@@ -1,10 +1,10 @@
 /**
- * News store - manages news data across all categories
+ * News store - manages news data across all Marin categories
  */
 
 import { writable, derived, get } from 'svelte/store';
 import type { NewsItem, NewsCategory } from '$lib/types';
-import { containsAlertKeyword, detectRegion, detectTopics } from '$lib/config';
+import { containsAlertKeyword, detectTown, detectTopics } from '$lib/config';
 
 export interface CategoryState {
 	items: NewsItem[];
@@ -18,8 +18,8 @@ export interface NewsState {
 	initialized: boolean;
 }
 
-// All news categories
-const NEWS_CATEGORIES: NewsCategory[] = ['politics', 'tech', 'finance', 'gov', 'ai', 'intel'];
+// All Marin news categories
+const NEWS_CATEGORIES: NewsCategory[] = ['local', 'civic', 'safety', 'outdoors', 'housing', 'satire'];
 
 // Create initial state for a category
 function createCategoryState(): CategoryState {
@@ -40,16 +40,18 @@ function createInitialState(): NewsState {
 	return { categories, initialized: false };
 }
 
-// Enrich news item with analysis
+// Enrich news item with town detection and alert keywords
 function enrichNewsItem(item: NewsItem): NewsItem {
 	const text = `${item.title} ${item.description || ''}`;
 	const alertResult = containsAlertKeyword(text);
+	const townResult = detectTown(text);
 
 	return {
 		...item,
 		isAlert: alertResult.isAlert,
 		alertKeyword: alertResult.keyword,
-		region: item.region ?? detectRegion(text) ?? undefined,
+		town: item.town ?? townResult?.name,
+		townSlug: item.townSlug ?? townResult?.slug,
 		topics: item.topics ?? detectTopics(text)
 	};
 }
@@ -181,6 +183,18 @@ function createNewsStore() {
 		},
 
 		/**
+		 * Get items for a specific town
+		 */
+		getItemsByTown(townSlug: string): NewsItem[] {
+			const state = get({ subscribe });
+			const items: NewsItem[] = [];
+			for (const category of NEWS_CATEGORIES) {
+				items.push(...state.categories[category].items.filter((i) => i.townSlug === townSlug));
+			}
+			return items.sort((a, b) => b.timestamp - a.timestamp);
+		},
+
+		/**
 		 * Clear a category
 		 */
 		clearCategory(category: NewsCategory) {
@@ -213,13 +227,13 @@ function createNewsStore() {
 // Export singleton store
 export const news = createNewsStore();
 
-// Derived stores for each category
-export const politicsNews = derived(news, ($news) => $news.categories.politics);
-export const techNews = derived(news, ($news) => $news.categories.tech);
-export const financeNews = derived(news, ($news) => $news.categories.finance);
-export const govNews = derived(news, ($news) => $news.categories.gov);
-export const aiNews = derived(news, ($news) => $news.categories.ai);
-export const intelNews = derived(news, ($news) => $news.categories.intel);
+// Derived stores for each Marin category
+export const localNews = derived(news, ($news) => $news.categories.local);
+export const civicNews = derived(news, ($news) => $news.categories.civic);
+export const safetyNews = derived(news, ($news) => $news.categories.safety);
+export const outdoorsNews = derived(news, ($news) => $news.categories.outdoors);
+export const housingNews = derived(news, ($news) => $news.categories.housing);
+export const satireNews = derived(news, ($news) => $news.categories.satire);
 
 // Derived store for all news items (reactive)
 export const allNewsItems = derived(news, ($news) => {

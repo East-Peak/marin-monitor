@@ -1,5 +1,5 @@
 /**
- * Analysis configuration - correlation topics, narrative patterns, source classification
+ * Analysis configuration — local correlation topics and narrative patterns for Marin
  */
 
 export interface CorrelationTopic {
@@ -12,270 +12,143 @@ export interface NarrativePattern {
 	id: string;
 	keywords: string[];
 	category: string;
-	severity: 'watch' | 'emerging' | 'spreading' | 'disinfo';
+	severity: 'watch' | 'emerging' | 'spreading';
 }
 
 export interface SourceTypes {
-	fringe: string[];
-	alternative: string[];
-	mainstream: string[];
+	official: string[];
+	local_media: string[];
+	community: string[];
+	satire: string[];
 }
 
 export const CORRELATION_TOPICS: CorrelationTopic[] = [
 	{
-		id: 'tariffs',
-		patterns: [/tariff/i, /trade war/i, /import tax/i, /customs duty/i],
-		category: 'Economy'
+		id: 'fire-season',
+		patterns: [/wildfire/i, /fire season/i, /red flag/i, /psps/i, /power shutoff/i, /evacuation/i],
+		category: 'Safety'
 	},
 	{
-		id: 'fed-rates',
-		patterns: [/federal reserve/i, /interest rate/i, /rate cut/i, /rate hike/i, /powell/i, /fomc/i],
-		category: 'Economy'
+		id: 'housing-market',
+		patterns: [/housing/i, /home sale/i, /median price/i, /real estate/i, /listing/i],
+		category: 'Housing'
 	},
 	{
-		id: 'inflation',
-		patterns: [/inflation/i, /cpi/i, /consumer price/i, /cost of living/i],
-		category: 'Economy'
-	},
-	{
-		id: 'ai-regulation',
-		patterns: [/ai regulation/i, /artificial intelligence.*law/i, /ai safety/i, /ai governance/i],
-		category: 'Tech'
-	},
-	{
-		id: 'china-tensions',
-		patterns: [/china.*taiwan/i, /south china sea/i, /us.*china/i, /beijing.*washington/i],
-		category: 'Geopolitics'
-	},
-	{
-		id: 'russia-ukraine',
-		patterns: [/ukraine/i, /zelensky/i, /putin.*war/i, /crimea/i, /donbas/i],
-		category: 'Conflict'
-	},
-	{
-		id: 'israel-gaza',
-		patterns: [/gaza/i, /hamas/i, /netanyahu/i, /israel.*attack/i, /hostage/i],
-		category: 'Conflict'
-	},
-	{
-		id: 'iran',
-		patterns: [/iran.*nuclear/i, /tehran/i, /ayatollah/i, /iranian.*strike/i],
-		category: 'Geopolitics'
-	},
-	{
-		id: 'crypto',
-		patterns: [/bitcoin/i, /crypto.*regulation/i, /ethereum/i, /sec.*crypto/i],
-		category: 'Finance'
-	},
-	{
-		id: 'housing',
-		patterns: [/housing market/i, /mortgage rate/i, /home price/i, /real estate.*crash/i],
-		category: 'Economy'
-	},
-	{
-		id: 'layoffs',
-		patterns: [/layoff/i, /job cut/i, /workforce reduction/i, /downsizing/i],
-		category: 'Business'
-	},
-	{
-		id: 'bank-crisis',
-		patterns: [/bank.*fail/i, /banking crisis/i, /fdic/i, /bank run/i],
-		category: 'Finance'
-	},
-	{
-		id: 'election',
-		patterns: [/election/i, /polling/i, /campaign/i, /ballot/i, /voter/i],
-		category: 'Politics'
-	},
-	{
-		id: 'immigration',
-		patterns: [/immigration/i, /border.*crisis/i, /migrant/i, /deportation/i, /asylum/i],
-		category: 'Politics'
-	},
-	{
-		id: 'climate',
-		patterns: [/climate change/i, /wildfire/i, /hurricane/i, /extreme weather/i, /flood/i],
+		id: 'water-supply',
+		patterns: [/drought/i, /reservoir/i, /water.*restrict/i, /mmwd/i, /water district/i],
 		category: 'Environment'
 	},
 	{
-		id: 'pandemic',
-		patterns: [/pandemic/i, /outbreak/i, /virus.*spread/i, /who.*emergency/i, /bird flu/i],
-		category: 'Health'
+		id: 'traffic-commute',
+		patterns: [/101.*traffic/i, /commute/i, /golden gate.*traffic/i, /richmond.*bridge/i, /ferry.*delay/i],
+		category: 'Traffic'
 	},
 	{
-		id: 'nuclear',
-		patterns: [/nuclear.*threat/i, /nuclear weapon/i, /atomic/i, /icbm/i],
-		category: 'Security'
+		id: 'development',
+		patterns: [/zoning/i, /development.*project/i, /affordable housing/i, /adu/i, /planning.*commission/i],
+		category: 'Civic'
 	},
 	{
-		id: 'supply-chain',
-		patterns: [/supply chain/i, /shipping.*delay/i, /port.*congestion/i, /logistics.*crisis/i],
-		category: 'Economy'
+		id: 'schools',
+		patterns: [/school.*district/i, /tamalpais.*union/i, /college of marin/i, /enrollment/i],
+		category: 'Education'
 	},
 	{
-		id: 'big-tech',
-		patterns: [/antitrust.*tech/i, /google.*monopoly/i, /meta.*lawsuit/i, /apple.*doj/i],
-		category: 'Tech'
+		id: 'sea-level',
+		patterns: [/sea level/i, /king tide/i, /flooding.*bay/i, /shoreline/i, /adaptation/i],
+		category: 'Environment'
 	},
 	{
-		id: 'deepfake',
-		patterns: [/deepfake/i, /ai.*misinformation/i, /synthetic media/i],
-		category: 'Tech'
+		id: 'trails-parks',
+		patterns: [/trail.*closure/i, /park.*closed/i, /muir woods/i, /point reyes/i, /mt\.*tam/i, /open space/i],
+		category: 'Outdoors'
+	},
+	{
+		id: 'wildlife',
+		patterns: [/mountain lion/i, /coyote/i, /whale/i, /shark.*sight/i, /bobcat/i, /elk/i],
+		category: 'Nature'
+	},
+	{
+		id: 'budget-tax',
+		patterns: [/county.*budget/i, /tax.*measure/i, /parcel tax/i, /sales tax/i, /ballot.*measure/i],
+		category: 'Civic'
 	}
 ];
 
 export const NARRATIVE_PATTERNS: NarrativePattern[] = [
 	{
-		id: 'deep-state',
-		keywords: ['deep state', 'shadow government', 'permanent state'],
-		category: 'Political',
+		id: 'nimby-housing',
+		keywords: ['nimby', 'housing opposition', 'neighborhood character', 'density'],
+		category: 'Housing',
 		severity: 'watch'
 	},
 	{
-		id: 'cbdc-control',
-		keywords: ['cbdc control', 'digital currency surveillance', 'social credit'],
-		category: 'Finance',
-		severity: 'watch'
-	},
-	{
-		id: 'wef-agenda',
-		keywords: ['great reset', 'wef agenda', 'world economic forum plot'],
-		category: 'Political',
-		severity: 'watch'
-	},
-	{
-		id: 'bio-weapon',
-		keywords: ['lab leak', 'bioweapon', 'gain of function'],
-		category: 'Health',
+		id: 'fire-preparedness',
+		keywords: ['fire preparedness', 'defensible space', 'firewise', 'vegetation management'],
+		category: 'Safety',
 		severity: 'emerging'
 	},
 	{
-		id: 'election-fraud',
-		keywords: ['election fraud', 'rigged election', 'stolen election', 'mail ballot fraud'],
-		category: 'Political',
+		id: 'water-wars',
+		keywords: ['water allocation', 'water rights', 'drought restrictions', 'water rate'],
+		category: 'Environment',
 		severity: 'watch'
 	},
 	{
-		id: 'ai-doom',
-		keywords: ['ai doom', 'ai extinction', 'superintelligence risk', 'agi danger'],
-		category: 'Tech',
-		severity: 'emerging'
-	},
-	{
-		id: 'ai-consciousness',
-		keywords: ['ai sentient', 'ai conscious', 'ai feelings', 'ai alive'],
-		category: 'Tech',
-		severity: 'emerging'
-	},
-	{
-		id: 'robot-replacement',
-		keywords: ['robots replacing', 'automation unemployment', 'job automation'],
-		category: 'Economy',
-		severity: 'spreading'
-	},
-	{
-		id: 'china-invasion',
-		keywords: ['china taiwan invasion', 'china war', 'south china sea conflict'],
-		category: 'Geopolitical',
+		id: 'ferry-expansion',
+		keywords: ['ferry service', 'ferry route', 'golden gate ferry', 'ferry ridership'],
+		category: 'Transit',
 		severity: 'watch'
 	},
 	{
-		id: 'nato-expansion',
-		keywords: ['nato provocation', 'nato aggression', 'nato encirclement'],
-		category: 'Geopolitical',
+		id: 'smart-train',
+		keywords: ['smart train', 'smart extension', 'smart ridership', 'sonoma-marin'],
+		category: 'Transit',
 		severity: 'watch'
 	},
 	{
-		id: 'dollar-collapse',
-		keywords: ['dollar collapse', 'dedollarization', 'brics currency', 'petrodollar death'],
-		category: 'Finance',
-		severity: 'spreading'
-	},
-	{
-		id: 'vaccine-injury',
-		keywords: ['vaccine injury', 'vaccine side effect', 'vaccine death', 'turbo cancer'],
-		category: 'Health',
-		severity: 'watch'
-	},
-	{
-		id: 'next-pandemic',
-		keywords: ['next pandemic', 'disease x', 'bird flu pandemic'],
-		category: 'Health',
+		id: 'tourism-pressure',
+		keywords: ['overtourism', 'visitor impact', 'parking congestion', 'trail damage'],
+		category: 'Community',
 		severity: 'emerging'
 	},
 	{
-		id: 'depopulation',
-		keywords: ['depopulation agenda', 'fertility crisis', 'population control'],
-		category: 'Society',
-		severity: 'disinfo'
-	},
-	{
-		id: 'food-crisis',
-		keywords: ['food shortage', 'engineered famine', 'food supply attack'],
-		category: 'Economy',
-		severity: 'emerging'
-	},
-	{
-		id: 'energy-war',
-		keywords: ['energy crisis manufactured', 'green agenda', 'energy shortage'],
+		id: 'cost-of-living',
+		keywords: ['cost of living', 'affordability', 'median income', 'priced out'],
 		category: 'Economy',
 		severity: 'spreading'
 	}
 ];
 
 export const SOURCE_TYPES: SourceTypes = {
-	fringe: [
-		'zerohedge',
-		'infowars',
-		'naturalnews',
-		'gateway',
-		'breitbart',
-		'epoch',
-		'revolver',
-		'dailycaller'
+	official: [
+		'marin county',
+		'city of san rafael',
+		'town of fairfax',
+		'city of novato',
+		'town of san anselmo',
+		'city of mill valley',
+		'town of corte madera',
+		'nws',
+		'cal fire',
+		'chp',
+		'nps',
+		'mmwd',
+		'usgs'
 	],
-	alternative: ['substack', 'rumble', 'bitchute', 'telegram', 'gab', 'gettr', 'truth social'],
-	mainstream: [
-		'reuters',
-		'ap news',
-		'bbc',
-		'cnn',
-		'nytimes',
-		'wsj',
-		'wapo',
-		'guardian',
-		'abc',
-		'nbc',
-		'cbs',
-		'fox'
+	local_media: [
+		'marin independent journal',
+		'marinij',
+		'sf chronicle',
+		'point reyes light',
+		'patch'
+	],
+	community: [
+		'nextdoor',
+		'west marin feed',
+		'marin magazine'
+	],
+	satire: [
+		'marin lately'
 	]
 };
-
-// Main character patterns for tracking prominent figures
-export interface PersonPattern {
-	pattern: RegExp;
-	name: string;
-}
-
-export const PERSON_PATTERNS: PersonPattern[] = [
-	{ pattern: /\btrump\b/gi, name: 'Trump' },
-	{ pattern: /\bbiden\b/gi, name: 'Biden' },
-	{ pattern: /\belon\b|\bmusk\b/gi, name: 'Elon Musk' },
-	{ pattern: /\bputin\b/gi, name: 'Putin' },
-	{ pattern: /\bzelensky\b/gi, name: 'Zelensky' },
-	{ pattern: /\bxi\s*jinping\b|\bxi\b/gi, name: 'Xi Jinping' },
-	{ pattern: /\bnetanyahu\b/gi, name: 'Netanyahu' },
-	{ pattern: /\bsam\s*altman\b/gi, name: 'Sam Altman' },
-	{ pattern: /\bmark\s*zuckerberg\b|\bzuckerberg\b/gi, name: 'Zuckerberg' },
-	{ pattern: /\bjeff\s*bezos\b|\bbezos\b/gi, name: 'Bezos' },
-	{ pattern: /\btim\s*cook\b/gi, name: 'Tim Cook' },
-	{ pattern: /\bsatya\s*nadella\b|\bnadella\b/gi, name: 'Satya Nadella' },
-	{ pattern: /\bsundar\s*pichai\b|\bpichai\b/gi, name: 'Sundar Pichai' },
-	{ pattern: /\bwarren\s*buffett\b|\bbuffett\b/gi, name: 'Warren Buffett' },
-	{ pattern: /\bjanet\s*yellen\b|\byellen\b/gi, name: 'Janet Yellen' },
-	{ pattern: /\bjerome\s*powell\b|\bpowell\b/gi, name: 'Jerome Powell' },
-	{ pattern: /\bkamala\s*harris\b|\bharris\b/gi, name: 'Kamala Harris' },
-	{ pattern: /\bnancy\s*pelosi\b|\bpelosi\b/gi, name: 'Nancy Pelosi' },
-	{ pattern: /\bjensen\s*huang\b|\bhuang\b/gi, name: 'Jensen Huang' },
-	{ pattern: /\bdario\s*amodei\b|\bamodei\b/gi, name: 'Dario Amodei' }
-];

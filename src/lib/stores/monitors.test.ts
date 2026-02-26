@@ -118,35 +118,37 @@ describe('Monitors Store', () => {
 		const { monitors } = await import('./monitors');
 
 		monitors.addMonitor({
-			name: 'Ukraine Monitor',
-			keywords: ['ukraine', 'zelensky'],
+			name: 'Wildfire Monitor',
+			keywords: ['wildfire', 'evacuation'],
 			enabled: true
 		});
 
 		const newsItems = [
 			{
 				id: '1',
-				title: 'Ukraine announces new policy',
-				source: 'BBC',
-				link: 'https://bbc.com/1',
+				title: 'Wildfire threatens homes in West Marin',
+				source: 'Marin Independent Journal',
+				link: 'https://marinij.com/1',
 				timestamp: Date.now(),
-				category: 'politics' as const
+				category: 'safety' as const,
+				verification: 'local_media' as const
 			},
 			{
 				id: '2',
-				title: 'Tech stocks rise',
-				source: 'CNBC',
-				link: 'https://cnbc.com/2',
+				title: 'New trail opens on Mt. Tam',
+				source: 'Patch',
+				link: 'https://patch.com/2',
 				timestamp: Date.now(),
-				category: 'finance' as const
+				category: 'outdoors' as const,
+				verification: 'local_media' as const
 			}
 		];
 
 		const matches = monitors.scanForMatches(newsItems);
 
 		expect(matches.length).toBe(1);
-		expect(matches[0].item.title).toContain('Ukraine');
-		expect(matches[0].matchedKeywords).toContain('ukraine');
+		expect(matches[0].item.title).toContain('Wildfire');
+		expect(matches[0].matchedKeywords).toContain('wildfire');
 	});
 
 	it('should not match disabled monitors', async () => {
@@ -162,10 +164,11 @@ describe('Monitors Store', () => {
 			{
 				id: '1',
 				title: 'Test headline',
-				source: 'Test',
-				link: 'https://test.com',
+				source: 'Marin Independent Journal',
+				link: 'https://marinij.com',
 				timestamp: Date.now(),
-				category: 'politics' as const
+				category: 'local' as const,
+				verification: 'local_media' as const
 			}
 		];
 

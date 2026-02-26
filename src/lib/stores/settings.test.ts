@@ -48,45 +48,42 @@ describe('Settings Store', () => {
 
 		// Check that common panels are enabled by default
 		expect(state.enabled['map']).toBe(true);
-		expect(state.enabled['politics']).toBe(true);
-		expect(state.enabled['tech']).toBe(true);
+		expect(state.enabled['local-wire']).toBe(true);
+		expect(state.enabled['safety']).toBe(true);
 	});
 
 	it('should toggle panel visibility', async () => {
 		const { settings } = await import('./settings');
 
 		// Initially enabled
-		expect(get(settings).enabled['tech']).toBe(true);
+		expect(get(settings).enabled['outdoors']).toBe(true);
 
 		// Toggle off
-		settings.togglePanel('tech');
-		expect(get(settings).enabled['tech']).toBe(false);
+		settings.togglePanel('outdoors');
+		expect(get(settings).enabled['outdoors']).toBe(false);
 
 		// Toggle on
-		settings.togglePanel('tech');
-		expect(get(settings).enabled['tech']).toBe(true);
+		settings.togglePanel('outdoors');
+		expect(get(settings).enabled['outdoors']).toBe(true);
 	});
 
 	it('should persist panel settings to localStorage', async () => {
 		const { settings } = await import('./settings');
 
-		settings.togglePanel('finance');
+		settings.togglePanel('housing');
 
-		expect(localStorageMock.setItem).toHaveBeenCalledWith(
-			'situationMonitorPanels',
-			expect.any(String)
-		);
+		expect(localStorageMock.setItem).toHaveBeenCalledWith('mm_panels', expect.any(String));
 
 		const savedData = JSON.parse(
 			localStorageMock.setItem.mock.calls[localStorageMock.setItem.mock.calls.length - 1][1]
 		);
-		expect(savedData['finance']).toBe(false);
+		expect(savedData['housing']).toBe(false);
 	});
 
 	it('should update panel order', async () => {
 		const { settings } = await import('./settings');
 
-		const newOrder = ['tech', 'finance', 'politics', 'map'] as const;
+		const newOrder = ['outdoors', 'housing', 'civic', 'map'] as const;
 		settings.updateOrder([...newOrder]);
 
 		const state = get(settings);
@@ -114,14 +111,14 @@ describe('Settings Store', () => {
 		const { settings } = await import('./settings');
 
 		// Make some changes
-		settings.togglePanel('tech');
+		settings.togglePanel('outdoors');
 		settings.updateSize('map', { width: 1000 });
 
 		// Reset
 		settings.reset();
 
 		const state = get(settings);
-		expect(state.enabled['tech']).toBe(true);
+		expect(state.enabled['outdoors']).toBe(true);
 		expect(state.sizes['map']).toBeUndefined();
 	});
 
@@ -129,13 +126,13 @@ describe('Settings Store', () => {
 		const { settings, enabledPanels } = await import('./settings');
 
 		// Disable some panels
-		settings.togglePanel('whales');
-		settings.togglePanel('polymarket');
+		settings.togglePanel('satire');
+		settings.togglePanel('correlation');
 
 		const enabled = get(enabledPanels);
-		expect(enabled).not.toContain('whales');
-		expect(enabled).not.toContain('polymarket');
+		expect(enabled).not.toContain('satire');
+		expect(enabled).not.toContain('correlation');
 		expect(enabled).toContain('map');
-		expect(enabled).toContain('politics');
+		expect(enabled).toContain('local-wire');
 	});
 });

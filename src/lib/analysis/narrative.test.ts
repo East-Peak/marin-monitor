@@ -20,82 +20,92 @@ describe('Narrative Tracker', () => {
 		const news: NewsItem[] = [
 			{
 				id: '1',
-				title: 'Deep state allegations surface',
-				source: 'Test',
+				title: 'NIMBY housing opposition blocks new project',
+				source: 'Marin Independent Journal',
 				link: 'a',
 				timestamp: Date.now(),
-				category: 'politics'
+				category: 'housing',
+				verification: 'local_media'
 			},
 			{
 				id: '2',
-				title: 'Shadow government concerns',
-				source: 'Test2',
+				title: 'Neighborhood character cited in density fight',
+				source: 'Patch',
 				link: 'b',
 				timestamp: Date.now(),
-				category: 'politics'
+				category: 'housing',
+				verification: 'local_media'
 			}
 		];
 
 		const results = analyzeNarratives(news);
 
 		expect(results).not.toBeNull();
-		const deepState =
-			results!.emergingFringe.find((n) => n.id === 'deep-state') ||
-			results!.narrativeWatch.find((n) => n.id === 'deep-state');
+		const nimbyNarrative =
+			results!.emergingFringe.find((n) => n.id === 'nimby-housing') ||
+			results!.narrativeWatch.find((n) => n.id === 'nimby-housing');
 
-		expect(deepState).toBeDefined();
-		expect(deepState!.count).toBe(2);
+		expect(nimbyNarrative).toBeDefined();
+		expect(nimbyNarrative!.count).toBe(2);
 	});
 
-	it('should classify disinfo patterns', () => {
+	it('should classify spreading narratives', () => {
 		const news: NewsItem[] = [
 			{
 				id: '1',
-				title: 'Depopulation agenda exposed',
-				source: 'Fringe',
+				title: 'Cost of living pushes families out of Marin',
+				source: 'Marin Magazine',
 				link: 'a',
 				timestamp: Date.now(),
-				category: 'politics'
+				category: 'housing',
+				verification: 'community'
 			}
 		];
 
 		const results = analyzeNarratives(news);
 
-		expect(results!.disinfoSignals.length).toBeGreaterThan(0);
-		expect(results!.disinfoSignals.find((n) => n.id === 'depopulation')).toBeDefined();
+		// cost-of-living has severity: 'spreading' in NARRATIVE_PATTERNS
+		const costNarrative =
+			results!.emergingFringe.find((n) => n.id === 'cost-of-living') ||
+			results!.narrativeWatch.find((n) => n.id === 'cost-of-living');
+
+		expect(costNarrative).toBeDefined();
 	});
 
 	it('should detect fringe-to-mainstream crossover', () => {
 		const news: NewsItem[] = [
 			{
 				id: '1',
-				title: 'Lab leak theory gains traction',
-				source: 'ZeroHedge',
+				title: 'Overtourism impacts trails on Mount Tam',
+				source: 'Marin Magazine',
 				link: 'a',
 				timestamp: Date.now(),
-				category: 'politics'
+				category: 'outdoors',
+				verification: 'community'
 			},
 			{
 				id: '2',
-				title: 'Lab leak investigation continues',
-				source: 'BBC News',
+				title: 'Visitor impact grows at Point Reyes',
+				source: 'Marin Independent Journal',
 				link: 'b',
 				timestamp: Date.now(),
-				category: 'politics'
+				category: 'outdoors',
+				verification: 'local_media'
 			},
 			{
 				id: '3',
-				title: 'Bioweapon research concerns',
-				source: 'CNN',
+				title: 'Parking congestion forces weekend closures',
+				source: 'Marin County',
 				link: 'c',
 				timestamp: Date.now(),
-				category: 'politics'
+				category: 'civic',
+				verification: 'official'
 			}
 		];
 
 		const results = analyzeNarratives(news);
 
-		// Should detect the bio-weapon narrative crossing from fringe to mainstream
+		// Should detect the tourism-pressure narrative crossing from community to official
 		expect(results!.fringeToMainstream.length).toBeGreaterThan(0);
 	});
 
@@ -103,59 +113,63 @@ describe('Narrative Tracker', () => {
 		const news: NewsItem[] = [
 			{
 				id: '1',
-				title: 'Dollar collapse imminent',
-				source: 'ZeroHedge',
+				title: 'Water allocation dispute heats up',
+				source: 'West Marin Feed',
 				link: 'a',
 				timestamp: Date.now(),
-				category: 'finance'
+				category: 'local',
+				verification: 'community'
 			},
 			{
 				id: '2',
-				title: 'Dedollarization fears',
-				source: 'Infowars',
+				title: 'Water rights challenged by new development',
+				source: 'NextDoor',
 				link: 'b',
 				timestamp: Date.now(),
-				category: 'finance'
+				category: 'local',
+				verification: 'community'
 			}
 		];
 
 		const results = analyzeNarratives(news);
 
-		const dollarNarrative = results!.emergingFringe.find((n) => n.id === 'dollar-collapse');
+		const waterNarrative = results!.emergingFringe.find((n) => n.id === 'water-wars');
 
-		expect(dollarNarrative).toBeDefined();
-		expect(dollarNarrative!.fringeCount).toBeGreaterThan(0);
+		expect(waterNarrative).toBeDefined();
+		expect(waterNarrative!.fringeCount).toBeGreaterThan(0);
 	});
 
 	it('should track keywords and headlines', () => {
 		const news: NewsItem[] = [
 			{
 				id: '1',
-				title: 'AI doom predictions increase',
-				source: 'Tech',
+				title: 'Fire preparedness efforts ramp up in Marin',
+				source: 'Marin Independent Journal',
 				link: 'a',
 				timestamp: Date.now(),
-				category: 'tech'
+				category: 'safety',
+				verification: 'local_media'
 			},
 			{
 				id: '2',
-				title: 'AI extinction risk debated',
-				source: 'Tech2',
+				title: 'Defensible space inspections begin countywide',
+				source: 'Patch',
 				link: 'b',
 				timestamp: Date.now(),
-				category: 'tech'
+				category: 'safety',
+				verification: 'local_media'
 			}
 		];
 
 		const results = analyzeNarratives(news);
 
-		const aiDoom =
-			results!.emergingFringe.find((n) => n.id === 'ai-doom') ||
-			results!.narrativeWatch.find((n) => n.id === 'ai-doom');
+		const firePrep =
+			results!.emergingFringe.find((n) => n.id === 'fire-preparedness') ||
+			results!.narrativeWatch.find((n) => n.id === 'fire-preparedness');
 
-		expect(aiDoom).toBeDefined();
-		expect(aiDoom!.keywords).toContain('ai doom');
-		expect(aiDoom!.headlines.length).toBeGreaterThan(0);
+		expect(firePrep).toBeDefined();
+		expect(firePrep!.keywords).toContain('fire preparedness');
+		expect(firePrep!.headlines.length).toBeGreaterThan(0);
 	});
 
 	it('should return correct summary', () => {
@@ -164,11 +178,12 @@ describe('Narrative Tracker', () => {
 		const news: NewsItem[] = [
 			{
 				id: '1',
-				title: 'Great reset concerns',
-				source: 'Test',
+				title: 'SMART train ridership drops again',
+				source: 'Marin Independent Journal',
 				link: 'a',
 				timestamp: Date.now(),
-				category: 'politics'
+				category: 'civic',
+				verification: 'local_media'
 			}
 		];
 
@@ -182,19 +197,20 @@ describe('Narrative Tracker', () => {
 	it('should limit sources to 5', () => {
 		const news: NewsItem[] = Array.from({ length: 10 }, (_, i) => ({
 			id: String(i),
-			title: 'Deep state news',
+			title: 'NIMBY housing opposition in Marin',
 			source: `Source${i}`,
 			link: `link${i}`,
 			timestamp: Date.now(),
-			category: 'politics' as const
+			category: 'housing' as const,
+			verification: 'local_media' as const
 		}));
 
 		const results = analyzeNarratives(news);
 
-		const deepState =
-			results!.emergingFringe.find((n) => n.id === 'deep-state') ||
-			results!.narrativeWatch.find((n) => n.id === 'deep-state');
+		const nimbyNarrative =
+			results!.emergingFringe.find((n) => n.id === 'nimby-housing') ||
+			results!.narrativeWatch.find((n) => n.id === 'nimby-housing');
 
-		expect(deepState!.sources.length).toBeLessThanOrEqual(5);
+		expect(nimbyNarrative!.sources.length).toBeLessThanOrEqual(5);
 	});
 });

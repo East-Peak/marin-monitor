@@ -54,17 +54,20 @@ function formatNarrativeName(id: string): string {
 /**
  * Classify source type
  */
-function classifySource(source: string): 'fringe' | 'alternative' | 'mainstream' | null {
+function classifySource(source: string): 'official' | 'local_media' | 'community' | 'satire' | null {
 	const lowerSource = source.toLowerCase();
 
-	for (const fringeSource of SOURCE_TYPES.fringe) {
-		if (lowerSource.includes(fringeSource)) return 'fringe';
+	for (const s of SOURCE_TYPES.official) {
+		if (lowerSource.includes(s)) return 'official';
 	}
-	for (const altSource of SOURCE_TYPES.alternative) {
-		if (lowerSource.includes(altSource)) return 'alternative';
+	for (const s of SOURCE_TYPES.local_media) {
+		if (lowerSource.includes(s)) return 'local_media';
 	}
-	for (const msSource of SOURCE_TYPES.mainstream) {
-		if (lowerSource.includes(msSource)) return 'mainstream';
+	for (const s of SOURCE_TYPES.community) {
+		if (lowerSource.includes(s)) return 'community';
+	}
+	for (const s of SOURCE_TYPES.satire) {
+		if (lowerSource.includes(s)) return 'satire';
 	}
 	return null;
 }
@@ -86,13 +89,15 @@ export function analyzeNarratives(allNews: NewsItem[]): NarrativeResults | null 
 	for (const narrative of NARRATIVE_PATTERNS) {
 		const matches: NewsItem[] = [];
 		const sourceMatches: {
-			fringe: NewsItem[];
-			alternative: NewsItem[];
-			mainstream: NewsItem[];
+			official: NewsItem[];
+			local_media: NewsItem[];
+			community: NewsItem[];
+			satire: NewsItem[];
 		} = {
-			fringe: [],
-			alternative: [],
-			mainstream: []
+			official: [],
+			local_media: [],
+			community: [],
+			satire: []
 		};
 
 		// Find matching news items
@@ -126,32 +131,32 @@ export function analyzeNarratives(allNews: NewsItem[]): NarrativeResults | null 
 		}
 
 		// Build narrative data
+		const officialCount = sourceMatches.official.length + sourceMatches.local_media.length;
+		const communityCount = sourceMatches.community.length + sourceMatches.satire.length;
+
 		const narrativeData: NarrativeData = {
 			id: narrative.id,
 			name: formatNarrativeName(narrative.id),
 			category: narrative.category,
 			severity: narrative.severity,
 			count: matches.length,
-			fringeCount: sourceMatches.fringe.length,
-			mainstreamCount: sourceMatches.mainstream.length,
+			fringeCount: communityCount,
+			mainstreamCount: officialCount,
 			sources: [...new Set(matches.map((m) => m.source))].slice(0, 5),
 			headlines: matches.slice(0, 3),
 			keywords: narrative.keywords
 		};
 
 		// Categorize narrative
-		if (sourceMatches.mainstream.length > 0 && sourceMatches.fringe.length > 0) {
-			// Fringe to Mainstream crossover
+		if (officialCount > 0 && communityCount > 0) {
+			// Cross-source narrative (community + official)
 			results.fringeToMainstream.push({
 				...narrativeData,
 				status: 'crossing',
-				crossoverLevel: sourceMatches.mainstream.length / matches.length
+				crossoverLevel: officialCount / matches.length
 			});
-		} else if (narrative.severity === 'disinfo') {
-			// Known disinformation pattern
-			results.disinfoSignals.push(narrativeData);
-		} else if (sourceMatches.fringe.length > 0 || sourceMatches.alternative.length > 0) {
-			// Emerging from fringe sources
+		} else if (communityCount > 0) {
+			// Community-sourced narrative
 			const status: EmergingFringe['status'] =
 				matches.length >= 5 ? 'viral' : matches.length >= 3 ? 'spreading' : 'emerging';
 

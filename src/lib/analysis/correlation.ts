@@ -220,22 +220,22 @@ export function analyzeCorrelations(allNews: NewsItem[]): CorrelationResults | n
  * Generate prediction text based on topic and count
  */
 function getPrediction(topic: CorrelationTopic, count: number): string {
-	if (topic.id === 'tariffs' && count >= 4) {
-		return 'Market volatility likely in next 24-48h';
+	if (topic.id === 'fire-season' && count >= 4) {
+		return 'Elevated fire activity — watch for closures and evacuations';
 	}
-	if (topic.id === 'fed-rates') {
-		return 'Expect increased financial sector coverage';
+	if (topic.id === 'water-supply') {
+		return 'Water supply concerns gaining attention';
 	}
-	if (topic.id.includes('china') || topic.id.includes('russia')) {
-		return 'Geopolitical escalation narrative forming';
+	if (topic.id === 'traffic-commute') {
+		return 'Commute disruption likely — check alternate routes';
 	}
-	if (topic.id === 'layoffs') {
-		return 'Employment concerns may dominate news cycle';
+	if (topic.id === 'development') {
+		return 'Development discussion heating up — watch for meetings';
 	}
-	if (topic.category === 'Conflict') {
-		return 'Breaking developments likely within hours';
+	if (topic.category === 'Safety') {
+		return 'Safety-related developments — stay informed';
 	}
-	return 'Topic gaining mainstream traction';
+	return 'Topic gaining local traction';
 }
 
 /**

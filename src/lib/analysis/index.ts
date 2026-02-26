@@ -24,12 +24,3 @@ export {
 	type FringeToMainstream,
 	type NarrativeResults
 } from './narrative';
-
-// Main character
-export {
-	calculateMainCharacter,
-	getMainCharacterSummary,
-	calculateDominance,
-	type MainCharacterEntry,
-	type MainCharacterResults
-} from './main-character';

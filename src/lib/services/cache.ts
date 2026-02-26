@@ -35,7 +35,7 @@ export class CacheManager {
 
 	constructor(options: CacheManagerOptions = {}) {
 		this.memoryCache = new Map();
-		this.storagePrefix = options.prefix || 'sm_cache_';
+		this.storagePrefix = options.prefix || 'mm_cache_';
 		this.maxMemorySize = options.maxMemorySize || 100;
 		this.debug = options.debug || false;
 	}
@@ -281,4 +281,4 @@ export class CacheManager {
 }
 
 // Export singleton instance
-export const cacheManager = new CacheManager({ prefix: 'sm_' });
+export const cacheManager = new CacheManager({ prefix: 'mm_' });

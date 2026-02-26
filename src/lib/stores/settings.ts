@@ -15,9 +15,9 @@ import {
 
 // Storage keys
 const STORAGE_KEYS = {
-	panels: 'situationMonitorPanels',
-	order: 'panelOrder',
-	sizes: 'panelSizes'
+	panels: 'mm_panels',
+	order: 'mm_panelOrder',
+	sizes: 'mm_panelSizes'
 } as const;
 
 // Types

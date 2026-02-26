@@ -1,5 +1,5 @@
 /**
- * ServiceRegistry - Service configurations for all external APIs
+ * ServiceRegistry - Service configurations for Marin Monitor external APIs
  */
 
 export interface CacheConfig {
@@ -22,46 +22,31 @@ export interface ServiceConfig {
 	proxies?: string[];
 }
 
-export type ServiceId = 'GDELT' | 'COINGECKO' | 'FRED' | 'USGS' | 'CORS_PROXY';
+export type ServiceId = 'NWS' | 'NOAA_TIDES' | 'USGS' | 'AIRNOW' | 'MARIN_OPENDATA' | 'CORS_PROXY';
 
 const SERVICE_CONFIG: Record<ServiceId, ServiceConfig> = {
-	GDELT: {
-		id: 'gdelt',
-		baseUrl: 'https://api.gdeltproject.org',
-		timeout: 15000,
-		retries: 1,
+	NWS: {
+		id: 'nws',
+		baseUrl: 'https://api.weather.gov',
+		timeout: 10000,
+		retries: 2,
 		cache: {
-			ttl: 3 * 60 * 1000, // 3 minutes (real-time news)
+			ttl: 15 * 60 * 1000, // 15 minutes
 			staleWhileRevalidate: true
 		},
 		circuitBreaker: {
-			failureThreshold: 2,
-			resetTimeout: 60000 // 1 minute
-		}
-	},
-
-	COINGECKO: {
-		id: 'coingecko',
-		baseUrl: 'https://api.coingecko.com',
-		timeout: 10000,
-		retries: 2,
-		cache: {
-			ttl: 60 * 1000, // 1 minute (crypto volatility)
-			staleWhileRevalidate: false
-		},
-		circuitBreaker: {
 			failureThreshold: 3,
-			resetTimeout: 120000 // 2 minutes (API can be flaky)
+			resetTimeout: 60000
 		}
 	},
 
-	FRED: {
-		id: 'fred',
-		baseUrl: 'https://fred.stlouisfed.org',
+	NOAA_TIDES: {
+		id: 'noaa_tides',
+		baseUrl: 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter',
 		timeout: 10000,
 		retries: 2,
 		cache: {
-			ttl: 60 * 60 * 1000, // 1 hour (weekly data)
+			ttl: 60 * 60 * 1000, // 1 hour
 			staleWhileRevalidate: true
 		},
 		circuitBreaker: {
@@ -85,15 +70,45 @@ const SERVICE_CONFIG: Record<ServiceId, ServiceConfig> = {
 		}
 	},
 
+	AIRNOW: {
+		id: 'airnow',
+		baseUrl: 'https://www.airnowapi.org',
+		timeout: 10000,
+		retries: 2,
+		cache: {
+			ttl: 30 * 60 * 1000, // 30 minutes
+			staleWhileRevalidate: true
+		},
+		circuitBreaker: {
+			failureThreshold: 3,
+			resetTimeout: 120000
+		}
+	},
+
+	MARIN_OPENDATA: {
+		id: 'marin_opendata',
+		baseUrl: 'https://data.marincounty.org/resource',
+		timeout: 15000,
+		retries: 2,
+		cache: {
+			ttl: 6 * 60 * 60 * 1000, // 6 hours
+			staleWhileRevalidate: true
+		},
+		circuitBreaker: {
+			failureThreshold: 3,
+			resetTimeout: 120000
+		}
+	},
+
 	CORS_PROXY: {
 		id: 'cors_proxy',
-		baseUrl: null, // Uses proxy URLs from list
+		baseUrl: null,
 		proxies: [
-			'https://situation-monitor-proxy.seanthielen-e.workers.dev/?url=',
+			'https://corsproxy.io/?url=',
 			'https://api.allorigins.win/raw?url='
 		],
 		timeout: 12000,
-		retries: 1, // Already has proxy fallback
+		retries: 1,
 		cache: {
 			ttl: 5 * 60 * 1000,
 			staleWhileRevalidate: true

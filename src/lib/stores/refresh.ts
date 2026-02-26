@@ -14,21 +14,21 @@ export interface StageConfig {
 	delayMs: number;
 }
 
-// Staged refresh configuration
+// Staged refresh configuration for Marin data sources
 export const REFRESH_STAGES: StageConfig[] = [
 	{
 		name: 'critical',
-		categories: ['news', 'markets', 'alerts'],
+		categories: ['local', 'safety', 'weather'],
 		delayMs: 0
 	},
 	{
 		name: 'secondary',
-		categories: ['crypto', 'commodities', 'intel'],
+		categories: ['civic', 'outdoors', 'air-quality', 'tides'],
 		delayMs: 2000
 	},
 	{
 		name: 'tertiary',
-		categories: ['contracts', 'whales', 'layoffs', 'polymarket'],
+		categories: ['housing', 'satire', 'earthquakes'],
 		delayMs: 4000
 	}
 ];

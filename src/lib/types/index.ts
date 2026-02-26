@@ -1,12 +1,22 @@
 // Core data types for Marin Monitor
 
 /**
- * News feed category
+ * Marin news/data categories
  */
-export type NewsCategory = 'politics' | 'tech' | 'finance' | 'gov' | 'ai' | 'intel';
+export type NewsCategory = 'local' | 'civic' | 'safety' | 'outdoors' | 'housing' | 'satire';
 
 /**
- * A news item from any source (RSS, GDELT, etc.)
+ * Verification level for every story/item
+ */
+export type VerificationLevel = 'official' | 'local_media' | 'community' | 'satire';
+
+/**
+ * Map layer toggles
+ */
+export type MapLayer = 'civic' | 'news' | 'safety' | 'housing' | 'activity' | 'satire';
+
+/**
+ * A news item from any local source
  */
 export interface NewsItem {
 	id: string;
@@ -18,9 +28,13 @@ export interface NewsItem {
 	content?: string;
 	source: string;
 	category: NewsCategory;
+	verification: VerificationLevel;
+	town?: string;
+	townSlug?: string;
+	lat?: number;
+	lon?: number;
 	isAlert?: boolean;
 	alertKeyword?: string;
-	region?: string;
 	topics?: string[];
 }
 
@@ -31,73 +45,77 @@ export interface FeedConfig {
 	name: string;
 	url: string;
 	category: NewsCategory;
+	verification: VerificationLevel;
 }
 
 /**
- * Market data for stocks/crypto
+ * Marin town definition
  */
-export interface MarketItem {
-	symbol: string;
+export interface Town {
 	name: string;
-	price: number;
-	change: number;
-	changePercent: number;
-	type?: 'stock' | 'crypto' | 'commodity' | 'index';
+	slug: string;
+	lat: number;
+	lon: number;
+	/** Approximate population */
+	pop?: number;
+	/** Whether this is an incorporated city */
+	incorporated: boolean;
+	/** ZIP codes associated with this town */
+	zips?: string[];
 }
 
 /**
- * Sector performance data (ETFs like XLK, XLF, etc.)
+ * Weather data from NWS
  */
-export interface SectorPerformance {
-	symbol: string;
-	name: string;
-	price: number;
-	change: number;
-	changePercent: number;
+export interface WeatherData {
+	temperature: number;
+	temperatureUnit: string;
+	windSpeed: string;
+	windDirection: string;
+	shortForecast: string;
+	detailedForecast?: string;
+	isDaytime: boolean;
+	timestamp: number;
 }
 
 /**
- * Cryptocurrency data from CoinGecko
+ * Fire weather alert from NWS
  */
-export interface CryptoItem {
+export interface FireWeatherAlert {
 	id: string;
-	symbol: string;
-	name: string;
-	current_price: number;
-	price_change_24h: number;
-	price_change_percentage_24h: number;
-	market_cap?: number;
-	volume_24h?: number;
+	event: string;
+	headline: string;
+	description: string;
+	severity: 'Extreme' | 'Severe' | 'Moderate' | 'Minor' | 'Unknown';
+	urgency: 'Immediate' | 'Expected' | 'Future' | 'Past' | 'Unknown';
+	onset: string;
+	expires: string;
+	areaDesc: string;
 }
 
 /**
- * Sector heatmap data
+ * Air quality data from AirNow
  */
-export interface SectorData {
-	symbol: string;
-	name: string;
-	change: number;
+export interface AirQualityData {
+	aqi: number;
+	category: string;
 	color: string;
+	pollutant: string;
+	timestamp: number;
 }
 
 /**
- * Commodity data
+ * Tide data from NOAA
  */
-export interface CommodityData {
-	name: string;
-	price: number;
-	change: number;
-	unit: string;
+export interface TideData {
+	station: string;
+	predictions: TidePrediction[];
 }
 
-/**
- * Federal Reserve balance sheet data
- */
-export interface FedBalanceData {
-	value: number;
-	change: number;
-	changePercent: number;
-	percentOfMax: number;
+export interface TidePrediction {
+	time: string;
+	height: number;
+	type: 'H' | 'L'; // High or Low
 }
 
 /**
@@ -115,100 +133,6 @@ export interface EarthquakeData {
 }
 
 /**
- * Polymarket prediction data
- */
-export interface PredictionData {
-	id: string;
-	title: string;
-	probability: number;
-	volume: number;
-	url: string;
-}
-
-/**
- * Whale transaction data
- */
-export interface WhaleTransaction {
-	hash: string;
-	from: string;
-	to: string;
-	value: number;
-	token: string;
-	timestamp: number;
-	type: 'transfer' | 'swap' | 'mint' | 'burn';
-}
-
-/**
- * Government contract data
- */
-export interface GovContract {
-	id: string;
-	title: string;
-	agency: string;
-	value: number;
-	vendor: string;
-	date: string;
-	url: string;
-}
-
-/**
- * Layoff announcement data
- */
-export interface LayoffData {
-	company: string;
-	count: number;
-	percentage?: number;
-	date: string;
-	source: string;
-	url: string;
-}
-
-/**
- * Map hotspot configuration
- */
-export interface Hotspot {
-	id: string;
-	name: string;
-	location: string;
-	lat: number;
-	lon: number;
-	level: 'low' | 'medium' | 'high' | 'critical';
-	category: string;
-	description?: string;
-	keywords?: string[];
-}
-
-/**
- * Custom monitor created by user
- */
-export interface CustomMonitor {
-	id: string;
-	name: string;
-	keywords: string[];
-	enabled: boolean;
-	color?: string;
-	location?: {
-		name: string;
-		lat: number;
-		lon: number;
-	};
-	createdAt: number;
-	updatedAt?: number;
-	matchCount: number;
-}
-
-/**
- * Panel configuration
- */
-export interface PanelConfig {
-	id: string;
-	title: string;
-	category: string;
-	enabled: boolean;
-	order: number;
-}
-
-/**
  * Correlation analysis result
  */
 export interface CorrelationResult {
@@ -216,7 +140,6 @@ export interface CorrelationResult {
 	count: number;
 	sources: string[];
 	momentum: 'rising' | 'stable' | 'falling';
-	sentiment?: 'positive' | 'neutral' | 'negative';
 }
 
 /**
@@ -232,13 +155,18 @@ export interface NarrativeResult {
 }
 
 /**
- * Main character ranking result
+ * Custom monitor created by user
  */
-export interface MainCharacterResult {
+export interface CustomMonitor {
+	id: string;
 	name: string;
-	mentions: number;
-	sources: string[];
-	sentiment: 'positive' | 'neutral' | 'negative' | 'mixed';
+	keywords: string[];
+	enabled: boolean;
+	color?: string;
+	town?: string;
+	createdAt: number;
+	updatedAt?: number;
+	matchCount: number;
 }
 
 /**
@@ -298,30 +226,17 @@ export interface SettingsState {
 	panels: Record<string, boolean>;
 	panelOrder: string[];
 	theme: 'dark' | 'light';
+	enableVibes: boolean; // Toggle for satire/Marin Lately content
 }
 
 /**
- * News item for a world leader
+ * Pulse stats — at-a-glance numbers for the dashboard
  */
-export interface LeaderNews {
-	source: string;
-	title: string;
-	link: string;
-	pubDate: string;
-}
-
-/**
- * World leader tracking data
- */
-export interface WorldLeader {
-	id: string;
-	name: string;
-	title: string;
-	country: string;
-	flag: string;
-	keywords: string[];
-	since: string;
-	party: string;
-	focus?: string[];
-	news?: LeaderNews[];
+export interface PulseStats {
+	stories24h: number;
+	alerts24h: number;
+	aqi: number | null;
+	temperature: number | null;
+	tideNext: TidePrediction | null;
+	lastEarthquake: EarthquakeData | null;
 }

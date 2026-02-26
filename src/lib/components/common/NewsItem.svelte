@@ -39,8 +39,8 @@
 
 	<div class="item-meta">
 		<span class="item-time">{timeAgo(item.timestamp)}</span>
-		{#if item.region}
-			<span class="item-region">{item.region}</span>
+		{#if item.town}
+			<span class="item-town">{item.town}</span>
 		{/if}
 	</div>
 </div>
@@ -124,12 +124,11 @@
 		color: var(--text-muted);
 	}
 
-	.item-region {
+	.item-town {
 		font-size: 0.5rem;
 		color: var(--accent);
 		background: rgba(var(--accent-rgb), 0.1);
 		padding: 0.1rem 0.3rem;
 		border-radius: 2px;
-		text-transform: uppercase;
 	}
 </style>

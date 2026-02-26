@@ -13,105 +13,49 @@ export interface Preset {
 }
 
 export const PRESETS: Record<string, Preset> = {
-	'news-junkie': {
-		id: 'news-junkie',
-		name: 'News Junkie',
-		icon: '📰',
-		description: 'Stay on top of breaking news across politics, tech, and finance',
-		panels: ['politics', 'tech', 'finance', 'gov', 'ai', 'mainchar', 'map']
+	essentials: {
+		id: 'essentials',
+		name: 'Essentials',
+		icon: 'M',
+		description: 'Map, local wire, and pulse — the basics',
+		panels: ['map', 'pulse', 'local-wire', 'safety']
 	},
-	trader: {
-		id: 'trader',
-		name: 'Trader',
-		icon: '📈',
-		description: 'Market-focused dashboard with stocks, crypto, and commodities',
-		panels: [
-			'markets',
-			'heatmap',
-			'commodities',
-			'crypto',
-			'polymarket',
-			'whales',
-			'printer',
-			'finance',
-			'map'
-		]
+	'safety-first': {
+		id: 'safety-first',
+		name: 'Safety First',
+		icon: '!',
+		description: 'Fire alerts, weather, road closures, and emergency info',
+		panels: ['map', 'pulse', 'safety', 'weather', 'local-wire']
 	},
-	geopolitics: {
-		id: 'geopolitics',
-		name: 'Geopolitics Watcher',
-		icon: '🌍',
-		description: 'Global situation awareness and regional hotspots',
-		panels: [
-			'map',
-			'intel',
-			'leaders',
-			'politics',
-			'gov',
-			'venezuela',
-			'greenland',
-			'iran',
-			'correlation',
-			'narrative'
-		]
+	'local-nerd': {
+		id: 'local-nerd',
+		name: 'Local Nerd',
+		icon: '#',
+		description: 'All the civic data, meetings, and housing numbers',
+		panels: ['map', 'pulse', 'local-wire', 'civic', 'housing', 'correlation', 'narrative']
 	},
-	intel: {
-		id: 'intel',
-		name: 'Intelligence Analyst',
-		icon: '🔍',
-		description: 'Deep analysis, pattern detection, and narrative tracking',
-		panels: ['map', 'intel', 'leaders', 'correlation', 'narrative', 'mainchar', 'politics']
-	},
-	minimal: {
-		id: 'minimal',
-		name: 'Minimal',
-		icon: '⚡',
-		description: 'Just the essentials - map, news, and markets',
-		panels: ['map', 'politics', 'markets']
+	outdoor: {
+		id: 'outdoor',
+		name: 'Trail & Tide',
+		icon: '^',
+		description: 'Weather, tides, trails, and outdoor conditions',
+		panels: ['map', 'pulse', 'weather', 'outdoors', 'safety']
 	},
 	everything: {
 		id: 'everything',
 		name: 'Everything',
-		icon: '🎛️',
-		description: 'Kitchen sink - all panels enabled',
+		icon: '*',
+		description: 'All panels enabled — the full Marin experience',
 		panels: [
-			'map',
-			'politics',
-			'tech',
-			'finance',
-			'gov',
-			'heatmap',
-			'markets',
-			'monitors',
-			'commodities',
-			'crypto',
-			'polymarket',
-			'whales',
-			'mainchar',
-			'printer',
-			'contracts',
-			'ai',
-			'layoffs',
-			'venezuela',
-			'greenland',
-			'iran',
-			'leaders',
-			'intel',
-			'correlation',
-			'narrative'
+			'map', 'pulse', 'local-wire', 'safety', 'weather',
+			'civic', 'outdoors', 'housing', 'monitors',
+			'correlation', 'narrative', 'satire'
 		]
 	}
 };
 
-export const PRESET_ORDER = [
-	'news-junkie',
-	'trader',
-	'geopolitics',
-	'intel',
-	'minimal',
-	'everything'
-];
+export const PRESET_ORDER = ['essentials', 'safety-first', 'local-nerd', 'outdoor', 'everything'];
 
 // Storage keys
-export const ONBOARDING_STORAGE_KEY = 'onboardingComplete';
-export const PRESET_STORAGE_KEY = 'selectedPreset';
+export const ONBOARDING_STORAGE_KEY = 'mm_onboardingComplete';
+export const PRESET_STORAGE_KEY = 'mm_selectedPreset';

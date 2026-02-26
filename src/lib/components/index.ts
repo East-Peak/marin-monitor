@@ -3,15 +3,7 @@
  */
 
 // Common components
-export {
-	Panel,
-	NewsItem,
-	MarketItem,
-	HeatmapCell,
-	LoadingSpinner,
-	ErrorMessage,
-	Badge
-} from './common';
+export { Panel, NewsItem, LoadingSpinner, ErrorMessage, Badge } from './common';
 
 // Layout components
 export { Header, Dashboard } from './layout';

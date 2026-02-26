@@ -1,134 +1,153 @@
 /**
- * RSS feed and news source configuration
+ * Marin County RSS feed and news source configuration
+ *
+ * Status as of 2026-02-25:
+ *   CONFIRMED WORKING: Marin IJ, Point Reyes Light, City of San Rafael,
+ *     Town of Fairfax, MMWD, Marin Lately
+ *   UNTESTED: SF Chronicle, Novato, San Anselmo, Mill Valley, Corte Madera, CHP
+ *   BLOCKED (403): Marin County official (Cloudflare), CAL FIRE (Akamai),
+ *     Marin County Emergency (likely same Cloudflare)
+ *   DEAD: All Patch feeds (404), West Marin Feed (DNS gone), NPS feeds (deprecated)
  */
 
-import type { NewsCategory } from '$lib/types';
+import type { NewsCategory, VerificationLevel } from '$lib/types';
 
 export interface FeedSource {
 	name: string;
 	url: string;
-}
-
-export interface IntelSource extends FeedSource {
-	type: 'think-tank' | 'defense' | 'regional' | 'osint' | 'govt' | 'cyber';
-	topics: string[];
-	region?: string;
+	verification: VerificationLevel;
+	/** Known to be working as of last test */
+	confirmed?: boolean;
+	/** Known to be broken — skip in fetcher */
+	broken?: boolean;
 }
 
 export const FEEDS: Record<NewsCategory, FeedSource[]> = {
-	politics: [
-		{ name: 'BBC World', url: 'https://feeds.bbci.co.uk/news/world/rss.xml' },
-		{ name: 'NPR News', url: 'https://feeds.npr.org/1001/rss.xml' },
-		{ name: 'Guardian World', url: 'https://www.theguardian.com/world/rss' },
-		{ name: 'NYT World', url: 'https://rss.nytimes.com/services/xml/rss/nyt/World.xml' }
-	],
-	tech: [
-		{ name: 'Hacker News', url: 'https://hnrss.org/frontpage' },
-		{ name: 'Ars Technica', url: 'https://feeds.arstechnica.com/arstechnica/technology-lab' },
-		{ name: 'The Verge', url: 'https://www.theverge.com/rss/index.xml' },
-		{ name: 'MIT Tech Review', url: 'https://www.technologyreview.com/feed/' },
-		{ name: 'ArXiv AI', url: 'https://rss.arxiv.org/rss/cs.AI' },
-		{ name: 'OpenAI Blog', url: 'https://openai.com/news/rss.xml' }
-	],
-	finance: [
-		{ name: 'CNBC', url: 'https://www.cnbc.com/id/100003114/device/rss/rss.html' },
-		{ name: 'MarketWatch', url: 'https://feeds.marketwatch.com/marketwatch/topstories' },
-		{ name: 'Yahoo Finance', url: 'https://finance.yahoo.com/news/rssindex' },
-		{ name: 'BBC Business', url: 'https://feeds.bbci.co.uk/news/business/rss.xml' },
-		{ name: 'FT', url: 'https://www.ft.com/rss/home' }
-	],
-	gov: [
-		{ name: 'White House', url: 'https://www.whitehouse.gov/news/feed/' },
-		{ name: 'Federal Reserve', url: 'https://www.federalreserve.gov/feeds/press_all.xml' },
-		{ name: 'SEC Announcements', url: 'https://www.sec.gov/news/pressreleases.rss' },
+	local: [
 		{
-			name: 'DoD News',
-			url: 'https://www.defense.gov/DesktopModules/ArticleCS/RSS.ashx?max=10&ContentType=1&Site=945'
+			name: 'Marin Independent Journal',
+			url: 'https://www.marinij.com/feed/',
+			verification: 'local_media',
+			confirmed: true
+		},
+		{
+			name: 'Point Reyes Light',
+			url: 'https://www.ptreyeslight.com/feed/',
+			verification: 'local_media',
+			confirmed: true
+		},
+		{
+			name: 'SF Chronicle – Bay Area',
+			url: 'https://www.sfchronicle.com/bayarea/feed/Bay-Area-Local-702.php',
+			verification: 'local_media'
 		}
 	],
-	ai: [
-		{ name: 'OpenAI Blog', url: 'https://openai.com/news/rss.xml' },
-		{ name: 'ArXiv AI', url: 'https://rss.arxiv.org/rss/cs.AI' }
+	civic: [
+		{
+			name: 'City of San Rafael',
+			url: 'https://www.cityofsanrafael.org/feed/',
+			verification: 'official',
+			confirmed: true
+		},
+		{
+			name: 'Town of Fairfax',
+			url: 'https://townoffairfaxca.gov/feed/',
+			verification: 'official',
+			confirmed: true
+		},
+		{
+			name: 'City of Novato',
+			url: 'https://www.novato.org/Home/Components/RssFeeds/RssFeeds/2/20',
+			verification: 'official'
+		},
+		{
+			name: 'Town of San Anselmo',
+			url: 'https://www.townofsananselmo.org/RSSFeed.aspx',
+			verification: 'official'
+		},
+		{
+			name: 'City of Mill Valley',
+			url: 'https://www.cityofmillvalley.org/feed/',
+			verification: 'official'
+		},
+		{
+			name: 'Town of Corte Madera',
+			url: 'https://www.townofcortemadera.org/RSSFeed.aspx',
+			verification: 'official'
+		},
+		{
+			name: 'Marin County News',
+			url: 'https://www.marincounty.org/main/county-press-releases/rss',
+			verification: 'official',
+			broken: true // Cloudflare 403
+		}
 	],
-	intel: [
-		{ name: 'CSIS', url: 'https://www.csis.org/analysis/feed' },
-		{ name: 'Brookings', url: 'https://www.brookings.edu/feed/' }
+	safety: [
+		{
+			name: 'CHP – Golden Gate Division',
+			url: 'https://cad.chp.ca.gov/Traffic.aspx/AreaRSS?AreaId=GGD',
+			verification: 'official'
+		},
+		{
+			name: 'Marin County Emergency',
+			url: 'https://www.marincounty.org/depts/fr/rss',
+			verification: 'official',
+			broken: true // Likely same Cloudflare block
+		},
+		{
+			name: 'CAL FIRE',
+			url: 'https://www.fire.ca.gov/feed',
+			verification: 'official',
+			broken: true // Akamai 403
+		}
+	],
+	outdoors: [
+		{
+			name: 'MMWD / Marin Water',
+			url: 'https://www.marinwater.org/feed/',
+			verification: 'official',
+			confirmed: true
+		}
+		// NPS Point Reyes and Muir Woods feeds are broken (return HTML, not RSS)
+	],
+	housing: [
+		// Housing data comes from Marin Open Data (Socrata) API, not RSS
+	],
+	satire: [
+		{
+			name: 'Marin Lately',
+			url: 'https://marinlately.com/feed/',
+			verification: 'satire',
+			confirmed: true
+		}
 	]
 };
 
-export const INTEL_SOURCES: IntelSource[] = [
-	{
-		name: 'CSIS',
-		url: 'https://www.csis.org/analysis/feed',
-		type: 'think-tank',
-		topics: ['defense', 'geopolitics']
-	},
-	{
-		name: 'Brookings',
-		url: 'https://www.brookings.edu/feed/',
-		type: 'think-tank',
-		topics: ['policy', 'geopolitics']
-	},
-	{
-		name: 'CFR',
-		url: 'https://www.cfr.org/rss.xml',
-		type: 'think-tank',
-		topics: ['foreign-policy']
-	},
-	{
-		name: 'Defense One',
-		url: 'https://www.defenseone.com/rss/all/',
-		type: 'defense',
-		topics: ['military', 'defense']
-	},
-	{
-		name: 'War on Rocks',
-		url: 'https://warontherocks.com/feed/',
-		type: 'defense',
-		topics: ['military', 'strategy']
-	},
-	{
-		name: 'Breaking Defense',
-		url: 'https://breakingdefense.com/feed/',
-		type: 'defense',
-		topics: ['military', 'defense']
-	},
-	{
-		name: 'The Drive War Zone',
-		url: 'https://www.thedrive.com/the-war-zone/feed',
-		type: 'defense',
-		topics: ['military']
-	},
-	{
-		name: 'The Diplomat',
-		url: 'https://thediplomat.com/feed/',
-		type: 'regional',
-		topics: ['asia-pacific'],
-		region: 'APAC'
-	},
-	{
-		name: 'Al-Monitor',
-		url: 'https://www.al-monitor.com/rss',
-		type: 'regional',
-		topics: ['middle-east'],
-		region: 'MENA'
-	},
-	{
-		name: 'Bellingcat',
-		url: 'https://www.bellingcat.com/feed/',
-		type: 'osint',
-		topics: ['investigation', 'osint']
-	},
-	{
-		name: 'CISA Alerts',
-		url: 'https://www.cisa.gov/uscert/ncas/alerts.xml',
-		type: 'cyber',
-		topics: ['cyber', 'security']
-	},
-	{
-		name: 'Krebs Security',
-		url: 'https://krebsonsecurity.com/feed/',
-		type: 'cyber',
-		topics: ['cyber', 'security']
+/**
+ * All feed URLs flattened for batch fetching (excludes broken feeds)
+ */
+export function getAllFeedUrls(): {
+	name: string;
+	url: string;
+	category: NewsCategory;
+	verification: VerificationLevel;
+}[] {
+	const all: {
+		name: string;
+		url: string;
+		category: NewsCategory;
+		verification: VerificationLevel;
+	}[] = [];
+	for (const [category, sources] of Object.entries(FEEDS)) {
+		for (const source of sources) {
+			if (source.broken) continue;
+			all.push({
+				name: source.name,
+				url: source.url,
+				category: category as NewsCategory,
+				verification: source.verification
+			});
+		}
 	}
-];
+	return all;
+}

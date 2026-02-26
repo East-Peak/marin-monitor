@@ -1,49 +1,55 @@
 /**
- * API Configuration
+ * API Configuration — endpoints, keys, and proxy setup for Marin Monitor
  */
 
 import { browser } from '$app/environment';
 
 /**
- * Finnhub API key
- * Get your free key at: https://finnhub.io/
- * Free tier: 60 calls/minute
+ * AirNow API key (free tier)
+ * Get your key at: https://docs.airnowapi.org/account/request/
  */
-export const FINNHUB_API_KEY = browser
-	? (import.meta.env?.VITE_FINNHUB_API_KEY ?? '')
-	: (process.env.VITE_FINNHUB_API_KEY ?? '');
-
-export const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
+export const AIRNOW_API_KEY = browser
+	? (import.meta.env?.VITE_AIRNOW_API_KEY ?? '')
+	: (process.env.VITE_AIRNOW_API_KEY ?? '');
 
 /**
- * FRED API key (St. Louis Fed)
- * Get your free key at: https://fred.stlouisfed.org/docs/api/api_key.html
- * Free tier: Unlimited requests
+ * Strava API credentials (free tier, rate limited)
+ * Create app at: https://www.strava.com/settings/api
  */
-export const FRED_API_KEY = browser
-	? (import.meta.env?.VITE_FRED_API_KEY ?? '')
-	: (process.env.VITE_FRED_API_KEY ?? '');
+export const STRAVA_CLIENT_ID = browser
+	? (import.meta.env?.VITE_STRAVA_CLIENT_ID ?? '')
+	: (process.env.VITE_STRAVA_CLIENT_ID ?? '');
 
-export const FRED_BASE_URL = 'https://api.stlouisfed.org/fred';
+export const STRAVA_CLIENT_SECRET = browser
+	? (import.meta.env?.VITE_STRAVA_CLIENT_SECRET ?? '')
+	: (process.env.VITE_STRAVA_CLIENT_SECRET ?? '');
+
+/**
+ * API base URLs
+ */
+export const API_URLS = {
+	nws: 'https://api.weather.gov',
+	noaaTides: 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter',
+	usgsEarthquakes: 'https://earthquake.usgs.gov/fdsnws/event/1/query',
+	airnow: 'https://www.airnowapi.org/aq/observation/latLong/current',
+	marinOpenData: 'https://data.marincounty.org/resource'
+} as const;
 
 /**
  * Check if we're in development mode
- * Uses import.meta.env which is available in both browser and test environments
  */
 const isDev = browser ? (import.meta.env?.DEV ?? false) : false;
 
 /**
  * CORS proxy URLs for external API requests
- * Primary: Custom Cloudflare Worker (faster, dedicated)
- * Fallback: corsproxy.io (public, may rate limit)
+ * TODO: Set up our own Cloudflare Worker proxy
  */
 export const CORS_PROXIES = {
-	primary: 'https://situation-monitor-proxy.seanthielen-e.workers.dev/?url=',
-	fallback: 'https://corsproxy.io/?url='
+	primary: 'https://corsproxy.io/?url=',
+	fallback: 'https://api.allorigins.win/raw?url='
 } as const;
 
-// Default export for backward compatibility
-export const CORS_PROXY_URL = CORS_PROXIES.fallback;
+export const CORS_PROXY_URL = CORS_PROXIES.primary;
 
 /**
  * Fetch with CORS proxy fallback
@@ -58,7 +64,6 @@ export async function fetchWithProxy(url: string): Promise<Response> {
 		if (response.ok) {
 			return response;
 		}
-		// If we get an error response, try fallback
 		logger.warn('API', `Primary proxy failed (${response.status}), trying fallback`);
 	} catch (error) {
 		logger.warn('API', 'Primary proxy error, trying fallback:', error);
@@ -80,9 +85,12 @@ export const API_DELAYS = {
  * Cache TTLs (ms)
  */
 export const CACHE_TTLS = {
-	weather: 10 * 60 * 1000, // 10 minutes
+	weather: 15 * 60 * 1000, // 15 minutes
 	news: 5 * 60 * 1000, // 5 minutes
-	markets: 60 * 1000, // 1 minute
+	tides: 60 * 60 * 1000, // 1 hour (predictions don't change often)
+	airQuality: 30 * 60 * 1000, // 30 minutes
+	earthquakes: 5 * 60 * 1000, // 5 minutes
+	housing: 6 * 60 * 60 * 1000, // 6 hours
 	default: 5 * 60 * 1000 // 5 minutes
 } as const;
 
@@ -96,7 +104,7 @@ export const DEBUG = {
 } as const;
 
 /**
- * Conditional logger - only logs in development
+ * Conditional logger — only logs in development
  */
 export const logger = {
 	log: (prefix: string, ...args: unknown[]) => {

@@ -4,48 +4,18 @@
 	import { SettingsModal, MonitorFormModal, OnboardingModal } from '$lib/components/modals';
 	import {
 		NewsPanel,
-		MarketsPanel,
-		HeatmapPanel,
-		CommoditiesPanel,
-		CryptoPanel,
-		MainCharPanel,
 		CorrelationPanel,
 		NarrativePanel,
-		MonitorsPanel,
-		MapPanel,
-		WhalePanel,
-		PolymarketPanel,
-		ContractsPanel,
-		LayoffsPanel,
-		IntelPanel,
-		SituationPanel,
-		WorldLeadersPanel,
-		PrinterPanel,
-		FedPanel
+		MonitorsPanel
 	} from '$lib/components/panels';
 	import {
 		news,
-		markets,
 		monitors,
 		settings,
 		refresh,
-		allNewsItems,
-		fedIndicators,
-		fedNews
+		allNewsItems
 	} from '$lib/stores';
-	import {
-		fetchAllNews,
-		fetchAllMarkets,
-		fetchPolymarket,
-		fetchWhaleTransactions,
-		fetchGovContracts,
-		fetchLayoffs,
-		fetchWorldLeaders,
-		fetchFedIndicators,
-		fetchFedNews
-	} from '$lib/api';
-	import type { Prediction, WhaleTransaction, Contract, Layoff } from '$lib/api';
-	import type { CustomMonitor, WorldLeader } from '$lib/types';
+	import type { CustomMonitor } from '$lib/types';
 	import type { PanelId } from '$lib/config';
 
 	// Modal state
@@ -54,91 +24,23 @@
 	let onboardingOpen = $state(false);
 	let editingMonitor = $state<CustomMonitor | null>(null);
 
-	// Misc panel data
-	let predictions = $state<Prediction[]>([]);
-	let whales = $state<WhaleTransaction[]>([]);
-	let contracts = $state<Contract[]>([]);
-	let layoffs = $state<Layoff[]>([]);
-	let leaders = $state<WorldLeader[]>([]);
-	let leadersLoading = $state(false);
-
-	// Data fetching
+	// TODO: Wire up data fetching when adapters are built
 	async function loadNews() {
-		// Set loading for all categories
-		const categories = ['politics', 'tech', 'finance', 'gov', 'ai', 'intel'] as const;
+		const categories = ['local', 'civic', 'safety', 'outdoors', 'housing', 'satire'] as const;
 		categories.forEach((cat) => news.setLoading(cat, true));
 
-		try {
-			const data = await fetchAllNews();
-			Object.entries(data).forEach(([category, items]) => {
-				news.setItems(category as keyof typeof data, items);
-			});
-		} catch (error) {
-			categories.forEach((cat) => news.setError(cat, String(error)));
-		}
+		// TODO: Replace with actual Marin RSS adapter calls
+		// For now, just clear loading state
+		setTimeout(() => {
+			categories.forEach((cat) => news.setLoading(cat, false));
+		}, 500);
 	}
 
-	async function loadMarkets() {
-		try {
-			const data = await fetchAllMarkets();
-			markets.setIndices(data.indices);
-			markets.setSectors(data.sectors);
-			markets.setCommodities(data.commodities);
-			markets.setCrypto(data.crypto);
-		} catch (error) {
-			console.error('Failed to load markets:', error);
-		}
-	}
-
-	async function loadMiscData() {
-		try {
-			const [predictionsData, whalesData, contractsData, layoffsData] = await Promise.all([
-				fetchPolymarket(),
-				fetchWhaleTransactions(),
-				fetchGovContracts(),
-				fetchLayoffs()
-			]);
-			predictions = predictionsData;
-			whales = whalesData;
-			contracts = contractsData;
-			layoffs = layoffsData;
-		} catch (error) {
-			console.error('Failed to load misc data:', error);
-		}
-	}
-
-	async function loadWorldLeaders() {
-		if (!isPanelVisible('leaders')) return;
-		leadersLoading = true;
-		try {
-			leaders = await fetchWorldLeaders();
-		} catch (error) {
-			console.error('Failed to load world leaders:', error);
-		} finally {
-			leadersLoading = false;
-		}
-	}
-
-	async function loadFedData() {
-		if (!isPanelVisible('fed')) return;
-		fedIndicators.setLoading(true);
-		fedNews.setLoading(true);
-		try {
-			const [indicatorsData, newsData] = await Promise.all([fetchFedIndicators(), fetchFedNews()]);
-			fedIndicators.setData(indicatorsData);
-			fedNews.setItems(newsData);
-		} catch (error) {
-			console.error('Failed to load Fed data:', error);
-			fedIndicators.setError(String(error));
-			fedNews.setError(String(error));
-		}
-	}
-
-	// Refresh handlers
+	// Refresh handler
 	async function handleRefresh() {
 		refresh.startRefresh();
 		try {
-			await Promise.all([loadNews(), loadMarkets()]);
+			await loadNews();
 			refresh.endRefresh();
 		} catch (error) {
 			refresh.endRefresh([String(error)]);
@@ -173,7 +75,6 @@
 	function handleSelectPreset(presetId: string) {
 		settings.applyPreset(presetId);
 		onboardingOpen = false;
-		// Refresh data after applying preset
 		handleRefresh();
 	}
 
@@ -186,22 +87,14 @@
 
 	// Initial load
 	onMount(() => {
-		// Check if first visit
 		if (!settings.isOnboardingComplete()) {
 			onboardingOpen = true;
 		}
 
-		// Load initial data and track as refresh
 		async function initialLoad() {
 			refresh.startRefresh();
 			try {
-				await Promise.all([
-					loadNews(),
-					loadMarkets(),
-					loadMiscData(),
-					loadWorldLeaders(),
-					loadFedData()
-				]);
+				await loadNews();
 				refresh.endRefresh();
 			} catch (error) {
 				refresh.endRefresh([String(error)]);
@@ -218,7 +111,7 @@
 
 <svelte:head>
 	<title>Marin Monitor</title>
-	<meta name="description" content="Real-time global situation monitoring dashboard" />
+	<meta name="description" content="Local situational awareness for Marin County" />
 </svelte:head>
 
 <div class="app">
@@ -226,76 +119,75 @@
 
 	<main class="main-content">
 		<Dashboard>
-			<!-- Map Panel - Full width -->
+			<!-- Map Panel - Full width (TODO: Build MarinMapPanel) -->
 			{#if isPanelVisible('map')}
 				<div class="panel-slot map-slot">
-					<MapPanel monitors={$monitors.monitors} />
+					<div class="placeholder-panel">
+						<h3>Marin Map</h3>
+						<p>Map panel coming soon — D3 + county boundary + town markers</p>
+					</div>
 				</div>
 			{/if}
 
-			<!-- News Panels -->
-			{#if isPanelVisible('politics')}
+			<!-- Pulse Panel (TODO: Build PulsePanel) -->
+			{#if isPanelVisible('pulse')}
 				<div class="panel-slot">
-					<NewsPanel category="politics" panelId="politics" title="Politics" />
+					<div class="placeholder-panel">
+						<h3>Pulse</h3>
+						<p>At-a-glance stats — stories, AQI, weather, tides</p>
+					</div>
 				</div>
 			{/if}
 
-			{#if isPanelVisible('tech')}
+			<!-- Local Wire -->
+			{#if isPanelVisible('local-wire')}
 				<div class="panel-slot">
-					<NewsPanel category="tech" panelId="tech" title="Tech" />
+					<NewsPanel category="local" panelId="local-wire" title="Local Wire" />
 				</div>
 			{/if}
 
-			{#if isPanelVisible('finance')}
+			<!-- Safety -->
+			{#if isPanelVisible('safety')}
 				<div class="panel-slot">
-					<NewsPanel category="finance" panelId="finance" title="Finance" />
+					<NewsPanel category="safety" panelId="safety" title="Safety" />
 				</div>
 			{/if}
 
-			{#if isPanelVisible('gov')}
+			<!-- Weather & Tides (TODO: Build WeatherPanel) -->
+			{#if isPanelVisible('weather')}
 				<div class="panel-slot">
-					<NewsPanel category="gov" panelId="gov" title="Government" />
+					<div class="placeholder-panel">
+						<h3>Weather & Tides</h3>
+						<p>NWS forecast, AQI, NOAA tides</p>
+					</div>
 				</div>
 			{/if}
 
-			{#if isPanelVisible('ai')}
+			<!-- Civic -->
+			{#if isPanelVisible('civic')}
 				<div class="panel-slot">
-					<NewsPanel category="ai" panelId="ai" title="AI" />
+					<NewsPanel category="civic" panelId="civic" title="Civic" />
 				</div>
 			{/if}
 
-			<!-- Markets Panels -->
-			{#if isPanelVisible('markets')}
+			<!-- Outdoors -->
+			{#if isPanelVisible('outdoors')}
 				<div class="panel-slot">
-					<MarketsPanel />
+					<NewsPanel category="outdoors" panelId="outdoors" title="Outdoors" />
 				</div>
 			{/if}
 
-			{#if isPanelVisible('heatmap')}
+			<!-- Housing (TODO: Build HousingPanel) -->
+			{#if isPanelVisible('housing')}
 				<div class="panel-slot">
-					<HeatmapPanel />
-				</div>
-			{/if}
-
-			{#if isPanelVisible('commodities')}
-				<div class="panel-slot">
-					<CommoditiesPanel />
-				</div>
-			{/if}
-
-			{#if isPanelVisible('crypto')}
-				<div class="panel-slot">
-					<CryptoPanel />
+					<div class="placeholder-panel">
+						<h3>Housing</h3>
+						<p>Recent transactions, market activity</p>
+					</div>
 				</div>
 			{/if}
 
 			<!-- Analysis Panels -->
-			{#if isPanelVisible('mainchar')}
-				<div class="panel-slot">
-					<MainCharPanel />
-				</div>
-			{/if}
-
 			{#if isPanelVisible('correlation')}
 				<div class="panel-slot">
 					<CorrelationPanel news={$allNewsItems} />
@@ -308,127 +200,14 @@
 				</div>
 			{/if}
 
-			<!-- Intel Panel -->
-			{#if isPanelVisible('intel')}
-				<div class="panel-slot">
-					<IntelPanel />
+			<!-- Satire / The Vibes (TODO: Style with dashed border) -->
+			{#if isPanelVisible('satire')}
+				<div class="panel-slot vibes-slot">
+					<NewsPanel category="satire" panelId="satire" title="The Vibes" />
 				</div>
 			{/if}
 
-			<!-- Fed Panel -->
-			{#if isPanelVisible('fed')}
-				<div class="panel-slot">
-					<FedPanel />
-				</div>
-			{/if}
-
-			<!-- World Leaders Panel -->
-			{#if isPanelVisible('leaders')}
-				<div class="panel-slot">
-					<WorldLeadersPanel {leaders} loading={leadersLoading} />
-				</div>
-			{/if}
-
-			<!-- Situation Panels -->
-			{#if isPanelVisible('venezuela')}
-				<div class="panel-slot">
-					<SituationPanel
-						panelId="venezuela"
-						config={{
-							title: 'Venezuela Watch',
-							subtitle: 'Humanitarian crisis monitoring',
-							criticalKeywords: ['maduro', 'caracas', 'venezuela', 'guaido']
-						}}
-						news={$allNewsItems.filter(
-							(n) =>
-								n.title.toLowerCase().includes('venezuela') ||
-								n.title.toLowerCase().includes('maduro')
-						)}
-					/>
-				</div>
-			{/if}
-
-			{#if isPanelVisible('greenland')}
-				<div class="panel-slot">
-					<SituationPanel
-						panelId="greenland"
-						config={{
-							title: 'Greenland Watch',
-							subtitle: 'Arctic geopolitics monitoring',
-							criticalKeywords: ['greenland', 'arctic', 'nuuk', 'denmark']
-						}}
-						news={$allNewsItems.filter(
-							(n) =>
-								n.title.toLowerCase().includes('greenland') ||
-								n.title.toLowerCase().includes('arctic')
-						)}
-					/>
-				</div>
-			{/if}
-
-			{#if isPanelVisible('iran')}
-				<div class="panel-slot">
-					<SituationPanel
-						panelId="iran"
-						config={{
-							title: 'Iran Crisis',
-							subtitle: 'Revolution protests, regime instability & nuclear program',
-							criticalKeywords: [
-								'protest',
-								'uprising',
-								'revolution',
-								'crackdown',
-								'killed',
-								'nuclear',
-								'strike',
-								'attack',
-								'irgc',
-								'khamenei'
-							]
-						}}
-						news={$allNewsItems.filter(
-							(n) =>
-								n.title.toLowerCase().includes('iran') ||
-								n.title.toLowerCase().includes('tehran') ||
-								n.title.toLowerCase().includes('irgc')
-						)}
-					/>
-				</div>
-			{/if}
-
-			<!-- Placeholder panels for additional data sources -->
-			{#if isPanelVisible('whales')}
-				<div class="panel-slot">
-					<WhalePanel {whales} />
-				</div>
-			{/if}
-
-			{#if isPanelVisible('polymarket')}
-				<div class="panel-slot">
-					<PolymarketPanel {predictions} />
-				</div>
-			{/if}
-
-			{#if isPanelVisible('contracts')}
-				<div class="panel-slot">
-					<ContractsPanel {contracts} />
-				</div>
-			{/if}
-
-			{#if isPanelVisible('layoffs')}
-				<div class="panel-slot">
-					<LayoffsPanel {layoffs} />
-				</div>
-			{/if}
-
-			<!-- Money Printer Panel -->
-			{#if isPanelVisible('printer')}
-				<div class="panel-slot">
-					<PrinterPanel />
-				</div>
-			{/if}
-
-			<!-- Custom Monitors (always last) -->
+			<!-- Custom Monitors -->
 			{#if isPanelVisible('monitors')}
 				<div class="panel-slot">
 					<MonitorsPanel
@@ -475,6 +254,31 @@
 	.map-slot {
 		column-span: all;
 		margin-bottom: 0.5rem;
+	}
+
+	.vibes-slot :global(.panel) {
+		border-style: dashed;
+		border-color: #ec4899;
+	}
+
+	.placeholder-panel {
+		background: var(--bg-secondary, #1a1a2e);
+		border: 1px dashed var(--border, #333);
+		border-radius: 8px;
+		padding: 2rem;
+		text-align: center;
+		color: var(--text-secondary, #888);
+	}
+
+	.placeholder-panel h3 {
+		margin: 0 0 0.5rem;
+		color: var(--text-primary, #ccc);
+		font-size: 0.85rem;
+	}
+
+	.placeholder-panel p {
+		margin: 0;
+		font-size: 0.7rem;
 	}
 
 	@media (max-width: 768px) {

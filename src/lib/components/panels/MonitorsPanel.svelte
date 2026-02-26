@@ -101,9 +101,9 @@
 							{/if}
 						</div>
 
-						{#if monitor.location}
+						{#if monitor.town}
 							<div class="monitor-location">
-								📍 {monitor.location.name}
+								{monitor.town}
 							</div>
 						{/if}
 

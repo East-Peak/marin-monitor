@@ -46,7 +46,7 @@ export class ServiceClient {
 	private readonly debug: boolean;
 
 	constructor(options: ServiceClientOptions = {}) {
-		this.cache = new CacheManager({ prefix: 'sm_', debug: options.debug });
+		this.cache = new CacheManager({ prefix: 'mm_', debug: options.debug });
 		this.circuitBreakers = new CircuitBreakerRegistry();
 		this.deduplicator = new RequestDeduplicator();
 		this.debug = options.debug || false;

@@ -20,27 +20,30 @@ describe('Correlation Engine', () => {
 		const news: NewsItem[] = [
 			{
 				id: '1',
-				title: 'Ukraine announces new policy',
-				source: 'BBC',
+				title: 'Wildfire threatens West Marin homes',
+				source: 'Marin Independent Journal',
 				link: 'a',
 				timestamp: Date.now(),
-				category: 'politics'
+				category: 'safety',
+				verification: 'local_media'
 			},
 			{
 				id: '2',
-				title: 'Ukraine military update',
-				source: 'CNN',
+				title: 'Red flag warning issued for Marin hills',
+				source: 'NWS',
 				link: 'b',
 				timestamp: Date.now(),
-				category: 'politics'
+				category: 'safety',
+				verification: 'official'
 			},
 			{
 				id: '3',
-				title: 'Zelensky addresses nation',
-				source: 'NYT',
+				title: 'PSPS power shutoff planned for fire season',
+				source: 'Patch',
 				link: 'c',
 				timestamp: Date.now(),
-				category: 'politics'
+				category: 'safety',
+				verification: 'local_media'
 			}
 		];
 
@@ -49,91 +52,99 @@ describe('Correlation Engine', () => {
 		expect(results).not.toBeNull();
 		expect(results!.emergingPatterns.length).toBeGreaterThan(0);
 
-		const ukrainePattern = results!.emergingPatterns.find((p) => p.id === 'russia-ukraine');
-		expect(ukrainePattern).toBeDefined();
-		expect(ukrainePattern!.count).toBeGreaterThanOrEqual(3);
-		expect(ukrainePattern!.level).toBe('emerging');
+		const firePattern = results!.emergingPatterns.find((p) => p.id === 'fire-season');
+		expect(firePattern).toBeDefined();
+		expect(firePattern!.count).toBeGreaterThanOrEqual(3);
+		expect(firePattern!.level).toBe('emerging');
 	});
 
 	it('should categorize pattern levels correctly', () => {
-		// Create many Ukraine-related articles to trigger 'high' level
+		// Create many fire-related articles to trigger 'high' level
 		const news: NewsItem[] = Array.from({ length: 10 }, (_, i) => ({
 			id: String(i),
-			title: `Ukraine news ${i}`,
+			title: `Wildfire update ${i}`,
 			source: `Source${i}`,
 			link: `link${i}`,
 			timestamp: Date.now(),
-			category: 'politics' as const
+			category: 'safety' as const,
+			verification: 'local_media' as const
 		}));
 
 		const results = analyzeCorrelations(news);
-		const ukrainePattern = results?.emergingPatterns.find((p) => p.id === 'russia-ukraine');
+		const firePattern = results?.emergingPatterns.find((p) => p.id === 'fire-season');
 
-		expect(ukrainePattern?.level).toBe('high');
+		expect(firePattern?.level).toBe('high');
 	});
 
 	it('should track cross-source correlations', () => {
 		const news: NewsItem[] = [
 			{
 				id: '1',
-				title: 'Tariff news today',
-				source: 'BBC',
+				title: 'Housing prices hit new high in Marin',
+				source: 'Marin Independent Journal',
 				link: 'a',
 				timestamp: Date.now(),
-				category: 'finance'
+				category: 'housing',
+				verification: 'local_media'
 			},
 			{
 				id: '2',
-				title: 'Trade war escalates',
-				source: 'CNN',
+				title: 'Home sale volume drops in county',
+				source: 'SF Chronicle',
 				link: 'b',
 				timestamp: Date.now(),
-				category: 'finance'
+				category: 'housing',
+				verification: 'local_media'
 			},
 			{
 				id: '3',
-				title: 'Import tax increases',
-				source: 'NYT',
+				title: 'Real estate market cools in Marin',
+				source: 'Patch',
 				link: 'c',
 				timestamp: Date.now(),
-				category: 'finance'
+				category: 'housing',
+				verification: 'local_media'
 			},
 			{
 				id: '4',
-				title: 'Customs duty update',
-				source: 'WSJ',
+				title: 'Median price rises for Marin listings',
+				source: 'Marin Magazine',
 				link: 'd',
 				timestamp: Date.now(),
-				category: 'finance'
+				category: 'housing',
+				verification: 'community'
 			}
 		];
 
 		const results = analyzeCorrelations(news);
-		const tariffCorrelation = results?.crossSourceCorrelations.find((c) => c.id === 'tariffs');
+		const housingCorrelation = results?.crossSourceCorrelations.find(
+			(c) => c.id === 'housing-market'
+		);
 
-		expect(tariffCorrelation).toBeDefined();
-		expect(tariffCorrelation!.sourceCount).toBe(4);
-		expect(tariffCorrelation!.sources).toContain('BBC');
+		expect(housingCorrelation).toBeDefined();
+		expect(housingCorrelation!.sourceCount).toBe(4);
+		expect(housingCorrelation!.sources).toContain('Marin Independent Journal');
 	});
 
 	it('should generate predictive signals for high scores', () => {
-		// Create many tariff articles to generate predictive signals
+		// Create many water-supply articles to generate predictive signals
 		const news: NewsItem[] = Array.from({ length: 8 }, (_, i) => ({
 			id: String(i),
-			title: `Tariff policy update ${i}`,
+			title: `Drought restrictions update ${i}`,
 			source: `Source${i % 4}`,
 			link: `link${i}`,
 			timestamp: Date.now(),
-			category: 'finance' as const
+			category: 'local' as const,
+			verification: 'local_media' as const
 		}));
 
 		const results = analyzeCorrelations(news);
 
 		expect(results?.predictiveSignals.length).toBeGreaterThan(0);
 
-		const tariffSignal = results?.predictiveSignals.find((s) => s.id === 'tariffs');
-		if (tariffSignal) {
-			expect(tariffSignal.prediction).toContain('volatility');
+		const waterSignal = results?.predictiveSignals.find((s) => s.id === 'water-supply');
+		if (waterSignal) {
+			expect(waterSignal.prediction).toContain('Water supply');
 		}
 	});
 
@@ -141,36 +152,39 @@ describe('Correlation Engine', () => {
 		const news: NewsItem[] = [
 			{
 				id: '1',
-				title: 'Gaza conflict escalates',
-				source: 'BBC',
-				link: 'https://bbc.com/1',
+				title: 'Mt. Tam trail closure due to storm damage',
+				source: 'Marin Independent Journal',
+				link: 'https://marinij.com/1',
 				timestamp: Date.now(),
-				category: 'politics'
+				category: 'outdoors',
+				verification: 'local_media'
 			},
 			{
 				id: '2',
-				title: 'Hamas negotiations',
-				source: 'CNN',
-				link: 'https://cnn.com/2',
+				title: 'Point Reyes park closed for restoration',
+				source: 'Point Reyes Light',
+				link: 'https://ptreyeslight.com/2',
 				timestamp: Date.now(),
-				category: 'politics'
+				category: 'outdoors',
+				verification: 'local_media'
 			},
 			{
 				id: '3',
-				title: 'Israel Gaza update',
-				source: 'NYT',
-				link: 'https://nyt.com/3',
+				title: 'Muir Woods access restricted this weekend',
+				source: 'Patch',
+				link: 'https://patch.com/3',
 				timestamp: Date.now(),
-				category: 'politics'
+				category: 'outdoors',
+				verification: 'local_media'
 			}
 		];
 
 		const results = analyzeCorrelations(news);
-		const gazaPattern = results?.emergingPatterns.find((p) => p.id === 'israel-gaza');
+		const trailsPattern = results?.emergingPatterns.find((p) => p.id === 'trails-parks');
 
-		expect(gazaPattern?.headlines.length).toBeGreaterThan(0);
-		expect(gazaPattern?.headlines[0].link).toBeDefined();
-		expect(gazaPattern?.headlines[0].source).toBeDefined();
+		expect(trailsPattern?.headlines.length).toBeGreaterThan(0);
+		expect(trailsPattern?.headlines[0].link).toBeDefined();
+		expect(trailsPattern?.headlines[0].source).toBeDefined();
 	});
 
 	it('should return correct summary', () => {
@@ -179,27 +193,30 @@ describe('Correlation Engine', () => {
 		const news: NewsItem[] = [
 			{
 				id: '1',
-				title: 'Ukraine update',
-				source: 'BBC',
+				title: 'Wildfire update for Marin County',
+				source: 'NWS',
 				link: 'a',
 				timestamp: Date.now(),
-				category: 'politics'
+				category: 'safety',
+				verification: 'official'
 			},
 			{
 				id: '2',
-				title: 'Ukraine news',
-				source: 'CNN',
+				title: 'Fire season prep underway',
+				source: 'Marin Independent Journal',
 				link: 'b',
 				timestamp: Date.now(),
-				category: 'politics'
+				category: 'safety',
+				verification: 'local_media'
 			},
 			{
 				id: '3',
-				title: 'Zelensky speaks',
-				source: 'NYT',
+				title: 'Evacuation routes updated for fire season',
+				source: 'Marin County',
 				link: 'c',
 				timestamp: Date.now(),
-				category: 'politics'
+				category: 'safety',
+				verification: 'official'
 			}
 		];
 

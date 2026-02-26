@@ -1,69 +1,58 @@
 /**
- * Panel configuration
+ * Panel configuration — defines the dashboard panels for Marin Monitor
  */
 
 export interface PanelConfig {
 	name: string;
 	priority: 1 | 2 | 3;
+	description?: string;
 }
 
 export type PanelId =
 	| 'map'
-	| 'politics'
-	| 'tech'
-	| 'finance'
-	| 'gov'
-	| 'heatmap'
-	| 'markets'
+	| 'local-wire'
+	| 'pulse'
+	| 'safety'
+	| 'weather'
+	| 'outdoors'
+	| 'civic'
+	| 'housing'
 	| 'monitors'
-	| 'commodities'
-	| 'crypto'
-	| 'polymarket'
-	| 'whales'
-	| 'mainchar'
-	| 'printer'
-	| 'contracts'
-	| 'ai'
-	| 'layoffs'
-	| 'venezuela'
-	| 'greenland'
-	| 'iran'
-	| 'leaders'
-	| 'intel'
 	| 'correlation'
 	| 'narrative'
-	| 'fed';
+	| 'satire';
 
 export const PANELS: Record<PanelId, PanelConfig> = {
-	map: { name: 'Global Map', priority: 1 },
-	politics: { name: 'World / Geopolitical', priority: 1 },
-	tech: { name: 'Technology / AI', priority: 1 },
-	finance: { name: 'Financial', priority: 1 },
-	gov: { name: 'Government / Policy', priority: 2 },
-	heatmap: { name: 'Sector Heatmap', priority: 1 },
-	markets: { name: 'Markets', priority: 1 },
-	monitors: { name: 'My Monitors', priority: 1 },
-	commodities: { name: 'Commodities / VIX', priority: 2 },
-	crypto: { name: 'Crypto', priority: 2 },
-	polymarket: { name: 'Polymarket', priority: 2 },
-	whales: { name: 'Whale Watch', priority: 3 },
-	mainchar: { name: 'Main Character', priority: 2 },
-	printer: { name: 'Money Printer', priority: 2 },
-	contracts: { name: 'Gov Contracts', priority: 3 },
-	ai: { name: 'AI Arms Race', priority: 3 },
-	layoffs: { name: 'Layoffs Tracker', priority: 3 },
-	venezuela: { name: 'Venezuela Situation', priority: 2 },
-	greenland: { name: 'Greenland Situation', priority: 2 },
-	iran: { name: 'Iran Situation', priority: 2 },
-	leaders: { name: 'World Leaders', priority: 1 },
-	intel: { name: 'Intel Feed', priority: 2 },
-	correlation: { name: 'Correlation Engine', priority: 1 },
-	narrative: { name: 'Narrative Tracker', priority: 1 },
-	fed: { name: 'Federal Reserve', priority: 1 }
+	map: { name: 'Marin Map', priority: 1, description: 'County map with layered data' },
+	'local-wire': { name: 'Local Wire', priority: 1, description: 'Scrolling feed from local news sources' },
+	pulse: { name: 'Pulse', priority: 1, description: 'At-a-glance stats: stories, AQI, weather, tides' },
+	safety: { name: 'Safety', priority: 1, description: 'Fire alerts, road closures, emergency notices' },
+	weather: { name: 'Weather & Tides', priority: 2, description: 'NWS forecast, AQI, NOAA tides' },
+	outdoors: { name: 'Outdoors', priority: 2, description: 'Trail closures, park alerts, Strava KOMs' },
+	civic: { name: 'Civic', priority: 2, description: 'County/city announcements, meetings, permits' },
+	housing: { name: 'Housing', priority: 3, description: 'Recent transactions, market activity' },
+	monitors: { name: 'My Monitors', priority: 2, description: 'Custom keyword monitors' },
+	correlation: { name: 'Connections', priority: 3, description: 'Cross-source topic correlations' },
+	narrative: { name: 'Threads', priority: 3, description: 'Emerging local narrative tracking' },
+	satire: { name: 'The Vibes', priority: 3, description: 'Marin Lately unconfirmed reports' }
 };
 
 export const NON_DRAGGABLE_PANELS: PanelId[] = ['map'];
 
-export const MAP_ZOOM_MIN = 1;
-export const MAP_ZOOM_MAX = 4;
-export const MAP_ZOOM_STEP = 0.5;
+/**
+ * Default panel display order
+ */
+export const DEFAULT_PANEL_ORDER: PanelId[] = [
+	'map',
+	'pulse',
+	'local-wire',
+	'safety',
+	'weather',
+	'civic',
+	'outdoors',
+	'housing',
+	'monitors',
+	'correlation',
+	'narrative',
+	'satire'
+];

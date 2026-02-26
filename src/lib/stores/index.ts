@@ -26,12 +26,12 @@ export {
 // News store
 export {
 	news,
-	politicsNews,
-	techNews,
-	financeNews,
-	govNews,
-	aiNews,
-	intelNews,
+	localNews,
+	civicNews,
+	safetyNews,
+	outdoorsNews,
+	housingNews,
+	satireNews,
 	allNewsItems,
 	alerts,
 	isLoading as isNewsLoading,
@@ -39,19 +39,6 @@ export {
 	type CategoryState,
 	type NewsState
 } from './news';
-
-// Markets store
-export {
-	markets,
-	indices,
-	sectors,
-	commodities,
-	crypto,
-	isMarketsLoading,
-	marketsLastUpdated,
-	vix,
-	type MarketsState
-} from './markets';
 
 // Refresh store
 export {
@@ -67,13 +54,3 @@ export {
 	type StageConfig,
 	type RefreshState
 } from './refresh';
-
-// Fed store
-export {
-	fedIndicators,
-	fedNews,
-	isFedLoading,
-	fedVideos,
-	type FedIndicatorsState,
-	type FedNewsState
-} from './fed';
