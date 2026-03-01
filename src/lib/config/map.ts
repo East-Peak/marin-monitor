@@ -9,8 +9,8 @@ import { MARIN_CENTER, MARIN_BOUNDS } from './towns';
  */
 export const MAP_DEFAULT = {
 	center: MARIN_CENTER,
-	zoom: 11,
-	minZoom: 9,
+	zoom: 10.3,
+	minZoom: 5,
 	maxZoom: 16
 } as const;
 
@@ -88,13 +88,17 @@ export const LANDMARKS: Landmark[] = [
 	{ name: 'Point Reyes Lighthouse', lat: 37.9953, lon: -123.0247, type: 'park' },
 	{ name: 'Muir Woods', lat: 37.8912, lon: -122.5714, type: 'park' },
 	{ name: 'Larkspur Ferry Terminal', lat: 37.9453, lon: -122.5102, type: 'transit' },
-	{ name: 'Sausalito Ferry Terminal', lat: 37.8590, lon: -122.4850, type: 'transit' },
-	{ name: 'Tomales Bay', lat: 38.1600, lon: -122.8800, type: 'water' },
-	{ name: 'Bolinas Lagoon', lat: 37.9130, lon: -122.6820, type: 'water' },
-	{ name: 'Richardson Bay', lat: 37.8780, lon: -122.5000, type: 'water' },
+	{ name: 'Sausalito Ferry Terminal', lat: 37.859, lon: -122.485, type: 'transit' },
+	{ name: 'Tomales Bay', lat: 38.16, lon: -122.88, type: 'water' },
+	{ name: 'Bolinas Lagoon', lat: 37.913, lon: -122.682, type: 'water' },
+	{ name: 'Richardson Bay', lat: 37.878, lon: -122.5, type: 'water' },
 	{ name: 'China Camp', lat: 38.0035, lon: -122.4897, type: 'park' },
-	{ name: 'SMART Train — San Rafael', lat: 37.9745, lon: -122.5185, type: 'transit' },
-	{ name: 'SMART Train — Novato', lat: 38.1044, lon: -122.5599, type: 'transit' }
+	{ name: 'SMART Train — Larkspur', lat: 37.9477, lon: -122.5126, type: 'transit' },
+	{ name: 'SMART Train — San Rafael', lat: 37.9711, lon: -122.5227, type: 'transit' },
+	{ name: 'SMART Train — Marin Civic Center', lat: 38.0013, lon: -122.5376, type: 'transit' },
+	{ name: 'SMART Train — Novato Hamilton', lat: 38.0565, lon: -122.5240, type: 'transit' },
+	{ name: 'SMART Train — Novato Downtown', lat: 38.1088, lon: -122.5797, type: 'transit' },
+	{ name: 'SMART Train — Novato San Marin', lat: 38.1206, lon: -122.5663, type: 'transit' }
 ];
 
 /**

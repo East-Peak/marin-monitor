@@ -111,7 +111,7 @@
 						<div class="predictive-item">
 							<div class="predictive-pattern">{signal.prediction}</div>
 							<div class="predictive-confidence">
-								Confidence: {Math.round(signal.confidence * 100)}%
+								Heuristic confidence: {signal.confidence}%
 							</div>
 						</div>
 					{/each}

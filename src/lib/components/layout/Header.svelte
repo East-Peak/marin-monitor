@@ -16,7 +16,7 @@
 
 <header class="header">
 	<div class="header-left">
-		<h1 class="logo">SITUATION MONITOR</h1>
+		<h1 class="logo">MARIN MONITOR</h1>
 	</div>
 
 	<div class="header-center">

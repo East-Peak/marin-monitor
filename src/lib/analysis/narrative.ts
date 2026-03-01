@@ -54,7 +54,9 @@ function formatNarrativeName(id: string): string {
 /**
  * Classify source type
  */
-function classifySource(source: string): 'official' | 'local_media' | 'community' | 'satire' | null {
+function classifySource(
+	source: string
+): 'official' | 'local_media' | 'community' | 'satire' | null {
 	const lowerSource = source.toLowerCase();
 
 	for (const s of SOURCE_TYPES.official) {

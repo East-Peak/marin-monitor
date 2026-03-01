@@ -8,6 +8,12 @@
 		safetyNews,
 		outdoorsNews,
 		housingNews,
+		cyclingNews,
+		enduranceNews,
+		humanPoweredNews,
+		showsNews,
+		prepNews,
+		farmNews,
 		satireNews
 	} from '$lib/stores';
 
@@ -15,9 +21,10 @@
 		category: NewsCategory;
 		panelId: PanelId;
 		title: string;
+		filterTown?: string | null;
 	}
 
-	let { category, panelId, title }: Props = $props();
+	let { category, panelId, title, filterTown = null }: Props = $props();
 
 	// Get the appropriate derived store based on category
 	const categoryStores = {
@@ -26,17 +33,31 @@
 		safety: safetyNews,
 		outdoors: outdoorsNews,
 		housing: housingNews,
+		cycling: cyclingNews,
+		endurance: enduranceNews,
+		shows: showsNews,
+		prep: prepNews,
+		farm: farmNews,
 		satire: satireNews
 	};
 
-	const categoryStore = $derived(categoryStores[category]);
-	const items = $derived($categoryStore.items);
+	function resolveCategoryStore() {
+		if (panelId === 'cycling' && category === 'cycling') {
+			return humanPoweredNews;
+		}
+		return categoryStores[category];
+	}
+
+	const categoryStore = $derived(resolveCategoryStore());
+	const categoryVariant = $derived(category === 'local' ? 'local' : category);
+	const allItems = $derived($categoryStore.items);
+	const items = $derived(filterTown ? allItems.filter((i) => i.townSlug === filterTown) : allItems);
 	const loading = $derived($categoryStore.loading);
 	const error = $derived($categoryStore.error);
 	const count = $derived(items.length);
 </script>
 
-<Panel id={panelId} {title} {count} {loading} {error}>
+<Panel id={panelId} {title} variant={categoryVariant} {count} {loading} {error}>
 	{#if items.length === 0 && !loading && !error}
 		<div class="empty-state">No news available</div>
 	{:else}

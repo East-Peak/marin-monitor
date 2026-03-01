@@ -14,9 +14,14 @@ export type PanelId =
 	| 'pulse'
 	| 'safety'
 	| 'weather'
+	| 'cameras'
 	| 'outdoors'
 	| 'civic'
 	| 'housing'
+	| 'cycling'
+	| 'shows'
+	| 'prep'
+	| 'farm'
 	| 'monitors'
 	| 'correlation'
 	| 'narrative'
@@ -24,17 +29,62 @@ export type PanelId =
 
 export const PANELS: Record<PanelId, PanelConfig> = {
 	map: { name: 'Marin Map', priority: 1, description: 'County map with layered data' },
-	'local-wire': { name: 'Local Wire', priority: 1, description: 'Scrolling feed from local news sources' },
-	pulse: { name: 'Pulse', priority: 1, description: 'At-a-glance stats: stories, AQI, weather, tides' },
-	safety: { name: 'Safety', priority: 1, description: 'Fire alerts, road closures, emergency notices' },
+	'local-wire': {
+		name: 'Local Wire',
+		priority: 1,
+		description: 'Scrolling feed from local news sources'
+	},
+	pulse: {
+		name: 'Pulse',
+		priority: 1,
+		description: 'At-a-glance stats: stories, AQI, weather, tides'
+	},
+	safety: {
+		name: 'Crime & Safety',
+		priority: 1,
+		description: 'Fire alerts, road closures, emergency notices'
+	},
 	weather: { name: 'Weather & Tides', priority: 2, description: 'NWS forecast, AQI, NOAA tides' },
-	outdoors: { name: 'Outdoors', priority: 2, description: 'Trail closures, park alerts, Strava KOMs' },
-	civic: { name: 'Civic', priority: 2, description: 'County/city announcements, meetings, permits' },
+	cameras: {
+		name: 'Cameras',
+		priority: 2,
+		description: 'Live webcams: 101 freeway, Mt. Tam, Golden Gate Bridge'
+	},
+	outdoors: {
+		name: 'Outdoors & Lifestyle',
+		priority: 2,
+		description: 'Trail closures, park alerts, fishing, and wildlife'
+	},
+	civic: {
+		name: 'Civic',
+		priority: 2,
+		description: 'County/city announcements, meetings, permits'
+	},
 	housing: { name: 'Housing', priority: 3, description: 'Recent transactions, market activity' },
+	cycling: {
+		name: 'Cycling & Endurance',
+		priority: 3,
+		description: 'Race calendars, results, trail events, and local human-powered competition'
+	},
+	shows: {
+		name: 'Shows & Events',
+		priority: 3,
+		description: 'Live music, venue calendars, and public community happenings'
+	},
+	prep: {
+		name: 'Sports & Prep',
+		priority: 3,
+		description: 'High school, club, and local competitive sports coverage'
+	},
+	farm: {
+		name: 'Farm & Market',
+		priority: 3,
+		description: 'Farmers markets, cheese, produce, and West Marin food culture'
+	},
 	monitors: { name: 'My Monitors', priority: 2, description: 'Custom keyword monitors' },
 	correlation: { name: 'Connections', priority: 3, description: 'Cross-source topic correlations' },
 	narrative: { name: 'Threads', priority: 3, description: 'Emerging local narrative tracking' },
-	satire: { name: 'The Vibes', priority: 3, description: 'Marin Lately unconfirmed reports' }
+	satire: { name: 'Marin Lately (satire)', priority: 3, description: 'Marin Lately unconfirmed reports' }
 };
 
 export const NON_DRAGGABLE_PANELS: PanelId[] = ['map'];
@@ -48,9 +98,14 @@ export const DEFAULT_PANEL_ORDER: PanelId[] = [
 	'local-wire',
 	'safety',
 	'weather',
+	'cameras',
 	'civic',
 	'outdoors',
 	'housing',
+	'cycling',
+	'shows',
+	'prep',
+	'farm',
 	'monitors',
 	'correlation',
 	'narrative',

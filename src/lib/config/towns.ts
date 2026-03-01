@@ -28,8 +28,8 @@ export const MARIN_TOWNS: Town[] = [
 	{
 		name: 'Mill Valley',
 		slug: 'mill-valley',
-		lat: 37.9060,
-		lon: -122.5450,
+		lat: 37.906,
+		lon: -122.545,
 		pop: 14500,
 		incorporated: true,
 		zips: ['94941', '94942']
@@ -92,7 +92,7 @@ export const MARIN_TOWNS: Town[] = [
 		name: 'Ross',
 		slug: 'ross',
 		lat: 37.9624,
-		lon: -122.5550,
+		lon: -122.555,
 		pop: 2500,
 		incorporated: true,
 		zips: ['94957']
@@ -192,7 +192,7 @@ export const MARIN_TOWNS: Town[] = [
 	{
 		name: 'Greenbrae',
 		slug: 'greenbrae',
-		lat: 37.9460,
+		lat: 37.946,
 		lon: -122.5364,
 		pop: 5000,
 		incorporated: false,
@@ -210,7 +210,7 @@ export const MARIN_TOWNS: Town[] = [
 	{
 		name: 'Tam Valley',
 		slug: 'tam-valley',
-		lat: 37.8830,
+		lat: 37.883,
 		lon: -122.5375,
 		pop: 12000,
 		incorporated: false,
@@ -219,8 +219,8 @@ export const MARIN_TOWNS: Town[] = [
 	{
 		name: 'Muir Beach',
 		slug: 'muir-beach',
-		lat: 37.8620,
-		lon: -122.5750,
+		lat: 37.862,
+		lon: -122.575,
 		pop: 300,
 		incorporated: false,
 		zips: ['94965']
@@ -228,7 +228,7 @@ export const MARIN_TOWNS: Town[] = [
 	{
 		name: 'Tomales',
 		slug: 'tomales',
-		lat: 38.2460,
+		lat: 38.246,
 		lon: -122.9055,
 		pop: 200,
 		incorporated: false,
@@ -238,7 +238,7 @@ export const MARIN_TOWNS: Town[] = [
 		name: 'Marshall',
 		slug: 'marshall',
 		lat: 38.1571,
-		lon: -122.8870,
+		lon: -122.887,
 		pop: 50,
 		incorporated: false,
 		zips: ['94940']
@@ -256,15 +256,15 @@ export const MARIN_TOWNS: Town[] = [
 		name: 'Lucas Valley',
 		slug: 'lucas-valley',
 		lat: 38.0278,
-		lon: -122.5850,
+		lon: -122.585,
 		pop: 3500,
 		incorporated: false
 	},
 	{
 		name: 'Marinwood',
 		slug: 'marinwood',
-		lat: 38.0400,
-		lon: -122.5450,
+		lat: 38.04,
+		lon: -122.545,
 		pop: 5000,
 		incorporated: false,
 		zips: ['94903']
@@ -272,8 +272,8 @@ export const MARIN_TOWNS: Town[] = [
 	{
 		name: 'Terra Linda',
 		slug: 'terra-linda',
-		lat: 38.0050,
-		lon: -122.5450,
+		lat: 38.005,
+		lon: -122.545,
 		pop: 9000,
 		incorporated: false,
 		zips: ['94903']

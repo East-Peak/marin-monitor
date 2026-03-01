@@ -2,6 +2,8 @@
 	import Modal from './Modal.svelte';
 	import { settings } from '$lib/stores';
 	import { PANELS, type PanelId } from '$lib/config';
+	import type { ThemeMode } from '$lib/stores/settings';
+	import { LOCATION_PRESETS } from '$lib/config/locations';
 
 	interface Props {
 		open: boolean;
@@ -17,6 +19,24 @@
 
 	function handleResetPanels() {
 		settings.reset();
+	}
+
+	function handleThemeChange(theme: ThemeMode) {
+		settings.setTheme(theme);
+	}
+
+	function handleLocationChange(event: Event) {
+		const select = event.target as HTMLSelectElement;
+		settings.setLocation(select.value);
+	}
+
+	function handleScaleChange(event: Event) {
+		const input = event.target as HTMLInputElement;
+		settings.setUiScale(Number(input.value));
+	}
+
+	function handleResetScale() {
+		settings.setUiScale(100);
 	}
 </script>
 
@@ -40,6 +60,68 @@
 						<span class="panel-priority">P{config.priority}</span>
 					</label>
 				{/each}
+			</div>
+		</section>
+
+		<section class="settings-section">
+			<h3 class="section-title">Location</h3>
+			<p class="section-desc">Set your weather, tide, and forecast location</p>
+			<div class="location-select-wrap">
+				<select
+					class="location-select"
+					value={$settings.locationId}
+					onchange={handleLocationChange}
+				>
+					{#each LOCATION_PRESETS as loc}
+						<option value={loc.id}>{loc.name}</option>
+					{/each}
+				</select>
+				<div class="location-detail">
+					Tide station: {LOCATION_PRESETS.find((l) => l.id === $settings.locationId)
+						?.tideStationName ?? 'Point Reyes'}
+				</div>
+			</div>
+		</section>
+
+		<section class="settings-section">
+			<h3 class="section-title">Appearance</h3>
+			<p class="section-desc">Choose your preferred color theme</p>
+			<div class="theme-toggle">
+				<button
+					class="theme-btn"
+					class:active={$settings.theme === 'dark'}
+					onclick={() => handleThemeChange('dark')}
+				>
+					Dark
+				</button>
+				<button
+					class="theme-btn"
+					class:active={$settings.theme === 'light'}
+					onclick={() => handleThemeChange('light')}
+				>
+					Light
+				</button>
+			</div>
+
+			<div class="scale-control">
+				<div class="scale-header">
+					<span class="scale-label">UI Scale</span>
+					<span class="scale-value">{$settings.uiScale}%</span>
+				</div>
+				<div class="scale-row">
+					<input
+						type="range"
+						min="50"
+						max="150"
+						step="5"
+						value={$settings.uiScale}
+						oninput={handleScaleChange}
+						class="scale-slider"
+					/>
+					{#if $settings.uiScale !== 100}
+						<button class="scale-reset" onclick={handleResetScale}>Reset</button>
+					{/if}
+				</div>
 			</div>
 		</section>
 
@@ -127,6 +209,35 @@
 		border-radius: 2px;
 	}
 
+	.location-select-wrap {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.location-select {
+		width: 100%;
+		padding: 0.45rem 0.6rem;
+		font: inherit;
+		font-size: 0.68rem;
+		color: var(--text-primary);
+		background: rgba(255, 255, 255, 0.04);
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		cursor: pointer;
+		appearance: auto;
+	}
+
+	.location-select:focus {
+		outline: 1px solid var(--accent);
+		border-color: var(--accent);
+	}
+
+	.location-detail {
+		font-size: 0.58rem;
+		color: var(--text-muted);
+	}
+
 	.reconfigure-btn {
 		padding: 0.5rem 1rem;
 		background: rgba(0, 255, 136, 0.1);
@@ -137,6 +248,94 @@
 		cursor: pointer;
 		transition: all 0.15s ease;
 		margin-bottom: 0.25rem;
+	}
+
+	.theme-toggle {
+		display: inline-flex;
+		gap: 0.35rem;
+		padding: 0.25rem;
+		border: 1px solid var(--border);
+		background: rgba(255, 255, 255, 0.02);
+		border-radius: 6px;
+		width: fit-content;
+	}
+
+	.theme-btn {
+		padding: 0.35rem 0.7rem;
+		border: 1px solid transparent;
+		background: transparent;
+		color: var(--text-secondary);
+		font: inherit;
+		font-size: 0.66rem;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		cursor: pointer;
+		border-radius: 4px;
+		transition: all 0.15s ease;
+	}
+
+	.theme-btn:hover {
+		color: var(--text-primary);
+	}
+
+	.theme-btn.active {
+		color: var(--text-primary);
+		border-color: var(--accent);
+		background: rgba(var(--accent-rgb), 0.12);
+	}
+
+	.scale-control {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		margin-top: 0.5rem;
+	}
+
+	.scale-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+	}
+
+	.scale-label {
+		font-size: 0.65rem;
+		color: var(--text-secondary);
+	}
+
+	.scale-value {
+		font-size: 0.65rem;
+		color: var(--text-primary);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.scale-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.scale-slider {
+		flex: 1;
+		height: 4px;
+		accent-color: var(--accent);
+		cursor: pointer;
+	}
+
+	.scale-reset {
+		padding: 0.2rem 0.45rem;
+		border: 1px solid var(--border);
+		background: rgba(255, 255, 255, 0.04);
+		color: var(--text-secondary);
+		font: inherit;
+		font-size: 0.58rem;
+		border-radius: 3px;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.scale-reset:hover {
+		color: var(--text-primary);
+		border-color: var(--accent);
 	}
 
 	.reconfigure-btn:hover {

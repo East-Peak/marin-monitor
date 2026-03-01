@@ -3,7 +3,18 @@
 /**
  * Marin news/data categories
  */
-export type NewsCategory = 'local' | 'civic' | 'safety' | 'outdoors' | 'housing' | 'satire';
+export type NewsCategory =
+	| 'local'
+	| 'civic'
+	| 'safety'
+	| 'outdoors'
+	| 'housing'
+	| 'cycling'
+	| 'endurance'
+	| 'shows'
+	| 'prep'
+	| 'farm'
+	| 'satire';
 
 /**
  * Verification level for every story/item
@@ -33,6 +44,8 @@ export interface NewsItem {
 	townSlug?: string;
 	lat?: number;
 	lon?: number;
+	locationConfidence?: 'exact' | 'approx' | 'town';
+	locationEvidence?: string;
 	isAlert?: boolean;
 	alertKeyword?: string;
 	topics?: string[];

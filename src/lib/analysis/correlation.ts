@@ -233,7 +233,7 @@ function getPrediction(topic: CorrelationTopic, count: number): string {
 		return 'Development discussion heating up — watch for meetings';
 	}
 	if (topic.category === 'Safety') {
-		return 'Safety-related developments — stay informed';
+		return 'Crime & safety developments — stay informed';
 	}
 	return 'Topic gaining local traction';
 }

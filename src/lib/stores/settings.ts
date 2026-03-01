@@ -12,19 +12,30 @@ import {
 	PRESET_STORAGE_KEY,
 	type PanelId
 } from '$lib/config';
+import { DEFAULT_LOCATION_ID } from '$lib/config/locations';
 
 // Storage keys
 const STORAGE_KEYS = {
 	panels: 'mm_panels',
 	order: 'mm_panelOrder',
-	sizes: 'mm_panelSizes'
+	sizes: 'mm_panelSizes',
+	theme: 'mm_theme',
+	location: 'mm_location',
+	uiScale: 'mm_uiScale',
+	dashboardExpanded: 'mm_dashExpanded'
 } as const;
 
 // Types
+export type ThemeMode = 'dark' | 'light';
+
 export interface PanelSettings {
 	enabled: Record<PanelId, boolean>;
 	order: PanelId[];
 	sizes: Record<PanelId, { width?: number; height?: number }>;
+	theme: ThemeMode;
+	locationId: string;
+	uiScale: number;
+	dashboardExpanded: boolean;
 }
 
 export interface SettingsState extends PanelSettings {
@@ -38,7 +49,11 @@ function getDefaultSettings(): PanelSettings {
 	return {
 		enabled: Object.fromEntries(allPanelIds.map((id) => [id, true])) as Record<PanelId, boolean>,
 		order: allPanelIds,
-		sizes: {} as Record<PanelId, { width?: number; height?: number }>
+		sizes: {} as Record<PanelId, { width?: number; height?: number }>,
+		theme: 'dark',
+		locationId: DEFAULT_LOCATION_ID,
+		uiScale: 100,
+		dashboardExpanded: true
 	};
 }
 
@@ -50,16 +65,36 @@ function loadFromStorage(): Partial<PanelSettings> {
 		const panels = localStorage.getItem(STORAGE_KEYS.panels);
 		const order = localStorage.getItem(STORAGE_KEYS.order);
 		const sizes = localStorage.getItem(STORAGE_KEYS.sizes);
+		const theme = localStorage.getItem(STORAGE_KEYS.theme);
+
+		const location = localStorage.getItem(STORAGE_KEYS.location);
+		const uiScaleRaw = localStorage.getItem(STORAGE_KEYS.uiScale);
+		const uiScale = uiScaleRaw ? Number(uiScaleRaw) : undefined;
+		const dashRaw = localStorage.getItem(STORAGE_KEYS.dashboardExpanded);
 
 		return {
 			enabled: panels ? JSON.parse(panels) : undefined,
 			order: order ? JSON.parse(order) : undefined,
-			sizes: sizes ? JSON.parse(sizes) : undefined
+			sizes: sizes ? JSON.parse(sizes) : undefined,
+			theme: theme === 'light' || theme === 'dark' ? theme : undefined,
+			locationId: location ?? undefined,
+			uiScale: uiScale && uiScale >= 50 && uiScale <= 150 ? uiScale : undefined,
+			dashboardExpanded: dashRaw !== null ? dashRaw !== 'false' : undefined
 		};
 	} catch (e) {
 		console.warn('Failed to load settings from localStorage:', e);
 		return {};
 	}
+}
+
+function applyTheme(theme: ThemeMode): void {
+	if (!browser || typeof document === 'undefined') return;
+	document.documentElement.setAttribute('data-theme', theme);
+}
+
+function applyUiScale(scale: number): void {
+	if (!browser || typeof document === 'undefined') return;
+	document.documentElement.style.zoom = scale === 100 ? '' : `${scale}%`;
 }
 
 // Save to localStorage
@@ -82,10 +117,16 @@ function createSettingsStore() {
 		enabled: { ...defaults.enabled, ...saved.enabled },
 		order: saved.order ?? defaults.order,
 		sizes: { ...defaults.sizes, ...saved.sizes },
+		theme: saved.theme ?? defaults.theme,
+		locationId: saved.locationId ?? defaults.locationId,
+		uiScale: saved.uiScale ?? defaults.uiScale,
+		dashboardExpanded: saved.dashboardExpanded ?? defaults.dashboardExpanded,
 		initialized: false
 	};
 
 	const { subscribe, set, update } = writable<SettingsState>(initialState);
+	applyTheme(initialState.theme);
+	applyUiScale(initialState.uiScale);
 
 	return {
 		subscribe,
@@ -186,6 +227,68 @@ function createSettingsStore() {
 		},
 
 		/**
+		 * Set light/dark theme
+		 */
+		setTheme(theme: ThemeMode) {
+			update((state) => {
+				saveToStorage('theme', theme);
+				applyTheme(theme);
+				return { ...state, theme };
+			});
+		},
+
+		/**
+		 * Toggle light/dark theme
+		 */
+		toggleTheme() {
+			update((state) => {
+				const theme: ThemeMode = state.theme === 'dark' ? 'light' : 'dark';
+				saveToStorage('theme', theme);
+				applyTheme(theme);
+				return { ...state, theme };
+			});
+		},
+
+		/**
+		 * Set the UI zoom level (50–150%)
+		 */
+		setUiScale(scale: number) {
+			const clamped = Math.max(50, Math.min(150, Math.round(scale)));
+			update((state) => {
+				if (browser) {
+					localStorage.setItem(STORAGE_KEYS.uiScale, String(clamped));
+				}
+				applyUiScale(clamped);
+				return { ...state, uiScale: clamped };
+			});
+		},
+
+		/**
+		 * Toggle the dashboard (signal deck) visibility
+		 */
+		toggleDashboard() {
+			update((state) => {
+				const expanded = !state.dashboardExpanded;
+				if (browser) {
+					localStorage.setItem(STORAGE_KEYS.dashboardExpanded, String(expanded));
+				}
+				return { ...state, dashboardExpanded: expanded };
+			});
+		},
+
+		/**
+		 * Set the user's preferred location
+		 */
+		setLocation(locationId: string) {
+			update((state) => {
+				if (browser) {
+					localStorage.setItem(STORAGE_KEYS.location, locationId);
+				}
+				return { ...state, locationId };
+			});
+		},
+
+		/**
 		 * Reset all settings to defaults
 		 */
 		reset() {
@@ -194,7 +297,13 @@ function createSettingsStore() {
 				localStorage.removeItem(STORAGE_KEYS.panels);
 				localStorage.removeItem(STORAGE_KEYS.order);
 				localStorage.removeItem(STORAGE_KEYS.sizes);
+				localStorage.removeItem(STORAGE_KEYS.theme);
+				localStorage.removeItem(STORAGE_KEYS.location);
+				localStorage.removeItem(STORAGE_KEYS.uiScale);
+				localStorage.removeItem(STORAGE_KEYS.dashboardExpanded);
 			}
+			applyTheme(defaults.theme);
+			applyUiScale(defaults.uiScale);
 			set({ ...defaults, initialized: true });
 		},
 
@@ -277,3 +386,5 @@ export const disabledPanels = derived(settings, ($settings) =>
 export const draggablePanels = derived(enabledPanels, ($enabled) =>
 	$enabled.filter((id) => !NON_DRAGGABLE_PANELS.includes(id))
 );
+
+export const currentLocationId = derived(settings, ($s) => $s.locationId);

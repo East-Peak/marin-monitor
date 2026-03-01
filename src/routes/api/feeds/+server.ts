@@ -1,0 +1,48 @@
+/**
+ * Server-side RSS feed proxy endpoint
+ *
+ * During dev, this runs via Vite's built-in server.
+ * In production with adapter-static, this won't exist — the client falls back to CORS proxy.
+ * If we switch to adapter-node or adapter-cloudflare, this just works.
+ */
+
+import { error } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+
+export const GET: RequestHandler = async ({ url }) => {
+	const feedUrl = url.searchParams.get('url');
+
+	if (!feedUrl) {
+		throw error(400, 'Missing url parameter');
+	}
+
+	// Basic validation — only allow http/https URLs
+	if (!feedUrl.startsWith('http://') && !feedUrl.startsWith('https://')) {
+		throw error(400, 'Invalid URL');
+	}
+
+	try {
+		const response = await fetch(feedUrl, {
+			headers: {
+				Accept: 'application/rss+xml, application/xml, text/xml, */*',
+				'User-Agent': 'MarinMonitor/1.0 (RSS Feed Reader)'
+			}
+		});
+
+		if (!response.ok) {
+			throw error(response.status, `Feed returned ${response.status}`);
+		}
+
+		const xml = await response.text();
+
+		return new Response(xml, {
+			headers: {
+				'Content-Type': 'application/xml',
+				'Cache-Control': 'public, max-age=300' // 5 min cache
+			}
+		});
+	} catch (e) {
+		if ((e as { status?: number }).status) throw e; // Re-throw SvelteKit errors
+		throw error(502, `Failed to fetch feed: ${(e as Error).message}`);
+	}
+};

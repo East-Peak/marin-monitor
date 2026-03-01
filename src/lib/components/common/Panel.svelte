@@ -3,8 +3,22 @@
 	import type { PanelId } from '$lib/config';
 
 	interface Props {
-		id: PanelId;
+		id: PanelId | string;
 		title: string;
+		variant?:
+			| 'default'
+			| 'local'
+			| 'civic'
+			| 'safety'
+			| 'outdoors'
+			| 'housing'
+			| 'cycling'
+			| 'endurance'
+			| 'shows'
+			| 'prep'
+			| 'farm'
+			| 'satire'
+			| 'pulse';
 		count?: number | string | null;
 		status?: string;
 		statusClass?: string;
@@ -22,6 +36,7 @@
 	let {
 		id,
 		title,
+		variant = 'default',
 		count = null,
 		status = '',
 		statusClass = '',
@@ -43,7 +58,24 @@
 	}
 </script>
 
-<div class="panel" class:draggable class:collapsed data-panel-id={id}>
+<div
+	class="panel"
+	class:draggable
+	class:collapsed
+	class:variant-local={variant === 'local'}
+	class:variant-civic={variant === 'civic'}
+	class:variant-safety={variant === 'safety'}
+	class:variant-outdoors={variant === 'outdoors'}
+	class:variant-housing={variant === 'housing'}
+	class:variant-cycling={variant === 'cycling'}
+	class:variant-endurance={variant === 'endurance'}
+	class:variant-shows={variant === 'shows'}
+	class:variant-prep={variant === 'prep'}
+	class:variant-farm={variant === 'farm'}
+	class:variant-satire={variant === 'satire'}
+	class:variant-pulse={variant === 'pulse'}
+	data-panel-id={id}
+>
 	<div class="panel-header">
 		<div class="panel-title-row">
 			<h3 class="panel-title">{title}</h3>
@@ -89,6 +121,7 @@
 	.panel {
 		background: var(--surface);
 		border: 1px solid var(--border);
+		border-top: 2px solid var(--border-light);
 		border-radius: 4px;
 		overflow: hidden;
 		display: flex;
@@ -203,6 +236,100 @@
 
 	.panel-content.hidden {
 		display: none;
+	}
+
+	.panel.variant-local {
+		border-top-color: #3b82f6;
+	}
+
+	.panel.variant-civic {
+		border-top-color: #f59e0b;
+	}
+
+	.panel.variant-safety {
+		border-top-color: #ef4444;
+	}
+
+	.panel.variant-outdoors {
+		border-top-color: #22c55e;
+	}
+
+	.panel.variant-housing {
+		border-top-color: #14b8a6;
+	}
+
+	.panel.variant-cycling {
+		border-top-color: #06b6d4;
+	}
+
+	.panel.variant-endurance {
+		border-top-color: #84cc16;
+	}
+
+	.panel.variant-shows {
+		border-top-color: #f97316;
+	}
+
+	.panel.variant-prep {
+		border-top-color: #6366f1;
+	}
+
+	.panel.variant-farm {
+		border-top-color: #65a30d;
+	}
+
+	.panel.variant-satire {
+		border-top-color: #ec4899;
+		border-style: dashed;
+	}
+
+	.panel.variant-pulse {
+		border-top-color: #a78bfa;
+	}
+
+	.panel.variant-civic .panel-count {
+		color: #f59e0b;
+		background: rgba(245, 158, 11, 0.14);
+	}
+
+	.panel.variant-safety .panel-count {
+		color: #ef4444;
+		background: rgba(239, 68, 68, 0.14);
+	}
+
+	.panel.variant-outdoors .panel-count {
+		color: #22c55e;
+		background: rgba(34, 197, 94, 0.14);
+	}
+
+	.panel.variant-satire .panel-count {
+		color: #ec4899;
+		background: rgba(236, 72, 153, 0.15);
+	}
+
+	.panel.variant-cycling .panel-count {
+		color: #06b6d4;
+		background: rgba(6, 182, 212, 0.15);
+	}
+
+	.panel.variant-endurance .panel-count {
+		color: #84cc16;
+		background: rgba(132, 204, 22, 0.16);
+	}
+
+	.panel.variant-shows .panel-count {
+		color: #f97316;
+		background: rgba(249, 115, 22, 0.15);
+	}
+
+	.panel.variant-prep .panel-count {
+		color: #6366f1;
+		background: rgba(99, 102, 241, 0.16);
+	}
+
+	.panel.variant-farm .panel-count {
+		color: #65a30d;
+		background: rgba(101, 163, 13, 0.16);
 	}
 
 	.error-msg {

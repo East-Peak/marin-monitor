@@ -40,12 +40,24 @@ export const CORRELATION_TOPICS: CorrelationTopic[] = [
 	},
 	{
 		id: 'traffic-commute',
-		patterns: [/101.*traffic/i, /commute/i, /golden gate.*traffic/i, /richmond.*bridge/i, /ferry.*delay/i],
+		patterns: [
+			/101.*traffic/i,
+			/commute/i,
+			/golden gate.*traffic/i,
+			/richmond.*bridge/i,
+			/ferry.*delay/i
+		],
 		category: 'Traffic'
 	},
 	{
 		id: 'development',
-		patterns: [/zoning/i, /development.*project/i, /affordable housing/i, /adu/i, /planning.*commission/i],
+		patterns: [
+			/zoning/i,
+			/development.*project/i,
+			/affordable housing/i,
+			/adu/i,
+			/planning.*commission/i
+		],
 		category: 'Civic'
 	},
 	{
@@ -60,7 +72,14 @@ export const CORRELATION_TOPICS: CorrelationTopic[] = [
 	},
 	{
 		id: 'trails-parks',
-		patterns: [/trail.*closure/i, /park.*closed/i, /muir woods/i, /point reyes/i, /mt\.*tam/i, /open space/i],
+		patterns: [
+			/trail.*closure/i,
+			/park.*closed/i,
+			/muir woods/i,
+			/point reyes/i,
+			/mt\.*tam/i,
+			/open space/i
+		],
 		category: 'Outdoors'
 	},
 	{
@@ -143,12 +162,6 @@ export const SOURCE_TYPES: SourceTypes = {
 		'point reyes light',
 		'patch'
 	],
-	community: [
-		'nextdoor',
-		'west marin feed',
-		'marin magazine'
-	],
-	satire: [
-		'marin lately'
-	]
+	community: ['nextdoor', 'west marin feed', 'marin magazine'],
+	satire: ['marin lately']
 };

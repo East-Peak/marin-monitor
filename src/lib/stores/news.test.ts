@@ -112,8 +112,8 @@ describe('News Store', () => {
 		const initial = [
 			{
 				id: '1',
-				title: 'First trail report',
-				source: 'Patch',
+				title: 'First trail report from Marin Headlands',
+				source: 'Point Reyes Light',
 				link: 'https://patch.com/1',
 				timestamp: Date.now(),
 				category: 'outdoors' as const,
@@ -124,8 +124,8 @@ describe('News Store', () => {
 		const more = [
 			{
 				id: '1',
-				title: 'First trail report',
-				source: 'Patch',
+				title: 'First trail report from Marin Headlands',
+				source: 'Point Reyes Light',
 				link: 'https://patch.com/1',
 				timestamp: Date.now(),
 				category: 'outdoors' as const,
@@ -133,8 +133,8 @@ describe('News Store', () => {
 			},
 			{
 				id: '2',
-				title: 'Second trail report',
-				source: 'Patch',
+				title: 'Second trail report near Mt Tam',
+				source: 'Point Reyes Light',
 				link: 'https://patch.com/2',
 				timestamp: Date.now(),
 				category: 'outdoors' as const,
@@ -155,7 +155,7 @@ describe('News Store', () => {
 		news.setItems('local', [
 			{
 				id: '1',
-				title: 'Local news story',
+				title: 'San Rafael local news story',
 				source: 'Marin Independent Journal',
 				link: 'a',
 				timestamp: Date.now(),
@@ -166,8 +166,8 @@ describe('News Store', () => {
 		news.setItems('civic', [
 			{
 				id: '2',
-				title: 'County board meeting recap',
-				source: 'Marin County',
+				title: 'Marin County Board of Supervisors meeting recap in San Rafael',
+				source: 'City of San Rafael',
 				link: 'b',
 				timestamp: Date.now(),
 				category: 'civic' as const,
@@ -227,5 +227,44 @@ describe('News Store', () => {
 
 		const state = get(news);
 		expect(state.categories.local.items).toEqual([]);
+	});
+
+	it('should not assign false town matches from substring collisions in mixed feeds', async () => {
+		const { news, localNews } = await import('./news');
+
+		news.setItems('local', [
+			{
+				id: 'kqed-1',
+				title: 'How to Get Tickets to the 2028 Los Angeles Olympics',
+				source: 'KQED News',
+				link: 'https://kqed.org/example',
+				timestamp: Date.now(),
+				category: 'local' as const,
+				verification: 'local_media' as const
+			}
+		]);
+
+		const local = get(localNews);
+		expect(local.items).toHaveLength(0);
+	});
+
+	it('should keep mixed-source stories with a real Marin town anchor', async () => {
+		const { news, localNews } = await import('./news');
+
+		news.setItems('local', [
+			{
+				id: 'kqed-2',
+				title: 'Ross officials weigh changes to local traffic safety plan',
+				source: 'KQED News',
+				link: 'https://kqed.org/example-2',
+				timestamp: Date.now(),
+				category: 'local' as const,
+				verification: 'local_media' as const
+			}
+		]);
+
+		const local = get(localNews);
+		expect(local.items).toHaveLength(1);
+		expect(local.items[0].townSlug).toBe('ross');
 	});
 });

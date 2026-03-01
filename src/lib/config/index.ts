@@ -12,16 +12,13 @@ export {
 } from './panels';
 
 // Town configuration
-export {
-	MARIN_TOWNS,
-	TOWN_BY_SLUG,
-	TOWN_BY_NAME,
-	MARIN_CENTER,
-	MARIN_BOUNDS
-} from './towns';
+export { MARIN_TOWNS, TOWN_BY_SLUG, TOWN_BY_NAME, MARIN_CENTER, MARIN_BOUNDS } from './towns';
 
 // Feed configuration
 export { FEEDS, getAllFeedUrls, type FeedSource } from './feeds';
+
+// Camera configuration
+export { CAMERAS, CAMERA_CATEGORIES, type CameraConfig, type CameraCategory } from './cameras';
 
 // Keyword configuration
 export {
@@ -68,6 +65,9 @@ export {
 	PRESET_STORAGE_KEY,
 	type Preset
 } from './presets';
+
+// Relevance filter
+export { isLocallyRelevant, isMixedSource } from './relevance';
 
 // API configuration
 export {

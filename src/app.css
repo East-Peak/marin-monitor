@@ -1,3 +1,5 @@
+@import 'maplibre-gl/dist/maplibre-gl.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,13 +12,45 @@
 	--border: #2a2a2a;
 	--border-light: #3a3a3a;
 	--text: #e8e8e8;
+	--text-primary: #e8e8e8;
+	--text-secondary: #b8b8b8;
 	--text-dim: #888;
 	--text-muted: #666;
-	--accent: #fff;
+	--accent: #ffffff;
+	--accent-rgb: 255, 255, 255;
 	--red: #ff4444;
 	--green: #44ff88;
 	--yellow: #ffaa00;
 	--blue: #4488ff;
+	--danger: #ff5f5f;
+	--success: #44ff88;
+	--warning: #ffb347;
+	--map-control-icon-filter: invert(1);
+	color-scheme: dark;
+}
+
+html[data-theme='light'] {
+	--bg: #f6f7f9;
+	--surface: #ffffff;
+	--surface-hover: #f1f3f6;
+	--border: #d6dbe3;
+	--border-light: #c4ccd8;
+	--text: #131821;
+	--text-primary: #131821;
+	--text-secondary: #2f3947;
+	--text-dim: #5b6778;
+	--text-muted: #7b889a;
+	--accent: #0f172a;
+	--accent-rgb: 15, 23, 42;
+	--red: #dc2626;
+	--green: #16a34a;
+	--yellow: #ca8a04;
+	--blue: #2563eb;
+	--danger: #dc2626;
+	--success: #16a34a;
+	--warning: #b45309;
+	--map-control-icon-filter: none;
+	color-scheme: light;
 }
 
 /* Base styles */
@@ -80,6 +114,21 @@ a:hover {
 	100% {
 		background-position: 200% 0;
 	}
+}
+
+/* MapLibre overrides for dark theme */
+.maplibregl-popup-content {
+	background: var(--surface) !important;
+	color: var(--text) !important;
+	border: 1px solid var(--border) !important;
+	border-radius: 4px !important;
+	padding: 0.5rem !important;
+	font-family: 'SF Mono', Monaco, Inconsolata, 'Fira Code', monospace !important;
+	font-size: 0.65rem !important;
+}
+
+.maplibregl-popup-tip {
+	border-top-color: var(--surface) !important;
 }
 
 /* D3 Map styles - keeping here since they're complex */

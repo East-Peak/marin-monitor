@@ -5,6 +5,15 @@
 import { browser } from '$app/environment';
 
 /**
+ * 511.org API key (free tier)
+ * Covers: Golden Gate Transit/Ferry, Marin Transit, SMART, SF Bay Ferry
+ * Get your key at: https://511.org/open-data/token
+ */
+export const TRANSIT_511_API_KEY = browser
+	? (import.meta.env?.VITE_511_API_KEY ?? '')
+	: (process.env.VITE_511_API_KEY ?? '');
+
+/**
  * AirNow API key (free tier)
  * Get your key at: https://docs.airnowapi.org/account/request/
  */
@@ -23,6 +32,13 @@ export const STRAVA_CLIENT_ID = browser
 export const STRAVA_CLIENT_SECRET = browser
 	? (import.meta.env?.VITE_STRAVA_CLIENT_SECRET ?? '')
 	: (process.env.VITE_STRAVA_CLIENT_SECRET ?? '');
+
+/**
+ * Mapbox token for optional traffic congestion overlays
+ */
+export const MAPBOX_TOKEN = browser
+	? (import.meta.env?.VITE_MAPBOX_TOKEN ?? '')
+	: (process.env.VITE_MAPBOX_TOKEN ?? '');
 
 /**
  * API base URLs

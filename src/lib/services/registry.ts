@@ -103,10 +103,7 @@ const SERVICE_CONFIG: Record<ServiceId, ServiceConfig> = {
 	CORS_PROXY: {
 		id: 'cors_proxy',
 		baseUrl: null,
-		proxies: [
-			'https://corsproxy.io/?url=',
-			'https://api.allorigins.win/raw?url='
-		],
+		proxies: ['https://corsproxy.io/?url=', 'https://api.allorigins.win/raw?url='],
 		timeout: 12000,
 		retries: 1,
 		cache: {

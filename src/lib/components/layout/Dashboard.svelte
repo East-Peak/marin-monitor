@@ -27,8 +27,6 @@
 	.dashboard-grid {
 		column-count: 1;
 		column-gap: 0.5rem;
-		max-width: 2000px;
-		margin: 0 auto;
 	}
 
 	.dashboard-grid > :global(*) {

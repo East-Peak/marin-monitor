@@ -1,192 +1,94 @@
 # Marin Monitor — Backlog
 
-Living document. Items roughly ordered by priority within each phase.
+Updated: 2026-03-01
 
----
+## Current Snapshot
 
-## Phase 1: Get Data Flowing (MVP)
+### Completed recently
 
-### RSS Adapter + Local Wire
-- [ ] Build `src/lib/api/marin/rss.ts` — fetch and parse RSS feeds via CORS proxy
-- [ ] Wire up the 6 confirmed-working feeds:
-  - Marin IJ (`marinij.com/feed/`)
-  - Point Reyes Light (`ptreyeslight.com/feed/`)
-  - City of San Rafael (`cityofsanrafael.org/feed/`)
-  - Town of Fairfax (`townoffairfaxca.gov/feed/`) — note: domain changed from townoffairfax.org
-  - MMWD / Marin Water (`marinwater.org/feed/`)
-  - Marin Lately / satire (`marinlately.com/feed/`)
-- [ ] Drop dead feeds from config: all 3 Patch feeds, West Marin Feed (domain gone)
-- [ ] Move blocked feeds to a "needs proxy or scraping" list: Marin County official (Cloudflare 403), CAL FIRE (Akamai 403)
-- [ ] Fix NPS Point Reyes feed URL (returns HTML, not RSS — NPS deprecated feed infra)
-- [ ] Add more working city/town feeds as discovered
+- [x] Marin county data ingest in place (RSS + NWS + NOAA tides + USGS quakes + NPS + 511 transit + housing dataset)
+- [x] Map panel implemented with towns, layers, hover/click interactions, and town-level filtering
+- [x] Weather panel with temperature sparkline, hourly forecast, sunrise/sunset, and QPF rain totals
+- [x] Outlooks panel with 5-day weather (including rain amounts), 5-day swell, and summary highlight cards
+- [x] Cameras panel with 3 category tabs (Traffic/Scenic/Fire), 9 cameras including ALERTCalifornia fire cams
+- [x] Housing panel implemented from static extracted dataset
+- [x] Relevance filter and local enrichment (town/topic/alert tagging) with word-boundary matching
+- [x] Pulse panel implemented (stories, alerts, temp, next tide, last quake, last refresh)
+- [x] Category panel visual differentiation added (safety/civic/outdoors/satire)
+- [x] Responsive weather chart redraw on resize
+- [x] Quality baseline restored (`npm run check`, `npm run test:unit`, `npm run lint` all passing)
+- [x] Traffic overlay implemented with Mapbox congestion + 511 traffic events
+- [x] Crime & Safety expanded beyond newspapers (Marin Sheriff blotter + 10 municipal public-safety feeds)
+- [x] New wire-style verticals added: Cycling & Endurance, Shows & Events, Sports & Prep, Fishing, Farm & Market
+- [x] Supplemental static activity sync implemented at `static/data/marin-activity.json`
+- [x] False ALERT badge fix (word-boundary matching in `containsAlertKeyword()`)
+- [x] False geo-tagging fix (title-only `detectTown()` scanning)
+- [x] SMART train stations expanded from 2 to 6 with verified GPS coordinates
+- [x] UI zoom/scale setting (50-150%) with localStorage persistence
+- [x] Fully responsive wire columns (no max-width cap)
+- [x] Collapsible signal deck with persisted state
+- [x] Dashboard rebalanced (Environment moved to middle column, stretch-flush columns)
+- [x] ALERTCalifornia fire cams switched from iframe to direct JPEG snapshots (10s auto-refresh)
+- [x] WildCare (discoverwildcare.org) added as RSS feed source
 
-### NWS Weather Adapter
-- [ ] Build `src/lib/api/marin/nws.ts` — NWS forecast + alerts
-- [ ] Zones: CAZ505 (coast), CAZ506 (interior valleys), CAZ502 (coastal range)
-- [ ] Fire weather zone: CAZ506
-- [ ] Alerts endpoint: `api.weather.gov/alerts/active?zone=CAZ505,CAZ506`
-- [ ] Forecast endpoint: `api.weather.gov/gridpoints/MTR/{x},{y}/forecast`
-- [ ] Build Weather panel component
+## Next Sprint (Highest Priority)
 
-### Pulse Panel
-- [ ] Build `PulsePanel.svelte` — at-a-glance dashboard stats
-- [ ] Stories in last 24h, active alerts, AQI, temperature, next tide, last earthquake
+### 1) Pre-Launch Quality
 
-### Main Character of Marin
-- [ ] Rebuild `src/lib/analysis/main-character.ts` for local use
-- [ ] Track: which **town** dominates coverage, which **topic**, which **person/entity**
-- [ ] "Main Character of Marin This Week: Fairfax" — fits the playful tone
-- [ ] Build `MainCharPanel.svelte`
+- [ ] Adversarial testing pass — identify and fix remaining edge cases
+- [ ] Verify all data sources are live and returning content
+- [ ] Cross-browser testing (Chrome, Firefox, Safari)
+- [ ] Mobile responsiveness audit (< 768px)
+- [ ] Performance profiling — largest contentful paint, bundle size
 
----
+### 2) Performance / Production Architecture
 
-## Phase 2: The Map
+- [ ] Move from static-only first-load fanout toward cached server/bootstrap payloads
+- [ ] Reduce duplicate panel fetches (weather/tides/marine/housing)
+- [ ] Add edge caching / stale-while-revalidate strategy for production
+- [ ] Add a fast first-paint snapshot path for hard refreshes
 
-### Marin Map with D3
-- [ ] Build `MarinMapPanel.svelte` — D3 SVG map of Marin County
-- [ ] County boundary from TopoJSON/GeoJSON (Census TIGER data)
-- [ ] Town markers with labels
-- [ ] Fire zone overlays (Mt. Tam, San Geronimo Valley, etc.)
-- [ ] Landmark markers (bridges, peaks, ferry terminals)
-- [ ] Toggleable layers: civic, news, safety, housing, activity, satire
-- [ ] Story dots on map, colored by category, clickable
+### 3) Crime & Safety Depth
 
-### H3 Hex Grid Overlay
-- [ ] Add `h3-js` dependency
-- [ ] Generate hex grid at resolution 7-8 covering Marin bounds
-- [ ] Color hexes by data density per active layer
-- [ ] Red hexes where fire/safety alerts cluster
-- [ ] Blue for civic, purple for news, pink dashed for satire
-- [ ] Tooltip on hex hover showing item count + top headline
-- [ ] Inspired by Retard Mode's spatial scoring approach
+- [ ] Improve Central Marin town assignment from road/place hints without inventing false precision
+- [ ] Add OCR or better extraction for Fairfax / Mill Valley / Ross document logs
+- [ ] Evaluate Community Crime Map / vendor-backed sources only if official sources remain too shallow
+- [ ] Decide which blotter-derived spikes should surface in Pulse / Signals
 
----
+### 4) Vertical Expansion / Quality
 
-## Phase 3: Real-Time Data Sources
+- [ ] Tighten Shows & Events density / curation window so venue calendars stay useful instead of noisy
+- [ ] Add more real event/result sources for Cycling & Endurance
+- [ ] Expand Fishing with CDFW news, expanded keywords, Marin IJ filter
+- [ ] Decide whether Faith & Community becomes a real column or stays parked until a reliable feed exists
 
-### Surf & Ocean Conditions
-- [ ] Build `src/lib/api/marin/surf.ts`
-- [ ] **Open-Meteo Marine API** (FREE, no auth, JSON) — wave height, swell, period, direction
-  - `marine-api.open-meteo.com/v1/marine?latitude=37.9&longitude=-122.8&hourly=wave_height,swell_wave_height,swell_wave_period`
-- [ ] **NOAA NDBC Buoys** (FREE, no auth, text) — ground truth
-  - Buoy 46026 (San Francisco): `ndbc.noaa.gov/data/realtime2/46026.txt`
-  - Buoy 46013 (Bodega Bay): `ndbc.noaa.gov/data/realtime2/46013.txt`
-- [ ] **CDIP Buoy 029** (Point Reyes) — real-time wave spectra via OPeNDAP
-  - `thredds.cdip.ucsd.edu/thredds/dodsC/cdip/realtime/029p1_rt.nc.ascii`
-- [ ] **NWS High Surf Advisories** — `api.weather.gov/alerts/active?zone=CAZ505&event=High%20Surf%20Advisory`
-- [ ] **NWS Marine Forecast** (fog, marine layer) — `tgftp.nws.noaa.gov/data/forecasts/marine/coastal/pz/pzz540.txt`
-- [ ] Surfline unofficial API for enrichment only (could break): spotId `5842041f4e65fad6a77089c2` (Bolinas)
-- [ ] Build Surf/Ocean panel component — swell height, period, direction, water temp, surf advisory status
+### 5) UI Polish Pass
 
-### Traffic Cameras
-- [ ] Build `src/lib/api/marin/cameras.ts`
-- [ ] **Caltrans CCTV** (FREE, no auth, CORS enabled) — goldmine
-  - Camera list JSON: `cwwp2.dot.ca.gov/data/d4/cctv/cctvStatusD04.json`
-  - Static images (refresh every 5s): direct JPEG URLs
-  - HLS streams: `wzmedia.dot.ca.gov/D4/{camera}.stream/playlist.m3u8`
-  - 36 cameras in Marin: US-101, I-580, SR-37
-- [ ] Filter Marin cameras from District 4 JSON by lat/lon bounds
-- [ ] Build traffic camera panel — grid of thumbnail images, click to enlarge
-- [ ] Overlay camera locations on Marin map
+- [ ] Tighten map controls and tooltip hierarchy (larger hit areas, richer context in hover)
+- [ ] Improve mobile density and readability under 768px
+- [ ] Surface per-source freshness and error states in UI
+- [ ] Add a small diagnostic/dev panel for source latency + failures
 
-### Fire Lookout Cameras (Mt. Tam)
-- [ ] **ALERTCalifornia** camera network
-  - Camera location API: `ops.alertcalifornia.org/api/getCameraDataByLoc` (no auth, returns JSON)
-  - Mt Tam East (console ~2192), Mt Tam West (console ~2193)
-  - 12 wildfire detection cameras total in Marin County
-  - Image access requires the camera console web UI (no public image API)
-- [ ] Option A: Link out to camera console pages
-- [ ] Option B: Playwright scraping for image capture (fragile, matches CLAUDE.md "no fragile scraping" constraint — evaluate)
-- [ ] Display camera locations on map
+## Parked / Deferred
 
-### Traffic Data & Transit
-- [ ] **511.org Traffic Events** (FREE, API token required — register at 511.org)
-  - `api.511.org/traffic/events?api_key=[key]` — incidents, closures, construction
-  - 60 req/hour
-- [ ] **SMART Train** — GTFS-RT via 511.org regional feed
-- [ ] **Golden Gate Transit** — GTFS static at `realtime.goldengate.org/gtfsstatic/GTFSTransitData.zip`
-- [ ] **Marin Transit** — GTFS static at `marintransit.gov/data/google_transit.zip`; real-time via Swiftly (need API key from Marin Transit)
-- [ ] Build Traffic panel — active incidents, road closures, transit status
+- [ ] PG&E PSPS direct monitoring (no reliable public API)
+- [ ] Paid housing data vendors unless business case is confirmed
+- [ ] Re-introduce Custom Monitors panel after core layout/data work stabilizes
+- [ ] SeeClickFix / civic requests integration
+- [ ] Feedback / bug / feature form that emails operator on launch
+- [ ] Church / faith community live feeds and calendars
+- [ ] Beer / wine / pubs vertical
+- [ ] Hunting / game / public land vertical if there is enough real Marin signal
+- [ ] Surf spots using Open-Meteo + NOAA + NDBC, not Surfline scraping
+- [ ] Twitter/X fire intelligence feeds (@MarinFireDept, @alertwildfire, @CAL_FIRE)
 
-### Air Quality
-- [ ] Build `src/lib/api/marin/airquality.ts`
-- [ ] **AirNow API** (FREE, API key required — register at airnowapi.org)
-  - `airnowapi.org/aq/observation/latLong/current?latitude=37.97&longitude=-122.53&distance=25&API_KEY=[key]`
-- [ ] Display AQI in Pulse panel and on map
-- [ ] Color coding: green/yellow/orange/red/purple
+## Constraints / Guardrails
 
-### Tides
-- [ ] Build `src/lib/api/marin/tides.ts`
-- [ ] **NOAA CO-OPS** (FREE, no auth)
-  - Point Reyes station 9415020
-  - San Francisco station 9414290
-  - `api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=9415020&product=predictions&datum=MLLW&time_zone=lst_ldt&units=english&format=json`
-- [ ] Display next high/low in Pulse panel
-
-### Earthquakes
-- [ ] Build `src/lib/api/marin/earthquakes.ts`
-- [ ] **USGS** (FREE, no auth) — already in service registry
-  - `earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&latitude=37.97&longitude=-122.53&maxradiuskm=100&minmagnitude=2.0&limit=10`
-- [ ] Display on map + in Pulse panel
-
----
-
-## Phase 4: Deep Features
-
-### Housing Data
-- [ ] Research: ATTOM API for property transactions (paid — ~$100/mo?)
-- [ ] **Marin County Socrata** — limited: aggregate tax revenue only, no parcel-level data
-  - Code enforcement cases: `data.marincounty.gov/resource/ti2m-gwng.json`
-  - Property tax collected: `data.marincounty.gov/resource/tezz-bbg4.json`
-- [ ] Zillow/Redfin — explicitly off-limits per CLAUDE.md (no scraping)
-- [ ] Build Housing panel with whatever data is available
-
-### Strava KOM Tracking
-- [ ] Strava API (FREE tier, rate limited) — track segment KOM changes on local trails
-- [ ] Mt. Tam, Camino Alto, Paradise Loop, Bolinas Ridge segments
-- [ ] "KOM changed on Camino Alto" as an activity-layer event
-
-### PG&E PSPS Monitoring
-- [ ] No clean API exists
-- [ ] Best proxy: NWS Red Flag Warnings via `api.weather.gov`
-- [ ] Could monitor Simon Willison's `pge-outages` scraper data as a secondary signal
-- [ ] Outage map scraping is fragile — probably skip per design constraints
-
-### Fog Tracker
-- [ ] NWS marine forecast text parsing for fog mentions
-- [ ] NWS Area Forecast Discussion (AFD) from MTR office: `api.weather.gov/products/types/AFD/locations/MTR`
-- [ ] "Marine layer burning off by noon" — classic Marin data point
-- [ ] Could be a fun small panel or Pulse stat
-
-### Crime Data
-- [ ] Marin County Socrata has crime data but only for specific neighborhoods (Sleepy Hollow, Oak Crest)
-- [ ] Not county-wide — limited utility
-- [ ] May need to find other sources or skip for V1
-
----
-
-## Someday / Maybe
-
-- [ ] Marin Humane Society — lost pets feed?
-- [ ] School closures / district announcements RSS
-- [ ] Local event calendars (community centers, libraries)
-- [ ] Marin magazine or Marin Scope RSS if available
-- [ ] Tip jar integration (Stripe) — monetization per blueprint
-- [ ] Local sponsor ad slots — per blueprint revenue model
-- [ ] Batch LLM summarization of daily news (scheduled, cached — no per-request inference)
-- [ ] Mobile-responsive layout optimization
-- [ ] PWA support for phone home screen
-- [ ] Email digest — daily/weekly summary
-
----
-
-## Dead Ends (don't bother)
-
-- **Patch RSS** — all endpoints return 404, they killed RSS
-- **West Marin Feed** — domain doesn't resolve
-- **NPS RSS feeds** — infrastructure deprecated, returns HTML
-- **Google Maps traffic API** — paid, prohibits scraping
-- **PG&E PSPS API** — doesn't exist, scraping is fragile
-- **Zillow/Redfin scraping** — explicitly prohibited
-- **FamilySearch API** — not relevant and not approving projects anyway
-- **MagicSeaweed** — acquired by Surfline and shut down in 2023
+- No per-request LLM calls
+- Prefer official APIs / RSS / structured feeds first
+- Low-throughput local public pages may be parsed when no clean feed exists
+- Avoid brittle or hostile scraping patterns; cache aggressively and stay polite
+- Politically neutral framing
+- Satire always clearly labeled
+- No fake map pin precision
+- Static site deployment target (no backend/db)

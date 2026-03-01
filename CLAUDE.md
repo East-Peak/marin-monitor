@@ -12,23 +12,26 @@ Inspired by [hipcityreg/situation-monitor](https://github.com/hipcityreg/situati
 ## Development Commands
 
 ```bash
-npm run dev          # Start dev server (localhost:5173)
-npm run build        # Build to /build directory
-npm run preview      # Preview production build (localhost:4173)
-npm run check        # TypeScript type checking
-npm run test         # Run Vitest in watch mode
-npm run test:unit    # Run unit tests once
-npm run test:e2e     # Run Playwright E2E tests
-npm run lint         # ESLint + Prettier check
-npm run format       # Auto-format with Prettier
+npm run dev            # Start dev server (localhost:5173)
+npm run build          # Build to /build directory
+npm run preview        # Preview production build (localhost:4173)
+npm run check          # TypeScript type checking
+npm run test           # Run Vitest in watch mode
+npm run test:unit      # Run unit tests once (103 tests)
+npm run test:e2e       # Run Playwright E2E tests
+npm run lint           # ESLint + Prettier check
+npm run format         # Auto-format with Prettier
+npm run sync:activity  # Regenerate static/data/marin-activity.json
+npm run sync:police    # Regenerate static/data/marin-police-logs.json
 ```
 
 ## Technology Stack
 
-- **SvelteKit 2.0** with Svelte 5 runes (`$state`, `$derived`, `$effect`)
+- **SvelteKit 2.0** with Svelte 5 runes (`$state`, `$derived`, `$effect`, `$props`)
 - **TypeScript** (strict mode)
 - **Tailwind CSS** with dark theme
-- **D3.js** for map visualization + H3 hex grid overlay
+- **D3.js** for map visualization
+- **MapLibre GL** for base map with Mapbox traffic overlay
 - **Vitest** (unit) + **Playwright** (E2E)
 - **Static adapter** — deploys as pure static site
 
@@ -36,10 +39,10 @@ npm run format       # Auto-format with Prettier
 
 ### Core Directories (`src/lib/`)
 
-- **`api/marin/`** — Data adapters for Marin sources (RSS, NWS, Socrata, NOAA tides, AirNow, USGS)
+- **`api/marin/`** — Data adapters (RSS, NWS, NWS hourly/QPF, NOAA tides, NOAA marine, AirNow, USGS, NPS, UV, sun, CalFire, transit, housing, activity, blotter, police-logs, article-enrichment)
 - **`analysis/`** — Story correlation, narrative tracking, entity extraction
 - **`components/`** — Svelte components: layout/, panels/, modals/, common/
-- **`config/`** — Configuration-driven: feeds, keywords, towns, map, panels
+- **`config/`** — Configuration-driven: feeds, keywords, towns, map, panels, cameras, presets, relevance, analysis, api
 - **`geo/`** — Town geo-tagging, H3 hex grid utilities
 - **`services/`** — Resilience layer: CacheManager, CircuitBreaker, RequestDeduplicator, ServiceClient
 - **`stores/`** — Svelte stores: news, settings, monitors, refresh orchestration
@@ -59,55 +62,95 @@ $types      → src/lib/types
 ## Key Architectural Patterns
 
 ### Service Layer (`src/lib/services/`)
+
 All HTTP requests go through `ServiceClient` which integrates:
+
 - **CacheManager**: Per-service caching with TTL and stale-while-revalidate
 - **CircuitBreaker**: Prevents cascading failures from flaky sources
 - **RequestDeduplicator**: Prevents concurrent duplicate requests
 
 ### Multi-Stage Refresh (`src/lib/stores/refresh.ts`)
+
 Data fetches happen in 3 priority stages:
+
 1. Critical (0ms): Local news, fire/weather alerts
 2. Secondary (2s): Air quality, tides, traffic
 3. Tertiary (4s): Community, outdoor, civic data
 
 ### Configuration-Driven Design (`src/lib/config/`)
-- `feeds.ts` — Local RSS sources (Marin IJ, Patch, county/city sites, emergency portals)
-- `keywords.ts` — Alert keywords (wildfire, PSPS, evacuation) + town detection
+
+- `feeds.ts` — Local RSS sources with verification levels (26 feeds across 11 categories)
+- `keywords.ts` — Alert keywords (wildfire, PSPS, evacuation) + town detection (word-boundary matching)
 - `towns.ts` — Marin town definitions with coordinates
 - `panels.ts` — Panel registry with display order
-- `map.ts` — Marin geography, town boundaries, fire zones
+- `cameras.ts` — Webcam config: Caltrans traffic, Windy scenic, ALERTCalifornia fire (9 cameras, 3 categories)
+- `map.ts` — Marin geography, fire zones, landmarks, SMART stations, NWS/tide/earthquake params
+- `relevance.ts` — Local-vs-global scoring with strict/mixed source rules and editorial detection
+- `presets.ts` — Layout presets for different user modes
 - `analysis.ts` — Local correlation topics and narrative patterns
 
-### Map Layers (`src/lib/components/panels/MarinMapPanel.svelte`)
+### Dashboard Layout
+
+Top section (collapsible signal deck):
+- **Left column**: Marin Map, Cameras
+- **Middle column**: Pulse, Outlooks, Environment
+- **Right column**: Weather, Signals, Coastal Conditions
+
+Wire columns below (responsive grid, auto-fit):
+- Local Wire, Crime & Safety, Civic, Outdoors & Lifestyle, Marin Lately
+- Cycling & Endurance, Shows & Events, Sports & Prep, Fishing, Farm & Market
+
+### Map Layers
+
 Toggleable layers on the Marin map:
+
 - **Civic** — County announcements, public meetings, agency releases
 - **News** — Local media stories, geo-tagged by town
 - **Safety** — Fire alerts, emergency announcements, road closures
 - **Housing** — Recent transactions, market activity
-- **Activity** — Strava KOM changes, local events
+- **Activity** — Local events, races, community
 - **Satire** — Marin Lately "unconfirmed reports" (clearly labeled)
+- **Traffic** — Mapbox congestion lines + 511 incident points
 
 ### Verification Levels
+
 Every story carries a `verification_level`:
+
 - **Official** — County/city pages, NWS, emergency portals
-- **Local Media** — Marin IJ, SF Chronicle, Patch
-- **Community** — Social, NextDoor, scanner mentions
+- **Local Media** — Marin IJ, Point Reyes Light, Pacific Sun, KQED, NBC Bay Area
+- **Community** — Marin Humane, WildCare, community organizations
 - **Satire** — Marin Lately (displayed with dashed outlines, behind "Enable Vibes" toggle)
 
-## Data Sources (V1)
+### Alert Keywords
 
-| Source | Type | API Key? |
-|--------|------|----------|
-| Marin IJ / local news | RSS | No |
-| Marin County emergency portal | RSS | No |
-| City news pages (CivicEngage) | RSS | No |
-| National Weather Service | REST | No |
-| NOAA Tides (Pt Reyes / SF) | REST | No |
-| USGS Earthquakes | REST | No |
-| AirNow AQI | REST | Yes (free) |
-| Marin Open Data (Socrata) | REST | No |
-| Strava segments | REST | Yes (free, rate limited) |
-| Marin Lately | RSS/scrape | No |
+`containsAlertKeyword()` uses word-boundary matching (`hasWholePhrase()`) to prevent false positives. "MarinFire" won't trigger, but "fire on Miller Ave" will. Title-only scanning for town detection to prevent false geo-tagging.
+
+## Data Sources
+
+| Source                          | Type       | API Key?                 |
+| ------------------------------- | ---------- | ------------------------ |
+| Marin IJ / local news (7 feeds)| RSS        | No                       |
+| Point Reyes Light, Pacific Sun  | RSS        | No                       |
+| Marin Magazine                  | RSS        | No                       |
+| NBC Bay Area (Marin), KQED     | RSS        | No                       |
+| City of San Rafael, Town of Fairfax | RSS   | No                       |
+| Marin County BOS (Granicus)     | RSS        | No                       |
+| Marin Humane, WildCare         | RSS        | No                       |
+| MMWD / Marin Water              | RSS        | No                       |
+| National Weather Service        | REST       | No                       |
+| NWS Hourly + QPF (rain totals)  | REST       | No                       |
+| NOAA Tides (Pt Reyes / SF Bar) | REST       | No                       |
+| NOAA Marine (nearshore buoys)   | REST       | No                       |
+| USGS Earthquakes                | REST       | No                       |
+| AirNow AQI                      | REST       | Yes (free)               |
+| NPS Alerts                       | REST       | Yes (free)               |
+| 511 Traffic Events               | REST       | Yes (free)               |
+| Mapbox Traffic v1                | Tiles      | Yes                      |
+| ALERTCalifornia fire cams        | Image CDN  | No                       |
+| Caltrans CCTV                    | Image      | No                       |
+| Marin Open Data (Socrata)        | REST       | No                       |
+| Marin Lately                     | RSS/scrape | No                       |
+| 20+ activity/event scrapers      | Scrape     | No                       |
 
 ## Design Constraints
 
@@ -115,8 +158,17 @@ Every story carries a `verification_level`:
 - **No fragile scraping.** Use RSS and documented APIs. Never scrape Zillow.
 - **Politically neutral.** No political scoring, ideological narratives, risk ratings, or fraud claims.
 - **Satire clearly labeled.** Marin Lately items always marked "Satire / Unconfirmed" with distinct visual treatment.
+- **No fake map precision.** Exact coordinates only when we truly have them. Town-level placement otherwise.
 - **Low operating cost.** Target ~$70/month total (hosting + APIs + inference).
 - **Caching everywhere.** Use ServiceClient with appropriate TTLs for all data fetching.
+
+## Settings
+
+User-configurable via Settings modal:
+- **UI Scale** (50-150%) — CSS zoom on document root, persisted to localStorage
+- **Dashboard collapse** — Hide/show the signal deck section
+- **Panel order** — Drag-and-drop reorder of wire columns
+- **Preset layouts** — Quick-switch between curated panel arrangements
 
 ## Testing
 

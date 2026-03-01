@@ -5,6 +5,8 @@
 import { writable, derived, get } from 'svelte/store';
 import type { NewsItem, NewsCategory } from '$lib/types';
 import { containsAlertKeyword, detectTown, detectTopics } from '$lib/config';
+import { isLocallyRelevant } from '$lib/config/relevance';
+import { enrichItemsForLocation } from '$lib/api/marin/article-enrichment';
 
 export interface CategoryState {
 	items: NewsItem[];
@@ -19,7 +21,19 @@ export interface NewsState {
 }
 
 // All Marin news categories
-const NEWS_CATEGORIES: NewsCategory[] = ['local', 'civic', 'safety', 'outdoors', 'housing', 'satire'];
+const NEWS_CATEGORIES: NewsCategory[] = [
+	'local',
+	'civic',
+	'safety',
+	'outdoors',
+	'housing',
+	'cycling',
+	'endurance',
+	'shows',
+	'prep',
+	'farm',
+	'satire'
+];
 
 // Create initial state for a category
 function createCategoryState(): CategoryState {
@@ -42,23 +56,35 @@ function createInitialState(): NewsState {
 
 // Enrich news item with town detection and alert keywords
 function enrichNewsItem(item: NewsItem): NewsItem {
-	const text = `${item.title} ${item.description || ''}`;
-	const alertResult = containsAlertKeyword(text);
-	const townResult = detectTown(text);
+	const fullText = `${item.title} ${item.description || ''} ${item.content || ''}`;
+	// Only scan the TITLE for alert keywords — description/content matches produce
+	// too many false positives (e.g. "wildfire" in a landscaping article, "landslide"
+	// in a concert listing).
+	const alertResult = containsAlertKeyword(item.title, {
+		source: item.source,
+		verification: item.verification,
+		link: item.link,
+		title: item.title
+	});
+	// Only detect town from TITLE — description/content mentions produce false
+	// positives (e.g. a San Rafael newsletter listing events in Stinson Beach gets
+	// pinned at Stinson Beach instead of San Rafael).
+	const townResult = detectTown(item.title);
 
 	return {
 		...item,
-		isAlert: alertResult.isAlert,
-		alertKeyword: alertResult.keyword,
+		isAlert: item.isAlert !== undefined ? item.isAlert : alertResult.isAlert,
+		alertKeyword: alertResult.isAlert ? alertResult.keyword : undefined,
 		town: item.town ?? townResult?.name,
 		townSlug: item.townSlug ?? townResult?.slug,
-		topics: item.topics ?? detectTopics(text)
+		topics: item.topics ?? detectTopics(fullText)
 	};
 }
 
 // Create the store
 function createNewsStore() {
 	const { subscribe, set, update } = writable<NewsState>(createInitialState());
+	const inFlightLocationEnrichment = new Set<NewsCategory>();
 
 	return {
 		subscribe,
@@ -108,7 +134,7 @@ function createNewsStore() {
 		 * Set items for a category
 		 */
 		setItems(category: NewsCategory, items: NewsItem[]) {
-			const enrichedItems = items.map(enrichNewsItem);
+			const enrichedItems = items.map(enrichNewsItem).filter(isLocallyRelevant);
 
 			update((state) => ({
 				...state,
@@ -128,7 +154,7 @@ function createNewsStore() {
 		 * Append items to a category (for pagination)
 		 */
 		appendItems(category: NewsCategory, items: NewsItem[]) {
-			const enrichedItems = items.map(enrichNewsItem);
+			const enrichedItems = items.map(enrichNewsItem).filter(isLocallyRelevant);
 
 			update((state) => {
 				const existing = state.categories[category].items;
@@ -149,6 +175,66 @@ function createNewsStore() {
 					}
 				};
 			});
+		},
+
+		/**
+		 * Enrich already-filtered items with precise map locations (when available).
+		 * This runs in the background and only updates items still present in the category.
+		 */
+		async enrichLocations(category: NewsCategory) {
+			if (inFlightLocationEnrichment.has(category)) return;
+			inFlightLocationEnrichment.add(category);
+
+			try {
+				const snapshot = get({ subscribe }).categories[category].items;
+				if (snapshot.length === 0) return;
+
+				const enriched = await enrichItemsForLocation(snapshot);
+				const byId = new Map(enriched.map((item) => [item.id, item]));
+
+				update((state) => {
+					let changed = false;
+					const nextItems = state.categories[category].items.map((item) => {
+						const candidate = byId.get(item.id);
+						if (!candidate) return item;
+
+						const nextLat = candidate.lat;
+						const nextLon = candidate.lon;
+						const nextConfidence = candidate.locationConfidence;
+						const nextEvidence = candidate.locationEvidence;
+
+						const same =
+							nextLat === item.lat &&
+							nextLon === item.lon &&
+							nextConfidence === item.locationConfidence &&
+							nextEvidence === item.locationEvidence;
+
+						if (same) return item;
+						changed = true;
+						return {
+							...item,
+							lat: nextLat,
+							lon: nextLon,
+							locationConfidence: nextConfidence,
+							locationEvidence: nextEvidence
+						};
+					});
+
+					if (!changed) return state;
+					return {
+						...state,
+						categories: {
+							...state.categories,
+							[category]: {
+								...state.categories[category],
+								items: nextItems
+							}
+						}
+					};
+				});
+			} finally {
+				inFlightLocationEnrichment.delete(category);
+			}
 		},
 
 		/**
@@ -233,6 +319,17 @@ export const civicNews = derived(news, ($news) => $news.categories.civic);
 export const safetyNews = derived(news, ($news) => $news.categories.safety);
 export const outdoorsNews = derived(news, ($news) => $news.categories.outdoors);
 export const housingNews = derived(news, ($news) => $news.categories.housing);
+export const cyclingNews = derived(news, ($news) => $news.categories.cycling);
+export const enduranceNews = derived(news, ($news) => $news.categories.endurance);
+export const humanPoweredNews = derived([cyclingNews, enduranceNews], ([$cycling, $endurance]) => ({
+	items: [...$cycling.items, ...$endurance.items].sort((a, b) => b.timestamp - a.timestamp),
+	loading: $cycling.loading || $endurance.loading,
+	error: $cycling.error ?? $endurance.error,
+	lastUpdated: Math.max($cycling.lastUpdated ?? 0, $endurance.lastUpdated ?? 0) || null
+}));
+export const showsNews = derived(news, ($news) => $news.categories.shows);
+export const prepNews = derived(news, ($news) => $news.categories.prep);
+export const farmNews = derived(news, ($news) => $news.categories.farm);
 export const satireNews = derived(news, ($news) => $news.categories.satire);
 
 // Derived store for all news items (reactive)

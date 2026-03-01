@@ -107,6 +107,22 @@ describe('Settings Store', () => {
 		expect(get(settings).initialized).toBe(true);
 	});
 
+	it('should default to dark theme and toggle to light', async () => {
+		const { settings } = await import('./settings');
+
+		expect(get(settings).theme).toBe('dark');
+		settings.toggleTheme();
+		expect(get(settings).theme).toBe('light');
+	});
+
+	it('should persist theme changes', async () => {
+		const { settings } = await import('./settings');
+
+		settings.setTheme('light');
+		expect(get(settings).theme).toBe('light');
+		expect(localStorageMock.setItem).toHaveBeenCalledWith('mm_theme', JSON.stringify('light'));
+	});
+
 	it('should reset to defaults', async () => {
 		const { settings } = await import('./settings');
 

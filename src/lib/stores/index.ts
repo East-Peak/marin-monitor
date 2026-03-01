@@ -31,6 +31,12 @@ export {
 	safetyNews,
 	outdoorsNews,
 	housingNews,
+	cyclingNews,
+	enduranceNews,
+	humanPoweredNews,
+	showsNews,
+	prepNews,
+	farmNews,
 	satireNews,
 	allNewsItems,
 	alerts,
@@ -39,6 +45,17 @@ export {
 	type CategoryState,
 	type NewsState
 } from './news';
+
+// Map store
+export {
+	mapStore,
+	selectedTown,
+	activeLayers,
+	hoveredTown,
+	LAYER_TO_CATEGORY,
+	CATEGORY_TO_LAYER,
+	type MapState
+} from './map';
 
 // Refresh store
 export {

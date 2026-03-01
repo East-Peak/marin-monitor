@@ -8,12 +8,21 @@
 export function timeAgo(dateInput: string | number | Date): string {
 	const date = new Date(dateInput);
 	const now = new Date();
-	const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+	const deltaSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+	const future = deltaSeconds < 0;
+	const seconds = Math.abs(deltaSeconds);
 
-	if (seconds < 60) return 'just now';
-	if (seconds < 3600) return Math.floor(seconds / 60) + 'm';
-	if (seconds < 86400) return Math.floor(seconds / 3600) + 'h';
-	return Math.floor(seconds / 86400) + 'd';
+	if (seconds < 60) return future ? 'soon' : 'just now';
+	if (seconds < 3600) {
+		const minutes = Math.floor(seconds / 60);
+		return future ? `in ${minutes}m` : `${minutes}m`;
+	}
+	if (seconds < 86400) {
+		const hours = Math.floor(seconds / 3600);
+		return future ? `in ${hours}h` : `${hours}h`;
+	}
+	const days = Math.floor(seconds / 86400);
+	return future ? `in ${days}d` : `${days}d`;
 }
 
 /**
@@ -23,12 +32,14 @@ export function getRelativeTime(dateInput: string | number | Date): string {
 	const date = new Date(dateInput);
 	const now = new Date();
 	const diff = now.getTime() - date.getTime();
-	const hours = Math.floor(diff / (1000 * 60 * 60));
+	const future = diff < 0;
+	const absDiff = Math.abs(diff);
+	const hours = Math.floor(absDiff / (1000 * 60 * 60));
 	const days = Math.floor(hours / 24);
 
-	if (hours < 1) return 'Just now';
-	if (hours < 24) return `${hours}h ago`;
-	if (days < 7) return `${days}d ago`;
+	if (hours < 1) return future ? 'Soon' : 'Just now';
+	if (hours < 24) return future ? `In ${hours}h` : `${hours}h ago`;
+	if (days < 7) return future ? `In ${days}d` : `${days}d ago`;
 	return date.toLocaleDateString();
 }
 

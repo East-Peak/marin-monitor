@@ -13,7 +13,13 @@
 		"test:unit": "vitest run",
 		"test:e2e": "playwright test",
 		"lint": "eslint . && prettier --check .",
-		"format": "prettier --write ."
+		"format": "prettier --write .",
+		"traffic:evaluate": "node scripts/evaluate-traffic-sources.mjs",
+		"sync:police": "node scripts/extract-police-logs.mjs",
+		"sync:activity": "node scripts/extract-activity-feeds.mjs",
+		"sync:install": "bash scripts/manage-sync.sh install",
+		"sync:uninstall": "bash scripts/manage-sync.sh uninstall",
+		"sync:status": "bash scripts/manage-sync.sh status"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.49.0",
@@ -23,9 +29,12 @@
 		"@testing-library/svelte": "^5.0.0",
 		"@types/d3": "^7.4.0",
 		"@types/node": "^22.0.0",
+		"@types/react": "^19.2.14",
+		"@types/react-dom": "^19.2.3",
 		"@types/topojson-client": "^3.1.0",
 		"@typescript-eslint/eslint-plugin": "^8.0.0",
 		"@typescript-eslint/parser": "^8.0.0",
+		"agentation": "^2.2.1",
 		"autoprefixer": "^10.4.0",
 		"eslint": "^9.0.0",
 		"eslint-config-prettier": "^9.0.0",
@@ -35,6 +44,8 @@
 		"postcss": "^8.4.0",
 		"prettier": "^3.0.0",
 		"prettier-plugin-svelte": "^3.0.0",
+		"react": "^19.2.4",
+		"react-dom": "^19.2.4",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
 		"tailwindcss": "^3.4.0",
@@ -45,6 +56,7 @@
 	},
 	"dependencies": {
 		"d3": "^7.9.0",
+		"maplibre-gl": "^4.7.1",
 		"topojson-client": "^3.1.0"
 	}
 }

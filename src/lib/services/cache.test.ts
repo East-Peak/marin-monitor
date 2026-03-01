@@ -7,7 +7,7 @@ describe('CacheManager', () => {
 	beforeEach(() => {
 		cache = new CacheManager({ prefix: 'test_', maxMemorySize: 5 });
 		// Clear any previous localStorage entries
-		if (typeof localStorage !== 'undefined') {
+		if (typeof localStorage !== 'undefined' && typeof localStorage.clear === 'function') {
 			localStorage.clear();
 		}
 	});
