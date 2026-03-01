@@ -22,7 +22,7 @@ export interface ServiceConfig {
 	proxies?: string[];
 }
 
-export type ServiceId = 'NWS' | 'NOAA_TIDES' | 'USGS' | 'AIRNOW' | 'MARIN_OPENDATA' | 'CORS_PROXY';
+export type ServiceId = 'NWS' | 'NOAA_TIDES' | 'USGS' | 'AIRNOW' | 'MARIN_OPENDATA';
 
 const SERVICE_CONFIG: Record<ServiceId, ServiceConfig> = {
 	NWS: {
@@ -98,22 +98,6 @@ const SERVICE_CONFIG: Record<ServiceId, ServiceConfig> = {
 			failureThreshold: 3,
 			resetTimeout: 120000
 		}
-	},
-
-	CORS_PROXY: {
-		id: 'cors_proxy',
-		baseUrl: null,
-		proxies: ['https://corsproxy.io/?url=', 'https://api.allorigins.win/raw?url='],
-		timeout: 12000,
-		retries: 1,
-		cache: {
-			ttl: 5 * 60 * 1000,
-			staleWhileRevalidate: true
-		},
-		circuitBreaker: {
-			failureThreshold: 5,
-			resetTimeout: 120000
-		}
 	}
 };
 
@@ -144,13 +128,6 @@ export class ServiceRegistry {
 	 */
 	static has(serviceId: string): serviceId is ServiceId {
 		return Object.hasOwn(SERVICE_CONFIG, serviceId);
-	}
-
-	/**
-	 * Get CORS proxies list
-	 */
-	static getCorsProxies(): string[] {
-		return SERVICE_CONFIG.CORS_PROXY.proxies || [];
 	}
 }
 

@@ -12,11 +12,8 @@
  * API key required — get one at https://511.org/open-data/token
  */
 
-import { TRANSIT_511_API_KEY } from '$lib/config/api';
 import type { NewsItem } from '$lib/types';
 import { logger } from '$lib/config/api';
-
-const API_BASE = 'https://api.511.org/transit';
 
 /** Marin-relevant transit agencies */
 const MARIN_AGENCIES = [
@@ -57,9 +54,7 @@ interface GtfsResponse {
 }
 
 /**
- * Fetch service alerts for a single agency.
- * Tries local API proxy first (keeps key server-side),
- * falls back to direct 511.org call if proxy unavailable.
+ * Fetch service alerts for a single agency via the first-party API proxy.
  */
 async function fetchAgencyAlerts(
 	agencyId: string,
@@ -67,34 +62,14 @@ async function fetchAgencyAlerts(
 ): Promise<{ items: NewsItem[]; error?: string }> {
 	try {
 		logger.log('511', `Fetching ${agencyName} alerts`);
-
-		let data: GtfsResponse;
-
-		// Try local proxy first
-		try {
-			const proxyUrl = `/api/transit?agency=${agencyId}`;
-			const proxyResponse = await fetch(proxyUrl);
-			if (proxyResponse.ok) {
-				data = await proxyResponse.json();
-			} else {
-				throw new Error('Proxy failed');
-			}
-		} catch {
-			// Fallback: direct call (needs API key in client)
-			if (!TRANSIT_511_API_KEY) {
-				return { items: [], error: 'No 511 API key configured' };
-			}
-			const url = `${API_BASE}/servicealerts?api_key=${TRANSIT_511_API_KEY}&agency=${agencyId}&format=json`;
-			const response = await fetch(url, {
-				headers: { Accept: 'application/json' }
-			});
-			if (!response.ok) {
-				throw new Error(`511 API failed for ${agencyId}: ${response.status}`);
-			}
-			const text = await response.text();
-			const clean = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
-			data = JSON.parse(clean);
+		const proxyUrl = `/api/transit?agency=${agencyId}`;
+		const proxyResponse = await fetch(proxyUrl, {
+			headers: { Accept: 'application/json' }
+		});
+		if (!proxyResponse.ok) {
+			throw new Error(`Transit proxy failed for ${agencyId}: ${proxyResponse.status}`);
 		}
+		const data: GtfsResponse = await proxyResponse.json();
 
 		return {
 			items: data.Entities.map((entity) => entityToNewsItem(entity, agencyId, agencyName))
@@ -151,11 +126,6 @@ export async function fetchTransitAlerts(): Promise<{
 	items: NewsItem[];
 	errors: string[];
 }> {
-	if (!TRANSIT_511_API_KEY) {
-		logger.warn('511', 'No API key configured — skipping transit alerts');
-		return { items: [], errors: ['No 511 API key'] };
-	}
-
 	const results = await Promise.allSettled(
 		MARIN_AGENCIES.map((agency) => fetchAgencyAlerts(agency.id, agency.name))
 	);

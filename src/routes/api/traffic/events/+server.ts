@@ -3,6 +3,10 @@ import { env } from '$env/dynamic/private';
 
 const API_BASE = 'https://api.511.org/traffic/events';
 
+function get511ApiKey(): string {
+	return env.API_511_KEY || '';
+}
+
 function normalizeEvents(payload: unknown): Record<string, unknown>[] {
 	if (Array.isArray(payload)) return payload as Record<string, unknown>[];
 	if (!payload || typeof payload !== 'object') return [];
@@ -19,7 +23,7 @@ function normalizeEvents(payload: unknown): Record<string, unknown>[] {
 }
 
 export async function GET({ fetch }) {
-	const apiKey = env.VITE_511_API_KEY;
+	const apiKey = get511ApiKey();
 	if (!apiKey) {
 		return json(
 			{ events: [], error: 'No 511 API key configured' },

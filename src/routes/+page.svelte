@@ -564,7 +564,9 @@
 				<span class="dash-toggle-line"></span>
 				<span class="dash-toggle-label">
 					{$settings.dashboardExpanded ? 'Hide' : 'Show'} Dashboard
-					<span class="dash-toggle-chevron">{$settings.dashboardExpanded ? '\u25B4' : '\u25BE'}</span>
+					<span class="dash-toggle-chevron"
+						>{$settings.dashboardExpanded ? '\u25B4' : '\u25BE'}</span
+					>
 				</span>
 				<span class="dash-toggle-line"></span>
 			</button>
@@ -856,7 +858,9 @@
 		gap: 0.5rem;
 		margin-bottom: 0.5rem;
 		align-items: stretch;
-		transition: grid-template-rows 0.25s ease, opacity 0.2s ease;
+		transition:
+			grid-template-rows 0.25s ease,
+			opacity 0.2s ease;
 	}
 
 	.signal-layout.collapsed {

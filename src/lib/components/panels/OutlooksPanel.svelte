@@ -141,10 +141,7 @@
 	}
 
 	onMount(async () => {
-		const [marine, rain] = await Promise.all([
-			fetchMarineOutlook(5),
-			fetchDailyRainForecast()
-		]);
+		const [marine, rain] = await Promise.all([fetchMarineOutlook(5), fetchDailyRainForecast()]);
 		marineOutlook = marine;
 		dailyRain = rain;
 		marineLoading = false;

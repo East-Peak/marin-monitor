@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { Panel } from '$lib/components/common';
-	import { CAMERAS, CAMERA_CATEGORIES, type CameraCategory, type CameraConfig } from '$lib/config/cameras';
+	import {
+		CAMERAS,
+		CAMERA_CATEGORIES,
+		type CameraCategory,
+		type CameraConfig
+	} from '$lib/config/cameras';
 
 	let imageTimestamps = $state<Record<string, number>>({});
 	let expandedCamera = $state<string | null>(null);

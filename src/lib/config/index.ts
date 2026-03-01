@@ -70,14 +70,4 @@ export {
 export { isLocallyRelevant, isMixedSource } from './relevance';
 
 // API configuration
-export {
-	CORS_PROXY_URL,
-	CORS_PROXIES,
-	fetchWithProxy,
-	API_DELAYS,
-	CACHE_TTLS,
-	API_URLS,
-	AIRNOW_API_KEY,
-	DEBUG,
-	logger
-} from './api';
+export { API_DELAYS, CACHE_TTLS, API_URLS, DEBUG, logger } from './api';

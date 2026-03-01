@@ -84,7 +84,11 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 	monitors: { name: 'My Monitors', priority: 2, description: 'Custom keyword monitors' },
 	correlation: { name: 'Connections', priority: 3, description: 'Cross-source topic correlations' },
 	narrative: { name: 'Threads', priority: 3, description: 'Emerging local narrative tracking' },
-	satire: { name: 'Marin Lately (satire)', priority: 3, description: 'Marin Lately unconfirmed reports' }
+	satire: {
+		name: 'Marin Lately (satire)',
+		priority: 3,
+		description: 'Marin Lately unconfirmed reports'
+	}
 };
 
 export const NON_DRAGGABLE_PANELS: PanelId[] = ['map'];

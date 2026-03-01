@@ -11,6 +11,10 @@ import type { RequestHandler } from './$types';
 
 const API_BASE = 'https://api.511.org/transit';
 
+function get511ApiKey(): string {
+	return env.API_511_KEY || '';
+}
+
 export const GET: RequestHandler = async ({ url }) => {
 	const agency = url.searchParams.get('agency');
 
@@ -18,8 +22,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		throw error(400, 'Missing agency parameter');
 	}
 
-	// Read API key from env (VITE_ prefix stripped by SvelteKit for private env)
-	const apiKey = env.VITE_511_API_KEY;
+	const apiKey = get511ApiKey();
 	if (!apiKey) {
 		throw error(500, 'No 511 API key configured');
 	}

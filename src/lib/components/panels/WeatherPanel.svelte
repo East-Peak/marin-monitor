@@ -62,9 +62,10 @@
 		// Find today's estimated rain total from QPF data
 		const todayDate = new Date().toLocaleDateString('en-CA');
 		const todayRain = dailyRain.find((d) => d.date === todayDate);
-		const rainDetail = todayRain && todayRain.totalInches > 0
-			? `${formatTooltipTime(peakRain.startTime)} · Est. ${formatRainAmount(todayRain.totalInches)} today`
-			: `${formatTooltipTime(peakRain.startTime)} · ${peakRain.shortForecast}`;
+		const rainDetail =
+			todayRain && todayRain.totalInches > 0
+				? `${formatTooltipTime(peakRain.startTime)} · Est. ${formatRainAmount(todayRain.totalInches)} today`
+				: `${formatTooltipTime(peakRain.startTime)} · ${peakRain.shortForecast}`;
 
 		return [
 			{

@@ -13,10 +13,6 @@
 import type { NewsItem } from '$lib/types';
 import { logger } from '$lib/config/api';
 
-const NPS_BASE = 'https://developer.nps.gov/api/v1';
-const NPS_API_KEY = import.meta.env.VITE_NPS_API_KEY || 'DEMO_KEY';
-const MARIN_PARKS = 'goga,muwo,pore';
-
 interface NpsAlert {
 	id: string;
 	title: string;
@@ -25,11 +21,6 @@ interface NpsAlert {
 	category: string; // 'Danger', 'Caution', 'Information', 'Park Closure'
 	url: string;
 	lastIndexedDate: string;
-}
-
-interface NpsResponse {
-	total: string;
-	data: NpsAlert[];
 }
 
 const PARK_NAMES: Record<string, string> = {
@@ -44,25 +35,18 @@ const PARK_NAMES: Record<string, string> = {
  */
 export async function fetchNpsAlerts(): Promise<NewsItem[]> {
 	try {
-		const url = `${NPS_BASE}/alerts?parkCode=${MARIN_PARKS}&api_key=${NPS_API_KEY}`;
-		logger.log('NPS', `Fetching alerts for ${MARIN_PARKS}`);
-
-		const response = await fetch(url, {
+		logger.log('NPS', 'Fetching Marin park alerts via local API');
+		const response = await fetch('/api/nps/alerts', {
 			headers: { Accept: 'application/json' }
 		});
-
-		if (response.status === 429) {
-			logger.log('NPS', 'Rate limited (DEMO_KEY). Get a free key at nps.gov/subjects/developer');
-			return [];
-		}
 
 		if (!response.ok) {
 			throw new Error(`NPS API failed: ${response.status}`);
 		}
 
-		const data: NpsResponse = await response.json();
+		const alerts: NpsAlert[] = await response.json();
 
-		return data.data.map((alert) => ({
+		return alerts.map((alert) => ({
 			id: `nps-${alert.id}`,
 			title: alert.title,
 			link: alert.url || `https://www.nps.gov/${alert.parkCode}/planyourvisit/conditions.htm`,

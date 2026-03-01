@@ -273,50 +273,6 @@ export class ServiceClient {
 	}
 
 	/**
-	 * Fetch through CORS proxy with fallback
-	 */
-	async fetchWithProxy<T = string>(targetUrl: string, options: RequestOptions = {}): Promise<T> {
-		const proxies = ServiceRegistry.getCorsProxies();
-		const config = ServiceRegistry.get('CORS_PROXY');
-		if (!config) {
-			throw new ServiceError('CORS_PROXY service not configured');
-		}
-
-		let lastError: Error | undefined;
-
-		for (let i = 0; i < proxies.length; i++) {
-			const proxy = proxies[i];
-			const proxyUrl = proxy + encodeURIComponent(targetUrl);
-
-			try {
-				const response = await this.fetchWithTimeout<string>(
-					proxyUrl,
-					{
-						...options,
-						accept: 'application/rss+xml, application/xml, text/xml, */*',
-						responseType: 'text'
-					},
-					config
-				);
-
-				// Validate response (check for error pages)
-				if (
-					response &&
-					!response.includes('<!DOCTYPE html>') &&
-					!response.includes('error code:')
-				) {
-					return response as T;
-				}
-			} catch (e) {
-				this.log(`Proxy ${i + 1} failed: ${(e as Error).message}`);
-				lastError = e as Error;
-			}
-		}
-
-		throw lastError || new NetworkError('All CORS proxies failed');
-	}
-
-	/**
 	 * Get health status of all services
 	 */
 	getHealthStatus(): HealthStatus {

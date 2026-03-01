@@ -5,36 +5,7 @@
 import { browser } from '$app/environment';
 
 /**
- * 511.org API key (free tier)
- * Covers: Golden Gate Transit/Ferry, Marin Transit, SMART, SF Bay Ferry
- * Get your key at: https://511.org/open-data/token
- */
-export const TRANSIT_511_API_KEY = browser
-	? (import.meta.env?.VITE_511_API_KEY ?? '')
-	: (process.env.VITE_511_API_KEY ?? '');
-
-/**
- * AirNow API key (free tier)
- * Get your key at: https://docs.airnowapi.org/account/request/
- */
-export const AIRNOW_API_KEY = browser
-	? (import.meta.env?.VITE_AIRNOW_API_KEY ?? '')
-	: (process.env.VITE_AIRNOW_API_KEY ?? '');
-
-/**
- * Strava API credentials (free tier, rate limited)
- * Create app at: https://www.strava.com/settings/api
- */
-export const STRAVA_CLIENT_ID = browser
-	? (import.meta.env?.VITE_STRAVA_CLIENT_ID ?? '')
-	: (process.env.VITE_STRAVA_CLIENT_ID ?? '');
-
-export const STRAVA_CLIENT_SECRET = browser
-	? (import.meta.env?.VITE_STRAVA_CLIENT_SECRET ?? '')
-	: (process.env.VITE_STRAVA_CLIENT_SECRET ?? '');
-
-/**
- * Mapbox token for optional traffic congestion overlays
+ * Mapbox token for optional traffic congestion overlays (public — used client-side for map tiles)
  */
 export const MAPBOX_TOKEN = browser
 	? (import.meta.env?.VITE_MAPBOX_TOKEN ?? '')
@@ -55,39 +26,6 @@ export const API_URLS = {
  * Check if we're in development mode
  */
 const isDev = browser ? (import.meta.env?.DEV ?? false) : false;
-
-/**
- * CORS proxy URLs for external API requests
- * TODO: Set up our own Cloudflare Worker proxy
- */
-export const CORS_PROXIES = {
-	primary: 'https://corsproxy.io/?url=',
-	fallback: 'https://api.allorigins.win/raw?url='
-} as const;
-
-export const CORS_PROXY_URL = CORS_PROXIES.primary;
-
-/**
- * Fetch with CORS proxy fallback
- * Tries primary proxy first, falls back to secondary on failure
- */
-export async function fetchWithProxy(url: string): Promise<Response> {
-	const encodedUrl = encodeURIComponent(url);
-
-	// Try primary proxy first
-	try {
-		const response = await fetch(CORS_PROXIES.primary + encodedUrl);
-		if (response.ok) {
-			return response;
-		}
-		logger.warn('API', `Primary proxy failed (${response.status}), trying fallback`);
-	} catch (error) {
-		logger.warn('API', 'Primary proxy error, trying fallback:', error);
-	}
-
-	// Fallback to secondary proxy
-	return fetch(CORS_PROXIES.fallback + encodedUrl);
-}
 
 /**
  * API request delays (ms) to avoid rate limiting

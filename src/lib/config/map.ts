@@ -96,7 +96,7 @@ export const LANDMARKS: Landmark[] = [
 	{ name: 'SMART Train — Larkspur', lat: 37.9477, lon: -122.5126, type: 'transit' },
 	{ name: 'SMART Train — San Rafael', lat: 37.9711, lon: -122.5227, type: 'transit' },
 	{ name: 'SMART Train — Marin Civic Center', lat: 38.0013, lon: -122.5376, type: 'transit' },
-	{ name: 'SMART Train — Novato Hamilton', lat: 38.0565, lon: -122.5240, type: 'transit' },
+	{ name: 'SMART Train — Novato Hamilton', lat: 38.0565, lon: -122.524, type: 'transit' },
 	{ name: 'SMART Train — Novato Downtown', lat: 38.1088, lon: -122.5797, type: 'transit' },
 	{ name: 'SMART Train — Novato San Marin', lat: 38.1206, lon: -122.5663, type: 'transit' }
 ];

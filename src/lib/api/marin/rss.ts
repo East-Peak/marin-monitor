@@ -3,10 +3,9 @@
  *
  * Fetches and parses RSS/Atom feeds from Marin news sources.
  * Uses browser-native DOMParser (no npm dependencies).
- * All requests go through CORS proxy via ServiceClient.
+ * Feed XML is fetched through the first-party /api/feeds route.
  */
 
-import { serviceClient } from '$lib/services/client';
 import { FEEDS, type FeedSource } from '$lib/config/feeds';
 import type { NewsItem, NewsCategory, VerificationLevel } from '$lib/types';
 import { logger } from '$lib/config/api';
@@ -200,25 +199,23 @@ function generateId(title: string, source: string): string {
 }
 
 /**
- * Fetch RSS XML for a feed URL.
- * Tries local API proxy first (works in dev and with adapter-node),
- * falls back to CORS proxy for static builds.
+ * Fetch RSS XML for a feed URL via the first-party server route.
  */
 async function fetchRssXml(url: string): Promise<string> {
-	// Try local API proxy first
-	try {
-		const proxyUrl = `/api/feeds?url=${encodeURIComponent(url)}`;
-		const response = await fetch(proxyUrl);
-		if (response.ok) {
-			const text = await response.text();
-			if (text && text.includes('<')) return text;
-		}
-	} catch {
-		// Local proxy not available (static build) — fall through to CORS proxy
+	const proxyUrl = `/api/feeds?url=${encodeURIComponent(url)}`;
+	const response = await fetch(proxyUrl, {
+		headers: { Accept: 'application/xml, text/xml, application/rss+xml, */*' }
+	});
+	if (!response.ok) {
+		throw new Error(`Feed proxy failed (${response.status})`);
 	}
 
-	// Fallback: CORS proxy via ServiceClient
-	return serviceClient.fetchWithProxy<string>(url);
+	const text = await response.text();
+	if (!text || !text.includes('<')) {
+		throw new Error('Feed proxy returned invalid XML');
+	}
+
+	return text;
 }
 
 /**

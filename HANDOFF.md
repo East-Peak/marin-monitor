@@ -101,26 +101,26 @@ That preserves future flexibility without fragmenting the wire grid.
 
 ## API Adapters (`src/lib/api/marin/`)
 
-| Adapter | Source | Notes |
-|---------|--------|-------|
-| `rss.ts` | RSS feeds | 26 feeds across 11 categories |
-| `nws.ts` | NWS 7-day forecast | Standard periods |
-| `nws-hourly.ts` | NWS hourly + QPF | Temperature sparkline + daily rain totals |
-| `marine.ts` | NOAA marine/buoy | Swell height, period, direction |
-| `tides.ts` | NOAA tides | Point Reyes + SF Bar |
-| `sun.ts` | Sunrise/sunset | Solar calculations |
-| `uv.ts` | UV index | OpenUV adapter |
-| `airnow.ts` | AirNow AQI | Air quality index |
-| `usgs.ts` | USGS earthquakes | Recent seismic activity |
-| `nps.ts` | NPS alerts | Point Reyes, Muir Woods, GGNRA |
-| `calfire.ts` | CAL FIRE incidents | Active fires |
-| `transit.ts` | 511 traffic events | Road closures, incidents |
-| `housing.ts` | Marin Open Data | Housing transactions |
-| `blotter.ts` | Marin Sheriff | Crime blotter |
-| `police-logs.ts` | Municipal PDs | 10 departments |
-| `activity.ts` | Static JSON | Supplemental activity data |
-| `streams.ts` | USGS streamflow | Water levels |
-| `article-enrichment.ts` | Content extraction | Article summaries |
+| Adapter                 | Source             | Notes                                     |
+| ----------------------- | ------------------ | ----------------------------------------- |
+| `rss.ts`                | RSS feeds          | 26 feeds across 11 categories             |
+| `nws.ts`                | NWS 7-day forecast | Standard periods                          |
+| `nws-hourly.ts`         | NWS hourly + QPF   | Temperature sparkline + daily rain totals |
+| `marine.ts`             | NOAA marine/buoy   | Swell height, period, direction           |
+| `tides.ts`              | NOAA tides         | Point Reyes + SF Bar                      |
+| `sun.ts`                | Sunrise/sunset     | Solar calculations                        |
+| `uv.ts`                 | UV index           | OpenUV adapter                            |
+| `airnow.ts`             | AirNow AQI         | Air quality index                         |
+| `usgs.ts`               | USGS earthquakes   | Recent seismic activity                   |
+| `nps.ts`                | NPS alerts         | Point Reyes, Muir Woods, GGNRA            |
+| `calfire.ts`            | CAL FIRE incidents | Active fires                              |
+| `transit.ts`            | 511 traffic events | Road closures, incidents                  |
+| `housing.ts`            | Marin Open Data    | Housing transactions                      |
+| `blotter.ts`            | Marin Sheriff      | Crime blotter                             |
+| `police-logs.ts`        | Municipal PDs      | 10 departments                            |
+| `activity.ts`           | Static JSON        | Supplemental activity data                |
+| `streams.ts`            | USGS streamflow    | Water levels                              |
+| `article-enrichment.ts` | Content extraction | Article summaries                         |
 
 ## Source / Scrape Policy
 
@@ -185,17 +185,18 @@ Reference: `docs/police-coverage.md`
 
 9 cameras across 3 categories:
 
-| Category | Cameras | Type |
-|----------|---------|------|
-| Traffic (4) | 101 at Spencer, SR-1, I-580, Ignacio Blvd | Caltrans JPEG, 10s refresh |
-| Scenic (3) | Mt. Tam Summit, Golden Gate Bay View, Muir Beach | ABC7 JPEG + Windy iframe |
-| Fire (2) | Mt. Tam East, Mt. Tam West | ALERTCalifornia CDN JPEG, 10s refresh |
+| Category    | Cameras                                          | Type                                  |
+| ----------- | ------------------------------------------------ | ------------------------------------- |
+| Traffic (4) | 101 at Spencer, SR-1, I-580, Ignacio Blvd        | Caltrans JPEG, 10s refresh            |
+| Scenic (3)  | Mt. Tam Summit, Golden Gate Bay View, Muir Beach | ABC7 JPEG + Windy iframe              |
+| Fire (2)    | Mt. Tam East, Mt. Tam West                       | ALERTCalifornia CDN JPEG, 10s refresh |
 
 Fire cams use direct snapshot URLs from `cameras.alertcalifornia.org/public-camera-data/` (public CDN, no auth, 1920x1080, near-infrared night vision). Previously used iframe embeds of the full ALERTCalifornia console UI — switched to snapshots for clean rendering.
 
 ## Alert Keyword System
 
 `containsAlertKeyword()` in `keywords.ts` uses `hasWholePhrase()` (word-boundary regex) instead of `.includes()`. This prevents false positives:
+
 - "MarinFire" does NOT trigger (no word boundary before "fire")
 - "fire on Miller Ave" DOES trigger (proper word boundary)
 - Safety hub pages (AlertMarin, MarinFire portals) are removed from the wire
@@ -214,21 +215,27 @@ Two NWS data paths:
 ## Activity / Culture Vertical Status
 
 ### Cycling & Endurance
+
 Sources: B-17/Webscorer, Marinduro, Dipsea, Quad Dipsea, Miwok 100K, Marin Ultra Challenge
 
 ### Shows & Events
+
 Sources: Sweetwater, Rancho Nicasio, Mac's, Dance Palace, JCC, Tourist Club, Peri's, Smiley's, KWMR, Seahorse, Symphony, HopMonk, The Junction, libraries, Elks
 
 ### Sports & Prep
+
 Sources: Redwood Bark, NorCal MTB, Marin Catholic/Archie Williams/San Rafael athletics, TUHSD, San Rafael Pacifics, Marin Rowing, Marin Highlanders
 
 ### Fishing
+
 Sources: CDFW regulations, Point Reyes Light fishing stories
 
 ### Farm & Market
+
 Sources: Agricultural Institute of Marin, Point Reyes Farmstead Cheese, Marin Magazine food/market
 
 ### Outdoors
+
 Sources: MMWD, Marin IJ Environment, Marin Humane, WildCare, NPS alerts
 
 ## Backlog Themes Already Discussed

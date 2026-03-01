@@ -27,7 +27,6 @@ describe('ServiceRegistry', () => {
 			expect(ids).toContain('USGS');
 			expect(ids).toContain('AIRNOW');
 			expect(ids).toContain('MARIN_OPENDATA');
-			expect(ids).toContain('CORS_PROXY');
 		});
 	});
 
@@ -39,16 +38,6 @@ describe('ServiceRegistry', () => {
 
 		it('should return false for unknown services', () => {
 			expect(ServiceRegistry.has('UNKNOWN')).toBe(false);
-		});
-	});
-
-	describe('getCorsProxies', () => {
-		it('should return list of CORS proxies', () => {
-			const proxies = ServiceRegistry.getCorsProxies();
-
-			expect(proxies).toBeInstanceOf(Array);
-			expect(proxies.length).toBeGreaterThan(0);
-			expect(proxies[0]).toContain('corsproxy');
 		});
 	});
 

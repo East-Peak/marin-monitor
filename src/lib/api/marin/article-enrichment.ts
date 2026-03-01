@@ -6,7 +6,7 @@
  */
 
 import type { NewsItem } from '$lib/types';
-import { fetchWithProxy, logger } from '$lib/config/api';
+import { logger } from '$lib/config/api';
 import { MARIN_BOUNDS } from '$lib/config';
 
 const ENRICHED_DOMAINS = ['marinij.com', 'ptreyeslight.com'];
@@ -61,7 +61,7 @@ async function fetchArticleExcerpt(url: string): Promise<string | null> {
 	if (pageCache.has(url)) return pageCache.get(url) || null;
 
 	try {
-		const response = await fetchWithProxy(url);
+		const response = await fetch(`/api/article?url=${encodeURIComponent(url)}`);
 		if (!response.ok) return null;
 		const html = await response.text();
 		const excerpt = extractArticleText(html);
@@ -140,24 +140,18 @@ async function geocodeCandidate(
 		return geocodeCache.get(cacheKey) || null;
 	}
 
-	const params = new URLSearchParams({
-		q: query,
-		format: 'jsonv2',
-		limit: '1',
-		addressdetails: '0',
-		bounded: '1',
-		viewbox: `${MARIN_BOUNDS.west - 0.08},${MARIN_BOUNDS.north + 0.06},${MARIN_BOUNDS.east + 0.08},${MARIN_BOUNDS.south - 0.06}`
-	});
-
-	const url = `https://nominatim.openstreetmap.org/search?${params.toString()}`;
 	try {
-		const response = await fetchWithProxy(url);
+		const params = new URLSearchParams({
+			q: candidate,
+			town: townHint ?? ''
+		});
+		const response = await fetch(`/api/geocode?${params.toString()}`);
 		if (!response.ok) {
 			geocodeCache.set(cacheKey, null);
 			return null;
 		}
-		const payload = (await response.json()) as Array<{ lat: string; lon: string }>;
-		const result = payload?.[0];
+		const payload = (await response.json()) as { lat?: number; lon?: number } | null;
+		const result = payload?.lat !== undefined && payload?.lon !== undefined ? payload : null;
 		if (!result) {
 			geocodeCache.set(cacheKey, null);
 			return null;

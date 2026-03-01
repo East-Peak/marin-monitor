@@ -40,29 +40,29 @@ npm run sync:police    # Regenerate static/data/marin-police-logs.json
 
 ## Data Sources
 
-| Source | Type | Key? |
-|--------|------|------|
-| Marin IJ, Point Reyes Light, Pacific Sun, Marin Magazine | RSS | No |
-| NBC Bay Area (Marin tag), KQED | RSS | No |
-| City of San Rafael, Town of Fairfax | RSS | No |
-| Marin County BOS (Granicus) | RSS | No |
-| Marin Humane, WildCare | RSS | No |
-| MMWD / Marin Water | RSS | No |
-| Marin Lately (satire) | RSS | No |
-| National Weather Service (hourly + 7-day + QPF) | REST | No |
-| NOAA Tides (Point Reyes, SF Bar) | REST | No |
-| NOAA Marine (nearshore buoys) | REST | No |
-| USGS Earthquakes | REST | No |
-| AirNow AQI | REST | Yes (free) |
-| NPS Alerts (Pt Reyes, Muir Woods, GGNRA) | REST | Yes (free) |
-| 511 Traffic Events | REST | Yes (free) |
-| Mapbox Traffic v1 congestion | Vector tiles | Yes |
-| Marin County Open Data (Socrata) | REST | No |
-| ALERTCalifornia fire cams (Mt Tam) | Image CDN | No |
-| Caltrans CCTV (US-101 corridor) | Image | No |
-| Windy.com webcams (Tiburon, Muir Beach) | Embed | No |
-| 20+ activity/event sources (venues, races, civic) | Scrape/RSS | No |
-| Marin Sheriff blotter + 10 municipal PD feeds | RSS/scrape | No |
+| Source                                                   | Type         | Key?       |
+| -------------------------------------------------------- | ------------ | ---------- |
+| Marin IJ, Point Reyes Light, Pacific Sun, Marin Magazine | RSS          | No         |
+| NBC Bay Area (Marin tag), KQED                           | RSS          | No         |
+| City of San Rafael, Town of Fairfax                      | RSS          | No         |
+| Marin County BOS (Granicus)                              | RSS          | No         |
+| Marin Humane, WildCare                                   | RSS          | No         |
+| MMWD / Marin Water                                       | RSS          | No         |
+| Marin Lately (satire)                                    | RSS          | No         |
+| National Weather Service (hourly + 7-day + QPF)          | REST         | No         |
+| NOAA Tides (Point Reyes, SF Bar)                         | REST         | No         |
+| NOAA Marine (nearshore buoys)                            | REST         | No         |
+| USGS Earthquakes                                         | REST         | No         |
+| AirNow AQI                                               | REST         | Yes (free) |
+| NPS Alerts (Pt Reyes, Muir Woods, GGNRA)                 | REST         | Yes (free) |
+| 511 Traffic Events                                       | REST         | Yes (free) |
+| Mapbox Traffic v1 congestion                             | Vector tiles | Yes        |
+| Marin County Open Data (Socrata)                         | REST         | No         |
+| ALERTCalifornia fire cams (Mt Tam)                       | Image CDN    | No         |
+| Caltrans CCTV (US-101 corridor)                          | Image        | No         |
+| Windy.com webcams (Tiburon, Muir Beach)                  | Embed        | No         |
+| 20+ activity/event sources (venues, races, civic)        | Scrape/RSS   | No         |
+| Marin Sheriff blotter + 10 municipal PD feeds            | RSS/scrape   | No         |
 
 ## Environment Variables
 

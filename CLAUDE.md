@@ -92,11 +92,13 @@ Data fetches happen in 3 priority stages:
 ### Dashboard Layout
 
 Top section (collapsible signal deck):
+
 - **Left column**: Marin Map, Cameras
 - **Middle column**: Pulse, Outlooks, Environment
 - **Right column**: Weather, Signals, Coastal Conditions
 
 Wire columns below (responsive grid, auto-fit):
+
 - Local Wire, Crime & Safety, Civic, Outdoors & Lifestyle, Marin Lately
 - Cycling & Endurance, Shows & Events, Sports & Prep, Fishing, Farm & Market
 
@@ -127,30 +129,30 @@ Every story carries a `verification_level`:
 
 ## Data Sources
 
-| Source                          | Type       | API Key?                 |
-| ------------------------------- | ---------- | ------------------------ |
-| Marin IJ / local news (7 feeds)| RSS        | No                       |
-| Point Reyes Light, Pacific Sun  | RSS        | No                       |
-| Marin Magazine                  | RSS        | No                       |
-| NBC Bay Area (Marin), KQED     | RSS        | No                       |
-| City of San Rafael, Town of Fairfax | RSS   | No                       |
-| Marin County BOS (Granicus)     | RSS        | No                       |
-| Marin Humane, WildCare         | RSS        | No                       |
-| MMWD / Marin Water              | RSS        | No                       |
-| National Weather Service        | REST       | No                       |
-| NWS Hourly + QPF (rain totals)  | REST       | No                       |
-| NOAA Tides (Pt Reyes / SF Bar) | REST       | No                       |
-| NOAA Marine (nearshore buoys)   | REST       | No                       |
-| USGS Earthquakes                | REST       | No                       |
-| AirNow AQI                      | REST       | Yes (free)               |
-| NPS Alerts                       | REST       | Yes (free)               |
-| 511 Traffic Events               | REST       | Yes (free)               |
-| Mapbox Traffic v1                | Tiles      | Yes                      |
-| ALERTCalifornia fire cams        | Image CDN  | No                       |
-| Caltrans CCTV                    | Image      | No                       |
-| Marin Open Data (Socrata)        | REST       | No                       |
-| Marin Lately                     | RSS/scrape | No                       |
-| 20+ activity/event scrapers      | Scrape     | No                       |
+| Source                              | Type       | API Key?   |
+| ----------------------------------- | ---------- | ---------- |
+| Marin IJ / local news (7 feeds)     | RSS        | No         |
+| Point Reyes Light, Pacific Sun      | RSS        | No         |
+| Marin Magazine                      | RSS        | No         |
+| NBC Bay Area (Marin), KQED          | RSS        | No         |
+| City of San Rafael, Town of Fairfax | RSS        | No         |
+| Marin County BOS (Granicus)         | RSS        | No         |
+| Marin Humane, WildCare              | RSS        | No         |
+| MMWD / Marin Water                  | RSS        | No         |
+| National Weather Service            | REST       | No         |
+| NWS Hourly + QPF (rain totals)      | REST       | No         |
+| NOAA Tides (Pt Reyes / SF Bar)      | REST       | No         |
+| NOAA Marine (nearshore buoys)       | REST       | No         |
+| USGS Earthquakes                    | REST       | No         |
+| AirNow AQI                          | REST       | Yes (free) |
+| NPS Alerts                          | REST       | Yes (free) |
+| 511 Traffic Events                  | REST       | Yes (free) |
+| Mapbox Traffic v1                   | Tiles      | Yes        |
+| ALERTCalifornia fire cams           | Image CDN  | No         |
+| Caltrans CCTV                       | Image      | No         |
+| Marin Open Data (Socrata)           | REST       | No         |
+| Marin Lately                        | RSS/scrape | No         |
+| 20+ activity/event scrapers         | Scrape     | No         |
 
 ## Design Constraints
 
@@ -165,6 +167,7 @@ Every story carries a `verification_level`:
 ## Settings
 
 User-configurable via Settings modal:
+
 - **UI Scale** (50-150%) — CSS zoom on document root, persisted to localStorage
 - **Dashboard collapse** — Hide/show the signal deck section
 - **Panel order** — Drag-and-drop reorder of wire columns

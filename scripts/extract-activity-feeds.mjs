@@ -207,7 +207,7 @@ const SHOW_HUBS = [
 		town: 'San Rafael',
 		townSlug: 'san-rafael',
 		lat: 37.9715,
-		lon: -122.5200, // Marin Veterans' Memorial Auditorium
+		lon: -122.52, // Marin Veterans' Memorial Auditorium
 		topics: ['music', 'classical']
 	},
 	{
@@ -809,14 +809,14 @@ async function parseMacsEvents() {
 				title: stripHtml(match[2]),
 				link: stripHtml(match[3]),
 				pubDate: stripHtml(match[1]),
-				description: "Upcoming Fairfax show at Mac’s at 19 Broadway.",
-				content: "Fairfax live music, comedy, and nightlife calendar.",
-				verification: "community",
-				town: "Fairfax",
-				townSlug: "fairfax",
+				description: 'Upcoming Fairfax show at Mac’s at 19 Broadway.',
+				content: 'Fairfax live music, comedy, and nightlife calendar.',
+				verification: 'community',
+				town: 'Fairfax',
+				townSlug: 'fairfax',
 				lat: 37.9871,
 				lon: -122.5889, // 19 Broadway, Fairfax
-				topics: ["music", "shows"]
+				topics: ['music', 'shows']
 			})
 		)
 		.filter(Boolean)
@@ -883,7 +883,7 @@ async function parseDipseaHome() {
 			verification: 'official',
 			town: 'Mill Valley',
 			townSlug: 'mill-valley',
-			lat: 37.9060,
+			lat: 37.906,
 			lon: -122.5491, // Dipsea Steps, Mill Valley
 			topics: ['running', 'trail-race']
 		});
@@ -902,7 +902,7 @@ async function parseDipseaHome() {
 		verification: 'official',
 		town: 'Mill Valley',
 		townSlug: 'mill-valley',
-		lat: 37.9060,
+		lat: 37.906,
 		lon: -122.5491, // Dipsea Steps, Mill Valley
 		topics: ['running', 'trail-race']
 	});
@@ -1019,8 +1019,7 @@ async function parseShowsHubs() {
 }
 
 async function parsePacificsSchedule() {
-	const scheduleUrl =
-		'https://www.pacificsbaseball.com/pacifics.asp?page=11&team=801&year=2026';
+	const scheduleUrl = 'https://www.pacificsbaseball.com/pacifics.asp?page=11&team=801&year=2026';
 	try {
 		const html = await fetchText(scheduleUrl);
 		const items = [];
@@ -1152,10 +1151,18 @@ async function scrapeFarmMarketSchedule(market) {
 		const text = stripHtml(html);
 
 		// Try to extract day/time patterns like "Every Saturday", "9am–2pm", "8am - 1pm"
-		const dayMatch = text.match(/every\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i);
-		const timeMatch = text.match(/(\d{1,2}(?::\d{2})?\s*(?:am|pm)\s*[-–—to]+\s*\d{1,2}(?::\d{2})?\s*(?:am|pm))/i);
-		const seasonMatch = text.match(/((?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2}\s*[-–—]+\s*(?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2},?\s*\d{4})/i);
-		const locationMatch = text.match(/(?:at|location:?)\s+([^.!?\n]{5,60}(?:center|barn|street|plaza|downtown|fourth|civic))/i);
+		const dayMatch = text.match(
+			/every\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i
+		);
+		const timeMatch = text.match(
+			/(\d{1,2}(?::\d{2})?\s*(?:am|pm)\s*[-–—to]+\s*\d{1,2}(?::\d{2})?\s*(?:am|pm))/i
+		);
+		const seasonMatch = text.match(
+			/((?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2}\s*[-–—]+\s*(?:january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2},?\s*\d{4})/i
+		);
+		const locationMatch = text.match(
+			/(?:at|location:?)\s+([^.!?\n]{5,60}(?:center|barn|street|plaza|downtown|fourth|civic))/i
+		);
 		const yearRoundMatch = /rain or shine|year[\s-]?round/i.test(text);
 
 		const parts = [];
@@ -1167,17 +1174,22 @@ async function scrapeFarmMarketSchedule(market) {
 		let location = market.town || '';
 		if (locationMatch) location = locationMatch[1].trim();
 
-		const title = parts.length > 0
-			? `${market.title.replace(/ schedule$/, '')} · ${parts.join(', ')}`
-			: market.title;
+		const title =
+			parts.length > 0
+				? `${market.title.replace(/ schedule$/, '')} · ${parts.join(', ')}`
+				: market.title;
 
-		const desc = parts.length > 0
-			? `${parts.join(' · ')}${location ? ` at ${location}` : ''}`
-			: 'Official market schedule from the Agricultural Institute of Marin.';
+		const desc =
+			parts.length > 0
+				? `${parts.join(' · ')}${location ? ` at ${location}` : ''}`
+				: 'Official market schedule from the Agricultural Institute of Marin.';
 
 		return { title, description: desc };
 	} catch {
-		return { title: market.title, description: 'Official market schedule from the Agricultural Institute of Marin.' };
+		return {
+			title: market.title,
+			description: 'Official market schedule from the Agricultural Institute of Marin.'
+		};
 	}
 }
 

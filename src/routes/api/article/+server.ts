@@ -1,0 +1,40 @@
+import { error } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+
+const ALLOWED_DOMAINS = ['marinij.com', 'ptreyeslight.com'];
+
+function isAllowedArticleUrl(value: string): boolean {
+	try {
+		const parsed = new URL(value);
+		if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
+		const hostname = parsed.hostname.toLowerCase();
+		return ALLOWED_DOMAINS.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
+	} catch {
+		return false;
+	}
+}
+
+export const GET: RequestHandler = async ({ url, fetch }) => {
+	const articleUrl = url.searchParams.get('url');
+	if (!articleUrl || !isAllowedArticleUrl(articleUrl)) {
+		throw error(400, 'Invalid article URL');
+	}
+
+	const response = await fetch(articleUrl, {
+		headers: {
+			Accept: 'text/html,application/xhtml+xml',
+			'User-Agent': 'MarinMonitor/1.0'
+		}
+	});
+
+	if (!response.ok) {
+		throw error(response.status, `Article returned ${response.status}`);
+	}
+
+	return new Response(await response.text(), {
+		headers: {
+			'Content-Type': 'text/html; charset=utf-8',
+			'Cache-Control': 'public, max-age=900'
+		}
+	});
+};

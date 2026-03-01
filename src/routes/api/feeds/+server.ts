@@ -7,7 +7,14 @@
  */
 
 import { error } from '@sveltejs/kit';
+import { getAllFeedUrls, MARINIJ_LOCATION_FEEDS, MARINIJ_TAG_FEEDS } from '$lib/config/feeds';
 import type { RequestHandler } from './$types';
+
+const ALLOWED_FEED_URLS = new Set([
+	...getAllFeedUrls().map((feed) => feed.url),
+	...Object.values(MARINIJ_TAG_FEEDS),
+	...Object.values(MARINIJ_LOCATION_FEEDS)
+]);
 
 export const GET: RequestHandler = async ({ url }) => {
 	const feedUrl = url.searchParams.get('url');
@@ -16,8 +23,8 @@ export const GET: RequestHandler = async ({ url }) => {
 		throw error(400, 'Missing url parameter');
 	}
 
-	// Basic validation — only allow http/https URLs
-	if (!feedUrl.startsWith('http://') && !feedUrl.startsWith('https://')) {
+	// Only allow known feed URLs from the checked-in source configuration.
+	if (!ALLOWED_FEED_URLS.has(feedUrl)) {
 		throw error(400, 'Invalid URL');
 	}
 
