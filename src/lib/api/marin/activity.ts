@@ -4,12 +4,9 @@ import { fetchWithTimeout } from './fetch-helpers';
 
 export async function fetchSupplementalActivityFeeds(): Promise<NewsItem[]> {
 	try {
-		logger.log(
-			'ACTIVITY',
-			'Loading supplemental activity feeds from static/data/marin-activity.json'
-		);
+		logger.log('ACTIVITY', 'Loading supplemental activity feeds from /api/data/activity');
 
-		const response = await fetchWithTimeout('/data/marin-activity.json');
+		const response = await fetchWithTimeout('/api/data/activity');
 		if (!response.ok) {
 			throw new Error(`Supplemental activity feed fetch failed: ${response.status}`);
 		}

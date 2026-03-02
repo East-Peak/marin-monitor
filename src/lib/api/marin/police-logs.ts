@@ -4,12 +4,9 @@ import { fetchWithTimeout } from './fetch-helpers';
 
 export async function fetchSupplementalPoliceLogs(): Promise<NewsItem[]> {
 	try {
-		logger.log(
-			'POLICE',
-			'Loading supplemental police logs from static/data/marin-police-logs.json'
-		);
+		logger.log('POLICE', 'Loading supplemental police logs from /api/data/police-logs');
 
-		const response = await fetchWithTimeout('/data/marin-police-logs.json');
+		const response = await fetchWithTimeout('/api/data/police-logs');
 		if (!response.ok) {
 			throw new Error(`Supplemental police logs fetch failed: ${response.status}`);
 		}

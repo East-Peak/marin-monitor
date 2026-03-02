@@ -7,7 +7,7 @@ const config = {
 
 	kit: {
 		// Vercel adapter for server-backed API routes and secure key handling
-		adapter: adapter(),
+		adapter: adapter({ runtime: 'nodejs22.x' }),
 		paths: {
 			base: process.env.BASE_PATH || ''
 		},
