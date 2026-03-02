@@ -855,11 +855,11 @@
     ]
   },
   {
-    "id": "outdoors:california-department-of-fish-wildlife:ocean-salmon-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-salmon",
-    "title": "Ocean salmon sport fishing regulations",
-    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Salmon",
-    "pubDate": "2026-03-02T11:18:15.000Z",
-    "timestamp": 1772450295000,
+    "id": "outdoors:california-department-of-fish-wildlife:crab-trap-and-season-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-crab",
+    "title": "Crab trap and season regulations",
+    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Crab",
+    "pubDate": "2026-03-02T17:19:13.000Z",
+    "timestamp": 1772471953000,
     "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
     "source": "California Department of Fish & Wildlife",
     "category": "outdoors",
@@ -870,11 +870,11 @@
     ]
   },
   {
-    "id": "outdoors:california-department-of-fish-wildlife:crab-trap-and-season-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-crab",
-    "title": "Crab trap and season regulations",
-    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Crab",
-    "pubDate": "2026-03-02T11:18:15.000Z",
-    "timestamp": 1772450295000,
+    "id": "outdoors:california-department-of-fish-wildlife:ocean-salmon-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-salmon",
+    "title": "Ocean salmon sport fishing regulations",
+    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Salmon",
+    "pubDate": "2026-03-02T17:19:12.000Z",
+    "timestamp": 1772471952000,
     "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
     "source": "California Department of Fish & Wildlife",
     "category": "outdoors",
@@ -888,8 +888,8 @@
     "id": "farm:point-reyes-farmstead-cheese:point-reyes-farmstead-cheese-journal:https-www-pointreyescheese-com-blogs-news",
     "title": "Point Reyes Farmstead Cheese journal",
     "link": "https://www.pointreyescheese.com/blogs/news",
-    "pubDate": "2026-03-02T11:18:13.000Z",
-    "timestamp": 1772450293000,
+    "pubDate": "2026-03-02T17:19:11.000Z",
+    "timestamp": 1772471951000,
     "description": "Official Point Reyes Farmstead Cheese news and seasonal product updates.",
     "source": "Point Reyes Farmstead Cheese",
     "category": "farm",
@@ -909,8 +909,8 @@
     "id": "outdoors:california-department-of-fish-wildlife:ocean-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations",
     "title": "Ocean sport fishing regulations",
     "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations",
-    "pubDate": "2026-03-02T11:18:13.000Z",
-    "timestamp": 1772450293000,
+    "pubDate": "2026-03-02T17:19:11.000Z",
+    "timestamp": 1772471951000,
     "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
     "source": "California Department of Fish & Wildlife",
     "category": "outdoors",
@@ -924,8 +924,8 @@
     "id": "outdoors:california-department-of-fish-wildlife:san-francisco-ocean-fishing-map-and-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-fishing-map-sf",
     "title": "San Francisco ocean fishing map and regulations",
     "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Fishing-Map/SF",
-    "pubDate": "2026-03-02T11:18:13.000Z",
-    "timestamp": 1772450293000,
+    "pubDate": "2026-03-02T17:19:11.000Z",
+    "timestamp": 1772471951000,
     "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
     "source": "California Department of Fish & Wildlife",
     "category": "outdoors",
@@ -939,8 +939,8 @@
     "id": "prep:marin-highlanders-rugby:marin-highlanders-rugby-club-hub:https-www-marinhighlandersrugby-org",
     "title": "Marin Highlanders Rugby club hub",
     "link": "https://www.marinhighlandersrugby.org/",
-    "pubDate": "2026-03-02T11:18:09.000Z",
-    "timestamp": 1772450289000,
+    "pubDate": "2026-03-02T17:19:07.000Z",
+    "timestamp": 1772471947000,
     "description": "Local sports hub for schedules, fixtures, club updates, or season information.",
     "source": "Marin Highlanders Rugby",
     "category": "prep",
@@ -960,8 +960,8 @@
     "id": "prep:tamalpais-union-high-school-district:tuhsd-athletics-hub:https-www-tamdistrict-org-students-athletics",
     "title": "TUHSD athletics hub",
     "link": "https://www.tamdistrict.org/students/athletics",
-    "pubDate": "2026-03-02T11:18:06.000Z",
-    "timestamp": 1772450286000,
+    "pubDate": "2026-03-02T17:18:47.000Z",
+    "timestamp": 1772471927000,
     "description": "Official athletics or team hub for a Marin-area school or league program.",
     "source": "Tamalpais Union High School District",
     "category": "prep",
@@ -979,8 +979,8 @@
     "id": "prep:archie-williams-mtb:archie-williams-mountain-bike-team-hub:https-www-awmtb-com",
     "title": "Archie Williams mountain bike team hub",
     "link": "https://www.awmtb.com/",
-    "pubDate": "2026-03-02T11:18:06.000Z",
-    "timestamp": 1772450286000,
+    "pubDate": "2026-03-02T17:18:47.000Z",
+    "timestamp": 1772471927000,
     "description": "Official athletics or team hub for a Marin-area school or league program.",
     "source": "Archie Williams MTB",
     "category": "prep",
@@ -1000,8 +1000,8 @@
     "id": "prep:san-rafael-athletics:san-rafael-high-athletics-hub:https-sanrafael-srcs-org-athletics",
     "title": "San Rafael High athletics hub",
     "link": "https://sanrafael.srcs.org/athletics",
-    "pubDate": "2026-03-02T11:18:04.000Z",
-    "timestamp": 1772450284000,
+    "pubDate": "2026-03-02T17:18:45.000Z",
+    "timestamp": 1772471925000,
     "description": "Official athletics or team hub for a Marin-area school or league program.",
     "source": "San Rafael Athletics",
     "category": "prep",
@@ -1021,8 +1021,8 @@
     "id": "prep:archie-williams-athletics:archie-williams-athletics-hub:https-archiewilliams-tamdistrict-org-athletics",
     "title": "Archie Williams athletics hub",
     "link": "https://archiewilliams.tamdistrict.org/athletics",
-    "pubDate": "2026-03-02T11:18:03.000Z",
-    "timestamp": 1772450283000,
+    "pubDate": "2026-03-02T17:18:44.000Z",
+    "timestamp": 1772471924000,
     "description": "Official athletics or team hub for a Marin-area school or league program.",
     "source": "Archie Williams Athletics",
     "category": "prep",
@@ -1042,8 +1042,8 @@
     "id": "prep:marin-catholic-athletics:marin-catholic-athletic-calendar:https-www-marincatholic-org-athletics-athletic-calendar",
     "title": "Marin Catholic athletic calendar",
     "link": "https://www.marincatholic.org/athletics/athletic-calendar",
-    "pubDate": "2026-03-02T11:18:01.000Z",
-    "timestamp": 1772450281000,
+    "pubDate": "2026-03-02T17:18:42.000Z",
+    "timestamp": 1772471922000,
     "description": "Official athletics or team hub for a Marin-area school or league program.",
     "source": "Marin Catholic Athletics",
     "category": "prep",
@@ -1063,8 +1063,8 @@
     "id": "endurance:dipsea-race:dipsea-race-hub-and-season-updates:https-www-dipsea-org",
     "title": "Dipsea race hub and season updates",
     "link": "https://www.dipsea.org/",
-    "pubDate": "2026-03-02T11:18:00.000Z",
-    "timestamp": 1772450280000,
+    "pubDate": "2026-03-02T17:18:41.000Z",
+    "timestamp": 1772471921000,
     "description": "Official Dipsea race site for race information, entry details, and latest news.",
     "source": "Dipsea Race",
     "category": "endurance",
@@ -1078,6 +1078,194 @@
     "topics": [
       "running",
       "trail-race"
+    ]
+  },
+  {
+    "id": "shows:marin-county-free-library:marin-county-free-library-events:https-marinlibrary-bibliocommons-com-v2-events",
+    "title": "Marin County Free Library events",
+    "link": "https://marinlibrary.bibliocommons.com/v2/events",
+    "pubDate": "2026-03-02T17:18:36.000Z",
+    "timestamp": 1772471916000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Marin County Free Library",
+    "category": "shows",
+    "verification": "community",
+    "lat": 37.9991,
+    "lon": -122.5234,
+    "locationConfidence": "exact",
+    "locationEvidence": "Marin County Free Library",
+    "topics": [
+      "community-events",
+      "library"
+    ]
+  },
+  {
+    "id": "shows:sausalito-seahorse:sausalito-seahorse-calendar:https-www-sausalitoseahorse-com-calendar",
+    "title": "Sausalito Seahorse calendar",
+    "link": "https://www.sausalitoseahorse.com/calendar/",
+    "pubDate": "2026-03-02T17:18:34.000Z",
+    "timestamp": 1772471914000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Sausalito Seahorse",
+    "category": "shows",
+    "verification": "community",
+    "town": "Sausalito",
+    "townSlug": "sausalito",
+    "lat": 37.8584,
+    "lon": -122.4853,
+    "locationConfidence": "exact",
+    "locationEvidence": "Sausalito Seahorse",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:marin-symphony:marin-symphony-tickets-and-events:https-marinsymphony-org-tickets-events",
+    "title": "Marin Symphony tickets and events",
+    "link": "https://marinsymphony.org/tickets-events/",
+    "pubDate": "2026-03-02T17:18:34.000Z",
+    "timestamp": 1772471914000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Marin Symphony",
+    "category": "shows",
+    "verification": "community",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9715,
+    "lon": -122.52,
+    "locationConfidence": "exact",
+    "locationEvidence": "Marin Symphony",
+    "topics": [
+      "music",
+      "classical"
+    ]
+  },
+  {
+    "id": "shows:mill-valley-library:mill-valley-library-calendar:https-millvalleylibrary-gov-calendar-aspx",
+    "title": "Mill Valley Library calendar",
+    "link": "https://millvalleylibrary.gov/calendar.aspx",
+    "pubDate": "2026-03-02T17:18:34.000Z",
+    "timestamp": 1772471914000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Mill Valley Library",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9058,
+    "lon": -122.5478,
+    "locationConfidence": "exact",
+    "locationEvidence": "Mill Valley Library",
+    "topics": [
+      "community-events",
+      "library"
+    ]
+  },
+  {
+    "id": "shows:kwmr:kwmr-events-and-tickets-hub:https-kwmr-org-events",
+    "title": "KWMR events and tickets hub",
+    "link": "https://kwmr.org/events",
+    "pubDate": "2026-03-02T17:18:31.000Z",
+    "timestamp": 1772471911000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "KWMR",
+    "category": "shows",
+    "verification": "community",
+    "town": "Point Reyes Station",
+    "townSlug": "point-reyes",
+    "lat": 38.0699,
+    "lon": -122.8097,
+    "locationConfidence": "exact",
+    "locationEvidence": "KWMR",
+    "topics": [
+      "music",
+      "community-events",
+      "west-marin"
+    ]
+  },
+  {
+    "id": "shows:the-junction:the-junction-music-calendar:https-www-thejunc-com-music-calendar",
+    "title": "The Junction music calendar",
+    "link": "https://www.thejunc.com/music-calendar",
+    "pubDate": "2026-03-02T17:18:26.000Z",
+    "timestamp": 1772471906000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "The Junction",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.906,
+    "lon": -122.5458,
+    "locationConfidence": "exact",
+    "locationEvidence": "The Junction",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:smiley-s-saloon:smiley-s-saloon-shows-and-supper-club-hub:https-smileyssaloon-com",
+    "title": "Smiley's Saloon shows and supper club hub",
+    "link": "https://smileyssaloon.com/",
+    "pubDate": "2026-03-02T17:18:26.000Z",
+    "timestamp": 1772471906000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Smiley's Saloon",
+    "category": "shows",
+    "verification": "community",
+    "town": "Bolinas",
+    "townSlug": "bolinas",
+    "lat": 37.9096,
+    "lon": -122.6864,
+    "locationConfidence": "exact",
+    "locationEvidence": "Smiley's Saloon",
+    "topics": [
+      "music",
+      "west-marin"
+    ]
+  },
+  {
+    "id": "shows:peri-s-tavern:peri-s-tavern-music-calendar:https-peristavern-com-music-calendar",
+    "title": "Peri's Tavern music calendar",
+    "link": "https://peristavern.com/music-calendar/",
+    "pubDate": "2026-03-02T17:18:25.000Z",
+    "timestamp": 1772471905000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Peri's Tavern",
+    "category": "shows",
+    "verification": "community",
+    "town": "Fairfax",
+    "townSlug": "fairfax",
+    "lat": 37.9871,
+    "lon": -122.5889,
+    "locationConfidence": "exact",
+    "locationEvidence": "Peri's Tavern",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "farm:agricultural-institute-of-marin:point-reyes-farmers-market-every-saturday-9am-2pm-may-2-october-10-2026:https-www-agriculturalinstitute-org-point-reyes",
+    "title": "Point Reyes farmers market · Every Saturday, 9am–2pm, May 2 – October 10, 2026",
+    "link": "https://www.agriculturalinstitute.org/point-reyes",
+    "pubDate": "2026-03-02T16:42:12.000Z",
+    "timestamp": 1772469732000,
+    "description": "Every Saturday · 9am–2pm · May 2 – October 10, 2026 at Toby’s Feed Barn",
+    "source": "Agricultural Institute of Marin",
+    "category": "farm",
+    "verification": "official",
+    "town": "Point Reyes Station",
+    "townSlug": "point-reyes",
+    "lat": 38.0702,
+    "lon": -122.8105,
+    "locationConfidence": "exact",
+    "locationEvidence": "Agricultural Institute of Marin",
+    "topics": [
+      "farmers-market",
+      "produce"
     ]
   },
   {
@@ -1099,173 +1287,6 @@
     "topics": [
       "community-events",
       "fraternal"
-    ]
-  },
-  {
-    "id": "shows:marin-county-free-library:marin-county-free-library-events:https-marinlibrary-bibliocommons-com-v2-events",
-    "title": "Marin County Free Library events",
-    "link": "https://marinlibrary.bibliocommons.com/v2/events",
-    "pubDate": "2026-03-02T11:17:55.000Z",
-    "timestamp": 1772450275000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Marin County Free Library",
-    "category": "shows",
-    "verification": "community",
-    "lat": 37.9991,
-    "lon": -122.5234,
-    "locationConfidence": "exact",
-    "locationEvidence": "Marin County Free Library",
-    "topics": [
-      "community-events",
-      "library"
-    ]
-  },
-  {
-    "id": "shows:marin-symphony:marin-symphony-tickets-and-events:https-marinsymphony-org-tickets-events",
-    "title": "Marin Symphony tickets and events",
-    "link": "https://marinsymphony.org/tickets-events/",
-    "pubDate": "2026-03-02T11:17:53.000Z",
-    "timestamp": 1772450273000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Marin Symphony",
-    "category": "shows",
-    "verification": "community",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9715,
-    "lon": -122.52,
-    "locationConfidence": "exact",
-    "locationEvidence": "Marin Symphony",
-    "topics": [
-      "music",
-      "classical"
-    ]
-  },
-  {
-    "id": "shows:mill-valley-library:mill-valley-library-calendar:https-millvalleylibrary-gov-calendar-aspx",
-    "title": "Mill Valley Library calendar",
-    "link": "https://millvalleylibrary.gov/calendar.aspx",
-    "pubDate": "2026-03-02T11:17:53.000Z",
-    "timestamp": 1772450273000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Mill Valley Library",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.9058,
-    "lon": -122.5478,
-    "locationConfidence": "exact",
-    "locationEvidence": "Mill Valley Library",
-    "topics": [
-      "community-events",
-      "library"
-    ]
-  },
-  {
-    "id": "shows:sausalito-seahorse:sausalito-seahorse-calendar:https-www-sausalitoseahorse-com-calendar",
-    "title": "Sausalito Seahorse calendar",
-    "link": "https://www.sausalitoseahorse.com/calendar/",
-    "pubDate": "2026-03-02T11:17:52.000Z",
-    "timestamp": 1772450272000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Sausalito Seahorse",
-    "category": "shows",
-    "verification": "community",
-    "town": "Sausalito",
-    "townSlug": "sausalito",
-    "lat": 37.8584,
-    "lon": -122.4853,
-    "locationConfidence": "exact",
-    "locationEvidence": "Sausalito Seahorse",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:kwmr:kwmr-events-and-tickets-hub:https-kwmr-org-events",
-    "title": "KWMR events and tickets hub",
-    "link": "https://kwmr.org/events",
-    "pubDate": "2026-03-02T11:17:49.000Z",
-    "timestamp": 1772450269000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "KWMR",
-    "category": "shows",
-    "verification": "community",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0699,
-    "lon": -122.8097,
-    "locationConfidence": "exact",
-    "locationEvidence": "KWMR",
-    "topics": [
-      "music",
-      "community-events",
-      "west-marin"
-    ]
-  },
-  {
-    "id": "shows:smiley-s-saloon:smiley-s-saloon-shows-and-supper-club-hub:https-smileyssaloon-com",
-    "title": "Smiley's Saloon shows and supper club hub",
-    "link": "https://smileyssaloon.com/",
-    "pubDate": "2026-03-02T11:17:45.000Z",
-    "timestamp": 1772450265000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Smiley's Saloon",
-    "category": "shows",
-    "verification": "community",
-    "town": "Bolinas",
-    "townSlug": "bolinas",
-    "lat": 37.9096,
-    "lon": -122.6864,
-    "locationConfidence": "exact",
-    "locationEvidence": "Smiley's Saloon",
-    "topics": [
-      "music",
-      "west-marin"
-    ]
-  },
-  {
-    "id": "shows:peri-s-tavern:peri-s-tavern-music-calendar:https-peristavern-com-music-calendar",
-    "title": "Peri's Tavern music calendar",
-    "link": "https://peristavern.com/music-calendar/",
-    "pubDate": "2026-03-02T11:17:44.000Z",
-    "timestamp": 1772450264000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Peri's Tavern",
-    "category": "shows",
-    "verification": "community",
-    "town": "Fairfax",
-    "townSlug": "fairfax",
-    "lat": 37.9871,
-    "lon": -122.5889,
-    "locationConfidence": "exact",
-    "locationEvidence": "Peri's Tavern",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:the-junction:the-junction-music-calendar:https-www-thejunc-com-music-calendar",
-    "title": "The Junction music calendar",
-    "link": "https://www.thejunc.com/music-calendar",
-    "pubDate": "2026-03-02T11:17:44.000Z",
-    "timestamp": 1772450264000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "The Junction",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.906,
-    "lon": -122.5458,
-    "locationConfidence": "exact",
-    "locationEvidence": "The Junction",
-    "topics": [
-      "music",
-      "shows"
     ]
   },
   {
@@ -1368,22 +1389,6 @@
     ]
   },
   {
-    "id": "outdoors:marin-independent-journal:sharks-takeaways-another-teenager-shows-he-s-ready-for-the-spotlight:https-www-marinij-com-2026-03-01-san-jose-sharks-michael-misa-winnipeg-jets-macklin-celebrini-will-smith-nhl",
-    "title": "Sharks takeaways: Another teenager shows he’s ready for the spotlight",
-    "link": "https://www.marinij.com/2026/03/01/san-jose-sharks-michael-misa-winnipeg-jets-macklin-celebrini-will-smith-nhl/",
-    "pubDate": "2026-03-02T02:10:31.000Z",
-    "timestamp": 1772417431000,
-    "description": "San Jose Sharks sweep a pair of weekend matinees at SAP Center, move within three points of playoff spot",
-    "content": "SAN JOSE – Rookie center Michael Misa had one thought in 3-on-3 overtime after he came out of the San Jose Sharks’ zone and took a drop pass from teammate William Eklund. “Definitely attack,” Misa said. Misa took the pass from Eklund, skated into the offensive zone, split two players, fought off a check, and beat goalie Connor Hellebuyck, the reigning league MVP, giving the Sharks a come-from-behind 2-1 win over the Winnipeg Jets on Sunday. Will Smith also scored, and goalie Alex Nedeljovic finished with 27 saves as the Sharks swept a pair of weekend matinees at SAP Center, both before enthusiastic sellout crowds of 17,435. The Sharks also beat the Edmonton Oilers 5-4 on Saturday. With the win, the Sharks (29-25-4) moved to within three points of the idle Seattle Kraken for the second wild card spot in the Western Conference. The Sharks have 24 games remaining, and a game in hand on the Kraken. “It's huge,” Smith said of the weekend sweep. “We dropped (four straight games) before the break. You want to make sure you're getting those points here at the end of the year. We’ve only got 20-something games left. It’s going to be a tight race.” The Sharks are now 2-1-0 on a six-game homestand that concludes with games against the Montreal Canadiens on Tuesday, the St. Louis Blues on Friday, and the New York Islanders on Saturday. Takeaways from Sunday’s game: MISA CONTINUES TO SHINE Macklin Celebrini and Smith entered the NHL at 18 and 19, respectively. Now another teenager is showing he's ready for the pressure of a playoff push . While Smith and Celebrini, the Sharks’ two leading scorers, were natural choices to start overtime for the Sharks, it says something that coach Ryan Warsofsky soon put Misa out with the game in the balance. As much as San Jose wants to keep pushing for its first playoff appearance since 2019, it's still a development season. With that in mind, the Sharks must like the way Misa, 18, this has come along, especially with every game being so meaningful. Since his two-assist game against the Florida Panthers on Jan. 19, Misa is third on the Sharks in scoring with nine points (three goals, six assists) in 11 games. Smith and Celebrini are tied with 11 points each in that time. Misa finished Sunday with a season-high 15:39 in ice time, including 44 seconds of a 100-second overtime, a clear indication of how much equity he’s started to build with Warsofsky. “He's earned it,” Warsofsky said of Misa, this past year’s second overall draft pick, of the overtime ice time. “He has earned it by the way he's played, and that's something we talked way back in training camp. “You earn your ice, you earn your spot on this team, and he certainly has earned the ice, and he's going to get more and more. But he earned that OT shift.” San Jose Sharks forward Michael Misa (77), left, celebrates after scoring the game winning goal in overtime during their game against the Winnipeg Jets on Sunday, March 1, 2026, in San Jose, Calif. (Aric Crabb/Bay Area News Group) Misa and Eklund hardly spent any time on the same line before Misa left the Sharks to compete for Canada at the World Junior Championships in December. But since Misa returned in January, he and Eklund have formed an effective duo, creating 17 high-danger chances at 5-on-5 play while allowing just 13, per Natural Stat Trick. “I think whenever (Warsofsky) puts me and (Eklund) together, we usually create,” Misa said. “Since he's put us together, we've had good chemistry. So seeing us out there in overtime together, I thought something was definitely going to click.” On his overtime goal, Misa, “was the last guy back, so I had to make sure we got in their zone, and one thing led to another.” The Sharks now have a record of 12-4 in overtime this season, a major reason why they’re in the playoff picture to begin with. BETTER ON DEFENSE The Sharks need to do a better job of keeping the puck out of their net, and their win over the Oilers on Saturday was anything but a defensive clinic. So Sunday’s game was at least a step in the right direction, as they allowed just six high-danger chances during 5-on-5 play, per Natural Stat Trick, down from the 10 per game average they had given up in their last five games. The Sharks were 3-for-3 on the penalty kill as they allowed five shots while the Jets had the man advantage. Nedeljkovic allowed a first-period goal to Jets winger Morgan Barron, but had 20 saves over the final two periods and overtime. Nedeljkovic’s biggest save may have come on a Sharks third-period power play, as Barron came in alone and eluded a poke check from the San Jose goalie. But Nedeljkovic made a save with his right pad on Barron’s shot from close range to keep the game tied 1-1. Starting with his 34-save performance against the Columbus Blue Jackets on Jan. 6, Nedeljkovic, a pending unrestricted free agent, is 6-1-0 with a .928 save percentage in eight games. The Sharks have another back-to-back situation on Friday and Saturday, so Nedeljkovic, assuming he’s still in San Jose, will get at least one more start on this homestand. Related Articles Rookie center’s overtime goal leads Sharks past Winnipeg Jets Mukhamadullin has life-changing day, then enjoys his season’s biggest moment Defenseman’s third period goal gives Sharks entertaining win over Oilers Sharks make lineup changes ahead of marquee matchup against McDavid, Oilers Draymond Green likely to face Lakers, Kristaps Porzingis is questionable LINE JUGGLE PAYS OFF Smith, Celebrini and Kiefer Sherwood had an excellent game together Saturday, with an expected goals-for percentage of 79.41 during 5-on-5 play, and 15 shots on goal combined. Sunday was a different story: The trio did OK but not great. Some line shuffling by Warsofsky worked. Collin Graf joined Celebrini and Smith late in the second period, and into the third, when the line combined on the Sharks’ first goal. Graf took a long pass from Celebrini, carried the puck toward the Jets’ net on a Sharks 2-on-1 with Smith, and fired a shot that was stopped by Hellebuyck. The rebound, though, came right to Smith, who directed it into the Jets' net to tie the game 1-1 with 18:13 left in regulation time.",
-    "source": "Marin Independent Journal",
-    "category": "outdoors",
-    "verification": "community",
-    "topics": [
-      "fishing",
-      "local-news"
-    ]
-  },
-  {
     "id": "farm:agricultural-institute-of-marin:sunday-marin-farmers-market-every-sunday-8am-1pm-year-round:https-www-agriculturalinstitute-org-sunday-marin",
     "title": "Sunday Marin farmers market · Every Sunday, 8am - 1pm, Year-round",
     "link": "https://www.agriculturalinstitute.org/sunday-marin",
@@ -1402,38 +1407,6 @@
     "topics": [
       "farmers-market",
       "produce"
-    ]
-  },
-  {
-    "id": "outdoors:marin-independent-journal:rookie-center-s-overtime-goal-leads-sharks-past-winnipeg-jets:https-www-marinij-com-2026-03-01-san-jose-sharks-winnipeg-jets-macklin-celebrini-michael-misa-will-smith",
-    "title": "Rookie center’s overtime goal leads Sharks past Winnipeg Jets",
-    "link": "https://www.marinij.com/2026/03/01/san-jose-sharks-winnipeg-jets-macklin-celebrini-michael-misa-will-smith/",
-    "pubDate": "2026-03-01T23:39:43.000Z",
-    "timestamp": 1772408383000,
-    "description": "NHL: San Jose Sharks beat Winnipeg Jets to continue six-game homestand",
-    "content": "SAN JOSE – Michael Misa scored at the 1:40 mark of overtime to lift the San Jose Sharks to a 2-1 win over the Winnipeg Jets on Sunday before a sellout crowd of 17,435 at SAP Center. On the goal, Misa took a drop pass from William Eklund, skated into the Jets’ zone, fought off a check from defenseman Haydn Fleury, and beat goalie Connor Hellebuyck for his fourth goal of the season. The Sharks now have a record of 12-4 in overtime this season. \"First shift I ever got in OT and tried to make the most of it,\" Misa said. \"(Eklund) made a nice drop pass to me, and I figured I'd just wheel in there and see what happens.\" Will Smith scored the Sharks’ other goal, and goalie Alex Nedeljkovic finished with 27 saves in the win. The Sharks are now 2-1-0 on a six-game homestand that concludes with games against the Montreal Canadiens on Tuesday, the St. Louis Blues on Friday, and the New York Islanders on Saturday. The Sharks had trouble establishing any forecheck in the second period when they managed just five shots on net. The Jets did an effective job of taking away time and space in the neutral zone, and whenever they had breakdowns, Hellebuyck was there with 18 saves in the first 40 minutes. Sharks coach Ryan Warsofsky juggled his forward lines late in the second period, moving Kiefer Sherwood to the second line with Alexander Wennberg and Philipp Kurashev and Collin Graf up with Macklin Celebrini and Will Smith. San Jose Sharks celebrate their victory over the Winnipeg Jets on Sunday, March 1, 2026, in San Jose, Calif. (Aric Crabb/Bay Area News Group) The three combined to score the Sharks’ first goal early in the third period. Graf took a long pass from Celebrini, carried the puck toward the Jets’ net on a Sharks 2-on-1 with Smith, and fired a shot that was stopped by Hellebuyck. The rebound, though, came right to Smith, who directed it into the Jets' net to tie the game 1-1 with 18:13 left in regulation time. \"Just a 2-on-1 developed, and we wanted to have a shooting mentality, and it popped up in the air, and I got a piece of it,\" Smith said. The Sharks fell behind at the 2:44 mark of the first period on a goal by Morgan Barron. After the puck came back to him after a faceoff in the Jets zone, defenseman Shakir Mukhamadullin tried to poke the puck ahead to a teammate. Instead, it went off Jets winger Cole Koepke, who sent it to Tanner Pearson as Barron began streaking up the ice. Pearson then fed Barron, who skated into the Sharks’ zone and beat Nedeljkovic high to the glove side for his eighth goal of the season. Nedeljkovic was making his first start since Jan. 31 when he made 39 stops in a 3-2 loss to the Calgary Flames. Nedeljkovic, a pending unrestricted free agent, entered Sunday with a 10-9-2 record and an .899 save percentage in 25 games. Hellebuyck was making his second start since last Sunday, when he made 41 saves to help lead Team USA to a 2-1 overtime win over Celebrini and Team Canada in the gold medal game at the Milan Cortina Winter Olympics. President Donald Trump announced during his State of the Union address last Tuesday that he would award the Presidential Medal of Freedom to Hellebuyck, who will become the first hockey player to be given the award.",
-    "source": "Marin Independent Journal",
-    "category": "outdoors",
-    "verification": "community",
-    "topics": [
-      "fishing",
-      "local-news"
-    ]
-  },
-  {
-    "id": "outdoors:marin-independent-journal:marin-county-suspends-corte-madera-flood-control-project:https-www-marinij-com-2026-03-01-marin-county-suspends-corte-madera-flood-control-project",
-    "title": "Marin County suspends Corte Madera flood control project",
-    "link": "https://www.marinij.com/2026/03/01/marin-county-suspends-corte-madera-flood-control-project/",
-    "pubDate": "2026-03-01T21:28:13.000Z",
-    "timestamp": 1772400493000,
-    "description": "The effort “faces a combination of regulatory, technical, and community challenges that prevent it from moving forward in its current form,\" according to the Department of Public Works.",
-    "content": "The Marin County Department of Public Works has suspended a Corte Madera Creek flood control project to determine if its goals can be accomplished. An announcement by the department said the project “faces a combination of regulatory, technical, and community challenges that prevent it from moving forward in its current form.\" “This pause gives us the opportunity to step back, reassess our approach, and ensure we are making responsible decisions on behalf of the community,” said Christopher Blunk, the public works director. The announcement follows a notification by the Federal Emergency Management Agency that aspects of the project are problematic. In January, the county disclosed that a FEMA edict was impeding another flood control project on Corte Madera Creek, the removal of Building Bridge 2 in San Anselmo. FEMA told the county that the bridge cannot be demolished without the unanimous consent of 12 downstream property owners who would face increased flooding if the structure is removed. The projects at issue are in Zone 9 of the Marin County Flood Control and Water Conservation District within the Ross Valley watershed. The district is managed and staffed by the public works office and governed by the Board of Supervisors. Each zone has an advisory board. Several members of the Zone 9 advisory board said there was no mention of a pause when they met with public works staff on Jan. 28. Christopher Martin, who serves on the advisory board, said Blunk called him on Feb. 8, a Sunday. “He explained that the Corte Madera Creek flood risk project has the same issues that Building Bridge 2 has, which is delaying its progress,” Martin said. Blunk told Martin that FEMA had determined that the work that remains to be done on the Corte Madera project would increase the risk of flooding downstream. A water depth gauge hangs on the concrete wall containing Corte Madera Creek in Kentfield, Calif. on Thursday, Feb. 19, 2026. (Alan Dep/Marin Independent Journal) The changes being contemplated include removing a fish ladder downstream from the Ross post office between the Lagunitas Road bridge and the Sir Francis Drake Boulevard bridge; creating larger fish resting pools within the concrete channel between the College Avenue bridge and the Lagunitas Road bridge; and creating taller floodwalls between the Lagunitas Road bridge and part of the way to San Francisco Bay. In response to questions, the public works office said in an email that the Corte Madera Creek flood risk project “was designed to manage modeled rise associated with removing the wooden fish ladder, by raising some wall segments along the channel, but not to a level that meets FEMA’s requirements.” To meet FEMA’s requirements, the channel walls would need to be raised to a height that could obstruct views from the pedestrian and bike path along the Corte Madera Creek concrete channel and \"generally change the aesthetic of the neighborhood,\" the email said. “Alternatively,” the email said, “mitigations may be required for downstream properties. Either of these scenarios warrants discussions with the community before the District proceeds with further development of the project.” Martin said the public works office had expected FEMA to approve the Corte Madera project and was surprised by the requirement to raise the floodwalls or provide mitigation. “It’s very frustrating for everyone involved,” he said. “Removal of the fish ladder has been an issue for over 20 years.” Advisory board member Frank Egger said he received a similar call from the public works office. “I’ve been trying to get that old fish ladder removed because it blocks salmon passage in Corte Madera Creek coming up towards the upper reaches of the Ross Valley,\" said Egger, the vice mayor of Fairfax. While the public works office said the pause only applies to the Corte Madera Creek project, Marin County Supervisor Brian Colbert said a reappraisal of both it and the Building Bridge 2 removal project are in order. “Basically, all the various projects are facing challenges,” Colbert said. “It’s our responsibility collectively to determine what needs to be done to get the projects across the finish line. We really need to understand where this process veered off course so we can correct it and prevent similar issues elsewhere.” A path by the Corte Madera Creek in Kentfield, Calif., on Thursday, Feb. 19, 2026. (Alan Dep/Marin Independent Journal) The Department of Public Works has sent letters to the 12 property owners who must agree to proffered mitigations in order for Building Bridge 2 to be removed. It set a Feb. 28 deadline for their response. “The mitigations that they’re proposing are still inadequate.” said Jennifer Mota, one of the property owners. Mota said public works managers canceled a meeting they had scheduled with her on the day the meeting was supposed to happen, and no follow-up meeting has been agreed on. Another property owner, John Crane, said he has a meeting with Blunk scheduled for Feb. 25. “I need more information,” Crane said. “I put in requests to them for the information, and I repeated it several times over. I'm still waiting to hear.” The public works office said it has \"received additional questions from downstream property owners, but no definitive responses.” Whether the flood district has the money to pay for all the mitigations that might be required is an open question. A 20-year stormwater drainage fee approved by Ross Valley to generate money for flood control projects sunsets in June 2027. The fee generates about $2.6 million per year. Without the fee revenue, Zone 9 is projecting an operating deficit of more than $200,000 in the fiscal year ending in 2028. It has a fund balance of $6.6 million. The bridge removal project has $2.2 million in California Department of Water Resources grant funds that are scheduled to expire at the end of this year. The Corte Madera project has $3 million in remaining Department of Water Resources grant funds scheduled to expire at the end of March.",
-    "source": "Marin Independent Journal",
-    "category": "outdoors",
-    "verification": "community",
-    "topics": [
-      "fishing",
-      "local-news"
     ]
   },
   {
@@ -1486,29 +1459,6 @@
     "timestamp": 1772391600000,
     "description": "The West Marin Contact Improvisation Jam (WMCIJ)— Every first Sunday of the month from 11am-1:30pm. Please check calendar for exceptions! $15-$20. After a period of little play and touch, the WMCJ offers a much needed o…",
     "content": "Main Hall · Maica Folch · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
-    "source": "Dance Palace",
-    "category": "shows",
-    "verification": "community",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0699,
-    "lon": -122.8089,
-    "locationConfidence": "exact",
-    "locationEvidence": "Dance Palace",
-    "topics": [
-      "music",
-      "community-events",
-      "west-marin"
-    ]
-  },
-  {
-    "id": "shows:dance-palace:tai-chi-with-ellen-serber-outdoors:https-dancepalace-org-event-tai-chi-with-ellen-serber-outdoors-2026-03-01",
-    "title": "Tai Chi with Ellen Serber* – Outdoors",
-    "link": "https://dancepalace.org/event/tai-chi-with-ellen-serber-outdoors/2026-03-01/",
-    "pubDate": "2026-03-01T16:30:00.000Z",
-    "timestamp": 1772382600000,
-    "description": "We practice outside, behind the Dance Palace. Warm-up and practice of Tai Chi set as taught by Sifu Kuo Lien Ying, who certified Ellen to teach in 1978. Shaolin and weapons sets for advanced students. New students are t…",
-    "content": "Outdoors · Ellen Serber · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
     "source": "Dance Palace",
     "category": "shows",
     "verification": "community",
@@ -1605,27 +1555,6 @@
     ]
   },
   {
-    "id": "farm:agricultural-institute-of-marin:point-reyes-farmers-market-every-saturday-9am-2pm-may-2-october-10-2026:https-www-agriculturalinstitute-org-point-reyes",
-    "title": "Point Reyes farmers market · Every Saturday, 9am–2pm, May 2 – October 10, 2026",
-    "link": "https://www.agriculturalinstitute.org/point-reyes",
-    "pubDate": "2026-02-27T14:52:38.000Z",
-    "timestamp": 1772203958000,
-    "description": "Every Saturday · 9am–2pm · May 2 – October 10, 2026 at Toby’s Feed Barn",
-    "source": "Agricultural Institute of Marin",
-    "category": "farm",
-    "verification": "official",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0702,
-    "lon": -122.8105,
-    "locationConfidence": "exact",
-    "locationEvidence": "Agricultural Institute of Marin",
-    "topics": [
-      "farmers-market",
-      "produce"
-    ]
-  },
-  {
     "id": "prep:redwood-bark:overtime-thriller-sends-girls-varsity-basketball-to-ncs-championship:https-redwoodbark-org-108055-sports-overtime-thriller-sends-girls-varsity-basketball-to-ncs-championship",
     "title": "Overtime thriller sends girls varsity basketball to NCS championship",
     "link": "https://redwoodbark.org/108055/sports/overtime-thriller-sends-girls-varsity-basketball-to-ncs-championship/",
@@ -1697,6 +1626,28 @@
     "topics": [
       "farmers-market",
       "food-drink"
+    ]
+  },
+  {
+    "id": "shows:sweetwater-music-hall:clinton-fearon:https-sweetwatermusichall-org-event-clinton-fearon-sweetwater-music-hall-mill-valley-california",
+    "title": "Clinton Fearon",
+    "link": "https://sweetwatermusichall.org/event/clinton-fearon/sweetwater-music-hall/mill-valley-california/",
+    "pubDate": "2026-02-24T18:00:00.000Z",
+    "timestamp": 1771956000000,
+    "description": "Clinton Fearon is one of the most prolific reggae artists of his generation. He's 75 today and still records new songs every year, new albums every other year and more! Composer, songwriter, singer and player of instrum…",
+    "content": "Clinton Fearon is one of the most prolific reggae artists of his generation. He's 75 today and still records new songs every year, new albums every other year and more! Composer, songwriter, singer and player of instruments since his early teens, Clinton Fearon recorded 15 albums under his own name and he's still touring the world with this impressive repertoire, accompanied by his band or in solo acoustic. Born in Jamaica, Clinton became the bassist, vocalist and lyricist of the mythic Gladiators at the age of 19. He spent 18 years with the band and signed several songs for The Gladiators, hits and classics like Chatty Chatty Mouth, Richman Poorman, On The Other Side, Can You Imagine How I Feel and more. Clinton Fearon was also a session musician for different producers in Jamaica, including Coxsone Dodd at Studio One and Lee ‘Scratch' Perry's at Black Ark, but also at Channel One, Aquarius, Harry J, Randy's, etc. In these studios, Clinton Fearon composed some everlasting bass lines for artists like Yabby You, Jimmy Riley, Max Romeo, Junior Byles and many others. After leaving The Gladiators and Jamaica in 1987, Clinton Fearon started a new career in Seattle. At first he was one of the singers of The Defenders with his fellow Jamaican musicians. The band built a nice following in the area until they split after five years. And finally Clinton Fearon formed his own band in the mid 90s with local musicians: Clinton Fearon and Boogie Brown Band. Since 2019, Clinton Fearon is also teaming up with the Riddim Source band, featuring la crème de la crème of the French reggae musicians scene. Together they recorded \"Breaking News\" in 2022 and \"Jah Is Love\", brand new album of the reggae master, was released June 6th 2025. Each song of Clinton Fearon is a strong message coming from the heart of a man who is dedicating his life to help a better world to come. With chiseled music and poetic lyrics, he opens reggae to a wider audience who simply loves his beautiful songs.",
+    "source": "Sweetwater Music Hall",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9059,
+    "lon": -122.5491,
+    "locationConfidence": "exact",
+    "locationEvidence": "Sweetwater Music Hall",
+    "topics": [
+      "music",
+      "shows"
     ]
   },
   {
@@ -1773,28 +1724,6 @@
     "timestamp": 1771956000000,
     "description": "Sol Horizon is Sonoma County, California's best reggae band and Northern California's premier Bob Marley tribute band. The band was voted \"Best Band\" in the North Bay Bohemian's \"Best of the North Bay\" Reader's Picks in…",
     "content": "Sol Horizon is Sonoma County, California's best reggae band and Northern California's premier Bob Marley tribute band. The band was voted \"Best Band\" in the North Bay Bohemian's \"Best of the North Bay\" Reader's Picks in 2022 and 2023 and awarded the NorBay Award for \"Best Reggae Band\" in the North Bay 9 times, including the last 5 years in a row and 8 of the previous 9 years. Their renowned Bob Marley tribute pays homage to the global voice of reggae, celebrating his life and legacy through performances of his greatest music. The tribute expands from an 8-piece original music band to a 12-piece featuring an additional keyboardist, 2 female background vocalist, and 2 horns. The band continues to expand its offering of Bob Marley classics, from well-known chart-toppers to more rare cuts and versions, mixing in subtle musical interpretations and blazing solos to keep the crowd on its toes. Don't miss this tribute to the worldwide voice of reggae music!",
-    "source": "Sweetwater Music Hall",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.9059,
-    "lon": -122.5491,
-    "locationConfidence": "exact",
-    "locationEvidence": "Sweetwater Music Hall",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:sweetwater-music-hall:clinton-fearon:https-sweetwatermusichall-org-event-clinton-fearon-sweetwater-music-hall-mill-valley-california",
-    "title": "Clinton Fearon",
-    "link": "https://sweetwatermusichall.org/event/clinton-fearon/sweetwater-music-hall/mill-valley-california/",
-    "pubDate": "2026-02-24T18:00:00.000Z",
-    "timestamp": 1771956000000,
-    "description": "Clinton Fearon is one of the most prolific reggae artists of his generation. He's 75 today and still records new songs every year, new albums every other year and more! Composer, songwriter, singer and player of instrum…",
-    "content": "Clinton Fearon is one of the most prolific reggae artists of his generation. He's 75 today and still records new songs every year, new albums every other year and more! Composer, songwriter, singer and player of instruments since his early teens, Clinton Fearon recorded 15 albums under his own name and he's still touring the world with this impressive repertoire, accompanied by his band or in solo acoustic. Born in Jamaica, Clinton became the bassist, vocalist and lyricist of the mythic Gladiators at the age of 19. He spent 18 years with the band and signed several songs for The Gladiators, hits and classics like Chatty Chatty Mouth, Richman Poorman, On The Other Side, Can You Imagine How I Feel and more. Clinton Fearon was also a session musician for different producers in Jamaica, including Coxsone Dodd at Studio One and Lee ‘Scratch' Perry's at Black Ark, but also at Channel One, Aquarius, Harry J, Randy's, etc. In these studios, Clinton Fearon composed some everlasting bass lines for artists like Yabby You, Jimmy Riley, Max Romeo, Junior Byles and many others. After leaving The Gladiators and Jamaica in 1987, Clinton Fearon started a new career in Seattle. At first he was one of the singers of The Defenders with his fellow Jamaican musicians. The band built a nice following in the area until they split after five years. And finally Clinton Fearon formed his own band in the mid 90s with local musicians: Clinton Fearon and Boogie Brown Band. Since 2019, Clinton Fearon is also teaming up with the Riddim Source band, featuring la crème de la crème of the French reggae musicians scene. Together they recorded \"Breaking News\" in 2022 and \"Jah Is Love\", brand new album of the reggae master, was released June 6th 2025. Each song of Clinton Fearon is a strong message coming from the heart of a man who is dedicating his life to help a better world to come. With chiseled music and poetic lyrics, he opens reggae to a wider audience who simply loves his beautiful songs.",
     "source": "Sweetwater Music Hall",
     "category": "shows",
     "verification": "community",
@@ -2700,9 +2629,9 @@
     ]
   },
   {
-    "id": "shows:sweetwater-music-hall:super-diamond-the-neil-diamond-tribute:https-sweetwatermusichall-org-event-super-diamond-the-neil-diamond-tribute-2-sweetwater-music-hall-mill-valley-california",
-    "title": "Super Diamond – The Neil Diamond Tribute",
-    "link": "https://sweetwatermusichall.org/event/super-diamond-the-neil-diamond-tribute-2/sweetwater-music-hall/mill-valley-california/",
+    "id": "shows:sweetwater-music-hall:super-diamond-the-neil-diamond-tribute-sold-out:https-sweetwatermusichall-org-event-super-diamond-the-neil-diamond-tribute-sold-out-3-sweetwater-music-hall-mill-valley-california",
+    "title": "Super Diamond – The Neil Diamond Tribute–SOLD OUT",
+    "link": "https://sweetwatermusichall.org/event/super-diamond-the-neil-diamond-tribute-sold-out-3/sweetwater-music-hall/mill-valley-california/",
     "pubDate": "2025-12-30T18:00:00.000Z",
     "timestamp": 1767117600000,
     "description": "After assembling a band of truly kindred spirits, Surreal Neil and Super Diamond began to perform regularly in San Francisco and then all over the U.S., and something quite wonderful happened: people turned out in large…",

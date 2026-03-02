@@ -18,7 +18,8 @@
 			| 'prep'
 			| 'farm'
 			| 'satire'
-			| 'pulse';
+			| 'pulse'
+			| 'community';
 		count?: number | string | null;
 		status?: string;
 		statusClass?: string;
@@ -74,6 +75,7 @@
 	class:variant-farm={variant === 'farm'}
 	class:variant-satire={variant === 'satire'}
 	class:variant-pulse={variant === 'pulse'}
+	class:variant-community={variant === 'community'}
 	data-panel-id={id}
 >
 	<div class="panel-header">
@@ -285,6 +287,15 @@
 
 	.panel.variant-pulse {
 		border-top-color: #a78bfa;
+	}
+
+	.panel.variant-community {
+		border-top-color: #a855f7;
+	}
+
+	.panel.variant-community .panel-count {
+		color: #a855f7;
+		background: rgba(168, 85, 247, 0.14);
 	}
 
 	.panel.variant-civic .panel-count {

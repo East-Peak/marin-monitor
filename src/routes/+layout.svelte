@@ -1,5 +1,8 @@
 <script lang="ts">
 	import '../app.css';
+	import { inject } from '@vercel/analytics';
+
+	inject({ mode: 'auto' });
 
 	interface Props {
 		children: import('svelte').Snippet;
