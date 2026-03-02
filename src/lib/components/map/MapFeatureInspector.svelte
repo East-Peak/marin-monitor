@@ -1,6 +1,6 @@
 <script lang="ts">
 	interface FeatureInspectorData {
-		kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident';
+		kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station';
 		title: string;
 		subtitle?: string;
 		description?: string;
@@ -27,6 +27,8 @@
 				return 'Earthquake';
 			case 'fire-incident':
 				return 'Active Fire';
+			case 'gas-station':
+				return 'Gas Station';
 			default:
 				return 'Map Feature';
 		}

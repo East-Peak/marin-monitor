@@ -15,3 +15,7 @@ export function getNpsApiKey(): string {
 export function getAirnowApiKey(): string {
 	return env.AIRNOW_API_KEY || '';
 }
+
+export function getGooglePlacesApiKey(): string {
+	return env.GOOGLE_PLACES_API_KEY || '';
+}

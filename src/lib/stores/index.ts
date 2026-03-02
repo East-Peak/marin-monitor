@@ -57,6 +57,9 @@ export {
 	type MapState
 } from './map';
 
+// Gas prices store
+export { gasPriceStore, currentGasStations } from './gas-prices';
+
 // Refresh store
 export {
 	refresh,

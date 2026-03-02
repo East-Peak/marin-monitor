@@ -12,6 +12,7 @@
 		SignalsPanel,
 		MapPanel,
 		HousingPanel,
+		GasPricesPanel,
 		EnvironmentPanel,
 		CommunityPanel,
 		ConditionsPanel
@@ -660,6 +661,12 @@
 						</div>
 					{/if}
 
+					{#if isPanelVisible('gas-prices')}
+						<div class="signal-card signal-gas-prices">
+							<GasPricesPanel />
+						</div>
+					{/if}
+
 					{#if isPanelVisible('weather')}
 						<div class="signal-card signal-tides">
 							<TidesPanel
@@ -929,6 +936,7 @@
 
 	.signal-weather :global(.panel-content),
 	.signal-housing :global(.panel-content),
+	.signal-gas-prices :global(.panel-content),
 	.signal-tides :global(.panel-content),
 	.signal-pulse :global(.panel-content),
 	.signal-signals :global(.panel-content),

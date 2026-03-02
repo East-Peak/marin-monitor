@@ -26,7 +26,8 @@ export type PanelId =
 	| 'monitors'
 	| 'correlation'
 	| 'narrative'
-	| 'satire';
+	| 'satire'
+	| 'gas-prices';
 
 export const PANELS: Record<PanelId, PanelConfig> = {
 	map: { name: 'Marin Map', priority: 1, description: 'County map with layered data' },
@@ -94,6 +95,11 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 		name: 'Marin Lately (satire)',
 		priority: 3,
 		description: 'Marin Lately unconfirmed reports'
+	},
+	'gas-prices': {
+		name: 'Gas Prices',
+		priority: 3,
+		description: 'Station-level fuel prices across Marin County'
 	}
 };
 
@@ -112,6 +118,7 @@ export const DEFAULT_PANEL_ORDER: PanelId[] = [
 	'civic',
 	'outdoors',
 	'housing',
+	'gas-prices',
 	'cycling',
 	'shows',
 	'prep',

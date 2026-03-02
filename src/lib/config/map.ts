@@ -25,7 +25,8 @@ export const LAYER_COLORS = {
 	safety: '#ef4444', // red
 	housing: '#f59e0b', // amber
 	activity: '#10b981', // emerald
-	satire: '#ec4899' // pink — dashed outline
+	satire: '#ec4899', // pink — dashed outline
+	gas: '#22d3ee' // cyan
 } as const;
 
 /**

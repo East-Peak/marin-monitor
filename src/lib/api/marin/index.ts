@@ -17,3 +17,4 @@ export { fetchFireIncidents, type FireIncident } from './calfire';
 export { fetchUvIndex, type UvData } from './uv';
 export { fetchSunTimes, type SunData } from './sun';
 export { fetchObservedWeather, type ObservedWeather } from './open-meteo';
+export { fetchGasPriceData } from './gas-prices';

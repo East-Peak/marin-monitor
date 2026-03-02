@@ -14,7 +14,7 @@ export interface MapState {
 	initialized: boolean;
 }
 
-const ALL_LAYERS: MapLayer[] = ['civic', 'news', 'safety', 'housing', 'activity', 'satire'];
+const ALL_LAYERS: MapLayer[] = ['civic', 'news', 'safety', 'housing', 'activity', 'satire', 'gas'];
 
 function createInitialState(): MapState {
 	const activeLayers = {} as Record<MapLayer, boolean>;
@@ -34,7 +34,7 @@ function createInitialState(): MapState {
 /**
  * Map MapLayer → NewsCategory
  */
-export const LAYER_TO_CATEGORY: Record<MapLayer, NewsCategory> = {
+export const LAYER_TO_CATEGORY: Partial<Record<MapLayer, NewsCategory>> = {
 	news: 'local',
 	activity: 'outdoors',
 	civic: 'civic',

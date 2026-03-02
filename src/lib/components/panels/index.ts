@@ -11,3 +11,4 @@ export { default as SignalsPanel } from './SignalsPanel.svelte';
 export { default as EnvironmentPanel } from './EnvironmentPanel.svelte';
 export { default as CommunityPanel } from './CommunityPanel.svelte';
 export { default as ConditionsPanel } from './ConditionsPanel.svelte';
+export { default as GasPricesPanel } from './GasPricesPanel.svelte';

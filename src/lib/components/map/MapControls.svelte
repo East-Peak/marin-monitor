@@ -10,10 +10,11 @@
 		safety: 'Crime & Safety',
 		housing: 'Housing',
 		activity: 'Activity',
-		satire: 'Marin Lately'
+		satire: 'Marin Lately',
+		gas: 'Gas'
 	};
 
-	const LAYER_ORDER: MapLayer[] = ['news', 'safety', 'civic', 'activity', 'housing', 'satire'];
+	const LAYER_ORDER: MapLayer[] = ['news', 'safety', 'civic', 'activity', 'housing', 'gas', 'satire'];
 
 	function toggleLayer(layer: MapLayer) {
 		mapStore.toggleLayer(layer);

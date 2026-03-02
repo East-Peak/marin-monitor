@@ -4,6 +4,7 @@
 	import type { Map as MapLibreMap, GeoJSONSource, MapLayerMouseEvent } from 'maplibre-gl';
 	import { allNewsItems } from '$lib/stores/news';
 	import { mapStore, CATEGORY_TO_LAYER } from '$lib/stores/map';
+	import { currentGasStations } from '$lib/stores/gas-prices';
 	import { MARIN_TOWNS, TOWN_BY_SLUG, LAYER_COLORS, MARIN_BOUNDS } from '$lib/config';
 	import { FIRE_ZONES, LANDMARKS } from '$lib/config/map';
 	import { MAPBOX_TOKEN } from '$lib/config/api';
@@ -27,7 +28,7 @@
 		onTownHover?: (townSlug: string | null) => void;
 		onPinClick?: (itemId: string) => void;
 		onFeatureClick?: (feature: {
-			kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident';
+			kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station';
 			title: string;
 			subtitle?: string;
 			description?: string;
@@ -363,6 +364,12 @@
 			}
 		});
 
+		// Gas stations source
+		map.addSource('gas-stations', {
+			type: 'geojson',
+			data: { type: 'FeatureCollection', features: [] }
+		});
+
 		// --- Layers ---
 
 		// Fire zones (semi-transparent red circles)
@@ -525,6 +532,40 @@
 			}
 		});
 
+		// Gas station dots (cyan)
+		map.addLayer({
+			id: 'gas-stations-layer',
+			type: 'circle',
+			source: 'gas-stations',
+			paint: {
+				'circle-radius': 5,
+				'circle-color': '#22d3ee',
+				'circle-opacity': 0.8,
+				'circle-stroke-width': 1,
+				'circle-stroke-color': 'rgba(10, 10, 10, 0.8)'
+			}
+		});
+
+		// Gas station labels (visible at higher zoom)
+		map.addLayer({
+			id: 'gas-stations-label',
+			type: 'symbol',
+			source: 'gas-stations',
+			minzoom: 12,
+			layout: {
+				'text-field': ['concat', ['get', 'name'], '\n', ['get', 'price']],
+				'text-size': 9,
+				'text-offset': [0, 1.4],
+				'text-anchor': 'top',
+				'text-optional': true
+			},
+			paint: {
+				'text-color': '#22d3ee',
+				'text-halo-color': 'rgba(10, 10, 10, 0.9)',
+				'text-halo-width': 1.5
+			}
+		});
+
 		// News pins (small dots per item)
 		map.addLayer({
 			id: 'news-pins-layer',
@@ -666,6 +707,20 @@
 				});
 			});
 
+			map.on('click', 'gas-stations-layer', (e: MapLayerMouseEvent) => {
+				const feature = e.features?.[0];
+				const name = String(feature?.properties?.name ?? 'Gas Station');
+				const price = String(feature?.properties?.price ?? '');
+				const address = String(feature?.properties?.address ?? '');
+				onFeatureClick?.({
+					kind: 'gas-station',
+					title: name,
+					subtitle: price ? `Regular: ${price}` : 'Price unavailable',
+					description: address,
+					source: 'Google Places'
+				});
+			});
+
 			map.on('click', 'fire-incidents-layer', (e: MapLayerMouseEvent) => {
 				const feature = e.features?.[0];
 				const name = String(feature?.properties?.name ?? 'Fire');
@@ -679,6 +734,14 @@
 					description: url ? `Details: ${url}` : undefined,
 					source: String(feature?.properties?.source ?? 'CAL FIRE')
 				});
+			});
+
+			map.on('mouseenter', 'gas-stations-layer', () => {
+				map.getCanvas().style.cursor = 'pointer';
+			});
+
+			map.on('mouseleave', 'gas-stations-layer', () => {
+				map.getCanvas().style.cursor = '';
 			});
 
 			map.on('mouseenter', 'fire-incidents-layer', () => {
@@ -880,11 +943,56 @@
 			fireSource.setData({ type: 'FeatureCollection', features: fireFeatures });
 		}
 
+		// Gas stations
+		const gasStations = get(currentGasStations);
+		const mapGasVisible = mapState.activeLayers['gas'];
+		const gasFeatures: GeoJSON.Feature[] = mapGasVisible
+			? gasStations.map((station) => {
+					const regularPrice = station.fuelPrices.find(
+						(fp) => fp.type === 'REGULAR_UNLEADED'
+					)?.price;
+					return {
+						type: 'Feature' as const,
+						properties: {
+							placeId: station.placeId,
+							name: station.name,
+							address: station.address,
+							price: regularPrice !== undefined ? `$${regularPrice.toFixed(3)}` : ''
+						},
+						geometry: {
+							type: 'Point' as const,
+							coordinates: [station.lon, station.lat]
+						}
+					};
+				})
+			: [];
+
+		const gasSource = map.getSource('gas-stations') as GeoJSONSource;
+		if (gasSource) {
+			gasSource.setData({ type: 'FeatureCollection', features: gasFeatures });
+		}
+
+		if (map.getLayer('gas-stations-layer')) {
+			map.setLayoutProperty(
+				'gas-stations-layer',
+				'visibility',
+				mapGasVisible ? 'visible' : 'none'
+			);
+		}
+		if (map.getLayer('gas-stations-label')) {
+			map.setLayoutProperty(
+				'gas-stations-label',
+				'visibility',
+				mapGasVisible ? 'visible' : 'none'
+			);
+		}
+
 		applyTrafficVisibility(map);
 	}
 
 	let unsubscribeNews: (() => void) | null = null;
 	let unsubscribeMap: (() => void) | null = null;
+	let unsubscribeGas: (() => void) | null = null;
 	let updateDataTimer: ReturnType<typeof setTimeout> | null = null;
 
 	onMount(() => {
@@ -933,6 +1041,14 @@
 					updateData(m);
 				});
 			}
+
+			if (!unsubscribeGas) {
+				unsubscribeGas = currentGasStations.subscribe(() => {
+					const m = getMap();
+					if (!m || !m.getSource('gas-stations')) return;
+					updateData(m);
+				});
+			}
 		});
 
 		return () => {
@@ -944,6 +1060,7 @@
 		removeStyleLoadListener?.();
 		unsubscribeNews?.();
 		unsubscribeMap?.();
+		unsubscribeGas?.();
 		if (trafficRefreshTimer) {
 			clearInterval(trafficRefreshTimer);
 			trafficRefreshTimer = null;
