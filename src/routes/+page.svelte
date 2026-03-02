@@ -465,7 +465,14 @@
 
 <svelte:head>
 	<title>Marin Monitor</title>
-	<meta name="description" content="Local situational awareness for Marin County" />
+	<meta name="description" content="Everything happening in Marin County — news, weather, tides, traffic, and the occasional coyote sighting." />
+	<meta property="og:title" content="Marin Monitor" />
+	<meta property="og:description" content="Everything happening in Marin County — news, weather, tides, traffic, and the occasional coyote sighting." />
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://marinmonitor.com" />
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:title" content="Marin Monitor" />
+	<meta name="twitter:description" content="Everything happening in Marin County — news, weather, tides, traffic, and the occasional coyote sighting." />
 </svelte:head>
 
 <div class="app">
