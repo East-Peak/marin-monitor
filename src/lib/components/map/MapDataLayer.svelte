@@ -324,7 +324,7 @@
 				tiles: [
 					`https://api.mapbox.com/v4/mapbox.mapbox-traffic-v1/{z}/{x}/{y}.vector.pbf?access_token=${encodeURIComponent(
 						mapboxToken
-					)}`
+					)}&v=2`
 				],
 				minzoom: 6,
 				maxzoom: 16

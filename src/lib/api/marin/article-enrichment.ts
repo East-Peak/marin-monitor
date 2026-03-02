@@ -13,8 +13,9 @@ import { fetchWithTimeout } from './fetch-helpers';
 const ENRICHED_DOMAINS = ['marinij.com', 'ptreyeslight.com'];
 const MAX_ITEMS_PER_BATCH = 12;
 const BODY_CHAR_LIMIT = 1400;
-const LOCATION_BATCH_LIMIT = 28;
-const LOCATION_CANDIDATE_LIMIT = 6;
+const LOCATION_BATCH_LIMIT = 10;
+const LOCATION_CANDIDATE_LIMIT = 3;
+const GEOCODE_DELAY_MS = 1100;
 
 const pageCache = new Map<string, string>();
 const geocodeCache = new Map<string, { lat: number; lon: number } | null>();
@@ -210,6 +211,11 @@ export async function enrichItemsForLocation(items: NewsItem[]): Promise<NewsIte
 
 		const candidates = extractAddressCandidates(combinedText);
 		for (const candidate of candidates) {
+			// Skip if already cached (no delay needed for cache hits)
+			const cacheKey = `${candidate}, ${item.town ?? ''}, Marin County, California`.toLowerCase();
+			if (!geocodeCache.has(cacheKey)) {
+				await new Promise((r) => setTimeout(r, GEOCODE_DELAY_MS));
+			}
 			const location = await geocodeCandidate(candidate, item.town);
 			if (!location) continue;
 
