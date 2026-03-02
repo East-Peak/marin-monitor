@@ -26,9 +26,9 @@ export interface HousingMetric {
  */
 export async function fetchHousingData(): Promise<HousingMetric[]> {
 	try {
-		logger.log('Housing', 'Loading housing data from static/data/marin-housing.json');
+		logger.log('Housing', 'Loading housing data from /api/data/housing');
 
-		const response = await fetchWithTimeout('/data/marin-housing.json');
+		const response = await fetchWithTimeout('/api/data/housing');
 		if (!response.ok) {
 			throw new Error(`Housing data fetch failed: ${response.status}`);
 		}
