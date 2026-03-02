@@ -1,5 +1,6 @@
 import { json } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
+import { fetchWithTimeout } from '$lib/server/fetch-utils';
+import { getAirnowApiKey } from '$lib/server/api-keys';
 import type { RequestHandler } from './$types';
 import { MARIN_CENTER } from '$lib/config/towns';
 
@@ -31,17 +32,10 @@ function aqiColor(categoryNumber: number): string {
 	}
 }
 
-function getAirNowApiKey(): string {
-	return env.AIRNOW_API_KEY || '';
-}
-
-export const GET: RequestHandler = async ({ fetch }) => {
-	const apiKey = getAirNowApiKey();
+export const GET: RequestHandler = async () => {
+	const apiKey = getAirnowApiKey();
 	if (!apiKey) {
-		return new Response(null, {
-			status: 204,
-			headers: { 'Cache-Control': 'public, max-age=300' }
-		});
+		return json({ error: 'Service unavailable' }, { status: 503 });
 	}
 
 	const params = new URLSearchParams({
@@ -52,7 +46,7 @@ export const GET: RequestHandler = async ({ fetch }) => {
 		API_KEY: apiKey
 	});
 
-	const response = await fetch(
+	const response = await fetchWithTimeout(
 		`https://www.airnowapi.org/aq/observation/latLong/current/?${params.toString()}`,
 		{
 			headers: { Accept: 'application/json' }

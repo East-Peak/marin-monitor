@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Panel } from '$lib/components/common';
+	import { timeAgo } from '$lib/utils';
 	import {
 		fetchAirQuality,
 		fetchStreamGauges,
@@ -33,14 +34,6 @@
 		return '#f59e0b';
 	}
 
-	function timeAgo(ts: number): string {
-		const mins = Math.floor((Date.now() - ts) / 60000);
-		if (mins < 1) return 'now';
-		if (mins < 60) return `${mins}m`;
-		const hours = Math.floor(mins / 60);
-		if (hours < 24) return `${hours}h`;
-		return `${Math.floor(hours / 24)}d`;
-	}
 
 	onMount(async () => {
 		try {

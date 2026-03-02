@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import type { RequestHandler } from './$types';
 import { MARIN_BOUNDS } from '$lib/config';
 
@@ -12,7 +13,7 @@ function isInsideMarin(lat: number, lon: number): boolean {
 	);
 }
 
-export const GET: RequestHandler = async ({ url, fetch }) => {
+export const GET: RequestHandler = async ({ url }) => {
 	const q = url.searchParams.get('q')?.trim();
 	const town = url.searchParams.get('town')?.trim();
 	if (!q) {
@@ -29,7 +30,7 @@ export const GET: RequestHandler = async ({ url, fetch }) => {
 		viewbox: `${MARIN_BOUNDS.west - 0.08},${MARIN_BOUNDS.north + 0.06},${MARIN_BOUNDS.east + 0.08},${MARIN_BOUNDS.south - 0.06}`
 	});
 
-	const response = await fetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`, {
+	const response = await fetchWithTimeout(`https://nominatim.openstreetmap.org/search?${params.toString()}`, {
 		headers: {
 			Accept: 'application/json',
 			'User-Agent': 'MarinMonitor/1.0'

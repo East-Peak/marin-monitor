@@ -3,7 +3,11 @@
 	import { Panel } from '$lib/components/common';
 	import { housingNews } from '$lib/stores/news';
 	import { fetchHousingData, type HousingMetric } from '$lib/api/marin/housing';
-	import * as d3 from 'd3';
+	import { select } from 'd3-selection';
+	import type { Selection } from 'd3-selection';
+	import { scaleLinear } from 'd3-scale';
+	import type { ScaleLinear } from 'd3-scale';
+	import { area, line, curveMonotoneX } from 'd3-shape';
 
 	type HoverChart = 'price' | 'inventory';
 	type HoverState = { chart: HoverChart; index: number; x: number } | null;
@@ -162,8 +166,8 @@
 	}
 
 	function drawSharedXAxis(
-		g: d3.Selection<SVGGElement, unknown, null, undefined>,
-		x: d3.ScaleLinear<number, number>,
+		g: Selection<SVGGElement, unknown, null, undefined>,
+		x: ScaleLinear<number, number>,
 		innerH: number,
 		series: HousingMetric[]
 	) {
@@ -182,7 +186,7 @@
 	function drawPriceChart() {
 		if (!priceSvg || priceData.length < 2) return;
 
-		const svg = d3.select(priceSvg);
+		const svg = select(priceSvg);
 		svg.selectAll('*').remove();
 
 		const width = priceSvg.clientWidth;
@@ -195,11 +199,10 @@
 		const yMin = Math.min(...prices) * 0.95;
 		const yMax = Math.max(...prices) * 1.05;
 
-		const x = d3
-			.scaleLinear()
+		const x = scaleLinear()
 			.domain([0, priceData.length - 1])
 			.range([0, innerW]);
-		const y = d3.scaleLinear().domain([yMin, yMax]).range([innerH, 0]);
+		const y = scaleLinear().domain([yMin, yMax]).range([innerH, 0]);
 
 		const g = svg
 			.attr('width', width)
@@ -207,24 +210,22 @@
 			.append('g')
 			.attr('transform', `translate(${margin.left},${margin.top})`);
 
-		const area = d3
-			.area<HousingMetric>()
+		const areaGen = area<HousingMetric>()
 			.x((_d, i) => x(i))
 			.y0(innerH)
 			.y1((d) => y(d.medianPrice!))
-			.curve(d3.curveMonotoneX);
+			.curve(curveMonotoneX);
 
-		g.append('path').datum(priceData).attr('d', area).attr('fill', 'rgba(245, 158, 11, 0.1)');
+		g.append('path').datum(priceData).attr('d', areaGen).attr('fill', 'rgba(245, 158, 11, 0.1)');
 
-		const line = d3
-			.line<HousingMetric>()
+		const lineGen = line<HousingMetric>()
 			.x((_d, i) => x(i))
 			.y((d) => y(d.medianPrice!))
-			.curve(d3.curveMonotoneX);
+			.curve(curveMonotoneX);
 
 		g.append('path')
 			.datum(priceData)
-			.attr('d', line)
+			.attr('d', lineGen)
 			.attr('fill', 'none')
 			.attr('stroke', '#f59e0b')
 			.attr('stroke-width', 1.5);
@@ -281,7 +282,7 @@
 	function drawInventoryChart() {
 		if (!inventorySvg || inventoryData.length < 2) return;
 
-		const svg = d3.select(inventorySvg);
+		const svg = select(inventorySvg);
 		svg.selectAll('*').remove();
 
 		const width = inventorySvg.clientWidth;
@@ -294,11 +295,10 @@
 		const yMax = Math.max(...inventories) * 1.1;
 		const barW = innerW / Math.max(inventoryData.length, 1);
 
-		const x = d3
-			.scaleLinear()
+		const x = scaleLinear()
 			.domain([0, inventoryData.length - 1])
 			.range([0, innerW]);
-		const y = d3.scaleLinear().domain([0, yMax]).range([innerH, 0]);
+		const y = scaleLinear().domain([0, yMax]).range([innerH, 0]);
 
 		const g = svg
 			.attr('width', width)
@@ -350,9 +350,13 @@
 	}
 
 	onMount(() => {
+		let resizeTimer: ReturnType<typeof setTimeout>;
 		function handleResize() {
-			if (priceData.length > 1 && priceSvg) drawPriceChart();
-			if (inventoryData.length > 1 && inventorySvg) drawInventoryChart();
+			clearTimeout(resizeTimer);
+			resizeTimer = setTimeout(() => {
+				if (priceData.length > 1 && priceSvg) drawPriceChart();
+				if (inventoryData.length > 1 && inventorySvg) drawInventoryChart();
+			}, 150);
 		}
 
 		window.addEventListener('resize', handleResize);

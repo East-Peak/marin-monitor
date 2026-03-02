@@ -14,6 +14,7 @@
 
 import type { NewsItem } from '$lib/types';
 import { logger } from '$lib/config/api';
+import { fetchWithTimeout } from './fetch-helpers';
 
 /** Marin-relevant transit agencies */
 const MARIN_AGENCIES = [
@@ -63,7 +64,7 @@ async function fetchAgencyAlerts(
 	try {
 		logger.log('511', `Fetching ${agencyName} alerts`);
 		const proxyUrl = `/api/transit?agency=${agencyId}`;
-		const proxyResponse = await fetch(proxyUrl, {
+		const proxyResponse = await fetchWithTimeout(proxyUrl, {
 			headers: { Accept: 'application/json' }
 		});
 		if (!proxyResponse.ok) {

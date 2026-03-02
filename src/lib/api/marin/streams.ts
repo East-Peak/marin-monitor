@@ -7,6 +7,7 @@
  */
 
 import { logger } from '$lib/config/api';
+import { fetchWithTimeout } from './fetch-helpers';
 
 export interface StreamGauge {
 	siteId: string;
@@ -75,7 +76,7 @@ export async function fetchStreamGauges(): Promise<StreamGauge[]> {
 		const url = `${USGS_BASE}?${params}`;
 		logger.log('USGS-Water', `Fetching stream gauges: ${url}`);
 
-		const response = await fetch(url, {
+		const response = await fetchWithTimeout(url, {
 			headers: { Accept: 'application/json' }
 		});
 

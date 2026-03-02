@@ -10,7 +10,11 @@
 	} from '$lib/api/marin/marine';
 	import { fetchHourlyForecast, type HourlyPeriod } from '$lib/api/marin/nws-hourly';
 	import type { TidePrediction } from '$lib/types';
-	import * as d3 from 'd3';
+	import { select } from 'd3-selection';
+	import type { Selection } from 'd3-selection';
+	import { scaleLinear } from 'd3-scale';
+	import type { ScaleLinear } from 'd3-scale';
+	import { area, line, curveBasis } from 'd3-shape';
 
 	interface Props {
 		tideStation?: string;
@@ -156,8 +160,8 @@
 	}
 
 	function drawSharedXAxis(
-		g: d3.Selection<SVGGElement, unknown, null, undefined>,
-		x: d3.ScaleLinear<number, number>,
+		g: Selection<SVGGElement, unknown, null, undefined>,
+		x: ScaleLinear<number, number>,
 		innerH: number,
 		points: CoastalPoint[],
 		withDirection: boolean = false
@@ -184,8 +188,8 @@
 	}
 
 	function drawHoverGuide(
-		g: d3.Selection<SVGGElement, unknown, null, undefined>,
-		x: d3.ScaleLinear<number, number>,
+		g: Selection<SVGGElement, unknown, null, undefined>,
+		x: ScaleLinear<number, number>,
 		innerH: number
 	) {
 		if (!hoverState) return;
@@ -202,7 +206,7 @@
 	function drawWaveChart() {
 		if (!waveSvg || coastalPoints.length === 0) return;
 		const waveValues = coastalPoints.map((point) => point.waveHeight ?? 0);
-		const svg = d3.select(waveSvg);
+		const svg = select(waveSvg);
 		svg.selectAll('*').remove();
 
 		const width = waveSvg.clientWidth;
@@ -213,11 +217,10 @@
 		const maxWave = Math.max(2, ...waveValues.map((value) => value + 0.2));
 		const barW = innerW / Math.max(coastalPoints.length, 1);
 
-		const x = d3
-			.scaleLinear()
+		const x = scaleLinear()
 			.domain([0, coastalPoints.length - 1])
 			.range([0, innerW]);
-		const y = d3.scaleLinear().domain([0, maxWave]).range([innerH, 0]);
+		const y = scaleLinear().domain([0, maxWave]).range([innerH, 0]);
 
 		const g = svg
 			.attr('width', width)
@@ -261,7 +264,7 @@
 	function drawWindChart() {
 		if (!windSvg || coastalPoints.length === 0) return;
 		const windValues = coastalPoints.map((point) => point.windSpeed ?? 0);
-		const svg = d3.select(windSvg);
+		const svg = select(windSvg);
 		svg.selectAll('*').remove();
 
 		const width = windSvg.clientWidth;
@@ -272,11 +275,10 @@
 		const maxWind = Math.max(6, ...windValues.map((value) => value + 1));
 		const barW = innerW / Math.max(coastalPoints.length, 1);
 
-		const x = d3
-			.scaleLinear()
+		const x = scaleLinear()
 			.domain([0, coastalPoints.length - 1])
 			.range([0, innerW]);
-		const y = d3.scaleLinear().domain([0, maxWind]).range([innerH, 0]);
+		const y = scaleLinear().domain([0, maxWind]).range([innerH, 0]);
 
 		const g = svg
 			.attr('width', width)
@@ -320,7 +322,7 @@
 	function drawTideChart() {
 		if (!tideSvg || coastalPoints.length === 0) return;
 		const tideValues = coastalPoints.map((point) => point.tideHeight ?? 0);
-		const svg = d3.select(tideSvg);
+		const svg = select(tideSvg);
 		svg.selectAll('*').remove();
 
 		const width = tideSvg.clientWidth;
@@ -331,11 +333,10 @@
 		const yMin = Math.min(...tideValues) - 0.5;
 		const yMax = Math.max(...tideValues) + 0.5;
 
-		const x = d3
-			.scaleLinear()
+		const x = scaleLinear()
 			.domain([0, coastalPoints.length - 1])
 			.range([0, innerW]);
-		const y = d3.scaleLinear().domain([yMin, yMax]).range([innerH, 0]);
+		const y = scaleLinear().domain([yMin, yMax]).range([innerH, 0]);
 
 		const g = svg
 			.attr('width', width)
@@ -353,24 +354,22 @@
 				.attr('stroke-dasharray', '2,2');
 		}
 
-		const area = d3
-			.area<CoastalPoint>()
+		const areaGen = area<CoastalPoint>()
 			.x((_d, i) => x(i))
 			.y0(innerH)
 			.y1((d) => y(d.tideHeight ?? 0))
-			.curve(d3.curveBasis);
+			.curve(curveBasis);
 
-		g.append('path').datum(coastalPoints).attr('d', area).attr('fill', 'rgba(16, 185, 129, 0.1)');
+		g.append('path').datum(coastalPoints).attr('d', areaGen).attr('fill', 'rgba(16, 185, 129, 0.1)');
 
-		const line = d3
-			.line<CoastalPoint>()
+		const lineGen = line<CoastalPoint>()
 			.x((_d, i) => x(i))
 			.y((d) => y(d.tideHeight ?? 0))
-			.curve(d3.curveBasis);
+			.curve(curveBasis);
 
 		g.append('path')
 			.datum(coastalPoints)
-			.attr('d', line)
+			.attr('d', lineGen)
 			.attr('fill', 'none')
 			.attr('stroke', '#10b981')
 			.attr('stroke-width', 1.5);
@@ -398,10 +397,14 @@
 	}
 
 	onMount(() => {
+		let resizeTimer: ReturnType<typeof setTimeout>;
 		function handleResize() {
-			if (coastalPoints.length > 0 && waveSvg) drawWaveChart();
-			if (coastalPoints.length > 0 && windSvg) drawWindChart();
-			if (coastalPoints.length > 0 && tideSvg) drawTideChart();
+			clearTimeout(resizeTimer);
+			resizeTimer = setTimeout(() => {
+				if (coastalPoints.length > 0 && waveSvg) drawWaveChart();
+				if (coastalPoints.length > 0 && windSvg) drawWindChart();
+				if (coastalPoints.length > 0 && tideSvg) drawTideChart();
+			}, 150);
 		}
 
 		window.addEventListener('resize', handleResize);

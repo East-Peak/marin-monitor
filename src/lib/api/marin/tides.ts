@@ -10,6 +10,7 @@
 import { TIDE_STATIONS } from '$lib/config/map';
 import type { TidePrediction } from '$lib/types';
 import { logger } from '$lib/config/api';
+import { fetchWithTimeout } from './fetch-helpers';
 
 const NOAA_BASE = 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter';
 
@@ -48,7 +49,7 @@ export async function fetchTidePredictions(
 		const url = `${NOAA_BASE}?${params}`;
 		logger.log('NOAA', `Fetching tides: ${url}`);
 
-		const response = await fetch(url);
+		const response = await fetchWithTimeout(url);
 		if (!response.ok) {
 			throw new Error(`NOAA tides failed: ${response.status}`);
 		}
@@ -93,7 +94,7 @@ export async function fetchHourlyTides(
 		const url = `${NOAA_BASE}?${params}`;
 		logger.log('NOAA', `Fetching hourly tides: ${url}`);
 
-		const response = await fetch(url);
+		const response = await fetchWithTimeout(url);
 		if (!response.ok) {
 			throw new Error(`NOAA hourly tides failed: ${response.status}`);
 		}

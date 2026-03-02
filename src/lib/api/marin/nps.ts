@@ -12,6 +12,7 @@
 
 import type { NewsItem } from '$lib/types';
 import { logger } from '$lib/config/api';
+import { fetchWithTimeout } from './fetch-helpers';
 
 interface NpsAlert {
 	id: string;
@@ -36,7 +37,7 @@ const PARK_NAMES: Record<string, string> = {
 export async function fetchNpsAlerts(): Promise<NewsItem[]> {
 	try {
 		logger.log('NPS', 'Fetching Marin park alerts via local API');
-		const response = await fetch('/api/nps/alerts', {
+		const response = await fetchWithTimeout('/api/nps/alerts', {
 			headers: { Accept: 'application/json' }
 		});
 

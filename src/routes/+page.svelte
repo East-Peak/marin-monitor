@@ -139,9 +139,21 @@
 			'farm',
 			'satire'
 		];
-		rssCategories.forEach((cat) => news.setLoading(cat, true));
+		// Only show loading spinners on initial load (when no data exists yet)
+		rssCategories.forEach((cat) => {
+			if (news.getItems(cat).length === 0) news.setLoading(cat, true);
+		});
 
-		// Fetch RSS feeds and API sources in parallel
+		// Fetch RSS feeds and API sources in parallel (allSettled so one failure doesn't blank others)
+		const settled = await Promise.allSettled([
+			fetchAllFeeds(),
+			fetchNpsAlerts(),
+			fetchEarthquakes(),
+			fetchTransitAlerts().then((r) => r.items),
+			fetchSheriffCrimeBlotter(),
+			fetchSupplementalPoliceLogs(),
+			fetchSupplementalActivityFeeds()
+		]);
 		const [
 			rssResults,
 			npsAlerts,
@@ -150,17 +162,15 @@
 			sheriffBlotter,
 			policeLogs,
 			supplementalActivity
-		] = await Promise.all([
-			fetchAllFeeds(),
-			fetchNpsAlerts().catch(() => []),
-			fetchEarthquakes().catch(() => []),
-			fetchTransitAlerts()
-				.then((r) => r.items)
-				.catch(() => []),
-			fetchSheriffCrimeBlotter().catch(() => []),
-			fetchSupplementalPoliceLogs().catch(() => []),
-			fetchSupplementalActivityFeeds().catch(() => [])
-		]);
+		] = settled.map((r) => (r.status === 'fulfilled' ? r.value : [])) as [
+			Awaited<ReturnType<typeof fetchAllFeeds>>,
+			NewsItem[],
+			EarthquakeData[],
+			NewsItem[],
+			NewsItem[],
+			NewsItem[],
+			NewsItem[]
+		];
 
 		const earthquakeNews = earthquakesToNewsItems(earthquakes);
 		const supplementalByCategory = new Map<NewsCategory, NewsItem[]>();
@@ -175,32 +185,36 @@
 		earthquakeItems = earthquakeNews;
 		earthquakesRaw = earthquakes;
 
-		// Populate stores from RSS results
-		for (const result of rssResults) {
-			const extraItems =
-				result.category === 'safety'
-					? [
-							...earthquakeNews,
-							...transitAlerts,
-							...sheriffBlotter,
-							...policeLogs,
-							...(supplementalByCategory.get(result.category) ?? [])
-						]
-					: result.category === 'outdoors'
-						? [...npsAlerts, ...(supplementalByCategory.get(result.category) ?? [])]
-						: (supplementalByCategory.get(result.category) ?? []);
+		// Populate stores from RSS results (enrich categories in parallel)
+		await Promise.all(
+			rssResults.map(async (result) => {
+				const extraItems =
+					result.category === 'safety'
+						? [
+								...earthquakeNews,
+								...transitAlerts,
+								...sheriffBlotter,
+								...policeLogs,
+								...(supplementalByCategory.get(result.category) ?? [])
+							]
+						: result.category === 'outdoors'
+							? [...npsAlerts, ...(supplementalByCategory.get(result.category) ?? [])]
+							: (supplementalByCategory.get(result.category) ?? []);
 
-			const allItems = [...result.items, ...extraItems].sort((a, b) => b.timestamp - a.timestamp);
-			const enrichedItems = await enrichItemsForRelevance(allItems);
+				const allItems = [...result.items, ...extraItems].sort(
+					(a, b) => b.timestamp - a.timestamp
+				);
+				const enrichedItems = await enrichItemsForRelevance(allItems);
 
-			news.setItems(result.category, enrichedItems);
-			if (enrichedItems.length > 0) {
-				void news.enrichLocations(result.category);
-			}
-			if (result.errors.length > 0) {
-				console.warn(`[${result.category}] Feed errors:`, result.errors);
-			}
-		}
+				news.setItems(result.category, enrichedItems);
+				if (enrichedItems.length > 0) {
+					void news.enrichLocations(result.category);
+				}
+				if (result.errors.length > 0) {
+					console.warn(`[${result.category}] Feed errors:`, result.errors);
+				}
+			})
+		);
 	}
 
 	// Fetch weather data from NWS using the user's preferred location

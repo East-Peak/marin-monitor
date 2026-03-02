@@ -8,6 +8,7 @@
 import type { NewsItem } from '$lib/types';
 import { logger } from '$lib/config/api';
 import { MARIN_BOUNDS } from '$lib/config';
+import { fetchWithTimeout } from './fetch-helpers';
 
 const ENRICHED_DOMAINS = ['marinij.com', 'ptreyeslight.com'];
 const MAX_ITEMS_PER_BATCH = 12;
@@ -61,7 +62,7 @@ async function fetchArticleExcerpt(url: string): Promise<string | null> {
 	if (pageCache.has(url)) return pageCache.get(url) || null;
 
 	try {
-		const response = await fetch(`/api/article?url=${encodeURIComponent(url)}`);
+		const response = await fetchWithTimeout(`/api/article?url=${encodeURIComponent(url)}`);
 		if (!response.ok) return null;
 		const html = await response.text();
 		const excerpt = extractArticleText(html);
@@ -145,7 +146,7 @@ async function geocodeCandidate(
 			q: candidate,
 			town: townHint ?? ''
 		});
-		const response = await fetch(`/api/geocode?${params.toString()}`);
+		const response = await fetchWithTimeout(`/api/geocode?${params.toString()}`);
 		if (!response.ok) {
 			geocodeCache.set(cacheKey, null);
 			return null;

@@ -238,6 +238,27 @@ export function containsAlertKeyword(
 	return { isAlert: false };
 }
 
+// Pre-computed: towns sorted longest-first for greedy matching
+const TOWNS_BY_LENGTH = [...MARIN_TOWNS].sort((a, b) => b.name.length - a.name.length);
+
+// Common abbreviations and alternate names
+const TOWN_ALIASES: Record<string, string> = {
+	'pt reyes': 'point-reyes',
+	'pt. reyes': 'point-reyes',
+	'point reyes': 'point-reyes',
+	'san rafael': 'san-rafael',
+	'san anselmo': 'san-anselmo',
+	'corte madera': 'corte-madera',
+	'mill valley': 'mill-valley',
+	'muir beach': 'muir-beach',
+	stinson: 'stinson-beach',
+	'tam valley': 'tam-valley',
+	'forest knolls': 'forest-knolls',
+	'san geronimo': 'san-geronimo',
+	'lucas valley': 'lucas-valley',
+	'terra linda': 'terra-linda'
+};
+
 /**
  * Detect town from text — checks for town names and common abbreviations
  */
@@ -245,31 +266,13 @@ export function detectTown(text: string): { name: string; slug: string } | null 
 	const lowerText = text.toLowerCase();
 
 	// Check each town name, longest first, with word boundaries.
-	for (const town of [...MARIN_TOWNS].sort((a, b) => b.name.length - a.name.length)) {
+	for (const town of TOWNS_BY_LENGTH) {
 		if (hasWholePhrase(lowerText, town.name.toLowerCase())) {
 			return { name: town.name, slug: town.slug };
 		}
 	}
 
-	// Common abbreviations and alternate names
-	const ALIASES: Record<string, string> = {
-		'pt reyes': 'point-reyes',
-		'pt. reyes': 'point-reyes',
-		'point reyes': 'point-reyes',
-		'san rafael': 'san-rafael',
-		'san anselmo': 'san-anselmo',
-		'corte madera': 'corte-madera',
-		'mill valley': 'mill-valley',
-		'muir beach': 'muir-beach',
-		stinson: 'stinson-beach',
-		'tam valley': 'tam-valley',
-		'forest knolls': 'forest-knolls',
-		'san geronimo': 'san-geronimo',
-		'lucas valley': 'lucas-valley',
-		'terra linda': 'terra-linda'
-	};
-
-	for (const [alias, slug] of Object.entries(ALIASES)) {
+	for (const [alias, slug] of Object.entries(TOWN_ALIASES)) {
 		if (hasWholePhrase(lowerText, alias)) {
 			const town = MARIN_TOWNS.find((t) => t.slug === slug);
 			if (town) return { name: town.name, slug: town.slug };

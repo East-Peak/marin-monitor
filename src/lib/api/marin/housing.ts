@@ -9,6 +9,7 @@
  */
 
 import { logger } from '$lib/config/api';
+import { fetchWithTimeout } from './fetch-helpers';
 
 export interface HousingMetric {
 	month: string;
@@ -27,7 +28,7 @@ export async function fetchHousingData(): Promise<HousingMetric[]> {
 	try {
 		logger.log('Housing', 'Loading housing data from static/data/marin-housing.json');
 
-		const response = await fetch('/data/marin-housing.json');
+		const response = await fetchWithTimeout('/data/marin-housing.json');
 		if (!response.ok) {
 			throw new Error(`Housing data fetch failed: ${response.status}`);
 		}

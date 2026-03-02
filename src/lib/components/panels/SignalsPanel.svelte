@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Panel, Badge } from '$lib/components/common';
+	import { timeAgo } from '$lib/utils';
 	import type { NewsItem } from '$lib/types';
 
 	interface Props {
@@ -110,14 +111,6 @@
 			.slice(0, 6);
 	});
 
-	function timeAgo(ts: number): string {
-		const mins = Math.floor((Date.now() - ts) / 60000);
-		if (mins < 1) return 'just now';
-		if (mins < 60) return `${mins}m ago`;
-		const hours = Math.floor(mins / 60);
-		if (hours < 24) return `${hours}h ago`;
-		return `${Math.floor(hours / 24)}d ago`;
-	}
 
 	function categoryLabel(cat: string): string {
 		const labels: Record<string, string> = {

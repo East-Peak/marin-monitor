@@ -885,6 +885,7 @@
 
 	let unsubscribeNews: (() => void) | null = null;
 	let unsubscribeMap: (() => void) | null = null;
+	let updateDataTimer: ReturnType<typeof setTimeout> | null = null;
 
 	onMount(() => {
 		const unsubReady = mapReady.subscribe((ready) => {
@@ -913,12 +914,15 @@
 				}, TRAFFIC_REFRESH_MS);
 			}
 
-			// Re-render when news or map state changes
+			// Re-render when news or map state changes (debounced to avoid rapid redraws)
 			if (!unsubscribeNews) {
 				unsubscribeNews = allNewsItems.subscribe(() => {
-					const m = getMap();
-					if (!m || !m.getSource('towns')) return;
-					updateData(m);
+					if (updateDataTimer) clearTimeout(updateDataTimer);
+					updateDataTimer = setTimeout(() => {
+						const m = getMap();
+						if (!m || !m.getSource('towns')) return;
+						updateData(m);
+					}, 100);
 				});
 			}
 

@@ -8,6 +8,7 @@
 
 import type { AirQualityData } from '$lib/types';
 import { logger } from '$lib/config/api';
+import { fetchWithTimeout } from './fetch-helpers';
 
 /**
  * Fetch current AQI for Marin County area.
@@ -15,7 +16,7 @@ import { logger } from '$lib/config/api';
  */
 export async function fetchAirQuality(): Promise<AirQualityData | null> {
 	try {
-		const response = await fetch('/api/air-quality', {
+		const response = await fetchWithTimeout('/api/air-quality', {
 			headers: { Accept: 'application/json' }
 		});
 

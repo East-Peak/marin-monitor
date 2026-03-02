@@ -6,6 +6,7 @@
  */
 
 import { logger } from '$lib/config/api';
+import { fetchWithTimeout } from './fetch-helpers';
 
 export interface SunData {
 	sunrise: string; // formatted time, e.g. "6:42 AM"
@@ -38,7 +39,7 @@ function formatDuration(seconds: number): string {
 export async function fetchSunTimes(lat: number = LAT, lon: number = LNG): Promise<SunData | null> {
 	try {
 		const url = `https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lon}&formatted=0&date=today`;
-		const response = await fetch(url);
+		const response = await fetchWithTimeout(url);
 
 		if (!response.ok) {
 			throw new Error(`Sunrise API failed: ${response.status}`);

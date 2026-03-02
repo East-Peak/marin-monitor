@@ -6,7 +6,11 @@
 	import { fetchHourlyForecast, fetchDailyRainForecast } from '$lib/api/marin/nws-hourly';
 	import { fetchSunTimes } from '$lib/api/marin/sun';
 	import type { SunData } from '$lib/api/marin/sun';
-	import * as d3 from 'd3';
+	import { select } from 'd3-selection';
+	import type { Selection } from 'd3-selection';
+	import { scaleLinear } from 'd3-scale';
+	import type { ScaleLinear } from 'd3-scale';
+	import { area, line, curveBasis } from 'd3-shape';
 
 	interface Props {
 		forecast: (WeatherData & { name: string })[];
@@ -149,8 +153,8 @@
 	}
 
 	function drawHoverGuide(
-		g: d3.Selection<SVGGElement, unknown, null, undefined>,
-		x: d3.ScaleLinear<number, number>,
+		g: Selection<SVGGElement, unknown, null, undefined>,
+		x: ScaleLinear<number, number>,
 		innerH: number
 	) {
 		if (!hoverState) return;
@@ -167,7 +171,7 @@
 	function drawTempChart() {
 		if (!hourlySvg || hourlyData.length === 0) return;
 
-		const svg = d3.select(hourlySvg);
+		const svg = select(hourlySvg);
 		svg.selectAll('*').remove();
 
 		const width = hourlySvg.clientWidth;
@@ -180,11 +184,10 @@
 		const yMin = Math.min(...temps) - 2;
 		const yMax = Math.max(...temps) + 2;
 
-		const x = d3
-			.scaleLinear()
+		const x = scaleLinear()
 			.domain([0, hourlyData.length - 1])
 			.range([0, innerW]);
-		const y = d3.scaleLinear().domain([yMin, yMax]).range([innerH, 0]);
+		const y = scaleLinear().domain([yMin, yMax]).range([innerH, 0]);
 
 		const g = svg
 			.attr('width', width)
@@ -192,24 +195,22 @@
 			.append('g')
 			.attr('transform', `translate(${margin.left},${margin.top})`);
 
-		const area = d3
-			.area<HourlyPeriod>()
+		const areaGen = area<HourlyPeriod>()
 			.x((_d, i) => x(i))
 			.y0(innerH)
 			.y1((d) => y(d.temperature))
-			.curve(d3.curveBasis);
+			.curve(curveBasis);
 
-		g.append('path').datum(hourlyData).attr('d', area).attr('fill', 'rgba(68, 136, 255, 0.1)');
+		g.append('path').datum(hourlyData).attr('d', areaGen).attr('fill', 'rgba(68, 136, 255, 0.1)');
 
-		const line = d3
-			.line<HourlyPeriod>()
+		const lineGen = line<HourlyPeriod>()
 			.x((_d, i) => x(i))
 			.y((d) => y(d.temperature))
-			.curve(d3.curveBasis);
+			.curve(curveBasis);
 
 		g.append('path')
 			.datum(hourlyData)
-			.attr('d', line)
+			.attr('d', lineGen)
 			.attr('fill', 'none')
 			.attr('stroke', '#4488ff')
 			.attr('stroke-width', 1.5);
@@ -248,7 +249,7 @@
 	function drawPrecipChart() {
 		if (!precipSvg || hourlyData.length === 0) return;
 
-		const svg = d3.select(precipSvg);
+		const svg = select(precipSvg);
 		svg.selectAll('*').remove();
 
 		const width = precipSvg.clientWidth;
@@ -257,11 +258,10 @@
 		const innerW = width - margin.left - margin.right;
 		const innerH = height - margin.top - margin.bottom;
 
-		const x = d3
-			.scaleLinear()
+		const x = scaleLinear()
 			.domain([0, hourlyData.length - 1])
 			.range([0, innerW]);
-		const y = d3.scaleLinear().domain([0, 100]).range([innerH, 0]);
+		const y = scaleLinear().domain([0, 100]).range([innerH, 0]);
 
 		const g = svg
 			.attr('width', width)
@@ -269,24 +269,22 @@
 			.append('g')
 			.attr('transform', `translate(${margin.left},${margin.top})`);
 
-		const area = d3
-			.area<HourlyPeriod>()
+		const areaGen = area<HourlyPeriod>()
 			.x((_d, i) => x(i))
 			.y0(innerH)
 			.y1((d) => y(Math.max(0, Math.min(100, d.precipitationChance))))
-			.curve(d3.curveBasis);
+			.curve(curveBasis);
 
-		g.append('path').datum(hourlyData).attr('d', area).attr('fill', 'rgba(34, 197, 94, 0.14)');
+		g.append('path').datum(hourlyData).attr('d', areaGen).attr('fill', 'rgba(34, 197, 94, 0.14)');
 
-		const line = d3
-			.line<HourlyPeriod>()
+		const lineGen = line<HourlyPeriod>()
 			.x((_d, i) => x(i))
 			.y((d) => y(Math.max(0, Math.min(100, d.precipitationChance))))
-			.curve(d3.curveBasis);
+			.curve(curveBasis);
 
 		g.append('path')
 			.datum(hourlyData)
-			.attr('d', line)
+			.attr('d', lineGen)
 			.attr('fill', 'none')
 			.attr('stroke', '#22c55e')
 			.attr('stroke-width', 1.4);
@@ -313,9 +311,13 @@
 	}
 
 	onMount(() => {
+		let resizeTimer: ReturnType<typeof setTimeout>;
 		function handleResize() {
-			if (hourlyData.length > 0 && hourlySvg) drawTempChart();
-			if (hourlyData.length > 0 && precipSvg) drawPrecipChart();
+			clearTimeout(resizeTimer);
+			resizeTimer = setTimeout(() => {
+				if (hourlyData.length > 0 && hourlySvg) drawTempChart();
+				if (hourlyData.length > 0 && precipSvg) drawPrecipChart();
+			}, 150);
 		}
 
 		window.addEventListener('resize', handleResize);

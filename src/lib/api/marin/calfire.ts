@@ -7,6 +7,7 @@
  */
 
 import { logger } from '$lib/config/api';
+import { fetchWithTimeout } from './fetch-helpers';
 
 export interface FireIncident {
 	id: string;
@@ -80,7 +81,7 @@ function isNearMarin(lat: number, lon: number, radiusKm = 80): boolean {
  */
 async function fetchCalFire(): Promise<FireIncident[]> {
 	try {
-		const response = await fetch(CALFIRE_URL, {
+		const response = await fetchWithTimeout(CALFIRE_URL, {
 			headers: { Accept: 'application/json' }
 		});
 
@@ -123,7 +124,7 @@ async function fetchCalFire(): Promise<FireIncident[]> {
  */
 async function fetchNifc(): Promise<FireIncident[]> {
 	try {
-		const response = await fetch(NIFC_URL, {
+		const response = await fetchWithTimeout(NIFC_URL, {
 			headers: { Accept: 'application/json' }
 		});
 

@@ -1,11 +1,8 @@
 import { json } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
+import { fetchWithTimeout } from '$lib/server/fetch-utils';
+import { get511ApiKey } from '$lib/server/api-keys';
 
 const API_BASE = 'https://api.511.org/traffic/events';
-
-function get511ApiKey(): string {
-	return env.API_511_KEY || '';
-}
 
 function normalizeEvents(payload: unknown): Record<string, unknown>[] {
 	if (Array.isArray(payload)) return payload as Record<string, unknown>[];
@@ -22,23 +19,20 @@ function normalizeEvents(payload: unknown): Record<string, unknown>[] {
 	return [];
 }
 
-export async function GET({ fetch }) {
+export async function GET() {
 	const apiKey = get511ApiKey();
 	if (!apiKey) {
-		return json(
-			{ events: [], error: 'No 511 API key configured' },
-			{ headers: { 'cache-control': 'public, max-age=30' } }
-		);
+		return json({ error: 'Service unavailable' }, { status: 503 });
 	}
 
 	const url = `${API_BASE}?api_key=${encodeURIComponent(apiKey)}&format=json`;
-	const response = await fetch(url, {
+	const response = await fetchWithTimeout(url, {
 		headers: { Accept: 'application/json' }
 	});
 
 	if (!response.ok) {
 		return json(
-			{ events: [], error: `511 API returned ${response.status}` },
+			{ events: [], error: 'Upstream traffic API error' },
 			{
 				status: response.status,
 				headers: { 'cache-control': 'no-store' }
@@ -52,9 +46,9 @@ export async function GET({ fetch }) {
 	let payload: unknown = {};
 	try {
 		payload = JSON.parse(clean);
-	} catch (error) {
+	} catch {
 		return json(
-			{ events: [], error: `Invalid 511 JSON payload: ${(error as Error).message}` },
+			{ events: [], error: 'Invalid upstream response' },
 			{ status: 502, headers: { 'cache-control': 'no-store' } }
 		);
 	}
