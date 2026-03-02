@@ -6,56 +6,56 @@
 
 /* CSS Custom Properties for theming */
 :root {
-	--bg: #0a0a0a;
-	--surface: #141414;
-	--surface-hover: #1a1a1a;
-	--border: #2a2a2a;
-	--border-light: #3a3a3a;
-	--text: #e8e8e8;
-	--text-primary: #e8e8e8;
-	--text-secondary: #b8b8b8;
-	--text-dim: #888;
-	--text-muted: #666;
-	--accent: #ffffff;
-	--accent-rgb: 255, 255, 255;
-	--red: #ff4444;
-	--green: #44ff88;
-	--yellow: #ffaa00;
-	--blue: #4488ff;
-	--danger: #ff5f5f;
-	--success: #44ff88;
-	--warning: #ffb347;
+	--bg: #050a14;
+	--surface: rgba(20, 25, 40, 0.65);
+	--surface-hover: rgba(30, 38, 55, 0.75);
+	--border: rgba(255, 255, 255, 0.08);
+	--border-light: rgba(255, 255, 255, 0.15);
+	--text: #f1f5f9;
+	--text-primary: #f1f5f9;
+	--text-secondary: #94a3b8;
+	--text-dim: #94a3b8;
+	--text-muted: #64748b;
+	--accent: #38bdf8;
+	--accent-rgb: 56, 189, 248;
+	--red: #ef4444;
+	--green: #10b981;
+	--yellow: #f59e0b;
+	--blue: #3b82f6;
+	--danger: #ef4444;
+	--success: #10b981;
+	--warning: #f59e0b;
 	--map-control-icon-filter: invert(1);
 	color-scheme: dark;
 }
 
 html[data-theme='light'] {
-	--bg: #f6f7f9;
-	--surface: #ffffff;
-	--surface-hover: #f1f3f6;
-	--border: #d6dbe3;
-	--border-light: #c4ccd8;
-	--text: #131821;
-	--text-primary: #131821;
-	--text-secondary: #2f3947;
-	--text-dim: #5b6778;
-	--text-muted: #7b889a;
-	--accent: #0f172a;
-	--accent-rgb: 15, 23, 42;
+	--bg: #f8fafc;
+	--surface: rgba(255, 255, 255, 0.7);
+	--surface-hover: rgba(241, 245, 249, 0.8);
+	--border: rgba(0, 0, 0, 0.1);
+	--border-light: rgba(0, 0, 0, 0.15);
+	--text: #0f172a;
+	--text-primary: #0f172a;
+	--text-secondary: #334155;
+	--text-dim: #475569;
+	--text-muted: #64748b;
+	--accent: #0284c7;
+	--accent-rgb: 2, 132, 199;
 	--red: #dc2626;
 	--green: #16a34a;
-	--yellow: #ca8a04;
+	--yellow: #d97706;
 	--blue: #2563eb;
 	--danger: #dc2626;
 	--success: #16a34a;
-	--warning: #b45309;
+	--warning: #d97706;
 	--map-control-icon-filter: none;
 	color-scheme: light;
 }
 
 /* Base styles */
 html {
-	font-family: 'SF Mono', Monaco, Inconsolata, 'Fira Code', monospace;
+	font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
 	background-color: var(--bg);
 	color: var(--text);
 }
@@ -63,6 +63,15 @@ html {
 body {
 	margin: 0;
 	min-height: 100vh;
+}
+
+/* Glass panel utility */
+.glass-panel {
+	background: var(--surface);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	border: 1px solid var(--border);
+	box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* Scrollbar styling */
@@ -111,6 +120,7 @@ a:hover {
 	0% {
 		background-position: -200% 0;
 	}
+
 	100% {
 		background-position: 200% 0;
 	}
@@ -119,12 +129,14 @@ a:hover {
 /* MapLibre overrides for dark theme */
 .maplibregl-popup-content {
 	background: var(--surface) !important;
+	backdrop-filter: blur(8px) !important;
 	color: var(--text) !important;
 	border: 1px solid var(--border) !important;
-	border-radius: 4px !important;
-	padding: 0.5rem !important;
-	font-family: 'SF Mono', Monaco, Inconsolata, 'Fira Code', monospace !important;
-	font-size: 0.65rem !important;
+	border-radius: 6px !important;
+	padding: 0.75rem !important;
+	font-family: 'Inter', ui-sans-serif, system-ui, sans-serif !important;
+	font-size: 0.8rem !important;
+	box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
 }
 
 .maplibregl-popup-tip {

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { Header } from '$lib/components/layout';
-	import { SettingsModal, OnboardingModal } from '$lib/components/modals';
+	import { Header, Footer } from '$lib/components/layout';
+	import { SettingsModal, OnboardingModal, FeedbackModal } from '$lib/components/modals';
 	import {
 		NewsPanel,
 		WeatherPanel,
@@ -12,7 +12,8 @@
 		SignalsPanel,
 		MapPanel,
 		HousingPanel,
-		EnvironmentPanel
+		EnvironmentPanel,
+		CommunityPanel
 	} from '$lib/components/panels';
 	import { news, settings, refresh, allNewsItems, selectedTown } from '$lib/stores';
 	import { getLocationById } from '$lib/config/locations';
@@ -44,6 +45,13 @@
 	// Modal state
 	let settingsOpen = $state(false);
 	let onboardingOpen = $state(false);
+	let feedbackOpen = $state(false);
+	let feedbackType = $state<'feed-request' | 'bug-report' | 'general'>('general');
+
+	function openFeedback(type: 'feed-request' | 'bug-report' | 'general' = 'general') {
+		feedbackType = type;
+		feedbackOpen = true;
+	}
 
 	// Weather state
 	let weatherForecast = $state<(WeatherData & { name: string })[]>([]);
@@ -669,9 +677,14 @@
 						</div>
 					{/if}
 				{/each}
+				<div class="wire-slot">
+					<CommunityPanel onFeedback={openFeedback} />
+				</div>
 			</div>
 		</div>
 	</main>
+
+	<Footer onFeedback={() => openFeedback('general')} />
 
 	<!-- Modals -->
 	<SettingsModal
@@ -680,6 +693,11 @@
 		onReconfigure={handleReconfigure}
 	/>
 	<OnboardingModal open={onboardingOpen} onSelectPreset={handleSelectPreset} />
+	<FeedbackModal
+		open={feedbackOpen}
+		onClose={() => (feedbackOpen = false)}
+		initialType={feedbackType}
+	/>
 	<AgentationWidget />
 </div>
 
@@ -693,7 +711,7 @@
 
 	.main-content {
 		flex: 1;
-		padding: 0.5rem;
+		padding: 1.5rem;
 		overflow-y: auto;
 	}
 
@@ -704,8 +722,8 @@
 	.top-stage {
 		display: grid;
 		grid-template-columns: minmax(0, 3fr) minmax(300px, 1fr);
-		gap: 0.5rem;
-		margin-bottom: 0.5rem;
+		gap: 1rem;
+		margin-bottom: 1rem;
 		align-items: start;
 	}
 
@@ -869,12 +887,12 @@
 	.signal-layout {
 		display: grid;
 		grid-template-columns: minmax(240px, 2.4fr) minmax(0, 5.1fr) minmax(0, 4.9fr);
-		gap: 0.5rem;
-		margin-bottom: 0.5rem;
+		gap: 1rem;
+		margin-bottom: 1rem;
 		align-items: stretch;
 		transition:
-			grid-template-rows 0.25s ease,
-			opacity 0.2s ease;
+			grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+			opacity 0.3s ease;
 	}
 
 	.signal-layout.collapsed {
@@ -884,7 +902,7 @@
 	.signal-column {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 1rem;
 		min-width: 0;
 	}
 
@@ -940,13 +958,13 @@
 	}
 
 	.news-area {
-		margin-top: 0.5rem;
+		margin-top: 1rem;
 	}
 
 	.wire-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-		gap: 0.5rem;
+		gap: 1rem;
 	}
 
 	.wire-slot {
