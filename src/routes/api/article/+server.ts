@@ -2,30 +2,10 @@ import { error } from '@sveltejs/kit';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import type { RequestHandler } from './$types';
 
-const ALLOWED_DOMAINS = [
-	'marinij.com',
-	'ptreyeslight.com',
-	'pacificsun.com',
-	'marinmagazine.com',
-	'nbcbayarea.com',
-	'kqed.org',
-	'cityofsanrafael.org',
-	'townoffairfaxca.gov',
-	'marinwater.org',
-	'marinhumane.org',
-	'discoverwildcare.org',
-	'marinlately.com',
-	'granicus.com',
-	'webscorer.com',
-	'cityofmillvalley.gov'
-];
-
 function isAllowedArticleUrl(value: string): boolean {
 	try {
 		const parsed = new URL(value);
-		if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
-		const hostname = parsed.hostname.toLowerCase();
-		return ALLOWED_DOMAINS.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
+		return parsed.protocol === 'https:' || parsed.protocol === 'http:';
 	} catch {
 		return false;
 	}
