@@ -1,8 +1,11 @@
 /**
  * Server-side housing data scraper.
- * Ported from scripts/extract-housing.mjs — fetches Redfin TSV via HTTP instead of stdin pipe.
+ * Ported from scripts/extract-housing.mjs — fetches Redfin TSV via HTTP.
+ * Uses streaming decompression to avoid loading the entire ~500MB file into memory.
  */
-import { gunzipSync } from 'node:zlib';
+import { createGunzip } from 'node:zlib';
+import { Readable } from 'node:stream';
+import { createInterface } from 'node:readline';
 import type { HousingMetric } from '$lib/api/marin/housing';
 
 const REDFIN_URL =
@@ -15,28 +18,36 @@ export async function scrapeHousing(): Promise<HousingMetric[]> {
 	if (!response.ok) {
 		throw new Error(`Redfin fetch failed: ${response.status}`);
 	}
-
-	const compressed = Buffer.from(await response.arrayBuffer());
-	const decompressed = gunzipSync(compressed).toString('utf-8');
-
-	const lines = decompressed.split('\n');
-	if (lines.length === 0) throw new Error('Empty TSV from Redfin');
-
-	const headers = lines[0].split('\t').map((c) => c.replace(/^"|"$/g, ''));
-
-	interface Row {
-		[key: string]: string;
+	if (!response.body) {
+		throw new Error('Redfin response has no body');
 	}
 
-	const rows: Row[] = [];
-	for (let i = 1; i < lines.length; i++) {
-		if (!lines[i].trim()) continue;
-		const cols = lines[i].split('\t').map((c) => c.replace(/^"|"$/g, ''));
-		const row: Row = {};
-		headers.forEach((h, idx) => (row[h] = cols[idx]));
-		if (row.REGION === 'Marin County, CA' && row.PROPERTY_TYPE === 'All Residential') {
-			rows.push(row);
+	const gunzip = createGunzip();
+	// Pipe the compressed response stream through gunzip
+	const readable = Readable.fromWeb(response.body as import('stream/web').ReadableStream);
+	const decompressed = readable.pipe(gunzip);
+
+	const rl = createInterface({ input: decompressed });
+
+	let headers: string[] | undefined;
+	const rows: Record<string, string>[] = [];
+
+	for await (const line of rl) {
+		const cols = line.split('\t').map((c: string) => c.replace(/^"|"$/g, ''));
+		if (headers === undefined) {
+			headers = cols;
+			continue;
 		}
+		// Early filter: only process Marin County rows to save memory
+		// REGION is typically one of the first columns
+		const regionIdx = headers.indexOf('REGION');
+		const typeIdx = headers.indexOf('PROPERTY_TYPE');
+		if (regionIdx >= 0 && cols[regionIdx] !== 'Marin County, CA') continue;
+		if (typeIdx >= 0 && cols[typeIdx] !== 'All Residential') continue;
+
+		const row: Record<string, string> = {};
+		headers.forEach((h, i) => (row[h] = cols[i]));
+		rows.push(row);
 	}
 
 	rows.sort((a, b) => a.PERIOD_BEGIN.localeCompare(b.PERIOD_BEGIN));

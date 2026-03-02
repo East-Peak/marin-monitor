@@ -13,7 +13,7 @@ export const GET: RequestHandler = async ({ request }) => {
 	try {
 		const data = await scrapeHousing();
 		await put('marin-housing.json', JSON.stringify(data), {
-			access: 'public',
+			access: 'private',
 			contentType: 'application/json',
 			addRandomSuffix: false,
 			token: env.BLOB_READ_WRITE_TOKEN

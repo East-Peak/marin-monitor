@@ -13,7 +13,7 @@ export const GET: RequestHandler = async ({ request }) => {
 	try {
 		const items = await scrapeActivity();
 		await put('marin-activity.json', JSON.stringify(items), {
-			access: 'public',
+			access: 'private',
 			contentType: 'application/json',
 			addRandomSuffix: false,
 			token: env.BLOB_READ_WRITE_TOKEN
