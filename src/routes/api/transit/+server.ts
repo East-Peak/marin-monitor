@@ -19,7 +19,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		throw error(400, 'Missing agency parameter');
 	}
 
-	const ALLOWED_AGENCIES = new Set(['GGT', 'MA', 'SR', 'SM', 'SF']);
+	const ALLOWED_AGENCIES = new Set(['GG', 'GF', 'MA', 'SA', 'AF']);
 	if (!ALLOWED_AGENCIES.has(agency)) {
 		throw error(400, 'Unknown transit agency');
 	}

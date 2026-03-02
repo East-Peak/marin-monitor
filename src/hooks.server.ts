@@ -12,8 +12,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 			"default-src 'self'",
 			"script-src 'self' 'unsafe-inline'",
 			"style-src 'self' 'unsafe-inline'",
-			"img-src 'self' https://cameras.alertcalifornia.org https://cwwp2.dot.ca.gov https://www.windy.com data: blob:",
-			"connect-src 'self' https://api.weather.gov https://*.mapbox.com https://*.maptiler.com https://earthquake.usgs.gov https://api.tidesandcurrents.noaa.gov https://services3.arcgis.com https://nominatim.openstreetmap.org https://www.airnowapi.org https://api.511.org https://developer.nps.gov https://api.sunrise-sunset.org https://currentuvindex.com https://waterservices.usgs.gov https://marine.weather.gov https://incidents.fire.ca.gov https://marine-api.open-meteo.com https://data.marincounty.gov",
+			"worker-src blob: 'self'",
+			"img-src 'self' https://cameras.alertcalifornia.org https://cwwp2.dot.ca.gov https://www.windy.com https://*.cartocdn.com data: blob:",
+			"connect-src 'self' https://api.weather.gov https://*.mapbox.com https://*.maptiler.com https://*.cartocdn.com https://earthquake.usgs.gov https://api.tidesandcurrents.noaa.gov https://services3.arcgis.com https://nominatim.openstreetmap.org https://www.airnowapi.org https://api.511.org https://developer.nps.gov https://api.sunrise-sunset.org https://currentuvindex.com https://waterservices.usgs.gov https://marine.weather.gov https://incidents.fire.ca.gov https://marine-api.open-meteo.com https://data.marincounty.gov",
 			"font-src 'self'",
 			"frame-src 'none'"
 		].join('; ')

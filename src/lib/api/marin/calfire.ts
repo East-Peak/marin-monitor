@@ -25,8 +25,7 @@ export interface FireIncident {
 	isActive: boolean;
 }
 
-const CALFIRE_URL =
-	'https://incidents.fire.ca.gov/umbraco/api/IncidentApi/GeoJsonList?inactive=false';
+const CALFIRE_URL = '/api/calfire';
 
 // NIFC/WFIGS — California active fire locations
 const NIFC_URL =
