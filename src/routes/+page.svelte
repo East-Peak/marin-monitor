@@ -611,9 +611,11 @@
 						</div>
 					{/if}
 
-					<div class="signal-card signal-conditions">
-						<ConditionsPanel />
-					</div>
+					{#if isPanelVisible('weather')}
+						<div class="signal-card signal-environment">
+							<EnvironmentPanel />
+						</div>
+					{/if}
 
 					{#if isPanelVisible('narrative') || isPanelVisible('correlation')}
 						<div class="signal-card signal-signals">
@@ -647,11 +649,9 @@
 						</div>
 					{/if}
 
-					{#if isPanelVisible('weather')}
-						<div class="signal-card signal-environment">
-							<EnvironmentPanel />
-						</div>
-					{/if}
+					<div class="signal-card signal-conditions">
+						<ConditionsPanel />
+					</div>
 				</div>
 
 				<div class="signal-column signal-column-right">
