@@ -30,10 +30,10 @@ npm run sync:police    # Regenerate static/data/marin-police-logs.json
 - **SvelteKit 2.0** with Svelte 5 runes (`$state`, `$derived`, `$effect`, `$props`)
 - **TypeScript** (strict mode)
 - **Tailwind CSS** with dark theme
-- **D3.js** for map visualization
+- **D3.js** (d3-selection, d3-scale, d3-shape) for chart/sparkline rendering
 - **MapLibre GL** for base map with Mapbox traffic overlay
 - **Vitest** (unit) + **Playwright** (E2E)
-- **Static adapter** — deploys as pure static site
+- **Vercel adapter** (`@sveltejs/adapter-vercel`) — deploys with server routes
 
 ## Project Architecture
 
@@ -63,7 +63,7 @@ $types      → src/lib/types
 
 ### Service Layer (`src/lib/services/`)
 
-All HTTP requests go through `ServiceClient` which integrates:
+API adapters call fetch directly (with timeout wrappers). A resilience layer exists in `services/` but is not yet wired into adapters:
 
 - **CacheManager**: Per-service caching with TTL and stale-while-revalidate
 - **CircuitBreaker**: Prevents cascading failures from flaky sources
@@ -99,8 +99,8 @@ Top section (collapsible signal deck):
 
 Wire columns below (responsive grid, auto-fit):
 
-- Local Wire, Crime & Safety, Civic, Outdoors & Lifestyle, Marin Lately
-- Cycling & Endurance, Shows & Events, Sports & Prep, Fishing, Farm & Market
+- Local Wire, Crime & Safety, Civic, Outdoors & Lifestyle, Marin Lately (satire)
+- Cycling & Endurance, Shows & Events, Sports & Prep, Farm & Market
 
 ### Map Layers
 

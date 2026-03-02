@@ -5,15 +5,12 @@
  * During dev, runs via Vite's built-in server.
  */
 
-import { error } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
+import { error, json } from '@sveltejs/kit';
+import { fetchWithTimeout } from '$lib/server/fetch-utils';
+import { get511ApiKey } from '$lib/server/api-keys';
 import type { RequestHandler } from './$types';
 
 const API_BASE = 'https://api.511.org/transit';
-
-function get511ApiKey(): string {
-	return env.API_511_KEY || '';
-}
 
 export const GET: RequestHandler = async ({ url }) => {
 	const agency = url.searchParams.get('agency');
@@ -22,15 +19,20 @@ export const GET: RequestHandler = async ({ url }) => {
 		throw error(400, 'Missing agency parameter');
 	}
 
+	const ALLOWED_AGENCIES = new Set(['GGT', 'MA', 'SR', 'SM', 'SF']);
+	if (!ALLOWED_AGENCIES.has(agency)) {
+		throw error(400, 'Unknown transit agency');
+	}
+
 	const apiKey = get511ApiKey();
 	if (!apiKey) {
-		throw error(500, 'No 511 API key configured');
+		return json({ error: 'Service unavailable' }, { status: 503 });
 	}
 
 	try {
 		const apiUrl = `${API_BASE}/servicealerts?api_key=${apiKey}&agency=${agency}&format=json`;
 
-		const response = await fetch(apiUrl, {
+		const response = await fetchWithTimeout(apiUrl, {
 			headers: { Accept: 'application/json' }
 		});
 
@@ -50,6 +52,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		});
 	} catch (e) {
 		if ((e as { status?: number }).status) throw e;
-		throw error(502, `Failed to fetch transit alerts: ${(e as Error).message}`);
+		console.error('Transit fetch failed:', (e as Error).message);
+		throw error(502, 'Failed to fetch transit alerts');
 	}
 };

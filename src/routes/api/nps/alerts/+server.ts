@@ -1,17 +1,18 @@
 import { json } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
+import { fetchWithTimeout } from '$lib/server/fetch-utils';
+import { getNpsApiKey } from '$lib/server/api-keys';
 import type { RequestHandler } from './$types';
 
 const NPS_BASE = 'https://developer.nps.gov/api/v1';
 const MARIN_PARKS = 'goga,muwo,pore';
 
-function getNpsApiKey(): string {
-	return env.NPS_API_KEY || 'DEMO_KEY';
-}
-
-export const GET: RequestHandler = async ({ fetch }) => {
+export const GET: RequestHandler = async () => {
 	const apiKey = getNpsApiKey();
-	const response = await fetch(`${NPS_BASE}/alerts?parkCode=${MARIN_PARKS}&api_key=${apiKey}`, {
+	if (!apiKey) {
+		return json({ error: 'Service unavailable' }, { status: 503 });
+	}
+
+	const response = await fetchWithTimeout(`${NPS_BASE}/alerts?parkCode=${MARIN_PARKS}&api_key=${apiKey}`, {
 		headers: { Accept: 'application/json' }
 	});
 

@@ -8,6 +8,7 @@
 import type { NewsItem, EarthquakeData } from '$lib/types';
 import { MARIN_CENTER } from '$lib/config/towns';
 import { logger } from '$lib/config/api';
+import { fetchWithTimeout } from './fetch-helpers';
 
 const USGS_BASE = 'https://earthquake.usgs.gov/fdsnws/event/1/query';
 
@@ -49,7 +50,7 @@ export async function fetchEarthquakes(): Promise<EarthquakeData[]> {
 		const url = `${USGS_BASE}?${params}`;
 		logger.log('USGS', `Fetching earthquakes: ${url}`);
 
-		const response = await fetch(url, {
+		const response = await fetchWithTimeout(url, {
 			headers: { Accept: 'application/json' }
 		});
 

@@ -1,4 +1,5 @@
 import { error } from '@sveltejs/kit';
+import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import type { RequestHandler } from './$types';
 
 const ALLOWED_DOMAINS = ['marinij.com', 'ptreyeslight.com'];
@@ -14,13 +15,13 @@ function isAllowedArticleUrl(value: string): boolean {
 	}
 }
 
-export const GET: RequestHandler = async ({ url, fetch }) => {
+export const GET: RequestHandler = async ({ url }) => {
 	const articleUrl = url.searchParams.get('url');
 	if (!articleUrl || !isAllowedArticleUrl(articleUrl)) {
 		throw error(400, 'Invalid article URL');
 	}
 
-	const response = await fetch(articleUrl, {
+	const response = await fetchWithTimeout(articleUrl, {
 		headers: {
 			Accept: 'text/html,application/xhtml+xml',
 			'User-Agent': 'MarinMonitor/1.0'

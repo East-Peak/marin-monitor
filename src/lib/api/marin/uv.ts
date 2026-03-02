@@ -7,6 +7,7 @@
 
 import { logger } from '$lib/config/api';
 import { MARIN_CENTER } from '$lib/config/towns';
+import { fetchWithTimeout } from './fetch-helpers';
 
 export interface UvData {
 	current: number;
@@ -42,7 +43,7 @@ export async function fetchUvIndex(): Promise<UvData | null> {
 		const url = `${UV_API_BASE}?latitude=${MARIN_CENTER.lat}&longitude=${MARIN_CENTER.lon}`;
 		logger.log('UV', `Fetching UV index: ${url}`);
 
-		const response = await fetch(url, {
+		const response = await fetchWithTimeout(url, {
 			headers: { Accept: 'application/json' }
 		});
 

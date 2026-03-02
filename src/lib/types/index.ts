@@ -183,35 +183,6 @@ export interface CustomMonitor {
 }
 
 /**
- * Service client configuration
- */
-export interface ServiceConfig {
-	name: string;
-	baseUrl: string;
-	timeout: number;
-	retries: number;
-	cacheTtl: number;
-	circuitBreaker: {
-		failureThreshold: number;
-		resetTimeout: number;
-	};
-}
-
-/**
- * Cache entry
- */
-export interface CacheEntry<T> {
-	data: T;
-	timestamp: number;
-	ttl: number;
-}
-
-/**
- * Circuit breaker state
- */
-export type CircuitBreakerState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
-
-/**
  * API response wrapper
  */
 export interface ApiResponse<T> {

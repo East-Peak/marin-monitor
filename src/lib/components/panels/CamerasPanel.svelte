@@ -41,11 +41,13 @@
 		}
 		imageTimestamps = initial;
 
-		// Set up refresh timers for image cameras
+		// Set up refresh timers for image cameras (only refresh visible ones)
 		for (const cam of imageCameras) {
 			const interval = (cam.refreshInterval || 30) * 1000;
 			const timer = setInterval(() => {
-				imageTimestamps = { ...imageTimestamps, [cam.id]: Date.now() };
+				if (activeCategory === cam.category || activeCategory === ('all' as CameraCategory)) {
+					imageTimestamps = { ...imageTimestamps, [cam.id]: Date.now() };
+				}
 			}, interval);
 			refreshTimers.push(timer);
 		}

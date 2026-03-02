@@ -8,6 +8,7 @@
 
 import { error } from '@sveltejs/kit';
 import { getAllFeedUrls, MARINIJ_LOCATION_FEEDS, MARINIJ_TAG_FEEDS } from '$lib/config/feeds';
+import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import type { RequestHandler } from './$types';
 
 const ALLOWED_FEED_URLS = new Set([
@@ -29,7 +30,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	}
 
 	try {
-		const response = await fetch(feedUrl, {
+		const response = await fetchWithTimeout(feedUrl, {
 			headers: {
 				Accept: 'application/rss+xml, application/xml, text/xml, */*',
 				'User-Agent': 'MarinMonitor/1.0 (RSS Feed Reader)'
@@ -50,6 +51,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		});
 	} catch (e) {
 		if ((e as { status?: number }).status) throw e; // Re-throw SvelteKit errors
-		throw error(502, `Failed to fetch feed: ${(e as Error).message}`);
+		console.error('Feed fetch failed:', (e as Error).message);
+		throw error(502, 'Failed to fetch upstream feed');
 	}
 };

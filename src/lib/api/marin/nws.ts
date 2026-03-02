@@ -10,16 +10,11 @@
  * - /alerts/active?zone=CAZ006 → active weather alerts for Marin
  */
 
-import { NWS_ZONE, NWS_OFFICE } from '$lib/config/map';
-import { MARIN_CENTER } from '$lib/config/towns';
+import { NWS_ZONE } from '$lib/config/map';
 import type { WeatherData, FireWeatherAlert } from '$lib/types';
 import { logger } from '$lib/config/api';
-
-const NWS_BASE = 'https://api.weather.gov';
-const NWS_HEADERS = {
-	Accept: 'application/geo+json',
-	'User-Agent': 'MarinMonitor/1.0 (marin-monitor@example.com)'
-};
+import { NWS_BASE, NWS_HEADERS, getGridPoint } from './nws-common';
+import { fetchWithTimeout } from './fetch-helpers';
 
 /** NWS forecast period from the API */
 interface NwsForecastPeriod {
@@ -52,38 +47,6 @@ interface NwsAlertFeature {
 	};
 }
 
-// Cache the grid coordinates keyed by lat/lon
-const gridCacheMap = new Map<string, { office: string; gridX: number; gridY: number }>();
-
-/**
- * Get NWS grid coordinates for a location (defaults to Marin County center)
- */
-async function getGridPoint(
-	lat: number = MARIN_CENTER.lat,
-	lon: number = MARIN_CENTER.lon
-): Promise<{ office: string; gridX: number; gridY: number }> {
-	const key = `${lat},${lon}`;
-	const cached = gridCacheMap.get(key);
-	if (cached) return cached;
-
-	const url = `${NWS_BASE}/points/${lat},${lon}`;
-	const response = await fetch(url, { headers: NWS_HEADERS });
-
-	if (!response.ok) {
-		throw new Error(`NWS points lookup failed: ${response.status}`);
-	}
-
-	const data = await response.json();
-	const grid = {
-		office: data.properties.gridId || NWS_OFFICE,
-		gridX: data.properties.gridX,
-		gridY: data.properties.gridY
-	};
-	gridCacheMap.set(key, grid);
-
-	return grid;
-}
-
 /**
  * Fetch current forecast for Marin County
  * Returns the current period and the next period
@@ -98,7 +61,7 @@ export async function fetchForecast(
 
 		logger.log('NWS', `Fetching forecast: ${url}`);
 
-		const response = await fetch(url, { headers: NWS_HEADERS });
+		const response = await fetchWithTimeout(url, { headers: NWS_HEADERS });
 		if (!response.ok) {
 			throw new Error(`NWS forecast failed: ${response.status}`);
 		}
@@ -132,7 +95,7 @@ export async function fetchAlerts(): Promise<FireWeatherAlert[]> {
 		const url = `${NWS_BASE}/alerts/active?zone=${NWS_ZONE}`;
 		logger.log('NWS', `Fetching alerts: ${url}`);
 
-		const response = await fetch(url, { headers: NWS_HEADERS });
+		const response = await fetchWithTimeout(url, { headers: NWS_HEADERS });
 		if (!response.ok) {
 			throw new Error(`NWS alerts failed: ${response.status}`);
 		}

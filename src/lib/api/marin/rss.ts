@@ -9,6 +9,7 @@
 import { FEEDS, type FeedSource } from '$lib/config/feeds';
 import type { NewsItem, NewsCategory, VerificationLevel } from '$lib/types';
 import { logger } from '$lib/config/api';
+import { fetchWithTimeout } from './fetch-helpers';
 
 /** Result from fetching a single feed */
 interface FeedResult {
@@ -203,7 +204,7 @@ function generateId(title: string, source: string): string {
  */
 async function fetchRssXml(url: string): Promise<string> {
 	const proxyUrl = `/api/feeds?url=${encodeURIComponent(url)}`;
-	const response = await fetch(proxyUrl, {
+	const response = await fetchWithTimeout(proxyUrl, {
 		headers: { Accept: 'application/xml, text/xml, application/rss+xml, */*' }
 	});
 	if (!response.ok) {

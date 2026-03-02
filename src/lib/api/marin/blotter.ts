@@ -1,6 +1,7 @@
 import { detectTown } from '$lib/config';
 import { logger } from '$lib/config/api';
 import type { NewsItem } from '$lib/types';
+import { fetchWithTimeout } from './fetch-helpers';
 
 const SHERIFF_BLOTTER_API = 'https://data.marincounty.gov/resource/ahxi-5nsc.json';
 const SHERIFF_BLOTTER_PAGE =
@@ -185,7 +186,7 @@ export async function fetchSheriffCrimeBlotter(
 
 		const url = `${SHERIFF_BLOTTER_API}?${params.toString()}`;
 		logger.log('BLOTTER', `Fetching Marin Sheriff blotter: ${url}`);
-		const response = await fetch(url, {
+		const response = await fetchWithTimeout(url, {
 			headers: {
 				Accept: 'application/json'
 			}

@@ -1,4 +1,5 @@
 import { logger } from '$lib/config/api';
+import { fetchWithTimeout } from './fetch-helpers';
 
 const MARINE_BASE = 'https://marine-api.open-meteo.com/v1/marine';
 const POINT_REYES = { lat: 37.996, lon: -122.976 };
@@ -58,7 +59,7 @@ export async function fetchMarineSnapshot(): Promise<MarineSnapshot | null> {
 
 		const url = `${MARINE_BASE}?${params}`;
 		logger.log('MARINE', `Fetching marine forecast: ${url}`);
-		const response = await fetch(url, { headers: { Accept: 'application/json' } });
+		const response = await fetchWithTimeout(url, { headers: { Accept: 'application/json' } });
 		if (!response.ok) throw new Error(`Marine API failed: ${response.status}`);
 
 		const data = (await response.json()) as MarineApiResponse;
@@ -122,7 +123,7 @@ export async function fetchMarineOutlook(days: number = 5): Promise<MarineOutloo
 
 		const url = `${MARINE_BASE}?${params}`;
 		logger.log('MARINE', `Fetching marine outlook: ${url}`);
-		const response = await fetch(url, { headers: { Accept: 'application/json' } });
+		const response = await fetchWithTimeout(url, { headers: { Accept: 'application/json' } });
 		if (!response.ok) throw new Error(`Marine outlook failed: ${response.status}`);
 
 		const data = (await response.json()) as MarineApiResponse;
@@ -153,7 +154,7 @@ export async function fetchMarineHourly(hours: number = 12): Promise<MarineHourl
 
 		const url = `${MARINE_BASE}?${params}`;
 		logger.log('MARINE', `Fetching marine hourly: ${url}`);
-		const response = await fetch(url, { headers: { Accept: 'application/json' } });
+		const response = await fetchWithTimeout(url, { headers: { Accept: 'application/json' } });
 		if (!response.ok) throw new Error(`Marine hourly failed: ${response.status}`);
 
 		const data = (await response.json()) as MarineApiResponse;
