@@ -18,6 +18,8 @@ export interface HourlyPeriod {
 	windDirection: string;
 	shortForecast: string;
 	isDaytime: boolean;
+	dewpoint: number | null;
+	relativeHumidity: number | null;
 }
 
 /** QPF (Quantitative Precipitation Forecast) for a time window */
@@ -66,6 +68,8 @@ export async function fetchHourlyForecast(lat?: number, lon?: number): Promise<H
 					windDirection: string;
 					shortForecast: string;
 					isDaytime: boolean;
+					dewpoint?: { value: number | null; unitCode?: string };
+					relativeHumidity?: { value: number | null };
 				}) => ({
 					startTime: p.startTime,
 					temperature: p.temperature,
@@ -74,7 +78,12 @@ export async function fetchHourlyForecast(lat?: number, lon?: number): Promise<H
 					windSpeed: p.windSpeed,
 					windDirection: p.windDirection,
 					shortForecast: p.shortForecast,
-					isDaytime: p.isDaytime
+					isDaytime: p.isDaytime,
+					dewpoint:
+						p.dewpoint?.value != null
+							? Math.round(p.dewpoint.value * (9 / 5) + 32)
+							: null,
+					relativeHumidity: p.relativeHumidity?.value ?? null
 				})
 			);
 	} catch (error) {

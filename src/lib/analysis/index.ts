@@ -14,6 +14,14 @@ export {
 	type CorrelationResults
 } from './correlation';
 
+// Condition indicators
+export {
+	computeHeroDirt,
+	type HeroDirtScore,
+	type MoistureEvent,
+	type TrailIntelItem
+} from './indicators';
+
 // Narrative tracker
 export {
 	analyzeNarratives,

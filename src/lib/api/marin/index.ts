@@ -16,3 +16,4 @@ export { fetchStreamGauges, type StreamGauge } from './streams';
 export { fetchFireIncidents, type FireIncident } from './calfire';
 export { fetchUvIndex, type UvData } from './uv';
 export { fetchSunTimes, type SunData } from './sun';
+export { fetchObservedWeather, type ObservedWeather } from './open-meteo';

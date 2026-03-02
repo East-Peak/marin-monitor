@@ -10,3 +10,4 @@ export { default as OutlooksPanel } from './OutlooksPanel.svelte';
 export { default as SignalsPanel } from './SignalsPanel.svelte';
 export { default as EnvironmentPanel } from './EnvironmentPanel.svelte';
 export { default as CommunityPanel } from './CommunityPanel.svelte';
+export { default as ConditionsPanel } from './ConditionsPanel.svelte';

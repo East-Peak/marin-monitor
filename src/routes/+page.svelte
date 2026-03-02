@@ -13,7 +13,8 @@
 		MapPanel,
 		HousingPanel,
 		EnvironmentPanel,
-		CommunityPanel
+		CommunityPanel,
+		ConditionsPanel
 	} from '$lib/components/panels';
 	import { news, settings, refresh, allNewsItems, selectedTown } from '$lib/stores';
 	import { getLocationById } from '$lib/config/locations';
@@ -609,6 +610,10 @@
 						</div>
 					{/if}
 
+					<div class="signal-card signal-conditions">
+						<ConditionsPanel />
+					</div>
+
 					{#if isPanelVisible('narrative') || isPanelVisible('correlation')}
 						<div class="signal-card signal-signals">
 							<SignalsPanel news={$allNewsItems} />
@@ -928,7 +933,8 @@
 	.signal-pulse :global(.panel-content),
 	.signal-signals :global(.panel-content),
 	.signal-outlooks :global(.panel-content),
-	.signal-environment :global(.panel-content) {
+	.signal-environment :global(.panel-content),
+	.signal-conditions :global(.panel-content) {
 		max-height: none;
 		overflow-y: visible;
 	}

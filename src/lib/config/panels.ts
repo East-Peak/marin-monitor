@@ -15,6 +15,7 @@ export type PanelId =
 	| 'safety'
 	| 'weather'
 	| 'cameras'
+	| 'conditions'
 	| 'outdoors'
 	| 'civic'
 	| 'housing'
@@ -49,6 +50,11 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 		name: 'Cameras',
 		priority: 2,
 		description: 'Live webcams: 101 freeway, Mt. Tam, Golden Gate Bridge'
+	},
+	conditions: {
+		name: 'Hero Dirt Tracker',
+		priority: 2,
+		description: 'Mt. Tam trail conditions'
 	},
 	outdoors: {
 		name: 'Outdoors & Lifestyle',
