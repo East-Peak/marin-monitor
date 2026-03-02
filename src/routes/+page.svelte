@@ -611,11 +611,9 @@
 						</div>
 					{/if}
 
-					{#if isPanelVisible('weather')}
-						<div class="signal-card signal-environment">
-							<EnvironmentPanel />
-						</div>
-					{/if}
+					<div class="signal-card signal-conditions">
+						<ConditionsPanel />
+					</div>
 
 					{#if isPanelVisible('narrative') || isPanelVisible('correlation')}
 						<div class="signal-card signal-signals">
@@ -649,9 +647,16 @@
 						</div>
 					{/if}
 
-					<div class="signal-card signal-conditions">
-						<ConditionsPanel />
-					</div>
+					{#if isPanelVisible('weather')}
+						<div class="signal-card signal-tides">
+							<TidesPanel
+								tideStation={userLocation.tideStation}
+								tideStationName={userLocation.tideStationName}
+								locationLat={userLocation.lat}
+								locationLon={userLocation.lon}
+							/>
+						</div>
+					{/if}
 				</div>
 
 				<div class="signal-column signal-column-right">
@@ -668,13 +673,8 @@
 					{/if}
 
 					{#if isPanelVisible('weather')}
-						<div class="signal-card signal-tides">
-							<TidesPanel
-								tideStation={userLocation.tideStation}
-								tideStationName={userLocation.tideStationName}
-								locationLat={userLocation.lat}
-								locationLon={userLocation.lon}
-							/>
+						<div class="signal-card signal-environment">
+							<EnvironmentPanel />
 						</div>
 					{/if}
 				</div>
