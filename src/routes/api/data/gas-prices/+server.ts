@@ -7,7 +7,9 @@ export const GET: RequestHandler = async () => {
 		const blob = await head('marin-gas-prices.json', {
 			token: env.BLOB_READ_WRITE_TOKEN
 		});
-		const response = await fetch(blob.downloadUrl);
+		const response = await fetch(blob.downloadUrl, {
+			headers: { Authorization: `Bearer ${env.BLOB_READ_WRITE_TOKEN}` }
+		});
 		if (response.ok) {
 			return new Response(await response.text(), {
 				headers: {

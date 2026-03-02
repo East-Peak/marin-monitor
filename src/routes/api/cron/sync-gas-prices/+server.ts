@@ -38,7 +38,9 @@ export const GET: RequestHandler = async ({ request }) => {
 		let existing: GasPriceData = { current: null, history: [] };
 		try {
 			const blob = await head(BLOB_KEY, { token: env.BLOB_READ_WRITE_TOKEN });
-			const res = await fetch(blob.downloadUrl);
+			const res = await fetch(blob.downloadUrl, {
+				headers: { Authorization: `Bearer ${env.BLOB_READ_WRITE_TOKEN}` }
+			});
 			if (res.ok) {
 				existing = (await res.json()) as GasPriceData;
 			}
