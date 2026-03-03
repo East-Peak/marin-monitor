@@ -66,6 +66,9 @@
 		<button class="expand-link" onclick={() => settings.toggleCamerasExpanded()}>
 			{$settings.camerasExpanded ? 'Collapse' : 'Expand'} views
 		</button>
+		<button class="expand-link" onclick={() => settings.toggleCamerasHidden()}>
+			Hide
+		</button>
 	{/snippet}
 	<div class="camera-tabs">
 		{#each CAMERA_CATEGORIES as cat (cat.id)}

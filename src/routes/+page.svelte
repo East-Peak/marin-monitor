@@ -595,24 +595,36 @@
 			</div>
 		{:else}
 			<!-- Top stage: map + cameras -->
-			<div class="top-stage" class:map-full-width={$settings.camerasExpanded || !isPanelVisible('cameras')}>
+			<div class="top-stage" class:map-full-width={$settings.camerasExpanded || $settings.camerasHidden || !isPanelVisible('cameras')}>
 				{#if isPanelVisible('map')}
 					<div class="map-slot">
 						<MapPanel earthquakes={earthquakeItems} />
 					</div>
 				{/if}
 
-				{#if isPanelVisible('cameras') && !$settings.camerasExpanded}
+				{#if isPanelVisible('cameras') && !$settings.camerasExpanded && !$settings.camerasHidden}
 					<div class="camera-stage">
 						<CamerasPanel />
 					</div>
 				{/if}
 			</div>
 
-			{#if $settings.camerasExpanded && isPanelVisible('cameras')}
+			{#if $settings.camerasExpanded && !$settings.camerasHidden && isPanelVisible('cameras')}
 				<div class="expanded-cameras-stage">
 					<ExpandedCamerasPanel />
 				</div>
+			{/if}
+
+			<!-- Cameras show/hide toggle (only when cameras are hidden) -->
+			{#if $settings.camerasHidden && isPanelVisible('cameras')}
+				<button class="dash-toggle" onclick={() => settings.toggleCamerasHidden()}>
+					<span class="dash-toggle-line"></span>
+					<span class="dash-toggle-label">
+						Show Cameras
+						<span class="dash-toggle-chevron">{'\u25BE'}</span>
+					</span>
+					<span class="dash-toggle-line"></span>
+				</button>
 			{/if}
 
 			<!-- Dashboard collapse toggle -->
