@@ -13,9 +13,11 @@
 		MapPanel,
 		HousingPanel,
 		GasPricesPanel,
+		EvChargingPanel,
 		EnvironmentPanel,
 		CommunityPanel,
-		ConditionsPanel
+		ConditionsPanel,
+		ExpandedCamerasPanel
 	} from '$lib/components/panels';
 	import { news, settings, refresh, allNewsItems, selectedTown } from '$lib/stores';
 	import { getLocationById } from '$lib/config/locations';
@@ -590,6 +592,12 @@
 				{/if}
 			</div>
 
+			{#if $settings.camerasExpanded && isPanelVisible('cameras')}
+				<div class="expanded-cameras-stage">
+					<ExpandedCamerasPanel />
+				</div>
+			{/if}
+
 			<!-- Dashboard collapse toggle -->
 			<button class="dash-toggle" onclick={() => settings.toggleDashboard()}>
 				<span class="dash-toggle-line"></span>
@@ -672,6 +680,12 @@
 						</div>
 					{/if}
 
+					{#if isPanelVisible('ev-charging')}
+						<div class="signal-card signal-ev-charging">
+							<EvChargingPanel />
+						</div>
+					{/if}
+
 					{#if isPanelVisible('weather')}
 						<div class="signal-card signal-environment">
 							<EnvironmentPanel />
@@ -744,6 +758,10 @@
 		gap: 1rem;
 		margin-bottom: 1rem;
 		align-items: start;
+	}
+
+	.expanded-cameras-stage {
+		margin-bottom: 1rem;
 	}
 
 	.camera-stage :global(.panel-content) {
@@ -937,6 +955,7 @@
 	.signal-weather :global(.panel-content),
 	.signal-housing :global(.panel-content),
 	.signal-gas-prices :global(.panel-content),
+	.signal-ev-charging :global(.panel-content),
 	.signal-tides :global(.panel-content),
 	.signal-pulse :global(.panel-content),
 	.signal-signals :global(.panel-content),

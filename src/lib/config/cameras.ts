@@ -13,6 +13,7 @@
  */
 
 export type CameraCategory = 'traffic' | 'scenic' | 'fire';
+export type FireSubRegion = 'south' | 'central' | 'west' | 'north';
 
 export interface CameraConfig {
 	id: string;
@@ -30,6 +31,12 @@ export interface CameraConfig {
 	source: string;
 	/** Sort order within category */
 	order: number;
+	/** Fire camera sub-region for grouping in expanded view */
+	subRegion?: FireSubRegion;
+	/** Camera latitude */
+	lat?: number;
+	/** Camera longitude */
+	lon?: number;
 }
 
 export const CAMERA_CATEGORIES: { id: CameraCategory; label: string }[] = [
@@ -37,6 +44,17 @@ export const CAMERA_CATEGORIES: { id: CameraCategory; label: string }[] = [
 	{ id: 'scenic', label: 'Scenic' },
 	{ id: 'fire', label: 'Fire' }
 ];
+
+export const FIRE_SUB_REGIONS: { id: FireSubRegion; label: string }[] = [
+	{ id: 'south', label: 'South Marin' },
+	{ id: 'central', label: 'Central Marin' },
+	{ id: 'west', label: 'West Marin' },
+	{ id: 'north', label: 'North Marin' }
+];
+
+function alertCamUrl(axisId: string): string {
+	return `https://cameras.alertcalifornia.org/public-camera-data/${axisId}/latest-frame.jpg`;
+}
 
 export const CAMERAS: CameraConfig[] = [
 	// ── Traffic: Caltrans 101 freeway cameras (static JPEG) ──
@@ -118,27 +136,251 @@ export const CAMERAS: CameraConfig[] = [
 		order: 3
 	},
 
-	// ── Fire: ALERTCalifornia wildfire detection cameras (public CDN snapshots) ──
+	// ── Fire: ALERTCalifornia wildfire detection cameras ──
+
+	// South Marin (5)
 	{
 		id: 'alert-tam-east',
 		name: 'Mt. Tam East',
 		location: 'Mt. Tamalpais',
 		category: 'fire',
+		subRegion: 'south',
 		type: 'image',
-		url: 'https://cameras.alertcalifornia.org/public-camera-data/Axis-TamEast/latest-frame.jpg',
+		url: alertCamUrl('Axis-TamEast'),
 		refreshInterval: 10,
 		source: 'ALERTCalifornia',
-		order: 1
+		order: 1,
+		lat: 37.9235,
+		lon: -122.5816
 	},
 	{
 		id: 'alert-tam-west',
 		name: 'Mt. Tam West',
 		location: 'Mt. Tamalpais',
 		category: 'fire',
+		subRegion: 'south',
 		type: 'image',
-		url: 'https://cameras.alertcalifornia.org/public-camera-data/Axis-TamWest/latest-frame.jpg',
+		url: alertCamUrl('Axis-TamWest'),
 		refreshInterval: 10,
 		source: 'ALERTCalifornia',
-		order: 2
+		order: 2,
+		lat: 37.9235,
+		lon: -122.5816
+	},
+	{
+		id: 'alert-muir-beach',
+		name: 'Muir Beach',
+		location: 'Muir Beach',
+		category: 'fire',
+		subRegion: 'south',
+		type: 'image',
+		url: alertCamUrl('Axis-MuirBeach'),
+		refreshInterval: 10,
+		source: 'ALERTCalifornia',
+		order: 3,
+		lat: 37.8592,
+		lon: -122.5784
+	},
+	{
+		id: 'alert-wolfback-ridge',
+		name: 'Wolfback Ridge',
+		location: 'Sausalito',
+		category: 'fire',
+		subRegion: 'south',
+		type: 'image',
+		url: alertCamUrl('Axis-WolfbackRidge'),
+		refreshInterval: 10,
+		source: 'ALERTCalifornia',
+		order: 4,
+		lat: 37.8529,
+		lon: -122.5103
+	},
+	{
+		id: 'alert-bolinas',
+		name: 'Bolinas',
+		location: 'Bolinas',
+		category: 'fire',
+		subRegion: 'south',
+		type: 'image',
+		url: alertCamUrl('Axis-Bolinas'),
+		refreshInterval: 10,
+		source: 'ALERTCalifornia',
+		order: 5,
+		lat: 37.9093,
+		lon: -122.6869
+	},
+
+	// Central Marin (4)
+	{
+		id: 'alert-san-pedro',
+		name: 'San Pedro',
+		location: 'San Rafael',
+		category: 'fire',
+		subRegion: 'central',
+		type: 'image',
+		url: alertCamUrl('Axis-SanPedro'),
+		refreshInterval: 10,
+		source: 'ALERTCalifornia',
+		order: 6,
+		lat: 37.9962,
+		lon: -122.5343
+	},
+	{
+		id: 'alert-san-rafael-hill',
+		name: 'San Rafael Hill',
+		location: 'San Rafael',
+		category: 'fire',
+		subRegion: 'central',
+		type: 'image',
+		url: alertCamUrl('Axis-SanRafaelHill1'),
+		refreshInterval: 10,
+		source: 'ALERTCalifornia',
+		order: 7,
+		lat: 37.9735,
+		lon: -122.5311
+	},
+	{
+		id: 'alert-big-rock',
+		name: 'Big Rock',
+		location: 'Lucas Valley',
+		category: 'fire',
+		subRegion: 'central',
+		type: 'image',
+		url: alertCamUrl('Axis-BigRock'),
+		refreshInterval: 10,
+		source: 'ALERTCalifornia',
+		order: 8,
+		lat: 38.0303,
+		lon: -122.5944
+	},
+	{
+		id: 'alert-big-rock-2',
+		name: 'Big Rock 2',
+		location: 'Lucas Valley',
+		category: 'fire',
+		subRegion: 'central',
+		type: 'image',
+		url: alertCamUrl('Axis-BigRock2'),
+		refreshInterval: 10,
+		source: 'ALERTCalifornia',
+		order: 9,
+		lat: 38.0303,
+		lon: -122.5944
+	},
+
+	// West Marin (4)
+	{
+		id: 'alert-barnabe-east',
+		name: 'Barnabe East',
+		location: 'Samuel P. Taylor',
+		category: 'fire',
+		subRegion: 'west',
+		type: 'image',
+		url: alertCamUrl('Axis-BarnabeEast'),
+		refreshInterval: 10,
+		source: 'ALERTCalifornia',
+		order: 10,
+		lat: 38.0256,
+		lon: -122.7218
+	},
+	{
+		id: 'alert-barnabe-west',
+		name: 'Barnabe West',
+		location: 'Samuel P. Taylor',
+		category: 'fire',
+		subRegion: 'west',
+		type: 'image',
+		url: alertCamUrl('Axis-BarnabeWest'),
+		refreshInterval: 10,
+		source: 'ALERTCalifornia',
+		order: 11,
+		lat: 38.0256,
+		lon: -122.7218
+	},
+	{
+		id: 'alert-black-mtn',
+		name: 'Black Mountain',
+		location: 'Point Reyes Station',
+		category: 'fire',
+		subRegion: 'west',
+		type: 'image',
+		url: alertCamUrl('Axis-BlackMtnMarin'),
+		refreshInterval: 10,
+		source: 'ALERTCalifornia',
+		order: 12,
+		lat: 38.0706,
+		lon: -122.7896
+	},
+	{
+		id: 'alert-vision',
+		name: 'Vision',
+		location: 'Inverness',
+		category: 'fire',
+		subRegion: 'west',
+		type: 'image',
+		url: alertCamUrl('Axis-Vision'),
+		refreshInterval: 10,
+		source: 'ALERTCalifornia',
+		order: 13,
+		lat: 38.0976,
+		lon: -122.8479
+	},
+
+	// North Marin (4)
+	{
+		id: 'alert-burdell',
+		name: 'Burdell',
+		location: 'Novato',
+		category: 'fire',
+		subRegion: 'north',
+		type: 'image',
+		url: alertCamUrl('Axis-Burdell'),
+		refreshInterval: 10,
+		source: 'ALERTCalifornia',
+		order: 14,
+		lat: 38.1479,
+		lon: -122.5618
+	},
+	{
+		id: 'alert-burdell-2',
+		name: 'Burdell 2',
+		location: 'Novato',
+		category: 'fire',
+		subRegion: 'north',
+		type: 'image',
+		url: alertCamUrl('Axis-Burdell2'),
+		refreshInterval: 10,
+		source: 'ALERTCalifornia',
+		order: 15,
+		lat: 38.1479,
+		lon: -122.5618
+	},
+	{
+		id: 'alert-mt-burdell-south',
+		name: 'Mt. Burdell South',
+		location: 'Novato',
+		category: 'fire',
+		subRegion: 'north',
+		type: 'image',
+		url: alertCamUrl('Axis-MtBurdellSouth1'),
+		refreshInterval: 10,
+		source: 'ALERTCalifornia',
+		order: 16,
+		lat: 38.1479,
+		lon: -122.5618
+	},
+	{
+		id: 'alert-league-221',
+		name: 'League 221',
+		location: 'Novato',
+		category: 'fire',
+		subRegion: 'north',
+		type: 'image',
+		url: alertCamUrl('Axis-League221'),
+		refreshInterval: 10,
+		source: 'ALERTCalifornia',
+		order: 17,
+		lat: 38.1195,
+		lon: -122.5965
 	}
 ];

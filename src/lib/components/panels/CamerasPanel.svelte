@@ -7,6 +7,7 @@
 		type CameraCategory,
 		type CameraConfig
 	} from '$lib/config/cameras';
+	import { settings } from '$lib/stores';
 
 	let imageTimestamps = $state<Record<string, number>>({});
 	let expandedCamera = $state<string | null>(null);
@@ -143,6 +144,10 @@
 			</div>
 		{/each}
 	</div>
+
+	<button class="expand-cameras-btn" onclick={() => settings.toggleCamerasExpanded()}>
+		{$settings.camerasExpanded ? 'Collapse Camera Views' : 'Expand Camera Views'}
+	</button>
 </Panel>
 
 <style>
@@ -297,6 +302,28 @@
 		font-size: 0.5rem;
 		color: var(--text-secondary);
 		opacity: 0.6;
+	}
+
+	.expand-cameras-btn {
+		width: 100%;
+		padding: 0.4rem 0.5rem;
+		margin-top: 0.5rem;
+		background: rgba(255, 255, 255, 0.03);
+		border: 1px solid var(--border);
+		border-radius: 3px;
+		color: var(--text-muted);
+		font: inherit;
+		font-size: 0.58rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.expand-cameras-btn:hover {
+		color: var(--text-secondary);
+		border-color: var(--accent);
+		background: rgba(var(--accent-rgb), 0.06);
 	}
 
 	@media (max-width: 768px) {

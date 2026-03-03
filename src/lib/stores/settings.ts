@@ -22,7 +22,8 @@ const STORAGE_KEYS = {
 	theme: 'mm_theme',
 	location: 'mm_location',
 	uiScale: 'mm_uiScale',
-	dashboardExpanded: 'mm_dashExpanded'
+	dashboardExpanded: 'mm_dashExpanded',
+	camerasExpanded: 'mm_camerasExpanded'
 } as const;
 
 // Types
@@ -36,6 +37,7 @@ export interface PanelSettings {
 	locationId: string;
 	uiScale: number;
 	dashboardExpanded: boolean;
+	camerasExpanded: boolean;
 }
 
 export interface SettingsState extends PanelSettings {
@@ -53,7 +55,8 @@ function getDefaultSettings(): PanelSettings {
 		theme: 'dark',
 		locationId: DEFAULT_LOCATION_ID,
 		uiScale: 100,
-		dashboardExpanded: true
+		dashboardExpanded: true,
+		camerasExpanded: false
 	};
 }
 
@@ -71,6 +74,7 @@ function loadFromStorage(): Partial<PanelSettings> {
 		const uiScaleRaw = localStorage.getItem(STORAGE_KEYS.uiScale);
 		const uiScale = uiScaleRaw ? Number(uiScaleRaw) : undefined;
 		const dashRaw = localStorage.getItem(STORAGE_KEYS.dashboardExpanded);
+		const camerasRaw = localStorage.getItem(STORAGE_KEYS.camerasExpanded);
 
 		return {
 			enabled: panels ? JSON.parse(panels) : undefined,
@@ -79,7 +83,8 @@ function loadFromStorage(): Partial<PanelSettings> {
 			theme: theme === 'light' || theme === 'dark' ? theme : undefined,
 			locationId: location ?? undefined,
 			uiScale: uiScale && uiScale >= 50 && uiScale <= 150 ? uiScale : undefined,
-			dashboardExpanded: dashRaw !== null ? dashRaw !== 'false' : undefined
+			dashboardExpanded: dashRaw !== null ? dashRaw !== 'false' : undefined,
+			camerasExpanded: camerasRaw !== null ? camerasRaw === 'true' : undefined
 		};
 	} catch (e) {
 		console.warn('Failed to load settings from localStorage:', e);
@@ -121,6 +126,7 @@ function createSettingsStore() {
 		locationId: saved.locationId ?? defaults.locationId,
 		uiScale: saved.uiScale ?? defaults.uiScale,
 		dashboardExpanded: saved.dashboardExpanded ?? defaults.dashboardExpanded,
+		camerasExpanded: saved.camerasExpanded ?? defaults.camerasExpanded,
 		initialized: false
 	};
 
@@ -277,6 +283,19 @@ function createSettingsStore() {
 		},
 
 		/**
+		 * Toggle the expanded cameras panel
+		 */
+		toggleCamerasExpanded() {
+			update((state) => {
+				const expanded = !state.camerasExpanded;
+				if (browser) {
+					localStorage.setItem(STORAGE_KEYS.camerasExpanded, String(expanded));
+				}
+				return { ...state, camerasExpanded: expanded };
+			});
+		},
+
+		/**
 		 * Set the user's preferred location
 		 */
 		setLocation(locationId: string) {
@@ -301,6 +320,7 @@ function createSettingsStore() {
 				localStorage.removeItem(STORAGE_KEYS.location);
 				localStorage.removeItem(STORAGE_KEYS.uiScale);
 				localStorage.removeItem(STORAGE_KEYS.dashboardExpanded);
+				localStorage.removeItem(STORAGE_KEYS.camerasExpanded);
 			}
 			applyTheme(defaults.theme);
 			applyUiScale(defaults.uiScale);
