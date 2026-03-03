@@ -46,6 +46,7 @@ export const CACHE_TTLS = {
 	earthquakes: 5 * 60 * 1000, // 5 minutes
 	housing: 6 * 60 * 60 * 1000, // 6 hours
 	gasPrices: 4 * 60 * 60 * 1000, // 4 hours
+	evCharging: 24 * 60 * 60 * 1000, // 24 hours
 	default: 5 * 60 * 1000 // 5 minutes
 } as const;
 

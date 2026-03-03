@@ -19,3 +19,11 @@ export function getAirnowApiKey(): string {
 export function getGooglePlacesApiKey(): string {
 	return env.GOOGLE_PLACES_API_KEY || '';
 }
+
+export function getNrelApiKey(): string {
+	return env.NREL_API_KEY || '';
+}
+
+export function getOpenChargeMapApiKey(): string {
+	return env.OPEN_CHARGE_MAP_API_KEY || '';
+}

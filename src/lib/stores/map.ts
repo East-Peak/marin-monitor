@@ -14,7 +14,7 @@ export interface MapState {
 	initialized: boolean;
 }
 
-const ALL_LAYERS: MapLayer[] = ['civic', 'news', 'safety', 'housing', 'activity', 'satire', 'gas'];
+const ALL_LAYERS: MapLayer[] = ['civic', 'news', 'safety', 'housing', 'activity', 'satire', 'gas', 'ev-charging'];
 
 function createInitialState(): MapState {
 	const activeLayers = {} as Record<MapLayer, boolean>;

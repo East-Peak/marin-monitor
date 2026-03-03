@@ -5,6 +5,7 @@
 	import { allNewsItems } from '$lib/stores/news';
 	import { mapStore, CATEGORY_TO_LAYER } from '$lib/stores/map';
 	import { currentGasStations } from '$lib/stores/gas-prices';
+	import { currentChargingStations } from '$lib/stores/ev-charging';
 	import { MARIN_TOWNS, TOWN_BY_SLUG, LAYER_COLORS, MARIN_BOUNDS } from '$lib/config';
 	import { FIRE_ZONES, LANDMARKS } from '$lib/config/map';
 	import { MAPBOX_TOKEN } from '$lib/config/api';
@@ -28,7 +29,7 @@
 		onTownHover?: (townSlug: string | null) => void;
 		onPinClick?: (itemId: string) => void;
 		onFeatureClick?: (feature: {
-			kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station';
+			kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station' | 'ev-charging-station';
 			title: string;
 			subtitle?: string;
 			description?: string;
@@ -370,6 +371,12 @@
 			data: { type: 'FeatureCollection', features: [] }
 		});
 
+		// EV charging stations source
+		map.addSource('ev-charging-stations', {
+			type: 'geojson',
+			data: { type: 'FeatureCollection', features: [] }
+		});
+
 		// --- Layers ---
 
 		// Fire zones (semi-transparent red circles)
@@ -566,6 +573,40 @@
 			}
 		});
 
+		// EV charging station dots (purple)
+		map.addLayer({
+			id: 'ev-charging-stations-layer',
+			type: 'circle',
+			source: 'ev-charging-stations',
+			paint: {
+				'circle-radius': 5,
+				'circle-color': '#a855f7',
+				'circle-opacity': 0.8,
+				'circle-stroke-width': 1,
+				'circle-stroke-color': 'rgba(10, 10, 10, 0.8)'
+			}
+		});
+
+		// EV charging station labels (visible at higher zoom)
+		map.addLayer({
+			id: 'ev-charging-stations-label',
+			type: 'symbol',
+			source: 'ev-charging-stations',
+			minzoom: 12,
+			layout: {
+				'text-field': ['concat', ['get', 'network'], '\n', ['get', 'level']],
+				'text-size': 9,
+				'text-offset': [0, 1.4],
+				'text-anchor': 'top',
+				'text-optional': true
+			},
+			paint: {
+				'text-color': '#a855f7',
+				'text-halo-color': 'rgba(10, 10, 10, 0.9)',
+				'text-halo-width': 1.5
+			}
+		});
+
 		// News pins (small dots per item)
 		map.addLayer({
 			id: 'news-pins-layer',
@@ -721,6 +762,22 @@
 				});
 			});
 
+			map.on('click', 'ev-charging-stations-layer', (e: MapLayerMouseEvent) => {
+				const feature = e.features?.[0];
+				const name = String(feature?.properties?.name ?? 'EV Station');
+				const network = String(feature?.properties?.network ?? '');
+				const level = String(feature?.properties?.level ?? '');
+				const connectors = String(feature?.properties?.connectors ?? '');
+				const pricing = String(feature?.properties?.pricing ?? '');
+				onFeatureClick?.({
+					kind: 'ev-charging-station',
+					title: name,
+					subtitle: [network, level].filter(Boolean).join(' \u00b7 '),
+					description: [connectors, pricing].filter(Boolean).join('\n'),
+					source: 'NREL AFDC'
+				});
+			});
+
 			map.on('click', 'fire-incidents-layer', (e: MapLayerMouseEvent) => {
 				const feature = e.features?.[0];
 				const name = String(feature?.properties?.name ?? 'Fire');
@@ -741,6 +798,14 @@
 			});
 
 			map.on('mouseleave', 'gas-stations-layer', () => {
+				map.getCanvas().style.cursor = '';
+			});
+
+			map.on('mouseenter', 'ev-charging-stations-layer', () => {
+				map.getCanvas().style.cursor = 'pointer';
+			});
+
+			map.on('mouseleave', 'ev-charging-stations-layer', () => {
 				map.getCanvas().style.cursor = '';
 			});
 
@@ -987,12 +1052,58 @@
 			);
 		}
 
+		// EV charging stations
+		const evStations = get(currentChargingStations);
+		const mapEvVisible = mapState.activeLayers['ev-charging'];
+		const evFeatures: GeoJSON.Feature[] = mapEvVisible
+			? evStations.map((station) => {
+					const level = station.chargingLevels.includes('DCFast') ? 'DC Fast' : 'Level 2';
+					const connectorTypes = station.connectors.map((c) => c.type).join(', ');
+					return {
+						type: 'Feature' as const,
+						properties: {
+							stationId: station.stationId,
+							name: station.name,
+							network: station.network,
+							level,
+							connectors: connectorTypes,
+							pricing: station.pricingInfo ?? ''
+						},
+						geometry: {
+							type: 'Point' as const,
+							coordinates: [station.lon, station.lat]
+						}
+					};
+				})
+			: [];
+
+		const evSource = map.getSource('ev-charging-stations') as GeoJSONSource;
+		if (evSource) {
+			evSource.setData({ type: 'FeatureCollection', features: evFeatures });
+		}
+
+		if (map.getLayer('ev-charging-stations-layer')) {
+			map.setLayoutProperty(
+				'ev-charging-stations-layer',
+				'visibility',
+				mapEvVisible ? 'visible' : 'none'
+			);
+		}
+		if (map.getLayer('ev-charging-stations-label')) {
+			map.setLayoutProperty(
+				'ev-charging-stations-label',
+				'visibility',
+				mapEvVisible ? 'visible' : 'none'
+			);
+		}
+
 		applyTrafficVisibility(map);
 	}
 
 	let unsubscribeNews: (() => void) | null = null;
 	let unsubscribeMap: (() => void) | null = null;
 	let unsubscribeGas: (() => void) | null = null;
+	let unsubscribeEv: (() => void) | null = null;
 	let updateDataTimer: ReturnType<typeof setTimeout> | null = null;
 
 	onMount(() => {
@@ -1049,6 +1160,14 @@
 					updateData(m);
 				});
 			}
+
+			if (!unsubscribeEv) {
+				unsubscribeEv = currentChargingStations.subscribe(() => {
+					const m = getMap();
+					if (!m || !m.getSource('ev-charging-stations')) return;
+					updateData(m);
+				});
+			}
 		});
 
 		return () => {
@@ -1061,6 +1180,7 @@
 		unsubscribeNews?.();
 		unsubscribeMap?.();
 		unsubscribeGas?.();
+		unsubscribeEv?.();
 		if (trafficRefreshTimer) {
 			clearInterval(trafficRefreshTimer);
 			trafficRefreshTimer = null;

@@ -27,7 +27,8 @@ export type PanelId =
 	| 'correlation'
 	| 'narrative'
 	| 'satire'
-	| 'gas-prices';
+	| 'gas-prices'
+	| 'ev-charging';
 
 export const PANELS: Record<PanelId, PanelConfig> = {
 	map: { name: 'Marin Map', priority: 1, description: 'County map with layered data' },
@@ -100,6 +101,11 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 		name: 'Gas Prices',
 		priority: 3,
 		description: 'Station-level fuel prices across Marin County'
+	},
+	'ev-charging': {
+		name: 'EV Charging',
+		priority: 3,
+		description: 'EV charging station locations, connectors, and networks'
 	}
 };
 
@@ -119,6 +125,7 @@ export const DEFAULT_PANEL_ORDER: PanelId[] = [
 	'outdoors',
 	'housing',
 	'gas-prices',
+	'ev-charging',
 	'cycling',
 	'shows',
 	'prep',

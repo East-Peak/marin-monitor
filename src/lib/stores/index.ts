@@ -60,6 +60,9 @@ export {
 // Gas prices store
 export { gasPriceStore, currentGasStations } from './gas-prices';
 
+// EV charging store
+export { evChargingStore, currentChargingStations } from './ev-charging';
+
 // Refresh store
 export {
 	refresh,

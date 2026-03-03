@@ -809,6 +809,535 @@
     ]
   },
   {
+    "id": "outdoors:california-department-of-fish-wildlife:crab-trap-and-season-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-crab",
+    "title": "Crab trap and season regulations",
+    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Crab",
+    "pubDate": "2026-03-02T23:19:55.000Z",
+    "timestamp": 1772493595000,
+    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
+    "source": "California Department of Fish & Wildlife",
+    "category": "outdoors",
+    "verification": "official",
+    "topics": [
+      "fishing",
+      "regulations"
+    ]
+  },
+  {
+    "id": "outdoors:california-department-of-fish-wildlife:ocean-salmon-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-salmon",
+    "title": "Ocean salmon sport fishing regulations",
+    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Salmon",
+    "pubDate": "2026-03-02T23:19:54.000Z",
+    "timestamp": 1772493594000,
+    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
+    "source": "California Department of Fish & Wildlife",
+    "category": "outdoors",
+    "verification": "official",
+    "topics": [
+      "fishing",
+      "regulations"
+    ]
+  },
+  {
+    "id": "outdoors:california-department-of-fish-wildlife:ocean-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations",
+    "title": "Ocean sport fishing regulations",
+    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations",
+    "pubDate": "2026-03-02T23:19:53.000Z",
+    "timestamp": 1772493593000,
+    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
+    "source": "California Department of Fish & Wildlife",
+    "category": "outdoors",
+    "verification": "official",
+    "topics": [
+      "fishing",
+      "regulations"
+    ]
+  },
+  {
+    "id": "outdoors:california-department-of-fish-wildlife:san-francisco-ocean-fishing-map-and-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-fishing-map-sf",
+    "title": "San Francisco ocean fishing map and regulations",
+    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Fishing-Map/SF",
+    "pubDate": "2026-03-02T23:19:53.000Z",
+    "timestamp": 1772493593000,
+    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
+    "source": "California Department of Fish & Wildlife",
+    "category": "outdoors",
+    "verification": "official",
+    "topics": [
+      "fishing",
+      "regulations"
+    ]
+  },
+  {
+    "id": "farm:point-reyes-farmstead-cheese:point-reyes-farmstead-cheese-journal:https-www-pointreyescheese-com-blogs-news",
+    "title": "Point Reyes Farmstead Cheese journal",
+    "link": "https://www.pointreyescheese.com/blogs/news",
+    "pubDate": "2026-03-02T23:19:50.000Z",
+    "timestamp": 1772493590000,
+    "description": "Official Point Reyes Farmstead Cheese news and seasonal product updates.",
+    "source": "Point Reyes Farmstead Cheese",
+    "category": "farm",
+    "verification": "official",
+    "town": "Point Reyes Station",
+    "townSlug": "point-reyes",
+    "lat": 38.0764,
+    "lon": -122.8012,
+    "locationConfidence": "exact",
+    "locationEvidence": "Point Reyes Farmstead Cheese",
+    "topics": [
+      "cheese",
+      "farm-market"
+    ]
+  },
+  {
+    "id": "farm:agricultural-institute-of-marin:rollin-root-mobile-market-schedule:https-www-agriculturalinstitute-org-rollin-root",
+    "title": "Rollin' Root mobile market schedule",
+    "link": "https://www.agriculturalinstitute.org/rollin-root",
+    "pubDate": "2026-03-02T23:19:48.000Z",
+    "timestamp": 1772493588000,
+    "description": "Official market schedule from the Agricultural Institute of Marin.",
+    "source": "Agricultural Institute of Marin",
+    "category": "farm",
+    "verification": "official",
+    "topics": [
+      "farmers-market",
+      "produce"
+    ]
+  },
+  {
+    "id": "farm:agricultural-institute-of-marin:san-rafael-summer-market-schedule:https-www-agriculturalinstitute-org-san-rafael-summer-1",
+    "title": "San Rafael Summer market schedule",
+    "link": "https://www.agriculturalinstitute.org/san-rafael-summer-1",
+    "pubDate": "2026-03-02T23:19:48.000Z",
+    "timestamp": 1772493588000,
+    "description": "Official market schedule from the Agricultural Institute of Marin.",
+    "source": "Agricultural Institute of Marin",
+    "category": "farm",
+    "verification": "official",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9735,
+    "lon": -122.5311,
+    "locationConfidence": "exact",
+    "locationEvidence": "Agricultural Institute of Marin",
+    "topics": [
+      "farmers-market",
+      "produce"
+    ]
+  },
+  {
+    "id": "farm:agricultural-institute-of-marin:point-reyes-farmers-market-every-saturday-9am-2pm-may-2-october-10-2026:https-www-agriculturalinstitute-org-point-reyes",
+    "title": "Point Reyes farmers market · Every Saturday, 9am–2pm, May 2 – October 10, 2026",
+    "link": "https://www.agriculturalinstitute.org/point-reyes",
+    "pubDate": "2026-03-02T23:19:47.000Z",
+    "timestamp": 1772493587000,
+    "description": "Every Saturday · 9am–2pm · May 2 – October 10, 2026 at Toby’s Feed Barn",
+    "source": "Agricultural Institute of Marin",
+    "category": "farm",
+    "verification": "official",
+    "town": "Point Reyes Station",
+    "townSlug": "point-reyes",
+    "lat": 38.0702,
+    "lon": -122.8105,
+    "locationConfidence": "exact",
+    "locationEvidence": "Agricultural Institute of Marin",
+    "topics": [
+      "farmers-market",
+      "produce"
+    ]
+  },
+  {
+    "id": "farm:agricultural-institute-of-marin:thursday-marin-farmers-market-every-thursday-8am-1pm-year-round:https-www-agriculturalinstitute-org-thursday-marin",
+    "title": "Thursday Marin farmers market · Every Thursday, 8am - 1pm, Year-round",
+    "link": "https://www.agriculturalinstitute.org/thursday-marin",
+    "pubDate": "2026-03-02T23:19:46.000Z",
+    "timestamp": 1772493586000,
+    "description": "Every Thursday · 8am - 1pm · Year-round at Marin County Civic Center",
+    "source": "Agricultural Institute of Marin",
+    "category": "farm",
+    "verification": "official",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9991,
+    "lon": -122.5234,
+    "locationConfidence": "exact",
+    "locationEvidence": "Agricultural Institute of Marin",
+    "topics": [
+      "farmers-market",
+      "produce"
+    ]
+  },
+  {
+    "id": "prep:marin-highlanders-rugby:marin-highlanders-rugby-club-hub:https-www-marinhighlandersrugby-org",
+    "title": "Marin Highlanders Rugby club hub",
+    "link": "https://www.marinhighlandersrugby.org/",
+    "pubDate": "2026-03-02T23:19:45.000Z",
+    "timestamp": 1772493585000,
+    "description": "Local sports hub for schedules, fixtures, club updates, or season information.",
+    "source": "Marin Highlanders Rugby",
+    "category": "prep",
+    "verification": "community",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9756,
+    "lon": -122.5123,
+    "locationConfidence": "exact",
+    "locationEvidence": "Marin Highlanders Rugby",
+    "topics": [
+      "rugby",
+      "club-sports"
+    ]
+  },
+  {
+    "id": "prep:tamalpais-union-high-school-district:tuhsd-athletics-hub:https-www-tamdistrict-org-students-athletics",
+    "title": "TUHSD athletics hub",
+    "link": "https://www.tamdistrict.org/students/athletics",
+    "pubDate": "2026-03-02T23:19:41.000Z",
+    "timestamp": 1772493581000,
+    "description": "Official athletics or team hub for a Marin-area school or league program.",
+    "source": "Tamalpais Union High School District",
+    "category": "prep",
+    "verification": "official",
+    "lat": 37.9341,
+    "lon": -122.5353,
+    "locationConfidence": "exact",
+    "locationEvidence": "Tamalpais Union High School District",
+    "topics": [
+      "prep-sports",
+      "district"
+    ]
+  },
+  {
+    "id": "prep:archie-williams-mtb:archie-williams-mountain-bike-team-hub:https-www-awmtb-com",
+    "title": "Archie Williams mountain bike team hub",
+    "link": "https://www.awmtb.com/",
+    "pubDate": "2026-03-02T23:19:41.000Z",
+    "timestamp": 1772493581000,
+    "description": "Official athletics or team hub for a Marin-area school or league program.",
+    "source": "Archie Williams MTB",
+    "category": "prep",
+    "verification": "official",
+    "town": "San Anselmo",
+    "townSlug": "san-anselmo",
+    "lat": 37.9746,
+    "lon": -122.5648,
+    "locationConfidence": "exact",
+    "locationEvidence": "Archie Williams MTB",
+    "topics": [
+      "prep-sports",
+      "mountain-bike"
+    ]
+  },
+  {
+    "id": "prep:san-rafael-athletics:san-rafael-high-athletics-hub:https-sanrafael-srcs-org-athletics",
+    "title": "San Rafael High athletics hub",
+    "link": "https://sanrafael.srcs.org/athletics",
+    "pubDate": "2026-03-02T23:19:39.000Z",
+    "timestamp": 1772493579000,
+    "description": "Official athletics or team hub for a Marin-area school or league program.",
+    "source": "San Rafael Athletics",
+    "category": "prep",
+    "verification": "official",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9752,
+    "lon": -122.5248,
+    "locationConfidence": "exact",
+    "locationEvidence": "San Rafael Athletics",
+    "topics": [
+      "prep-sports",
+      "schedule"
+    ]
+  },
+  {
+    "id": "prep:archie-williams-athletics:archie-williams-athletics-hub:https-archiewilliams-tamdistrict-org-athletics",
+    "title": "Archie Williams athletics hub",
+    "link": "https://archiewilliams.tamdistrict.org/athletics",
+    "pubDate": "2026-03-02T23:19:38.000Z",
+    "timestamp": 1772493578000,
+    "description": "Official athletics or team hub for a Marin-area school or league program.",
+    "source": "Archie Williams Athletics",
+    "category": "prep",
+    "verification": "official",
+    "town": "San Anselmo",
+    "townSlug": "san-anselmo",
+    "lat": 37.9746,
+    "lon": -122.5648,
+    "locationConfidence": "exact",
+    "locationEvidence": "Archie Williams Athletics",
+    "topics": [
+      "prep-sports",
+      "schedule"
+    ]
+  },
+  {
+    "id": "prep:marin-catholic-athletics:marin-catholic-athletic-calendar:https-www-marincatholic-org-athletics-athletic-calendar",
+    "title": "Marin Catholic athletic calendar",
+    "link": "https://www.marincatholic.org/athletics/athletic-calendar",
+    "pubDate": "2026-03-02T23:19:36.000Z",
+    "timestamp": 1772493576000,
+    "description": "Official athletics or team hub for a Marin-area school or league program.",
+    "source": "Marin Catholic Athletics",
+    "category": "prep",
+    "verification": "official",
+    "town": "Kentfield",
+    "townSlug": "kentfield",
+    "lat": 37.9506,
+    "lon": -122.5578,
+    "locationConfidence": "exact",
+    "locationEvidence": "Marin Catholic Athletics",
+    "topics": [
+      "prep-sports",
+      "schedule"
+    ]
+  },
+  {
+    "id": "endurance:dipsea-race:dipsea-race-hub-and-season-updates:https-www-dipsea-org",
+    "title": "Dipsea race hub and season updates",
+    "link": "https://www.dipsea.org/",
+    "pubDate": "2026-03-02T23:19:35.000Z",
+    "timestamp": 1772493575000,
+    "description": "Official Dipsea race site for race information, entry details, and latest news.",
+    "source": "Dipsea Race",
+    "category": "endurance",
+    "verification": "official",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.906,
+    "lon": -122.5491,
+    "locationConfidence": "exact",
+    "locationEvidence": "Dipsea Race",
+    "topics": [
+      "running",
+      "trail-race"
+    ]
+  },
+  {
+    "id": "shows:marin-county-free-library:marin-county-free-library-events:https-marinlibrary-bibliocommons-com-v2-events",
+    "title": "Marin County Free Library events",
+    "link": "https://marinlibrary.bibliocommons.com/v2/events",
+    "pubDate": "2026-03-02T23:19:31.000Z",
+    "timestamp": 1772493571000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Marin County Free Library",
+    "category": "shows",
+    "verification": "community",
+    "lat": 37.9991,
+    "lon": -122.5234,
+    "locationConfidence": "exact",
+    "locationEvidence": "Marin County Free Library",
+    "topics": [
+      "community-events",
+      "library"
+    ]
+  },
+  {
+    "id": "shows:marin-symphony:marin-symphony-tickets-and-events:https-marinsymphony-org-tickets-events",
+    "title": "Marin Symphony tickets and events",
+    "link": "https://marinsymphony.org/tickets-events/",
+    "pubDate": "2026-03-02T23:19:30.000Z",
+    "timestamp": 1772493570000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Marin Symphony",
+    "category": "shows",
+    "verification": "community",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9715,
+    "lon": -122.52,
+    "locationConfidence": "exact",
+    "locationEvidence": "Marin Symphony",
+    "topics": [
+      "music",
+      "classical"
+    ]
+  },
+  {
+    "id": "shows:mill-valley-library:mill-valley-library-calendar:https-millvalleylibrary-gov-calendar-aspx",
+    "title": "Mill Valley Library calendar",
+    "link": "https://millvalleylibrary.gov/calendar.aspx",
+    "pubDate": "2026-03-02T23:19:30.000Z",
+    "timestamp": 1772493570000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Mill Valley Library",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9058,
+    "lon": -122.5478,
+    "locationConfidence": "exact",
+    "locationEvidence": "Mill Valley Library",
+    "topics": [
+      "community-events",
+      "library"
+    ]
+  },
+  {
+    "id": "shows:sausalito-seahorse:sausalito-seahorse-calendar:https-www-sausalitoseahorse-com-calendar",
+    "title": "Sausalito Seahorse calendar",
+    "link": "https://www.sausalitoseahorse.com/calendar/",
+    "pubDate": "2026-03-02T23:19:29.000Z",
+    "timestamp": 1772493569000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Sausalito Seahorse",
+    "category": "shows",
+    "verification": "community",
+    "town": "Sausalito",
+    "townSlug": "sausalito",
+    "lat": 37.8584,
+    "lon": -122.4853,
+    "locationConfidence": "exact",
+    "locationEvidence": "Sausalito Seahorse",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:kwmr:kwmr-events-and-tickets-hub:https-kwmr-org-events",
+    "title": "KWMR events and tickets hub",
+    "link": "https://kwmr.org/events",
+    "pubDate": "2026-03-02T23:19:25.000Z",
+    "timestamp": 1772493565000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "KWMR",
+    "category": "shows",
+    "verification": "community",
+    "town": "Point Reyes Station",
+    "townSlug": "point-reyes",
+    "lat": 38.0699,
+    "lon": -122.8097,
+    "locationConfidence": "exact",
+    "locationEvidence": "KWMR",
+    "topics": [
+      "music",
+      "community-events",
+      "west-marin"
+    ]
+  },
+  {
+    "id": "shows:smiley-s-saloon:smiley-s-saloon-shows-and-supper-club-hub:https-smileyssaloon-com",
+    "title": "Smiley's Saloon shows and supper club hub",
+    "link": "https://smileyssaloon.com/",
+    "pubDate": "2026-03-02T23:19:21.000Z",
+    "timestamp": 1772493561000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Smiley's Saloon",
+    "category": "shows",
+    "verification": "community",
+    "town": "Bolinas",
+    "townSlug": "bolinas",
+    "lat": 37.9096,
+    "lon": -122.6864,
+    "locationConfidence": "exact",
+    "locationEvidence": "Smiley's Saloon",
+    "topics": [
+      "music",
+      "west-marin"
+    ]
+  },
+  {
+    "id": "shows:peri-s-tavern:peri-s-tavern-music-calendar:https-peristavern-com-music-calendar",
+    "title": "Peri's Tavern music calendar",
+    "link": "https://peristavern.com/music-calendar/",
+    "pubDate": "2026-03-02T23:19:20.000Z",
+    "timestamp": 1772493560000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Peri's Tavern",
+    "category": "shows",
+    "verification": "community",
+    "town": "Fairfax",
+    "townSlug": "fairfax",
+    "lat": 37.9871,
+    "lon": -122.5889,
+    "locationConfidence": "exact",
+    "locationEvidence": "Peri's Tavern",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:the-junction:the-junction-music-calendar:https-www-thejunc-com-music-calendar",
+    "title": "The Junction music calendar",
+    "link": "https://www.thejunc.com/music-calendar",
+    "pubDate": "2026-03-02T23:19:20.000Z",
+    "timestamp": 1772493560000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "The Junction",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.906,
+    "lon": -122.5458,
+    "locationConfidence": "exact",
+    "locationEvidence": "The Junction",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "farm:agricultural-institute-of-marin:sunday-marin-farmers-market-every-sunday-8am-1pm-year-round:https-www-agriculturalinstitute-org-sunday-marin",
+    "title": "Sunday Marin farmers market · Every Sunday, 8am - 1pm, Year-round",
+    "link": "https://www.agriculturalinstitute.org/sunday-marin",
+    "pubDate": "2026-03-02T23:15:52.000Z",
+    "timestamp": 1772493352000,
+    "description": "Every Sunday · 8am - 1pm · Year-round at Marin County Civic Center",
+    "source": "Agricultural Institute of Marin",
+    "category": "farm",
+    "verification": "official",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9991,
+    "lon": -122.5234,
+    "locationConfidence": "exact",
+    "locationEvidence": "Agricultural Institute of Marin",
+    "topics": [
+      "farmers-market",
+      "produce"
+    ]
+  },
+  {
+    "id": "outdoors:marin-independent-journal:ruben-gallego-backs-graham-platner-as-democrats-split-over-maine-senate-race:https-www-marinij-com-2026-03-02-us-election-2026-senate-maine",
+    "title": "Ruben Gallego backs Graham Platner as Democrats split over Maine Senate race",
+    "link": "https://www.marinij.com/2026/03/02/us-election-2026-senate-maine/",
+    "pubDate": "2026-03-02T22:59:35.000Z",
+    "timestamp": 1772492375000,
+    "description": "The backing follows endorsements from Bernie Sanders and New Mexico Sen. Martin Heinrich.",
+    "content": "By PATRICK WHITTLE and KIMBERLEE KRUESI PORTLAND, Maine (AP) — Democrats are split over the best way to defeat Republican U.S. Sen. Susan Collins in Maine, a critical race that will help determine whether the party wins back control of the Senate in this year’s midterm elections. Related Articles Trump pushes back on mounting criticism about his Iran war battle plan as conflict spreads National Guard deployment in New Orleans extended for six months House panel releases videos of Bill and Hillary Clinton answering questions about Epstein Supreme Court could loosen law barring marijuana users from owning guns White House attributes redness on Trump’s neck to skin cream but doesn’t say what it’s treating Although Senate Minority Leader Chuck Schumer and other establishment figures have lined up behind Maine Gov. Janet Mills, first-time candidate Graham Platner continues to pick up support. On Monday, the oyster farmer and combat veteran was endorsed by Arizona Sen. Ruben Gallego, considered one of Democrats’ potential candidates in the next presidential race. It was another sign of Platner’s political resiliency after a series of controversies involving old social media posts and a tattoo he covered up because it resembled a Nazi symbol. “Since I met Graham a couple of months ago, and from talking to my non-political friends and Marine Corps buddies from Maine, I know Graham can draw people into politics right now who have been really unhappy with the two parties and feel forgotten,” Gallego said in a statement. “Those are the people we need to come out in an election year, and I believe Graham is the only candidate who can really do it.” Gallego also cited the outbreak of war with Iran , saying the Senate “needs to reflect the experiences and expertise of those who have been the boots on the ground.” The backing follows endorsements from Vermont Sen. Bernie Sanders, an independent who caucuses with Democrats, and New Mexico Sen. Martin Heinrich, another Democrat. Mills’ team said the two-term governor remains better positioned to deliver victory for Democrats in November. “Governor Mills has broad support from leaders who know what it takes to win tough races because they know she is the leader for this moment, has a record of delivering real progress for Maine people, and is the best candidate to defeat Susan Collins in November,” said Mills spokesman Tommy Garcia in a statement. Mills also has the backing of numerous other figures in the Democratic Party, including Michigan Gov. Gretchen Whitmer and Nevada Sen. Catherine Cortez Masto, as well as Maine Attorney General Aaron Frey and three of his predecessors. The dueling endorsements for Platner and Mills are “emblematic of the divisions we’re really seeing nationwide among Democrats,” said Mark Brewer, a professor and chair of the political science department at the University of Maine. He said some factions of the party are willing to take risks on a candidate like Platner in the current unsettled political environment. “Platner is definitely the insurgent candidate. His supporters are not only willing to support that kind of unconventional candidate, but willing to embrace that kind of unconventional candidate,” he said. Platner, 41, and Mills, 78, are vying for the chance to unseat Collins , 73, a five-term incumbent who announced last month that she was running for another term. The Democratic Party needs to net four seats to retake the Senate majority, and they are aiming to do that in Maine, North Carolina, Alaska and Ohio. Platner has gained traction with his anti-establishment image and economic equality message. He’s also faced questions about a skull-and-crossbones tattoo reminiscent of a Nazi symbol . According to Platner, he got the tattoo on his chest during a night of drinking while he was on leave in Croatia. He has maintained that he was unaware until recently that the image had been associated with Nazis, and he has since covered the tattoo with a different design. Mills referenced the controversy Friday, posting on social media that “for what it’s worth, I don’t have any tattoos.” Platner has received renewed scrutiny recently after reposting and then deleting a comment made on social media by Stew Peters, a radio host who has promoted antisemitism, Holocaust denial claims and conspiracy theories. Peters had posted about the looming conflict with Iran during President Donald Trump’s recent State of the Union address, criticizing that the war could have bipartisan support. FILE – Sen. Ruben Gallego D-Ariz., speaks during the \"People's State of the Union\" rally outside of the U.S. Capitol, Feb. 24, 2026, in Washington. (AP Photo/Jose Luis Magana, file) Platner shared Peters’ comment and added a similar sentiment by writing, “As always, there’s one thing that brings Republican and Democratic politicians together: sending other people’s children to die in stupid wars in the Middle East.” He later deleted his post. Separately, Platner has been questioned for being a guest on Nate Cornacchia’s podcast in late January. Cornacchia, a retired Green Beret, has also been accused of sharing antisemitic views. During the Jan. 27 conversation, Cornacchia and Platner largely focused on labor issues and immigration enforcement activities amid the death of Alex Pretti in Minnesota. Gallego is among the Democrats named as possible 2028 presidential contenders. Last fall, he stumped in New Jersey, Virginia and Florida, where he campaigned for Democrats who went on to win their elections. Gallego was first elected to the U.S. House of Representatives in 2014. “I have an immense amount of respect for him and I’m looking forward to joining him as a fellow Marine and combat infantryman in the U.S. Senate,” Platner said in a statement. Kruesi reported from Providence, Rhode Island.",
+    "source": "Marin Independent Journal",
+    "category": "outdoors",
+    "verification": "community",
+    "topics": [
+      "fishing",
+      "local-news"
+    ]
+  },
+  {
+    "id": "shows:hopmonk-novato:hopmonk-novato-live-music-calendar:https-www-hopmonk-com-livemusic",
+    "title": "HopMonk Novato live music calendar",
+    "link": "https://www.hopmonk.com/livemusic",
+    "pubDate": "2026-03-02T20:03:42.000Z",
+    "timestamp": 1772481822000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "HopMonk Novato",
+    "category": "shows",
+    "verification": "community",
+    "town": "Novato",
+    "townSlug": "novato",
+    "lat": 38.1074,
+    "lon": -122.5697,
+    "locationConfidence": "exact",
+    "locationEvidence": "HopMonk Novato",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
     "id": "shows:dance-palace:private-rental:https-dancepalace-org-event-private-rental-8",
     "title": "Private Rental*",
     "link": "https://dancepalace.org/event/private-rental-8/",
@@ -855,420 +1384,6 @@
     ]
   },
   {
-    "id": "outdoors:california-department-of-fish-wildlife:crab-trap-and-season-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-crab",
-    "title": "Crab trap and season regulations",
-    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Crab",
-    "pubDate": "2026-03-02T17:19:13.000Z",
-    "timestamp": 1772471953000,
-    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
-    "source": "California Department of Fish & Wildlife",
-    "category": "outdoors",
-    "verification": "official",
-    "topics": [
-      "fishing",
-      "regulations"
-    ]
-  },
-  {
-    "id": "outdoors:california-department-of-fish-wildlife:ocean-salmon-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-salmon",
-    "title": "Ocean salmon sport fishing regulations",
-    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Salmon",
-    "pubDate": "2026-03-02T17:19:12.000Z",
-    "timestamp": 1772471952000,
-    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
-    "source": "California Department of Fish & Wildlife",
-    "category": "outdoors",
-    "verification": "official",
-    "topics": [
-      "fishing",
-      "regulations"
-    ]
-  },
-  {
-    "id": "farm:point-reyes-farmstead-cheese:point-reyes-farmstead-cheese-journal:https-www-pointreyescheese-com-blogs-news",
-    "title": "Point Reyes Farmstead Cheese journal",
-    "link": "https://www.pointreyescheese.com/blogs/news",
-    "pubDate": "2026-03-02T17:19:11.000Z",
-    "timestamp": 1772471951000,
-    "description": "Official Point Reyes Farmstead Cheese news and seasonal product updates.",
-    "source": "Point Reyes Farmstead Cheese",
-    "category": "farm",
-    "verification": "official",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0764,
-    "lon": -122.8012,
-    "locationConfidence": "exact",
-    "locationEvidence": "Point Reyes Farmstead Cheese",
-    "topics": [
-      "cheese",
-      "farm-market"
-    ]
-  },
-  {
-    "id": "outdoors:california-department-of-fish-wildlife:ocean-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations",
-    "title": "Ocean sport fishing regulations",
-    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations",
-    "pubDate": "2026-03-02T17:19:11.000Z",
-    "timestamp": 1772471951000,
-    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
-    "source": "California Department of Fish & Wildlife",
-    "category": "outdoors",
-    "verification": "official",
-    "topics": [
-      "fishing",
-      "regulations"
-    ]
-  },
-  {
-    "id": "outdoors:california-department-of-fish-wildlife:san-francisco-ocean-fishing-map-and-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-fishing-map-sf",
-    "title": "San Francisco ocean fishing map and regulations",
-    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Fishing-Map/SF",
-    "pubDate": "2026-03-02T17:19:11.000Z",
-    "timestamp": 1772471951000,
-    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
-    "source": "California Department of Fish & Wildlife",
-    "category": "outdoors",
-    "verification": "official",
-    "topics": [
-      "fishing",
-      "regulations"
-    ]
-  },
-  {
-    "id": "prep:marin-highlanders-rugby:marin-highlanders-rugby-club-hub:https-www-marinhighlandersrugby-org",
-    "title": "Marin Highlanders Rugby club hub",
-    "link": "https://www.marinhighlandersrugby.org/",
-    "pubDate": "2026-03-02T17:19:07.000Z",
-    "timestamp": 1772471947000,
-    "description": "Local sports hub for schedules, fixtures, club updates, or season information.",
-    "source": "Marin Highlanders Rugby",
-    "category": "prep",
-    "verification": "community",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9756,
-    "lon": -122.5123,
-    "locationConfidence": "exact",
-    "locationEvidence": "Marin Highlanders Rugby",
-    "topics": [
-      "rugby",
-      "club-sports"
-    ]
-  },
-  {
-    "id": "prep:tamalpais-union-high-school-district:tuhsd-athletics-hub:https-www-tamdistrict-org-students-athletics",
-    "title": "TUHSD athletics hub",
-    "link": "https://www.tamdistrict.org/students/athletics",
-    "pubDate": "2026-03-02T17:18:47.000Z",
-    "timestamp": 1772471927000,
-    "description": "Official athletics or team hub for a Marin-area school or league program.",
-    "source": "Tamalpais Union High School District",
-    "category": "prep",
-    "verification": "official",
-    "lat": 37.9341,
-    "lon": -122.5353,
-    "locationConfidence": "exact",
-    "locationEvidence": "Tamalpais Union High School District",
-    "topics": [
-      "prep-sports",
-      "district"
-    ]
-  },
-  {
-    "id": "prep:archie-williams-mtb:archie-williams-mountain-bike-team-hub:https-www-awmtb-com",
-    "title": "Archie Williams mountain bike team hub",
-    "link": "https://www.awmtb.com/",
-    "pubDate": "2026-03-02T17:18:47.000Z",
-    "timestamp": 1772471927000,
-    "description": "Official athletics or team hub for a Marin-area school or league program.",
-    "source": "Archie Williams MTB",
-    "category": "prep",
-    "verification": "official",
-    "town": "San Anselmo",
-    "townSlug": "san-anselmo",
-    "lat": 37.9746,
-    "lon": -122.5648,
-    "locationConfidence": "exact",
-    "locationEvidence": "Archie Williams MTB",
-    "topics": [
-      "prep-sports",
-      "mountain-bike"
-    ]
-  },
-  {
-    "id": "prep:san-rafael-athletics:san-rafael-high-athletics-hub:https-sanrafael-srcs-org-athletics",
-    "title": "San Rafael High athletics hub",
-    "link": "https://sanrafael.srcs.org/athletics",
-    "pubDate": "2026-03-02T17:18:45.000Z",
-    "timestamp": 1772471925000,
-    "description": "Official athletics or team hub for a Marin-area school or league program.",
-    "source": "San Rafael Athletics",
-    "category": "prep",
-    "verification": "official",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9752,
-    "lon": -122.5248,
-    "locationConfidence": "exact",
-    "locationEvidence": "San Rafael Athletics",
-    "topics": [
-      "prep-sports",
-      "schedule"
-    ]
-  },
-  {
-    "id": "prep:archie-williams-athletics:archie-williams-athletics-hub:https-archiewilliams-tamdistrict-org-athletics",
-    "title": "Archie Williams athletics hub",
-    "link": "https://archiewilliams.tamdistrict.org/athletics",
-    "pubDate": "2026-03-02T17:18:44.000Z",
-    "timestamp": 1772471924000,
-    "description": "Official athletics or team hub for a Marin-area school or league program.",
-    "source": "Archie Williams Athletics",
-    "category": "prep",
-    "verification": "official",
-    "town": "San Anselmo",
-    "townSlug": "san-anselmo",
-    "lat": 37.9746,
-    "lon": -122.5648,
-    "locationConfidence": "exact",
-    "locationEvidence": "Archie Williams Athletics",
-    "topics": [
-      "prep-sports",
-      "schedule"
-    ]
-  },
-  {
-    "id": "prep:marin-catholic-athletics:marin-catholic-athletic-calendar:https-www-marincatholic-org-athletics-athletic-calendar",
-    "title": "Marin Catholic athletic calendar",
-    "link": "https://www.marincatholic.org/athletics/athletic-calendar",
-    "pubDate": "2026-03-02T17:18:42.000Z",
-    "timestamp": 1772471922000,
-    "description": "Official athletics or team hub for a Marin-area school or league program.",
-    "source": "Marin Catholic Athletics",
-    "category": "prep",
-    "verification": "official",
-    "town": "Kentfield",
-    "townSlug": "kentfield",
-    "lat": 37.9506,
-    "lon": -122.5578,
-    "locationConfidence": "exact",
-    "locationEvidence": "Marin Catholic Athletics",
-    "topics": [
-      "prep-sports",
-      "schedule"
-    ]
-  },
-  {
-    "id": "endurance:dipsea-race:dipsea-race-hub-and-season-updates:https-www-dipsea-org",
-    "title": "Dipsea race hub and season updates",
-    "link": "https://www.dipsea.org/",
-    "pubDate": "2026-03-02T17:18:41.000Z",
-    "timestamp": 1772471921000,
-    "description": "Official Dipsea race site for race information, entry details, and latest news.",
-    "source": "Dipsea Race",
-    "category": "endurance",
-    "verification": "official",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.906,
-    "lon": -122.5491,
-    "locationConfidence": "exact",
-    "locationEvidence": "Dipsea Race",
-    "topics": [
-      "running",
-      "trail-race"
-    ]
-  },
-  {
-    "id": "shows:marin-county-free-library:marin-county-free-library-events:https-marinlibrary-bibliocommons-com-v2-events",
-    "title": "Marin County Free Library events",
-    "link": "https://marinlibrary.bibliocommons.com/v2/events",
-    "pubDate": "2026-03-02T17:18:36.000Z",
-    "timestamp": 1772471916000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Marin County Free Library",
-    "category": "shows",
-    "verification": "community",
-    "lat": 37.9991,
-    "lon": -122.5234,
-    "locationConfidence": "exact",
-    "locationEvidence": "Marin County Free Library",
-    "topics": [
-      "community-events",
-      "library"
-    ]
-  },
-  {
-    "id": "shows:sausalito-seahorse:sausalito-seahorse-calendar:https-www-sausalitoseahorse-com-calendar",
-    "title": "Sausalito Seahorse calendar",
-    "link": "https://www.sausalitoseahorse.com/calendar/",
-    "pubDate": "2026-03-02T17:18:34.000Z",
-    "timestamp": 1772471914000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Sausalito Seahorse",
-    "category": "shows",
-    "verification": "community",
-    "town": "Sausalito",
-    "townSlug": "sausalito",
-    "lat": 37.8584,
-    "lon": -122.4853,
-    "locationConfidence": "exact",
-    "locationEvidence": "Sausalito Seahorse",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:marin-symphony:marin-symphony-tickets-and-events:https-marinsymphony-org-tickets-events",
-    "title": "Marin Symphony tickets and events",
-    "link": "https://marinsymphony.org/tickets-events/",
-    "pubDate": "2026-03-02T17:18:34.000Z",
-    "timestamp": 1772471914000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Marin Symphony",
-    "category": "shows",
-    "verification": "community",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9715,
-    "lon": -122.52,
-    "locationConfidence": "exact",
-    "locationEvidence": "Marin Symphony",
-    "topics": [
-      "music",
-      "classical"
-    ]
-  },
-  {
-    "id": "shows:mill-valley-library:mill-valley-library-calendar:https-millvalleylibrary-gov-calendar-aspx",
-    "title": "Mill Valley Library calendar",
-    "link": "https://millvalleylibrary.gov/calendar.aspx",
-    "pubDate": "2026-03-02T17:18:34.000Z",
-    "timestamp": 1772471914000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Mill Valley Library",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.9058,
-    "lon": -122.5478,
-    "locationConfidence": "exact",
-    "locationEvidence": "Mill Valley Library",
-    "topics": [
-      "community-events",
-      "library"
-    ]
-  },
-  {
-    "id": "shows:kwmr:kwmr-events-and-tickets-hub:https-kwmr-org-events",
-    "title": "KWMR events and tickets hub",
-    "link": "https://kwmr.org/events",
-    "pubDate": "2026-03-02T17:18:31.000Z",
-    "timestamp": 1772471911000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "KWMR",
-    "category": "shows",
-    "verification": "community",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0699,
-    "lon": -122.8097,
-    "locationConfidence": "exact",
-    "locationEvidence": "KWMR",
-    "topics": [
-      "music",
-      "community-events",
-      "west-marin"
-    ]
-  },
-  {
-    "id": "shows:the-junction:the-junction-music-calendar:https-www-thejunc-com-music-calendar",
-    "title": "The Junction music calendar",
-    "link": "https://www.thejunc.com/music-calendar",
-    "pubDate": "2026-03-02T17:18:26.000Z",
-    "timestamp": 1772471906000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "The Junction",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.906,
-    "lon": -122.5458,
-    "locationConfidence": "exact",
-    "locationEvidence": "The Junction",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:smiley-s-saloon:smiley-s-saloon-shows-and-supper-club-hub:https-smileyssaloon-com",
-    "title": "Smiley's Saloon shows and supper club hub",
-    "link": "https://smileyssaloon.com/",
-    "pubDate": "2026-03-02T17:18:26.000Z",
-    "timestamp": 1772471906000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Smiley's Saloon",
-    "category": "shows",
-    "verification": "community",
-    "town": "Bolinas",
-    "townSlug": "bolinas",
-    "lat": 37.9096,
-    "lon": -122.6864,
-    "locationConfidence": "exact",
-    "locationEvidence": "Smiley's Saloon",
-    "topics": [
-      "music",
-      "west-marin"
-    ]
-  },
-  {
-    "id": "shows:peri-s-tavern:peri-s-tavern-music-calendar:https-peristavern-com-music-calendar",
-    "title": "Peri's Tavern music calendar",
-    "link": "https://peristavern.com/music-calendar/",
-    "pubDate": "2026-03-02T17:18:25.000Z",
-    "timestamp": 1772471905000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Peri's Tavern",
-    "category": "shows",
-    "verification": "community",
-    "town": "Fairfax",
-    "townSlug": "fairfax",
-    "lat": 37.9871,
-    "lon": -122.5889,
-    "locationConfidence": "exact",
-    "locationEvidence": "Peri's Tavern",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "farm:agricultural-institute-of-marin:point-reyes-farmers-market-every-saturday-9am-2pm-may-2-october-10-2026:https-www-agriculturalinstitute-org-point-reyes",
-    "title": "Point Reyes farmers market · Every Saturday, 9am–2pm, May 2 – October 10, 2026",
-    "link": "https://www.agriculturalinstitute.org/point-reyes",
-    "pubDate": "2026-03-02T16:42:12.000Z",
-    "timestamp": 1772469732000,
-    "description": "Every Saturday · 9am–2pm · May 2 – October 10, 2026 at Toby’s Feed Barn",
-    "source": "Agricultural Institute of Marin",
-    "category": "farm",
-    "verification": "official",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0702,
-    "lon": -122.8105,
-    "locationConfidence": "exact",
-    "locationEvidence": "Agricultural Institute of Marin",
-    "topics": [
-      "farmers-market",
-      "produce"
-    ]
-  },
-  {
     "id": "shows:san-rafael-elks:san-rafael-elks-lodge-calendar:https-www-elks1108-org-calendar",
     "title": "San Rafael Elks Lodge calendar",
     "link": "https://www.elks1108.org/calendar",
@@ -1287,42 +1402,6 @@
     "topics": [
       "community-events",
       "fraternal"
-    ]
-  },
-  {
-    "id": "farm:agricultural-institute-of-marin:rollin-root-mobile-market-schedule:https-www-agriculturalinstitute-org-rollin-root",
-    "title": "Rollin' Root mobile market schedule",
-    "link": "https://www.agriculturalinstitute.org/rollin-root",
-    "pubDate": "2026-03-02T05:17:33.000Z",
-    "timestamp": 1772428653000,
-    "description": "Official market schedule from the Agricultural Institute of Marin.",
-    "source": "Agricultural Institute of Marin",
-    "category": "farm",
-    "verification": "official",
-    "topics": [
-      "farmers-market",
-      "produce"
-    ]
-  },
-  {
-    "id": "farm:agricultural-institute-of-marin:san-rafael-summer-market-schedule:https-www-agriculturalinstitute-org-san-rafael-summer-1",
-    "title": "San Rafael Summer market schedule",
-    "link": "https://www.agriculturalinstitute.org/san-rafael-summer-1",
-    "pubDate": "2026-03-02T05:17:33.000Z",
-    "timestamp": 1772428653000,
-    "description": "Official market schedule from the Agricultural Institute of Marin.",
-    "source": "Agricultural Institute of Marin",
-    "category": "farm",
-    "verification": "official",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9735,
-    "lon": -122.5311,
-    "locationConfidence": "exact",
-    "locationEvidence": "Agricultural Institute of Marin",
-    "topics": [
-      "farmers-market",
-      "produce"
     ]
   },
   {
@@ -1368,48 +1447,6 @@
     ]
   },
   {
-    "id": "farm:agricultural-institute-of-marin:thursday-marin-farmers-market-every-thursday-8am-1pm-year-round:https-www-agriculturalinstitute-org-thursday-marin",
-    "title": "Thursday Marin farmers market · Every Thursday, 8am - 1pm, Year-round",
-    "link": "https://www.agriculturalinstitute.org/thursday-marin",
-    "pubDate": "2026-03-02T02:33:53.000Z",
-    "timestamp": 1772418833000,
-    "description": "Every Thursday · 8am - 1pm · Year-round at Marin County Civic Center",
-    "source": "Agricultural Institute of Marin",
-    "category": "farm",
-    "verification": "official",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9991,
-    "lon": -122.5234,
-    "locationConfidence": "exact",
-    "locationEvidence": "Agricultural Institute of Marin",
-    "topics": [
-      "farmers-market",
-      "produce"
-    ]
-  },
-  {
-    "id": "farm:agricultural-institute-of-marin:sunday-marin-farmers-market-every-sunday-8am-1pm-year-round:https-www-agriculturalinstitute-org-sunday-marin",
-    "title": "Sunday Marin farmers market · Every Sunday, 8am - 1pm, Year-round",
-    "link": "https://www.agriculturalinstitute.org/sunday-marin",
-    "pubDate": "2026-03-02T01:42:50.000Z",
-    "timestamp": 1772415770000,
-    "description": "Every Sunday · 8am - 1pm · Year-round at Marin County Civic Center",
-    "source": "Agricultural Institute of Marin",
-    "category": "farm",
-    "verification": "official",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9991,
-    "lon": -122.5234,
-    "locationConfidence": "exact",
-    "locationEvidence": "Agricultural Institute of Marin",
-    "topics": [
-      "farmers-market",
-      "produce"
-    ]
-  },
-  {
     "id": "shows:sweetwater-music-hall:bread-roses-spring-benefit-concert-with-ron-artis-ii-and-rainbow-girls:https-sweetwatermusichall-org-event-bread-roses-spring-benefit-concert-with-ron-artis-ii-and-rainbow-girls",
     "title": "Bread & Roses Spring Benefit Concert with Ron Artis II and Rainbow Girls",
     "link": "https://sweetwatermusichall.org/event/bread-roses-spring-benefit-concert-with-ron-artis-ii-and-rainbow-girls/",
@@ -1449,29 +1486,6 @@
     "topics": [
       "music",
       "shows"
-    ]
-  },
-  {
-    "id": "shows:dance-palace:west-marin-improvisational-contact-jam:https-dancepalace-org-event-west-marin-improvisational-contact-jam-2-2026-03-01",
-    "title": "West Marin Improvisational Contact Jam*",
-    "link": "https://dancepalace.org/event/west-marin-improvisational-contact-jam-2/2026-03-01/",
-    "pubDate": "2026-03-01T19:00:00.000Z",
-    "timestamp": 1772391600000,
-    "description": "The West Marin Contact Improvisation Jam (WMCIJ)— Every first Sunday of the month from 11am-1:30pm. Please check calendar for exceptions! $15-$20. After a period of little play and touch, the WMCJ offers a much needed o…",
-    "content": "Main Hall · Maica Folch · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
-    "source": "Dance Palace",
-    "category": "shows",
-    "verification": "community",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0699,
-    "lon": -122.8089,
-    "locationConfidence": "exact",
-    "locationEvidence": "Dance Palace",
-    "topics": [
-      "music",
-      "community-events",
-      "west-marin"
     ]
   },
   {
@@ -1531,27 +1545,6 @@
     "topics": [
       "rowing",
       "club-sports"
-    ]
-  },
-  {
-    "id": "shows:hopmonk-novato:hopmonk-novato-live-music-calendar:https-www-hopmonk-com-livemusic",
-    "title": "HopMonk Novato live music calendar",
-    "link": "https://www.hopmonk.com/livemusic",
-    "pubDate": "2026-02-27T21:25:41.000Z",
-    "timestamp": 1772227541000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "HopMonk Novato",
-    "category": "shows",
-    "verification": "community",
-    "town": "Novato",
-    "townSlug": "novato",
-    "lat": 38.1074,
-    "lon": -122.5697,
-    "locationConfidence": "exact",
-    "locationEvidence": "HopMonk Novato",
-    "topics": [
-      "music",
-      "shows"
     ]
   },
   {
