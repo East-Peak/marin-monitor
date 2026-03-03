@@ -14,7 +14,8 @@ import type {
 
 const AIRPORTS = [
 	{ code: 'SFO', icao: 'KSFO', name: 'San Francisco Intl' },
-	{ code: 'OAK', icao: 'KOAK', name: 'Oakland Intl' }
+	{ code: 'OAK', icao: 'KOAK', name: 'Oakland Intl' },
+	{ code: 'STS', icao: 'KSTS', name: 'Santa Rosa (Schulz–Sonoma Co)' }
 ] as const;
 
 const FAA_NAS_URL = 'https://nasstatus.faa.gov/api/airport-events';
@@ -271,7 +272,7 @@ async function fetchTsa(airportCode: string): Promise<TsaWaitTime[] | null> {
 // --- Main handler ---
 
 export const GET: RequestHandler = async () => {
-	const [faaResult, metarResult, tafResult, tsaSfoResult, tsaOakResult] =
+	const [faaResult, metarResult, tafResult, tsaSfoResult, tsaOakResult, tsaStsResult] =
 		await Promise.allSettled([
 			fetchWithTimeout(FAA_NAS_URL, { headers: { Accept: 'application/json' } }, 10000)
 				.then((r) => (r.ok ? r.json() : []))
@@ -283,7 +284,8 @@ export const GET: RequestHandler = async () => {
 				.then((r) => (r.ok ? r.json() : []))
 				.catch(() => []),
 			fetchTsa('SFO'),
-			fetchTsa('OAK')
+			fetchTsa('OAK'),
+			fetchTsa('STS')
 		]);
 
 	const faaEvents = (faaResult.status === 'fulfilled' ? faaResult.value : []) as FaaEvent[];
@@ -291,8 +293,9 @@ export const GET: RequestHandler = async () => {
 	const tafData = (tafResult.status === 'fulfilled' ? tafResult.value : []) as TafForecast[];
 	const tsaSfo = tsaSfoResult.status === 'fulfilled' ? tsaSfoResult.value : null;
 	const tsaOak = tsaOakResult.status === 'fulfilled' ? tsaOakResult.value : null;
+	const tsaSts = tsaStsResult.status === 'fulfilled' ? tsaStsResult.value : null;
 
-	const tsaByCode: Record<string, TsaWaitTime[] | null> = { SFO: tsaSfo, OAK: tsaOak };
+	const tsaByCode: Record<string, TsaWaitTime[] | null> = { SFO: tsaSfo, OAK: tsaOak, STS: tsaSts };
 
 	const airports: AirportStatus[] = AIRPORTS.map((apt) => {
 		const faa = parseFaaEvents(faaEvents, apt.code);
