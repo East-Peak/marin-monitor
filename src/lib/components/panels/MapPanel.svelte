@@ -176,7 +176,7 @@
 <Panel id="map" title="Marin Map" draggable={false}>
 	{#snippet actions()}
 		{#if $selectedTown}
-			<button class="clear-filter" onclick={() => mapStore.selectTown(null)}>
+			<button class="clear-filter" onclick={clearTownFilter}>
 				{selectedTownName} &times;
 			</button>
 		{/if}
