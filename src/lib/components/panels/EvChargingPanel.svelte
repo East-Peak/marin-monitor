@@ -5,17 +5,12 @@
 	import { evChargingStore } from '$lib/stores/ev-charging';
 	import { townFilter, selectedTownObj } from '$lib/stores/town-filter';
 	import { findNearestTown } from '$lib/geo';
-	import { select } from 'd3-selection';
-	import { scaleLinear } from 'd3-scale';
-	import { area, line, curveMonotoneX } from 'd3-shape';
 	import type {
 		EvChargingData,
-		EvChargingSnapshot,
 		ChargingStation,
 		ConnectorType
 	} from '$lib/types/ev-charging';
 
-	type HoverState = { index: number; x: number } | null;
 	type SummaryCard = {
 		label: string;
 		value: string;
@@ -23,17 +18,10 @@
 		tone?: 'default' | 'positive' | 'warning';
 	};
 
-	const CHART_LEFT = 44;
-	const CHART_RIGHT = 10;
-	const ACCENT = '#a855f7';
-
 	let data = $state<EvChargingData>({ current: null, history: [] });
-	let chartSvg = $state<SVGSVGElement>(undefined!);
 	let dataLoading = $state(false);
-	let hoverState = $state<HoverState>(null);
 
 	const current = $derived(data.current);
-	const history = $derived(data.history.filter((h) => h.stationCount > 0));
 
 	// Filter stations by selected town (proximity match)
 	const filteredStations = $derived.by<ChargingStation[]>(() => {
@@ -119,143 +107,6 @@
 		];
 	});
 
-	function formatDate(iso: string): string {
-		return new Date(iso).toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric'
-		});
-	}
-
-	function updateHover(event: PointerEvent) {
-		if (history.length === 0) return;
-		const target = event.currentTarget as SVGSVGElement;
-		const rect = target.getBoundingClientRect();
-		const innerWidth = rect.width - CHART_LEFT - CHART_RIGHT;
-		const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - CHART_LEFT));
-		const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
-		const index = Math.max(
-			0,
-			Math.min(history.length - 1, Math.round(ratio * (history.length - 1)))
-		);
-		const pointX =
-			CHART_LEFT + (innerWidth * index) / Math.max(history.length - 1, 1);
-		hoverState = { index, x: pointX };
-	}
-
-	function clearHover() {
-		hoverState = null;
-	}
-
-	function drawChart() {
-		if (!chartSvg || history.length < 2) return;
-
-		const svg = select(chartSvg);
-		svg.selectAll('*').remove();
-
-		const width = chartSvg.clientWidth;
-		const height = 200;
-		const margin = { top: 12, right: CHART_RIGHT, bottom: 24, left: CHART_LEFT };
-		const innerW = width - margin.left - margin.right;
-		const innerH = height - margin.top - margin.bottom;
-
-		const counts = history.map((h) => h.stationCount);
-		const yMin = Math.min(...counts) * 0.95;
-		const yMax = Math.max(...counts) * 1.05;
-
-		const x = scaleLinear()
-			.domain([0, history.length - 1])
-			.range([0, innerW]);
-		const y = scaleLinear().domain([yMin, yMax]).range([innerH, 0]);
-
-		const g = svg
-			.attr('width', width)
-			.attr('height', height)
-			.append('g')
-			.attr('transform', `translate(${margin.left},${margin.top})`);
-
-		const areaGen = area<EvChargingSnapshot>()
-			.x((_d, i) => x(i))
-			.y0(innerH)
-			.y1((d) => y(d.stationCount))
-			.curve(curveMonotoneX);
-
-		g.append('path')
-			.datum(history)
-			.attr('d', areaGen)
-			.attr('fill', 'rgba(168, 85, 247, 0.1)');
-
-		const lineGen = line<EvChargingSnapshot>()
-			.x((_d, i) => x(i))
-			.y((d) => y(d.stationCount))
-			.curve(curveMonotoneX);
-
-		g.append('path')
-			.datum(history)
-			.attr('d', lineGen)
-			.attr('fill', 'none')
-			.attr('stroke', ACCENT)
-			.attr('stroke-width', 1.5);
-
-		g.selectAll('.dot')
-			.data(history)
-			.enter()
-			.append('circle')
-			.attr('cx', (_d, i) => x(i))
-			.attr('cy', (d) => y(d.stationCount))
-			.attr('r', 2.2)
-			.attr('fill', ACCENT);
-
-		if (hoverState) {
-			g.append('line')
-				.attr('x1', x(hoverState.index))
-				.attr('x2', x(hoverState.index))
-				.attr('y1', 0)
-				.attr('y2', innerH)
-				.attr('stroke', 'rgba(255,255,255,0.35)')
-				.attr('stroke-width', 1)
-				.attr('stroke-dasharray', '3,3');
-
-			g.append('circle')
-				.attr('cx', x(hoverState.index))
-				.attr('cy', y(history[hoverState.index].stationCount))
-				.attr('r', 4)
-				.attr('fill', ACCENT)
-				.attr('stroke', '#111')
-				.attr('stroke-width', 1);
-		}
-
-		// Y axis labels
-		g.append('text')
-			.attr('x', -4)
-			.attr('y', y(yMax))
-			.attr('text-anchor', 'end')
-			.attr('dominant-baseline', 'middle')
-			.attr('fill', '#888')
-			.attr('font-size', '7px')
-			.text(String(Math.round(yMax)));
-
-		g.append('text')
-			.attr('x', -4)
-			.attr('y', y(yMin))
-			.attr('text-anchor', 'end')
-			.attr('dominant-baseline', 'middle')
-			.attr('fill', '#888')
-			.attr('font-size', '7px')
-			.text(String(Math.round(yMin)));
-
-		// X axis labels
-		const labelIndices = [0, Math.floor(history.length / 2), history.length - 1];
-		for (const idx of labelIndices) {
-			g.append('text')
-				.attr('x', x(idx))
-				.attr('y', innerH + 14)
-				.attr('text-anchor', 'middle')
-				.attr('fill', '#666')
-				.attr('font-size', '7px')
-				.text(formatDate(history[idx].timestamp));
-		}
-	}
-
 	function connectorLabel(type: ConnectorType): string {
 		switch (type) {
 			case 'J1772':
@@ -276,16 +127,6 @@
 	}
 
 	onMount(() => {
-		let resizeTimer: ReturnType<typeof setTimeout>;
-		function handleResize() {
-			clearTimeout(resizeTimer);
-			resizeTimer = setTimeout(() => {
-				if (history.length > 1 && chartSvg) drawChart();
-			}, 150);
-		}
-
-		window.addEventListener('resize', handleResize);
-
 		void (async () => {
 			dataLoading = true;
 			try {
@@ -295,14 +136,6 @@
 				dataLoading = false;
 			}
 		})();
-
-		return () => {
-			window.removeEventListener('resize', handleResize);
-		};
-	});
-
-	$effect(() => {
-		if (history.length > 1 && chartSvg) drawChart();
 	});
 </script>
 
@@ -328,35 +161,9 @@
 		</div>
 	{/if}
 
-	{#if history.length > 1}
-		<div class="chart-section">
-			<div class="section-label">Station Count Trend</div>
-			<div class="chart-wrap">
-				<svg
-					class="chart-svg"
-					bind:this={chartSvg}
-					onpointermove={updateHover}
-					onpointerleave={clearHover}
-				></svg>
-				{#if hoverState}
-					<div class="chart-tooltip" style={`left:${Math.max(20, hoverState.x - 80)}px`}>
-						<div class="tooltip-time">{formatDate(history[hoverState.index].timestamp)}</div>
-						<div class="tooltip-line">
-							{history[hoverState.index].stationCount} stations
-						</div>
-						<div class="tooltip-line">
-							{history[hoverState.index].dcFastStationCount} DC Fast
-						</div>
-						<div class="tooltip-line">
-							{history[hoverState.index].totalPorts} total ports
-						</div>
-					</div>
-				{/if}
-			</div>
-		</div>
-	{:else if dataLoading}
+	{#if dataLoading && !current}
 		<div class="chart-loading">Loading EV charging data...</div>
-	{:else if !current}
+	{:else if !current && !dataLoading}
 		<div class="empty-state">EV charging data will appear after the first sync cycle.</div>
 	{/if}
 
@@ -464,12 +271,6 @@
 		margin-top: 0.18rem;
 	}
 
-	.chart-section {
-		margin-bottom: 0.65rem;
-		padding-bottom: 0.65rem;
-		border-bottom: 1px solid var(--border);
-	}
-
 	.section-label {
 		font-size: 0.55rem;
 		font-weight: 600;
@@ -477,39 +278,6 @@
 		letter-spacing: 0.05em;
 		color: var(--text-muted);
 		margin-bottom: 0.3rem;
-	}
-
-	.chart-svg {
-		width: 100%;
-		height: 200px;
-		display: block;
-	}
-
-	.chart-wrap {
-		position: relative;
-	}
-
-	.chart-tooltip {
-		position: absolute;
-		top: 0.25rem;
-		z-index: 2;
-		min-width: 124px;
-		padding: 0.35rem 0.45rem;
-		background: rgba(8, 8, 8, 0.95);
-		border: 1px solid rgba(255, 255, 255, 0.14);
-		pointer-events: none;
-		font-size: 0.55rem;
-		line-height: 1.4;
-	}
-
-	.tooltip-time {
-		color: var(--text);
-		font-weight: 700;
-		margin-bottom: 0.14rem;
-	}
-
-	.tooltip-line {
-		color: var(--text-dim);
 	}
 
 	.market-summary {
