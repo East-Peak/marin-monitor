@@ -197,12 +197,25 @@ export async function scrapeEvCharging(): Promise<EvChargingSnapshot> {
 	// Flatten and dedup by station ID
 	const seenIds = new Set<string>();
 	const stations: ChargingStation[] = [];
+	const failures: string[] = [];
 
-	for (const result of tileResults) {
+	for (let i = 0; i < tileResults.length; i++) {
+		const result = tileResults[i];
 		if (result.status !== 'fulfilled') {
-			console.warn('[ev-charging] Tile fetch failed:', result.reason);
+			const msg = `Tile ${TILE_CENTERS[i].label} failed: ${result.reason}`;
+			console.error('[ev-charging]', msg);
+			failures.push(msg);
 			continue;
 		}
+		console.log(`[ev-charging] Tile ${TILE_CENTERS[i].label}: ${result.value.length} stations`);
+	}
+
+	if (failures.length === tileResults.length) {
+		throw new Error(`All NREL tile fetches failed: ${failures.join('; ')}`);
+	}
+
+	for (const result of tileResults) {
+		if (result.status !== 'fulfilled') continue;
 		for (const raw of result.value) {
 			const station = toChargingStation(raw);
 			if (!station || seenIds.has(station.stationId)) continue;
