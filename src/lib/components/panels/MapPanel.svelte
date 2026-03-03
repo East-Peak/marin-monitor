@@ -46,7 +46,7 @@
 
 	let inspectorState = $state<InspectorState | null>(null);
 	let featureInspector = $state<{
-		kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station' | 'ev-charging-station';
+		kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station' | 'ev-charging-station' | 'airport';
 		title: string;
 		subtitle?: string;
 		description?: string;
@@ -138,7 +138,7 @@
 	}
 
 	function handleFeatureClick(feature: {
-		kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station' | 'ev-charging-station';
+		kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station' | 'ev-charging-station' | 'airport';
 		title: string;
 		subtitle?: string;
 		description?: string;

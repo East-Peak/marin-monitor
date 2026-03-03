@@ -104,6 +104,29 @@ export const LANDMARKS: Landmark[] = [
 ];
 
 /**
+ * Airport pins for SFO & OAK status overlay
+ */
+export interface AirportPin {
+	code: string;
+	name: string;
+	lat: number;
+	lon: number;
+}
+
+export const AIRPORT_PINS: AirportPin[] = [
+	{ code: 'SFO', name: 'San Francisco Intl', lat: 37.6213, lon: -122.379 },
+	{ code: 'OAK', name: 'Oakland Intl', lat: 37.7213, lon: -122.2208 }
+];
+
+export const AIRPORT_STATUS_COLORS: Record<string, string> = {
+	'on-time': '#22c55e',
+	delays: '#f59e0b',
+	'ground-delay': '#f97316',
+	'ground-stop': '#ef4444',
+	closed: '#6b7280'
+};
+
+/**
  * NWS weather zone for Marin
  */
 export const NWS_ZONE = 'CAZ006'; // Marin County coast and valleys

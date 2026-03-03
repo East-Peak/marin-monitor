@@ -9,7 +9,9 @@
 	import { currentGasStations } from '$lib/stores/gas-prices';
 	import { currentChargingStations } from '$lib/stores/ev-charging';
 	import { MARIN_TOWNS, LAYER_COLORS, MARIN_BOUNDS } from '$lib/config';
-	import { FIRE_ZONES, LANDMARKS } from '$lib/config/map';
+	import { FIRE_ZONES, LANDMARKS, AIRPORT_PINS, AIRPORT_STATUS_COLORS } from '$lib/config/map';
+	import { fetchAirportStatus } from '$lib/api/marin/airport-status';
+	import type { AirportStatus } from '$lib/types/airport';
 	import { MAPBOX_TOKEN } from '$lib/config/api';
 	import { findNearestTown } from '$lib/geo/proximity';
 	import type { NewsItem, MapLayer } from '$lib/types';
@@ -34,7 +36,7 @@
 		onTownHover?: (townSlug: string | null) => void;
 		onPinClick?: (itemId: string) => void;
 		onFeatureClick?: (feature: {
-			kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station' | 'ev-charging-station';
+			kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station' | 'ev-charging-station' | 'airport';
 			title: string;
 			subtitle?: string;
 			description?: string;
@@ -388,6 +390,28 @@
 			}
 		});
 
+		// Airport status pins source
+		map.addSource('airports', {
+			type: 'geojson',
+			data: {
+				type: 'FeatureCollection',
+				features: AIRPORT_PINS.map((ap) => ({
+					type: 'Feature' as const,
+					properties: {
+						code: ap.code,
+						name: ap.name,
+						color: '#6b7280',
+						statusLabel: 'Loading…',
+						weatherSummary: ''
+					},
+					geometry: {
+						type: 'Point' as const,
+						coordinates: [ap.lon, ap.lat]
+					}
+				}))
+			}
+		});
+
 		// Gas stations source
 		map.addSource('gas-stations', {
 			type: 'geojson',
@@ -524,6 +548,40 @@
 				'text-color': 'rgba(255, 255, 255, 0.25)',
 				'text-halo-color': 'rgba(10, 10, 10, 0.8)',
 				'text-halo-width': 1
+			}
+		});
+
+		// Airport status pins (larger dots, color from status)
+		map.addLayer({
+			id: 'airports-layer',
+			type: 'circle',
+			source: 'airports',
+			paint: {
+				'circle-radius': 7,
+				'circle-color': ['get', 'color'],
+				'circle-opacity': 0.9,
+				'circle-stroke-width': 1.5,
+				'circle-stroke-color': 'rgba(255, 255, 255, 0.8)'
+			}
+		});
+
+		// Airport labels (code above dot)
+		map.addLayer({
+			id: 'airports-label',
+			type: 'symbol',
+			source: 'airports',
+			layout: {
+				'text-field': ['get', 'code'],
+				'text-size': 10,
+				'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+				'text-offset': [0, -1.4],
+				'text-anchor': 'bottom',
+				'text-optional': true
+			},
+			paint: {
+				'text-color': ['get', 'color'],
+				'text-halo-color': 'rgba(10, 10, 10, 0.9)',
+				'text-halo-width': 1.5
 			}
 		});
 
@@ -836,6 +894,29 @@
 					description: url ? `Details: ${url}` : undefined,
 					source: String(feature?.properties?.source ?? 'CAL FIRE')
 				});
+			});
+
+			map.on('click', 'airports-layer', (e: MapLayerMouseEvent) => {
+				const feature = e.features?.[0];
+				const code = String(feature?.properties?.code ?? '');
+				const name = String(feature?.properties?.name ?? 'Airport');
+				const statusLabel = String(feature?.properties?.statusLabel ?? 'Unknown');
+				const weatherSummary = String(feature?.properties?.weatherSummary ?? '');
+				onFeatureClick?.({
+					kind: 'airport',
+					title: `${code} — ${name}`,
+					subtitle: statusLabel,
+					description: weatherSummary || undefined,
+					source: 'FAA / Aviation Weather'
+				});
+			});
+
+			map.on('mouseenter', 'airports-layer', () => {
+				map.getCanvas().style.cursor = 'pointer';
+			});
+
+			map.on('mouseleave', 'airports-layer', () => {
+				map.getCanvas().style.cursor = '';
 			});
 
 			map.on('mouseenter', 'gas-stations-layer', () => {
@@ -1161,6 +1242,60 @@
 		applyTrafficVisibility(map);
 	}
 
+	async function refreshAirportStatus(map: MapLibreMap) {
+		if (!map.getSource('airports')) return;
+		try {
+			const data = await fetchAirportStatus();
+			if (!data?.airports) return;
+			const statusMap = new Map<string, AirportStatus>();
+			for (const ap of data.airports) statusMap.set(ap.code, ap);
+
+			const features: GeoJSON.Feature[] = AIRPORT_PINS.map((pin) => {
+				const info = statusMap.get(pin.code);
+				const status = info?.status ?? 'on-time';
+				const color = AIRPORT_STATUS_COLORS[status] ?? '#6b7280';
+
+				const statusLabel =
+					status === 'on-time'
+						? 'On Time'
+						: status === 'delays'
+							? 'Delays'
+							: status === 'ground-delay'
+								? 'Ground Delay'
+								: status === 'ground-stop'
+									? 'Ground Stop'
+									: status === 'closed'
+										? 'Closed'
+										: status;
+
+				let weatherSummary = '';
+				if (info?.weather) {
+					const w = info.weather;
+					const parts: string[] = [w.fltCat];
+					parts.push(`${w.visibility} vis`);
+					if (w.ceiling !== null) parts.push(`Ceiling ${w.ceiling} ft`);
+					parts.push(`${w.windDir}° ${w.windSpeed}${w.windGust ? `g${w.windGust}` : ''} kt`);
+					if (w.fogRisk) parts.push('Fog Risk');
+					weatherSummary = parts.join(' · ');
+				}
+
+				return {
+					type: 'Feature' as const,
+					properties: { code: pin.code, name: pin.name, color, statusLabel, weatherSummary },
+					geometry: {
+						type: 'Point' as const,
+						coordinates: [pin.lon, pin.lat]
+					}
+				};
+			});
+
+			const source = map.getSource('airports') as GeoJSONSource;
+			source.setData({ type: 'FeatureCollection', features });
+		} catch {
+			// Silent fail: airport pins are additive
+		}
+	}
+
 	let unsubscribeNews: (() => void) | null = null;
 	let unsubscribeMap: (() => void) | null = null;
 	let unsubscribeGas: (() => void) | null = null;
@@ -1176,12 +1311,14 @@
 			setupSources(map);
 			updateData(map);
 			void refreshTrafficEvents(map);
+			void refreshAirportStatus(map);
 
 			removeStyleLoadListener?.();
 			const handleStyleLoad = () => {
 				setupSources(map);
 				updateData(map);
 				void refreshTrafficEvents(map);
+				void refreshAirportStatus(map);
 			};
 			map.on('style.load', handleStyleLoad);
 			removeStyleLoadListener = () => map.off('style.load', handleStyleLoad);
