@@ -387,7 +387,7 @@
 
 <Panel id="housing" title="Housing" loading={$housingNews.loading} error={$housingNews.error}>
 	{#if $townFilter}
-		<div class="county-badge">County-wide data</div>
+		<div class="county-badge">Showing Marin County — no per-town data available</div>
 	{/if}
 	{#if latestMetrics}
 		<div class="market-snapshot">

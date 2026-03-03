@@ -6,7 +6,7 @@
  * getLocationForTown — map a town slug to the best LocationPreset for weather/tides
  */
 
-import { MARIN_TOWNS } from '$lib/config/towns';
+import { MARIN_TOWNS, TOWN_BY_SLUG } from '$lib/config/towns';
 import {
 	LOCATION_PRESETS,
 	DEFAULT_LOCATION_ID,
@@ -74,10 +74,25 @@ for (const town of MARIN_TOWNS) {
 
 /**
  * Get the best LocationPreset for a given town slug.
+ * Uses the town's own coordinates and name for accurate weather,
+ * but keeps the nearest preset's tide station (fixed NOAA locations).
  * Returns the central-marin default when townSlug is null.
  */
 export function getLocationForTown(townSlug: string | null): LocationPreset {
 	if (!townSlug) return getLocationById(DEFAULT_LOCATION_ID);
+	const town = TOWN_BY_SLUG[townSlug];
+	if (!town) return getLocationById(DEFAULT_LOCATION_ID);
+
+	// Get nearest preset for its tide station only
 	const presetId = townLocationMap[townSlug] ?? DEFAULT_LOCATION_ID;
-	return getLocationById(presetId);
+	const preset = getLocationById(presetId);
+
+	return {
+		id: town.slug,
+		name: town.name,
+		lat: town.lat,
+		lon: town.lon,
+		tideStation: preset.tideStation,
+		tideStationName: preset.tideStationName
+	};
 }
