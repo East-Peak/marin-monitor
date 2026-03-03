@@ -648,9 +648,11 @@
 						</div>
 					{/if}
 
+					{#if isPanelVisible('conditions')}
 					<div class="signal-card signal-conditions">
 						<ConditionsPanel />
 					</div>
+				{/if}
 
 					{#if isPanelVisible('narrative') || isPanelVisible('correlation')}
 						<div class="signal-card signal-signals">

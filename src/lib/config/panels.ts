@@ -121,6 +121,7 @@ export const DEFAULT_PANEL_ORDER: PanelId[] = [
 	'safety',
 	'weather',
 	'cameras',
+	'conditions',
 	'civic',
 	'outdoors',
 	'housing',

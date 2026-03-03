@@ -25,21 +25,31 @@ export const PRESETS: Record<string, Preset> = {
 		name: 'Safety First',
 		icon: '!',
 		description: 'Fire alerts, weather, road closures, and emergency info',
-		panels: ['map', 'pulse', 'safety', 'weather', 'cameras', 'local-wire']
+		panels: ['map', 'pulse', 'safety', 'weather', 'cameras', 'local-wire', 'conditions']
 	},
 	'local-nerd': {
 		id: 'local-nerd',
 		name: 'Local Nerd',
 		icon: '#',
 		description: 'All the civic data, meetings, and housing numbers',
-		panels: ['map', 'pulse', 'local-wire', 'civic', 'housing', 'correlation', 'narrative']
+		panels: [
+			'map',
+			'pulse',
+			'local-wire',
+			'civic',
+			'housing',
+			'gas-prices',
+			'ev-charging',
+			'correlation',
+			'narrative'
+		]
 	},
 	outdoor: {
 		id: 'outdoor',
 		name: 'Trail & Tide',
 		icon: '^',
 		description: 'Weather, tides, trails, and outdoor conditions',
-		panels: ['map', 'pulse', 'weather', 'cameras', 'outdoors', 'safety']
+		panels: ['map', 'pulse', 'weather', 'cameras', 'outdoors', 'conditions', 'safety']
 	},
 	everything: {
 		id: 'everything',
@@ -53,9 +63,12 @@ export const PRESETS: Record<string, Preset> = {
 			'safety',
 			'weather',
 			'cameras',
+			'conditions',
 			'civic',
 			'outdoors',
 			'housing',
+			'gas-prices',
+			'ev-charging',
 			'cycling',
 			'shows',
 			'prep',
