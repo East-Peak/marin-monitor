@@ -116,7 +116,8 @@ export interface AirportPin {
 export const AIRPORT_PINS: AirportPin[] = [
 	{ code: 'SFO', name: 'San Francisco Intl', lat: 37.6213, lon: -122.379 },
 	{ code: 'OAK', name: 'Oakland Intl', lat: 37.7213, lon: -122.2208 },
-	{ code: 'STS', name: 'Santa Rosa (Schulz–Sonoma Co)', lat: 38.5089, lon: -122.8128 }
+	{ code: 'STS', name: 'Santa Rosa (Schulz–Sonoma Co)', lat: 38.5089, lon: -122.8128 },
+	{ code: 'SJC', name: 'San José Mineta Intl', lat: 37.3639, lon: -121.9289 }
 ];
 
 export const AIRPORT_STATUS_COLORS: Record<string, string> = {

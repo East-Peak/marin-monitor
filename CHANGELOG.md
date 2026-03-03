@@ -8,8 +8,9 @@ All notable changes to Marin Monitor are documented here.
 
 ### Added
 - **Airport Status panel** — SFO and OAK operational status, FAA delay/ground stop alerts, METAR weather conditions (flight category, visibility, ceiling, wind, fog risk), TAF forecast notes for IFR/LIFR periods, and TSA wait times (graceful degradation while API is down).
-- **Airport map pins** — SFO, OAK, and STS (Santa Rosa) shown as color-coded dots on the map (green=on-time, amber=delays, orange=ground-delay, red=ground-stop). Click for status details and aviation weather summary.
+- **Airport map pins** — SFO, OAK, STS (Santa Rosa), and SJC (San José) shown as color-coded dots on the map (green=on-time, amber=delays, orange=ground-delay, red=ground-stop). Click for status details and aviation weather summary.
 - **Santa Rosa Airport (STS)** — Charles M. Schulz–Sonoma County Airport added to airport status panel and map pins with METAR/TAF weather, FAA delays, and TSA wait times.
+- **San José Airport (SJC)** — Norman Y. Mineta San José International Airport added to airport status panel and map pins.
 - **Pathogen Watch panel** — wastewater pathogen surveillance using CDPH Cal-SuWers CKAN API. Tracks SARS-CoV-2, Influenza A, RSV, and Norovirus across 5 Marin sewersheds with population-weighted county-wide trends, sparklines, and status chips.
 
 ### Fixed

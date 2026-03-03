@@ -16,7 +16,7 @@ export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-03-03',
 		title: 'Airport map pins',
-		description: 'SFO, OAK, and STS (Santa Rosa) appear as color-coded dots on the map. Green = on time, amber = delays, red = ground stop. Click for details.'
+		description: 'SFO, OAK, STS (Santa Rosa), and SJC (San José) appear as color-coded dots on the map. Green = on time, amber = delays, red = ground stop. Click for details.'
 	},
 	{
 		date: '2026-03-03',
