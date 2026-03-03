@@ -58,10 +58,13 @@
 </script>
 
 <Panel id="environment" title="Environment" variant="default" {loading} {error}>
+	{#if $townFilter}
+		<div class="county-badge">County-wide data</div>
+	{/if}
 	<!-- Top row: AQI + UV + Fire status -->
 	<div class="env-grid">
 		<div class="stat-card">
-			<div class="label">Air Quality{$townFilter ? ' (county)' : ''}</div>
+			<div class="label">Air Quality</div>
 			{#if aqi}
 				<div class="value" style="color: {aqi.color}">{aqi.aqi}</div>
 				<div class="sub">{aqi.category} ({aqi.pollutant})</div>
@@ -138,6 +141,19 @@
 </Panel>
 
 <style>
+	.county-badge {
+		font-size: 0.5rem;
+		color: var(--text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		padding: 0.2rem 0.4rem;
+		margin-bottom: 0.4rem;
+		background: rgba(255, 255, 255, 0.03);
+		border: 1px solid var(--border);
+		border-radius: 3px;
+		text-align: center;
+	}
+
 	.env-grid {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));

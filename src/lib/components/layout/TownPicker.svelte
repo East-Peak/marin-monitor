@@ -178,10 +178,10 @@
 		right: 0;
 		width: 220px;
 		max-height: 400px;
-		background: var(--surface);
+		background: rgb(16, 20, 32);
 		border: 1px solid var(--border);
 		border-radius: 6px;
-		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 		z-index: 200;
 		display: flex;
 		flex-direction: column;
@@ -196,7 +196,7 @@
 	.picker-search input {
 		width: 100%;
 		padding: 0.4rem 0.5rem;
-		background: rgba(255, 255, 255, 0.05);
+		background: rgba(255, 255, 255, 0.08);
 		border: 1px solid var(--border);
 		border-radius: 3px;
 		color: var(--text-primary);
