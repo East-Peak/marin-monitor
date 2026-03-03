@@ -15,6 +15,11 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-03-03',
+		title: 'Airport Status panel',
+		description: 'SFO and OAK delays, weather conditions, fog risk, and forecast alerts. Data from FAA NAS and Aviation Weather.'
+	},
+	{
+		date: '2026-03-03',
 		title: 'Pathogen Watch panel',
 		description: 'Wastewater pathogen surveillance from 5 Marin sewersheds. Tracks COVID, Flu A, RSV, and Norovirus with trend sparklines.'
 	},

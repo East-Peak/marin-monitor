@@ -19,7 +19,8 @@
 		CommunityPanel,
 		ConditionsPanel,
 		ExpandedCamerasPanel,
-		WastewaterPanel
+		WastewaterPanel,
+		AirportStatusPanel
 	} from '$lib/components/panels';
 	import { news, settings, refresh, allNewsItems } from '$lib/stores';
 	import { townLocation } from '$lib/stores/town-filter';
@@ -665,6 +666,12 @@
 					</div>
 				{/if}
 
+					{#if isPanelVisible('airport-status')}
+						<div class="signal-card signal-airport-status">
+							<AirportStatusPanel />
+						</div>
+					{/if}
+
 					{#if isPanelVisible('wastewater')}
 						<div class="signal-card signal-wastewater">
 							<WastewaterPanel />
@@ -1015,7 +1022,8 @@
 	.signal-outlooks :global(.panel-content),
 	.signal-environment :global(.panel-content),
 	.signal-conditions :global(.panel-content),
-	.signal-wastewater :global(.panel-content) {
+	.signal-wastewater :global(.panel-content),
+	.signal-airport-status :global(.panel-content) {
 		max-height: none;
 		overflow-y: visible;
 	}

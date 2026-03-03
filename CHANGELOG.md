@@ -7,6 +7,7 @@ All notable changes to Marin Monitor are documented here.
 ## 2026-03-03
 
 ### Added
+- **Airport Status panel** — SFO and OAK operational status, FAA delay/ground stop alerts, METAR weather conditions (flight category, visibility, ceiling, wind, fog risk), TAF forecast notes for IFR/LIFR periods, and TSA wait times (graceful degradation while API is down).
 - **Pathogen Watch panel** — wastewater pathogen surveillance using CDPH Cal-SuWers CKAN API. Tracks SARS-CoV-2, Influenza A, RSV, and Norovirus across 5 Marin sewersheds with population-weighted county-wide trends, sparklines, and status chips.
 
 ### Fixed

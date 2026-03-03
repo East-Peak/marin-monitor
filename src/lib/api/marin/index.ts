@@ -19,3 +19,4 @@ export { fetchSunTimes, type SunData } from './sun';
 export { fetchObservedWeather, type ObservedWeather } from './open-meteo';
 export { fetchGasPriceData } from './gas-prices';
 export { fetchEvChargingData } from './ev-charging';
+export { fetchAirportStatus } from './airport-status';

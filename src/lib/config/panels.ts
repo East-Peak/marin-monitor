@@ -29,7 +29,8 @@ export type PanelId =
 	| 'satire'
 	| 'gas-prices'
 	| 'ev-charging'
-	| 'wastewater';
+	| 'wastewater'
+	| 'airport-status';
 
 export const PANELS: Record<PanelId, PanelConfig> = {
 	map: { name: 'Marin Map', priority: 1, description: 'County map with layered data' },
@@ -112,6 +113,11 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 		name: 'Pathogen Watch',
 		priority: 2,
 		description: 'Wastewater pathogen surveillance from Marin sewersheds'
+	},
+	'airport-status': {
+		name: 'Airport Status',
+		priority: 2,
+		description: 'SFO and OAK delays, conditions, and TSA wait times'
 	}
 };
 
@@ -128,6 +134,7 @@ export const DEFAULT_PANEL_ORDER: PanelId[] = [
 	'weather',
 	'cameras',
 	'conditions',
+	'airport-status',
 	'wastewater',
 	'civic',
 	'outdoors',
