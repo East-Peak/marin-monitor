@@ -595,7 +595,7 @@
 			</div>
 		{:else}
 			<!-- Top stage: map + cameras -->
-			<div class="top-stage">
+			<div class="top-stage" class:map-full-width={$settings.camerasExpanded || !isPanelVisible('cameras')}>
 				{#if isPanelVisible('map')}
 					<div class="map-slot">
 						<MapPanel earthquakes={earthquakeItems} />
@@ -774,6 +774,10 @@
 		gap: 1rem;
 		margin-bottom: 1rem;
 		align-items: start;
+	}
+
+	.top-stage.map-full-width {
+		grid-template-columns: 1fr;
 	}
 
 	.expanded-cameras-stage {
