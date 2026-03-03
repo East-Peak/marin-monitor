@@ -4,6 +4,7 @@
 	import { PANELS, type PanelId } from '$lib/config';
 	import type { ThemeMode } from '$lib/stores/settings';
 	import { LOCATION_PRESETS } from '$lib/config/locations';
+	import { selectedTownObj } from '$lib/stores/town-filter';
 
 	interface Props {
 		open: boolean;
@@ -64,8 +65,13 @@
 		</section>
 
 		<section class="settings-section">
-			<h3 class="section-title">Location</h3>
-			<p class="section-desc">Set your weather, tide, and forecast location</p>
+			<h3 class="section-title">Default Location</h3>
+			<p class="section-desc">Weather &amp; tide location when no town is selected</p>
+			{#if $selectedTownObj}
+				<p class="section-desc" style="color: var(--accent)">
+					Currently viewing: {$selectedTownObj.name} (use town picker to clear)
+				</p>
+			{/if}
 			<div class="location-select-wrap">
 				<select
 					class="location-select"

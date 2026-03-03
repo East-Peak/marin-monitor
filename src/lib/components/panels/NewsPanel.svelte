@@ -16,15 +16,15 @@
 		farmNews,
 		satireNews
 	} from '$lib/stores';
+	import { townFilter } from '$lib/stores/town-filter';
 
 	interface Props {
 		category: NewsCategory;
 		panelId: PanelId;
 		title: string;
-		filterTown?: string | null;
 	}
 
-	let { category, panelId, title, filterTown = null }: Props = $props();
+	let { category, panelId, title }: Props = $props();
 
 	// Get the appropriate derived store based on category
 	const categoryStores = {
@@ -51,7 +51,7 @@
 	const categoryStore = $derived(resolveCategoryStore());
 	const categoryVariant = $derived(category === 'local' ? 'local' : category);
 	const allItems = $derived($categoryStore.items);
-	const items = $derived(filterTown ? allItems.filter((i) => i.townSlug === filterTown) : allItems);
+	const items = $derived($townFilter ? allItems.filter((i) => i.townSlug === $townFilter) : allItems);
 	const loading = $derived($categoryStore.loading);
 	const error = $derived($categoryStore.error);
 	const count = $derived(items.length);

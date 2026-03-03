@@ -3,6 +3,8 @@
 	import { Panel } from '$lib/components/common';
 	import { fetchEvChargingData } from '$lib/api/marin/ev-charging';
 	import { evChargingStore } from '$lib/stores/ev-charging';
+	import { townFilter, selectedTownObj } from '$lib/stores/town-filter';
+	import { findNearestTown } from '$lib/geo';
 	import { select } from 'd3-selection';
 	import { scaleLinear } from 'd3-scale';
 	import { area, line, curveMonotoneX } from 'd3-shape';
@@ -33,23 +35,41 @@
 	const current = $derived(data.current);
 	const history = $derived(data.history.filter((h) => h.stationCount > 0));
 
+	// Filter stations by selected town (proximity match)
+	const filteredStations = $derived.by<ChargingStation[]>(() => {
+		if (!current?.stations) return [];
+		if (!$townFilter) return current.stations;
+		return current.stations.filter(
+			(s) => findNearestTown(s.lat, s.lon) === $townFilter
+		);
+	});
+
 	const topNetworks = $derived.by<[string, number][]>(() => {
-		if (!current) return [];
-		return Object.entries(current.networkBreakdown)
+		if (filteredStations.length === 0) return [];
+		const breakdown: Record<string, number> = {};
+		for (const s of filteredStations) {
+			breakdown[s.network] = (breakdown[s.network] ?? 0) + 1;
+		}
+		return Object.entries(breakdown)
 			.sort((a, b) => b[1] - a[1])
 			.slice(0, 5);
 	});
 
 	const connectorEntries = $derived.by<[ConnectorType, number][]>(() => {
-		if (!current) return [];
-		return Object.entries(current.connectorBreakdown)
+		if (filteredStations.length === 0) return [];
+		const breakdown: Partial<Record<ConnectorType, number>> = {};
+		for (const s of filteredStations) {
+			for (const c of s.connectors) {
+				breakdown[c.type] = (breakdown[c.type] ?? 0) + c.count;
+			}
+		}
+		return Object.entries(breakdown)
 			.filter(([, count]) => count > 0)
 			.sort((a, b) => b[1] - a[1]) as [ConnectorType, number][];
 	});
 
 	const fastestStations = $derived.by<ChargingStation[]>(() => {
-		if (!current?.stations) return [];
-		return [...current.stations]
+		return [...filteredStations]
 			.filter((s) => s.connectors.some((c) => c.powerKw))
 			.sort((a, b) => {
 				const maxA = Math.max(...a.connectors.map((c) => c.powerKw ?? 0));
@@ -60,25 +80,27 @@
 	});
 
 	const pricedStations = $derived.by<ChargingStation[]>(() => {
-		if (!current?.stations) return [];
-		return current.stations.filter((s) => s.pricingInfo).slice(0, 3);
+		return filteredStations.filter((s) => s.pricingInfo).slice(0, 3);
 	});
 
 	const summaryCards = $derived.by<SummaryCard[]>(() => {
 		if (!current) return [];
 
+		const townName = $selectedTownObj?.name;
 		const topNetwork = topNetworks[0];
+		const dcFastCount = filteredStations.filter((s) => s.dcFastCount > 0).length;
+		const totalPorts = filteredStations.reduce((sum, s) => sum + s.totalPorts, 0);
 
 		return [
 			{
 				label: 'Total Stations',
-				value: String(current.stationCount),
-				detail: 'Across Marin County',
+				value: String(filteredStations.length),
+				detail: townName ? `In ${townName}` : 'Across Marin County',
 				tone: 'default' as const
 			},
 			{
 				label: 'DC Fast',
-				value: String(current.dcFastStationCount),
+				value: String(dcFastCount),
 				detail: 'High-speed charging',
 				tone: 'positive' as const
 			},
@@ -90,7 +112,7 @@
 			},
 			{
 				label: 'Total Ports',
-				value: String(current.totalPorts),
+				value: String(totalPorts),
 				detail: 'All connector types',
 				tone: 'default' as const
 			}

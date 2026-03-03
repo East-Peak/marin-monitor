@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { Panel } from '$lib/components/common';
 	import { allNewsItems, refresh } from '$lib/stores';
+	import { townFilter, selectedTownObj } from '$lib/stores/town-filter';
 	import { fetchTidePredictions } from '$lib/api/marin';
 	import type { FireWeatherAlert, WeatherData, EarthquakeData, TidePrediction } from '$lib/types';
 
@@ -16,14 +17,18 @@
 	let nextTide = $state<TidePrediction | null>(null);
 	let tideError = $state<string | null>(null);
 
-	const stories24h = $derived(
-		$allNewsItems.filter((item) => Date.now() - item.timestamp <= 24 * 60 * 60 * 1000).length
+	const recentItems = $derived(
+		$allNewsItems.filter((item) => Date.now() - item.timestamp <= 24 * 60 * 60 * 1000)
 	);
 
+	const filteredRecentItems = $derived(
+		$townFilter ? recentItems.filter((i) => i.townSlug === $townFilter) : recentItems
+	);
+
+	const stories24h = $derived(filteredRecentItems.length);
+
 	const alerts24h = $derived(
-		$allNewsItems.filter(
-			(item) => item.isAlert && Date.now() - item.timestamp <= 24 * 60 * 60 * 1000
-		).length + weatherAlerts.length
+		filteredRecentItems.filter((item) => item.isAlert).length + weatherAlerts.length
 	);
 
 	const temperature = $derived(forecast[0]?.temperature ?? null);
@@ -65,7 +70,7 @@
 <Panel id="pulse" title="Pulse" variant="pulse" count={stories24h}>
 	<div class="pulse-grid">
 		<div class="stat-card">
-			<div class="label">Stories (24h)</div>
+			<div class="label">{$selectedTownObj ? `${$selectedTownObj.name} (24h)` : 'Stories (24h)'}</div>
 			<div class="value">{stories24h}</div>
 		</div>
 		<div class="stat-card">

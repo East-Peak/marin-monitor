@@ -4,9 +4,11 @@
 	import type { Map as MapLibreMap, GeoJSONSource, MapLayerMouseEvent } from 'maplibre-gl';
 	import { allNewsItems } from '$lib/stores/news';
 	import { mapStore, CATEGORY_TO_LAYER } from '$lib/stores/map';
+	import { townFilter } from '$lib/stores/town-filter';
+	import { TOWN_BY_SLUG } from '$lib/config/towns';
 	import { currentGasStations } from '$lib/stores/gas-prices';
 	import { currentChargingStations } from '$lib/stores/ev-charging';
-	import { MARIN_TOWNS, TOWN_BY_SLUG, LAYER_COLORS, MARIN_BOUNDS } from '$lib/config';
+	import { MARIN_TOWNS, LAYER_COLORS, MARIN_BOUNDS } from '$lib/config';
 	import { FIRE_ZONES, LANDMARKS } from '$lib/config/map';
 	import { MAPBOX_TOKEN } from '$lib/config/api';
 	import type { NewsItem, MapLayer } from '$lib/types';
@@ -55,6 +57,8 @@
 	let interactionsBound = false;
 	let trafficRefreshTimer: ReturnType<typeof setInterval> | null = null;
 	let isTrafficFetchInFlight = false;
+	let unsubscribeTownFilter: (() => void) | null = null;
+	let lastTownSlug: string | null | undefined = undefined;
 
 	const TRAFFIC_REFRESH_MS = 3 * 60 * 1000;
 	const TRAFFIC_BOUNDS_BUFFER = 0.12;
@@ -1175,12 +1179,47 @@
 		};
 	});
 
+	// Sync map view when town filter changes (from header picker or other sources)
+	onMount(() => {
+		unsubscribeTownFilter = townFilter.subscribe((slug) => {
+			// Skip initial subscription call
+			if (lastTownSlug === undefined) {
+				lastTownSlug = slug;
+				return;
+			}
+			if (slug === lastTownSlug) return;
+			lastTownSlug = slug;
+
+			// Keep mapStore in sync for backward compat (inspector, town dots)
+			mapStore.selectTown(slug);
+
+			const map = getMap();
+			if (!map) return;
+
+			if (slug) {
+				const town = TOWN_BY_SLUG[slug];
+				if (town) {
+					map.flyTo({ center: [town.lon, town.lat], zoom: 13, duration: 1200 });
+				}
+			} else {
+				map.fitBounds(
+					[
+						[MARIN_BOUNDS.west, MARIN_BOUNDS.south],
+						[MARIN_BOUNDS.east, MARIN_BOUNDS.north]
+					],
+					{ padding: 20, duration: 1200 }
+				);
+			}
+		});
+	});
+
 	onDestroy(() => {
 		removeStyleLoadListener?.();
 		unsubscribeNews?.();
 		unsubscribeMap?.();
 		unsubscribeGas?.();
 		unsubscribeEv?.();
+		unsubscribeTownFilter?.();
 		if (trafficRefreshTimer) {
 			clearInterval(trafficRefreshTimer);
 			trafficRefreshTimer = null;

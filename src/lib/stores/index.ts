@@ -63,6 +63,9 @@ export { gasPriceStore, currentGasStations } from './gas-prices';
 // EV charging store
 export { evChargingStore, currentChargingStations } from './ev-charging';
 
+// Town filter store
+export { townFilter, selectedTownObj, townLocation } from './town-filter';
+
 // Refresh store
 export {
 	refresh,

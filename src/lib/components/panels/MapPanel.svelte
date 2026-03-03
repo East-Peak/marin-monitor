@@ -10,6 +10,7 @@
 		MapFeatureInspector
 	} from '$lib/components/map';
 	import { mapStore, selectedTown, activeLayers, CATEGORY_TO_LAYER } from '$lib/stores/map';
+	import { townFilter } from '$lib/stores/town-filter';
 	import { allNewsItems } from '$lib/stores/news';
 	import { TOWN_BY_SLUG } from '$lib/config';
 	import { fetchFireIncidents } from '$lib/api/marin';
@@ -112,6 +113,7 @@
 		// Toggle: click same town again to deselect
 		const next = current === slug ? null : slug;
 		mapStore.selectTown(next);
+		townFilter.select(next);
 		inspectorState = next ? { mode: 'town', townSlug: next } : null;
 		featureInspector = null;
 	}
@@ -125,6 +127,7 @@
 		if (!item) return;
 		if (item.townSlug) {
 			mapStore.selectTown(item.townSlug);
+			townFilter.select(item.townSlug);
 		}
 		inspectorState = {
 			mode: 'pin',
@@ -156,11 +159,13 @@
 
 	function clearTownFilter() {
 		mapStore.selectTown(null);
+		townFilter.clear();
 	}
 
 	function focusInspectorTown() {
 		if (!inspectorModel?.townSlug) return;
 		mapStore.selectTown(inspectorModel.townSlug);
+		townFilter.select(inspectorModel.townSlug);
 	}
 
 	const selectedTownName = $derived(

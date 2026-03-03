@@ -3,6 +3,8 @@
 	import { Panel } from '$lib/components/common';
 	import { fetchGasPriceData } from '$lib/api/marin/gas-prices';
 	import { gasPriceStore } from '$lib/stores/gas-prices';
+	import { townFilter, selectedTownObj } from '$lib/stores/town-filter';
+	import { findNearestTown } from '$lib/geo';
 	import { select } from 'd3-selection';
 	import { scaleLinear } from 'd3-scale';
 	import { area, line, curveMonotoneX } from 'd3-shape';
@@ -27,9 +29,18 @@
 
 	const current = $derived(data.current);
 	const history = $derived(data.history.filter((h) => h.avgRegular !== null));
-	const cheapestStations = $derived.by<GasStation[]>(() => {
+
+	// Filter stations by selected town (proximity match)
+	const filteredStations = $derived.by<GasStation[]>(() => {
 		if (!current?.stations) return [];
-		return [...current.stations]
+		if (!$townFilter) return current.stations;
+		return current.stations.filter(
+			(s) => findNearestTown(s.lat, s.lon) === $townFilter
+		);
+	});
+
+	const cheapestStations = $derived.by<GasStation[]>(() => {
+		return [...filteredStations]
 			.filter((s) => s.fuelPrices.some((fp) => fp.type === 'REGULAR_UNLEADED'))
 			.sort((a, b) => {
 				const pa = a.fuelPrices.find((fp) => fp.type === 'REGULAR_UNLEADED')?.price ?? Infinity;
@@ -41,6 +52,19 @@
 
 	const summaryCards = $derived.by<SummaryCard[]>(() => {
 		if (!current) return [];
+
+		const townName = $selectedTownObj?.name;
+
+		// Compute avg from filtered stations
+		const regularPrices = cheapestStations
+			.map((s) => s.fuelPrices.find((fp) => fp.type === 'REGULAR_UNLEADED')?.price)
+			.filter((p): p is number => p !== undefined);
+		const filteredAvg =
+			regularPrices.length > 0
+				? regularPrices.reduce((a, b) => a + b, 0) / regularPrices.length
+				: null;
+
+		const displayAvg = $townFilter ? filteredAvg : current.avgRegular;
 
 		const sevenDaysAgo = history.length >= 42 ? history[41] : history[history.length - 1];
 		const priceDelta =
@@ -56,8 +80,8 @@
 		return [
 			{
 				label: 'Avg Regular',
-				value: current.avgRegular !== null ? `$${current.avgRegular.toFixed(3)}` : 'N/A',
-				detail: 'County-wide average',
+				value: displayAvg !== null ? `$${displayAvg.toFixed(3)}` : 'N/A',
+				detail: townName ? `In ${townName}` : 'County-wide average',
 				tone: 'default' as const
 			},
 			{
@@ -82,13 +106,13 @@
 			{
 				label: 'Cheapest',
 				value: cheapestPrice !== undefined ? `$${cheapestPrice.toFixed(3)}` : 'N/A',
-				detail: cheapest?.name ?? 'No data',
+				detail: cheapest?.name ?? (townName ? `No stations in ${townName}` : 'No data'),
 				tone: 'positive' as const
 			},
 			{
 				label: 'Stations',
-				value: String(current.stationCount),
-				detail: 'Reporting prices',
+				value: String(filteredStations.length),
+				detail: townName ? `In ${townName}` : 'Reporting prices',
 				tone: 'default' as const
 			}
 		];

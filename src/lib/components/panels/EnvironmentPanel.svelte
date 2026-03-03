@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { Panel } from '$lib/components/common';
 	import { timeAgo } from '$lib/utils';
+	import { townFilter } from '$lib/stores/town-filter';
 	import {
 		fetchAirQuality,
 		fetchStreamGauges,
@@ -60,7 +61,7 @@
 	<!-- Top row: AQI + UV + Fire status -->
 	<div class="env-grid">
 		<div class="stat-card">
-			<div class="label">Air Quality</div>
+			<div class="label">Air Quality{$townFilter ? ' (county)' : ''}</div>
 			{#if aqi}
 				<div class="value" style="color: {aqi.color}">{aqi.aqi}</div>
 				<div class="sub">{aqi.category} ({aqi.pollutant})</div>

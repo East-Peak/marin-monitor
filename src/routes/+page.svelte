@@ -19,8 +19,8 @@
 		ConditionsPanel,
 		ExpandedCamerasPanel
 	} from '$lib/components/panels';
-	import { news, settings, refresh, allNewsItems, selectedTown } from '$lib/stores';
-	import { getLocationById } from '$lib/config/locations';
+	import { news, settings, refresh, allNewsItems } from '$lib/stores';
+	import { townLocation } from '$lib/stores/town-filter';
 	import type {
 		NewsCategory,
 		NewsItem,
@@ -43,8 +43,8 @@
 	} from '$lib/api/marin';
 	import AgentationWidget from '$lib/components/dev/AgentationWidget.svelte';
 
-	// Location (derived from settings)
-	const userLocation = $derived(getLocationById($settings.locationId));
+	// Location (derived from town filter, falls back to settings.locationId)
+	const userLocation = $derived($townLocation);
 
 	// Modal state
 	let settingsOpen = $state(false);
@@ -229,12 +229,12 @@
 		);
 	}
 
-	// Fetch weather data from NWS using the user's preferred location
+	// Fetch weather data from NWS using the active location (town filter or settings default)
 	async function loadWeather() {
 		weatherLoading = true;
 		weatherError = null;
 		try {
-			const loc = getLocationById($settings.locationId);
+			const loc = userLocation;
 			const data = await fetchWeather(loc.lat, loc.lon);
 			weatherForecast = data.forecast;
 			weatherAlerts = data.alerts;
@@ -438,6 +438,23 @@
 	]);
 
 	// Initial load
+	// Re-fetch weather when the active location changes (town filter or settings)
+	let weatherDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+	let lastLocationId: string | null = null;
+	$effect(() => {
+		const locId = userLocation.id;
+		if (lastLocationId === null) {
+			// Skip first run (initial load handles it)
+			lastLocationId = locId;
+			return;
+		}
+		if (locId !== lastLocationId) {
+			lastLocationId = locId;
+			if (weatherDebounceTimer) clearTimeout(weatherDebounceTimer);
+			weatherDebounceTimer = setTimeout(() => loadWeather(), 500);
+		}
+	});
+
 	onMount(() => {
 		editMode = new URLSearchParams(window.location.search).get('layout') === 'edit';
 		if (editMode) {
@@ -705,7 +722,6 @@
 								category={column.category}
 								panelId={column.panelId}
 								title={column.title}
-								filterTown={$selectedTown}
 							/>
 						</div>
 					{/if}

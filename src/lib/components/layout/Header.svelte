@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { isRefreshing, lastRefresh } from '$lib/stores';
+	import TownPicker from './TownPicker.svelte';
 
 	interface Props {
 		onSettingsClick?: () => void;
@@ -30,6 +31,7 @@
 	</div>
 
 	<div class="header-right">
+		<TownPicker />
 		<button class="header-btn settings-btn" onclick={onSettingsClick} title="Settings">
 			<span class="btn-icon">⚙</span>
 			<span class="btn-label">Settings</span>
