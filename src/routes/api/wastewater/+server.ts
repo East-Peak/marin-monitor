@@ -14,19 +14,20 @@ const MARIN_SEWERSHEDS = [
 	'SMWTP_MillValley'
 ];
 
-// Approximate service populations for weighted averaging
+// Service populations from CDPH data (population_served field)
 const SEWERSHED_POP: Record<string, number> = {
-	LGVSD_Inf: 19000,
-	NovatoSD: 55000,
-	Sausalito_MarinCity_Inf: 10000,
-	CMSA_Inf: 115000,
-	SMWTP_MillValley: 14000
+	LGVSD_Inf: 30000,
+	NovatoSD: 53000,
+	Sausalito_MarinCity_Inf: 18000,
+	CMSA_Inf: 104250,
+	SMWTP_MillValley: 30000
 };
 
-const TARGET_MAP: Record<string, { id: string; label: string }> = {
-	n: { id: 'covid', label: 'SARS-CoV-2' },
-	infa1: { id: 'flu_a', label: 'Influenza A' },
-	'rsv-a': { id: 'rsv', label: 'RSV' },
+// pcr_target values → display config. Prefer one gene target per pathogen to avoid double-counting.
+const TARGET_MAP: Record<string, { id: string; label: string; geneTarget?: string }> = {
+	'sars-cov-2': { id: 'covid', label: 'SARS-CoV-2', geneTarget: 'n' },
+	fluav: { id: 'flu_a', label: 'Influenza A', geneTarget: 'infa1' },
+	rsv: { id: 'rsv', label: 'RSV' },
 	'nov gii': { id: 'norovirus', label: 'Norovirus' }
 };
 
@@ -36,7 +37,7 @@ interface CkanRecord {
 	pcr_target: string;
 	pcr_gene_target: string;
 	pcr_target_avg_conc: number | null;
-	below_lod: string;
+	pcr_target_below_lod: string;
 }
 
 interface CkanResponse {
@@ -51,7 +52,7 @@ function buildSql(): string {
 	const targets = Object.keys(TARGET_MAP)
 		.map((t) => `'${t}'`)
 		.join(',');
-	return `SELECT sample_collect_date, wwtp_name, pcr_target, pcr_gene_target, pcr_target_avg_conc, below_lod FROM "${RESOURCE_ID}" WHERE wwtp_name IN (${plantList}) AND pcr_target IN (${targets}) AND sample_collect_date >= (CURRENT_DATE - INTERVAL '60 days') ORDER BY sample_collect_date ASC`;
+	return `SELECT sample_collect_date, wwtp_name, pcr_target, pcr_gene_target, pcr_target_avg_conc, pcr_target_below_lod FROM "${RESOURCE_ID}" WHERE wwtp_name IN (${plantList}) AND pcr_target IN (${targets}) AND sample_collect_date >= (CURRENT_DATE - INTERVAL '60 days') ORDER BY sample_collect_date ASC`;
 }
 
 function weeklyAverages(points: { date: string; conc: number }[]): number[] {
@@ -139,7 +140,11 @@ export const GET: RequestHandler = async () => {
 
 	for (const rec of records) {
 		const targetKey = rec.pcr_target?.toLowerCase();
-		if (!TARGET_MAP[targetKey]) continue;
+		const targetInfo = TARGET_MAP[targetKey];
+		if (!targetInfo) continue;
+
+		// Filter to preferred gene target to avoid double-counting subtargets
+		if (targetInfo.geneTarget && rec.pcr_gene_target?.toLowerCase() !== targetInfo.geneTarget) continue;
 
 		const date = rec.sample_collect_date?.slice(0, 10);
 		if (!date) continue;
@@ -152,8 +157,8 @@ export const GET: RequestHandler = async () => {
 		}
 		const entry = dateMap.get(date)!;
 		const pop = SEWERSHED_POP[rec.wwtp_name] ?? 10000;
-		const conc = rec.pcr_target_avg_conc ?? 0;
-		const isBelow = rec.below_lod === 'Yes' || rec.below_lod === 'TRUE';
+		const conc = Number(rec.pcr_target_avg_conc) || 0;
+		const isBelow = rec.pcr_target_below_lod?.toLowerCase() === 'yes';
 
 		entry.weightedSum += conc * pop;
 		entry.popSum += pop;
