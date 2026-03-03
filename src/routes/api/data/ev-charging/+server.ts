@@ -18,8 +18,8 @@ export const GET: RequestHandler = async () => {
 				}
 			});
 		}
-	} catch {
-		// Blob not available — return empty data
+	} catch (err) {
+		console.error('[data/ev-charging] Blob read failed:', err instanceof Error ? err.message : err);
 	}
 
 	return new Response(JSON.stringify({ current: null, history: [] }), {
