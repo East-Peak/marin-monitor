@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Panel, Badge } from '$lib/components/common';
 	import { timeAgo } from '$lib/utils';
+	import { townFilter } from '$lib/stores/town-filter';
 	import type { NewsItem } from '$lib/types';
 
 	interface Props {
@@ -11,9 +12,14 @@
 
 	let { news = [], loading = false, error = null }: Props = $props();
 
+	// Filter news by selected town
+	const filteredNews = $derived(
+		$townFilter ? news.filter((i) => i.townSlug === $townFilter) : news
+	);
+
 	// Active alerts — the most important thing to surface
 	const activeAlerts = $derived(
-		news
+		filteredNews
 			.filter((item) => item.isAlert)
 			.sort((a, b) => b.timestamp - a.timestamp)
 			.slice(0, 5)
@@ -24,7 +30,7 @@
 		// Group by normalized title keywords (3+ word overlap = same story)
 		const storyGroups = new Map<string, { items: NewsItem[]; sources: Set<string> }>();
 
-		for (const item of news) {
+		for (const item of filteredNews) {
 			const words = (item.title || '')
 				.toLowerCase()
 				.replace(/[^\w\s]/g, '')
@@ -72,7 +78,7 @@
 			string,
 			{ name: string; count: number; alerts: number; categories: Set<string> }
 		>();
-		for (const item of news) {
+		for (const item of filteredNews) {
 			if (!item.townSlug || !item.town) continue;
 			const existing = townMap.get(item.townSlug) ?? {
 				name: item.town,
@@ -94,7 +100,7 @@
 	// Category breakdown — what types of stories are in the wire
 	const categoryBreakdown = $derived.by(() => {
 		const cats = new Map<string, number>();
-		for (const item of news) {
+		for (const item of filteredNews) {
 			cats.set(item.category, (cats.get(item.category) || 0) + 1);
 		}
 		return Array.from(cats.entries())
@@ -105,7 +111,7 @@
 	// Fresh stories — most recent items in the last few hours
 	const freshStories = $derived.by(() => {
 		const fourHoursAgo = Date.now() - 4 * 60 * 60 * 1000;
-		return news
+		return filteredNews
 			.filter((item) => item.timestamp > fourHoursAgo)
 			.sort((a, b) => b.timestamp - a.timestamp)
 			.slice(0, 6);
@@ -129,13 +135,15 @@
 		return labels[cat] || cat;
 	}
 
-	const totalStories = $derived(news.length);
+	const totalStories = $derived(filteredNews.length);
 	const totalAlerts = $derived(activeAlerts.length);
-	const totalTowns = $derived(new Set(news.filter((i) => i.townSlug).map((i) => i.townSlug)).size);
+	const totalTowns = $derived(
+		new Set(filteredNews.filter((i) => i.townSlug).map((i) => i.townSlug)).size
+	);
 </script>
 
 <Panel id="signals" title="Signals" {loading} {error}>
-	{#if news.length === 0 && !loading && !error}
+	{#if filteredNews.length === 0 && !loading && !error}
 		<div class="empty-state">Waiting for data...</div>
 	{:else}
 		<div class="signals-content">
@@ -192,7 +200,8 @@
 				</section>
 			{/if}
 
-			<!-- Town activity -->
+			<!-- Town activity (hidden when single town is filtered) -->
+			{#if !$townFilter}
 			<section class="section">
 				<div class="section-title">Town Activity</div>
 				{#each townActivity as town}
@@ -213,6 +222,7 @@
 					</div>
 				{/each}
 			</section>
+			{/if}
 
 			<!-- Fresh stories -->
 			{#if freshStories.length > 0}

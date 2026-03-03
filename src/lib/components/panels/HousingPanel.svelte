@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { Panel } from '$lib/components/common';
 	import { housingNews } from '$lib/stores/news';
+	import { townFilter } from '$lib/stores/town-filter';
 	import { fetchHousingData, type HousingMetric } from '$lib/api/marin/housing';
 	import { select } from 'd3-selection';
 	import type { Selection } from 'd3-selection';
@@ -385,6 +386,9 @@
 </script>
 
 <Panel id="housing" title="Housing" loading={$housingNews.loading} error={$housingNews.error}>
+	{#if $townFilter}
+		<div class="county-badge">County-wide data</div>
+	{/if}
 	{#if latestMetrics}
 		<div class="market-snapshot">
 			{#if latestMetrics.medianPrice !== null}
@@ -491,6 +495,19 @@
 </Panel>
 
 <style>
+	.county-badge {
+		font-size: 0.5rem;
+		color: var(--text-muted);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		padding: 0.2rem 0.4rem;
+		margin-bottom: 0.4rem;
+		background: rgba(255, 255, 255, 0.03);
+		border: 1px solid var(--border);
+		border-radius: 3px;
+		text-align: center;
+	}
+
 	.market-snapshot {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));

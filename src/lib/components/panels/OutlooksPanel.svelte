@@ -3,6 +3,7 @@
 	import { Panel } from '$lib/components/common';
 	import { fetchMarineOutlook, type MarineOutlookDay } from '$lib/api/marin/marine';
 	import { fetchDailyRainForecast, type DailyRainForecast } from '$lib/api/marin/nws-hourly';
+	import { selectedTownObj } from '$lib/stores/town-filter';
 	import type { WeatherData } from '$lib/types';
 
 	interface Props {
@@ -154,7 +155,7 @@
 			<section class="outlook-section">
 				<div class="section-header">
 					<div class="section-title">5-Day Weather</div>
-					<div class="section-meta">Central Marin</div>
+					<div class="section-meta">{$selectedTownObj ? $selectedTownObj.name : 'Central Marin'}</div>
 				</div>
 
 				{#if dailyForecast.length > 0}

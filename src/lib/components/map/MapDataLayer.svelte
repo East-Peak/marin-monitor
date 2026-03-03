@@ -11,7 +11,10 @@
 	import { MARIN_TOWNS, LAYER_COLORS, MARIN_BOUNDS } from '$lib/config';
 	import { FIRE_ZONES, LANDMARKS } from '$lib/config/map';
 	import { MAPBOX_TOKEN } from '$lib/config/api';
+	import { findNearestTown } from '$lib/geo/proximity';
 	import type { NewsItem, MapLayer } from '$lib/types';
+
+	let boundaryData: GeoJSON.FeatureCollection | null = null;
 
 	interface FireIncidentOverlay {
 		id: string;
@@ -59,6 +62,7 @@
 	let isTrafficFetchInFlight = false;
 	let unsubscribeTownFilter: (() => void) | null = null;
 	let lastTownSlug: string | null | undefined = undefined;
+	let rawTrafficFeatures: GeoJSON.Feature[] = [];
 
 	const TRAFFIC_REFRESH_MS = 3 * 60 * 1000;
 	const TRAFFIC_BOUNDS_BUFFER = 0.12;
@@ -197,6 +201,15 @@
 		return features;
 	}
 
+	function filterTrafficByTown(features: GeoJSON.Feature[]): GeoJSON.Feature[] {
+		const slug = get(townFilter);
+		if (!slug) return features;
+		return features.filter((f) => {
+			const coords = (f.geometry as GeoJSON.Point).coordinates;
+			return findNearestTown(coords[1], coords[0]) === slug;
+		});
+	}
+
 	async function refreshTrafficEvents(map: MapLibreMap) {
 		if (isTrafficFetchInFlight) return;
 		if (!map.getSource('traffic-events')) return;
@@ -209,11 +222,11 @@
 				events?: Record<string, unknown>[];
 			};
 			const events = Array.isArray(payload.events) ? payload.events : [];
-			const features = buildTrafficEventFeatures(events);
+			rawTrafficFeatures = buildTrafficEventFeatures(events);
 			const source = map.getSource('traffic-events') as GeoJSONSource;
 			source.setData({
 				type: 'FeatureCollection',
-				features
+				features: filterTrafficByTown(rawTrafficFeatures)
 			});
 		} catch {
 			// Silent fail: traffic is additive and should not block map rendering.
@@ -286,6 +299,12 @@
 	function setupSources(map: MapLibreMap) {
 		// Style swaps remove custom sources/layers. Re-add when missing.
 		if (map.getSource('towns')) return;
+
+		// Town boundary highlight source (Census polygons)
+		map.addSource('town-boundary', {
+			type: 'geojson',
+			data: { type: 'FeatureCollection', features: [] }
+		});
 
 		// Town dots source
 		map.addSource('towns', {
@@ -382,6 +401,28 @@
 		});
 
 		// --- Layers ---
+
+		// Town boundary highlight (renders beneath everything)
+		map.addLayer({
+			id: 'town-boundary-fill',
+			type: 'fill',
+			source: 'town-boundary',
+			paint: {
+				'fill-color': 'rgba(139, 92, 246, 0.06)',
+				'fill-outline-color': 'rgba(139, 92, 246, 0.2)'
+			}
+		});
+
+		map.addLayer({
+			id: 'town-boundary-stroke',
+			type: 'line',
+			source: 'town-boundary',
+			paint: {
+				'line-color': 'rgba(139, 92, 246, 0.35)',
+				'line-width': 1.5,
+				'line-dasharray': [4, 3]
+			}
+		});
 
 		// Fire zones (semi-transparent red circles)
 		map.addLayer({
@@ -877,6 +918,7 @@
 	function updateData(map: MapLibreMap) {
 		const items = get(allNewsItems);
 		const mapState = get(mapStore);
+		const currentTownFilter = get(townFilter);
 		const activeItems = items.filter((item) => {
 			const layer = CATEGORY_TO_LAYER[item.category];
 			return Boolean(layer && mapState.activeLayers[layer]);
@@ -888,10 +930,16 @@
 			const stats = storyCounts.get(town.slug);
 			const total = stats?.total || 0;
 			const hasData = total > 0;
-			const radius = hasData ? Math.max(6, Math.min(16, 5 + total * 0.8)) : 3;
-			const color = hasData ? getDominantColor(stats!.byLayer) : 'rgba(255, 255, 255, 0.2)';
-			const opacity = hasData ? 0.88 : 0.16;
-			const labelOpacity = hasData ? 0.72 : 0.28;
+			const isSelected = currentTownFilter === town.slug;
+			const isDimmed = currentTownFilter && !isSelected;
+			const radius = isDimmed ? 2 : hasData ? Math.max(6, Math.min(16, 5 + total * 0.8)) : 3;
+			const color = isDimmed
+				? 'rgba(255, 255, 255, 0.1)'
+				: hasData
+					? getDominantColor(stats!.byLayer)
+					: 'rgba(255, 255, 255, 0.2)';
+			const opacity = isDimmed ? 0.08 : hasData ? 0.88 : 0.16;
+			const labelOpacity = isDimmed ? 0.08 : hasData ? 0.72 : 0.28;
 
 			return {
 				type: 'Feature' as const,
@@ -924,6 +972,7 @@
 			const layer = CATEGORY_TO_LAYER[item.category];
 			if (!layer) continue;
 			if (typeof item.lat !== 'number' || typeof item.lon !== 'number') continue;
+			if (currentTownFilter && item.townSlug !== currentTownFilter) continue;
 
 			pinFeatures.push({
 				type: 'Feature',
@@ -952,6 +1001,7 @@
 		const alertFeatures: GeoJSON.Feature[] = [];
 		for (const item of activeItems) {
 			if (!item.isAlert || !item.townSlug) continue;
+			if (currentTownFilter && item.townSlug !== currentTownFilter) continue;
 			const town = TOWN_BY_SLUG[item.townSlug];
 			if (!town) continue;
 
@@ -1016,7 +1066,12 @@
 		const gasStations = get(currentGasStations);
 		const mapGasVisible = mapState.activeLayers['gas'];
 		const gasFeatures: GeoJSON.Feature[] = mapGasVisible
-			? gasStations.map((station) => {
+			? gasStations
+					.filter(
+						(s) =>
+							!currentTownFilter || findNearestTown(s.lat, s.lon) === currentTownFilter
+					)
+					.map((station) => {
 					const regularPrice = station.fuelPrices.find(
 						(fp) => fp.type === 'REGULAR_UNLEADED'
 					)?.price;
@@ -1057,7 +1112,9 @@
 		}
 
 		// EV charging stations (filter to Marin bounds for cached data that may include out-of-county)
-		const evStations = get(currentChargingStations).filter((s) => isWithinMarinView(s.lon, s.lat));
+		const evStations = get(currentChargingStations)
+			.filter((s) => isWithinMarinView(s.lon, s.lat))
+			.filter((s) => !currentTownFilter || findNearestTown(s.lat, s.lon) === currentTownFilter);
 		const mapEvVisible = mapState.activeLayers['ev-charging'];
 		const evFeatures: GeoJSON.Feature[] = mapEvVisible
 			? evStations.map((station) => {
@@ -1181,6 +1238,16 @@
 
 	// Sync map view when town filter changes (from header picker or other sources)
 	onMount(() => {
+		// Load boundary data once
+		fetch('/data/marin-boundaries.geojson')
+			.then((r) => r.json())
+			.then((d: GeoJSON.FeatureCollection) => {
+				boundaryData = d;
+			})
+			.catch(() => {
+				/* boundary data is optional enhancement */
+			});
+
 		unsubscribeTownFilter = townFilter.subscribe((slug) => {
 			// Skip initial subscription call
 			if (lastTownSlug === undefined) {
@@ -1196,6 +1263,37 @@
 			const map = getMap();
 			if (!map) return;
 
+			// Update boundary highlight
+			const boundarySource = map.getSource('town-boundary') as GeoJSONSource;
+			if (boundarySource) {
+				if (slug && boundaryData) {
+					const matchingFeatures = boundaryData.features.filter(
+						(f) => f.properties?.slug === slug
+					);
+					boundarySource.setData({
+						type: 'FeatureCollection',
+						features: matchingFeatures
+					});
+				} else {
+					boundarySource.setData({ type: 'FeatureCollection', features: [] });
+				}
+			}
+
+			// Re-filter map features
+			if (map.getSource('towns')) {
+				updateData(map);
+			}
+
+			// Re-filter traffic events with updated town filter
+			const trafficSource = map.getSource('traffic-events') as GeoJSONSource;
+			if (trafficSource && rawTrafficFeatures.length > 0) {
+				trafficSource.setData({
+					type: 'FeatureCollection',
+					features: filterTrafficByTown(rawTrafficFeatures)
+				});
+			}
+
+			// Fly to town or fit county bounds
 			if (slug) {
 				const town = TOWN_BY_SLUG[slug];
 				if (town) {
