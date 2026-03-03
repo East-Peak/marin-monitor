@@ -1056,8 +1056,8 @@
 			);
 		}
 
-		// EV charging stations
-		const evStations = get(currentChargingStations);
+		// EV charging stations (filter to Marin bounds for cached data that may include out-of-county)
+		const evStations = get(currentChargingStations).filter((s) => isWithinMarinView(s.lon, s.lat));
 		const mapEvVisible = mapState.activeLayers['ev-charging'];
 		const evFeatures: GeoJSON.Feature[] = mapEvVisible
 			? evStations.map((station) => {

@@ -6,6 +6,7 @@
  */
 
 import { getNrelApiKey, getOpenChargeMapApiKey } from '$lib/server/api-keys';
+import { MARIN_BOUNDS } from '$lib/config/towns';
 import type {
 	ConnectorType,
 	ChargingLevel,
@@ -14,7 +15,7 @@ import type {
 	EvChargingSnapshot
 } from '$lib/types/ev-charging';
 
-const NREL_BASE = 'https://developer.nrel.gov/api/alt-fuel-stations/v1.json';
+const NREL_BASE = 'https://developer.nrel.gov/api/alt-fuel-stations/v1/nearest.json';
 
 /** 4 tile centers covering Marin County with 10-mile radii */
 const TILE_CENTERS = [
@@ -82,7 +83,6 @@ async function fetchNrelTile(
 	const params = new URLSearchParams({
 		api_key: apiKey,
 		fuel_type: 'ELEC',
-		state: 'CA',
 		latitude: String(center.lat),
 		longitude: String(center.lon),
 		radius: String(TILE_RADIUS_MILES),
@@ -206,6 +206,13 @@ export async function scrapeEvCharging(): Promise<EvChargingSnapshot> {
 		for (const raw of result.value) {
 			const station = toChargingStation(raw);
 			if (!station || seenIds.has(station.stationId)) continue;
+			// Filter to Marin County bounds only
+			if (
+				station.lat < MARIN_BOUNDS.south ||
+				station.lat > MARIN_BOUNDS.north ||
+				station.lon < MARIN_BOUNDS.west ||
+				station.lon > MARIN_BOUNDS.east
+			) continue;
 			seenIds.add(station.stationId);
 			stations.push(station);
 		}
