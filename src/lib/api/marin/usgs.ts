@@ -8,9 +8,7 @@
 import type { NewsItem, EarthquakeData } from '$lib/types';
 import { MARIN_CENTER } from '$lib/config/towns';
 import { logger } from '$lib/config/api';
-import { fetchWithTimeout } from './fetch-helpers';
-
-const USGS_BASE = 'https://earthquake.usgs.gov/fdsnws/event/1/query';
+import { serviceClient } from '$lib/services/client';
 
 interface UsgsFeature {
 	id: string;
@@ -37,30 +35,21 @@ interface UsgsResponse {
  */
 export async function fetchEarthquakes(): Promise<EarthquakeData[]> {
 	try {
-		const params = new URLSearchParams({
-			format: 'geojson',
-			latitude: String(MARIN_CENTER.lat),
-			longitude: String(MARIN_CENTER.lon),
-			maxradiuskm: '100',
-			minmagnitude: '2.0',
-			limit: '10',
-			orderby: 'time'
+		logger.log('USGS', 'Fetching earthquakes');
+
+		const result = await serviceClient.request<UsgsResponse>('USGS', '/fdsnws/event/1/query', {
+			params: {
+				format: 'geojson',
+				latitude: MARIN_CENTER.lat,
+				longitude: MARIN_CENTER.lon,
+				maxradiuskm: 100,
+				minmagnitude: 2.0,
+				limit: 10,
+				orderby: 'time'
+			}
 		});
 
-		const url = `${USGS_BASE}?${params}`;
-		logger.log('USGS', `Fetching earthquakes: ${url}`);
-
-		const response = await fetchWithTimeout(url, {
-			headers: { Accept: 'application/json' }
-		});
-
-		if (!response.ok) {
-			throw new Error(`USGS API failed: ${response.status}`);
-		}
-
-		const data: UsgsResponse = await response.json();
-
-		return data.features.map((f) => ({
+		return result.data.features.map((f) => ({
 			id: f.id,
 			magnitude: f.properties.mag,
 			place: f.properties.place,

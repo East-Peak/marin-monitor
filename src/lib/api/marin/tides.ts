@@ -10,14 +10,23 @@
 import { TIDE_STATIONS } from '$lib/config/map';
 import type { TidePrediction } from '$lib/types';
 import { logger } from '$lib/config/api';
-import { fetchWithTimeout } from './fetch-helpers';
-
-const NOAA_BASE = 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter';
+import { serviceClient } from '$lib/services/client';
 
 interface NoaaTidePrediction {
 	t: string; // time "YYYY-MM-DD HH:MM"
 	v: string; // height in feet
 	type?: string; // "H" or "L" for hi/lo predictions
+}
+
+interface NoaaTideResponse {
+	predictions: NoaaTidePrediction[];
+}
+
+/** Round date down to the nearest hour for stable cache keys */
+function stableHour(d: Date): Date {
+	const rounded = new Date(d);
+	rounded.setMinutes(0, 0, 0);
+	return rounded;
 }
 
 /**
@@ -27,35 +36,26 @@ export async function fetchTidePredictions(
 	station: string = TIDE_STATIONS.pointReyes
 ): Promise<TidePrediction[]> {
 	try {
-		const now = new Date();
+		const now = stableHour(new Date());
 		const end = new Date(now.getTime() + 48 * 60 * 60 * 1000);
 
-		const beginDate = formatDate(now);
-		const endDate = formatDate(end);
+		logger.log('NOAA', `Fetching tides for station ${station}`);
 
-		const params = new URLSearchParams({
-			begin_date: beginDate,
-			end_date: endDate,
-			station,
-			product: 'predictions',
-			datum: 'MLLW',
-			units: 'english',
-			time_zone: 'lst_ldt',
-			interval: 'hilo',
-			format: 'json',
-			application: 'MarinMonitor'
+		const result = await serviceClient.request<NoaaTideResponse>('NOAA_TIDES', '', {
+			params: {
+				begin_date: formatDate(now),
+				end_date: formatDate(end),
+				station,
+				product: 'predictions',
+				datum: 'MLLW',
+				units: 'english',
+				time_zone: 'lst_ldt',
+				interval: 'hilo',
+				format: 'json',
+				application: 'MarinMonitor'
+			}
 		});
-
-		const url = `${NOAA_BASE}?${params}`;
-		logger.log('NOAA', `Fetching tides: ${url}`);
-
-		const response = await fetchWithTimeout(url);
-		if (!response.ok) {
-			throw new Error(`NOAA tides failed: ${response.status}`);
-		}
-
-		const data = await response.json();
-		const predictions: NoaaTidePrediction[] = data.predictions || [];
+		const predictions: NoaaTidePrediction[] = result.data.predictions || [];
 
 		return predictions.map((p) => ({
 			time: p.t,
@@ -75,32 +75,26 @@ export async function fetchHourlyTides(
 	station: string = TIDE_STATIONS.pointReyes
 ): Promise<{ time: string; height: number }[]> {
 	try {
-		const now = new Date();
+		const now = stableHour(new Date());
 		const end = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-		const params = new URLSearchParams({
-			begin_date: formatDate(now),
-			end_date: formatDate(end),
-			station,
-			product: 'predictions',
-			datum: 'MLLW',
-			units: 'english',
-			time_zone: 'lst_ldt',
-			interval: '60',
-			format: 'json',
-			application: 'MarinMonitor'
+		logger.log('NOAA', `Fetching hourly tides for station ${station}`);
+
+		const result = await serviceClient.request<NoaaTideResponse>('NOAA_TIDES', '', {
+			params: {
+				begin_date: formatDate(now),
+				end_date: formatDate(end),
+				station,
+				product: 'predictions',
+				datum: 'MLLW',
+				units: 'english',
+				time_zone: 'lst_ldt',
+				interval: '60',
+				format: 'json',
+				application: 'MarinMonitor'
+			}
 		});
-
-		const url = `${NOAA_BASE}?${params}`;
-		logger.log('NOAA', `Fetching hourly tides: ${url}`);
-
-		const response = await fetchWithTimeout(url);
-		if (!response.ok) {
-			throw new Error(`NOAA hourly tides failed: ${response.status}`);
-		}
-
-		const data = await response.json();
-		const predictions: NoaaTidePrediction[] = data.predictions || [];
+		const predictions: NoaaTidePrediction[] = result.data.predictions || [];
 
 		return predictions.map((p) => ({
 			time: p.t,

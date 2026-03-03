@@ -162,11 +162,22 @@ async function fetchNifc(): Promise<FireIncident[]> {
 	}
 }
 
+/** In-flight dedup: concurrent callers share the same request */
+let fireInflight: Promise<FireIncident[]> | null = null;
+
 /**
  * Fetch all active fire incidents from both CAL FIRE and NIFC,
  * deduplicated by proximity (within 5km = likely same fire).
  */
 export async function fetchFireIncidents(): Promise<FireIncident[]> {
+	if (fireInflight) return fireInflight;
+	fireInflight = fetchFireIncidentsInner().finally(() => {
+		fireInflight = null;
+	});
+	return fireInflight;
+}
+
+async function fetchFireIncidentsInner(): Promise<FireIncident[]> {
 	const [calfire, nifc] = await Promise.all([fetchCalFire(), fetchNifc()]);
 
 	// Deduplicate: prefer CAL FIRE data, drop NIFC if within 5km of a CAL FIRE incident

@@ -13,8 +13,8 @@
 import { NWS_ZONE } from '$lib/config/map';
 import type { WeatherData, FireWeatherAlert } from '$lib/types';
 import { logger } from '$lib/config/api';
-import { NWS_BASE, NWS_HEADERS, getGridPoint } from './nws-common';
-import { fetchWithTimeout } from './fetch-helpers';
+import { getGridPoint } from './nws-common';
+import { serviceClient } from '$lib/services/client';
 
 /** NWS forecast period from the API */
 interface NwsForecastPeriod {
@@ -32,6 +32,15 @@ interface NwsForecastPeriod {
 	icon: string;
 }
 
+/** NWS API response shapes */
+interface NwsForecastResponse {
+	properties?: { periods: NwsForecastPeriod[] };
+}
+
+interface NwsAlertsResponse {
+	features: NwsAlertFeature[];
+}
+
 /** NWS alert feature from the API */
 interface NwsAlertFeature {
 	properties: {
@@ -47,6 +56,11 @@ interface NwsAlertFeature {
 	};
 }
 
+const NWS_OPTIONS = {
+	accept: 'application/geo+json',
+	headers: { 'User-Agent': 'MarinMonitor/1.0 (marin-monitor@example.com)' }
+};
+
 /**
  * Fetch current forecast for Marin County
  * Returns the current period and the next period
@@ -57,17 +71,12 @@ export async function fetchForecast(
 ): Promise<(WeatherData & { name: string })[]> {
 	try {
 		const grid = await getGridPoint(lat, lon);
-		const url = `${NWS_BASE}/gridpoints/${grid.office}/${grid.gridX},${grid.gridY}/forecast`;
+		const endpoint = `/gridpoints/${grid.office}/${grid.gridX},${grid.gridY}/forecast`;
 
-		logger.log('NWS', `Fetching forecast: ${url}`);
+		logger.log('NWS', `Fetching forecast: ${endpoint}`);
 
-		const response = await fetchWithTimeout(url, { headers: NWS_HEADERS });
-		if (!response.ok) {
-			throw new Error(`NWS forecast failed: ${response.status}`);
-		}
-
-		const data = await response.json();
-		const periods: NwsForecastPeriod[] = data.properties?.periods || [];
+		const result = await serviceClient.request<NwsForecastResponse>('NWS', endpoint, NWS_OPTIONS);
+		const periods: NwsForecastPeriod[] = result.data.properties?.periods || [];
 
 		// Include enough periods to derive a real 5-day daytime outlook.
 		return periods.slice(0, 14).map((period) => ({
@@ -92,16 +101,13 @@ export async function fetchForecast(
  */
 export async function fetchAlerts(): Promise<FireWeatherAlert[]> {
 	try {
-		const url = `${NWS_BASE}/alerts/active?zone=${NWS_ZONE}`;
-		logger.log('NWS', `Fetching alerts: ${url}`);
+		logger.log('NWS', `Fetching alerts for zone ${NWS_ZONE}`);
 
-		const response = await fetchWithTimeout(url, { headers: NWS_HEADERS });
-		if (!response.ok) {
-			throw new Error(`NWS alerts failed: ${response.status}`);
-		}
-
-		const data = await response.json();
-		const features: NwsAlertFeature[] = data.features || [];
+		const result = await serviceClient.request<NwsAlertsResponse>('NWS', '/alerts/active', {
+			...NWS_OPTIONS,
+			params: { zone: NWS_ZONE }
+		});
+		const features: NwsAlertFeature[] = result.data.features || [];
 
 		return features.map((feature) => ({
 			id: feature.properties.id,
