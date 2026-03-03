@@ -1,11 +1,17 @@
 <script lang="ts">
 	import Panel from '$lib/components/common/Panel.svelte';
+	import { CHANGELOG } from '$lib/config/changelog';
 
 	interface Props {
 		onFeedback: (type: 'feed-request' | 'bug-report' | 'general') => void;
 	}
 
 	let { onFeedback }: Props = $props();
+
+	function formatDate(iso: string): string {
+		const d = new Date(iso + 'T00:00:00');
+		return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+	}
 </script>
 
 <Panel id="community" title="Community" variant="community">
@@ -45,6 +51,26 @@
 				Or email directly:
 				<a href="mailto:stuart@eastpeak.cc">stuart@eastpeak.cc</a>
 			</p>
+
+			<div class="divider"></div>
+
+			<div class="changelog">
+				<h4 class="changelog-heading">Changelog</h4>
+				{#each CHANGELOG as entry}
+					<div class="changelog-entry">
+						<span class="changelog-date">{formatDate(entry.date)}</span>
+						<div class="changelog-body">
+							<span class="changelog-title">{entry.title}</span>
+							{#if entry.description}
+								<span class="changelog-desc">{entry.description}</span>
+							{/if}
+							{#if entry.contributor}
+								<span class="changelog-credit">via {entry.contributor}</span>
+							{/if}
+						</div>
+					</div>
+				{/each}
+			</div>
 		</div>
 	{/snippet}
 </Panel>
@@ -134,5 +160,60 @@
 
 	.contact a:hover {
 		text-decoration: underline;
+	}
+
+	.changelog {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.changelog-heading {
+		font-size: 0.65rem;
+		font-weight: 700;
+		color: var(--text-primary);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		margin: 0;
+	}
+
+	.changelog-entry {
+		display: flex;
+		gap: 0.5rem;
+		align-items: flex-start;
+	}
+
+	.changelog-date {
+		font-size: 0.55rem;
+		color: var(--text-muted);
+		white-space: nowrap;
+		min-width: 2.8rem;
+		padding-top: 0.05rem;
+	}
+
+	.changelog-body {
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+		min-width: 0;
+	}
+
+	.changelog-title {
+		font-size: 0.65rem;
+		font-weight: 600;
+		color: var(--text-primary);
+		line-height: 1.3;
+	}
+
+	.changelog-desc {
+		font-size: 0.55rem;
+		color: var(--text-muted);
+		line-height: 1.4;
+	}
+
+	.changelog-credit {
+		font-size: 0.5rem;
+		color: #a855f7;
+		font-style: italic;
 	}
 </style>

@@ -66,6 +66,9 @@ export {
 	type Preset
 } from './presets';
 
+// Changelog
+export { CHANGELOG, type ChangelogEntry } from './changelog';
+
 // Relevance filter
 export { isLocallyRelevant, isMixedSource } from './relevance';
 
