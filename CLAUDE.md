@@ -182,3 +182,4 @@ Unit tests alongside source as `*.test.ts`. E2E tests in `tests/e2e/*.spec.ts`.
 - Work in feature branches, not main
 - Leave clear commit messages (Tammy reads them for PR review)
 - Leave `TODO:` comments for uncertain items
+- **Update `CHANGELOG.md`** after every deploy with what was added, changed, or fixed
