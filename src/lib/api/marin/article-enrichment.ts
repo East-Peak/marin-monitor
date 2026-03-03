@@ -7,8 +7,8 @@
 
 import type { NewsItem } from '$lib/types';
 import { logger } from '$lib/config/api';
-import { MARIN_BOUNDS } from '$lib/config';
 import { fetchWithTimeout } from './fetch-helpers';
+import { isInsideMarin } from '$lib/geo/proximity';
 
 const ENRICHED_DOMAINS = ['marinij.com', 'ptreyeslight.com'];
 const MAX_ITEMS_PER_BATCH = 12;
@@ -117,15 +117,6 @@ function isLikelyIntersection(candidate: string): boolean {
 	return /\s(?:and|&|at)\s/i.test(candidate);
 }
 
-function isInsideMarin(lat: number, lon: number): boolean {
-	const pad = 0.03;
-	return (
-		lat >= MARIN_BOUNDS.south - pad &&
-		lat <= MARIN_BOUNDS.north + pad &&
-		lon >= MARIN_BOUNDS.west - pad &&
-		lon <= MARIN_BOUNDS.east + pad
-	);
-}
 
 async function geocodeCandidate(
 	candidate: string,

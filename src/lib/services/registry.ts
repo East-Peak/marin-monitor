@@ -87,7 +87,7 @@ const SERVICE_CONFIG: Record<ServiceId, ServiceConfig> = {
 
 	MARIN_OPENDATA: {
 		id: 'marin_opendata',
-		baseUrl: 'https://data.marincounty.org/resource',
+		baseUrl: 'https://data.marincounty.gov/resource',
 		timeout: 15000,
 		retries: 2,
 		cache: {

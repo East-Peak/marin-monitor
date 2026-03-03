@@ -56,11 +56,11 @@ export class CacheManager {
 	 */
 	get<T = unknown>(key: string): CacheResult<T> | null {
 		// L1: Memory check
-		if (this.memoryCache.has(key)) {
-			const entry = this.memoryCache.get(key) as CacheEntry<T>;
-			if (this.isValid(entry)) {
+		const memEntry = this.memoryCache.get(key) as CacheEntry<T> | undefined;
+		if (memEntry) {
+			if (this.isValid(memEntry)) {
 				this.log(`Cache HIT (memory): ${key.substring(0, 50)}...`);
-				return { data: entry.data, fromCache: 'memory', isStale: this.isStale(entry) };
+				return { data: memEntry.data, fromCache: 'memory', isStale: this.isStale(memEntry) };
 			}
 			this.memoryCache.delete(key);
 		}
@@ -74,12 +74,15 @@ export class CacheManager {
 		try {
 			const stored = localStorage.getItem(this.storagePrefix + this.hashKey(key));
 			if (stored) {
-				const entry = JSON.parse(stored) as CacheEntry<T>;
-				if (this.isValid(entry)) {
-					// Promote to memory cache
-					this.setMemory(key, entry);
-					this.log(`Cache HIT (storage): ${key.substring(0, 50)}...`);
-					return { data: entry.data, fromCache: 'storage', isStale: this.isStale(entry) };
+				const parsed = JSON.parse(stored);
+				if (parsed && typeof parsed.timestamp === 'number' && typeof parsed.ttl === 'number') {
+					const entry = parsed as CacheEntry<T>;
+					if (this.isValid(entry)) {
+						// Promote to memory cache
+						this.setMemory(key, entry);
+						this.log(`Cache HIT (storage): ${key.substring(0, 50)}...`);
+						return { data: entry.data, fromCache: 'storage', isStale: this.isStale(entry) };
+					}
 				}
 				localStorage.removeItem(this.storagePrefix + this.hashKey(key));
 			}
@@ -186,8 +189,14 @@ export class CacheManager {
 			const key = localStorage.key(i);
 			if (key?.startsWith(this.storagePrefix)) {
 				try {
-					const entry = JSON.parse(localStorage.getItem(key) || '') as CacheEntry;
-					keys.push({ key, timestamp: entry.timestamp });
+					const raw = localStorage.getItem(key);
+					if (!raw) continue;
+					const parsed = JSON.parse(raw);
+					if (parsed && typeof parsed.timestamp === 'number') {
+						keys.push({ key, timestamp: parsed.timestamp });
+					} else {
+						localStorage.removeItem(key);
+					}
 				} catch {
 					// Invalid entry - remove it
 					localStorage.removeItem(key);

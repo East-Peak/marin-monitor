@@ -2,16 +2,7 @@ import { json } from '@sveltejs/kit';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import type { RequestHandler } from './$types';
 import { MARIN_BOUNDS } from '$lib/config';
-
-function isInsideMarin(lat: number, lon: number): boolean {
-	const pad = 0.03;
-	return (
-		lat >= MARIN_BOUNDS.south - pad &&
-		lat <= MARIN_BOUNDS.north + pad &&
-		lon >= MARIN_BOUNDS.west - pad &&
-		lon <= MARIN_BOUNDS.east + pad
-	);
-}
+import { isInsideMarin } from '$lib/geo/proximity';
 
 export const GET: RequestHandler = async ({ url }) => {
 	const q = url.searchParams.get('q')?.trim();

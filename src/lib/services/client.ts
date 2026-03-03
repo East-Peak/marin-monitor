@@ -7,6 +7,7 @@ import { CircuitBreakerRegistry, type CircuitBreaker } from './circuit-breaker';
 import { RequestDeduplicator } from './deduplicator';
 import { ServiceRegistry, type ServiceConfig, type ServiceId } from './registry';
 import { ServiceError, NetworkError, TimeoutError, CircuitOpenError } from './errors';
+import { logger } from '$lib/config/api';
 
 export interface RequestOptions {
 	params?: Record<string, string | number | boolean>;
@@ -152,8 +153,9 @@ export class ServiceClient {
 		// Try returning stale cache on failure
 		const cached = this.cache.get<T>(cacheKey);
 		if (cached) {
-			console.warn(
-				`[ServiceClient] ${serviceId}: Returning stale cache after ${retries + 1} failed attempts`
+			logger.warn(
+				'ServiceClient',
+				`${serviceId}: Returning stale cache after ${retries + 1} failed attempts`
 			);
 			return { data: cached.data, fromCache: 'stale-fallback', error: lastError?.message };
 		}
@@ -303,7 +305,7 @@ export class ServiceClient {
 	 */
 	private log(message: string): void {
 		if (this.debug) {
-			console.log(`[ServiceClient] ${message}`);
+			logger.log('ServiceClient', message);
 		}
 	}
 }

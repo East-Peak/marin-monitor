@@ -155,27 +155,6 @@ export interface EarthquakeData {
 	url: string;
 }
 
-/**
- * Correlation analysis result
- */
-export interface CorrelationResult {
-	topic: string;
-	count: number;
-	sources: string[];
-	momentum: 'rising' | 'stable' | 'falling';
-}
-
-/**
- * Narrative tracking result
- */
-export interface NarrativeResult {
-	narrative: string;
-	mentions: number;
-	firstSeen: number;
-	lastSeen: number;
-	trend: 'emerging' | 'established' | 'fading';
-	relatedTopics: string[];
-}
 
 /**
  * Custom monitor created by user
@@ -223,14 +202,3 @@ export interface SettingsState {
 	enableVibes: boolean; // Toggle for satire/Marin Lately content
 }
 
-/**
- * Pulse stats — at-a-glance numbers for the dashboard
- */
-export interface PulseStats {
-	stories24h: number;
-	alerts24h: number;
-	aqi: number | null;
-	temperature: number | null;
-	tideNext: TidePrediction | null;
-	lastEarthquake: EarthquakeData | null;
-}

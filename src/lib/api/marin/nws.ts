@@ -92,7 +92,7 @@ export async function fetchForecast(
 		})) as (WeatherData & { name: string })[];
 	} catch (error) {
 		logger.warn('NWS', `Forecast fetch failed: ${(error as Error).message}`);
-		throw error;
+		return [];
 	}
 }
 
@@ -122,7 +122,7 @@ export async function fetchAlerts(): Promise<FireWeatherAlert[]> {
 		}));
 	} catch (error) {
 		logger.warn('NWS', `Alerts fetch failed: ${(error as Error).message}`);
-		throw error;
+		return [];
 	}
 }
 
@@ -136,11 +136,6 @@ export async function fetchWeather(
 	forecast: (WeatherData & { name: string })[];
 	alerts: FireWeatherAlert[];
 }> {
-	const [forecast, alerts] = await Promise.allSettled([fetchForecast(lat, lon), fetchAlerts()]);
-
-	return {
-		forecast:
-			forecast.status === 'fulfilled' ? forecast.value : ([] as (WeatherData & { name: string })[]),
-		alerts: alerts.status === 'fulfilled' ? alerts.value : []
-	};
+	const [forecast, alerts] = await Promise.all([fetchForecast(lat, lon), fetchAlerts()]);
+	return { forecast, alerts };
 }

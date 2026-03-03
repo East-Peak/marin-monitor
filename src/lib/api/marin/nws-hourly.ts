@@ -6,8 +6,8 @@
  */
 
 import { logger } from '$lib/config/api';
-import { NWS_BASE, NWS_HEADERS, getGridPoint } from './nws-common';
-import { fetchWithTimeout } from './fetch-helpers';
+import { getGridPoint } from './nws-common';
+import { serviceClient } from '$lib/services/client';
 
 export interface HourlyPeriod {
 	startTime: string;
@@ -29,6 +29,37 @@ export interface QpfPeriod {
 	rainInches: number;
 }
 
+/** NWS API response shapes */
+interface NwsHourlyResponse {
+	properties?: {
+		periods: Array<{
+			startTime: string;
+			temperature: number;
+			probabilityOfPrecipitation?: { value: number | null };
+			temperatureUnit: string;
+			windSpeed: string;
+			windDirection: string;
+			shortForecast: string;
+			isDaytime: boolean;
+			dewpoint?: { value: number | null; unitCode?: string };
+			relativeHumidity?: { value: number | null };
+		}>;
+	};
+}
+
+interface NwsGridpointResponse {
+	properties?: {
+		quantitativePrecipitation?: {
+			values: Array<{ validTime: string; value: number }>;
+		};
+	};
+}
+
+const NWS_OPTIONS = {
+	accept: 'application/geo+json',
+	headers: { 'User-Agent': 'MarinMonitor/1.0 (marin-monitor@example.com)' }
+};
+
 /** Daily rain total derived from QPF */
 export interface DailyRainForecast {
 	/** Date string YYYY-MM-DD */
@@ -43,49 +74,27 @@ export interface DailyRainForecast {
 export async function fetchHourlyForecast(lat?: number, lon?: number): Promise<HourlyPeriod[]> {
 	try {
 		const grid = await getGridPoint(lat, lon);
-		const url = `${NWS_BASE}/gridpoints/${grid.office}/${grid.gridX},${grid.gridY}/forecast/hourly`;
+		const endpoint = `/gridpoints/${grid.office}/${grid.gridX},${grid.gridY}/forecast/hourly`;
 
-		logger.log('NWS', `Fetching hourly forecast: ${url}`);
+		logger.log('NWS', `Fetching hourly forecast: ${endpoint}`);
 
-		const response = await fetchWithTimeout(url, { headers: NWS_HEADERS });
-		if (!response.ok) {
-			throw new Error(`NWS hourly forecast failed: ${response.status}`);
-		}
-
-		const data = await response.json();
-		const periods = data.properties?.periods || [];
+		const result = await serviceClient.request<NwsHourlyResponse>('NWS', endpoint, NWS_OPTIONS);
+		const periods = result.data.properties?.periods || [];
 
 		// Return next 24 hours
-		return periods
-			.slice(0, 24)
-			.map(
-				(p: {
-					startTime: string;
-					temperature: number;
-					probabilityOfPrecipitation?: { value: number | null };
-					temperatureUnit: string;
-					windSpeed: string;
-					windDirection: string;
-					shortForecast: string;
-					isDaytime: boolean;
-					dewpoint?: { value: number | null; unitCode?: string };
-					relativeHumidity?: { value: number | null };
-				}) => ({
-					startTime: p.startTime,
-					temperature: p.temperature,
-					precipitationChance: p.probabilityOfPrecipitation?.value ?? 0,
-					temperatureUnit: p.temperatureUnit,
-					windSpeed: p.windSpeed,
-					windDirection: p.windDirection,
-					shortForecast: p.shortForecast,
-					isDaytime: p.isDaytime,
-					dewpoint:
-						p.dewpoint?.value != null
-							? Math.round(p.dewpoint.value * (9 / 5) + 32)
-							: null,
-					relativeHumidity: p.relativeHumidity?.value ?? null
-				})
-			);
+		return periods.slice(0, 24).map((p) => ({
+			startTime: p.startTime,
+			temperature: p.temperature,
+			precipitationChance: p.probabilityOfPrecipitation?.value ?? 0,
+			temperatureUnit: p.temperatureUnit,
+			windSpeed: p.windSpeed,
+			windDirection: p.windDirection,
+			shortForecast: p.shortForecast,
+			isDaytime: p.isDaytime,
+			dewpoint:
+				p.dewpoint?.value != null ? Math.round(p.dewpoint.value * (9 / 5) + 32) : null,
+			relativeHumidity: p.relativeHumidity?.value ?? null
+		}));
 	} catch (error) {
 		logger.warn('NWS', `Hourly forecast fetch failed: ${(error as Error).message}`);
 		return [];
@@ -119,17 +128,12 @@ export async function fetchDailyRainForecast(
 ): Promise<DailyRainForecast[]> {
 	try {
 		const grid = await getGridPoint(lat, lon);
-		const url = `${NWS_BASE}/gridpoints/${grid.office}/${grid.gridX},${grid.gridY}`;
+		const endpoint = `/gridpoints/${grid.office}/${grid.gridX},${grid.gridY}`;
 
-		logger.log('NWS', `Fetching QPF: ${url}`);
+		logger.log('NWS', `Fetching QPF: ${endpoint}`);
 
-		const response = await fetchWithTimeout(url, { headers: NWS_HEADERS });
-		if (!response.ok) {
-			throw new Error(`NWS gridpoint failed: ${response.status}`);
-		}
-
-		const data = await response.json();
-		const qpf = data.properties?.quantitativePrecipitation;
+		const result = await serviceClient.request<NwsGridpointResponse>('NWS', endpoint, NWS_OPTIONS);
+		const qpf = result.data.properties?.quantitativePrecipitation;
 		if (!qpf?.values?.length) return [];
 
 		// Aggregate mm values by local date

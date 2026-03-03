@@ -1,9 +1,8 @@
 import { detectTown } from '$lib/config';
 import { logger } from '$lib/config/api';
 import type { NewsItem } from '$lib/types';
-import { fetchWithTimeout } from './fetch-helpers';
+import { serviceClient } from '$lib/services/client';
 
-const SHERIFF_BLOTTER_API = 'https://data.marincounty.gov/resource/ahxi-5nsc.json';
 const SHERIFF_BLOTTER_PAGE =
 	'https://data.marincounty.gov/Public-Safety/Marin-County-Sheriff-Reported-Crime/ahxi-5nsc';
 
@@ -175,26 +174,27 @@ export async function fetchSheriffCrimeBlotter(
 	limit: number = 30
 ): Promise<NewsItem[]> {
 	try {
-		const cutoff = formatSocrataLocalDate(new Date(Date.now() - hours * 60 * 60 * 1000));
-		const params = new URLSearchParams({
-			$select:
-				'unique_id,incident_date_time,crime,crime_class,incident_street_address,incident_city_town,incident_city_town_mapping,jurisdiction,latitude,longitude',
-			$where: `incident_date_time >= '${cutoff}'`,
-			$order: 'incident_date_time DESC',
-			$limit: String(limit)
-		});
+		// Round cutoff to the nearest hour for stable cache keys
+		const now = new Date();
+		now.setMinutes(0, 0, 0);
+		const cutoff = formatSocrataLocalDate(new Date(now.getTime() - hours * 60 * 60 * 1000));
 
-		const url = `${SHERIFF_BLOTTER_API}?${params.toString()}`;
-		logger.log('BLOTTER', `Fetching Marin Sheriff blotter: ${url}`);
-		const response = await fetchWithTimeout(url, {
-			headers: {
-				Accept: 'application/json'
+		logger.log('BLOTTER', 'Fetching Marin Sheriff blotter');
+		const result = await serviceClient.request<SheriffCrimeRecord[]>(
+			'MARIN_OPENDATA',
+			'/ahxi-5nsc.json',
+			{
+				params: {
+					$select:
+						'unique_id,incident_date_time,crime,crime_class,incident_street_address,incident_city_town,incident_city_town_mapping,jurisdiction,latitude,longitude',
+					$where: `incident_date_time >= '${cutoff}'`,
+					$order: 'incident_date_time DESC',
+					$limit: limit
+				}
 			}
-		});
-		if (!response.ok) throw new Error(`Blotter fetch failed: ${response.status}`);
+		);
 
-		const payload = (await response.json()) as SheriffCrimeRecord[];
-		return payload
+		return result.data
 			.map(recordToNewsItem)
 			.filter((item): item is NewsItem => !!item)
 			.sort((a, b) => b.timestamp - a.timestamp);

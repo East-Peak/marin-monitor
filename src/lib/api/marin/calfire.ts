@@ -8,6 +8,7 @@
 
 import { logger } from '$lib/config/api';
 import { fetchWithTimeout } from './fetch-helpers';
+import { isNearMarin } from '$lib/geo/proximity';
 
 export interface FireIncident {
 	id: string;
@@ -66,14 +67,6 @@ interface NifcFeature {
 	};
 }
 
-function isNearMarin(lat: number, lon: number, radiusKm = 80): boolean {
-	// Quick check: is it within ~80km of central Marin (37.97, -122.53)?
-	const dLat = Math.abs(lat - 37.97);
-	const dLon = Math.abs(lon - -122.53);
-	// ~111km per degree lat, ~85km per degree lon at this latitude
-	const approxKm = Math.sqrt((dLat * 111) ** 2 + (dLon * 85) ** 2);
-	return approxKm <= radiusKm;
-}
 
 /**
  * Fetch active fire incidents near Marin County from CAL FIRE.

@@ -19,7 +19,7 @@ export const API_URLS = {
 	noaaTides: 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter',
 	usgsEarthquakes: 'https://earthquake.usgs.gov/fdsnws/event/1/query',
 	airnow: 'https://www.airnowapi.org/aq/observation/latLong/current',
-	marinOpenData: 'https://data.marincounty.org/resource'
+	marinOpenData: 'https://data.marincounty.gov/resource'
 } as const;
 
 /**
