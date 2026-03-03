@@ -64,6 +64,14 @@ export interface FeedConfig {
 /**
  * Marin town definition
  */
+export type MarinRegion =
+	| 'Southern Marin'
+	| 'Central Marin'
+	| 'San Rafael'
+	| 'Novato'
+	| 'San Geronimo Valley'
+	| 'West Marin';
+
 export interface Town {
 	name: string;
 	slug: string;
@@ -75,6 +83,8 @@ export interface Town {
 	incorporated: boolean;
 	/** ZIP codes associated with this town */
 	zips?: string[];
+	/** Geographic region within Marin County */
+	region: MarinRegion;
 }
 
 /**

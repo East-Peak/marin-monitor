@@ -1,26 +1,31 @@
 <script lang="ts">
 	import { townFilter, selectedTownObj } from '$lib/stores/town-filter';
-	import { MARIN_TOWNS } from '$lib/config/towns';
+	import { MARIN_TOWNS, MARIN_REGIONS } from '$lib/config/towns';
+	import type { MarinRegion } from '$lib/types';
+	import type { Town } from '$lib/types';
 
 	let open = $state(false);
 	let search = $state('');
 	let triggerEl = $state<HTMLButtonElement>(undefined!);
 	let dropdownEl = $state<HTMLDivElement>(undefined!);
 
-	const incorporated = MARIN_TOWNS.filter((t) => t.incorporated).sort((a, b) =>
-		a.name.localeCompare(b.name)
-	);
-	const unincorporated = MARIN_TOWNS.filter((t) => !t.incorporated).sort((a, b) =>
-		a.name.localeCompare(b.name)
-	);
+	// Pre-group towns by region, sorted alphabetically within each region
+	const townsByRegion: { region: MarinRegion; towns: Town[] }[] = MARIN_REGIONS.map((region) => ({
+		region,
+		towns: MARIN_TOWNS.filter((t) => t.region === region).sort((a, b) =>
+			a.name.localeCompare(b.name)
+		)
+	}));
 
 	const filtered = $derived.by(() => {
-		if (!search) return { incorporated, unincorporated };
+		if (!search) return townsByRegion;
 		const q = search.toLowerCase();
-		return {
-			incorporated: incorporated.filter((t) => t.name.toLowerCase().includes(q)),
-			unincorporated: unincorporated.filter((t) => t.name.toLowerCase().includes(q))
-		};
+		return townsByRegion
+			.map((group) => ({
+				...group,
+				towns: group.towns.filter((t) => t.name.toLowerCase().includes(q))
+			}))
+			.filter((group) => group.towns.length > 0);
 	});
 
 	const displayName = $derived($selectedTownObj?.name ?? 'All of Marin');
@@ -99,9 +104,9 @@
 					<span class="option-pop">County</span>
 				</button>
 
-				{#if filtered.incorporated.length > 0}
-					<div class="picker-group-header">Cities</div>
-					{#each filtered.incorporated as town}
+				{#each filtered as group (group.region)}
+					<div class="picker-group-header">{group.region}</div>
+					{#each group.towns as town (town.slug)}
 						<button
 							class="picker-option"
 							class:selected={$townFilter === town.slug}
@@ -111,23 +116,9 @@
 							<span class="option-pop">{town.pop ? formatPop(town.pop) : ''}</span>
 						</button>
 					{/each}
-				{/if}
+				{/each}
 
-				{#if filtered.unincorporated.length > 0}
-					<div class="picker-group-header">Communities</div>
-					{#each filtered.unincorporated as town}
-						<button
-							class="picker-option"
-							class:selected={$townFilter === town.slug}
-							onclick={() => selectTown(town.slug)}
-						>
-							<span class="option-name">{town.name}</span>
-							<span class="option-pop">{town.pop ? formatPop(town.pop) : ''}</span>
-						</button>
-					{/each}
-				{/if}
-
-				{#if filtered.incorporated.length === 0 && filtered.unincorporated.length === 0}
+				{#if filtered.length === 0}
 					<div class="picker-empty">No matching towns</div>
 				{/if}
 			</div>

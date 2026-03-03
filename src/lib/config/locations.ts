@@ -18,7 +18,7 @@ export interface LocationPreset {
 export const LOCATION_PRESETS: LocationPreset[] = [
 	{
 		id: 'central-marin',
-		name: 'Central Marin (San Rafael)',
+		name: 'Central Marin',
 		lat: 37.9735,
 		lon: -122.5311,
 		tideStation: '9415020',
