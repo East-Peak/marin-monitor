@@ -694,6 +694,12 @@
 							/>
 						</div>
 					{/if}
+
+					{#if isPanelVisible('weather')}
+						<div class="signal-card signal-environment">
+							<EnvironmentPanel />
+						</div>
+					{/if}
 				</div>
 
 				<div class="signal-column signal-column-right">
@@ -712,12 +718,6 @@
 					{#if isPanelVisible('ev-charging')}
 						<div class="signal-card signal-ev-charging">
 							<EvChargingPanel />
-						</div>
-					{/if}
-
-					{#if isPanelVisible('weather')}
-						<div class="signal-card signal-environment">
-							<EnvironmentPanel />
 						</div>
 					{/if}
 				</div>
