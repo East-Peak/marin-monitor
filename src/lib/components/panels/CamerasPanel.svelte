@@ -62,6 +62,11 @@
 </script>
 
 <Panel id="cameras" title="Cameras" count={CAMERAS.length}>
+	{#snippet actions()}
+		<button class="expand-link" onclick={() => settings.toggleCamerasExpanded()}>
+			{$settings.camerasExpanded ? 'Collapse' : 'Expand'} views
+		</button>
+	{/snippet}
 	<div class="camera-tabs">
 		{#each CAMERA_CATEGORIES as cat (cat.id)}
 			{@const count = CAMERAS.filter((c) => c.category === cat.id).length}
@@ -145,9 +150,6 @@
 		{/each}
 	</div>
 
-	<button class="expand-cameras-btn" onclick={() => settings.toggleCamerasExpanded()}>
-		{$settings.camerasExpanded ? 'Collapse Camera Views' : 'Expand Camera Views'}
-	</button>
 </Panel>
 
 <style>
@@ -304,26 +306,20 @@
 		opacity: 0.6;
 	}
 
-	.expand-cameras-btn {
-		width: 100%;
-		padding: 0.4rem 0.5rem;
-		margin-top: 0.5rem;
-		background: rgba(255, 255, 255, 0.03);
-		border: 1px solid var(--border);
-		border-radius: 3px;
+	.expand-link {
+		background: none;
+		border: none;
 		color: var(--text-muted);
 		font: inherit;
-		font-size: 0.58rem;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
+		font-size: 0.55rem;
 		cursor: pointer;
-		transition: all 0.15s;
+		padding: 0.1rem 0;
+		transition: color 0.15s;
+		white-space: nowrap;
 	}
 
-	.expand-cameras-btn:hover {
-		color: var(--text-secondary);
-		border-color: var(--accent);
-		background: rgba(var(--accent-rgb), 0.06);
+	.expand-link:hover {
+		color: var(--accent);
 	}
 
 	@media (max-width: 768px) {

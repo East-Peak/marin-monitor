@@ -585,7 +585,7 @@
 					</div>
 				{/if}
 
-				{#if isPanelVisible('cameras')}
+				{#if isPanelVisible('cameras') && !$settings.camerasExpanded}
 					<div class="camera-stage">
 						<CamerasPanel />
 					</div>
