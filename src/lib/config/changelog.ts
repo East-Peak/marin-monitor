@@ -15,6 +15,11 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-03-03',
+		title: 'Airport map pins',
+		description: 'SFO and OAK appear as color-coded dots on the map. Green = on time, amber = delays, red = ground stop. Click for details.'
+	},
+	{
+		date: '2026-03-03',
 		title: 'Airport Status panel',
 		description: 'SFO and OAK delays, weather conditions, fog risk, and forecast alerts. Data from FAA NAS and Aviation Weather.'
 	},
