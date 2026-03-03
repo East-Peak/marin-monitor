@@ -1208,25 +1208,34 @@
 
 			if (!unsubscribeMap) {
 				unsubscribeMap = mapStore.subscribe(() => {
-					const m = getMap();
-					if (!m || !m.getSource('towns')) return;
-					updateData(m);
+					if (updateDataTimer) clearTimeout(updateDataTimer);
+					updateDataTimer = setTimeout(() => {
+						const m = getMap();
+						if (!m || !m.getSource('towns')) return;
+						updateData(m);
+					}, 100);
 				});
 			}
 
 			if (!unsubscribeGas) {
 				unsubscribeGas = currentGasStations.subscribe(() => {
-					const m = getMap();
-					if (!m || !m.getSource('gas-stations')) return;
-					updateData(m);
+					if (updateDataTimer) clearTimeout(updateDataTimer);
+					updateDataTimer = setTimeout(() => {
+						const m = getMap();
+						if (!m || !m.getSource('gas-stations')) return;
+						updateData(m);
+					}, 100);
 				});
 			}
 
 			if (!unsubscribeEv) {
 				unsubscribeEv = currentChargingStations.subscribe(() => {
-					const m = getMap();
-					if (!m || !m.getSource('ev-charging-stations')) return;
-					updateData(m);
+					if (updateDataTimer) clearTimeout(updateDataTimer);
+					updateDataTimer = setTimeout(() => {
+						const m = getMap();
+						if (!m || !m.getSource('ev-charging-stations')) return;
+						updateData(m);
+					}, 100);
 				});
 			}
 		});

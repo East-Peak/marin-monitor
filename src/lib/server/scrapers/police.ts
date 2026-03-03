@@ -5,6 +5,7 @@
  */
 import { JSDOM } from 'jsdom';
 import type { NewsItem } from '$lib/types';
+import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import {
 	stripHtml,
 	excerpt,
@@ -93,7 +94,7 @@ async function resolveDocumentDate(
 	fallback: string | null = null
 ): Promise<string | null> {
 	try {
-		const response = await fetch(link, { method: 'HEAD', redirect: 'follow' });
+		const response = await fetchWithTimeout(link, { method: 'HEAD', redirect: 'follow' }, 10000);
 		const header = response.headers.get('last-modified') || response.headers.get('date');
 		if (header) {
 			const timestamp = new Date(header).getTime();
@@ -214,9 +215,9 @@ function buildHtmlItem(params: {
 }
 
 async function fetchFairfaxLogs(): Promise<NewsItem[]> {
-	const response = await fetch(FAIRFAX_DOCS_URL, {
+	const response = await fetchWithTimeout(FAIRFAX_DOCS_URL, {
 		headers: { Accept: 'application/json' }
-	});
+	}, 15000);
 	if (!response.ok) throw new Error(`Fairfax fetch failed: ${response.status}`);
 
 	const docs = (await response.json()) as Array<{
@@ -262,11 +263,11 @@ async function fetchMillValleyLogs(): Promise<NewsItem[]> {
 		sortOrder: 0
 	};
 
-	const response = await fetch(MILL_VALLEY_DOC_ENDPOINT, {
+	const response = await fetchWithTimeout(MILL_VALLEY_DOC_ENDPOINT, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json;charset=UTF-8' },
 		body: JSON.stringify(payload)
-	});
+	}, 15000);
 	if (!response.ok) {
 		throw new Error(`Mill Valley document fetch failed: ${response.status}`);
 	}
@@ -303,9 +304,9 @@ async function fetchMillValleyLogs(): Promise<NewsItem[]> {
 }
 
 async function fetchRossStats(): Promise<NewsItem[]> {
-	const response = await fetch(ROSS_STATS_URL, {
+	const response = await fetchWithTimeout(ROSS_STATS_URL, {
 		headers: { Accept: 'text/html' }
-	});
+	}, 15000);
 	if (!response.ok) throw new Error(`Ross fetch failed: ${response.status}`);
 
 	const html = await response.text();
@@ -341,9 +342,9 @@ async function fetchRossStats(): Promise<NewsItem[]> {
 }
 
 async function fetchTiburonPoliceNews(): Promise<NewsItem[]> {
-	const response = await fetch(TIBURON_POLICE_FEED_URL, {
+	const response = await fetchWithTimeout(TIBURON_POLICE_FEED_URL, {
 		headers: { Accept: 'text/html' }
-	});
+	}, 15000);
 	if (!response.ok) throw new Error(`Tiburon news flash fetch failed: ${response.status}`);
 
 	const feedHtml = await response.text();
@@ -367,9 +368,9 @@ async function fetchTiburonPoliceNews(): Promise<NewsItem[]> {
 			const articleId = href.match(/(\d+)(?!.*\d)/)?.[1];
 			if (!articleId) return null;
 			const detailUrl = `${TIBURON_BASE_URL}/CivicAlerts.aspx?AID=${articleId}`;
-			const detailResponse = await fetch(detailUrl, {
+			const detailResponse = await fetchWithTimeout(detailUrl, {
 				headers: { Accept: 'text/html' }
-			});
+			}, 10000);
 			if (!detailResponse.ok) return null;
 
 			const detailHtml = await detailResponse.text();
@@ -408,9 +409,9 @@ async function fetchTiburonPoliceNews(): Promise<NewsItem[]> {
 }
 
 async function fetchBelvedereSafetyPosts(): Promise<NewsItem[]> {
-	const response = await fetch(BELVEDERE_POSTS_URL, {
+	const response = await fetchWithTimeout(BELVEDERE_POSTS_URL, {
 		headers: { Accept: 'application/json' }
-	});
+	}, 15000);
 	if (!response.ok) throw new Error(`Belvedere posts fetch failed: ${response.status}`);
 
 	const posts = (await response.json()) as Array<{
@@ -465,7 +466,7 @@ function extractNixleDate(doc: Document): string | null {
 async function fetchNixleDetail(
 	url: string
 ): Promise<{ title: string; pubDate: string | null; description: string; content: string } | null> {
-	const response = await fetch(url, { headers: { Accept: 'text/html' } });
+	const response = await fetchWithTimeout(url, { headers: { Accept: 'text/html' } }, 10000);
 	if (!response.ok) return null;
 
 	const html = await response.text();
@@ -518,9 +519,9 @@ async function fetchNixleAgencyAlerts(agency: {
 
 	for (let pageNumber = 1; pageNumber <= NIXLE_MAX_PAGES; pageNumber += 1) {
 		const pageUrl = pageNumber === 1 ? baseUrl : `${baseUrl}?page=${pageNumber}`;
-		const response = await fetch(pageUrl, {
+		const response = await fetchWithTimeout(pageUrl, {
 			headers: { Accept: 'text/html' }
-		});
+		}, 15000);
 		if (!response.ok) {
 			throw new Error(`${agency.source} Nixle fetch failed: ${response.status}`);
 		}

@@ -2,10 +2,25 @@ import { error } from '@sveltejs/kit';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import type { RequestHandler } from './$types';
 
+/** Only proxy article pages from known local news domains */
+const ALLOWED_ARTICLE_DOMAINS = new Set([
+	'marinij.com',
+	'www.marinij.com',
+	'ptreyeslight.com',
+	'www.ptreyeslight.com',
+	'pacificsun.com',
+	'www.pacificsun.com',
+	'marinmagazine.com',
+	'www.marinmagazine.com',
+	'marinlately.com',
+	'www.marinlately.com'
+]);
+
 function isAllowedArticleUrl(value: string): boolean {
 	try {
 		const parsed = new URL(value);
-		return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+		if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return false;
+		return ALLOWED_ARTICLE_DOMAINS.has(parsed.hostname.toLowerCase());
 	} catch {
 		return false;
 	}

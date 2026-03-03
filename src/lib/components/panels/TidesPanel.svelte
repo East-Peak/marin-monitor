@@ -433,10 +433,6 @@
 	});
 
 	$effect(() => {
-		buildCoastalPoints();
-	});
-
-	$effect(() => {
 		if (coastalPoints.length > 0 && waveSvg) drawWaveChart();
 	});
 

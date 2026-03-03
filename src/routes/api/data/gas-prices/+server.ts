@@ -1,5 +1,6 @@
 import { head } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
+import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async () => {
@@ -7,9 +8,9 @@ export const GET: RequestHandler = async () => {
 		const blob = await head('marin-gas-prices.json', {
 			token: env.BLOB_READ_WRITE_TOKEN
 		});
-		const response = await fetch(blob.downloadUrl, {
+		const response = await fetchWithTimeout(blob.downloadUrl, {
 			headers: { Authorization: `Bearer ${env.BLOB_READ_WRITE_TOKEN}` }
-		});
+		}, 8000);
 		if (response.ok) {
 			return new Response(await response.text(), {
 				headers: {

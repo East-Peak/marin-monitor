@@ -1,14 +1,14 @@
 import { put } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
 import { scrapeActivity } from '$lib/server/scrapers/activity';
+import { verifyCronAuth } from '$lib/server/cron-auth';
 import type { RequestHandler } from './$types';
 
 export const config = { maxDuration: 60 };
 
 export const GET: RequestHandler = async ({ request }) => {
-	if (request.headers.get('authorization') !== `Bearer ${env.CRON_SECRET}`) {
-		return new Response('Unauthorized', { status: 401 });
-	}
+	const authError = verifyCronAuth(request);
+	if (authError) return authError;
 
 	try {
 		const items = await scrapeActivity();

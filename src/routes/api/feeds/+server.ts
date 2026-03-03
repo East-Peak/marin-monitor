@@ -42,6 +42,9 @@ export const GET: RequestHandler = async ({ url }) => {
 		}
 
 		const xml = await response.text();
+		if (xml.length > 2_000_000) {
+			throw error(413, 'Feed response too large');
+		}
 
 		return new Response(xml, {
 			headers: {

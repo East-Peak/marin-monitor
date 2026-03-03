@@ -3,6 +3,7 @@
  * Ported from scripts/extract-activity-feeds.mjs and scripts/extract-police-logs.mjs
  */
 import { JSDOM } from 'jsdom';
+import { fetchWithTimeout } from '$lib/server/fetch-utils';
 
 export function stripHtml(raw = ''): string {
 	return raw
@@ -57,23 +58,31 @@ export function toIsoDate(dateInput: unknown): string {
 	return Number.isFinite(date.getTime()) ? date.toISOString() : new Date().toISOString();
 }
 
-export async function safeFetch(url: string): Promise<string> {
-	const response = await fetch(url, {
-		headers: {
-			'User-Agent': 'Mozilla/5.0',
-			Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-		}
-	});
+export async function safeFetch(url: string, timeoutMs = 15000): Promise<string> {
+	const response = await fetchWithTimeout(
+		url,
+		{
+			headers: {
+				'User-Agent': 'Mozilla/5.0',
+				Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+			}
+		},
+		timeoutMs
+	);
 	if (!response.ok) throw new Error(`${url} → ${response.status}`);
 	return await response.text();
 }
 
 export async function fetchLastModified(url: string): Promise<string> {
 	try {
-		const response = await fetch(url, {
-			method: 'HEAD',
-			headers: { 'User-Agent': 'Mozilla/5.0' }
-		});
+		const response = await fetchWithTimeout(
+			url,
+			{
+				method: 'HEAD',
+				headers: { 'User-Agent': 'Mozilla/5.0' }
+			},
+			10000
+		);
 		const header = response.headers.get('last-modified') || response.headers.get('date');
 		if (header) {
 			const timestamp = new Date(header).getTime();

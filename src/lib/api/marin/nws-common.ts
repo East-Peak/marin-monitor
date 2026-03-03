@@ -35,6 +35,9 @@ export async function getGridPoint(
 	}
 
 	const data = await response.json();
+	if (!data.properties) {
+		throw new Error('NWS returned unexpected response structure (missing properties)');
+	}
 	const grid = {
 		office: data.properties.gridId || NWS_OFFICE,
 		gridX: data.properties.gridX,

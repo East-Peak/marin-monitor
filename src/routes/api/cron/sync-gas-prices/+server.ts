@@ -1,6 +1,7 @@
 import { put, head } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
 import { scrapeGasPrices } from '$lib/server/scrapers/gas-prices';
+import { verifyCronAuth } from '$lib/server/cron-auth';
 import type { RequestHandler } from './$types';
 import type { GasPriceData, GasPriceSnapshot } from '$lib/types/gas';
 
@@ -27,9 +28,8 @@ function toHistoryEntry(
 }
 
 export const GET: RequestHandler = async ({ request }) => {
-	if (request.headers.get('authorization') !== `Bearer ${env.CRON_SECRET}`) {
-		return new Response('Unauthorized', { status: 401 });
-	}
+	const authError = verifyCronAuth(request);
+	if (authError) return authError;
 
 	try {
 		const snapshot = await scrapeGasPrices();

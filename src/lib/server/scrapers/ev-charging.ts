@@ -6,6 +6,7 @@
  */
 
 import { getNrelApiKey, getOpenChargeMapApiKey } from '$lib/server/api-keys';
+import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import { MARIN_BOUNDS } from '$lib/config/towns';
 import type {
 	ConnectorType,
@@ -90,7 +91,7 @@ async function fetchNrelTile(
 		status: 'E'
 	});
 
-	const response = await fetch(`${NREL_BASE}?${params}`);
+	const response = await fetchWithTimeout(`${NREL_BASE}?${params}`, undefined, 10000);
 	if (!response.ok) {
 		const text = await response.text().catch(() => '');
 		throw new Error(`NREL API error ${response.status}: ${text.slice(0, 200)}`);
@@ -114,7 +115,7 @@ async function fetchOcmStations(apiKey: string): Promise<OcmStation[]> {
 	});
 
 	try {
-		const response = await fetch(`https://api.openchargemap.io/v3/poi?${params}`);
+		const response = await fetchWithTimeout(`https://api.openchargemap.io/v3/poi?${params}`, undefined, 10000);
 		if (!response.ok) return [];
 		return (await response.json()) as OcmStation[];
 	} catch {

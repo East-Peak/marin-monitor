@@ -1,6 +1,7 @@
 import { put, head } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
 import { scrapeEvCharging } from '$lib/server/scrapers/ev-charging';
+import { verifyCronAuth } from '$lib/server/cron-auth';
 import type { RequestHandler } from './$types';
 import type { EvChargingData, EvChargingSnapshot } from '$lib/types/ev-charging';
 
@@ -26,9 +27,8 @@ function toHistoryEntry(
 }
 
 export const GET: RequestHandler = async ({ request }) => {
-	if (request.headers.get('authorization') !== `Bearer ${env.CRON_SECRET}`) {
-		return new Response('Unauthorized', { status: 401 });
-	}
+	const authError = verifyCronAuth(request);
+	if (authError) return authError;
 
 	try {
 		const snapshot = await scrapeEvCharging();

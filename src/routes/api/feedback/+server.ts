@@ -12,6 +12,14 @@ interface FeedbackEntry {
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
+		const contentLength = request.headers.get('content-length');
+		if (contentLength && parseInt(contentLength) > 10000) {
+			return new Response(JSON.stringify({ error: 'Request too large' }), {
+				status: 413,
+				headers: { 'Content-Type': 'application/json' }
+			});
+		}
+
 		const body = await request.json();
 		const { type, message, email } = body as FeedbackEntry;
 
@@ -51,6 +59,12 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		existing.push(entry);
+
+		// Cap feedback entries to prevent unbounded blob growth
+		const MAX_FEEDBACK_ENTRIES = 1000;
+		if (existing.length > MAX_FEEDBACK_ENTRIES) {
+			existing = existing.slice(-MAX_FEEDBACK_ENTRIES);
+		}
 
 		await put('feedback.json', JSON.stringify(existing), {
 			access: 'private',

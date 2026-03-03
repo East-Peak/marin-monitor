@@ -6,6 +6,7 @@
  */
 
 import { getGooglePlacesApiKey } from '$lib/server/api-keys';
+import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import type { FuelPrice, GasStation, GasPriceSnapshot } from '$lib/types/gas';
 
 const PLACES_URL = 'https://places.googleapis.com/v1/places:searchNearby';
@@ -79,7 +80,7 @@ async function fetchTile(
 		}
 	};
 
-	const response = await fetch(PLACES_URL, {
+	const response = await fetchWithTimeout(PLACES_URL, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -87,7 +88,7 @@ async function fetchTile(
 			'X-Goog-FieldMask': FIELD_MASK
 		},
 		body: JSON.stringify(body)
-	});
+	}, 10000);
 
 	if (!response.ok) {
 		const text = await response.text().catch(() => '');
