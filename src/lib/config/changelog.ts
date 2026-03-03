@@ -14,6 +14,21 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-03-03',
+		title: 'Pathogen Watch panel',
+		description: 'Wastewater pathogen surveillance from 5 Marin sewersheds. Tracks COVID, Flu A, RSV, and Norovirus with trend sparklines.'
+	},
+	{
+		date: '2026-03-03',
+		title: 'Bug fixes',
+		description: 'Settings modal no longer transparent. Gas prices chart reads left-to-right. Pacifics schedule shows clean game titles.'
+	},
+	{
+		date: '2026-03-02',
+		title: 'Town filter overhaul',
+		description: 'Per-town filtering across the whole dashboard. Weather, conditions, gas, and EV panels re-fetch for your selected town.'
+	},
+	{
 		date: '2026-03-02',
 		title: 'Expanded fire camera coverage',
 		description: 'Added all 17 ALERTCalifornia fire cameras across Marin, organized by sub-region. New expandable full-screen camera grid.'
