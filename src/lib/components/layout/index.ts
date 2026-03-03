@@ -6,3 +6,4 @@ export { default as Header } from './Header.svelte';
 export { default as Dashboard } from './Dashboard.svelte';
 export { default as Footer } from './Footer.svelte';
 export { default as TownPicker } from './TownPicker.svelte';
+export { default as TownFilterBanner } from './TownFilterBanner.svelte';

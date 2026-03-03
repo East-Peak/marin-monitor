@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { Panel } from '$lib/components/common';
 	import { fetchObservedWeather } from '$lib/api/marin/open-meteo';
 	import { fetchHourlyForecast } from '$lib/api/marin/nws-hourly';
 	import { computeHeroDirt } from '$lib/analysis/indicators';
+	import { townLocation } from '$lib/stores/town-filter';
 	import type { HeroDirtScore } from '$lib/analysis/indicators';
 
 	let score = $state<HeroDirtScore | null>(null);
@@ -21,18 +21,23 @@
 		return Math.max(0, Math.min(100, moisture));
 	}
 
-	onMount(async () => {
-		try {
-			const [observed, forecast] = await Promise.all([
-				fetchObservedWeather(),
-				fetchHourlyForecast()
-			]);
-			score = computeHeroDirt(observed, forecast);
-		} catch (err) {
-			error = (err as Error).message;
-		} finally {
-			loading = false;
-		}
+	// Re-fetch when town location changes
+	$effect(() => {
+		const loc = $townLocation;
+		const lat = loc.lat;
+		const lon = loc.lon;
+		loading = true;
+		error = null;
+		Promise.all([fetchObservedWeather(lat, lon), fetchHourlyForecast(lat, lon)])
+			.then(([observed, forecast]) => {
+				score = computeHeroDirt(observed, forecast);
+			})
+			.catch((err) => {
+				error = (err as Error).message;
+			})
+			.finally(() => {
+				loading = false;
+			});
 	});
 </script>
 

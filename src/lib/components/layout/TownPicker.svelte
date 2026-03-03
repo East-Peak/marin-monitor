@@ -78,7 +78,15 @@
 		onclick={() => (open = !open)}
 		title="Filter by town"
 	>
-		<span class="picker-icon">&#9675;</span>
+		<svg class="picker-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+			{#if $selectedTownObj}
+				<path d="M8 1C5.24 1 3 3.24 3 6c0 3.75 5 9 5 9s5-5.25 5-9c0-2.76-2.24-5-5-5z" fill="currentColor"/>
+				<circle cx="8" cy="6" r="2" fill="var(--bg, #0a0e1a)"/>
+			{:else}
+				<path d="M8 1C5.24 1 3 3.24 3 6c0 3.75 5 9 5 9s5-5.25 5-9c0-2.76-2.24-5-5-5zm0 12.5C6.5 11 4 7.9 4 6a4 4 0 1 1 8 0c0 1.9-2.5 5-4 7.5z" fill="currentColor"/>
+				<circle cx="8" cy="6" r="1.5" fill="currentColor"/>
+			{/if}
+		</svg>
 		<span class="picker-label">{displayName}</span>
 		<span class="picker-caret">{open ? '\u25B4' : '\u25BE'}</span>
 	</button>
@@ -134,7 +142,7 @@
 	.picker-trigger {
 		display: flex;
 		align-items: center;
-		gap: 0.3rem;
+		gap: 0.35rem;
 		min-height: 2.75rem;
 		padding: 0.4rem 0.75rem;
 		background: transparent;
@@ -143,7 +151,7 @@
 		color: var(--text-secondary);
 		cursor: pointer;
 		transition: all 0.15s ease;
-		font-size: 0.65rem;
+		font-size: 0.72rem;
 		white-space: nowrap;
 	}
 
@@ -155,10 +163,13 @@
 	.picker-trigger.active {
 		border-color: var(--accent);
 		color: var(--accent);
+		background: rgba(168, 85, 247, 0.08);
 	}
 
 	.picker-icon {
-		font-size: 0.7rem;
+		width: 14px;
+		height: 14px;
+		flex-shrink: 0;
 	}
 
 	.picker-label {
@@ -276,8 +287,18 @@
 	}
 
 	@media (max-width: 480px) {
-		.picker-label {
+		.picker-trigger {
+			padding: 0.4rem 0.5rem;
+		}
+
+		.picker-label,
+		.picker-caret {
 			display: none;
+		}
+
+		.picker-icon {
+			width: 16px;
+			height: 16px;
 		}
 
 		.picker-dropdown {

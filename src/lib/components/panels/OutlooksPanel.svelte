@@ -10,9 +10,11 @@
 		forecast: (WeatherData & { name: string })[];
 		loading?: boolean;
 		error?: string | null;
+		locationLat?: number;
+		locationLon?: number;
 	}
 
-	let { forecast = [], loading = false, error = null }: Props = $props();
+	let { forecast = [], loading = false, error = null, locationLat, locationLon }: Props = $props();
 
 	let marineOutlook = $state<MarineOutlookDay[]>([]);
 	let marineLoading = $state(true);
@@ -141,11 +143,19 @@
 		return `${Math.round(inches * 10) / 10}"`;
 	}
 
+	// Fetch marine outlook once (not location-dependent — Point Reyes nearshore)
 	onMount(async () => {
-		const [marine, rain] = await Promise.all([fetchMarineOutlook(5), fetchDailyRainForecast()]);
-		marineOutlook = marine;
-		dailyRain = rain;
+		marineOutlook = await fetchMarineOutlook(5);
 		marineLoading = false;
+	});
+
+	// Re-fetch rain forecast when location changes
+	$effect(() => {
+		const lat = locationLat;
+		const lon = locationLon;
+		fetchDailyRainForecast(lat, lon).then((rain) => {
+			dailyRain = rain;
+		});
 	});
 </script>
 

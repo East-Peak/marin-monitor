@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Header, Footer } from '$lib/components/layout';
+	import TownFilterBanner from '$lib/components/layout/TownFilterBanner.svelte';
 	import { SettingsModal, OnboardingModal, FeedbackModal } from '$lib/components/modals';
 	import {
 		NewsPanel,
@@ -500,6 +501,8 @@
 	<Header onSettingsClick={() => (settingsOpen = true)} />
 
 	<main class="main-content">
+		<TownFilterBanner />
+
 		{#if editMode}
 			<div class="layout-edit-toolbar">
 				<div class="layout-edit-copy">
@@ -550,6 +553,9 @@
 										alerts={weatherAlerts}
 										loading={weatherLoading}
 										error={weatherError}
+										locationLat={userLocation.lat}
+										locationLon={userLocation.lon}
+										locationName={userLocation.name}
 									/>
 								{:else if tile.id === 'tides'}
 									<TidesPanel
@@ -567,6 +573,8 @@
 										forecast={weatherForecast}
 										loading={weatherLoading}
 										error={weatherError}
+										locationLat={userLocation.lat}
+										locationLon={userLocation.lon}
 									/>
 								{:else if tile.id === 'surf'}
 									<TidesPanel
@@ -580,6 +588,8 @@
 										forecast={weatherForecast}
 										loading={weatherLoading}
 										error={weatherError}
+										locationLat={userLocation.lat}
+										locationLon={userLocation.lon}
 									/>
 								{/if}
 							</div>
@@ -682,6 +692,8 @@
 								forecast={weatherForecast}
 								loading={weatherLoading}
 								error={weatherError}
+								locationLat={userLocation.lat}
+								locationLon={userLocation.lon}
 							/>
 						</div>
 					{/if}

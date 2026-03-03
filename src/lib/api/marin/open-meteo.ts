@@ -75,9 +75,10 @@ const HOURLY_VARS = [
 
 /**
  * Fetch 7 days of observed weather from Open-Meteo.
+ * Accepts optional lat/lon to fetch for a specific town; defaults to MARIN_CENTER.
  * Returns empty arrays on failure (graceful degradation).
  */
-export async function fetchObservedWeather(): Promise<ObservedWeather> {
+export async function fetchObservedWeather(lat?: number, lon?: number): Promise<ObservedWeather> {
 	const empty: ObservedWeather = {
 		time: [],
 		temperature: [],
@@ -97,8 +98,8 @@ export async function fetchObservedWeather(): Promise<ObservedWeather> {
 
 	try {
 		const params = new URLSearchParams({
-			latitude: String(MARIN_CENTER.lat),
-			longitude: String(MARIN_CENTER.lon),
+			latitude: String(lat ?? MARIN_CENTER.lat),
+			longitude: String(lon ?? MARIN_CENTER.lon),
 			hourly: HOURLY_VARS,
 			temperature_unit: 'fahrenheit',
 			wind_speed_unit: 'mph',
