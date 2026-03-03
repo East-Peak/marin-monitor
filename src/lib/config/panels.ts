@@ -28,7 +28,8 @@ export type PanelId =
 	| 'narrative'
 	| 'satire'
 	| 'gas-prices'
-	| 'ev-charging';
+	| 'ev-charging'
+	| 'wastewater';
 
 export const PANELS: Record<PanelId, PanelConfig> = {
 	map: { name: 'Marin Map', priority: 1, description: 'County map with layered data' },
@@ -106,6 +107,11 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 		name: 'EV Charging',
 		priority: 3,
 		description: 'EV charging station locations, connectors, and networks'
+	},
+	wastewater: {
+		name: 'Pathogen Watch',
+		priority: 2,
+		description: 'Wastewater pathogen surveillance from Marin sewersheds'
 	}
 };
 
@@ -122,6 +128,7 @@ export const DEFAULT_PANEL_ORDER: PanelId[] = [
 	'weather',
 	'cameras',
 	'conditions',
+	'wastewater',
 	'civic',
 	'outdoors',
 	'housing',

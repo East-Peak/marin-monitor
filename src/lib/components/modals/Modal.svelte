@@ -58,6 +58,7 @@
 		position: fixed;
 		inset: 0;
 		background: rgba(0, 0, 0, 0.7);
+		backdrop-filter: blur(8px);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -66,7 +67,7 @@
 	}
 
 	.modal {
-		background: var(--surface);
+		background: rgba(20, 25, 40, 0.95);
 		border: 1px solid var(--border);
 		border-radius: 8px;
 		width: 100%;

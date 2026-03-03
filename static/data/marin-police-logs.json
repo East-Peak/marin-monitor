@@ -1,5 +1,47 @@
 [
   {
+    "id": "ross-police-stats-town-statistics-february-2026",
+    "title": "Monthly police statistics February 2026",
+    "link": "https://www.townofrossca.gov/sites/default/files/fileattachments/police/page/283/town_stats_02-2026.pdf",
+    "pubDate": "2026-03-02T23:28:37.000Z",
+    "timestamp": 1772494117000,
+    "description": "Official Ross Police monthly statistics PDF. Monthly summary report; incident-level extraction is not yet available in the dashboard.",
+    "content": "Official Ross Police monthly statistics PDF. Monthly summary report; incident-level extraction is not yet available in the dashboard.",
+    "source": "Ross Police Statistics",
+    "category": "safety",
+    "verification": "official",
+    "topics": [
+      "crime",
+      "police-stats",
+      "monthly-report"
+    ],
+    "town": "Ross",
+    "townSlug": "ross",
+    "locationConfidence": "town",
+    "locationEvidence": "Ross"
+  },
+  {
+    "id": "ross-police-stats-town-statistics-january-2026",
+    "title": "Monthly police statistics January 2026",
+    "link": "https://www.townofrossca.gov/sites/default/files/fileattachments/police/page/283/town_stats_01-2026.pdf",
+    "pubDate": "2026-03-02T23:28:37.000Z",
+    "timestamp": 1772494117000,
+    "description": "Official Ross Police monthly statistics PDF. Monthly summary report; incident-level extraction is not yet available in the dashboard.",
+    "content": "Official Ross Police monthly statistics PDF. Monthly summary report; incident-level extraction is not yet available in the dashboard.",
+    "source": "Ross Police Statistics",
+    "category": "safety",
+    "verification": "official",
+    "topics": [
+      "crime",
+      "police-stats",
+      "monthly-report"
+    ],
+    "town": "Ross",
+    "townSlug": "ross",
+    "locationConfidence": "town",
+    "locationEvidence": "Ross"
+  },
+  {
     "id": "fairfax-police-log-40571",
     "title": "Weekly police log · Feb 21st thru 27th, 2026",
     "link": "https://storage.googleapis.com/proudcity/fairfaxca/2026/02/d943819d-doc00852720260228131009.pdf",

@@ -28,7 +28,11 @@
 	let hoverState = $state<HoverState>(null);
 
 	const current = $derived(data.current);
-	const history = $derived(data.history.filter((h) => h.avgRegular !== null));
+	const history = $derived(
+		data.history
+			.filter((h) => h.avgRegular !== null)
+			.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+	);
 
 	// Filter stations by selected town (proximity match)
 	const filteredStations = $derived.by<GasStation[]>(() => {

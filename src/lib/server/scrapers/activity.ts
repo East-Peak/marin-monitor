@@ -1024,8 +1024,18 @@ async function parsePacificsSchedule(now: number): Promise<NewsItem[]> {
 		const html = await safeFetch(scheduleUrl);
 		const items: NewsItem[] = [];
 
+		// Match imagearray entries: ['img','eventUrl','','Opponent @ San Rafael Pacifics MM-DD-YYYY ...']
 		const gamePattern =
-			/(.+?)\s+@\s+San Rafael Pacifics\s+(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM))/gi;
+			/','([A-Za-z\s]+?)\s+@\s+San Rafael Pacifics\s+(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM))/gi;
+		// Extract event URLs from imagearray 2nd element (eventid links)
+		const eventUrlPattern =
+			/'(https?:\/\/[^']*eventid=\d+[^']*)','','[^']*@\s*San Rafael Pacifics\s+(\d{2})-(\d{2})-(\d{4})/gi;
+		const eventUrls = new Map<string, string>();
+		let urlMatch;
+		while ((urlMatch = eventUrlPattern.exec(html)) !== null) {
+			const dateKey = `${urlMatch[2]}-${urlMatch[3]}-${urlMatch[4]}`;
+			eventUrls.set(dateKey, urlMatch[1]);
+		}
 
 		let match;
 		while ((match = gamePattern.exec(html)) !== null) {
@@ -1048,13 +1058,14 @@ async function parsePacificsSchedule(now: number): Promise<NewsItem[]> {
 				minute: '2-digit'
 			});
 			const title = `Pacifics vs ${opponent} · ${dayStr}, ${timeStr}`;
+			const eventUrl = eventUrls.get(`${month}-${day}-${year}`);
 
 			const item = buildItem(
 				{
 					category: 'prep',
 					source: 'San Rafael Pacifics',
 					title,
-					link: scheduleUrl,
+					link: eventUrl ?? scheduleUrl,
 					pubDate: gameDate.toISOString(),
 					description: `San Rafael Pacifics home game at Albert Park. ${timeStr} first pitch.`,
 					verification: 'community',

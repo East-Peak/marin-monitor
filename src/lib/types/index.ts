@@ -172,6 +172,26 @@ export interface CustomMonitor {
 }
 
 /**
+ * Wastewater pathogen surveillance (Cal-SuWers)
+ */
+export interface WastewaterPathogen {
+	id: string;
+	label: string;
+	status: 'high' | 'moderate' | 'low' | 'not-detected';
+	latestConc: number | null;
+	belowLod: boolean;
+	trend: number[];
+	trendDirection: 'rising' | 'falling' | 'stable';
+	lastSampleDate: string;
+}
+
+export interface WastewaterData {
+	pathogens: WastewaterPathogen[];
+	sewershedCount: number;
+	lastUpdated: string;
+}
+
+/**
  * API response wrapper
  */
 export interface ApiResponse<T> {

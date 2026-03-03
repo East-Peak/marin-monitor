@@ -18,7 +18,8 @@
 		EnvironmentPanel,
 		CommunityPanel,
 		ConditionsPanel,
-		ExpandedCamerasPanel
+		ExpandedCamerasPanel,
+		WastewaterPanel
 	} from '$lib/components/panels';
 	import { news, settings, refresh, allNewsItems } from '$lib/stores';
 	import { townLocation } from '$lib/stores/town-filter';
@@ -664,6 +665,12 @@
 					</div>
 				{/if}
 
+					{#if isPanelVisible('wastewater')}
+						<div class="signal-card signal-wastewater">
+							<WastewaterPanel />
+						</div>
+					{/if}
+
 					{#if isPanelVisible('narrative') || isPanelVisible('correlation')}
 						<div class="signal-card signal-signals">
 							<SignalsPanel news={$allNewsItems} />
@@ -1007,7 +1014,8 @@
 	.signal-signals :global(.panel-content),
 	.signal-outlooks :global(.panel-content),
 	.signal-environment :global(.panel-content),
-	.signal-conditions :global(.panel-content) {
+	.signal-conditions :global(.panel-content),
+	.signal-wastewater :global(.panel-content) {
 		max-height: none;
 		overflow-y: visible;
 	}
