@@ -4,22 +4,22 @@ export default {
 	theme: {
 		extend: {
 			colors: {
-				bg: '#050a14',
-				surface: 'rgba(20, 25, 40, 0.65)',
-				'surface-hover': 'rgba(30, 38, 55, 0.75)',
-				border: 'rgba(255, 255, 255, 0.08)',
-				'border-light': 'rgba(255, 255, 255, 0.15)',
-				'text-primary': '#f1f5f9',
+				bg: '#030712', // Darker, richer midnight base
+				surface: 'rgba(15, 23, 42, 0.65)', // Deeper slate blue-tinted panels
+				'surface-hover': 'rgba(30, 41, 59, 0.75)',
+				border: 'rgba(56, 189, 248, 0.1)', // Subtle cool-blue borders
+				'border-light': 'rgba(56, 189, 248, 0.2)',
+				'text-primary': '#f8fafc',
 				'text-dim': '#94a3b8',
 				'text-muted': '#64748b',
-				accent: '#38bdf8',
+				accent: '#0ea5e9', // Brighter, more vibrant ocean blue
 				danger: '#ef4444',
 				success: '#10b981',
 				warning: '#f59e0b',
 				info: '#3b82f6'
 			},
 			fontFamily: {
-				sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+				sans: ['"Outfit Variable"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
 				mono: ['Geist Mono', 'SF Mono', 'Fira Code', 'monospace']
 			},
 			fontSize: {

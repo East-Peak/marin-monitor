@@ -221,9 +221,7 @@
 							? [...npsAlerts, ...(supplementalByCategory.get(result.category) ?? [])]
 							: (supplementalByCategory.get(result.category) ?? []);
 
-				const allItems = [...result.items, ...extraItems].sort(
-					(a, b) => b.timestamp - a.timestamp
-				);
+				const allItems = [...result.items, ...extraItems].sort((a, b) => b.timestamp - a.timestamp);
 				const enrichedItems = await enrichItemsForRelevance(allItems);
 
 				news.setItems(result.category, enrichedItems);
@@ -506,14 +504,23 @@
 
 <svelte:head>
 	<title>Marin Monitor</title>
-	<meta name="description" content="Everything happening in Marin County — news, weather, tides, traffic, and the occasional coyote sighting." />
+	<meta
+		name="description"
+		content="Everything happening in Marin County — news, weather, tides, traffic, and the occasional coyote sighting."
+	/>
 	<meta property="og:title" content="Marin Monitor" />
-	<meta property="og:description" content="Everything happening in Marin County — news, weather, tides, traffic, and the occasional coyote sighting." />
+	<meta
+		property="og:description"
+		content="Everything happening in Marin County — news, weather, tides, traffic, and the occasional coyote sighting."
+	/>
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content="https://marinmonitor.com" />
 	<meta name="twitter:card" content="summary" />
 	<meta name="twitter:title" content="Marin Monitor" />
-	<meta name="twitter:description" content="Everything happening in Marin County — news, weather, tides, traffic, and the occasional coyote sighting." />
+	<meta
+		name="twitter:description"
+		content="Everything happening in Marin County — news, weather, tides, traffic, and the occasional coyote sighting."
+	/>
 </svelte:head>
 
 <div class="app">
@@ -624,7 +631,12 @@
 			</div>
 		{:else}
 			<!-- Top stage: map + cameras -->
-			<div class="top-stage" class:map-full-width={$settings.camerasExpanded || $settings.camerasHidden || !isPanelVisible('cameras')}>
+			<div
+				class="top-stage"
+				class:map-full-width={$settings.camerasExpanded ||
+					$settings.camerasHidden ||
+					!isPanelVisible('cameras')}
+			>
 				{#if isPanelVisible('map')}
 					<div class="map-slot">
 						<MapPanel earthquakes={earthquakeItems} />
@@ -672,31 +684,31 @@
 			<div class="signal-layout" class:collapsed={!$settings.dashboardExpanded}>
 				<div class="signal-column signal-column-left">
 					{#if isPanelVisible('pulse')}
-						<div class="signal-card signal-pulse">
+						<div class="signal-card signal-pulse animate-enter-up stagger-1 hover-lift">
 							<PulsePanel forecast={weatherForecast} {weatherAlerts} earthquakes={earthquakesRaw} />
 						</div>
 					{/if}
 
 					{#if isPanelVisible('conditions')}
-					<div class="signal-card signal-conditions">
-						<ConditionsPanel />
-					</div>
-				{/if}
+						<div class="signal-card signal-conditions animate-enter-up stagger-2 hover-lift">
+							<ConditionsPanel />
+						</div>
+					{/if}
 
 					{#if isPanelVisible('airport-status')}
-						<div class="signal-card signal-airport-status">
+						<div class="signal-card signal-airport-status animate-enter-up stagger-3 hover-lift">
 							<AirportStatusPanel />
 						</div>
 					{/if}
 
 					{#if isPanelVisible('wastewater')}
-						<div class="signal-card signal-wastewater">
+						<div class="signal-card signal-wastewater animate-enter-up stagger-3 hover-lift">
 							<WastewaterPanel />
 						</div>
 					{/if}
 
 					{#if isPanelVisible('narrative') || isPanelVisible('correlation')}
-						<div class="signal-card signal-signals">
+						<div class="signal-card signal-signals animate-enter-up stagger-4 hover-lift">
 							<SignalsPanel news={$allNewsItems} />
 						</div>
 					{/if}
@@ -704,7 +716,7 @@
 
 				<div class="signal-column signal-column-middle">
 					{#if isPanelVisible('weather')}
-						<div class="signal-card signal-weather">
+						<div class="signal-card signal-weather animate-enter-up stagger-1 hover-lift">
 							<WeatherPanel
 								forecast={weatherForecast}
 								alerts={weatherAlerts}
@@ -718,7 +730,7 @@
 					{/if}
 
 					{#if isPanelVisible('weather')}
-						<div class="signal-card signal-outlooks">
+						<div class="signal-card signal-outlooks animate-enter-up stagger-2 hover-lift">
 							<OutlooksPanel
 								forecast={weatherForecast}
 								loading={weatherLoading}
@@ -730,7 +742,7 @@
 					{/if}
 
 					{#if isPanelVisible('weather')}
-						<div class="signal-card signal-tides">
+						<div class="signal-card signal-tides animate-enter-up stagger-3 hover-lift">
 							<TidesPanel
 								tideStation={userLocation.tideStation}
 								tideStationName={userLocation.tideStationName}
@@ -741,7 +753,7 @@
 					{/if}
 
 					{#if isPanelVisible('weather')}
-						<div class="signal-card signal-environment">
+						<div class="signal-card signal-environment animate-enter-up stagger-4 hover-lift">
 							<EnvironmentPanel />
 						</div>
 					{/if}
@@ -749,19 +761,19 @@
 
 				<div class="signal-column signal-column-right">
 					{#if isPanelVisible('housing')}
-						<div class="signal-card signal-housing">
+						<div class="signal-card signal-housing animate-enter-up stagger-2 hover-lift">
 							<HousingPanel />
 						</div>
 					{/if}
 
 					{#if isPanelVisible('gas-prices')}
-						<div class="signal-card signal-gas-prices">
+						<div class="signal-card signal-gas-prices animate-enter-up stagger-3 hover-lift">
 							<GasPricesPanel />
 						</div>
 					{/if}
 
 					{#if isPanelVisible('ev-charging')}
-						<div class="signal-card signal-ev-charging">
+						<div class="signal-card signal-ev-charging animate-enter-up stagger-4 hover-lift">
 							<EvChargingPanel />
 						</div>
 					{/if}
@@ -781,11 +793,7 @@
 				{#each wireColumns as column (column.panelId)}
 					{#if isPanelVisible(column.panelId)}
 						<div class="wire-slot">
-							<NewsPanel
-								category={column.category}
-								panelId={column.panelId}
-								title={column.title}
-							/>
+							<NewsPanel category={column.category} panelId={column.panelId} title={column.title} />
 						</div>
 					{/if}
 				{/each}
