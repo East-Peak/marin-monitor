@@ -18,6 +18,8 @@ export interface AdConfig {
 	startDate?: string; // ISO date, inclusive
 	endDate?: string; // ISO date, inclusive
 	targetCategories?: NewsCategory[];
+	image?: string; // optional hero image URL
+	bullets?: string[]; // optional bullet points (replaces body)
 	priority: number; // 1-10, higher = more likely to show
 	position?: number; // where in the news list (default 3)
 	label?: string; // badge text, defaults to "Featured"
@@ -31,8 +33,15 @@ export const ADS: AdConfig[] = [
 		id: '597-ethel-ave',
 		type: 'listing',
 		placement: 'wire',
-		headline: '597 Ethel Ave — Cape Cod Charm, Mill Valley Vibe',
-		body: 'Fully remodeled 3BR/2BA in Homestead Valley. Tesla solar roof, new redwood deck, walkable to Equator & trails. 1,520 sq ft.',
+		headline: 'Cape Cod Charm | Mill Valley Vibe',
+		body: '',
+		image:
+			'https://cdn.openhomesphotography.com/uploads/597-ethel-avenue.1f1007dd-76d1-6c56-a42c-02ffd8b76bfd/batchUploads/p2k.e8878ea0-1387-11f1-9ca9-02ffe917ffb9/processed/pictures/web/597-ethel-avenue.87495.p2k.004.web.jpg',
+		bullets: [
+			'My friend Zack is selling his house.',
+			"It's right next to Super Duper Burger.",
+			'You should buy it.'
+		],
 		sponsor: 'Lisa Smith & Co. | Susannah Searson',
 		url: 'https://597ethel.com',
 		priority: 8,

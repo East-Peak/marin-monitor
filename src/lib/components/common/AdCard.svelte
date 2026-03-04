@@ -29,6 +29,18 @@
 		<span class="ad-badge">{ad.label || 'Featured'}</span>
 	</div>
 
+	{#if ad.image}
+		<a
+			class="ad-image-link"
+			href={ad.url}
+			target="_blank"
+			rel="noopener noreferrer sponsored"
+			onclick={handleClick}
+		>
+			<img class="ad-image" src={ad.image} alt={ad.headline} />
+		</a>
+	{/if}
+
 	<a
 		class="ad-title"
 		href={ad.url}
@@ -39,7 +51,13 @@
 		{ad.headline}
 	</a>
 
-	{#if ad.body}
+	{#if ad.bullets && ad.bullets.length > 0}
+		<ul class="ad-bullets">
+			{#each ad.bullets as bullet}
+				<li>{bullet}</li>
+			{/each}
+		</ul>
+	{:else if ad.body}
 		<p class="ad-body">{ad.body}</p>
 	{/if}
 </div>
@@ -85,6 +103,29 @@
 
 	.ad-title:hover {
 		color: rgb(217, 169, 56);
+	}
+
+	.ad-image-link {
+		display: block;
+		margin-bottom: 0.35rem;
+	}
+
+	.ad-image {
+		width: 100%;
+		border-radius: 3px;
+		display: block;
+	}
+
+	.ad-bullets {
+		margin: 0.3rem 0 0;
+		padding: 0 0 0 1rem;
+		list-style: '–  ';
+	}
+
+	.ad-bullets li {
+		font-size: 0.6rem;
+		color: var(--text-secondary);
+		line-height: 1.5;
 	}
 
 	.ad-body {
