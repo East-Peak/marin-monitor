@@ -481,8 +481,20 @@
 		initialLoad();
 		refresh.setupAutoRefresh(handleRefresh);
 
+		// Refresh when tab becomes visible again after being stale (>5 min)
+		function handleVisibilityChange() {
+			if (document.visibilityState === 'visible') {
+				const elapsed = refresh.getTimeSinceRefresh();
+				if (elapsed === null || elapsed > 5 * 60 * 1000) {
+					handleRefresh();
+				}
+			}
+		}
+		document.addEventListener('visibilitychange', handleVisibilityChange);
+
 		return () => {
 			refresh.stopAutoRefresh();
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
 		};
 	});
 </script>
