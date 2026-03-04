@@ -4,6 +4,13 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-03-04
+
+### Added
+- **Featured listings & events** — Config-driven newspaper-style classified ads. Inline wire column cards with amber dashed border and horizontal banners between signal deck and news area. Click tracking via Vercel Analytics + persistent Blob counter. Schedule ads by date range, target specific news categories, set priority for weighted selection.
+
+---
+
 ## 2026-03-03
 
 ### Added

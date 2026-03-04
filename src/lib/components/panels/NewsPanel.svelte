@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { Panel, NewsItem } from '$lib/components/common';
+	import { Panel, NewsItem, AdCard } from '$lib/components/common';
 	import type { NewsCategory } from '$lib/types';
 	import type { PanelId } from '$lib/config';
+	import { pickAds } from '$lib/config/ads';
 	import {
 		localNews,
 		civicNews,
@@ -55,6 +56,9 @@
 	const loading = $derived($categoryStore.loading);
 	const error = $derived($categoryStore.error);
 	const count = $derived(items.length);
+
+	const wireAd = $derived(pickAds('wire', category, 1)[0]);
+	const adPosition = $derived(wireAd?.position ?? 3);
 </script>
 
 <Panel id={panelId} {title} variant={categoryVariant} {count} {loading} {error}>
@@ -62,9 +66,15 @@
 		<div class="empty-state">No news available</div>
 	{:else}
 		<div class="news-list">
-			{#each items.slice(0, 15) as item (item.id)}
+			{#each items.slice(0, 15) as item, i (item.id)}
+				{#if wireAd && i === adPosition}
+					<AdCard ad={wireAd} />
+				{/if}
 				<NewsItem {item} />
 			{/each}
+			{#if wireAd && items.length <= adPosition}
+				<AdCard ad={wireAd} />
+			{/if}
 		</div>
 	{/if}
 </Panel>

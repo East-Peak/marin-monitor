@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-03-04',
+		title: 'Featured listings & events',
+		description:
+			'Newspaper-style classified ads inline in wire columns and as banners. Local listings, events, and community features from Marin businesses.'
+	},
+	{
 		date: '2026-03-03',
 		title: 'Airport map pins',
 		description: 'SFO, OAK, STS (Santa Rosa), and SJC (San José) appear as color-coded dots on the map. Green = on time, amber = delays, red = ground stop. Click for details.'

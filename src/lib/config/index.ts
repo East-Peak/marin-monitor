@@ -74,3 +74,6 @@ export { isLocallyRelevant, isMixedSource } from './relevance';
 
 // API configuration
 export { API_DELAYS, CACHE_TTLS, API_URLS, DEBUG, logger } from './api';
+
+// Ad configuration
+export { ADS, getActiveAds, pickAds, type AdConfig } from './ads';

@@ -24,6 +24,8 @@
 	} from '$lib/components/panels';
 	import { news, settings, refresh, allNewsItems } from '$lib/stores';
 	import { townLocation } from '$lib/stores/town-filter';
+	import { AdBanner } from '$lib/components/common';
+	import { pickAds } from '$lib/config/ads';
 	import type {
 		NewsCategory,
 		NewsItem,
@@ -48,6 +50,9 @@
 
 	// Location (derived from town filter, falls back to settings.locationId)
 	const userLocation = $derived($townLocation);
+
+	// Banner ad between signal deck and news area
+	const bannerAd = $derived(pickAds('banner', undefined, 1)[0]);
 
 	// Modal state
 	let settingsOpen = $state(false);
@@ -764,6 +769,12 @@
 			</div>
 		{/if}
 
+		{#if bannerAd}
+			<div class="banner-slot">
+				<AdBanner ad={bannerAd} />
+			</div>
+		{/if}
+
 		<!-- News area -->
 		<div class="news-area">
 			<div class="wire-grid">
@@ -1069,6 +1080,11 @@
 
 	.signal-outlooks :global(.panel) {
 		min-height: 310px;
+	}
+
+	.banner-slot {
+		margin-top: 1rem;
+		padding: 0 0.5rem;
 	}
 
 	.news-area {
