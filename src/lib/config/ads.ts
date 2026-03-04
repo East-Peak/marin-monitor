@@ -35,8 +35,7 @@ export const ADS: AdConfig[] = [
 		placement: 'wire',
 		headline: 'Cape Cod Charm | Mill Valley Vibe',
 		body: '',
-		image:
-			'https://cdn.openhomesphotography.com/uploads/597-ethel-avenue.1f1007dd-76d1-6c56-a42c-02ffd8b76bfd/batchUploads/p2k.e8878ea0-1387-11f1-9ca9-02ffe917ffb9/processed/pictures/web/597-ethel-avenue.87495.p2k.004.web.jpg',
+		image: '/images/597-ethel-ave.jpg',
 		bullets: [
 			'My friend Zack is selling his house.',
 			"It's right next to Super Duper Burger.",
