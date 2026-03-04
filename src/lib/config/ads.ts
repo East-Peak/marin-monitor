@@ -28,29 +28,29 @@ export interface AdConfig {
  */
 export const ADS: AdConfig[] = [
 	{
-		id: 'zach-listing-001',
+		id: '597-ethel-ave',
 		type: 'listing',
 		placement: 'wire',
-		headline: 'Coming Soon: Charming 3BR in San Anselmo',
-		body: 'Sun-drenched mid-century with creek views. Walk to downtown shops & restaurants.',
-		sponsor: "Zach's Realty",
-		url: 'https://example.com/listing/san-anselmo-3br',
+		headline: '597 Ethel Ave — Cape Cod Charm, Mill Valley Vibe',
+		body: 'Fully remodeled 3BR/2BA in Homestead Valley. Tesla solar roof, new redwood deck, walkable to Equator & trails. 1,520 sq ft.',
+		sponsor: 'Lisa Smith & Co. | Susannah Searson',
+		url: 'https://597ethel.com',
 		priority: 8,
 		position: 3,
 		targetCategories: ['local', 'housing'],
 		label: 'Featured Listing'
-	},
-	{
-		id: 'band-show-001',
-		type: 'event',
-		placement: 'banner',
-		headline: 'Live Music: The Tides at Sweetwater',
-		body: 'Friday 3/14 — Doors 8pm. Americana & surf rock from Mill Valley\'s own.',
-		sponsor: 'Sweetwater Music Hall',
-		url: 'https://example.com/sweetwater/the-tides',
-		priority: 7,
-		label: 'Featured Event'
 	}
+	// {
+	// 	id: 'band-show-001',
+	// 	type: 'event',
+	// 	placement: 'banner',
+	// 	headline: 'Live Music: The Tides at Sweetwater',
+	// 	body: 'Friday 3/14 — Doors 8pm. Americana & surf rock from Mill Valley\'s own.',
+	// 	sponsor: 'Sweetwater Music Hall',
+	// 	url: 'https://example.com/sweetwater/the-tides',
+	// 	priority: 7,
+	// 	label: 'Featured Event'
+	// }
 ];
 
 /**
