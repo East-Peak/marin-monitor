@@ -25,7 +25,17 @@ export const PRESETS: Record<string, Preset> = {
 		name: 'Safety First',
 		icon: '!',
 		description: 'Fire alerts, weather, road closures, and emergency info',
-		panels: ['map', 'pulse', 'safety', 'weather', 'cameras', 'local-wire', 'conditions']
+		panels: [
+			'map',
+			'pulse',
+			'safety',
+			'weather',
+			'cameras',
+			'local-wire',
+			'conditions',
+			'airport-status',
+			'wastewater'
+		]
 	},
 	'local-nerd': {
 		id: 'local-nerd',
@@ -64,6 +74,8 @@ export const PRESETS: Record<string, Preset> = {
 			'weather',
 			'cameras',
 			'conditions',
+			'airport-status',
+			'wastewater',
 			'civic',
 			'outdoors',
 			'housing',
