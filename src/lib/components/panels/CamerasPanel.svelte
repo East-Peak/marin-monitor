@@ -66,9 +66,7 @@
 		<button class="expand-link" onclick={() => settings.toggleCamerasExpanded()}>
 			{$settings.camerasExpanded ? 'Collapse' : 'Expand'} views
 		</button>
-		<button class="expand-link" onclick={() => settings.toggleCamerasHidden()}>
-			Hide
-		</button>
+		<button class="expand-link" onclick={() => settings.toggleCamerasHidden()}> Hide </button>
 	{/snippet}
 	<div class="camera-tabs">
 		{#each CAMERA_CATEGORIES as cat (cat.id)}
@@ -152,7 +150,6 @@
 			</div>
 		{/each}
 	</div>
-
 </Panel>
 
 <style>
@@ -310,19 +307,24 @@
 	}
 
 	.expand-link {
-		background: none;
-		border: none;
-		color: var(--text-muted);
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 4px;
+		color: var(--text-secondary);
 		font: inherit;
-		font-size: 0.55rem;
+		font-size: 0.65rem;
+		font-weight: 500;
 		cursor: pointer;
-		padding: 0.1rem 0;
-		transition: color 0.15s;
+		padding: 0.25rem 0.5rem;
+		margin-left: 0.25rem;
+		transition: all 0.15s;
 		white-space: nowrap;
 	}
 
 	.expand-link:hover {
-		color: var(--accent);
+		color: var(--text-primary);
+		background: rgba(255, 255, 255, 0.1);
+		border-color: rgba(255, 255, 255, 0.2);
 	}
 
 	@media (max-width: 768px) {

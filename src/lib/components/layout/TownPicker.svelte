@@ -80,11 +80,17 @@
 	>
 		<svg class="picker-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
 			{#if $selectedTownObj}
-				<path d="M8 1C5.24 1 3 3.24 3 6c0 3.75 5 9 5 9s5-5.25 5-9c0-2.76-2.24-5-5-5z" fill="currentColor"/>
-				<circle cx="8" cy="6" r="2" fill="var(--bg, #0a0e1a)"/>
+				<path
+					d="M8 1C5.24 1 3 3.24 3 6c0 3.75 5 9 5 9s5-5.25 5-9c0-2.76-2.24-5-5-5z"
+					fill="currentColor"
+				/>
+				<circle cx="8" cy="6" r="2" fill="var(--bg, #0a0e1a)" />
 			{:else}
-				<path d="M8 1C5.24 1 3 3.24 3 6c0 3.75 5 9 5 9s5-5.25 5-9c0-2.76-2.24-5-5-5zm0 12.5C6.5 11 4 7.9 4 6a4 4 0 1 1 8 0c0 1.9-2.5 5-4 7.5z" fill="currentColor"/>
-				<circle cx="8" cy="6" r="1.5" fill="currentColor"/>
+				<path
+					d="M8 1C5.24 1 3 3.24 3 6c0 3.75 5 9 5 9s5-5.25 5-9c0-2.76-2.24-5-5-5zm0 12.5C6.5 11 4 7.9 4 6a4 4 0 1 1 8 0c0 1.9-2.5 5-4 7.5z"
+					fill="currentColor"
+				/>
+				<circle cx="8" cy="6" r="1.5" fill="currentColor" />
 			{/if}
 		</svg>
 		<span class="picker-label">{displayName}</span>
@@ -94,12 +100,7 @@
 	{#if open}
 		<div class="picker-dropdown" bind:this={dropdownEl}>
 			<div class="picker-search">
-				<input
-					type="text"
-					placeholder="Search towns..."
-					bind:value={search}
-					autofocus
-				/>
+				<input type="text" placeholder="Search towns..." bind:value={search} autofocus />
 			</div>
 
 			<div class="picker-list">
@@ -142,28 +143,36 @@
 	.picker-trigger {
 		display: flex;
 		align-items: center;
-		gap: 0.35rem;
+		gap: 0.5rem;
 		min-height: 2.75rem;
-		padding: 0.4rem 0.75rem;
-		background: transparent;
-		border: 1px solid var(--border);
-		border-radius: 4px;
-		color: var(--text-secondary);
+		padding: 0.5rem 1rem;
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 6px;
+		color: var(--text-primary);
 		cursor: pointer;
-		transition: all 0.15s ease;
-		font-size: 0.72rem;
+		transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+		font-size: 0.8rem;
+		font-weight: 600;
 		white-space: nowrap;
+		box-shadow:
+			0 2px 8px rgba(0, 0, 0, 0.15),
+			inset 0 1px 1px rgba(255, 255, 255, 0.05);
 	}
 
 	.picker-trigger:hover {
-		background: var(--border);
-		color: var(--text-primary);
+		background: rgba(255, 255, 255, 0.1);
+		border-color: rgba(255, 255, 255, 0.25);
+		transform: translateY(-1px);
 	}
 
 	.picker-trigger.active {
 		border-color: var(--accent);
-		color: var(--accent);
-		background: rgba(168, 85, 247, 0.08);
+		color: #f8fafc;
+		background: rgba(14, 165, 233, 0.15);
+		box-shadow:
+			0 2px 12px rgba(14, 165, 233, 0.2),
+			inset 0 1px 1px rgba(255, 255, 255, 0.1);
 	}
 
 	.picker-icon {

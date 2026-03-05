@@ -538,18 +538,23 @@
 
 		{#if tipBannerVisible}
 			<div class="tip-banner">
-				<span class="tip-text">
-					New here? Customize which panels you see.
-				</span>
+				<span class="tip-text"> New here? Customize which panels you see. </span>
 				<button
 					class="tip-action"
-					onclick={() => { tipBannerVisible = false; localStorage.setItem(TIP_DISMISSED_KEY, 'true'); settingsOpen = true; }}
+					onclick={() => {
+						tipBannerVisible = false;
+						localStorage.setItem(TIP_DISMISSED_KEY, 'true');
+						settingsOpen = true;
+					}}
 				>
 					Open Settings
 				</button>
 				<button
 					class="tip-dismiss"
-					onclick={() => { tipBannerVisible = false; localStorage.setItem(TIP_DISMISSED_KEY, 'true'); }}
+					onclick={() => {
+						tipBannerVisible = false;
+						localStorage.setItem(TIP_DISMISSED_KEY, 'true');
+					}}
 					aria-label="Dismiss"
 				>
 					&times;
@@ -873,38 +878,43 @@
 	.tip-banner {
 		display: flex;
 		align-items: center;
-		gap: 0.75rem;
-		padding: 0.5rem 1rem;
-		margin-bottom: 1rem;
-		background: rgba(14, 165, 233, 0.08);
-		border: 1px dashed rgba(14, 165, 233, 0.3);
-		border-radius: 6px;
-		animation: fadeIn 0.3s ease-out;
+		gap: 1rem;
+		padding: 0.75rem 1.25rem;
+		margin-bottom: 1.5rem;
+		background: linear-gradient(90deg, rgba(14, 165, 233, 0.15), rgba(14, 165, 233, 0.05));
+		border: 1px solid rgba(14, 165, 233, 0.4);
+		border-left: 4px solid var(--accent);
+		border-radius: 8px;
+		animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+		box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
 	}
 
 	.tip-text {
 		flex: 1;
-		font-size: 0.75rem;
-		color: var(--text-secondary);
+		font-size: 0.9rem;
+		font-weight: 500;
+		color: var(--text-primary);
 	}
 
 	.tip-action {
-		padding: 0.3rem 0.75rem;
-		background: rgba(14, 165, 233, 0.15);
-		border: 1px solid rgba(14, 165, 233, 0.3);
-		border-radius: 4px;
-		color: var(--accent);
+		padding: 0.4rem 1rem;
+		background: var(--accent);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 6px;
+		color: #000;
 		font: inherit;
-		font-size: 0.68rem;
-		font-weight: 500;
+		font-size: 0.8rem;
+		font-weight: 600;
 		cursor: pointer;
-		transition: all 0.15s ease;
+		transition: all 0.2s ease;
 		white-space: nowrap;
+		box-shadow: 0 2px 8px rgba(14, 165, 233, 0.4);
 	}
 
 	.tip-action:hover {
-		background: rgba(14, 165, 233, 0.25);
-		border-color: var(--accent);
+		background: #38bdf8;
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(14, 165, 233, 0.5);
 	}
 
 	.tip-dismiss {
@@ -929,8 +939,14 @@
 	}
 
 	@keyframes fadeIn {
-		from { opacity: 0; transform: translateY(-4px); }
-		to { opacity: 1; transform: translateY(0); }
+		from {
+			opacity: 0;
+			transform: translateY(-4px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
 
 	.map-slot {

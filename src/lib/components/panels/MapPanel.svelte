@@ -46,7 +46,15 @@
 
 	let inspectorState = $state<InspectorState | null>(null);
 	let featureInspector = $state<{
-		kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station' | 'ev-charging-station' | 'airport';
+		kind:
+			| 'landmark'
+			| 'fire-zone'
+			| 'traffic-event'
+			| 'earthquake'
+			| 'fire-incident'
+			| 'gas-station'
+			| 'ev-charging-station'
+			| 'airport';
 		title: string;
 		subtitle?: string;
 		description?: string;
@@ -138,7 +146,15 @@
 	}
 
 	function handleFeatureClick(feature: {
-		kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station' | 'ev-charging-station' | 'airport';
+		kind:
+			| 'landmark'
+			| 'fire-zone'
+			| 'traffic-event'
+			| 'earthquake'
+			| 'fire-incident'
+			| 'gas-station'
+			| 'ev-charging-station'
+			| 'airport';
 		title: string;
 		subtitle?: string;
 		description?: string;
@@ -243,10 +259,13 @@
 	}
 
 	.no-location-badge {
-		font-size: 0.55rem;
-		color: var(--text-muted);
-		padding: 0.1rem 0.3rem;
-		background: rgba(255, 255, 255, 0.05);
-		border-radius: 3px;
+		font-size: 0.65rem;
+		font-weight: 500;
+		color: var(--text-primary);
+		padding: 0.2rem 0.5rem;
+		background: rgba(255, 255, 255, 0.12);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 4px;
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 	}
 </style>
