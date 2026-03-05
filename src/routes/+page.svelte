@@ -60,6 +60,10 @@
 	let feedbackOpen = $state(false);
 	let feedbackType = $state<'feed-request' | 'bug-report' | 'general'>('general');
 
+	// Tip banner — shows once until dismissed
+	const TIP_DISMISSED_KEY = 'mm_tip_banner_dismissed';
+	let tipBannerVisible = $state(false);
+
 	function openFeedback(type: 'feed-request' | 'bug-report' | 'general' = 'general') {
 		feedbackType = type;
 		feedbackOpen = true;
@@ -271,6 +275,8 @@
 	function handleSelectPreset(presetId: string) {
 		settings.applyPreset(presetId);
 		onboardingOpen = false;
+		tipBannerVisible = false;
+		localStorage.setItem(TIP_DISMISSED_KEY, 'true');
 		handleRefresh();
 	}
 
@@ -469,6 +475,8 @@
 
 		if (!settings.isOnboardingComplete()) {
 			onboardingOpen = true;
+		} else if (!localStorage.getItem(TIP_DISMISSED_KEY)) {
+			tipBannerVisible = true;
 		}
 
 		async function initialLoad() {
@@ -527,6 +535,27 @@
 
 	<main class="main-content">
 		<TownFilterBanner />
+
+		{#if tipBannerVisible}
+			<div class="tip-banner">
+				<span class="tip-text">
+					New here? Customize which panels you see.
+				</span>
+				<button
+					class="tip-action"
+					onclick={() => { tipBannerVisible = false; localStorage.setItem(TIP_DISMISSED_KEY, 'true'); settingsOpen = true; }}
+				>
+					Open Settings
+				</button>
+				<button
+					class="tip-dismiss"
+					onclick={() => { tipBannerVisible = false; localStorage.setItem(TIP_DISMISSED_KEY, 'true'); }}
+					aria-label="Dismiss"
+				>
+					&times;
+				</button>
+			</div>
+		{/if}
 
 		{#if editMode}
 			<div class="layout-edit-toolbar">
@@ -839,6 +868,69 @@
 		flex: 1;
 		padding: 1.5rem;
 		overflow-y: auto;
+	}
+
+	.tip-banner {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.5rem 1rem;
+		margin-bottom: 1rem;
+		background: rgba(14, 165, 233, 0.08);
+		border: 1px dashed rgba(14, 165, 233, 0.3);
+		border-radius: 6px;
+		animation: fadeIn 0.3s ease-out;
+	}
+
+	.tip-text {
+		flex: 1;
+		font-size: 0.75rem;
+		color: var(--text-secondary);
+	}
+
+	.tip-action {
+		padding: 0.3rem 0.75rem;
+		background: rgba(14, 165, 233, 0.15);
+		border: 1px solid rgba(14, 165, 233, 0.3);
+		border-radius: 4px;
+		color: var(--accent);
+		font: inherit;
+		font-size: 0.68rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		white-space: nowrap;
+	}
+
+	.tip-action:hover {
+		background: rgba(14, 165, 233, 0.25);
+		border-color: var(--accent);
+	}
+
+	.tip-dismiss {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.5rem;
+		height: 1.5rem;
+		background: transparent;
+		border: 1px solid transparent;
+		border-radius: 3px;
+		color: var(--text-muted);
+		font-size: 1rem;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		flex-shrink: 0;
+	}
+
+	.tip-dismiss:hover {
+		color: var(--text-primary);
+		border-color: var(--border-light);
+	}
+
+	@keyframes fadeIn {
+		from { opacity: 0; transform: translateY(-4px); }
+		to { opacity: 1; transform: translateY(0); }
 	}
 
 	.map-slot {
