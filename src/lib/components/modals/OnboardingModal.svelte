@@ -4,17 +4,17 @@
 	interface Props {
 		open: boolean;
 		onSelectPreset: (presetId: string) => void;
+		onCustomize?: () => void;
 		onSkip?: () => void;
 	}
 
-	let { open, onSelectPreset, onSkip }: Props = $props();
+	let { open, onSelectPreset, onCustomize, onSkip }: Props = $props();
 
 	function handleSelectPreset(presetId: string) {
 		onSelectPreset(presetId);
 	}
 
 	function handleSkip() {
-		// Select the 'everything' preset (show all panels) when skipping
 		onSelectPreset('everything');
 	}
 
@@ -51,7 +51,14 @@
 			</div>
 
 			<div class="modal-footer">
-				<p class="hint">You can change this later in Settings</p>
+				{#if onCustomize}
+					<button class="customize-btn" onclick={onCustomize}>
+						Configure Myself
+					</button>
+					<p class="hint">Pick exactly which panels you want</p>
+				{:else}
+					<p class="hint">You can change this later in Settings</p>
+				{/if}
 			</div>
 		</div>
 	</div>
@@ -145,7 +152,7 @@
 
 	.preset-card:hover {
 		border-color: var(--accent);
-		background: rgba(0, 255, 136, 0.05);
+		background: rgba(14, 165, 233, 0.06);
 	}
 
 	.preset-icon {
@@ -176,11 +183,33 @@
 		padding: 1rem 1.5rem;
 		border-top: 1px solid var(--border);
 		text-align: center;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+	}
+
+	.customize-btn {
+		padding: 0.5rem 1.25rem;
+		background: rgba(14, 165, 233, 0.1);
+		border: 1px solid rgba(14, 165, 233, 0.3);
+		border-radius: 6px;
+		color: var(--accent);
+		font: inherit;
+		font-size: 0.75rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.customize-btn:hover {
+		background: rgba(14, 165, 233, 0.2);
+		border-color: var(--accent);
 	}
 
 	.hint {
 		color: var(--text-muted);
-		font-size: 0.7rem;
+		font-size: 0.65rem;
 		margin: 0;
 	}
 

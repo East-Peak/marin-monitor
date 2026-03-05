@@ -10,8 +10,8 @@ export default {
 				border: 'rgba(56, 189, 248, 0.1)', // Subtle cool-blue borders
 				'border-light': 'rgba(56, 189, 248, 0.2)',
 				'text-primary': '#f8fafc',
-				'text-dim': '#94a3b8',
-				'text-muted': '#64748b',
+				'text-dim': '#a8b8cc',
+				'text-muted': '#7b8ba0',
 				accent: '#0ea5e9', // Brighter, more vibrant ocean blue
 				danger: '#ef4444',
 				success: '#10b981',

@@ -468,8 +468,7 @@
 		}
 
 		if (!settings.isOnboardingComplete()) {
-			settings.applyPreset('everything');
-			onboardingOpen = false;
+			onboardingOpen = true;
 		}
 
 		async function initialLoad() {
@@ -812,7 +811,14 @@
 		onClose={() => (settingsOpen = false)}
 		onReconfigure={handleReconfigure}
 	/>
-	<OnboardingModal open={onboardingOpen} onSelectPreset={handleSelectPreset} />
+	<OnboardingModal
+		open={onboardingOpen}
+		onSelectPreset={handleSelectPreset}
+		onCustomize={() => {
+			handleSelectPreset('everything');
+			settingsOpen = true;
+		}}
+	/>
 	<FeedbackModal
 		open={feedbackOpen}
 		onClose={() => (feedbackOpen = false)}

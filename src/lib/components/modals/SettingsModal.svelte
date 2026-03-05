@@ -14,6 +14,24 @@
 
 	let { open = false, onClose, onReconfigure }: Props = $props();
 
+	const panelGroups: { label: string; description: string; priority: 1 | 2 | 3 }[] = [
+		{ label: 'Core', description: 'Map, news wire, and essential signals', priority: 1 },
+		{
+			label: 'Signal Deck',
+			description: 'Weather, conditions, cameras, and monitoring panels',
+			priority: 2
+		},
+		{
+			label: 'Wire Columns & Data',
+			description: 'News categories, housing, gas prices, and community',
+			priority: 3
+		}
+	];
+
+	function panelsByPriority(priority: 1 | 2 | 3): [string, (typeof PANELS)[PanelId]][] {
+		return Object.entries(PANELS).filter(([, config]) => config.priority === priority);
+	}
+
 	function handleTogglePanel(panelId: PanelId) {
 		settings.togglePanel(panelId);
 	}
@@ -47,21 +65,28 @@
 			<h3 class="section-title">Enabled Panels</h3>
 			<p class="section-desc">Toggle panels on/off to customize your dashboard</p>
 
-			<div class="panels-grid">
-				{#each Object.entries(PANELS) as [id, config]}
-					{@const panelId = id as PanelId}
-					{@const isEnabled = $settings.enabled[panelId]}
-					<label class="panel-toggle" class:enabled={isEnabled}>
-						<input
-							type="checkbox"
-							checked={isEnabled}
-							onchange={() => handleTogglePanel(panelId)}
-						/>
-						<span class="panel-name">{config.name}</span>
-						<span class="panel-priority">P{config.priority}</span>
-					</label>
-				{/each}
-			</div>
+			{#each panelGroups as group}
+				<div class="panel-group">
+					<div class="panel-group-header">
+						<span class="panel-group-label">{group.label}</span>
+						<span class="panel-group-desc">{group.description}</span>
+					</div>
+					<div class="panels-grid">
+						{#each panelsByPriority(group.priority) as [id, config]}
+							{@const panelId = id as PanelId}
+							{@const isEnabled = $settings.enabled[panelId]}
+							<label class="panel-toggle" class:enabled={isEnabled}>
+								<input
+									type="checkbox"
+									checked={isEnabled}
+									onchange={() => handleTogglePanel(panelId)}
+								/>
+								<span class="panel-name">{config.name}</span>
+							</label>
+						{/each}
+					</div>
+				</div>
+			{/each}
 		</section>
 
 		<section class="settings-section">
@@ -170,6 +195,34 @@
 		margin: 0;
 	}
 
+	.panel-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		margin-top: 0.25rem;
+	}
+
+	.panel-group-header {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+		padding-bottom: 0.25rem;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.panel-group-label {
+		font-size: 0.68rem;
+		font-weight: 600;
+		color: var(--text-primary);
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+
+	.panel-group-desc {
+		font-size: 0.58rem;
+		color: var(--text-muted);
+	}
+
 	.panels-grid {
 		display: grid;
 		grid-template-columns: repeat(2, 1fr);
@@ -207,14 +260,6 @@
 		color: var(--text-primary);
 	}
 
-	.panel-priority {
-		font-size: 0.5rem;
-		color: var(--text-muted);
-		background: rgba(255, 255, 255, 0.05);
-		padding: 0.1rem 0.25rem;
-		border-radius: 2px;
-	}
-
 	.location-select-wrap {
 		display: flex;
 		flex-direction: column;
@@ -246,8 +291,8 @@
 
 	.reconfigure-btn {
 		padding: 0.5rem 1rem;
-		background: rgba(0, 255, 136, 0.1);
-		border: 1px solid rgba(0, 255, 136, 0.3);
+		background: rgba(14, 165, 233, 0.1);
+		border: 1px solid rgba(14, 165, 233, 0.3);
 		border-radius: 4px;
 		color: var(--accent);
 		font-size: 0.7rem;
@@ -345,7 +390,7 @@
 	}
 
 	.reconfigure-btn:hover {
-		background: rgba(0, 255, 136, 0.2);
+		background: rgba(14, 165, 233, 0.2);
 	}
 
 	.btn-hint {
