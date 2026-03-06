@@ -47,6 +47,20 @@ export const ADS: AdConfig[] = [
 		position: 3,
 		targetCategories: ['local', 'housing'],
 		label: 'Featured Listing'
+	},
+	{
+		id: 'marin-families',
+		type: 'community',
+		placement: 'wire',
+		headline: 'Marin Families',
+		body: 'Optimize where to <s>warehouse</s> enrich your children this summer. Find camps, daycare, preschools, and activities across 32 Marin towns — no group-chat panic or twenty open browser tabs required.',
+		image: '/images/marin-families.png',
+		sponsor: 'East Peak Advisors',
+		url: 'https://marinfamilies.com',
+		priority: 8,
+		position: 3,
+		targetCategories: ['local', 'outdoors', 'shows'],
+		label: 'From the Publisher'
 	}
 	// {
 	// 	id: 'band-show-001',

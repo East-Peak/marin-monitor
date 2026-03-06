@@ -58,7 +58,7 @@
 			{/each}
 		</ul>
 	{:else if ad.body}
-		<p class="ad-body">{ad.body}</p>
+		<p class="ad-body">{@html ad.body}</p>
 	{/if}
 </div>
 
@@ -133,5 +133,10 @@
 		color: var(--text-secondary);
 		margin: 0.3rem 0 0;
 		line-height: 1.4;
+	}
+
+	.ad-body :global(s) {
+		color: var(--text-muted);
+		text-decoration-color: var(--text-muted);
 	}
 </style>
