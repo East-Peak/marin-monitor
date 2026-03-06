@@ -45,7 +45,7 @@ export const ADS: AdConfig[] = [
 		url: 'https://597ethel.com',
 		priority: 8,
 		position: 3,
-		targetCategories: ['housing'],
+		targetCategories: ['local'],
 		label: 'Featured Listing'
 	},
 	{
@@ -59,7 +59,7 @@ export const ADS: AdConfig[] = [
 		url: 'https://marinfamilies.com',
 		priority: 8,
 		position: 3,
-		targetCategories: ['local'],
+		targetCategories: ['outdoors'],
 		label: 'From the Publisher'
 	}
 	// {
