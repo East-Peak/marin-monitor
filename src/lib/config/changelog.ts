@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-03-24',
+		title: 'TV Mode',
+		description:
+			'New /tv route for wall-mounted TVs. Auto-rotating carousel with 5 full-screen views, scrolling news ticker, keyboard shortcuts, and silent background refresh. Navigate to /tv to try it.'
+	},
+	{
 		date: '2026-03-04',
 		title: 'Featured listings & events',
 		description:
