@@ -1,7 +1,15 @@
 // src/lib/config/tv.ts
 
 /** TV carousel screen identifiers */
-export type TvScreenId = 'map-conditions' | 'news-wire' | 'safety' | 'cameras' | 'environment' | 'outdoors';
+export type TvScreenId =
+  | 'map-explorer'
+  | 'news-wire'
+  | 'safety'
+  | 'cameras-tam-coast'
+  | 'cameras-central-highway'
+  | 'cameras-west-north'
+  | 'conditions'
+  | 'community';
 
 export interface TvScreenConfig {
   id: TvScreenId;
@@ -10,15 +18,15 @@ export interface TvScreenConfig {
   durationMs: number;
 }
 
-export const CAROUSEL_DEFAULT_DURATION_MS = 20_000;
-
 export const TV_SCREENS: TvScreenConfig[] = [
-  { id: 'map-conditions', name: 'Map & Conditions', description: 'Live map with weather sidebar', durationMs: 30_000 },
-  { id: 'news-wire', name: 'News Wire', description: 'Local headlines', durationMs: CAROUSEL_DEFAULT_DURATION_MS },
-  { id: 'safety', name: 'Safety & Alerts', description: 'Crime, fire, weather alerts', durationMs: CAROUSEL_DEFAULT_DURATION_MS },
-  { id: 'cameras', name: 'Camera Wall', description: 'Live camera feeds across Marin', durationMs: CAROUSEL_DEFAULT_DURATION_MS },
-  { id: 'environment', name: 'Environment', description: 'Air quality, UV, fires, streams', durationMs: CAROUSEL_DEFAULT_DURATION_MS },
-  { id: 'outdoors', name: 'Outdoors & Tides', description: 'Tides, marine, trails, sun', durationMs: CAROUSEL_DEFAULT_DURATION_MS }
+  { id: 'map-explorer', name: 'Map Explorer', description: 'Live map with regional flyby and contextual sidebar', durationMs: 30_000 },
+  { id: 'news-wire', name: 'News Wire', description: 'Local headlines', durationMs: 20_000 },
+  { id: 'safety', name: 'Safety & Alerts', description: 'Crime and safety with auto-scroll', durationMs: 20_000 },
+  { id: 'cameras-tam-coast', name: 'Tam & Coast', description: 'Mt Tam ridgeline and coastal cameras', durationMs: 20_000 },
+  { id: 'cameras-central-highway', name: 'Central & Highway', description: '101 corridor and central Marin cameras', durationMs: 20_000 },
+  { id: 'cameras-west-north', name: 'West & North', description: 'West Marin and Novato hill cameras', durationMs: 20_000 },
+  { id: 'conditions', name: 'Conditions & Trails', description: 'AQI, tides, streams, Hero Dirt', durationMs: 20_000 },
+  { id: 'community', name: 'Outdoors & Community', description: 'Outdoor and civic news', durationMs: 20_000 }
 ];
 export const CAROUSEL_TRANSITION_MS = 500;
 export const TV_REFRESH_INTERVAL_MS = 3 * 60 * 1000; // 3 minutes
@@ -55,6 +63,15 @@ export const TV_MAP_VIEWS: TvMapView[] = [
 ];
 
 export const TV_MAP_VIEW_INTERVAL_MS = 6_000; // 6s per sub-view (5 views × 6s = 30s)
+
+/** Geographic camera clusters for TV mode */
+export type TvCameraCluster = 'tam-coast' | 'central-highway' | 'west-north';
+
+export const TV_CAMERA_CLUSTERS: { id: TvCameraCluster; label: string }[] = [
+  { id: 'tam-coast', label: 'Tam & Coast' },
+  { id: 'central-highway', label: 'Central & Highway' },
+  { id: 'west-north', label: 'West & North' }
+];
 
 export const CATEGORY_COLORS: Record<TickerCategory, string> = {
   WX: '#60a5fa',  // blue (weather)

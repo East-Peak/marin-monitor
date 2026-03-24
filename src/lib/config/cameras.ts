@@ -1,3 +1,5 @@
+import type { TvCameraCluster } from './tv';
+
 /**
  * Webcam configuration for Marin Monitor
  *
@@ -37,6 +39,8 @@ export interface CameraConfig {
 	lat?: number;
 	/** Camera longitude */
 	lon?: number;
+	/** TV carousel geographic cluster */
+	tvCluster?: TvCameraCluster;
 }
 
 export const CAMERA_CATEGORIES: { id: CameraCategory; label: string }[] = [
@@ -67,7 +71,8 @@ export const CAMERAS: CameraConfig[] = [
 		url: 'https://cwwp2.dot.ca.gov/data/d4/cctv/image/tve73us101spenceravenue/tve73us101spenceravenue.jpg',
 		refreshInterval: 10,
 		source: 'Caltrans',
-		order: 1
+		order: 1,
+		tvCluster: 'central-highway'
 	},
 	{
 		id: 'caltrans-sr1',
@@ -78,7 +83,8 @@ export const CAMERAS: CameraConfig[] = [
 		url: 'https://cwwp2.dot.ca.gov/data/d4/cctv/image/tve75us101marinsr1/tve75us101marinsr1.jpg',
 		refreshInterval: 10,
 		source: 'Caltrans',
-		order: 2
+		order: 2,
+		tvCluster: 'central-highway'
 	},
 	{
 		id: 'caltrans-580',
@@ -89,7 +95,8 @@ export const CAMERAS: CameraConfig[] = [
 		url: 'https://cwwp2.dot.ca.gov/data/d4/cctv/image/tve83us101i580/tve83us101i580.jpg',
 		refreshInterval: 10,
 		source: 'Caltrans',
-		order: 3
+		order: 3,
+		tvCluster: 'central-highway'
 	},
 	{
 		id: 'caltrans-ignacio',
@@ -100,7 +107,8 @@ export const CAMERAS: CameraConfig[] = [
 		url: 'https://cwwp2.dot.ca.gov/data/d4/cctv/image/tve86us101ignacioblvd/tve86us101ignacioblvd.jpg',
 		refreshInterval: 10,
 		source: 'Caltrans',
-		order: 4
+		order: 4,
+		tvCluster: 'central-highway'
 	},
 
 	// ── Scenic: Landscape and bridge views ──
@@ -113,7 +121,8 @@ export const CAMERAS: CameraConfig[] = [
 		url: 'https://cdns.abclocal.go.com/three/kgo/webcam/tam.jpg?w=600',
 		refreshInterval: 60,
 		source: 'ABC7 / KGO',
-		order: 1
+		order: 1,
+		tvCluster: 'tam-coast'
 	},
 	{
 		id: 'windy-tiburon',
@@ -123,7 +132,8 @@ export const CAMERAS: CameraConfig[] = [
 		type: 'iframe',
 		url: 'https://webcams.windy.com/webcams/public/embed/player/1468687535/live',
 		source: 'Windy.com',
-		order: 2
+		order: 2,
+		tvCluster: 'tam-coast'
 	},
 	{
 		id: 'windy-muir',
@@ -133,7 +143,8 @@ export const CAMERAS: CameraConfig[] = [
 		type: 'iframe',
 		url: 'https://webcams.windy.com/webcams/public/embed/player/1185292026/live',
 		source: 'Windy.com',
-		order: 3
+		order: 3,
+		tvCluster: 'tam-coast'
 	},
 
 	// ── Fire: ALERTCalifornia wildfire detection cameras ──
@@ -151,7 +162,8 @@ export const CAMERAS: CameraConfig[] = [
 		source: 'ALERTCalifornia',
 		order: 1,
 		lat: 37.9235,
-		lon: -122.5816
+		lon: -122.5816,
+		tvCluster: 'tam-coast'
 	},
 	{
 		id: 'alert-tam-west',
@@ -165,7 +177,8 @@ export const CAMERAS: CameraConfig[] = [
 		source: 'ALERTCalifornia',
 		order: 2,
 		lat: 37.9235,
-		lon: -122.5816
+		lon: -122.5816,
+		tvCluster: 'tam-coast'
 	},
 	{
 		id: 'alert-muir-beach',
@@ -179,7 +192,8 @@ export const CAMERAS: CameraConfig[] = [
 		source: 'ALERTCalifornia',
 		order: 3,
 		lat: 37.8592,
-		lon: -122.5784
+		lon: -122.5784,
+		tvCluster: 'tam-coast'
 	},
 	{
 		id: 'alert-wolfback-ridge',
@@ -193,7 +207,8 @@ export const CAMERAS: CameraConfig[] = [
 		source: 'ALERTCalifornia',
 		order: 4,
 		lat: 37.8529,
-		lon: -122.5103
+		lon: -122.5103,
+		tvCluster: 'tam-coast'
 	},
 	{
 		id: 'alert-bolinas',
@@ -207,7 +222,8 @@ export const CAMERAS: CameraConfig[] = [
 		source: 'ALERTCalifornia',
 		order: 5,
 		lat: 37.9093,
-		lon: -122.6869
+		lon: -122.6869,
+		tvCluster: 'tam-coast'
 	},
 
 	// Central Marin (4)
@@ -223,7 +239,8 @@ export const CAMERAS: CameraConfig[] = [
 		source: 'ALERTCalifornia',
 		order: 6,
 		lat: 37.9962,
-		lon: -122.5343
+		lon: -122.5343,
+		tvCluster: 'central-highway'
 	},
 	{
 		id: 'alert-san-rafael-hill',
@@ -237,7 +254,8 @@ export const CAMERAS: CameraConfig[] = [
 		source: 'ALERTCalifornia',
 		order: 7,
 		lat: 37.9735,
-		lon: -122.5311
+		lon: -122.5311,
+		tvCluster: 'central-highway'
 	},
 	{
 		id: 'alert-big-rock',
@@ -251,7 +269,8 @@ export const CAMERAS: CameraConfig[] = [
 		source: 'ALERTCalifornia',
 		order: 8,
 		lat: 38.0303,
-		lon: -122.5944
+		lon: -122.5944,
+		tvCluster: 'central-highway'
 	},
 	{
 		id: 'alert-big-rock-2',
@@ -265,7 +284,8 @@ export const CAMERAS: CameraConfig[] = [
 		source: 'ALERTCalifornia',
 		order: 9,
 		lat: 38.0303,
-		lon: -122.5944
+		lon: -122.5944,
+		tvCluster: 'central-highway'
 	},
 
 	// West Marin (4)
@@ -281,7 +301,8 @@ export const CAMERAS: CameraConfig[] = [
 		source: 'ALERTCalifornia',
 		order: 10,
 		lat: 38.0256,
-		lon: -122.7218
+		lon: -122.7218,
+		tvCluster: 'west-north'
 	},
 	{
 		id: 'alert-barnabe-west',
@@ -295,7 +316,8 @@ export const CAMERAS: CameraConfig[] = [
 		source: 'ALERTCalifornia',
 		order: 11,
 		lat: 38.0256,
-		lon: -122.7218
+		lon: -122.7218,
+		tvCluster: 'west-north'
 	},
 	{
 		id: 'alert-black-mtn',
@@ -309,7 +331,8 @@ export const CAMERAS: CameraConfig[] = [
 		source: 'ALERTCalifornia',
 		order: 12,
 		lat: 38.0706,
-		lon: -122.7896
+		lon: -122.7896,
+		tvCluster: 'west-north'
 	},
 	{
 		id: 'alert-vision',
@@ -323,7 +346,8 @@ export const CAMERAS: CameraConfig[] = [
 		source: 'ALERTCalifornia',
 		order: 13,
 		lat: 38.0976,
-		lon: -122.8479
+		lon: -122.8479,
+		tvCluster: 'west-north'
 	},
 
 	// North Marin (4)
@@ -339,7 +363,8 @@ export const CAMERAS: CameraConfig[] = [
 		source: 'ALERTCalifornia',
 		order: 14,
 		lat: 38.1479,
-		lon: -122.5618
+		lon: -122.5618,
+		tvCluster: 'west-north'
 	},
 	{
 		id: 'alert-burdell-2',
@@ -353,7 +378,8 @@ export const CAMERAS: CameraConfig[] = [
 		source: 'ALERTCalifornia',
 		order: 15,
 		lat: 38.1479,
-		lon: -122.5618
+		lon: -122.5618,
+		tvCluster: 'west-north'
 	},
 	{
 		id: 'alert-mt-burdell-south',
@@ -367,7 +393,8 @@ export const CAMERAS: CameraConfig[] = [
 		source: 'ALERTCalifornia',
 		order: 16,
 		lat: 38.1479,
-		lon: -122.5618
+		lon: -122.5618,
+		tvCluster: 'west-north'
 	},
 	{
 		id: 'alert-league-221',
@@ -381,6 +408,7 @@ export const CAMERAS: CameraConfig[] = [
 		source: 'ALERTCalifornia',
 		order: 17,
 		lat: 38.1195,
-		lon: -122.5965
+		lon: -122.5965,
+		tvCluster: 'west-north'
 	}
 ];
