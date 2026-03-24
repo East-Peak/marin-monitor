@@ -6,9 +6,10 @@
 
 	interface Props {
 		active: boolean;
+		onViewChange?: (view: typeof TV_MAP_VIEWS[0]) => void;
 	}
 
-	let { active }: Props = $props();
+	let { active, onViewChange }: Props = $props();
 
 	const { getMap, mapReady } = getContext<{
 		getMap: () => MapLibreMap | null;
@@ -25,6 +26,7 @@
 		if (!map || !view) return;
 
 		currentLabel = view.label;
+		onViewChange?.(view);
 
 		if (view.duration === 0) {
 			// Instant for county overview (initial view)
