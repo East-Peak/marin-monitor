@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { Header, Footer } from '$lib/components/layout';
 	import TownFilterBanner from '$lib/components/layout/TownFilterBanner.svelte';
 	import { SettingsModal, OnboardingModal, FeedbackModal } from '$lib/components/modals';
@@ -502,9 +503,21 @@
 		}
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
+		function handleMainKeydown(e: KeyboardEvent) {
+			// Don't trigger when typing in inputs
+			const tag = (e.target as HTMLElement)?.tagName;
+			if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+			if (e.key === 'm' || e.key === 'M') {
+				goto('/tv');
+			}
+		}
+		window.addEventListener('keydown', handleMainKeydown);
+
 		return () => {
 			refresh.stopAutoRefresh();
 			document.removeEventListener('visibilitychange', handleVisibilityChange);
+			window.removeEventListener('keydown', handleMainKeydown);
 		};
 	});
 </script>
