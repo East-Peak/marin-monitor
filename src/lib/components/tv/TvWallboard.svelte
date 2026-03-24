@@ -25,7 +25,8 @@
     fetchSheriffCrimeBlotter,
     fetchSupplementalPoliceLogs,
     fetchSupplementalActivityFeeds,
-    enrichItemsForRelevance
+    enrichItemsForRelevance,
+    fetchFireIncidents
   } from '$lib/api/marin';
   import { fetchHourlyForecast } from '$lib/api/marin/nws-hourly';
   import type {
@@ -162,9 +163,13 @@
     lastAdvanceTime = Date.now();
   }
 
-  // --- Earthquake + weather data ---
+  // --- Shared data for map screens ---
   let earthquakeItems = $state<NewsItem[]>([]);
+  let fireIncidents = $state<any[]>([]);
   let hourlyPeriods = $state<{ temperature: number }[]>([]);
+
+  // Pre-fetched weather cache for all map regions
+  let regionWeather = $state<Record<string, { temp: number; wind: string; shortForecast: string }>>({});
 
   // --- Pulse stats for header bar ---
   const stories24h = $derived(
@@ -230,18 +235,45 @@
 
   async function loadWeather() {
     try {
-      // Only fetch hourly for header temp display — per-region weather handled by TvMapScreen
+      // Fetch hourly for header temp display
       const hourly = await fetchHourlyForecast().catch(() => []);
       if (hourly.length > 0) hourlyPeriods = hourly;
     } catch {
-      // Silent fail — keep last good data
+      // Silent fail
+    }
+
+    // Pre-fetch weather for all map regions (parallel, non-blocking)
+    const { TV_MAP_VIEWS } = await import('$lib/config/tv');
+    const results = await Promise.allSettled(
+      TV_MAP_VIEWS.map(async (view) => {
+        const h = await fetchHourlyForecast(view.center[1], view.center[0]);
+        if (h.length > 0) {
+          return { id: view.id, data: { temp: h[0].temperature, wind: `${h[0].windSpeed}`, shortForecast: h[0].shortForecast ?? '' } };
+        }
+        return null;
+      })
+    );
+    const newWeather: Record<string, { temp: number; wind: string; shortForecast: string }> = { ...regionWeather };
+    for (const r of results) {
+      if (r.status === 'fulfilled' && r.value) {
+        newWeather[r.value.id] = r.value.data;
+      }
+    }
+    regionWeather = newWeather;
+  }
+
+  async function loadFireIncidents() {
+    try {
+      fireIncidents = await fetchFireIncidents();
+    } catch {
+      // Silent fail
     }
   }
 
   async function handleRefresh() {
     refresh.startRefresh();
     try {
-      await Promise.all([loadNews(), loadWeather()]);
+      await Promise.all([loadNews(), loadWeather(), loadFireIncidents()]);
       refresh.endRefresh();
     } catch (error) {
       refresh.endRefresh([String(error)]);
@@ -352,7 +384,7 @@
     {#each TV_SCREENS as screen, i (screen.id)}
       <TvScreen active={carouselIdx === i}>
         {#if screen.mapViewId}
-          <TvMapScreen {earthquakeItems} viewId={screen.mapViewId} />
+          <TvMapScreen {earthquakeItems} {fireIncidents} viewId={screen.mapViewId} weather={regionWeather[screen.mapViewId] ?? null} />
         {:else if screen.id === 'news-wire'}
           <NewsWireScreen />
         {:else if screen.id === 'safety'}

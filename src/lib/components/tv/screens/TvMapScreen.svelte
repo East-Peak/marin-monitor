@@ -1,10 +1,6 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { MapContainer, MapDataLayer, MapControls, MapTooltip } from '$lib/components/map';
 	import TvMapSidebar from '$lib/components/tv/TvMapSidebar.svelte';
-	import { fetchFireIncidents } from '$lib/api/marin';
-	import { fetchHourlyForecast } from '$lib/api/marin/nws-hourly';
-	import type { FireIncident } from '$lib/api/marin/calfire';
 	import { allNewsItems } from '$lib/stores';
 	import { MARIN_TOWNS } from '$lib/config/towns';
 	import { TV_MAP_VIEWS } from '$lib/config/tv';
@@ -12,20 +8,14 @@
 
 	interface Props {
 		earthquakeItems: NewsItem[];
+		fireIncidents: any[];
 		viewId: string;
+		weather: { temp: number; wind: string; shortForecast: string } | null;
 	}
 
-	let { earthquakeItems, viewId }: Props = $props();
+	let { earthquakeItems, fireIncidents, viewId, weather }: Props = $props();
 
 	const view = $derived(TV_MAP_VIEWS.find((v) => v.id === viewId) ?? TV_MAP_VIEWS[0]);
-
-	let fireIncidents = $state<FireIncident[]>([]);
-	let sidebarWeather = $state<{ temp: number; wind: string; shortForecast: string } | null>(null);
-	let weatherLoading = $state(true);
-
-	// Shared weather cache (module-level so it persists across instances)
-	const weatherCache = new Map<string, { data: { temp: number; wind: string; shortForecast: string }; fetchedAt: number }>();
-	const CACHE_TTL = 5 * 60 * 1000;
 
 	// Compute nearby stories reactively
 	const lat = $derived(view.center[1]);
@@ -53,41 +43,6 @@
 
 	const stories = $derived(nearby.filter((i) => !i.isAlert).slice(0, 6));
 	const alerts = $derived(nearby.filter((i) => i.isAlert).slice(0, 4));
-
-	onMount(async () => {
-		// Fetch fire incidents
-		try {
-			fireIncidents = await fetchFireIncidents();
-		} catch {
-			// Silent fail
-		}
-
-		// Fetch weather (cached)
-		const cached = weatherCache.get(viewId);
-		if (cached && Date.now() - cached.fetchedAt < CACHE_TTL) {
-			sidebarWeather = cached.data;
-			weatherLoading = false;
-			return;
-		}
-
-		try {
-			const hourly = await fetchHourlyForecast(lat, lon);
-			if (hourly.length > 0) {
-				const current = hourly[0];
-				const data = {
-					temp: current.temperature,
-					wind: `${current.windSpeed}`,
-					shortForecast: current.shortForecast ?? ''
-				};
-				sidebarWeather = data;
-				weatherCache.set(viewId, { data, fetchedAt: Date.now() });
-			}
-		} catch {
-			// Keep null
-		} finally {
-			weatherLoading = false;
-		}
-	});
 </script>
 
 <div class="flex h-full gap-0" style="min-height: 0;">
@@ -96,7 +51,6 @@
 			<MapDataLayer earthquakes={earthquakeItems} {fireIncidents} />
 			<MapControls />
 			<MapTooltip />
-			<!-- Set initial map position via a child component that reads context -->
 			{#await import('$lib/components/tv/TvMapPosition.svelte') then mod}
 				<svelte:component this={mod.default} center={view.center} zoom={view.zoom} />
 			{/await}
@@ -108,10 +62,10 @@
 	<div class="w-72 shrink-0">
 		<TvMapSidebar
 			regionLabel={view.label}
-			weather={sidebarWeather}
-			stories={stories}
-			alerts={alerts}
-			loading={weatherLoading}
+			{weather}
+			{stories}
+			{alerts}
+			loading={weather === null}
 		/>
 	</div>
 </div>
