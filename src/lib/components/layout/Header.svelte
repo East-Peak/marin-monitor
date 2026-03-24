@@ -15,7 +15,7 @@
 	function updateDateTime() {
 		const now = new Date();
 		dateTimeText = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-			+ '  ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+			+ '  ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 	}
 
 	onMount(() => {

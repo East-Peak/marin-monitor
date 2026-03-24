@@ -12,7 +12,6 @@
   import OutdoorsScreen from './screens/OutdoorsScreen.svelte';
   import {
     TV_SCREENS,
-    CAROUSEL_INTERVAL_MS,
     CURSOR_HIDE_MS,
     TV_REFRESH_INTERVAL_MS
   } from '$lib/config/tv';
@@ -41,19 +40,21 @@
   // --- Carousel state ---
   let carouselIdx = $state(0);
   let paused = $state(false);
-  let carouselTimer: ReturnType<typeof setInterval> | null = null;
+  let carouselTimer: ReturnType<typeof setTimeout> | null = null;
 
   function nextScreen() {
     carouselIdx = (carouselIdx + 1) % TV_SCREENS.length;
+    scheduleNext();
   }
 
   function prevScreen() {
     carouselIdx = (carouselIdx - 1 + TV_SCREENS.length) % TV_SCREENS.length;
+    scheduleNext();
   }
 
   function goToScreen(idx: number) {
     carouselIdx = idx;
-    restartCarousel();
+    scheduleNext();
   }
 
   function togglePause() {
@@ -61,24 +62,34 @@
     if (paused) {
       stopCarousel();
     } else {
-      startCarousel();
+      scheduleNext();
     }
   }
 
-  function startCarousel() {
+  /** Schedule the next screen advance based on current screen's duration */
+  function scheduleNext() {
     stopCarousel();
-    carouselTimer = setInterval(nextScreen, CAROUSEL_INTERVAL_MS);
+    if (paused) return;
+    const duration = TV_SCREENS[carouselIdx]?.durationMs ?? 20_000;
+    carouselTimer = setTimeout(() => {
+      carouselIdx = (carouselIdx + 1) % TV_SCREENS.length;
+      scheduleNext();
+    }, duration);
+  }
+
+  function startCarousel() {
+    scheduleNext();
   }
 
   function stopCarousel() {
     if (carouselTimer) {
-      clearInterval(carouselTimer);
+      clearTimeout(carouselTimer);
       carouselTimer = null;
     }
   }
 
   function restartCarousel() {
-    if (!paused) startCarousel();
+    if (!paused) scheduleNext();
   }
 
   // --- Clock ---
@@ -88,7 +99,7 @@
   function updateClock() {
     const now = new Date();
     clockText = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-      + '  ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      + '  ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
   }
 
   // --- Cursor auto-hide ---
@@ -300,7 +311,8 @@
     </div>
     <div class="flex items-center gap-3">
       {#if temperature !== null}
-        <span class="text-sm text-gray-300 font-medium">{temperature}&deg;</span>
+        <span class="text-xs text-gray-500">Now</span>
+        <span class="text-sm text-gray-300 font-medium">{temperature}&deg;F</span>
       {/if}
       <span class="text-xs text-gray-500">{stories24h} stories</span>
       {#if alertCount > 0}
