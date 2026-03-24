@@ -2,7 +2,11 @@
 
 /** TV carousel screen identifiers */
 export type TvScreenId =
-  | 'map-explorer'
+  | 'map-county'
+  | 'map-south'
+  | 'map-central'
+  | 'map-north'
+  | 'map-west'
   | 'news-wire'
   | 'safety'
   | 'cameras-tam-coast'
@@ -16,10 +20,16 @@ export interface TvScreenConfig {
   name: string;
   description: string;
   durationMs: number;
+  /** For map screens, which TvMapView to display */
+  mapViewId?: string;
 }
 
 export const TV_SCREENS: TvScreenConfig[] = [
-  { id: 'map-explorer', name: 'Map Explorer', description: 'Live map with regional flyby and contextual sidebar', durationMs: 30_000 },
+  { id: 'map-county', name: 'Marin County', description: 'County-wide map overview', durationMs: 15_000, mapViewId: 'county' },
+  { id: 'map-south', name: 'Southern Marin', description: 'Mill Valley, Sausalito, Tiburon', durationMs: 15_000, mapViewId: 'south' },
+  { id: 'map-central', name: 'Central Marin', description: 'San Rafael, San Anselmo, Larkspur', durationMs: 15_000, mapViewId: 'central' },
+  { id: 'map-north', name: 'Novato & North', description: 'Novato and northern corridor', durationMs: 15_000, mapViewId: 'north' },
+  { id: 'map-west', name: 'West Marin', description: 'Point Reyes, Bolinas, Nicasio', durationMs: 15_000, mapViewId: 'west' },
   { id: 'news-wire', name: 'News Wire', description: 'Local headlines', durationMs: 20_000 },
   { id: 'safety', name: 'Safety & Alerts', description: 'Crime and safety with auto-scroll', durationMs: 20_000 },
   { id: 'cameras-tam-coast', name: 'Tam & Coast', description: 'Mt Tam ridgeline and coastal cameras', durationMs: 20_000 },

@@ -351,8 +351,8 @@
   <div class="flex-1 relative" style="height: calc(100vh - 48px - 44px);">
     {#each TV_SCREENS as screen, i (screen.id)}
       <TvScreen active={carouselIdx === i}>
-        {#if screen.id === 'map-explorer'}
-          <TvMapScreen {earthquakeItems} active={carouselIdx === i} />
+        {#if screen.mapViewId}
+          <TvMapScreen {earthquakeItems} viewId={screen.mapViewId} />
         {:else if screen.id === 'news-wire'}
           <NewsWireScreen />
         {:else if screen.id === 'safety'}
