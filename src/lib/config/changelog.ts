@@ -15,9 +15,9 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-03-24',
-		title: 'TV Mode',
+		title: 'TV Mode v2',
 		description:
-			'Full-screen dashboard for wall-mounted TVs at /tv. Six auto-rotating screens: live map with regional fly-overs, news wire, safety & alerts, camera wall, environment, and outdoors & tides. Scrolling news ticker, keyboard shortcuts (arrows, space, M, Escape, F), and silent 3-minute refresh. Press M on the dashboard or click the TV button to try it.'
+			'Redesigned TV dashboard with 8 screens: map explorer with per-region weather, news wire, safety with auto-scroll, 3 geographic camera clusters (Tam & Coast, Central & Highway, West & North), conditions & trails, and outdoors & community. Press M or click the TV button to try it at /tv.'
 	},
 	{
 		date: '2026-03-04',

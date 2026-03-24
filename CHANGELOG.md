@@ -12,7 +12,11 @@ All notable changes to Marin Monitor are documented here.
 - **Environment screen** — Air quality, UV index, active fires, and stream gauges in TV carousel.
 - **TV button in header** — Monitor icon in main dashboard header links to `/tv`. Press `M` on the main dashboard to enter TV mode.
 - **Pulse stats in TV header** — Temperature, story count, and alert count shown persistently in the TV mode header bar.
-- **Map sub-carousel** — Map screen auto-flies through 5 regional views (county overview, Southern Marin, Central Marin, Novato & North, West Marin) every 4 seconds with smooth MapLibre flyTo transitions. Location label overlay shows current region.
+- **Map sub-carousel** — Map screen auto-flies through 5 regional views (county overview, Southern Marin, Central Marin, Novato & North, West Marin) every 6 seconds with smooth MapLibre flyTo transitions. Location label overlay shows current region.
+
+### Changed
+- **TV Mode v2** — Redesigned carousel: 8 purpose-built screens replacing 6. Geographic camera clusters (Tam & Coast, Central & Highway, West & North) replace generic camera wall. Contextual map sidebar shows per-region weather and nearby stories during flyby. Full-width safety feed with vertical auto-scroll. Combined Conditions & Trails screen with Hero Dirt (single instance). Outdoors & Community two-column headline screen. No panel duplication. Current temperature now reads hourly forecast (actual temp, not daytime high). Military time throughout.
+- **Venue GPS coordinates** — Corrected 25 of 30 hardcoded venue coordinates in activity scraper. Worst offenders: Osher Marin JCC (~5km off), Marin Symphony (~3.6km), The Junction (~3.4km), Albert Park/Pacifics (~1.5km).
 
 ---
 
