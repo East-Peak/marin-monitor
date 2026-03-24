@@ -36,59 +36,57 @@
   } from '$lib/types';
 
   // --- Carousel state ---
+  // Uses a single setInterval that ticks every second and checks elapsed time.
+  // This is more robust than recursive setTimeout which can get lost if
+  // component lifecycle events (MapContainer destroy/create) cause errors.
   let carouselIdx = $state(0);
   let paused = $state(false);
-  let carouselTimer: ReturnType<typeof setTimeout> | null = null;
+  let carouselTimer: ReturnType<typeof setInterval> | null = null;
+  let screenStartedAt = Date.now();
+
+  function advanceCarousel() {
+    if (paused) return;
+    const duration = TV_SCREENS[carouselIdx]?.durationMs ?? 20_000;
+    if (Date.now() - screenStartedAt >= duration) {
+      carouselIdx = (carouselIdx + 1) % TV_SCREENS.length;
+      screenStartedAt = Date.now();
+    }
+  }
 
   function nextScreen() {
     carouselIdx = (carouselIdx + 1) % TV_SCREENS.length;
-    scheduleNext();
+    screenStartedAt = Date.now();
   }
 
   function prevScreen() {
     carouselIdx = (carouselIdx - 1 + TV_SCREENS.length) % TV_SCREENS.length;
-    scheduleNext();
+    screenStartedAt = Date.now();
   }
 
   function goToScreen(idx: number) {
     carouselIdx = idx;
-    scheduleNext();
+    screenStartedAt = Date.now();
   }
 
   function togglePause() {
     paused = !paused;
-    if (paused) {
-      stopCarousel();
-    } else {
-      scheduleNext();
-    }
-  }
-
-  /** Schedule the next screen advance based on current screen's duration */
-  function scheduleNext() {
-    stopCarousel();
-    if (paused) return;
-    resetWatchdog();
-    const duration = TV_SCREENS[carouselIdx]?.durationMs ?? 20_000;
-    carouselTimer = setTimeout(() => {
-      carouselIdx = (carouselIdx + 1) % TV_SCREENS.length;
-      scheduleNext();
-    }, duration);
+    if (!paused) screenStartedAt = Date.now();
   }
 
   function startCarousel() {
-    scheduleNext();
+    stopCarousel();
+    carouselTimer = setInterval(advanceCarousel, 1000);
   }
 
   function stopCarousel() {
     if (carouselTimer) {
-      clearTimeout(carouselTimer);
+      clearInterval(carouselTimer);
       carouselTimer = null;
     }
   }
 
   function restartCarousel() {
-    if (!paused) scheduleNext();
+    screenStartedAt = Date.now();
   }
 
   // --- Clock ---
@@ -155,13 +153,6 @@
     }
   }
 
-  // --- Watchdog: force-advance if carousel gets stuck ---
-  let watchdogTimer: ReturnType<typeof setInterval> | null = null;
-  let lastAdvanceTime = Date.now();
-
-  function resetWatchdog() {
-    lastAdvanceTime = Date.now();
-  }
 
   // --- Shared data for map screens ---
   let earthquakeItems = $state<NewsItem[]>([]);
@@ -314,13 +305,6 @@
     // Recurring data refresh
     refreshTimer = setInterval(handleRefresh, TV_REFRESH_INTERVAL_MS);
 
-    // Watchdog: if carousel hasn't advanced in 45s, force it (handles browser suspend/timer drift)
-    watchdogTimer = setInterval(() => {
-      if (!paused && Date.now() - lastAdvanceTime > 45_000) {
-        carouselIdx = (carouselIdx + 1) % TV_SCREENS.length;
-        scheduleNext();
-      }
-    }, 10_000);
   });
 
   onDestroy(() => {
@@ -328,7 +312,6 @@
     if (clockTimer) clearInterval(clockTimer);
     if (cursorTimer) clearTimeout(cursorTimer);
     if (refreshTimer) clearInterval(refreshTimer);
-    if (watchdogTimer) clearInterval(watchdogTimer);
 
     if (browser) {
       window.removeEventListener('mousemove', resetCursorTimer);
