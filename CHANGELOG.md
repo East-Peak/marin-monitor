@@ -7,7 +7,11 @@ All notable changes to Marin Monitor are documented here.
 ## 2026-03-24
 
 ### Added
-- **TV Mode (`/tv`)** — Full-screen, hands-free dashboard for wall-mounted TVs. Five auto-rotating carousel screens (Map & Conditions, News Wire, Safety & Alerts, Pulse, Outdoors & Tides) with 20-second rotation and fade transitions. Scrolling chyron ticker merges 8 data categories (weather, safety, news, fire, earthquake, tides, transit, civic). Keyboard shortcuts for navigation, pause, fullscreen, and refresh. Cursor auto-hides after 5 seconds. Silent 3-minute data refresh. Forced dark theme.
+- **TV Mode (`/tv`)** — Full-screen, hands-free dashboard for wall-mounted TVs. Six auto-rotating carousel screens (Map & Conditions, News Wire, Safety & Alerts, Camera Wall, Environment, Outdoors & Tides) with 20-second rotation and fade transitions. Scrolling chyron ticker merges 8 data categories. Keyboard shortcuts (arrows, space, R, Escape, F). Cursor auto-hides. Silent 3-minute data refresh. Forced dark theme.
+- **Camera Wall screen** — Full-screen grid of all 24 Marin cameras (traffic, scenic, fire) in TV carousel.
+- **Environment screen** — Air quality, UV index, active fires, and stream gauges in TV carousel.
+- **TV button in header** — Monitor icon in main dashboard header links to `/tv`. Press `M` on the main dashboard to enter TV mode.
+- **Pulse stats in TV header** — Temperature, story count, and alert count shown persistently in the TV mode header bar.
 
 ---
 
