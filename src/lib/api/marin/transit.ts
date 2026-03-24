@@ -121,25 +121,28 @@ function entityToNewsItem(entity: GtfsAlertEntity, agencyId: string, agencyName:
 }
 
 /**
- * Fetch transit alerts for all Marin agencies
+ * Fetch transit alerts for all Marin agencies.
+ * Requests are sequential with a delay to avoid 511.org rate limiting (429s).
  */
 export async function fetchTransitAlerts(): Promise<{
 	items: NewsItem[];
 	errors: string[];
 }> {
-	const results = await Promise.allSettled(
-		MARIN_AGENCIES.map((agency) => fetchAgencyAlerts(agency.id, agency.name))
-	);
-
 	const allItems: NewsItem[] = [];
 	const errors: string[] = [];
 
-	for (const result of results) {
-		if (result.status === 'fulfilled') {
-			allItems.push(...result.value.items);
-			if (result.value.error) errors.push(result.value.error);
-		} else {
-			errors.push(result.reason?.message || 'Unknown error');
+	for (let i = 0; i < MARIN_AGENCIES.length; i++) {
+		const agency = MARIN_AGENCIES[i];
+		try {
+			const result = await fetchAgencyAlerts(agency.id, agency.name);
+			allItems.push(...result.items);
+			if (result.error) errors.push(result.error);
+		} catch (err) {
+			errors.push((err as Error).message || 'Unknown error');
+		}
+		// Small delay between requests to avoid rate limiting
+		if (i < MARIN_AGENCIES.length - 1) {
+			await new Promise((r) => setTimeout(r, 500));
 		}
 	}
 
