@@ -11,6 +11,11 @@ import { getAllFeedUrls, MARINIJ_LOCATION_FEEDS, MARINIJ_TAG_FEEDS } from '$lib/
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import type { RequestHandler } from './$types';
 
+const USER_AGENT = 'Mozilla/5.0 (compatible; MarinMonitor/1.0; +https://marinmonitor.com)';
+
+const feedCache = new Map<string, { data: string; fetchedAt: number; contentType: string }>();
+const FEED_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
 const ALLOWED_FEED_URLS = new Set([
 	...getAllFeedUrls().map((feed) => feed.url),
 	...Object.values(MARINIJ_TAG_FEEDS),
@@ -30,10 +35,22 @@ export const GET: RequestHandler = async ({ url }) => {
 	}
 
 	try {
+		const cached = feedCache.get(feedUrl);
+		if (cached && Date.now() - cached.fetchedAt < FEED_CACHE_TTL) {
+			return new Response(cached.data, {
+				headers: {
+					'Content-Type': cached.contentType,
+					'Cache-Control': 'public, max-age=300',
+					'X-Cache': 'HIT'
+				}
+			});
+		}
+
 		const response = await fetchWithTimeout(feedUrl, {
 			headers: {
+				'User-Agent': USER_AGENT,
 				Accept: 'application/rss+xml, application/xml, text/xml, */*',
-				'User-Agent': 'MarinMonitor/1.0 (RSS Feed Reader)'
+				Referer: 'https://marinmonitor.com/'
 			}
 		});
 
@@ -46,10 +63,14 @@ export const GET: RequestHandler = async ({ url }) => {
 			throw error(413, 'Feed response too large');
 		}
 
+		const contentType = response.headers.get('content-type') || 'application/xml';
+		feedCache.set(feedUrl, { data: xml, fetchedAt: Date.now(), contentType });
+
 		return new Response(xml, {
 			headers: {
-				'Content-Type': 'application/xml',
-				'Cache-Control': 'public, max-age=300' // 5 min cache
+				'Content-Type': contentType,
+				'Cache-Control': 'public, max-age=300',
+				'X-Cache': 'MISS'
 			}
 		});
 	} catch (e) {
