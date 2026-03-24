@@ -7,7 +7,8 @@
   import MapConditionsScreen from './screens/MapConditionsScreen.svelte';
   import NewsWireScreen from './screens/NewsWireScreen.svelte';
   import SafetyScreen from './screens/SafetyScreen.svelte';
-  import PulseScreen from './screens/PulseScreen.svelte';
+  import CameraWallScreen from './screens/CameraWallScreen.svelte';
+  import EnvironmentScreen from './screens/EnvironmentScreen.svelte';
   import OutdoorsScreen from './screens/OutdoorsScreen.svelte';
   import {
     TV_SCREENS,
@@ -15,7 +16,7 @@
     CURSOR_HIDE_MS,
     TV_REFRESH_INTERVAL_MS
   } from '$lib/config/tv';
-  import { news, refresh } from '$lib/stores';
+  import { news, refresh, allNewsItems, alerts } from '$lib/stores';
   import {
     fetchAllFeeds,
     fetchWeather,
@@ -151,7 +152,13 @@
   let weatherForecast = $state<(WeatherData & { name: string })[]>([]);
   let weatherAlerts = $state<FireWeatherAlert[]>([]);
   let earthquakeItems = $state<NewsItem[]>([]);
-  let earthquakesRaw = $state<EarthquakeData[]>([]);
+
+  // --- Pulse stats for header bar ---
+  const stories24h = $derived(
+    $allNewsItems.filter((item) => Date.now() - item.timestamp <= 24 * 60 * 60 * 1000).length
+  );
+  const alertCount = $derived($alerts.length);
+  const temperature = $derived(weatherForecast[0]?.temperature ?? null);
 
   const rssCategories: NewsCategory[] = [
     'local', 'civic', 'safety', 'outdoors', 'housing',
@@ -181,7 +188,6 @@
 
     const earthquakeNews = earthquakesToNewsItems(earthquakes);
     earthquakeItems = earthquakeNews;
-    earthquakesRaw = earthquakes;
 
     const supplementalByCategory = new Map<NewsCategory, NewsItem[]>();
     for (const category of rssCategories) {
@@ -292,6 +298,15 @@
         <span class="text-xs text-amber-400 font-medium">PAUSED</span>
       {/if}
     </div>
+    <div class="flex items-center gap-3">
+      {#if temperature !== null}
+        <span class="text-sm text-gray-300 font-medium">{temperature}&deg;</span>
+      {/if}
+      <span class="text-xs text-gray-500">{stories24h} stories</span>
+      {#if alertCount > 0}
+        <span class="text-xs text-red-400 font-medium">{alertCount} alerts</span>
+      {/if}
+    </div>
     <div class="flex items-center gap-4">
       <span class="text-sm text-gray-300 tabular-nums">{clockText}</span>
       <div class="flex items-center gap-1.5">
@@ -318,8 +333,10 @@
           <NewsWireScreen />
         {:else if screen.id === 'safety'}
           <SafetyScreen />
-        {:else if screen.id === 'pulse'}
-          <PulseScreen forecast={weatherForecast} {weatherAlerts} earthquakes={earthquakesRaw} />
+        {:else if screen.id === 'cameras'}
+          <CameraWallScreen />
+        {:else if screen.id === 'environment'}
+          <EnvironmentScreen />
         {:else if screen.id === 'outdoors'}
           <OutdoorsScreen />
         {/if}

@@ -12,8 +12,8 @@
   let { forecast, weatherAlerts, earthquakeItems }: Props = $props();
 </script>
 
-<div class="flex h-full gap-2 p-2">
-  <div class="flex-1 min-w-0">
+<div class="flex h-full gap-2 p-2" style="min-height: 0;">
+  <div class="flex-1 min-w-0 min-h-0" style="height: 100%;">
     <MapPanel earthquakes={earthquakeItems} />
   </div>
   <div class="w-80 shrink-0 overflow-y-auto">
