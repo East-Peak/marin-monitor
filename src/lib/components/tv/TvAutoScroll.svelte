@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import type { Snippet } from 'svelte';
 
   interface Props {
@@ -14,14 +13,6 @@
   let needsScroll = $state(false);
   let duration = $state(60);
 
-  onMount(() => {
-    checkOverflow();
-    const observer = new ResizeObserver(checkOverflow);
-    if (containerEl) observer.observe(containerEl);
-    if (contentEl) observer.observe(contentEl);
-    return () => observer.disconnect();
-  });
-
   function checkOverflow() {
     if (!containerEl || !contentEl) return;
     const contentHeight = contentEl.scrollHeight;
@@ -31,6 +22,21 @@
       duration = contentHeight / speed;
     }
   }
+
+  // Re-attach ResizeObserver whenever the bound elements change
+  // (contentEl rebinds when needsScroll flips the {#if} branch)
+  $effect(() => {
+    const container = containerEl;
+    const content = contentEl;
+    if (!container || !content) return;
+
+    checkOverflow();
+    const observer = new ResizeObserver(checkOverflow);
+    observer.observe(container);
+    observer.observe(content);
+
+    return () => observer.disconnect();
+  });
 </script>
 
 <div bind:this={containerEl} class="h-full overflow-hidden relative">
