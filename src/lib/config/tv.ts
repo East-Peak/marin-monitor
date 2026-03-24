@@ -1,7 +1,7 @@
 // src/lib/config/tv.ts
 
 /** TV carousel screen identifiers */
-export type TvScreenId = 'map-conditions' | 'news-wire' | 'safety' | 'pulse' | 'outdoors';
+export type TvScreenId = 'map-conditions' | 'news-wire' | 'safety' | 'cameras' | 'environment' | 'outdoors';
 
 export interface TvScreenConfig {
   id: TvScreenId;
@@ -13,7 +13,8 @@ export const TV_SCREENS: TvScreenConfig[] = [
   { id: 'map-conditions', name: 'Map & Conditions', description: 'Live map with weather sidebar' },
   { id: 'news-wire', name: 'News Wire', description: 'Local headlines' },
   { id: 'safety', name: 'Safety & Alerts', description: 'Crime, fire, weather alerts' },
-  { id: 'pulse', name: 'Pulse', description: 'Narrative summary and key metrics' },
+  { id: 'cameras', name: 'Camera Wall', description: 'Live camera feeds across Marin' },
+  { id: 'environment', name: 'Environment', description: 'Air quality, UV, fires, streams' },
   { id: 'outdoors', name: 'Outdoors & Tides', description: 'Tides, marine, trails, sun' }
 ];
 
