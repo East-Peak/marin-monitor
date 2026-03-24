@@ -28,6 +28,8 @@
     fetchSupplementalActivityFeeds,
     enrichItemsForRelevance
   } from '$lib/api/marin';
+  import { fetchHourlyForecast } from '$lib/api/marin/nws-hourly';
+  import type { HourlyPeriod } from '$lib/api/marin/nws-hourly';
   import { townLocation } from '$lib/stores/town-filter';
   import type {
     NewsCategory,
@@ -163,13 +165,16 @@
   let weatherForecast = $state<(WeatherData & { name: string })[]>([]);
   let weatherAlerts = $state<FireWeatherAlert[]>([]);
   let earthquakeItems = $state<NewsItem[]>([]);
+  let hourlyPeriods = $state<HourlyPeriod[]>([]);
 
   // --- Pulse stats for header bar ---
   const stories24h = $derived(
     $allNewsItems.filter((item) => Date.now() - item.timestamp <= 24 * 60 * 60 * 1000).length
   );
   const alertCount = $derived($alerts.length);
-  const temperature = $derived(weatherForecast[0]?.temperature ?? null);
+  // Use the first hourly period (current hour) for actual current temp,
+  // NOT weatherForecast[0] which is the daytime high
+  const currentTemp = $derived(hourlyPeriods[0]?.temperature ?? null);
 
   const rssCategories: NewsCategory[] = [
     'local', 'civic', 'safety', 'outdoors', 'housing',
@@ -227,9 +232,13 @@
   async function loadWeather() {
     try {
       const loc = userLocation;
-      const data = await fetchWeather(loc.lat, loc.lon);
+      const [data, hourly] = await Promise.all([
+        fetchWeather(loc.lat, loc.lon),
+        fetchHourlyForecast(loc.lat, loc.lon).catch(() => [] as HourlyPeriod[])
+      ]);
       weatherForecast = data.forecast;
       weatherAlerts = data.alerts;
+      if (hourly.length > 0) hourlyPeriods = hourly;
     } catch {
       // Silent fail — keep last good data
     }
@@ -310,9 +319,9 @@
       {/if}
     </div>
     <div class="flex items-center gap-3">
-      {#if temperature !== null}
+      {#if currentTemp !== null}
         <span class="text-xs text-gray-500">Now</span>
-        <span class="text-sm text-gray-300 font-medium">{temperature}&deg;F</span>
+        <span class="text-sm text-gray-300 font-medium">{currentTemp}&deg;F</span>
       {/if}
       <span class="text-xs text-gray-500">{stories24h} stories</span>
       {#if alertCount > 0}
