@@ -1,0 +1,340 @@
+<script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
+  import { goto } from '$app/navigation';
+  import { browser } from '$app/environment';
+  import TvScreen from './TvScreen.svelte';
+  import TvChyron from './TvChyron.svelte';
+  import MapConditionsScreen from './screens/MapConditionsScreen.svelte';
+  import NewsWireScreen from './screens/NewsWireScreen.svelte';
+  import SafetyScreen from './screens/SafetyScreen.svelte';
+  import PulseScreen from './screens/PulseScreen.svelte';
+  import OutdoorsScreen from './screens/OutdoorsScreen.svelte';
+  import {
+    TV_SCREENS,
+    CAROUSEL_INTERVAL_MS,
+    CURSOR_HIDE_MS,
+    TV_REFRESH_INTERVAL_MS
+  } from '$lib/config/tv';
+  import { news, refresh } from '$lib/stores';
+  import {
+    fetchAllFeeds,
+    fetchWeather,
+    fetchNpsAlerts,
+    fetchEarthquakes,
+    earthquakesToNewsItems,
+    fetchTransitAlerts,
+    fetchSheriffCrimeBlotter,
+    fetchSupplementalPoliceLogs,
+    fetchSupplementalActivityFeeds,
+    enrichItemsForRelevance
+  } from '$lib/api/marin';
+  import { townLocation } from '$lib/stores/town-filter';
+  import type {
+    NewsCategory,
+    NewsItem,
+    WeatherData,
+    FireWeatherAlert,
+    EarthquakeData
+  } from '$lib/types';
+
+  // --- Carousel state ---
+  let carouselIdx = $state(0);
+  let paused = $state(false);
+  let carouselTimer: ReturnType<typeof setInterval> | null = null;
+
+  const currentScreen = $derived(TV_SCREENS[carouselIdx % TV_SCREENS.length]);
+
+  function nextScreen() {
+    carouselIdx = (carouselIdx + 1) % TV_SCREENS.length;
+  }
+
+  function prevScreen() {
+    carouselIdx = (carouselIdx - 1 + TV_SCREENS.length) % TV_SCREENS.length;
+  }
+
+  function goToScreen(idx: number) {
+    carouselIdx = idx;
+    restartCarousel();
+  }
+
+  function togglePause() {
+    paused = !paused;
+    if (paused) {
+      stopCarousel();
+    } else {
+      startCarousel();
+    }
+  }
+
+  function startCarousel() {
+    stopCarousel();
+    carouselTimer = setInterval(nextScreen, CAROUSEL_INTERVAL_MS);
+  }
+
+  function stopCarousel() {
+    if (carouselTimer) {
+      clearInterval(carouselTimer);
+      carouselTimer = null;
+    }
+  }
+
+  function restartCarousel() {
+    if (!paused) startCarousel();
+  }
+
+  // --- Clock ---
+  let clockText = $state('');
+  let clockTimer: ReturnType<typeof setInterval> | null = null;
+
+  function updateClock() {
+    clockText = new Date().toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+
+  // --- Cursor auto-hide ---
+  let cursorHidden = $state(false);
+  let cursorTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function resetCursorTimer() {
+    cursorHidden = false;
+    if (cursorTimer) clearTimeout(cursorTimer);
+    cursorTimer = setTimeout(() => { cursorHidden = true; }, CURSOR_HIDE_MS);
+  }
+
+  // --- Keyboard shortcuts ---
+  function handleKeydown(e: KeyboardEvent) {
+    switch (e.key) {
+      case 'ArrowRight':
+        nextScreen();
+        restartCarousel();
+        break;
+      case 'ArrowLeft':
+        prevScreen();
+        restartCarousel();
+        break;
+      case ' ':
+        e.preventDefault();
+        togglePause();
+        break;
+      case 'r':
+      case 'R':
+        handleRefresh();
+        break;
+      case 'Escape':
+        goto('/');
+        break;
+      case 'f':
+      case 'F':
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        } else {
+          document.documentElement.requestFullscreen();
+        }
+        break;
+    }
+  }
+
+  // --- Visibility change (re-sync on tab focus) ---
+  function handleVisibilityChange() {
+    if (document.hidden) {
+      stopCarousel();
+    } else if (!paused) {
+      startCarousel();
+    }
+  }
+
+  // --- Location (derived from town filter) ---
+  const userLocation = $derived($townLocation);
+
+  // --- Weather & earthquake data (passed to screens) ---
+  let weatherForecast = $state<(WeatherData & { name: string })[]>([]);
+  let weatherAlerts = $state<FireWeatherAlert[]>([]);
+  let earthquakeItems = $state<NewsItem[]>([]);
+  let earthquakesRaw = $state<EarthquakeData[]>([]);
+
+  const rssCategories: NewsCategory[] = [
+    'local', 'civic', 'safety', 'outdoors', 'housing',
+    'cycling', 'endurance', 'shows', 'prep', 'farm', 'satire'
+  ];
+
+  async function loadNews() {
+    const settled = await Promise.allSettled([
+      fetchAllFeeds(),
+      fetchNpsAlerts(),
+      fetchEarthquakes(),
+      fetchTransitAlerts().then((r) => r.items),
+      fetchSheriffCrimeBlotter(),
+      fetchSupplementalPoliceLogs(),
+      fetchSupplementalActivityFeeds()
+    ]);
+    const [rssResults, npsAlerts, earthquakes, transitAlerts, sheriffBlotter, policeLogs, supplementalActivity] =
+      settled.map((r) => (r.status === 'fulfilled' ? r.value : [])) as [
+        Awaited<ReturnType<typeof fetchAllFeeds>>,
+        NewsItem[],
+        EarthquakeData[],
+        NewsItem[],
+        NewsItem[],
+        NewsItem[],
+        NewsItem[]
+      ];
+
+    const earthquakeNews = earthquakesToNewsItems(earthquakes);
+    earthquakeItems = earthquakeNews;
+    earthquakesRaw = earthquakes;
+
+    const supplementalByCategory = new Map<NewsCategory, NewsItem[]>();
+    for (const category of rssCategories) {
+      supplementalByCategory.set(category, supplementalActivity.filter((item) => item.category === category));
+    }
+
+    await Promise.all(
+      rssResults.map(async (result) => {
+        const extraItems =
+          result.category === 'safety'
+            ? [...earthquakeNews, ...transitAlerts, ...sheriffBlotter, ...policeLogs, ...(supplementalByCategory.get(result.category) ?? [])]
+            : result.category === 'outdoors'
+              ? [...npsAlerts, ...(supplementalByCategory.get(result.category) ?? [])]
+              : (supplementalByCategory.get(result.category) ?? []);
+
+        const allItems = [...result.items, ...extraItems].sort((a, b) => b.timestamp - a.timestamp);
+        const enrichedItems = await enrichItemsForRelevance(allItems);
+        news.setItems(result.category, enrichedItems);
+        if (enrichedItems.length > 0) {
+          void news.enrichLocations(result.category);
+        }
+      })
+    );
+  }
+
+  async function loadWeather() {
+    try {
+      const loc = userLocation;
+      const data = await fetchWeather(loc.lat, loc.lon);
+      weatherForecast = data.forecast;
+      weatherAlerts = data.alerts;
+    } catch {
+      // Silent fail — keep last good data
+    }
+  }
+
+  async function handleRefresh() {
+    refresh.startRefresh();
+    try {
+      await Promise.all([loadNews(), loadWeather()]);
+      refresh.endRefresh();
+    } catch (error) {
+      refresh.endRefresh([String(error)]);
+    }
+  }
+
+  // --- Data refresh interval ---
+  let refreshTimer: ReturnType<typeof setInterval> | null = null;
+
+  // --- Force dark theme ---
+  let originalTheme = '';
+
+  onMount(() => {
+    // Force dark theme (project uses data-theme attribute)
+    originalTheme = document.documentElement.getAttribute('data-theme') ?? '';
+    document.documentElement.setAttribute('data-theme', 'dark');
+
+    // Start carousel
+    startCarousel();
+
+    // Start clock
+    updateClock();
+    clockTimer = setInterval(updateClock, 1000);
+
+    // Cursor auto-hide
+    resetCursorTimer();
+    window.addEventListener('mousemove', resetCursorTimer);
+
+    // Keyboard shortcuts
+    window.addEventListener('keydown', handleKeydown);
+
+    // Visibility change
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Initial data load
+    handleRefresh();
+
+    // Recurring data refresh
+    refreshTimer = setInterval(handleRefresh, TV_REFRESH_INTERVAL_MS);
+  });
+
+  onDestroy(() => {
+    stopCarousel();
+    if (clockTimer) clearInterval(clockTimer);
+    if (cursorTimer) clearTimeout(cursorTimer);
+    if (refreshTimer) clearInterval(refreshTimer);
+
+    if (browser) {
+      window.removeEventListener('mousemove', resetCursorTimer);
+      window.removeEventListener('keydown', handleKeydown);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+
+      // Restore original theme
+      document.documentElement.setAttribute('data-theme', originalTheme || 'dark');
+    }
+  });
+</script>
+
+<div
+  class="fixed inset-0 bg-gray-950 text-gray-100 flex flex-col overflow-hidden select-none"
+  class:cursor-none={cursorHidden}
+>
+  <!-- Header: title + clock + dots -->
+  <header class="h-12 flex items-center justify-between px-4 bg-gray-900/80 border-b border-gray-800/50 shrink-0 z-10">
+    <div class="flex items-center gap-3">
+      <h1 class="text-lg font-bold tracking-wide text-gray-100">MARIN MONITOR</h1>
+      {#if paused}
+        <span class="text-xs text-amber-400 font-medium">PAUSED</span>
+      {/if}
+    </div>
+    <div class="flex items-center gap-4">
+      <span class="text-sm text-gray-300 tabular-nums">{clockText}</span>
+      <div class="flex items-center gap-1.5">
+        {#each TV_SCREENS as screen, i (screen.id)}
+          <button
+            class="w-2.5 h-2.5 rounded-full transition-colors"
+            class:bg-blue-400={carouselIdx === i}
+            class:bg-gray-600={carouselIdx !== i}
+            onclick={() => goToScreen(i)}
+            title={screen.name}
+          ></button>
+        {/each}
+      </div>
+    </div>
+  </header>
+
+  <!-- Carousel area -->
+  <div class="flex-1 relative" style="height: calc(100vh - 48px - 44px);">
+    {#each TV_SCREENS as screen, i (screen.id)}
+      <TvScreen active={carouselIdx === i}>
+        {#if screen.id === 'map-conditions'}
+          <MapConditionsScreen forecast={weatherForecast} {weatherAlerts} {earthquakeItems} />
+        {:else if screen.id === 'news-wire'}
+          <NewsWireScreen />
+        {:else if screen.id === 'safety'}
+          <SafetyScreen />
+        {:else if screen.id === 'pulse'}
+          <PulseScreen forecast={weatherForecast} {weatherAlerts} earthquakes={earthquakesRaw} />
+        {:else if screen.id === 'outdoors'}
+          <OutdoorsScreen />
+        {/if}
+      </TvScreen>
+    {/each}
+  </div>
+
+  <!-- Chyron -->
+  <TvChyron />
+</div>
+
+<style>
+  .cursor-none {
+    cursor: none;
+  }
+</style>
