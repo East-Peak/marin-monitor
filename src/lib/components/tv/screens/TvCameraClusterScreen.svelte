@@ -51,6 +51,7 @@
             alt={cam.name}
             class="w-full h-full object-cover"
             loading="eager"
+            onerror={(e) => { const el = e.currentTarget as HTMLImageElement; el.style.display = 'none'; }}
           />
         {:else if cam.type === 'iframe'}
           <iframe
@@ -61,6 +62,9 @@
             allow="autoplay"
           ></iframe>
         {/if}
+        <div class="camera-offline-fallback">
+          <span class="text-xs text-gray-500">Camera offline</span>
+        </div>
         <div class="absolute top-0 left-0 right-0 flex justify-between items-start p-1.5 pointer-events-none">
           <span class="text-xs font-medium text-white bg-black/60 px-1.5 py-0.5 rounded">{cam.name}</span>
           <span class="text-xs text-gray-300 bg-black/60 px-1.5 py-0.5 rounded">{cam.location}</span>
@@ -72,3 +76,14 @@
     {/each}
   </div>
 </div>
+
+<style>
+  .camera-offline-fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 0;
+  }
+</style>

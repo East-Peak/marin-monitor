@@ -92,11 +92,13 @@ export const tvTickerItems = derived(
       // Silent fail — don't break chyron
     }
 
-    // Deduplicate by id (fire/quake/transit items may overlap with safety)
+    // Deduplicate by underlying NewsItem id (strip badge prefix)
+    // Fire/quake/transit items overlap with safety — keep the more specific badge
     const seen = new Set<string>();
     const deduped = items.filter((item) => {
-      if (seen.has(item.id)) return false;
-      seen.add(item.id);
+      const baseId = item.id.replace(/^[A-Z]{2}-/, '');
+      if (seen.has(baseId)) return false;
+      seen.add(baseId);
       return true;
     });
 

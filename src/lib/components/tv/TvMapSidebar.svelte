@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { NewsItem } from '$lib/types';
+	import { timeAgo } from '$lib/utils';
 
 	interface Props {
 		regionLabel: string;
@@ -10,14 +11,6 @@
 	}
 
 	let { regionLabel, weather, stories, alerts, loading }: Props = $props();
-
-	function relativeTime(ts: number): string {
-		const diff = Math.floor((Date.now() - ts) / 1000);
-		if (diff < 60) return 'just now';
-		if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-		if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-		return `${Math.floor(diff / 86400)}d ago`;
-	}
 </script>
 
 <div class="h-full bg-gray-900/95 border-l border-gray-700/50 overflow-y-auto">
@@ -53,7 +46,7 @@
 					<p class="text-xs text-gray-200 line-clamp-2">{item.title}</p>
 					<div class="flex items-center gap-1 mt-0.5">
 						<span class="text-[10px] text-gray-500">{item.source}</span>
-						<span class="text-[10px] text-gray-600">{relativeTime(item.timestamp)}</span>
+						<span class="text-[10px] text-gray-600">{timeAgo(item.timestamp)}</span>
 					</div>
 				</div>
 			{/each}

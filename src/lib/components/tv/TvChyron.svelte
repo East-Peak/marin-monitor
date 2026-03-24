@@ -2,14 +2,7 @@
 <script lang="ts">
   import { tvTickerItems } from '$lib/stores/tv';
   import { CATEGORY_COLORS, type TickerCategory } from '$lib/config/tv';
-
-  function relativeTime(ts: number): string {
-    const diff = Math.floor((Date.now() - ts) / 1000);
-    if (diff < 60) return 'just now';
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
-  }
+  import { timeAgo } from '$lib/utils';
 
   function badgeBg(badge: TickerCategory): string {
     const hex = CATEGORY_COLORS[badge] ?? '#a3a3a3';
@@ -31,7 +24,7 @@
             {item.badge}
           </span>
           <span class="text-sm text-gray-200">{item.text}</span>
-          <span class="text-xs text-gray-500">{relativeTime(item.timestamp)}</span>
+          <span class="text-xs text-gray-500">{timeAgo(item.timestamp)}</span>
         </div>
       {/each}
     </div>

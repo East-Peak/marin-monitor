@@ -1,16 +1,10 @@
 <script lang="ts">
 	import { safetyNews, alerts } from '$lib/stores';
 	import TvAutoScroll from '$lib/components/tv/TvAutoScroll.svelte';
+	import { timeAgo } from '$lib/utils';
 
 	const safetyItems = $derived($safetyNews.items.slice(0, 20));
 	const activeAlerts = $derived($alerts.slice(0, 4));
-
-	function relativeTime(ts: number): string {
-		const diff = Math.floor((Date.now() - ts) / 1000);
-		if (diff < 60) return 'just now';
-		if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-		return `${Math.floor(diff / 3600)}h ago`;
-	}
 </script>
 
 <div class="h-full flex flex-col p-4 gap-3">
@@ -34,7 +28,7 @@
 					<div class="bg-gray-800/60 rounded-lg p-2.5 border border-gray-700/50">
 						<div class="flex justify-between items-start">
 							<h3 class="text-sm font-medium text-gray-100 line-clamp-2">{item.title}</h3>
-							<span class="text-[10px] text-gray-500 shrink-0 ml-2">{relativeTime(item.timestamp)}</span>
+							<span class="text-[10px] text-gray-500 shrink-0 ml-2">{timeAgo(item.timestamp)}</span>
 						</div>
 						<span class="text-[10px] text-gray-400">{item.source}</span>
 					</div>

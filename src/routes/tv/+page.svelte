@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { browser } from '$app/environment';
 	import { TvWallboard } from '$lib/components/tv';
 
 	onMount(() => {
@@ -9,9 +10,11 @@
 	});
 
 	onDestroy(() => {
-		document.body.style.overflow = '';
-		document.body.style.margin = '';
-		document.body.style.padding = '';
+		if (browser) {
+			document.body.style.overflow = '';
+			document.body.style.margin = '';
+			document.body.style.padding = '';
+		}
 	});
 </script>
 

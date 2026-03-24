@@ -1,17 +1,10 @@
 <script lang="ts">
 	import { outdoorsNews, civicNews } from '$lib/stores';
 	import TvAutoScroll from '$lib/components/tv/TvAutoScroll.svelte';
+	import { timeAgo } from '$lib/utils';
 
 	const outdoorItems = $derived($outdoorsNews.items.slice(0, 12));
 	const civicItems = $derived($civicNews.items.slice(0, 12));
-
-	function relativeTime(ts: number): string {
-		const diff = Math.floor((Date.now() - ts) / 1000);
-		if (diff < 60) return 'just now';
-		if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-		if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-		return `${Math.floor(diff / 86400)}d ago`;
-	}
 </script>
 
 <div class="h-full flex flex-col p-4 gap-3">
@@ -29,7 +22,7 @@
 								<h3 class="text-sm font-medium text-gray-100 line-clamp-2">{outdoorItems[i].title}</h3>
 								<div class="flex items-center gap-2 mt-1">
 									<span class="text-[10px] text-gray-400">{outdoorItems[i].source}</span>
-									<span class="text-[10px] text-gray-500">{relativeTime(outdoorItems[i].timestamp)}</span>
+									<span class="text-[10px] text-gray-500">{timeAgo(outdoorItems[i].timestamp)}</span>
 								</div>
 							</div>
 						{/if}
@@ -40,7 +33,7 @@
 								<h3 class="text-sm font-medium text-gray-100 line-clamp-2">{civicItems[i].title}</h3>
 								<div class="flex items-center gap-2 mt-1">
 									<span class="text-[10px] text-gray-400">{civicItems[i].source}</span>
-									<span class="text-[10px] text-gray-500">{relativeTime(civicItems[i].timestamp)}</span>
+									<span class="text-[10px] text-gray-500">{timeAgo(civicItems[i].timestamp)}</span>
 								</div>
 							</div>
 						{/if}

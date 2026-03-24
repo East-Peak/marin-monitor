@@ -228,16 +228,23 @@
     );
   }
 
+  let lastRegionWeatherFetch = 0;
+  const REGION_WEATHER_TTL = 15 * 60 * 1000; // 15 minutes for map region weather
+
   async function loadWeather() {
     try {
-      // Fetch hourly for header temp display
+      // Fetch hourly for header temp display (every refresh cycle)
       const hourly = await fetchHourlyForecast().catch(() => []);
       if (hourly.length > 0) hourlyPeriods = hourly;
     } catch {
       // Silent fail
     }
 
-    // Pre-fetch weather for all map regions (parallel, non-blocking)
+    // Pre-fetch weather for all map regions — only every 15 minutes
+    if (Date.now() - lastRegionWeatherFetch < REGION_WEATHER_TTL && Object.keys(regionWeather).length > 0) {
+      return;
+    }
+
     const { TV_MAP_VIEWS } = await import('$lib/config/tv');
     const results = await Promise.allSettled(
       TV_MAP_VIEWS.map(async (view) => {
@@ -255,6 +262,7 @@
       }
     }
     regionWeather = newWeather;
+    lastRegionWeatherFetch = Date.now();
   }
 
   async function loadFireIncidents() {
