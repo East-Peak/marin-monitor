@@ -12,6 +12,7 @@ All notable changes to Marin Monitor are documented here.
 - **Environment screen** — Air quality, UV index, active fires, and stream gauges in TV carousel.
 - **TV button in header** — Monitor icon in main dashboard header links to `/tv`. Press `M` on the main dashboard to enter TV mode.
 - **Pulse stats in TV header** — Temperature, story count, and alert count shown persistently in the TV mode header bar.
+- **Map sub-carousel** — Map screen auto-flies through 5 regional views (county overview, Southern Marin, Central Marin, Novato & North, West Marin) every 4 seconds with smooth MapLibre flyTo transitions. Location label overlay shows current region.
 
 ---
 
