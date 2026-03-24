@@ -12,6 +12,7 @@
   import TvCommunityScreen from './screens/TvCommunityScreen.svelte';
   import {
     TV_SCREENS,
+    TV_MAP_VIEWS,
     CURSOR_HIDE_MS,
     TV_REFRESH_INTERVAL_MS
   } from '$lib/config/tv';
@@ -183,7 +184,6 @@
       return;
     }
 
-    const { TV_MAP_VIEWS } = await import('$lib/config/tv');
     const results = await Promise.allSettled(
       TV_MAP_VIEWS.map(async (view) => {
         const h = await fetchHourlyForecast(view.center[1], view.center[0]);
@@ -211,18 +211,27 @@
     }
   }
 
+  let refreshInFlight = false;
   async function handleRefresh() {
+    if (refreshInFlight) return;
+    refreshInFlight = true;
     refresh.startRefresh();
     try {
       await Promise.all([loadNews(), loadWeather(), loadFireIncidents()]);
       refresh.endRefresh();
     } catch (error) {
       refresh.endRefresh([String(error)]);
+    } finally {
+      refreshInFlight = false;
     }
   }
 
   // --- Data refresh interval ---
   let refreshTimer: ReturnType<typeof setInterval> | null = null;
+
+  // --- Periodic page reload to reclaim memory (WebGL, tile cache, JS heap) ---
+  const PAGE_RELOAD_MS = 6 * 60 * 60 * 1000; // 6 hours
+  let reloadTimer: ReturnType<typeof setTimeout> | null = null;
 
   // --- Force dark theme ---
   let originalTheme = '';
@@ -255,6 +264,8 @@
     // Recurring data refresh
     refreshTimer = setInterval(handleRefresh, TV_REFRESH_INTERVAL_MS);
 
+    // Periodic full page reload to reclaim accumulated memory (standard for TV dashboards)
+    reloadTimer = setTimeout(() => location.reload(), PAGE_RELOAD_MS);
   });
 
   onDestroy(() => {
@@ -262,6 +273,7 @@
     if (clockTimer) clearInterval(clockTimer);
     if (cursorTimer) clearTimeout(cursorTimer);
     if (refreshTimer) clearInterval(refreshTimer);
+    if (reloadTimer) clearTimeout(reloadTimer);
 
     if (browser) {
       window.removeEventListener('mousemove', resetCursorTimer);

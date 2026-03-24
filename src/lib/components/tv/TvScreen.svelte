@@ -18,6 +18,7 @@
 <style>
 	.tv-screen {
 		animation: screen-fade-in 0.5s ease-out;
+		z-index: 2;
 	}
 
 	@keyframes screen-fade-in {
