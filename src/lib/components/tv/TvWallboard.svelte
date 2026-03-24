@@ -86,11 +86,9 @@
   let clockTimer: ReturnType<typeof setInterval> | null = null;
 
   function updateClock() {
-    clockText = new Date().toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
+    const now = new Date();
+    clockText = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+      + '  ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   }
 
   // --- Cursor auto-hide ---
@@ -123,6 +121,8 @@
         handleRefresh();
         break;
       case 'Escape':
+      case 'm':
+      case 'M':
         goto('/');
         break;
       case 'f':

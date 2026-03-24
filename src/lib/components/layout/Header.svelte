@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount, onDestroy } from 'svelte';
 	import { isRefreshing, lastRefresh } from '$lib/stores';
 	import TownPicker from './TownPicker.svelte';
 
@@ -7,6 +8,24 @@
 	}
 
 	let { onSettingsClick }: Props = $props();
+
+	let dateTimeText = $state('');
+	let clockTimer: ReturnType<typeof setInterval> | null = null;
+
+	function updateDateTime() {
+		const now = new Date();
+		dateTimeText = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+			+ '  ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+	}
+
+	onMount(() => {
+		updateDateTime();
+		clockTimer = setInterval(updateDateTime, 10_000);
+	});
+
+	onDestroy(() => {
+		if (clockTimer) clearInterval(clockTimer);
+	});
 
 	const lastRefreshText = $derived(
 		$lastRefresh
@@ -21,6 +40,7 @@
 	</div>
 
 	<div class="header-center">
+		<span class="datetime-text">{dateTimeText}</span>
 		<div class="refresh-status">
 			{#if $isRefreshing}
 				<span class="status-text loading">Refreshing...</span>
@@ -92,6 +112,15 @@
 		flex: 1;
 		justify-content: center;
 		min-width: 0;
+	}
+
+	.datetime-text {
+		font-size: 0.65rem;
+		font-weight: 500;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--text-dim);
+		white-space: nowrap;
 	}
 
 	.refresh-status {
