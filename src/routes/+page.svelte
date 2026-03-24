@@ -23,7 +23,7 @@
 		WastewaterPanel,
 		AirportStatusPanel
 	} from '$lib/components/panels';
-	import { news, settings, refresh, allNewsItems } from '$lib/stores';
+	import { settings, refresh, allNewsItems } from '$lib/stores';
 	import { townLocation } from '$lib/stores/town-filter';
 	import { AdBanner } from '$lib/components/common';
 	import { pickAds } from '$lib/config/ads';
@@ -35,18 +35,8 @@
 		EarthquakeData
 	} from '$lib/types';
 	import type { PanelId } from '$lib/config';
-	import {
-		fetchAllFeeds,
-		fetchWeather,
-		fetchNpsAlerts,
-		fetchEarthquakes,
-		earthquakesToNewsItems,
-		fetchTransitAlerts,
-		fetchSheriffCrimeBlotter,
-		fetchSupplementalPoliceLogs,
-		fetchSupplementalActivityFeeds,
-		enrichItemsForRelevance
-	} from '$lib/api/marin';
+	import { fetchWeather } from '$lib/api/marin';
+	import { loadAllNews } from '$lib/api/marin/load-all';
 	import AgentationWidget from '$lib/components/dev/AgentationWidget.svelte';
 
 	// Location (derived from town filter, falls back to settings.locationId)
@@ -151,93 +141,9 @@
 
 	// Fetch all RSS feeds and API data, populate stores
 	async function loadNews() {
-		const rssCategories: NewsCategory[] = [
-			'local',
-			'civic',
-			'safety',
-			'outdoors',
-			'housing',
-			'cycling',
-			'endurance',
-			'shows',
-			'prep',
-			'farm',
-			'satire'
-		];
-		// Only show loading spinners on initial load (when no data exists yet)
-		rssCategories.forEach((cat) => {
-			if (news.getItems(cat).length === 0) news.setLoading(cat, true);
-		});
-
-		// Fetch RSS feeds and API sources in parallel (allSettled so one failure doesn't blank others)
-		const settled = await Promise.allSettled([
-			fetchAllFeeds(),
-			fetchNpsAlerts(),
-			fetchEarthquakes(),
-			fetchTransitAlerts().then((r) => r.items),
-			fetchSheriffCrimeBlotter(),
-			fetchSupplementalPoliceLogs(),
-			fetchSupplementalActivityFeeds()
-		]);
-		const [
-			rssResults,
-			npsAlerts,
-			earthquakes,
-			transitAlerts,
-			sheriffBlotter,
-			policeLogs,
-			supplementalActivity
-		] = settled.map((r) => (r.status === 'fulfilled' ? r.value : [])) as [
-			Awaited<ReturnType<typeof fetchAllFeeds>>,
-			NewsItem[],
-			EarthquakeData[],
-			NewsItem[],
-			NewsItem[],
-			NewsItem[],
-			NewsItem[]
-		];
-
-		const earthquakeNews = earthquakesToNewsItems(earthquakes);
-		const supplementalByCategory = new Map<NewsCategory, NewsItem[]>();
-		for (const category of rssCategories) {
-			supplementalByCategory.set(
-				category,
-				supplementalActivity.filter((item) => item.category === category)
-			);
-		}
-
-		// Store earthquake items for the map (they have lat/lon)
-		earthquakeItems = earthquakeNews;
-		earthquakesRaw = earthquakes;
-
-		// Populate stores from RSS results (enrich categories in parallel)
-		await Promise.all(
-			rssResults.map(async (result) => {
-				const extraItems =
-					result.category === 'safety'
-						? [
-								...earthquakeNews,
-								...transitAlerts,
-								...sheriffBlotter,
-								...policeLogs,
-								...(supplementalByCategory.get(result.category) ?? [])
-							]
-						: result.category === 'outdoors'
-							? [...npsAlerts, ...(supplementalByCategory.get(result.category) ?? [])]
-							: (supplementalByCategory.get(result.category) ?? []);
-
-				const allItems = [...result.items, ...extraItems].sort((a, b) => b.timestamp - a.timestamp);
-				const enrichedItems = await enrichItemsForRelevance(allItems);
-
-				news.setItems(result.category, enrichedItems);
-				if (enrichedItems.length > 0) {
-					void news.enrichLocations(result.category);
-				}
-				if (result.errors.length > 0) {
-					console.warn(`[${result.category}] Feed errors:`, result.errors);
-				}
-			})
-		);
+		const result = await loadAllNews(true);
+		earthquakeItems = result.earthquakeNews;
+		earthquakesRaw = result.earthquakesRaw;
 	}
 
 	// Fetch weather data from NWS using the active location (town filter or settings default)
