@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, getContext } from 'svelte';
+	import { getContext } from 'svelte';
 	import { get, type Writable } from 'svelte/store';
 	import type { Map as MapLibreMap } from 'maplibre-gl';
 
@@ -15,11 +15,14 @@
 		mapReady: Writable<boolean>;
 	}>('maplibre-map');
 
-	onMount(() => {
+	// React to center/zoom changes — jumpTo whenever props change
+	$effect(() => {
+		const c = center;
+		const z = zoom;
 		function setPosition() {
 			const map = getMap();
 			if (map) {
-				map.jumpTo({ center, zoom });
+				map.jumpTo({ center: c, zoom: z });
 			}
 		}
 

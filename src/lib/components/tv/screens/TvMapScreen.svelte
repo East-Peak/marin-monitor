@@ -1,14 +1,16 @@
 <script lang="ts">
-	import { MapContainer, MapDataLayer, MapControls, MapTooltip } from '$lib/components/map';
+	import { MapContainer, MapDataLayer } from '$lib/components/map';
+	import TvMapPosition from '$lib/components/tv/TvMapPosition.svelte';
 	import TvMapSidebar from '$lib/components/tv/TvMapSidebar.svelte';
 	import { allNewsItems } from '$lib/stores';
 	import { MARIN_TOWNS } from '$lib/config/towns';
 	import { TV_MAP_VIEWS } from '$lib/config/tv';
+	import type { FireIncident } from '$lib/api/marin/calfire';
 	import type { NewsItem } from '$lib/types';
 
 	interface Props {
 		earthquakeItems: NewsItem[];
-		fireIncidents: any[];
+		fireIncidents: FireIncident[];
 		viewId: string;
 		weather: { temp: number; wind: string; shortForecast: string } | null;
 	}
@@ -49,11 +51,7 @@
 	<div class="flex-1 min-w-0 min-h-0 relative" style="height: 100%;">
 		<MapContainer>
 			<MapDataLayer earthquakes={earthquakeItems} {fireIncidents} />
-			<MapControls />
-			<MapTooltip />
-			{#await import('$lib/components/tv/TvMapPosition.svelte') then mod}
-				<svelte:component this={mod.default} center={view.center} zoom={view.zoom} />
-			{/await}
+			<TvMapPosition center={view.center} zoom={view.zoom} />
 		</MapContainer>
 		<div class="absolute top-16 left-3 z-10 px-3 py-1.5 rounded bg-gray-900/80 backdrop-blur-sm border border-gray-700/50">
 			<span class="text-sm font-medium text-gray-200">{view.label}</span>

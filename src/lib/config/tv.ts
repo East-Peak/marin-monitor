@@ -38,7 +38,6 @@ export const TV_SCREENS: TvScreenConfig[] = [
   { id: 'conditions', name: 'Conditions & Trails', description: 'AQI, tides, streams, Hero Dirt', durationMs: 20_000 },
   { id: 'community', name: 'Outdoors & Community', description: 'Outdoor and civic news', durationMs: 20_000 }
 ];
-export const CAROUSEL_TRANSITION_MS = 500;
 export const TV_REFRESH_INTERVAL_MS = 3 * 60 * 1000; // 3 minutes
 export const CURSOR_HIDE_MS = 5_000;
 
@@ -71,8 +70,6 @@ export const TV_MAP_VIEWS: TvMapView[] = [
   { id: 'north', label: 'Novato & North', center: [-122.57, 38.1], zoom: 12.5, duration: 1500 },
   { id: 'west', label: 'West Marin', center: [-122.78, 38.05], zoom: 11.5, duration: 1500 },
 ];
-
-export const TV_MAP_VIEW_INTERVAL_MS = 6_000; // 6s per sub-view (5 views × 6s = 30s)
 
 /** Geographic camera clusters for TV mode */
 export type TvCameraCluster = 'tam-coast' | 'central-highway' | 'west-north';

@@ -156,7 +156,7 @@
 
   // --- Shared data for map screens ---
   let earthquakeItems = $state<NewsItem[]>([]);
-  let fireIncidents = $state<any[]>([]);
+  let fireIncidents = $state<import('$lib/api/marin/calfire').FireIncident[]>([]);
   let hourlyPeriods = $state<{ temperature: number }[]>([]);
 
   // Pre-fetched weather cache for all map regions
@@ -167,6 +167,10 @@
     $allNewsItems.filter((item) => Date.now() - item.timestamp <= 24 * 60 * 60 * 1000).length
   );
   const alertCount = $derived($alerts.length);
+
+  // Derived: current map viewId (for the persistent map instance)
+  const activeMapViewId = $derived(TV_SCREENS[carouselIdx]?.mapViewId ?? 'county');
+  const isMapScreenActive = $derived(!!TV_SCREENS[carouselIdx]?.mapViewId);
   // Use the first hourly period (current hour) for actual current temp,
   // NOT weatherForecast[0] which is the daytime high
   const currentTemp = $derived(hourlyPeriods[0]?.temperature ?? null);
@@ -364,26 +368,32 @@
 
   <!-- Carousel area -->
   <div class="flex-1 relative" style="height: calc(100vh - 48px - 44px);">
+    <!-- Persistent map — single MapContainer, never destroyed. Hidden when non-map screen active. -->
+    <div class="absolute inset-0" style="z-index: {isMapScreenActive ? 1 : 0}; visibility: {isMapScreenActive ? 'visible' : 'hidden'};">
+      <TvMapScreen {earthquakeItems} {fireIncidents} viewId={activeMapViewId} weather={regionWeather[activeMapViewId] ?? null} />
+    </div>
+
+    <!-- Non-map screens — destroyed/created normally -->
     {#each TV_SCREENS as screen, i (screen.id)}
-      <TvScreen active={carouselIdx === i}>
-        {#if screen.mapViewId}
-          <TvMapScreen {earthquakeItems} {fireIncidents} viewId={screen.mapViewId} weather={regionWeather[screen.mapViewId] ?? null} />
-        {:else if screen.id === 'news-wire'}
-          <NewsWireScreen />
-        {:else if screen.id === 'safety'}
-          <SafetyScreen />
-        {:else if screen.id === 'cameras-tam-coast'}
-          <TvCameraClusterScreen clusterId="tam-coast" />
-        {:else if screen.id === 'cameras-central-highway'}
-          <TvCameraClusterScreen clusterId="central-highway" />
-        {:else if screen.id === 'cameras-west-north'}
-          <TvCameraClusterScreen clusterId="west-north" />
-        {:else if screen.id === 'conditions'}
-          <TvConditionsScreen />
-        {:else if screen.id === 'community'}
-          <TvCommunityScreen />
-        {/if}
-      </TvScreen>
+      {#if !screen.mapViewId}
+        <TvScreen active={carouselIdx === i}>
+          {#if screen.id === 'news-wire'}
+            <NewsWireScreen />
+          {:else if screen.id === 'safety'}
+            <SafetyScreen />
+          {:else if screen.id === 'cameras-tam-coast'}
+            <TvCameraClusterScreen clusterId="tam-coast" />
+          {:else if screen.id === 'cameras-central-highway'}
+            <TvCameraClusterScreen clusterId="central-highway" />
+          {:else if screen.id === 'cameras-west-north'}
+            <TvCameraClusterScreen clusterId="west-north" />
+          {:else if screen.id === 'conditions'}
+            <TvConditionsScreen />
+          {:else if screen.id === 'community'}
+            <TvCommunityScreen />
+          {/if}
+        </TvScreen>
+      {/if}
     {/each}
   </div>
 
