@@ -17,7 +17,7 @@ export const CHANGELOG: ChangelogEntry[] = [
 		date: '2026-03-24',
 		title: 'TV Mode',
 		description:
-			'New /tv route for wall-mounted TVs. 6 auto-rotating screens including camera wall and environment. Scrolling news ticker, keyboard shortcuts, and silent background refresh. Press M on the dashboard or click the TV button to try it.'
+			'Full-screen dashboard for wall-mounted TVs at /tv. Six auto-rotating screens: live map with regional fly-overs, news wire, safety & alerts, camera wall, environment, and outdoors & tides. Scrolling news ticker, keyboard shortcuts (arrows, space, M, Escape, F), and silent 3-minute refresh. Press M on the dashboard or click the TV button to try it.'
 	},
 	{
 		date: '2026-03-04',

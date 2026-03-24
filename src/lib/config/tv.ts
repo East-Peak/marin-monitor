@@ -53,7 +53,7 @@ export const TV_MAP_VIEWS: TvMapView[] = [
   { id: 'west', label: 'West Marin', center: [-122.78, 38.05], zoom: 11.5, duration: 1500 },
 ];
 
-export const TV_MAP_VIEW_INTERVAL_MS = 4_000; // 4s per sub-view (5 views × 4s = 20s)
+export const TV_MAP_VIEW_INTERVAL_MS = 6_000; // 6s per sub-view (5 views × 6s = 30s)
 
 export const CATEGORY_COLORS: Record<TickerCategory, string> = {
   WX: '#60a5fa',  // blue (weather)
