@@ -61,8 +61,8 @@ const SHOW_SOURCES: SourceConfig[] = [
 		url: 'https://ranchonicasio.com/events/feed/',
 		town: 'Nicasio',
 		townSlug: 'nicasio',
-		lat: 38.0594,
-		lon: -122.7028
+		lat: 38.0615,
+		lon: -122.6983
 	}
 ];
 
@@ -72,24 +72,24 @@ const FARM_MARKETS = [
 		url: 'https://www.agriculturalinstitute.org/thursday-marin',
 		town: 'San Rafael',
 		townSlug: 'san-rafael',
-		lat: 37.9991,
-		lon: -122.5234
+		lat: 38.0013,
+		lon: -122.5378
 	},
 	{
 		title: 'Sunday Marin farmers market schedule',
 		url: 'https://www.agriculturalinstitute.org/sunday-marin',
 		town: 'San Rafael',
 		townSlug: 'san-rafael',
-		lat: 37.9991,
-		lon: -122.5234
+		lat: 38.0013,
+		lon: -122.5378
 	},
 	{
 		title: 'Point Reyes farmers market schedule',
 		url: 'https://www.agriculturalinstitute.org/point-reyes',
 		town: 'Point Reyes Station',
 		townSlug: 'point-reyes',
-		lat: 38.0702,
-		lon: -122.8105
+		lat: 38.0691,
+		lon: -122.8069
 	},
 	{
 		title: "Rollin' Root mobile market schedule",
@@ -100,8 +100,8 @@ const FARM_MARKETS = [
 		url: 'https://www.agriculturalinstitute.org/san-rafael-summer-1',
 		town: 'San Rafael',
 		townSlug: 'san-rafael',
-		lat: 37.9735,
-		lon: -122.5311
+		lat: 37.9720,
+		lon: -122.5227
 	}
 ];
 
@@ -131,8 +131,8 @@ const PREP_HUBS: SourceConfig[] = [
 		url: 'https://www.marincatholic.org/athletics/athletic-calendar',
 		town: 'Kentfield',
 		townSlug: 'kentfield',
-		lat: 37.9506,
-		lon: -122.5578,
+		lat: 37.9583,
+		lon: -122.5511,
 		topics: ['prep-sports', 'schedule']
 	},
 	{
@@ -141,8 +141,8 @@ const PREP_HUBS: SourceConfig[] = [
 		url: 'https://archiewilliams.tamdistrict.org/athletics',
 		town: 'San Anselmo',
 		townSlug: 'san-anselmo',
-		lat: 37.9746,
-		lon: -122.5648,
+		lat: 37.9833,
+		lon: -122.5729,
 		topics: ['prep-sports', 'schedule']
 	},
 	{
@@ -151,16 +151,16 @@ const PREP_HUBS: SourceConfig[] = [
 		url: 'https://sanrafael.srcs.org/athletics',
 		town: 'San Rafael',
 		townSlug: 'san-rafael',
-		lat: 37.9752,
-		lon: -122.5248,
+		lat: 37.9716,
+		lon: -122.5136,
 		topics: ['prep-sports', 'schedule']
 	},
 	{
 		source: 'Tamalpais Union High School District',
 		title: 'TUHSD athletics hub',
 		url: 'https://www.tamdistrict.org/students/athletics',
-		lat: 37.9341,
-		lon: -122.5353,
+		lat: 37.9369,
+		lon: -122.5253,
 		topics: ['prep-sports', 'district']
 	},
 	{
@@ -169,8 +169,8 @@ const PREP_HUBS: SourceConfig[] = [
 		url: 'https://www.awmtb.com/',
 		town: 'San Anselmo',
 		townSlug: 'san-anselmo',
-		lat: 37.9746,
-		lon: -122.5648,
+		lat: 37.9833,
+		lon: -122.5729,
 		topics: ['prep-sports', 'mountain-bike']
 	}
 ];
@@ -182,8 +182,8 @@ const SHOW_HUBS: SourceConfig[] = [
 		url: 'https://peristavern.com/music-calendar/',
 		town: 'Fairfax',
 		townSlug: 'fairfax',
-		lat: 37.9871,
-		lon: -122.5889,
+		lat: 37.9895,
+		lon: -122.5918,
 		topics: ['music', 'shows']
 	},
 	{
@@ -192,8 +192,8 @@ const SHOW_HUBS: SourceConfig[] = [
 		url: 'https://www.thejunc.com/music-calendar',
 		town: 'Mill Valley',
 		townSlug: 'mill-valley',
-		lat: 37.906,
-		lon: -122.5458,
+		lat: 37.8805,
+		lon: -122.5234,
 		topics: ['music', 'shows']
 	},
 	{
@@ -202,8 +202,8 @@ const SHOW_HUBS: SourceConfig[] = [
 		url: 'https://www.hopmonk.com/livemusic',
 		town: 'Novato',
 		townSlug: 'novato',
-		lat: 38.1074,
-		lon: -122.5697,
+		lat: 38.0885,
+		lon: -122.5535,
 		topics: ['music', 'shows']
 	},
 	{
@@ -222,8 +222,8 @@ const SHOW_HUBS: SourceConfig[] = [
 		url: 'https://kwmr.org/events',
 		town: 'Point Reyes Station',
 		townSlug: 'point-reyes',
-		lat: 38.0699,
-		lon: -122.8097,
+		lat: 38.0690,
+		lon: -122.8067,
 		topics: ['music', 'community-events', 'west-marin']
 	},
 	{
@@ -232,8 +232,8 @@ const SHOW_HUBS: SourceConfig[] = [
 		url: 'https://www.sausalitoseahorse.com/calendar/',
 		town: 'Sausalito',
 		townSlug: 'sausalito',
-		lat: 37.8584,
-		lon: -122.4853,
+		lat: 37.8686,
+		lon: -122.4985,
 		topics: ['music', 'shows']
 	},
 	{
@@ -242,8 +242,8 @@ const SHOW_HUBS: SourceConfig[] = [
 		url: 'https://marinsymphony.org/tickets-events/',
 		town: 'San Rafael',
 		townSlug: 'san-rafael',
-		lat: 37.9715,
-		lon: -122.52,
+		lat: 38.0024,
+		lon: -122.5336,
 		topics: ['music', 'classical']
 	},
 	{
@@ -252,16 +252,16 @@ const SHOW_HUBS: SourceConfig[] = [
 		url: 'https://millvalleylibrary.gov/calendar.aspx',
 		town: 'Mill Valley',
 		townSlug: 'mill-valley',
-		lat: 37.9058,
-		lon: -122.5478,
+		lat: 37.9064,
+		lon: -122.5548,
 		topics: ['community-events', 'library']
 	},
 	{
 		source: 'Marin County Free Library',
 		title: 'Marin County Free Library events',
 		url: 'https://marinlibrary.bibliocommons.com/v2/events',
-		lat: 37.9991,
-		lon: -122.5234,
+		lat: 37.9980,
+		lon: -122.5307,
 		topics: ['community-events', 'library']
 	},
 	{
@@ -270,8 +270,8 @@ const SHOW_HUBS: SourceConfig[] = [
 		url: 'https://www.elks1108.org/calendar',
 		town: 'San Rafael',
 		townSlug: 'san-rafael',
-		lat: 37.9735,
-		lon: -122.5241,
+		lat: 37.9752,
+		lon: -122.5290,
 		topics: ['community-events', 'fraternal']
 	}
 ];
@@ -291,8 +291,8 @@ const SHOW_EVENT_PAGES = [
 		url: 'https://www.marinjcc.org/events/',
 		town: 'San Rafael',
 		townSlug: 'san-rafael',
-		lat: 37.9557,
-		lon: -122.5376,
+		lat: 37.9997,
+		lon: -122.5231,
 		topics: ['community-events', 'arts']
 	},
 	{
@@ -313,8 +313,8 @@ const SPORTS_HUBS: SourceConfig[] = [
 		url: 'https://www.pacificsbaseball.com/pacifics.asp?page=11&team=801&year=2026',
 		town: 'San Rafael',
 		townSlug: 'san-rafael',
-		lat: 37.9697,
-		lon: -122.5117,
+		lat: 37.9691,
+		lon: -122.5286,
 		topics: ['baseball', 'independent-ball']
 	},
 	{
@@ -323,8 +323,8 @@ const SPORTS_HUBS: SourceConfig[] = [
 		url: 'https://www.marinrowing.org/calendar',
 		town: 'Greenbrae',
 		townSlug: 'greenbrae',
-		lat: 37.9435,
-		lon: -122.5314,
+		lat: 37.9434,
+		lon: -122.5171,
 		topics: ['rowing', 'club-sports']
 	},
 	{
@@ -333,8 +333,8 @@ const SPORTS_HUBS: SourceConfig[] = [
 		url: 'https://www.marinhighlandersrugby.org/',
 		town: 'San Rafael',
 		townSlug: 'san-rafael',
-		lat: 37.9756,
-		lon: -122.5123,
+		lat: 37.9716,
+		lon: -122.5136,
 		topics: ['rugby', 'club-sports']
 	}
 ];
@@ -359,8 +359,8 @@ const EVENT_PAGES: EventPageConfig[] = [
 		eventName: 'Marin Ultra Challenge',
 		url: 'https://insidetrail.run/events/marin-ultra-challenge/',
 		category: 'endurance',
-		lat: 37.8325,
-		lon: -122.5388,
+		lat: 37.8305,
+		lon: -122.5365,
 		topics: ['running', 'ultra'],
 		fallbackDate: 'Mar 14, 2026 08:00:00 PST',
 		description: 'Official event page for the Marin Ultra Challenge at Rodeo Beach.'
@@ -370,8 +370,8 @@ const EVENT_PAGES: EventPageConfig[] = [
 		eventName: 'Miwok 100K',
 		url: 'https://miwok100k.com/',
 		category: 'endurance',
-		lat: 37.8328,
-		lon: -122.5295,
+		lat: 37.8603,
+		lon: -122.5364,
 		topics: ['running', 'ultra'],
 		verification: 'official',
 		datePatterns: [/(\w+\s+\d{1,2},?\s*\d{4})/i],
@@ -384,8 +384,8 @@ const EVENT_PAGES: EventPageConfig[] = [
 		category: 'endurance',
 		town: 'Mill Valley',
 		townSlug: 'mill-valley',
-		lat: 37.9072,
-		lon: -122.5496,
+		lat: 37.9051,
+		lon: -122.5530,
 		topics: ['running', 'dipsea'],
 		verification: 'official',
 		datePatterns: [
