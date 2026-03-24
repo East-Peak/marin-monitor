@@ -21,16 +21,16 @@ This is the hero/flagship screen. Gets 30s to complete the full flyby cycle.
 **Components:** Custom `TvMapScreen` composing MapContainer + MapDataLayer + MapControls + TvMapFlyer + new `TvMapSidebar` (replaces static WeatherPanel).
 
 #### Screen 2: News Wire (20s)
-Local headlines in a 2-column grid. Keep as-is -- it's working well.
+Local headlines in a 2-column grid. Layout unchanged, but wrap in `TvAutoScroll` if content exceeds viewport.
 
-**Components:** `NewsWireScreen` (existing, unchanged).
+**Components:** `NewsWireScreen` (existing, minor modification to add auto-scroll wrapper).
 
 #### Screen 3: Safety & Alerts (20s, auto-scroll)
 Full-width, no camera sidebar. Alerts pinned at top in red banner cards. Crime/safety feed below.
 
 If the feed exceeds the viewport height, it **auto-scrolls vertically** -- slow CSS animation (similar to chyron but vertical), continuous, no scrollbar visible. Content duplicated and scrolls 50% for seamless loop.
 
-**Components:** Rewrite `SafetyScreen` -- remove CamerasPanel import, full-width layout, add vertical auto-scroll.
+**Components:** Rewrite `SafetyScreen` -- remove CamerasPanel import, full-width layout, wrap feed in `TvAutoScroll`.
 
 #### Screen 4: Tam & Coast Cameras (20s)
 Geographic cluster: cameras looking at the Mt Tamalpais and coastline corridor.
@@ -204,24 +204,26 @@ Total cycle time: 30 + (7 x 20) = 170 seconds = ~2.8 minutes per full rotation.
 
 Each `TvMapView` in the config gets extended with weather coordinates:
 
+The existing `TvMapView` interface is unchanged -- weather lat/lon derived from `center[1]`/`center[0]`.
+
+`TvMapFlyer` emits a callback (`onViewChange: (view: TvMapView) => void`) when the sub-view changes. The parent `TvMapScreen` receives it and:
+1. Fetches hourly weather for the new region's lat/lon (cached in a local `Map<string, { data, fetchedAt }>` keyed by view ID -- simple in-component cache, no external service needed)
+2. Filters `allNewsItems` to items whose lat/lon falls within the current viewport. Radius varies by zoom: ~0.15 degrees for county overview (zoom ~10), ~0.05 degrees for regional views (zoom ~13). Items without lat/lon are excluded from the sidebar.
+3. Renders the sidebar with region-specific weather + visible stories + any active alerts
+
+**`TvMapSidebar` props interface:**
+
 ```typescript
-export interface TvMapView {
-  id: string;
-  label: string;
-  center: [number, number]; // map camera [lon, lat]
-  zoom: number;
-  duration: number;
-  weatherLat: number;      // lat for weather fetch
-  weatherLon: number;      // lon for weather fetch
+interface TvMapSidebarProps {
+  regionLabel: string;
+  weather: { temp: number; wind: string; shortForecast: string } | null;
+  stories: NewsItem[];  // filtered to current viewport
+  alerts: NewsItem[];   // items with isAlert === true in viewport
+  loading: boolean;     // true while weather is being fetched
 }
 ```
 
-`TvMapFlyer` emits a callback (`onViewChange`) when the sub-view changes. The parent `TvMapScreen` receives it and:
-1. Fetches hourly weather for the new region's lat/lon (cached per region ID)
-2. Filters `allNewsItems` to items whose lat/lon falls within ~0.05 degrees of the view center
-3. Renders the sidebar with region-specific weather + visible stories + any active alerts
-
-Weather is cached per region so we don't re-fetch on every carousel cycle.
+**`weatherLat`/`weatherLon` simplification:** Rather than adding redundant fields to `TvMapView`, derive from `center`: `lat = center[1]`, `lon = center[0]` (MapLibre convention). No interface change needed.
 
 ---
 
@@ -250,10 +252,12 @@ Weather is cached per region so we don't re-fetch on every carousel cycle.
 
 ```
 MODIFIED:
-  src/lib/config/tv.ts                    -- new screen IDs, camera cluster config
-  src/lib/config/cameras.ts               -- add tvCluster field to CameraConfig + assignments
-  src/lib/components/tv/TvWallboard.svelte -- new screen routing, map sidebar data flow
-  src/lib/components/tv/TvMapFlyer.svelte  -- add onViewChange callback
+  src/lib/config/tv.ts                                       -- new screen IDs, camera cluster config
+  src/lib/config/cameras.ts                                   -- add tvCluster field to CameraConfig + assignments
+  src/lib/components/tv/TvWallboard.svelte                    -- new screen routing, map sidebar data flow
+  src/lib/components/tv/TvMapFlyer.svelte                     -- add onViewChange callback
+  src/lib/components/tv/screens/SafetyScreen.svelte           -- remove camera sidebar, full-width, add auto-scroll
+  src/lib/components/tv/screens/NewsWireScreen.svelte          -- add TvAutoScroll wrapper
 
 NEW:
   src/lib/components/tv/screens/TvMapScreen.svelte           -- map + contextual sidebar
