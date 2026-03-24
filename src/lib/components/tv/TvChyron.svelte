@@ -10,11 +10,13 @@
   }
 
   const items = $derived($tvTickerItems);
+  // Scale animation duration with item count: ~3s per item, minimum 20s
+  const scrollDuration = $derived(Math.max(20, items.length * 3));
 </script>
 
 <div class="fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 border-t border-gray-700/50">
   <div class="overflow-hidden" style="height: 44px;">
-    <div class="chyron-track flex items-center gap-12 whitespace-nowrap px-4 h-full">
+    <div class="chyron-track flex items-center gap-12 whitespace-nowrap px-4 h-full" style="animation-duration: {scrollDuration}s;">
       {#each [...items, ...items] as item, i (item.id + '-' + i)}
         <div class="flex items-center gap-2 shrink-0">
           <span
@@ -33,7 +35,7 @@
 
 <style>
   .chyron-track {
-    animation: chyron-scroll 60s linear infinite;
+    animation: chyron-scroll linear infinite;
   }
   .chyron-track:hover {
     animation-play-state: paused;
