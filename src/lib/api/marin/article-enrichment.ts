@@ -11,6 +11,16 @@ import { fetchWithTimeout } from './fetch-helpers';
 import { isInsideMarin } from '$lib/geo/proximity';
 
 const ENRICHED_DOMAINS = ['marinij.com', 'ptreyeslight.com'];
+
+/** Domains accepted by /api/article — must stay in sync with +server.ts allowlist */
+const ARTICLE_ENDPOINT_DOMAINS = [
+	'marinij.com',
+	'ptreyeslight.com',
+	'pacificsun.com',
+	'marinmagazine.com',
+	'marinlately.com'
+];
+
 const MAX_ITEMS_PER_BATCH = 12;
 const BODY_CHAR_LIMIT = 1400;
 const LOCATION_BATCH_LIMIT = 10;
@@ -59,7 +69,17 @@ function extractArticleText(html: string): string {
 	return stripText(`${leadMeta} ${paragraphs}`).slice(0, BODY_CHAR_LIMIT);
 }
 
+function isEnrichableDomain(url: string): boolean {
+	try {
+		const hostname = new URL(url).hostname.toLowerCase().replace(/^www\./, '');
+		return ARTICLE_ENDPOINT_DOMAINS.some((d) => hostname === d || hostname.endsWith('.' + d));
+	} catch {
+		return false;
+	}
+}
+
 async function fetchArticleExcerpt(url: string): Promise<string | null> {
+	if (!isEnrichableDomain(url)) return null;
 	if (pageCache.has(url)) return pageCache.get(url) || null;
 
 	try {
