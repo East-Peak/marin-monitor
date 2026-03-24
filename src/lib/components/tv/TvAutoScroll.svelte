@@ -7,7 +7,7 @@
     speed?: number;
   }
 
-  let { children, speed = 30 }: Props = $props();
+  let { children, speed = 15 }: Props = $props();
 
   let containerEl = $state<HTMLDivElement | null>(null);
   let contentEl = $state<HTMLDivElement | null>(null);
