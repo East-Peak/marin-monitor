@@ -42,8 +42,6 @@
   let paused = $state(false);
   let carouselTimer: ReturnType<typeof setInterval> | null = null;
 
-  const currentScreen = $derived(TV_SCREENS[carouselIdx % TV_SCREENS.length]);
-
   function nextScreen() {
     carouselIdx = (carouselIdx + 1) % TV_SCREENS.length;
   }
