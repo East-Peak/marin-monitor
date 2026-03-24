@@ -19,6 +19,8 @@
 	$effect(() => {
 		const c = center;
 		const z = zoom;
+		let unsub: (() => void) | null = null;
+
 		function setPosition() {
 			const map = getMap();
 			if (map) {
@@ -29,12 +31,18 @@
 		if (get(mapReady)) {
 			setPosition();
 		} else {
-			const unsub = mapReady.subscribe((ready) => {
+			unsub = mapReady.subscribe((ready) => {
 				if (ready) {
-					unsub();
+					unsub?.();
+					unsub = null;
 					setPosition();
 				}
 			});
 		}
+
+		// Cleanup: unsubscribe if effect re-runs before map was ready
+		return () => {
+			unsub?.();
+		};
 	});
 </script>
