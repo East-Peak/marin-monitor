@@ -4,12 +4,12 @@
   import { browser } from '$app/environment';
   import TvScreen from './TvScreen.svelte';
   import TvChyron from './TvChyron.svelte';
-  import MapConditionsScreen from './screens/MapConditionsScreen.svelte';
+  import TvMapScreen from './screens/TvMapScreen.svelte';
   import NewsWireScreen from './screens/NewsWireScreen.svelte';
   import SafetyScreen from './screens/SafetyScreen.svelte';
-  import CameraWallScreen from './screens/CameraWallScreen.svelte';
-  import EnvironmentScreen from './screens/EnvironmentScreen.svelte';
-  import OutdoorsScreen from './screens/OutdoorsScreen.svelte';
+  import TvCameraClusterScreen from './screens/TvCameraClusterScreen.svelte';
+  import TvConditionsScreen from './screens/TvConditionsScreen.svelte';
+  import TvCommunityScreen from './screens/TvCommunityScreen.svelte';
   import {
     TV_SCREENS,
     CURSOR_HIDE_MS,
@@ -18,7 +18,6 @@
   import { news, refresh, allNewsItems, alerts } from '$lib/stores';
   import {
     fetchAllFeeds,
-    fetchWeather,
     fetchNpsAlerts,
     fetchEarthquakes,
     earthquakesToNewsItems,
@@ -29,13 +28,9 @@
     enrichItemsForRelevance
   } from '$lib/api/marin';
   import { fetchHourlyForecast } from '$lib/api/marin/nws-hourly';
-  import type { HourlyPeriod } from '$lib/api/marin/nws-hourly';
-  import { townLocation } from '$lib/stores/town-filter';
   import type {
     NewsCategory,
     NewsItem,
-    WeatherData,
-    FireWeatherAlert,
     EarthquakeData
   } from '$lib/types';
 
@@ -158,14 +153,9 @@
     }
   }
 
-  // --- Location (derived from town filter) ---
-  const userLocation = $derived($townLocation);
-
-  // --- Weather & earthquake data (passed to screens) ---
-  let weatherForecast = $state<(WeatherData & { name: string })[]>([]);
-  let weatherAlerts = $state<FireWeatherAlert[]>([]);
+  // --- Earthquake + weather data ---
   let earthquakeItems = $state<NewsItem[]>([]);
-  let hourlyPeriods = $state<HourlyPeriod[]>([]);
+  let hourlyPeriods = $state<{ temperature: number }[]>([]);
 
   // --- Pulse stats for header bar ---
   const stories24h = $derived(
@@ -231,13 +221,8 @@
 
   async function loadWeather() {
     try {
-      const loc = userLocation;
-      const [data, hourly] = await Promise.all([
-        fetchWeather(loc.lat, loc.lon),
-        fetchHourlyForecast(loc.lat, loc.lon).catch(() => [] as HourlyPeriod[])
-      ]);
-      weatherForecast = data.forecast;
-      weatherAlerts = data.alerts;
+      // Only fetch hourly for header temp display — per-region weather handled by TvMapScreen
+      const hourly = await fetchHourlyForecast().catch(() => []);
       if (hourly.length > 0) hourlyPeriods = hourly;
     } catch {
       // Silent fail — keep last good data
@@ -348,18 +333,22 @@
   <div class="flex-1 relative" style="height: calc(100vh - 48px - 44px);">
     {#each TV_SCREENS as screen, i (screen.id)}
       <TvScreen active={carouselIdx === i}>
-        {#if screen.id === 'map-conditions'}
-          <MapConditionsScreen forecast={weatherForecast} {weatherAlerts} {earthquakeItems} active={carouselIdx === i} />
+        {#if screen.id === 'map-explorer'}
+          <TvMapScreen {earthquakeItems} active={carouselIdx === i} />
         {:else if screen.id === 'news-wire'}
           <NewsWireScreen />
         {:else if screen.id === 'safety'}
           <SafetyScreen />
-        {:else if screen.id === 'cameras'}
-          <CameraWallScreen />
-        {:else if screen.id === 'environment'}
-          <EnvironmentScreen />
-        {:else if screen.id === 'outdoors'}
-          <OutdoorsScreen />
+        {:else if screen.id === 'cameras-tam-coast'}
+          <TvCameraClusterScreen clusterId="tam-coast" />
+        {:else if screen.id === 'cameras-central-highway'}
+          <TvCameraClusterScreen clusterId="central-highway" />
+        {:else if screen.id === 'cameras-west-north'}
+          <TvCameraClusterScreen clusterId="west-north" />
+        {:else if screen.id === 'conditions'}
+          <TvConditionsScreen />
+        {:else if screen.id === 'community'}
+          <TvCommunityScreen />
         {/if}
       </TvScreen>
     {/each}

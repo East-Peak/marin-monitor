@@ -5,7 +5,6 @@
   import TvMapSidebar from '$lib/components/tv/TvMapSidebar.svelte';
   import { fetchFireIncidents } from '$lib/api/marin';
   import { fetchHourlyForecast } from '$lib/api/marin/nws-hourly';
-  import type { HourlyPeriod } from '$lib/api/marin/nws-hourly';
   import type { FireIncident } from '$lib/api/marin/calfire';
   import { allNewsItems } from '$lib/stores';
   import type { TvMapView } from '$lib/config/tv';
