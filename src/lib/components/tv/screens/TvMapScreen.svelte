@@ -52,7 +52,11 @@
     );
 
     // Include items with coordinates in range OR items tagged to a nearby town
+    // Only show items from the last 7 days
+    const maxAge = 7 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
     const nearby = $allNewsItems.filter((item) => {
+      if (now - item.timestamp > maxAge) return false;
       // Match by explicit coordinates
       if (typeof item.lat === 'number' && typeof item.lon === 'number') {
         if (Math.abs(item.lat - lat) < radius && Math.abs(item.lon - lon) < radius) return true;
@@ -65,30 +69,39 @@
     sidebarStories = nearby.filter((i) => !i.isAlert).slice(0, 6);
     sidebarAlerts = nearby.filter((i) => i.isAlert).slice(0, 4);
 
+    // Weather fetch — non-blocking, with timeout
     const cached = weatherCache.get(view.id);
     if (cached && Date.now() - cached.fetchedAt < CACHE_TTL) {
       sidebarWeather = cached.data;
+      weatherLoading = false;
       return;
     }
 
     weatherLoading = true;
-    try {
-      const hourly = await fetchHourlyForecast(lat, lon);
-      if (hourly.length > 0) {
-        const current = hourly[0];
-        const data = {
-          temp: current.temperature,
-          wind: `${current.windSpeed}`,
-          shortForecast: current.shortForecast ?? ''
-        };
-        sidebarWeather = data;
-        weatherCache.set(view.id, { data, fetchedAt: Date.now() });
-      }
-    } catch {
-      // Keep last good data
-    } finally {
-      weatherLoading = false;
-    }
+    // Fire and forget with timeout — don't block the carousel
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+    fetchHourlyForecast(lat, lon)
+      .then((hourly) => {
+        clearTimeout(timeout);
+        if (hourly.length > 0) {
+          const current = hourly[0];
+          const data = {
+            temp: current.temperature,
+            wind: `${current.windSpeed}`,
+            shortForecast: current.shortForecast ?? ''
+          };
+          sidebarWeather = data;
+          weatherCache.set(view.id, { data, fetchedAt: Date.now() });
+        }
+      })
+      .catch(() => {
+        clearTimeout(timeout);
+        // Keep last good data
+      })
+      .finally(() => {
+        weatherLoading = false;
+      });
   }
 </script>
 

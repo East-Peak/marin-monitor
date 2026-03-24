@@ -67,6 +67,7 @@
   function scheduleNext() {
     stopCarousel();
     if (paused) return;
+    resetWatchdog();
     const duration = TV_SCREENS[carouselIdx]?.durationMs ?? 20_000;
     carouselTimer = setTimeout(() => {
       carouselIdx = (carouselIdx + 1) % TV_SCREENS.length;
@@ -151,6 +152,14 @@
     } else if (!paused) {
       startCarousel();
     }
+  }
+
+  // --- Watchdog: force-advance if carousel gets stuck ---
+  let watchdogTimer: ReturnType<typeof setInterval> | null = null;
+  let lastAdvanceTime = Date.now();
+
+  function resetWatchdog() {
+    lastAdvanceTime = Date.now();
   }
 
   // --- Earthquake + weather data ---
@@ -272,6 +281,14 @@
 
     // Recurring data refresh
     refreshTimer = setInterval(handleRefresh, TV_REFRESH_INTERVAL_MS);
+
+    // Watchdog: if carousel hasn't advanced in 45s, force it (handles browser suspend/timer drift)
+    watchdogTimer = setInterval(() => {
+      if (!paused && Date.now() - lastAdvanceTime > 45_000) {
+        carouselIdx = (carouselIdx + 1) % TV_SCREENS.length;
+        scheduleNext();
+      }
+    }, 10_000);
   });
 
   onDestroy(() => {
@@ -279,6 +296,7 @@
     if (clockTimer) clearInterval(clockTimer);
     if (cursorTimer) clearTimeout(cursorTimer);
     if (refreshTimer) clearInterval(refreshTimer);
+    if (watchdogTimer) clearInterval(watchdogTimer);
 
     if (browser) {
       window.removeEventListener('mousemove', resetCursorTimer);

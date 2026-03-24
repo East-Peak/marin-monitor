@@ -745,41 +745,11 @@
     ]
   },
   {
-    "id": "outdoors:california-department-of-fish-wildlife:ocean-salmon-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-salmon",
-    "title": "Ocean salmon sport fishing regulations",
-    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Salmon",
-    "pubDate": "2026-03-24T08:34:05.000Z",
-    "timestamp": 1774341245000,
-    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
-    "source": "California Department of Fish & Wildlife",
-    "category": "outdoors",
-    "verification": "official",
-    "topics": [
-      "fishing",
-      "regulations"
-    ]
-  },
-  {
     "id": "outdoors:california-department-of-fish-wildlife:crab-trap-and-season-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-crab",
     "title": "Crab trap and season regulations",
     "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Crab",
-    "pubDate": "2026-03-24T08:34:05.000Z",
-    "timestamp": 1774341245000,
-    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
-    "source": "California Department of Fish & Wildlife",
-    "category": "outdoors",
-    "verification": "official",
-    "topics": [
-      "fishing",
-      "regulations"
-    ]
-  },
-  {
-    "id": "outdoors:california-department-of-fish-wildlife:ocean-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations",
-    "title": "Ocean sport fishing regulations",
-    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations",
-    "pubDate": "2026-03-24T08:34:04.000Z",
-    "timestamp": 1774341244000,
+    "pubDate": "2026-03-24T14:34:48.000Z",
+    "timestamp": 1774362888000,
     "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
     "source": "California Department of Fish & Wildlife",
     "category": "outdoors",
@@ -793,8 +763,23 @@
     "id": "outdoors:california-department-of-fish-wildlife:san-francisco-ocean-fishing-map-and-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-fishing-map-sf",
     "title": "San Francisco ocean fishing map and regulations",
     "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Fishing-Map/SF",
-    "pubDate": "2026-03-24T08:34:04.000Z",
-    "timestamp": 1774341244000,
+    "pubDate": "2026-03-24T14:34:47.000Z",
+    "timestamp": 1774362887000,
+    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
+    "source": "California Department of Fish & Wildlife",
+    "category": "outdoors",
+    "verification": "official",
+    "topics": [
+      "fishing",
+      "regulations"
+    ]
+  },
+  {
+    "id": "outdoors:california-department-of-fish-wildlife:ocean-salmon-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-salmon",
+    "title": "Ocean salmon sport fishing regulations",
+    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Salmon",
+    "pubDate": "2026-03-24T14:34:47.000Z",
+    "timestamp": 1774362887000,
     "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
     "source": "California Department of Fish & Wildlife",
     "category": "outdoors",
@@ -808,8 +793,8 @@
     "id": "farm:point-reyes-farmstead-cheese:point-reyes-farmstead-cheese-journal:https-www-pointreyescheese-com-blogs-news",
     "title": "Point Reyes Farmstead Cheese journal",
     "link": "https://www.pointreyescheese.com/blogs/news",
-    "pubDate": "2026-03-24T08:34:03.000Z",
-    "timestamp": 1774341243000,
+    "pubDate": "2026-03-24T14:34:46.000Z",
+    "timestamp": 1774362886000,
     "description": "Official Point Reyes Farmstead Cheese news and seasonal product updates.",
     "source": "Point Reyes Farmstead Cheese",
     "category": "farm",
@@ -826,11 +811,26 @@
     ]
   },
   {
+    "id": "outdoors:california-department-of-fish-wildlife:ocean-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations",
+    "title": "Ocean sport fishing regulations",
+    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations",
+    "pubDate": "2026-03-24T14:34:46.000Z",
+    "timestamp": 1774362886000,
+    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
+    "source": "California Department of Fish & Wildlife",
+    "category": "outdoors",
+    "verification": "official",
+    "topics": [
+      "fishing",
+      "regulations"
+    ]
+  },
+  {
     "id": "prep:marin-highlanders-rugby:marin-highlanders-rugby-club-hub:https-www-marinhighlandersrugby-org",
     "title": "Marin Highlanders Rugby club hub",
     "link": "https://www.marinhighlandersrugby.org/",
-    "pubDate": "2026-03-24T08:33:59.000Z",
-    "timestamp": 1774341239000,
+    "pubDate": "2026-03-24T14:34:43.000Z",
+    "timestamp": 1774362883000,
     "description": "Local sports hub for schedules, fixtures, club updates, or season information.",
     "source": "Marin Highlanders Rugby",
     "category": "prep",
@@ -847,30 +847,11 @@
     ]
   },
   {
-    "id": "prep:tamalpais-union-high-school-district:tuhsd-athletics-hub:https-www-tamdistrict-org-students-athletics",
-    "title": "TUHSD athletics hub",
-    "link": "https://www.tamdistrict.org/students/athletics",
-    "pubDate": "2026-03-24T08:33:53.000Z",
-    "timestamp": 1774341233000,
-    "description": "Official athletics or team hub for a Marin-area school or league program.",
-    "source": "Tamalpais Union High School District",
-    "category": "prep",
-    "verification": "official",
-    "lat": 37.9341,
-    "lon": -122.5353,
-    "locationConfidence": "exact",
-    "locationEvidence": "Tamalpais Union High School District",
-    "topics": [
-      "prep-sports",
-      "district"
-    ]
-  },
-  {
     "id": "prep:archie-williams-mtb:archie-williams-mountain-bike-team-hub:https-www-awmtb-com",
     "title": "Archie Williams mountain bike team hub",
     "link": "https://www.awmtb.com/",
-    "pubDate": "2026-03-24T08:33:53.000Z",
-    "timestamp": 1774341233000,
+    "pubDate": "2026-03-24T14:34:32.000Z",
+    "timestamp": 1774362872000,
     "description": "Official athletics or team hub for a Marin-area school or league program.",
     "source": "Archie Williams MTB",
     "category": "prep",
@@ -887,11 +868,30 @@
     ]
   },
   {
+    "id": "prep:tamalpais-union-high-school-district:tuhsd-athletics-hub:https-www-tamdistrict-org-students-athletics",
+    "title": "TUHSD athletics hub",
+    "link": "https://www.tamdistrict.org/students/athletics",
+    "pubDate": "2026-03-24T14:34:31.000Z",
+    "timestamp": 1774362871000,
+    "description": "Official athletics or team hub for a Marin-area school or league program.",
+    "source": "Tamalpais Union High School District",
+    "category": "prep",
+    "verification": "official",
+    "lat": 37.9341,
+    "lon": -122.5353,
+    "locationConfidence": "exact",
+    "locationEvidence": "Tamalpais Union High School District",
+    "topics": [
+      "prep-sports",
+      "district"
+    ]
+  },
+  {
     "id": "prep:san-rafael-athletics:san-rafael-high-athletics-hub:https-sanrafael-srcs-org-athletics",
     "title": "San Rafael High athletics hub",
     "link": "https://sanrafael.srcs.org/athletics",
-    "pubDate": "2026-03-24T08:33:51.000Z",
-    "timestamp": 1774341231000,
+    "pubDate": "2026-03-24T14:34:29.000Z",
+    "timestamp": 1774362869000,
     "description": "Official athletics or team hub for a Marin-area school or league program.",
     "source": "San Rafael Athletics",
     "category": "prep",
@@ -911,8 +911,8 @@
     "id": "prep:archie-williams-athletics:archie-williams-athletics-hub:https-archiewilliams-tamdistrict-org-athletics",
     "title": "Archie Williams athletics hub",
     "link": "https://archiewilliams.tamdistrict.org/athletics",
-    "pubDate": "2026-03-24T08:33:50.000Z",
-    "timestamp": 1774341230000,
+    "pubDate": "2026-03-24T14:34:28.000Z",
+    "timestamp": 1774362868000,
     "description": "Official athletics or team hub for a Marin-area school or league program.",
     "source": "Archie Williams Athletics",
     "category": "prep",
@@ -932,8 +932,8 @@
     "id": "prep:marin-catholic-athletics:marin-catholic-athletic-calendar:https-www-marincatholic-org-athletics-athletic-calendar",
     "title": "Marin Catholic athletic calendar",
     "link": "https://www.marincatholic.org/athletics/athletic-calendar",
-    "pubDate": "2026-03-24T08:33:48.000Z",
-    "timestamp": 1774341228000,
+    "pubDate": "2026-03-24T14:34:26.000Z",
+    "timestamp": 1774362866000,
     "description": "Official athletics or team hub for a Marin-area school or league program.",
     "source": "Marin Catholic Athletics",
     "category": "prep",
@@ -953,8 +953,8 @@
     "id": "endurance:dipsea-race:dipsea-race-hub-and-season-updates:https-www-dipsea-org",
     "title": "Dipsea race hub and season updates",
     "link": "https://www.dipsea.org/",
-    "pubDate": "2026-03-24T08:33:46.000Z",
-    "timestamp": 1774341226000,
+    "pubDate": "2026-03-24T14:34:24.000Z",
+    "timestamp": 1774362864000,
     "description": "Official Dipsea race site for race information, entry details, and latest news.",
     "source": "Dipsea Race",
     "category": "endurance",
@@ -974,8 +974,8 @@
     "id": "shows:marin-county-free-library:marin-county-free-library-events:https-marinlibrary-bibliocommons-com-v2-events",
     "title": "Marin County Free Library events",
     "link": "https://marinlibrary.bibliocommons.com/v2/events",
-    "pubDate": "2026-03-24T08:33:41.000Z",
-    "timestamp": 1774341221000,
+    "pubDate": "2026-03-24T14:34:20.000Z",
+    "timestamp": 1774362860000,
     "description": "Curated Marin venue or community calendar worth checking directly.",
     "source": "Marin County Free Library",
     "category": "shows",
@@ -987,6 +987,154 @@
     "topics": [
       "community-events",
       "library"
+    ]
+  },
+  {
+    "id": "shows:sausalito-seahorse:sausalito-seahorse-calendar:https-www-sausalitoseahorse-com-calendar",
+    "title": "Sausalito Seahorse calendar",
+    "link": "https://www.sausalitoseahorse.com/calendar/",
+    "pubDate": "2026-03-24T14:34:19.000Z",
+    "timestamp": 1774362859000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Sausalito Seahorse",
+    "category": "shows",
+    "verification": "community",
+    "town": "Sausalito",
+    "townSlug": "sausalito",
+    "lat": 37.8584,
+    "lon": -122.4853,
+    "locationConfidence": "exact",
+    "locationEvidence": "Sausalito Seahorse",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:marin-symphony:marin-symphony-tickets-and-events:https-marinsymphony-org-tickets-events",
+    "title": "Marin Symphony tickets and events",
+    "link": "https://marinsymphony.org/tickets-events/",
+    "pubDate": "2026-03-24T14:34:19.000Z",
+    "timestamp": 1774362859000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Marin Symphony",
+    "category": "shows",
+    "verification": "community",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9715,
+    "lon": -122.52,
+    "locationConfidence": "exact",
+    "locationEvidence": "Marin Symphony",
+    "topics": [
+      "music",
+      "classical"
+    ]
+  },
+  {
+    "id": "shows:mill-valley-library:mill-valley-library-calendar:https-millvalleylibrary-gov-calendar-aspx",
+    "title": "Mill Valley Library calendar",
+    "link": "https://millvalleylibrary.gov/calendar.aspx",
+    "pubDate": "2026-03-24T14:34:19.000Z",
+    "timestamp": 1774362859000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Mill Valley Library",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9058,
+    "lon": -122.5478,
+    "locationConfidence": "exact",
+    "locationEvidence": "Mill Valley Library",
+    "topics": [
+      "community-events",
+      "library"
+    ]
+  },
+  {
+    "id": "shows:kwmr:kwmr-events-and-tickets-hub:https-kwmr-org-events",
+    "title": "KWMR events and tickets hub",
+    "link": "https://kwmr.org/events",
+    "pubDate": "2026-03-24T14:34:15.000Z",
+    "timestamp": 1774362855000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "KWMR",
+    "category": "shows",
+    "verification": "community",
+    "town": "Point Reyes Station",
+    "townSlug": "point-reyes",
+    "lat": 38.0699,
+    "lon": -122.8097,
+    "locationConfidence": "exact",
+    "locationEvidence": "KWMR",
+    "topics": [
+      "music",
+      "community-events",
+      "west-marin"
+    ]
+  },
+  {
+    "id": "shows:smiley-s-saloon:smiley-s-saloon-shows-and-supper-club-hub:https-smileyssaloon-com",
+    "title": "Smiley's Saloon shows and supper club hub",
+    "link": "https://smileyssaloon.com/",
+    "pubDate": "2026-03-24T14:34:12.000Z",
+    "timestamp": 1774362852000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Smiley's Saloon",
+    "category": "shows",
+    "verification": "community",
+    "town": "Bolinas",
+    "townSlug": "bolinas",
+    "lat": 37.9096,
+    "lon": -122.6864,
+    "locationConfidence": "exact",
+    "locationEvidence": "Smiley's Saloon",
+    "topics": [
+      "music",
+      "west-marin"
+    ]
+  },
+  {
+    "id": "shows:peri-s-tavern:peri-s-tavern-music-calendar:https-peristavern-com-music-calendar",
+    "title": "Peri's Tavern music calendar",
+    "link": "https://peristavern.com/music-calendar/",
+    "pubDate": "2026-03-24T14:34:11.000Z",
+    "timestamp": 1774362851000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Peri's Tavern",
+    "category": "shows",
+    "verification": "community",
+    "town": "Fairfax",
+    "townSlug": "fairfax",
+    "lat": 37.9871,
+    "lon": -122.5889,
+    "locationConfidence": "exact",
+    "locationEvidence": "Peri's Tavern",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:the-junction:the-junction-music-calendar:https-www-thejunc-com-music-calendar",
+    "title": "The Junction music calendar",
+    "link": "https://www.thejunc.com/music-calendar",
+    "pubDate": "2026-03-24T14:34:11.000Z",
+    "timestamp": 1774362851000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "The Junction",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.906,
+    "lon": -122.5458,
+    "locationConfidence": "exact",
+    "locationEvidence": "The Junction",
+    "topics": [
+      "music",
+      "shows"
     ]
   },
   {
@@ -1008,154 +1156,6 @@
     "topics": [
       "community-events",
       "fraternal"
-    ]
-  },
-  {
-    "id": "shows:sausalito-seahorse:sausalito-seahorse-calendar:https-www-sausalitoseahorse-com-calendar",
-    "title": "Sausalito Seahorse calendar",
-    "link": "https://www.sausalitoseahorse.com/calendar/",
-    "pubDate": "2026-03-24T08:33:39.000Z",
-    "timestamp": 1774341219000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Sausalito Seahorse",
-    "category": "shows",
-    "verification": "community",
-    "town": "Sausalito",
-    "townSlug": "sausalito",
-    "lat": 37.8584,
-    "lon": -122.4853,
-    "locationConfidence": "exact",
-    "locationEvidence": "Sausalito Seahorse",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:marin-symphony:marin-symphony-tickets-and-events:https-marinsymphony-org-tickets-events",
-    "title": "Marin Symphony tickets and events",
-    "link": "https://marinsymphony.org/tickets-events/",
-    "pubDate": "2026-03-24T08:33:39.000Z",
-    "timestamp": 1774341219000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Marin Symphony",
-    "category": "shows",
-    "verification": "community",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9715,
-    "lon": -122.52,
-    "locationConfidence": "exact",
-    "locationEvidence": "Marin Symphony",
-    "topics": [
-      "music",
-      "classical"
-    ]
-  },
-  {
-    "id": "shows:mill-valley-library:mill-valley-library-calendar:https-millvalleylibrary-gov-calendar-aspx",
-    "title": "Mill Valley Library calendar",
-    "link": "https://millvalleylibrary.gov/calendar.aspx",
-    "pubDate": "2026-03-24T08:33:39.000Z",
-    "timestamp": 1774341219000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Mill Valley Library",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.9058,
-    "lon": -122.5478,
-    "locationConfidence": "exact",
-    "locationEvidence": "Mill Valley Library",
-    "topics": [
-      "community-events",
-      "library"
-    ]
-  },
-  {
-    "id": "shows:kwmr:kwmr-events-and-tickets-hub:https-kwmr-org-events",
-    "title": "KWMR events and tickets hub",
-    "link": "https://kwmr.org/events",
-    "pubDate": "2026-03-24T08:33:35.000Z",
-    "timestamp": 1774341215000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "KWMR",
-    "category": "shows",
-    "verification": "community",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0699,
-    "lon": -122.8097,
-    "locationConfidence": "exact",
-    "locationEvidence": "KWMR",
-    "topics": [
-      "music",
-      "community-events",
-      "west-marin"
-    ]
-  },
-  {
-    "id": "shows:smiley-s-saloon:smiley-s-saloon-shows-and-supper-club-hub:https-smileyssaloon-com",
-    "title": "Smiley's Saloon shows and supper club hub",
-    "link": "https://smileyssaloon.com/",
-    "pubDate": "2026-03-24T08:33:32.000Z",
-    "timestamp": 1774341212000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Smiley's Saloon",
-    "category": "shows",
-    "verification": "community",
-    "town": "Bolinas",
-    "townSlug": "bolinas",
-    "lat": 37.9096,
-    "lon": -122.6864,
-    "locationConfidence": "exact",
-    "locationEvidence": "Smiley's Saloon",
-    "topics": [
-      "music",
-      "west-marin"
-    ]
-  },
-  {
-    "id": "shows:peri-s-tavern:peri-s-tavern-music-calendar:https-peristavern-com-music-calendar",
-    "title": "Peri's Tavern music calendar",
-    "link": "https://peristavern.com/music-calendar/",
-    "pubDate": "2026-03-24T08:33:31.000Z",
-    "timestamp": 1774341211000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Peri's Tavern",
-    "category": "shows",
-    "verification": "community",
-    "town": "Fairfax",
-    "townSlug": "fairfax",
-    "lat": 37.9871,
-    "lon": -122.5889,
-    "locationConfidence": "exact",
-    "locationEvidence": "Peri's Tavern",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:the-junction:the-junction-music-calendar:https-www-thejunc-com-music-calendar",
-    "title": "The Junction music calendar",
-    "link": "https://www.thejunc.com/music-calendar",
-    "pubDate": "2026-03-24T08:33:31.000Z",
-    "timestamp": 1774341211000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "The Junction",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.906,
-    "lon": -122.5458,
-    "locationConfidence": "exact",
-    "locationEvidence": "The Junction",
-    "topics": [
-      "music",
-      "shows"
     ]
   },
   {
