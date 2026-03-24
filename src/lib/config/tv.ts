@@ -36,6 +36,25 @@ export interface TickerItem {
   status: TickerStatus;
 }
 
+/** Map sub-carousel views — camera fly-to only, NO town filter changes */
+export interface TvMapView {
+  id: string;
+  label: string;
+  center: [number, number]; // [lon, lat]
+  zoom: number;
+  duration: number; // flyTo animation ms
+}
+
+export const TV_MAP_VIEWS: TvMapView[] = [
+  { id: 'county', label: 'Marin County', center: [-122.5311, 37.9735], zoom: 9.8, duration: 0 },
+  { id: 'south', label: 'Southern Marin', center: [-122.52, 37.885], zoom: 12.8, duration: 1500 },
+  { id: 'central', label: 'Central Marin', center: [-122.54, 37.955], zoom: 13, duration: 1500 },
+  { id: 'north', label: 'Novato & North', center: [-122.57, 38.1], zoom: 12.5, duration: 1500 },
+  { id: 'west', label: 'West Marin', center: [-122.78, 38.05], zoom: 11.5, duration: 1500 },
+];
+
+export const TV_MAP_VIEW_INTERVAL_MS = 4_000; // 4s per sub-view (5 views × 4s = 20s)
+
 export const CATEGORY_COLORS: Record<TickerCategory, string> = {
   WX: '#60a5fa',  // blue (weather)
   PD: '#ef4444',  // red (safety)

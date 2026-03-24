@@ -328,7 +328,7 @@
     {#each TV_SCREENS as screen, i (screen.id)}
       <TvScreen active={carouselIdx === i}>
         {#if screen.id === 'map-conditions'}
-          <MapConditionsScreen forecast={weatherForecast} {weatherAlerts} {earthquakeItems} />
+          <MapConditionsScreen forecast={weatherForecast} {weatherAlerts} {earthquakeItems} active={carouselIdx === i} />
         {:else if screen.id === 'news-wire'}
           <NewsWireScreen />
         {:else if screen.id === 'safety'}
