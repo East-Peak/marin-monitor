@@ -49,16 +49,7 @@ export const tvTickerItems = derived(
         items.push(newsToTicker(a, 'WX', 'elevated'));
       }
 
-      // Safety/crime — latest 5
-      for (const item of safetyItems.slice(0, 5)) {
-        items.push(newsToTicker(item, 'PD'));
-      }
-
-      // Local news — latest 5
-      for (const item of localItems.slice(0, 5)) {
-        items.push(newsToTicker(item, 'LW'));
-      }
-
+      // Specific categories FIRST — dedup keeps first occurrence, so these win over generic PD
       // Fire items from safety feed
       const fireItems = safetyItems.filter(
         (s) => s.source?.toLowerCase().includes('calfire') ||
@@ -82,6 +73,16 @@ export const tvTickerItems = derived(
       );
       for (const item of transitItems.slice(0, 3)) {
         items.push(newsToTicker(item, 'GG'));
+      }
+
+      // Generic safety/crime — after specific categories so dedup keeps specific badges
+      for (const item of safetyItems.slice(0, 5)) {
+        items.push(newsToTicker(item, 'PD'));
+      }
+
+      // Local news — latest 5
+      for (const item of localItems.slice(0, 5)) {
+        items.push(newsToTicker(item, 'LW'));
       }
 
       // Civic — latest 2
