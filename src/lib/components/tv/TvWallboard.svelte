@@ -16,7 +16,7 @@
     CURSOR_HIDE_MS,
     TV_REFRESH_INTERVAL_MS
   } from '$lib/config/tv';
-  import { refresh, allNewsItems, alerts, mapStore } from '$lib/stores';
+  import { refresh, allNewsItems, alerts, mapStore, settings } from '$lib/stores';
   import { townFilter } from '$lib/stores/town-filter';
   import { fetchFireIncidents } from '$lib/api/marin';
   import { loadAllNews } from '$lib/api/marin/load-all';
@@ -237,15 +237,19 @@
 
   // --- Force dark theme ---
   let originalTheme = '';
+  let originalSettingsTheme: 'dark' | 'light' = 'dark';
 
   onMount(() => {
     // Reset shared state so TV mode starts county-wide, not town-scoped
     townFilter.clear();
     mapStore.selectTown(null);
 
-    // Force dark theme (project uses data-theme attribute)
+    // Force dark theme — both data-theme attribute AND settings store
+    // (MapContainer reads settings.theme for basemap style)
     originalTheme = document.documentElement.getAttribute('data-theme') ?? '';
+    originalSettingsTheme = (document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark';
     document.documentElement.setAttribute('data-theme', 'dark');
+    settings.setTheme('dark');
 
     // Start carousel
     startCarousel();
@@ -286,8 +290,9 @@
       window.removeEventListener('keydown', handleKeydown);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
 
-      // Restore original theme
+      // Restore original theme (both data-theme and settings store)
       document.documentElement.setAttribute('data-theme', originalTheme || 'dark');
+      settings.setTheme(originalSettingsTheme);
     }
   });
 </script>
