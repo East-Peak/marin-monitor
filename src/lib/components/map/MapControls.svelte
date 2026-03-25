@@ -1,8 +1,28 @@
 <script lang="ts">
+	import { getContext } from 'svelte';
+	import type { Writable } from 'svelte/store';
+	import type { Map as MapLibreMap } from 'maplibre-gl';
 	import { mapStore, activeLayers, showTraffic } from '$lib/stores/map';
 	import { MAPBOX_TOKEN } from '$lib/config/api';
 	import { LAYER_COLORS } from '$lib/config';
 	import type { MapLayer } from '$lib/types';
+
+	const { getMap } = getContext<{
+		getMap: () => MapLibreMap | null;
+		mapReady: Writable<boolean>;
+	}>('maplibre-map');
+
+	let earthquakesVisible = $state(true);
+
+	function toggleEarthquakes() {
+		earthquakesVisible = !earthquakesVisible;
+		const map = getMap();
+		if (map) {
+			const vis = earthquakesVisible ? 'visible' : 'none';
+			if (map.getLayer('earthquakes-layer')) map.setLayoutProperty('earthquakes-layer', 'visibility', vis);
+			if (map.getLayer('earthquakes-ring-layer')) map.setLayoutProperty('earthquakes-ring-layer', 'visibility', vis);
+		}
+	}
 
 	const LAYER_LABELS: Record<MapLayer, string> = {
 		news: 'News',
@@ -82,11 +102,16 @@
 		</div>
 	{/if}
 
-	<!-- Earthquake legend (always visible — not toggleable) -->
-	<div class="earthquake-legend">
+	<button
+		class="layer-toggle eq-toggle"
+		class:active={earthquakesVisible}
+		style:--layer-color={'#f59e0b'}
+		onclick={toggleEarthquakes}
+		title="Earthquakes (sized by magnitude)"
+	>
 		<span class="eq-dot"></span>
-		<span class="eq-label">Earthquakes (sized by magnitude)</span>
-	</div>
+		<span class="layer-label">Earthquakes</span>
+	</button>
 </div>
 
 <style>
@@ -187,29 +212,12 @@
 		letter-spacing: 0.02em;
 	}
 
-	.earthquake-legend {
-		display: flex;
-		align-items: center;
-		gap: 0.3rem;
-		padding: 0.25rem 0.42rem;
-		background: rgba(10, 10, 10, 0.8);
-		border: 1px solid var(--border);
-		border-radius: 3px;
-		font-size: 0.56rem;
-		color: var(--text-dim);
-		backdrop-filter: blur(4px);
-	}
-
 	.eq-dot {
-		width: 10px;
-		height: 10px;
+		width: 8px;
+		height: 8px;
 		border-radius: 999px;
 		background: rgba(251, 191, 36, 0.5);
-		border: 2px solid #f59e0b;
+		border: 1.5px solid #f59e0b;
 		box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
-	}
-
-	.eq-label {
-		white-space: nowrap;
 	}
 </style>
