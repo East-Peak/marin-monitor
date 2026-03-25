@@ -17,11 +17,15 @@
 	import type { PanelId } from '$lib/config';
 	import { fetchWeather } from '$lib/api/marin';
 	import { loadAllNews } from '$lib/api/marin/load-all';
+	import { earthquakesToNewsItems } from '$lib/api/marin';
 	import AgentationWidget from '$lib/components/dev/AgentationWidget.svelte';
 	import WireGrid from '$lib/components/dashboard/WireGrid.svelte';
 	import MapStage from '$lib/components/dashboard/MapStage.svelte';
 	import SignalDeck from '$lib/components/dashboard/SignalDeck.svelte';
 	import LayoutEditMode from '$lib/components/dashboard/LayoutEditMode.svelte';
+
+	// Server bootstrap data (weather + earthquakes pre-fetched server-side)
+	let { data } = $props();
 
 	// Location (derived from town filter, falls back to settings.locationId)
 	const userLocation = $derived($townLocation);
@@ -44,15 +48,17 @@
 		feedbackOpen = true;
 	}
 
-	// Weather state
-	let weatherForecast = $state<(WeatherData & { name: string })[]>([]);
-	let weatherAlerts = $state<FireWeatherAlert[]>([]);
-	let weatherLoading = $state(false);
+	// Weather state — hydrate from server bootstrap if available
+	let weatherForecast = $state<(WeatherData & { name: string })[]>(data?.bootstrap?.weather?.forecast ?? []);
+	let weatherAlerts = $state<FireWeatherAlert[]>(data?.bootstrap?.weather?.alerts ?? []);
+	let weatherLoading = $state(!data?.bootstrap?.weather);
 	let weatherError = $state<string | null>(null);
 
-	// Earthquake items for the map (separate from news store since they have lat/lon)
-	let earthquakeItems = $state<NewsItem[]>([]);
-	let earthquakesRaw = $state<EarthquakeData[]>([]);
+	// Earthquake items — hydrate from server bootstrap if available
+	let earthquakeItems = $state<NewsItem[]>(
+		data?.bootstrap?.earthquakes?.length ? earthquakesToNewsItems(data.bootstrap.earthquakes) : []
+	);
+	let earthquakesRaw = $state<EarthquakeData[]>(data?.bootstrap?.earthquakes ?? []);
 
 
 	let editMode = $state(false);
@@ -142,7 +148,13 @@
 		async function initialLoad() {
 			refresh.startRefresh();
 			try {
-				await Promise.all([loadNews(), loadWeather()]);
+				// News always loads client-side (uses DOMParser for RSS)
+				// Weather: skip if already hydrated from server bootstrap
+				const fetches: Promise<void>[] = [loadNews()];
+				if (!data?.bootstrap?.weather) {
+					fetches.push(loadWeather());
+				}
+				await Promise.all(fetches);
 				refresh.endRefresh();
 			} catch (error) {
 				refresh.endRefresh([String(error)]);
