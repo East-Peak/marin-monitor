@@ -17,7 +17,6 @@
 		EvChargingPanel,
 		EnvironmentPanel,
 		ConditionsPanel,
-		ExpandedCamerasPanel,
 		WastewaterPanel,
 		AirportStatusPanel
 	} from '$lib/components/panels';
@@ -41,6 +40,7 @@
 	} from '$lib/config/edit-grid';
 	import AgentationWidget from '$lib/components/dev/AgentationWidget.svelte';
 	import WireGrid from '$lib/components/dashboard/WireGrid.svelte';
+	import MapStage from '$lib/components/dashboard/MapStage.svelte';
 
 	// Location (derived from town filter, falls back to settings.locationId)
 	const userLocation = $derived($townLocation);
@@ -528,43 +528,7 @@
 				{/each}
 			</div>
 		{:else}
-			<!-- Top stage: map + cameras -->
-			<div
-				class="top-stage"
-				class:map-full-width={$settings.camerasExpanded ||
-					$settings.camerasHidden ||
-					!isPanelVisible('cameras')}
-			>
-				{#if isPanelVisible('map')}
-					<div class="map-slot">
-						<MapPanel earthquakes={earthquakeItems} />
-					</div>
-				{/if}
-
-				{#if isPanelVisible('cameras') && !$settings.camerasExpanded && !$settings.camerasHidden}
-					<div class="camera-stage">
-						<CamerasPanel />
-					</div>
-				{/if}
-			</div>
-
-			{#if $settings.camerasExpanded && !$settings.camerasHidden && isPanelVisible('cameras')}
-				<div class="expanded-cameras-stage">
-					<ExpandedCamerasPanel />
-				</div>
-			{/if}
-
-			<!-- Cameras show/hide toggle (only when cameras are hidden) -->
-			{#if $settings.camerasHidden && isPanelVisible('cameras')}
-				<button class="dash-toggle" onclick={() => settings.toggleCamerasHidden()}>
-					<span class="dash-toggle-line"></span>
-					<span class="dash-toggle-label">
-						Show Cameras
-						<span class="dash-toggle-chevron">{'\u25BE'}</span>
-					</span>
-					<span class="dash-toggle-line"></span>
-				</button>
-			{/if}
+			<MapStage {earthquakeItems} {isPanelVisible} />
 
 			<!-- Dashboard collapse toggle -->
 			<button class="dash-toggle" onclick={() => settings.toggleDashboard()}>
