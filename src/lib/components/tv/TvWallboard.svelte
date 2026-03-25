@@ -202,7 +202,11 @@
       }
     }
     regionWeather = newWeather;
-    lastRegionWeatherFetch = Date.now();
+    // Only suppress retries if ALL views succeeded — partial failures should retry next cycle
+    const allSucceeded = results.every((r) => r.status === 'fulfilled' && r.value !== null);
+    if (allSucceeded) {
+      lastRegionWeatherFetch = Date.now();
+    }
   }
 
   async function loadFireIncidents() {
