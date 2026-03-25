@@ -12,13 +12,7 @@
 		OutlooksPanel,
 		SignalsPanel,
 		MapPanel,
-		HousingPanel,
-		GasPricesPanel,
-		EvChargingPanel,
-		EnvironmentPanel,
-		ConditionsPanel,
-		WastewaterPanel,
-		AirportStatusPanel
+		HousingPanel
 	} from '$lib/components/panels';
 	import { settings, refresh, allNewsItems } from '$lib/stores';
 	import { townLocation } from '$lib/stores/town-filter';
@@ -41,6 +35,7 @@
 	import AgentationWidget from '$lib/components/dev/AgentationWidget.svelte';
 	import WireGrid from '$lib/components/dashboard/WireGrid.svelte';
 	import MapStage from '$lib/components/dashboard/MapStage.svelte';
+	import SignalDeck from '$lib/components/dashboard/SignalDeck.svelte';
 
 	// Location (derived from town filter, falls back to settings.locationId)
 	const userLocation = $derived($townLocation);
@@ -530,117 +525,7 @@
 		{:else}
 			<MapStage {earthquakeItems} {isPanelVisible} />
 
-			<!-- Dashboard collapse toggle -->
-			<button class="dash-toggle" onclick={() => settings.toggleDashboard()}>
-				<span class="dash-toggle-line"></span>
-				<span class="dash-toggle-label">
-					{$settings.dashboardExpanded ? 'Hide' : 'Show'} Dashboard
-					<span class="dash-toggle-chevron"
-						>{$settings.dashboardExpanded ? '\u25B4' : '\u25BE'}</span
-					>
-				</span>
-				<span class="dash-toggle-line"></span>
-			</button>
-
-			<!-- Signal deck -->
-			<div class="signal-layout" class:collapsed={!$settings.dashboardExpanded}>
-				<div class="signal-column signal-column-left">
-					{#if isPanelVisible('pulse')}
-						<div class="signal-card signal-pulse animate-enter-up stagger-1 hover-lift">
-							<PulsePanel forecast={weatherForecast} {weatherAlerts} earthquakes={earthquakesRaw} />
-						</div>
-					{/if}
-
-					{#if isPanelVisible('conditions')}
-						<div class="signal-card signal-conditions animate-enter-up stagger-2 hover-lift">
-							<ConditionsPanel />
-						</div>
-					{/if}
-
-					{#if isPanelVisible('airport-status')}
-						<div class="signal-card signal-airport-status animate-enter-up stagger-3 hover-lift">
-							<AirportStatusPanel />
-						</div>
-					{/if}
-
-					{#if isPanelVisible('wastewater')}
-						<div class="signal-card signal-wastewater animate-enter-up stagger-3 hover-lift">
-							<WastewaterPanel />
-						</div>
-					{/if}
-
-					{#if isPanelVisible('narrative') || isPanelVisible('correlation')}
-						<div class="signal-card signal-signals animate-enter-up stagger-4 hover-lift">
-							<SignalsPanel news={$allNewsItems} />
-						</div>
-					{/if}
-				</div>
-
-				<div class="signal-column signal-column-middle">
-					{#if isPanelVisible('weather')}
-						<div class="signal-card signal-weather animate-enter-up stagger-1 hover-lift">
-							<WeatherPanel
-								forecast={weatherForecast}
-								alerts={weatherAlerts}
-								loading={weatherLoading}
-								error={weatherError}
-								locationLat={userLocation.lat}
-								locationLon={userLocation.lon}
-								locationName={userLocation.name}
-							/>
-						</div>
-					{/if}
-
-					{#if isPanelVisible('weather')}
-						<div class="signal-card signal-outlooks animate-enter-up stagger-2 hover-lift">
-							<OutlooksPanel
-								forecast={weatherForecast}
-								loading={weatherLoading}
-								error={weatherError}
-								locationLat={userLocation.lat}
-								locationLon={userLocation.lon}
-							/>
-						</div>
-					{/if}
-
-					{#if isPanelVisible('weather')}
-						<div class="signal-card signal-tides animate-enter-up stagger-3 hover-lift">
-							<TidesPanel
-								tideStation={userLocation.tideStation}
-								tideStationName={userLocation.tideStationName}
-								locationLat={userLocation.lat}
-								locationLon={userLocation.lon}
-							/>
-						</div>
-					{/if}
-
-					{#if isPanelVisible('weather')}
-						<div class="signal-card signal-environment animate-enter-up stagger-4 hover-lift">
-							<EnvironmentPanel />
-						</div>
-					{/if}
-				</div>
-
-				<div class="signal-column signal-column-right">
-					{#if isPanelVisible('housing')}
-						<div class="signal-card signal-housing animate-enter-up stagger-2 hover-lift">
-							<HousingPanel />
-						</div>
-					{/if}
-
-					{#if isPanelVisible('gas-prices')}
-						<div class="signal-card signal-gas-prices animate-enter-up stagger-3 hover-lift">
-							<GasPricesPanel />
-						</div>
-					{/if}
-
-					{#if isPanelVisible('ev-charging')}
-						<div class="signal-card signal-ev-charging animate-enter-up stagger-4 hover-lift">
-							<EvChargingPanel />
-						</div>
-					{/if}
-				</div>
-			</div>
+			<SignalDeck {weatherForecast} {weatherAlerts} {weatherLoading} {weatherError} {userLocation} {earthquakesRaw} {isPanelVisible} />
 		{/if}
 
 		{#if bannerAd}
