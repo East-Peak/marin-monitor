@@ -81,6 +81,12 @@
 			{/if}
 		</div>
 	{/if}
+
+	<!-- Earthquake legend (always visible — not toggleable) -->
+	<div class="earthquake-legend">
+		<span class="eq-dot"></span>
+		<span class="eq-label">Earthquakes (sized by magnitude)</span>
+	</div>
 </div>
 
 <style>
@@ -179,5 +185,31 @@
 		color: var(--text-muted);
 		font-size: 0.52rem;
 		letter-spacing: 0.02em;
+	}
+
+	.earthquake-legend {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.25rem 0.42rem;
+		background: rgba(10, 10, 10, 0.8);
+		border: 1px solid var(--border);
+		border-radius: 3px;
+		font-size: 0.56rem;
+		color: var(--text-dim);
+		backdrop-filter: blur(4px);
+	}
+
+	.eq-dot {
+		width: 10px;
+		height: 10px;
+		border-radius: 999px;
+		background: rgba(251, 191, 36, 0.5);
+		border: 2px solid #f59e0b;
+		box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+	}
+
+	.eq-label {
+		white-space: nowrap;
 	}
 </style>

@@ -585,16 +585,48 @@
 			}
 		});
 
-		// Earthquake dots (red, sized by magnitude)
+		// Earthquake dots — amber/yellow, distinct from red crime/safety
+		// Radius scales with magnitude: M2 = 6px, M3 = 10px, M4 = 14px, M5+ = 18px+
 		map.addLayer({
 			id: 'earthquakes-layer',
 			type: 'circle',
 			source: 'earthquakes',
 			paint: {
-				'circle-radius': ['*', ['get', 'magnitude'], 4],
-				'circle-color': 'rgba(255, 68, 68, 0.6)',
-				'circle-stroke-width': 1,
-				'circle-stroke-color': '#ef4444'
+				'circle-radius': [
+					'interpolate', ['linear'], ['get', 'magnitude'],
+					1, 4,
+					2, 6,
+					3, 10,
+					4, 14,
+					5, 20,
+					6, 28
+				],
+				'circle-color': 'rgba(251, 191, 36, 0.5)',
+				'circle-stroke-width': 2,
+				'circle-stroke-color': '#f59e0b',
+				'circle-opacity': 0.7
+			}
+		});
+
+		// Earthquake outer ring — concentric ring effect for visual distinction
+		map.addLayer({
+			id: 'earthquakes-ring-layer',
+			type: 'circle',
+			source: 'earthquakes',
+			paint: {
+				'circle-radius': [
+					'interpolate', ['linear'], ['get', 'magnitude'],
+					1, 8,
+					2, 12,
+					3, 18,
+					4, 24,
+					5, 32,
+					6, 44
+				],
+				'circle-color': 'transparent',
+				'circle-stroke-width': 1.5,
+				'circle-stroke-color': 'rgba(251, 191, 36, 0.3)',
+				'circle-stroke-opacity': 0.6
 			}
 		});
 
