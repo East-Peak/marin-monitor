@@ -158,6 +158,7 @@
   // Derived: current map viewId (for the persistent map instance)
   const activeMapViewId = $derived(TV_SCREENS[carouselIdx]?.mapViewId ?? 'county');
   const isMapScreenActive = $derived(!!TV_SCREENS[carouselIdx]?.mapViewId);
+  const isConditionsScreenActive = $derived(TV_SCREENS[carouselIdx]?.id === 'conditions');
   // Use the first hourly period (current hour) for actual current temp,
   // NOT weatherForecast[0] which is the daytime high
   const currentTemp = $derived(hourlyPeriods[0]?.temperature ?? null);
@@ -331,9 +332,14 @@
       <TvMapScreen {earthquakeItems} {fireIncidents} viewId={activeMapViewId} weather={regionWeather[activeMapViewId] ?? null} />
     </div>
 
-    <!-- Non-map screens — destroyed/created normally -->
+    <!-- Persistent conditions — panels fetch on mount, so keep alive to avoid refetching every carousel pass -->
+    <div class="absolute inset-0" style="z-index: {isConditionsScreenActive ? 1 : 0}; visibility: {isConditionsScreenActive ? 'visible' : 'hidden'};">
+      <TvConditionsScreen />
+    </div>
+
+    <!-- Other non-map screens — destroyed/created normally -->
     {#each TV_SCREENS as screen, i (screen.id)}
-      {#if !screen.mapViewId}
+      {#if !screen.mapViewId && screen.id !== 'conditions'}
         <TvScreen active={carouselIdx === i}>
           {#if screen.id === 'news-wire'}
             <NewsWireScreen />
@@ -345,8 +351,6 @@
             <TvCameraClusterScreen clusterId="central-highway" />
           {:else if screen.id === 'cameras-west-north'}
             <TvCameraClusterScreen clusterId="west-north" />
-          {:else if screen.id === 'conditions'}
-            <TvConditionsScreen />
           {:else if screen.id === 'community'}
             <TvCommunityScreen />
           {/if}
