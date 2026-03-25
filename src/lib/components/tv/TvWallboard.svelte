@@ -4,6 +4,7 @@
   import { browser } from '$app/environment';
   import TvScreen from './TvScreen.svelte';
   import TvChyron from './TvChyron.svelte';
+  import TvWallboardHeader from './TvWallboardHeader.svelte';
   import TvMapScreen from './screens/TvMapScreen.svelte';
   import NewsWireScreen from './screens/NewsWireScreen.svelte';
   import SafetyScreen from './screens/SafetyScreen.svelte';
@@ -305,39 +306,7 @@
   class="fixed inset-0 bg-gray-950 text-gray-100 flex flex-col overflow-hidden select-none"
   class:cursor-none={cursorHidden}
 >
-  <!-- Header: title + clock + dots -->
-  <header class="h-12 flex items-center justify-between px-4 bg-gray-900/80 border-b border-gray-800/50 shrink-0 z-10">
-    <div class="flex items-center gap-3">
-      <h1 class="text-lg font-bold tracking-wide text-gray-100">MARIN MONITOR</h1>
-      {#if paused}
-        <span class="text-xs text-amber-400 font-medium">PAUSED</span>
-      {/if}
-    </div>
-    <div class="flex items-center gap-3">
-      {#if currentTemp !== null}
-        <span class="text-xs text-gray-500">Now</span>
-        <span class="text-sm text-gray-300 font-medium">{currentTemp}&deg;F</span>
-      {/if}
-      <span class="text-xs text-gray-500">{stories24h} stories</span>
-      {#if alertCount > 0}
-        <span class="text-xs text-red-400 font-medium">{alertCount} alerts</span>
-      {/if}
-    </div>
-    <div class="flex items-center gap-4">
-      <span class="text-sm text-gray-300 tabular-nums">{clockText}</span>
-      <div class="flex items-center gap-1.5">
-        {#each TV_SCREENS as screen, i (screen.id)}
-          <button
-            class="w-2.5 h-2.5 rounded-full transition-colors"
-            class:bg-blue-400={carouselIdx === i}
-            class:bg-gray-600={carouselIdx !== i}
-            onclick={() => goToScreen(i)}
-            title={screen.name}
-          ></button>
-        {/each}
-      </div>
-    </div>
-  </header>
+  <TvWallboardHeader {carouselIdx} {paused} {currentTemp} {stories24h} {alertCount} {clockText} onGoToScreen={goToScreen} />
 
   <!-- Carousel area -->
   <div class="flex-1 relative" style="height: calc(100vh - 48px - 44px);">
