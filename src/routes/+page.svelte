@@ -5,7 +5,6 @@
 	import TownFilterBanner from '$lib/components/layout/TownFilterBanner.svelte';
 	import { SettingsModal, OnboardingModal, FeedbackModal } from '$lib/components/modals';
 	import {
-		NewsPanel,
 		WeatherPanel,
 		TidesPanel,
 		CamerasPanel,
@@ -17,7 +16,6 @@
 		GasPricesPanel,
 		EvChargingPanel,
 		EnvironmentPanel,
-		CommunityPanel,
 		ConditionsPanel,
 		ExpandedCamerasPanel,
 		WastewaterPanel,
@@ -36,13 +34,13 @@
 	import type { PanelId } from '$lib/config';
 	import { fetchWeather } from '$lib/api/marin';
 	import { loadAllNews } from '$lib/api/marin/load-all';
-	import { WIRE_COLUMNS } from '$lib/config/wire-columns';
 	import {
 		type EditableTileId, type TileLayout, type TileDefinition,
 		EDIT_LAYOUT_KEY, EDIT_GRID_COLUMNS, EDIT_GRID_ROWS, EDIT_ROW_HEIGHT, EDIT_GAP,
 		DEFAULT_EDIT_LAYOUT
 	} from '$lib/config/edit-grid';
 	import AgentationWidget from '$lib/components/dev/AgentationWidget.svelte';
+	import WireGrid from '$lib/components/dashboard/WireGrid.svelte';
 
 	// Location (derived from town filter, falls back to settings.locationId)
 	const userLocation = $derived($townLocation);
@@ -688,20 +686,7 @@
 		{/if}
 
 		<!-- News area -->
-		<div class="news-area">
-			<div class="wire-grid">
-				{#each WIRE_COLUMNS as column (column.panelId)}
-					{#if isPanelVisible(column.panelId)}
-						<div class="wire-slot">
-							<NewsPanel category={column.category} panelId={column.panelId} title={column.title} />
-						</div>
-					{/if}
-				{/each}
-				<div class="wire-slot">
-					<CommunityPanel onFeedback={openFeedback} />
-				</div>
-			</div>
-		</div>
+		<WireGrid onFeedback={openFeedback} />
 	</main>
 
 	<Footer onFeedback={() => openFeedback('general')} />
@@ -1076,19 +1061,6 @@
 		padding: 0 0.5rem;
 	}
 
-	.news-area {
-		margin-top: 1rem;
-	}
-
-	.wire-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-		gap: 1rem;
-	}
-
-	.wire-slot {
-		min-width: 0;
-	}
 
 	@media (max-width: 1320px) {
 		.layout-edit-grid {
@@ -1109,23 +1081,6 @@
 		}
 	}
 
-	@media (max-width: 1080px) {
-		.wire-grid {
-			grid-template-columns: repeat(3, minmax(0, 1fr));
-		}
-	}
-
-	@media (max-width: 820px) {
-		.wire-grid {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-	}
-
-	@media (max-width: 620px) {
-		.wire-grid {
-			grid-template-columns: 1fr;
-		}
-	}
 
 	@media (max-width: 768px) {
 		.main-content {
