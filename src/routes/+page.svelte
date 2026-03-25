@@ -385,31 +385,6 @@
 		}
 	}
 
-	.map-slot {
-		min-width: 0;
-	}
-
-	.top-stage {
-		display: grid;
-		grid-template-columns: minmax(0, 3fr) minmax(300px, 1fr);
-		gap: 1rem;
-		margin-bottom: 1rem;
-		align-items: start;
-	}
-
-	.top-stage.map-full-width {
-		grid-template-columns: 1fr;
-	}
-
-	.expanded-cameras-stage {
-		margin-bottom: 1rem;
-	}
-
-	.camera-stage :global(.panel-content) {
-		max-height: 500px;
-		overflow-y: auto;
-	}
-
 	.dash-toggle {
 		display: flex;
 		align-items: center;

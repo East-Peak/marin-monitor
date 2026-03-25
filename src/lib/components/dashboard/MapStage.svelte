@@ -71,6 +71,11 @@
 		min-width: 0;
 	}
 
+	.camera-stage :global(.panel-content) {
+		max-height: 500px;
+		overflow-y: auto;
+	}
+
 	.dash-toggle {
 		display: flex;
 		align-items: center;
