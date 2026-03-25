@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount, onDestroy } from 'svelte';
   import type { Snippet } from 'svelte';
 
   interface Props {
@@ -12,19 +13,32 @@
   let contentEl = $state<HTMLDivElement | null>(null);
   let needsScroll = $state(false);
   let duration = $state(60);
+  let checkTimer: ReturnType<typeof setInterval> | null = null;
 
   function checkOverflow() {
     if (!containerEl || !contentEl) return;
     const contentHeight = contentEl.scrollHeight;
     const containerHeight = containerEl.clientHeight;
-    needsScroll = contentHeight > containerHeight;
+    const shouldScroll = contentHeight > containerHeight + 10;
+    if (shouldScroll !== needsScroll) {
+      needsScroll = shouldScroll;
+    }
     if (needsScroll) {
       duration = contentHeight / speed;
     }
   }
 
-  // Re-attach ResizeObserver whenever the bound elements change
-  // (contentEl rebinds when needsScroll flips the {#if} branch)
+  onMount(() => {
+    // Check overflow periodically — store data may arrive after mount
+    checkOverflow();
+    checkTimer = setInterval(checkOverflow, 2000);
+  });
+
+  onDestroy(() => {
+    if (checkTimer) clearInterval(checkTimer);
+  });
+
+  // Also re-check when elements rebind (needsScroll flip swaps DOM)
   $effect(() => {
     const container = containerEl;
     const content = contentEl;
