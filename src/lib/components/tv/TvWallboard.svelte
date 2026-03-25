@@ -16,7 +16,8 @@
     CURSOR_HIDE_MS,
     TV_REFRESH_INTERVAL_MS
   } from '$lib/config/tv';
-  import { refresh, allNewsItems, alerts } from '$lib/stores';
+  import { refresh, allNewsItems, alerts, mapStore } from '$lib/stores';
+  import { townFilter } from '$lib/stores/town-filter';
   import { fetchFireIncidents } from '$lib/api/marin';
   import { loadAllNews } from '$lib/api/marin/load-all';
   import { fetchHourlyForecast } from '$lib/api/marin/nws-hourly';
@@ -238,6 +239,10 @@
   let originalTheme = '';
 
   onMount(() => {
+    // Reset shared state so TV mode starts county-wide, not town-scoped
+    townFilter.clear();
+    mapStore.selectTown(null);
+
     // Force dark theme (project uses data-theme attribute)
     originalTheme = document.documentElement.getAttribute('data-theme') ?? '';
     document.documentElement.setAttribute('data-theme', 'dark');
