@@ -28,7 +28,6 @@
 	import { AdBanner } from '$lib/components/common';
 	import { pickAds } from '$lib/config/ads';
 	import type {
-		NewsCategory,
 		NewsItem,
 		WeatherData,
 		FireWeatherAlert,
@@ -37,6 +36,12 @@
 	import type { PanelId } from '$lib/config';
 	import { fetchWeather } from '$lib/api/marin';
 	import { loadAllNews } from '$lib/api/marin/load-all';
+	import { WIRE_COLUMNS } from '$lib/config/wire-columns';
+	import {
+		type EditableTileId, type TileLayout, type TileDefinition,
+		EDIT_LAYOUT_KEY, EDIT_GRID_COLUMNS, EDIT_GRID_ROWS, EDIT_ROW_HEIGHT, EDIT_GAP,
+		DEFAULT_EDIT_LAYOUT
+	} from '$lib/config/edit-grid';
 	import AgentationWidget from '$lib/components/dev/AgentationWidget.svelte';
 
 	// Location (derived from town filter, falls back to settings.locationId)
@@ -70,66 +75,9 @@
 	let earthquakeItems = $state<NewsItem[]>([]);
 	let earthquakesRaw = $state<EarthquakeData[]>([]);
 
-	type EditableTileId =
-		| 'map'
-		| 'cameras'
-		| 'pulse'
-		| 'narrative'
-		| 'weather'
-		| 'tides'
-		| 'housing'
-		| 'forecast'
-		| 'pattern'
-		| 'surf'
-		| 'marine';
-
-	type TileLayout = {
-		x: number;
-		y: number;
-		w: number;
-		h: number;
-	};
-
-	type TileDefinition = {
-		id: EditableTileId;
-		title: string;
-		visible: boolean;
-	};
-
-	const EDIT_LAYOUT_KEY = 'marin-monitor:layout-edit:v1';
-	const EDIT_GRID_COLUMNS = 12;
-	const EDIT_GRID_ROWS = 18;
-	const EDIT_ROW_HEIGHT = 72;
-	const EDIT_GAP = 8;
-
-	const defaultEditLayout: Record<EditableTileId, TileLayout> = {
-		map: { x: 1, y: 1, w: 9, h: 4 },
-		cameras: { x: 10, y: 1, w: 3, h: 4 },
-		pulse: { x: 1, y: 5, w: 3, h: 3 },
-		narrative: { x: 1, y: 8, w: 3, h: 5 },
-		weather: { x: 4, y: 5, w: 5, h: 4 },
-		housing: { x: 9, y: 5, w: 4, h: 4 },
-		tides: { x: 9, y: 9, w: 4, h: 4 },
-		pattern: { x: 1, y: 13, w: 3, h: 3 },
-		forecast: { x: 4, y: 9, w: 5, h: 4 },
-		surf: { x: 4, y: 13, w: 2, h: 3 },
-		marine: { x: 9, y: 13, w: 4, h: 3 }
-	};
-
-	const wireColumns: { panelId: PanelId; category: NewsCategory; title: string }[] = [
-		{ panelId: 'local-wire', category: 'local', title: 'Local Wire' },
-		{ panelId: 'safety', category: 'safety', title: 'Crime & Safety' },
-		{ panelId: 'civic', category: 'civic', title: 'Civic' },
-		{ panelId: 'outdoors', category: 'outdoors', title: 'Outdoors & Lifestyle' },
-		{ panelId: 'satire', category: 'satire', title: 'Marin Lately (satire)' },
-		{ panelId: 'cycling', category: 'cycling', title: 'Cycling & Endurance' },
-		{ panelId: 'shows', category: 'shows', title: 'Shows & Events' },
-		{ panelId: 'prep', category: 'prep', title: 'Sports & Prep' },
-		{ panelId: 'farm', category: 'farm', title: 'Farm & Market' }
-	];
 
 	let editMode = $state(false);
-	let editLayout = $state<Record<EditableTileId, TileLayout>>({ ...defaultEditLayout });
+	let editLayout = $state<Record<EditableTileId, TileLayout>>({ ...DEFAULT_EDIT_LAYOUT });
 	let dragState = $state<{
 		id: EditableTileId;
 		mode: 'move' | 'resize';
@@ -196,7 +144,7 @@
 
 	function cloneDefaultLayout(): Record<EditableTileId, TileLayout> {
 		return Object.fromEntries(
-			Object.entries(defaultEditLayout).map(([id, layout]) => [id, { ...layout }])
+			Object.entries(DEFAULT_EDIT_LAYOUT).map(([id, layout]) => [id, { ...layout }])
 		) as Record<EditableTileId, TileLayout>;
 	}
 
@@ -212,10 +160,10 @@
 					Object.entries(parsed).map(([id, layout]) => [
 						id,
 						{
-							x: Number(layout?.x ?? defaultEditLayout[id as EditableTileId].x),
-							y: Number(layout?.y ?? defaultEditLayout[id as EditableTileId].y),
-							w: Number(layout?.w ?? defaultEditLayout[id as EditableTileId].w),
-							h: Number(layout?.h ?? defaultEditLayout[id as EditableTileId].h)
+							x: Number(layout?.x ?? DEFAULT_EDIT_LAYOUT[id as EditableTileId].x),
+							y: Number(layout?.y ?? DEFAULT_EDIT_LAYOUT[id as EditableTileId].y),
+							w: Number(layout?.w ?? DEFAULT_EDIT_LAYOUT[id as EditableTileId].w),
+							h: Number(layout?.h ?? DEFAULT_EDIT_LAYOUT[id as EditableTileId].h)
 						}
 					])
 				)
@@ -742,7 +690,7 @@
 		<!-- News area -->
 		<div class="news-area">
 			<div class="wire-grid">
-				{#each wireColumns as column (column.panelId)}
+				{#each WIRE_COLUMNS as column (column.panelId)}
 					{#if isPanelVisible(column.panelId)}
 						<div class="wire-slot">
 							<NewsPanel category={column.category} panelId={column.panelId} title={column.title} />
