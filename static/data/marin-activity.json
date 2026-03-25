@@ -103,6 +103,72 @@
     ]
   },
   {
+    "id": "shows:mac-s-at-19-broadway:sticky-s-backyard-ft-dj-j-cue-the-piedmont-underground-live-at-mac-s:https-www-eventbrite-com-e-stickys-backyard-ft-dj-jcue-the-piedmont-underground-live-at-macs-tickets-1984509337851",
+    "title": "Sticky’s Backyard ft. DJ J.Cue & The Piedmont Underground – Live at Mac's",
+    "link": "https://www.eventbrite.com/e/stickys-backyard-ft-dj-jcue-the-piedmont-underground-live-at-macs-tickets-1984509337851",
+    "pubDate": "2026-04-25T07:00:00.000Z",
+    "timestamp": 1777100400000,
+    "description": "Upcoming Fairfax show at Mac’s at 19 Broadway.",
+    "content": "Fairfax live music, comedy, and nightlife calendar.",
+    "source": "Mac's at 19 Broadway",
+    "category": "shows",
+    "verification": "community",
+    "town": "Fairfax",
+    "townSlug": "fairfax",
+    "lat": 37.9871,
+    "lon": -122.5889,
+    "locationConfidence": "exact",
+    "locationEvidence": "Mac's at 19 Broadway",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:mac-s-at-19-broadway:tiffany-bond-s-40th-birthday-bash-a-night-of-soul-blues-rock-at-mac-s:https-www-eventbrite-com-e-tiffany-bonds-40th-birthday-bash-a-night-of-soul-blues-rock-at-macs-tickets-1984508381992",
+    "title": "Tiffany Bond’s 40th Birthday Bash – A Night of Soul, Blues & Rock at Mac’s",
+    "link": "https://www.eventbrite.com/e/tiffany-bonds-40th-birthday-bash-a-night-of-soul-blues-rock-at-macs-tickets-1984508381992",
+    "pubDate": "2026-04-17T07:00:00.000Z",
+    "timestamp": 1776409200000,
+    "description": "Upcoming Fairfax show at Mac’s at 19 Broadway.",
+    "content": "Fairfax live music, comedy, and nightlife calendar.",
+    "source": "Mac's at 19 Broadway",
+    "category": "shows",
+    "verification": "community",
+    "town": "Fairfax",
+    "townSlug": "fairfax",
+    "lat": 37.9871,
+    "lon": -122.5889,
+    "locationConfidence": "exact",
+    "locationEvidence": "Mac's at 19 Broadway",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:osher-marin-jcc:passover-yoga-blooming-into-freedom:https-www-marinjcc-org-event-passover-yoga-blooming-into-freedom",
+    "title": "Passover Yoga: Blooming Into Freedom",
+    "link": "https://www.marinjcc.org/event/passover-yoga-blooming-into-freedom/",
+    "pubDate": "2026-04-12T20:30:00.000Z",
+    "timestamp": 1776025800000,
+    "description": "Join us for the 2nd installment of this new series, Yoga Through the Jewish Year! \\n",
+    "content": "JCC 2nd Floor Yoga Studio · Taube Center for Jewish Peoplehood · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
+    "source": "Osher Marin JCC",
+    "category": "shows",
+    "verification": "community",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9557,
+    "lon": -122.5376,
+    "locationConfidence": "exact",
+    "locationEvidence": "Osher Marin JCC",
+    "topics": [
+      "community-events",
+      "arts"
+    ]
+  },
+  {
     "id": "shows:tourist-club:volunteer-work-day:https-touristclubsf-org-tcevent-volunteer-work-day-2-3",
     "title": "Volunteer Work Day",
     "link": "https://touristclubsf.org/tcevent/volunteer-work-day-2-3/",
@@ -257,6 +323,28 @@
     ]
   },
   {
+    "id": "shows:osher-marin-jcc:israeli-folk-dance:https-www-marinjcc-org-event-israeli-folk-dance-jan-feb-2026-04-07",
+    "title": "Israeli Folk Dance!",
+    "link": "https://www.marinjcc.org/event/israeli-folk-dance-jan-feb/2026-04-07/",
+    "pubDate": "2026-04-07T20:00:00.000Z",
+    "timestamp": 1775592000000,
+    "description": "January 6-February 10 Tuesdays from 1:00-2:45 PM Dancing is great for the mind, body, and soul, and it’s also fun! We’ll be dancing to a wonderful assortment of Israeli and world music. The first hour is tailored to beg…",
+    "content": "Osher Marin JCC · Taube Center for Jewish Peoplehood · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
+    "source": "Osher Marin JCC",
+    "category": "shows",
+    "verification": "community",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9557,
+    "lon": -122.5376,
+    "locationConfidence": "exact",
+    "locationEvidence": "Osher Marin JCC",
+    "topics": [
+      "community-events",
+      "arts"
+    ]
+  },
+  {
     "id": "shows:osher-marin-jcc:game-on-mexican-train-rummikub-scrabble:https-www-marinjcc-org-event-game-on-mexican-train-rummikub-scrabble-4",
     "title": "Game On! Mexican Train, Rummikub & Scrabble",
     "link": "https://www.marinjcc.org/event/game-on-mexican-train-rummikub-scrabble-4/",
@@ -317,6 +405,28 @@
     "lon": -122.7028,
     "locationConfidence": "exact",
     "locationEvidence": "Rancho Nicasio",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:mac-s-at-19-broadway:mtv-80s-dance-party-at-mac-s-costume-night-djs-retro-dance-floor:https-www-eventbrite-com-e-mtv-80s-dance-party-at-macs-costume-night-djs-retro-dance-floor-tickets-1985335810854",
+    "title": "MTV 80s Dance Party at Mac’s – Costume Night, DJs & Retro Dance Floor",
+    "link": "https://www.eventbrite.com/e/mtv-80s-dance-party-at-macs-costume-night-djs-retro-dance-floor-tickets-1985335810854",
+    "pubDate": "2026-04-04T07:00:00.000Z",
+    "timestamp": 1775286000000,
+    "description": "Upcoming Fairfax show at Mac’s at 19 Broadway.",
+    "content": "Fairfax live music, comedy, and nightlife calendar.",
+    "source": "Mac's at 19 Broadway",
+    "category": "shows",
+    "verification": "community",
+    "town": "Fairfax",
+    "townSlug": "fairfax",
+    "lat": 37.9871,
+    "lon": -122.5889,
+    "locationConfidence": "exact",
+    "locationEvidence": "Mac's at 19 Broadway",
     "topics": [
       "music",
       "shows"
@@ -543,6 +653,29 @@
     ]
   },
   {
+    "id": "shows:dance-palace:aikido-for-kids:https-dancepalace-org-event-aikido-for-kids-session-2-2-2026-03-27",
+    "title": "Aikido for Kids*",
+    "link": "https://dancepalace.org/event/aikido-for-kids-session-2-2/2026-03-27/",
+    "pubDate": "2026-03-27T23:00:00.000Z",
+    "timestamp": 1774652400000,
+    "description": "Aikido is the only martial art that seeks to resolve conflict without harming the attacker. Children find that Aikido helps them learn to get along, build self-confidence, develop focus, good manners, and calmness. Trai…",
+    "content": "Church Space · Ruth Lopez · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
+    "source": "Dance Palace",
+    "category": "shows",
+    "verification": "community",
+    "town": "Point Reyes Station",
+    "townSlug": "point-reyes",
+    "lat": 38.0699,
+    "lon": -122.8089,
+    "locationConfidence": "exact",
+    "locationEvidence": "Dance Palace",
+    "topics": [
+      "music",
+      "community-events",
+      "west-marin"
+    ]
+  },
+  {
     "id": "shows:mac-s-at-19-broadway:hall-pass-live-at-mac-s-eclectic-rock-covers-originals:https-www-eventbrite-com-e-hall-pass-live-at-macs-eclectic-rock-covers-originals-tickets-1984507710985",
     "title": "Hall Pass LIVE at Mac’s – Eclectic Rock Covers & Originals",
     "link": "https://www.eventbrite.com/e/hall-pass-live-at-macs-eclectic-rock-covers-originals-tickets-1984507710985",
@@ -565,6 +698,29 @@
     ]
   },
   {
+    "id": "shows:dance-palace:zumba-with-gina-tanner-chrissy-costello:https-dancepalace-org-event-zumba-with-gina-tanner-chrissy-costello-4-2026-03-26",
+    "title": "ZUMBA with Gina Tanner & Chrissy Costello*",
+    "link": "https://dancepalace.org/event/zumba-with-gina-tanner-chrissy-costello-4/2026-03-26/",
+    "pubDate": "2026-03-27T01:00:00.000Z",
+    "timestamp": 1774573200000,
+    "description": "ZUMBA is a fitness program that combines Latin and international music with dance moves. Zumba routines incorporate interval training, alternating fast & slow rhythms, and resistance training. We absolutely love teachin…",
+    "content": "Main Hall · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
+    "source": "Dance Palace",
+    "category": "shows",
+    "verification": "community",
+    "town": "Point Reyes Station",
+    "townSlug": "point-reyes",
+    "lat": 38.0699,
+    "lon": -122.8089,
+    "locationConfidence": "exact",
+    "locationEvidence": "Dance Palace",
+    "topics": [
+      "music",
+      "community-events",
+      "west-marin"
+    ]
+  },
+  {
     "id": "shows:rancho-nicasio:zydeco-flames:https-ranchonicasio-com-event-zydeco-flames-5",
     "title": "ZYDECO FLAMES",
     "link": "https://ranchonicasio.com/event/zydeco-flames-5/",
@@ -584,6 +740,29 @@
     "topics": [
       "music",
       "shows"
+    ]
+  },
+  {
+    "id": "shows:dance-palace:mah-jong-at-the-dance-palace-new:https-dancepalace-org-event-mag-jong-at-the-dance-palace-new-2026-03-26",
+    "title": "Mah Jong at the Dance Palace – NEW!",
+    "link": "https://dancepalace.org/event/mag-jong-at-the-dance-palace-new/2026-03-26/",
+    "pubDate": "2026-03-26T20:00:00.000Z",
+    "timestamp": 1774555200000,
+    "description": "This gathering is free and open to the public, but registration is required so we can save you a seat. Contact Rudi for details and registration at rudi@rudidundas.com Dance Palace Church Space",
+    "content": "Church Space · The Dance Palace Community & Cultural Center · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
+    "source": "Dance Palace",
+    "category": "shows",
+    "verification": "community",
+    "town": "Point Reyes Station",
+    "townSlug": "point-reyes",
+    "lat": 38.0699,
+    "lon": -122.8089,
+    "locationConfidence": "exact",
+    "locationEvidence": "Dance Palace",
+    "topics": [
+      "music",
+      "community-events",
+      "west-marin"
     ]
   },
   {
@@ -655,6 +834,443 @@
     ]
   },
   {
+    "id": "shows:dance-palace:pilates-with-lorraine-fisher-smith:https-dancepalace-org-event-pilates-with-lorraine-fisher-smith-4-2026-03-25",
+    "title": "Pilates with Lorraine Fisher-Smith*",
+    "link": "https://dancepalace.org/event/pilates-with-lorraine-fisher-smith-4/2026-03-25/",
+    "pubDate": "2026-03-25T16:00:00.000Z",
+    "timestamp": 1774454400000,
+    "description": "West Marin personal trainer, yoga and Pilates instructor Lorraine Fisher-Smith guides a morning Pilates class. Pilates builds a strong core to promote good posture and prevent injury, and this class brings a focus on th…",
+    "content": "Main Hall · Lorraine Fisher-Smith · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
+    "source": "Dance Palace",
+    "category": "shows",
+    "verification": "community",
+    "town": "Point Reyes Station",
+    "townSlug": "point-reyes",
+    "lat": 38.0699,
+    "lon": -122.8089,
+    "locationConfidence": "exact",
+    "locationEvidence": "Dance Palace",
+    "topics": [
+      "music",
+      "community-events",
+      "west-marin"
+    ]
+  },
+  {
+    "id": "outdoors:california-department-of-fish-wildlife:ocean-salmon-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-salmon",
+    "title": "Ocean salmon sport fishing regulations",
+    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Salmon",
+    "pubDate": "2026-03-25T13:06:23.000Z",
+    "timestamp": 1774443983000,
+    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
+    "source": "California Department of Fish & Wildlife",
+    "category": "outdoors",
+    "verification": "official",
+    "topics": [
+      "fishing",
+      "regulations"
+    ]
+  },
+  {
+    "id": "outdoors:california-department-of-fish-wildlife:crab-trap-and-season-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-crab",
+    "title": "Crab trap and season regulations",
+    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Crab",
+    "pubDate": "2026-03-25T13:06:23.000Z",
+    "timestamp": 1774443983000,
+    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
+    "source": "California Department of Fish & Wildlife",
+    "category": "outdoors",
+    "verification": "official",
+    "topics": [
+      "fishing",
+      "regulations"
+    ]
+  },
+  {
+    "id": "farm:point-reyes-farmstead-cheese:point-reyes-farmstead-cheese-journal:https-www-pointreyescheese-com-blogs-news",
+    "title": "Point Reyes Farmstead Cheese journal",
+    "link": "https://www.pointreyescheese.com/blogs/news",
+    "pubDate": "2026-03-25T13:06:22.000Z",
+    "timestamp": 1774443982000,
+    "description": "Official Point Reyes Farmstead Cheese news and seasonal product updates.",
+    "source": "Point Reyes Farmstead Cheese",
+    "category": "farm",
+    "verification": "official",
+    "town": "Point Reyes Station",
+    "townSlug": "point-reyes",
+    "lat": 38.0764,
+    "lon": -122.8012,
+    "locationConfidence": "exact",
+    "locationEvidence": "Point Reyes Farmstead Cheese",
+    "topics": [
+      "cheese",
+      "farm-market"
+    ]
+  },
+  {
+    "id": "outdoors:california-department-of-fish-wildlife:ocean-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations",
+    "title": "Ocean sport fishing regulations",
+    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations",
+    "pubDate": "2026-03-25T13:06:22.000Z",
+    "timestamp": 1774443982000,
+    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
+    "source": "California Department of Fish & Wildlife",
+    "category": "outdoors",
+    "verification": "official",
+    "topics": [
+      "fishing",
+      "regulations"
+    ]
+  },
+  {
+    "id": "outdoors:california-department-of-fish-wildlife:san-francisco-ocean-fishing-map-and-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-fishing-map-sf",
+    "title": "San Francisco ocean fishing map and regulations",
+    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Fishing-Map/SF",
+    "pubDate": "2026-03-25T13:06:22.000Z",
+    "timestamp": 1774443982000,
+    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
+    "source": "California Department of Fish & Wildlife",
+    "category": "outdoors",
+    "verification": "official",
+    "topics": [
+      "fishing",
+      "regulations"
+    ]
+  },
+  {
+    "id": "prep:marin-highlanders-rugby:marin-highlanders-rugby-club-hub:https-www-marinhighlandersrugby-org",
+    "title": "Marin Highlanders Rugby club hub",
+    "link": "https://www.marinhighlandersrugby.org/",
+    "pubDate": "2026-03-25T13:06:18.000Z",
+    "timestamp": 1774443978000,
+    "description": "Local sports hub for schedules, fixtures, club updates, or season information.",
+    "source": "Marin Highlanders Rugby",
+    "category": "prep",
+    "verification": "community",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9756,
+    "lon": -122.5123,
+    "locationConfidence": "exact",
+    "locationEvidence": "Marin Highlanders Rugby",
+    "topics": [
+      "rugby",
+      "club-sports"
+    ]
+  },
+  {
+    "id": "prep:archie-williams-mtb:archie-williams-mountain-bike-team-hub:https-www-awmtb-com",
+    "title": "Archie Williams mountain bike team hub",
+    "link": "https://www.awmtb.com/",
+    "pubDate": "2026-03-25T13:06:16.000Z",
+    "timestamp": 1774443976000,
+    "description": "Official athletics or team hub for a Marin-area school or league program.",
+    "source": "Archie Williams MTB",
+    "category": "prep",
+    "verification": "official",
+    "town": "San Anselmo",
+    "townSlug": "san-anselmo",
+    "lat": 37.9746,
+    "lon": -122.5648,
+    "locationConfidence": "exact",
+    "locationEvidence": "Archie Williams MTB",
+    "topics": [
+      "prep-sports",
+      "mountain-bike"
+    ]
+  },
+  {
+    "id": "prep:tamalpais-union-high-school-district:tuhsd-athletics-hub:https-www-tamdistrict-org-students-athletics",
+    "title": "TUHSD athletics hub",
+    "link": "https://www.tamdistrict.org/students/athletics",
+    "pubDate": "2026-03-25T13:06:15.000Z",
+    "timestamp": 1774443975000,
+    "description": "Official athletics or team hub for a Marin-area school or league program.",
+    "source": "Tamalpais Union High School District",
+    "category": "prep",
+    "verification": "official",
+    "lat": 37.9341,
+    "lon": -122.5353,
+    "locationConfidence": "exact",
+    "locationEvidence": "Tamalpais Union High School District",
+    "topics": [
+      "prep-sports",
+      "district"
+    ]
+  },
+  {
+    "id": "prep:san-rafael-athletics:san-rafael-high-athletics-hub:https-sanrafael-srcs-org-athletics",
+    "title": "San Rafael High athletics hub",
+    "link": "https://sanrafael.srcs.org/athletics",
+    "pubDate": "2026-03-25T13:06:13.000Z",
+    "timestamp": 1774443973000,
+    "description": "Official athletics or team hub for a Marin-area school or league program.",
+    "source": "San Rafael Athletics",
+    "category": "prep",
+    "verification": "official",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9752,
+    "lon": -122.5248,
+    "locationConfidence": "exact",
+    "locationEvidence": "San Rafael Athletics",
+    "topics": [
+      "prep-sports",
+      "schedule"
+    ]
+  },
+  {
+    "id": "prep:archie-williams-athletics:archie-williams-athletics-hub:https-archiewilliams-tamdistrict-org-athletics",
+    "title": "Archie Williams athletics hub",
+    "link": "https://archiewilliams.tamdistrict.org/athletics",
+    "pubDate": "2026-03-25T13:06:12.000Z",
+    "timestamp": 1774443972000,
+    "description": "Official athletics or team hub for a Marin-area school or league program.",
+    "source": "Archie Williams Athletics",
+    "category": "prep",
+    "verification": "official",
+    "town": "San Anselmo",
+    "townSlug": "san-anselmo",
+    "lat": 37.9746,
+    "lon": -122.5648,
+    "locationConfidence": "exact",
+    "locationEvidence": "Archie Williams Athletics",
+    "topics": [
+      "prep-sports",
+      "schedule"
+    ]
+  },
+  {
+    "id": "prep:marin-catholic-athletics:marin-catholic-athletic-calendar:https-www-marincatholic-org-athletics-athletic-calendar",
+    "title": "Marin Catholic athletic calendar",
+    "link": "https://www.marincatholic.org/athletics/athletic-calendar",
+    "pubDate": "2026-03-25T13:06:10.000Z",
+    "timestamp": 1774443970000,
+    "description": "Official athletics or team hub for a Marin-area school or league program.",
+    "source": "Marin Catholic Athletics",
+    "category": "prep",
+    "verification": "official",
+    "town": "Kentfield",
+    "townSlug": "kentfield",
+    "lat": 37.9506,
+    "lon": -122.5578,
+    "locationConfidence": "exact",
+    "locationEvidence": "Marin Catholic Athletics",
+    "topics": [
+      "prep-sports",
+      "schedule"
+    ]
+  },
+  {
+    "id": "endurance:dipsea-race:dipsea-race-hub-and-season-updates:https-www-dipsea-org",
+    "title": "Dipsea race hub and season updates",
+    "link": "https://www.dipsea.org/",
+    "pubDate": "2026-03-25T13:06:09.000Z",
+    "timestamp": 1774443969000,
+    "description": "Official Dipsea race site for race information, entry details, and latest news.",
+    "source": "Dipsea Race",
+    "category": "endurance",
+    "verification": "official",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.906,
+    "lon": -122.5491,
+    "locationConfidence": "exact",
+    "locationEvidence": "Dipsea Race",
+    "topics": [
+      "running",
+      "trail-race"
+    ]
+  },
+  {
+    "id": "shows:marin-county-free-library:marin-county-free-library-events:https-marinlibrary-bibliocommons-com-v2-events",
+    "title": "Marin County Free Library events",
+    "link": "https://marinlibrary.bibliocommons.com/v2/events",
+    "pubDate": "2026-03-25T13:06:05.000Z",
+    "timestamp": 1774443965000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Marin County Free Library",
+    "category": "shows",
+    "verification": "community",
+    "lat": 37.9991,
+    "lon": -122.5234,
+    "locationConfidence": "exact",
+    "locationEvidence": "Marin County Free Library",
+    "topics": [
+      "community-events",
+      "library"
+    ]
+  },
+  {
+    "id": "shows:sausalito-seahorse:sausalito-seahorse-calendar:https-www-sausalitoseahorse-com-calendar",
+    "title": "Sausalito Seahorse calendar",
+    "link": "https://www.sausalitoseahorse.com/calendar/",
+    "pubDate": "2026-03-25T13:06:03.000Z",
+    "timestamp": 1774443963000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Sausalito Seahorse",
+    "category": "shows",
+    "verification": "community",
+    "town": "Sausalito",
+    "townSlug": "sausalito",
+    "lat": 37.8584,
+    "lon": -122.4853,
+    "locationConfidence": "exact",
+    "locationEvidence": "Sausalito Seahorse",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:marin-symphony:marin-symphony-tickets-and-events:https-marinsymphony-org-tickets-events",
+    "title": "Marin Symphony tickets and events",
+    "link": "https://marinsymphony.org/tickets-events/",
+    "pubDate": "2026-03-25T13:06:03.000Z",
+    "timestamp": 1774443963000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Marin Symphony",
+    "category": "shows",
+    "verification": "community",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9715,
+    "lon": -122.52,
+    "locationConfidence": "exact",
+    "locationEvidence": "Marin Symphony",
+    "topics": [
+      "music",
+      "classical"
+    ]
+  },
+  {
+    "id": "shows:mill-valley-library:mill-valley-library-calendar:https-millvalleylibrary-gov-calendar-aspx",
+    "title": "Mill Valley Library calendar",
+    "link": "https://millvalleylibrary.gov/calendar.aspx",
+    "pubDate": "2026-03-25T13:06:03.000Z",
+    "timestamp": 1774443963000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Mill Valley Library",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9058,
+    "lon": -122.5478,
+    "locationConfidence": "exact",
+    "locationEvidence": "Mill Valley Library",
+    "topics": [
+      "community-events",
+      "library"
+    ]
+  },
+  {
+    "id": "shows:kwmr:kwmr-events-and-tickets-hub:https-kwmr-org-events",
+    "title": "KWMR events and tickets hub",
+    "link": "https://kwmr.org/events",
+    "pubDate": "2026-03-25T13:06:02.000Z",
+    "timestamp": 1774443962000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "KWMR",
+    "category": "shows",
+    "verification": "community",
+    "town": "Point Reyes Station",
+    "townSlug": "point-reyes",
+    "lat": 38.0699,
+    "lon": -122.8097,
+    "locationConfidence": "exact",
+    "locationEvidence": "KWMR",
+    "topics": [
+      "music",
+      "community-events",
+      "west-marin"
+    ]
+  },
+  {
+    "id": "shows:smiley-s-saloon:smiley-s-saloon-shows-and-supper-club-hub:https-smileyssaloon-com",
+    "title": "Smiley's Saloon shows and supper club hub",
+    "link": "https://smileyssaloon.com/",
+    "pubDate": "2026-03-25T13:06:00.000Z",
+    "timestamp": 1774443960000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Smiley's Saloon",
+    "category": "shows",
+    "verification": "community",
+    "town": "Bolinas",
+    "townSlug": "bolinas",
+    "lat": 37.9096,
+    "lon": -122.6864,
+    "locationConfidence": "exact",
+    "locationEvidence": "Smiley's Saloon",
+    "topics": [
+      "music",
+      "west-marin"
+    ]
+  },
+  {
+    "id": "shows:peri-s-tavern:peri-s-tavern-music-calendar:https-peristavern-com-music-calendar",
+    "title": "Peri's Tavern music calendar",
+    "link": "https://peristavern.com/music-calendar/",
+    "pubDate": "2026-03-25T13:05:59.000Z",
+    "timestamp": 1774443959000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Peri's Tavern",
+    "category": "shows",
+    "verification": "community",
+    "town": "Fairfax",
+    "townSlug": "fairfax",
+    "lat": 37.9871,
+    "lon": -122.5889,
+    "locationConfidence": "exact",
+    "locationEvidence": "Peri's Tavern",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:the-junction:the-junction-music-calendar:https-www-thejunc-com-music-calendar",
+    "title": "The Junction music calendar",
+    "link": "https://www.thejunc.com/music-calendar",
+    "pubDate": "2026-03-25T13:05:59.000Z",
+    "timestamp": 1774443959000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "The Junction",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.906,
+    "lon": -122.5458,
+    "locationConfidence": "exact",
+    "locationEvidence": "The Junction",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:san-rafael-elks:san-rafael-elks-lodge-calendar:https-www-elks1108-org-calendar",
+    "title": "San Rafael Elks Lodge calendar",
+    "link": "https://www.elks1108.org/calendar",
+    "pubDate": "2026-03-25T08:36:21.000Z",
+    "timestamp": 1774427781000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "San Rafael Elks",
+    "category": "shows",
+    "verification": "community",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9735,
+    "lon": -122.5241,
+    "locationConfidence": "exact",
+    "locationEvidence": "San Rafael Elks",
+    "topics": [
+      "community-events",
+      "fraternal"
+    ]
+  },
+  {
     "id": "shows:mac-s-at-19-broadway:wednesday-hump-day-happy-hour-at-mac-s:https-www-eventbrite-com-e-wednesday-hump-day-happy-hour-at-macs-tickets-1982623056934",
     "title": "Wednesday Hump Day Happy Hour at Mac’s",
     "link": "https://www.eventbrite.com/e/wednesday-hump-day-happy-hour-at-macs-tickets-1982623056934",
@@ -674,6 +1290,43 @@
     "topics": [
       "music",
       "shows"
+    ]
+  },
+  {
+    "id": "farm:agricultural-institute-of-marin:point-reyes-farmers-market-every-saturday-9am-2pm-may-2-october-10-2026:https-www-agriculturalinstitute-org-point-reyes",
+    "title": "Point Reyes farmers market · Every Saturday, 9am–2pm, May 2 – October 10, 2026",
+    "link": "https://www.agriculturalinstitute.org/point-reyes",
+    "pubDate": "2026-03-25T02:35:59.000Z",
+    "timestamp": 1774406159000,
+    "description": "Every Saturday · 9am–2pm · May 2 – October 10, 2026 at Toby’s Feed Barn",
+    "source": "Agricultural Institute of Marin",
+    "category": "farm",
+    "verification": "official",
+    "town": "Point Reyes Station",
+    "townSlug": "point-reyes",
+    "lat": 38.0702,
+    "lon": -122.8105,
+    "locationConfidence": "exact",
+    "locationEvidence": "Agricultural Institute of Marin",
+    "topics": [
+      "farmers-market",
+      "produce"
+    ]
+  },
+  {
+    "id": "farm:marin-magazine:the-best-community-events-in-marin-county:https-marinmagazine-com-explore-best-of-the-county-the-best-community-events-in-marin-county-2",
+    "title": "The Best Community Events in Marin County",
+    "link": "https://marinmagazine.com/explore/best-of-the-county/the-best-community-events-in-marin-county-2/",
+    "pubDate": "2026-03-25T00:42:58.000Z",
+    "timestamp": 1774399378000,
+    "description": "Our guide to where to find Marin’s best community event. The post The Best Community Events in Marin County appeared first on Marin Magazine .",
+    "content": "Community is central to many of Marin's cities and towns, and every year the county holds diverse events to salute its people, culture and art. No matter what tickles your fancy or what you like to do on your free weekends, Marin has something special to offer you. The 2025 readers’ choice Best of the County winner is the Marin County Fair (pictured above). For the rest of the Marin Magazine ‘s Best of Marin County Community Event picks see below. Our 2025 Arts & Entertainment category sponsor is MarinArts . View the rest of the Arts & Entertainment category here . Southern Mill Valley – Sausalito Central Fairfax – San Anselmo – San Rafael Northern Novato Southern Marin Mill Valley Fall Arts Festival Mill Valley Photo courtesy of Barry Toranto Once a year, the arts community in Mill Valley gathers amongst the redwoods for a vibrant celebration of creativity. Explore and purchase unique works from over 135 artists, with everything from fine art to handcrafted goods for sale. Plus, enjoy live music, a children’s grove and more. Cascade Way , Mill Valley Sausalito Lighted Boat Parade & Fireworks Sausalito The Sausalito Lighted Boat Parade. Photo by Kimber Communications. The Sausalito Lighted Boat Parade & Fireworks is an unforgettable part of Sausalito’s annual Winterfest. The fleet of boats decked out in shimmering lights floating along the waterfront at nighttime truly has to be seen to be believed. Sausalito Waterfront, Gabrielson Park , Sausalito Central Marin Fairfax Festival Fairfax Fairfax is known for its nonconformist, fun and funky character, making it a draw for any foodie, cycling enthusiast or anyone who wants an escape from the city. Nothing better exemplifies this culture like the Fairfax Festival, a bright flare of food, arts and music. Highlights include the Saturday parade and the kid-zone on the ball field. 66-88 Bolinas Rd , Fairfax Marin County Fair San Rafael Photo courtesy of Marin County Fair Another Readers’ Choice recipient to keep their streak going, they first appeared on the scene in 1925 and embody everything that a nostalgic summer should — pie contests, pig races and live music. Whether it’s your 50th fair experience or your first, you’ll get all the fair feels here. 10 Ave of the Flags , San Rafael, 415.499.6400 San Anselmo Live on the Avenue San Anselmo Photo courtesy of San Anselmo Live on the Avenue Looking for live music? A family-friendly atmosphere? Or perhaps a vibrant community gathering? Live on the Avenue transforms downtown San Anselmo into a bustling pedestrian promenade every Friday and Saturday evening from June through September. With two stages, (Creek Park Amphitheater and Town Hall Plaza) hosting a variety of performances, from blues to indie rock, there’s something for everyone. The event also features rotating activities like movie nights, art exhibitions, and a Kids Zone, making it a perfect outing for all ages. San Anselmo Ave , San Anselmo, 415.258.4640 Northern Marin Novato Art, Wine and Music Festival Novato Photo courtesy of Marin CVB As the name promises, this summer festival has got art, it’s got wine and it’s got music. What more could a person want? Well, one could also want free admission, but this festival has that too! The variety of sponsors, vendors and performers creates a melange of experiences to try out. Grant Ave , Novato, 415.897.1164 Arts & Entertainment Sponsor MarinArts MarinArts is a nonprofit organization that has been proudly promoting the arts and cultural events in Marin County for over ten years. They provide a FREE platform for arts organizations, artists, and venues to share their events through our online calendar. Fun Fact: Their website is accessible in 11 languages — including Spanish, French, and Vietnamese — helping you connect with a wide and diverse audience. MarinArts | San Rafael, CA | 415.578.3856 | marinarts.org Are you a BOC business but want to change your photo, or did we miss including it? Submit your new photo here. The post The Best Community Events in Marin County appeared first on Marin Magazine .",
+    "source": "Marin Magazine",
+    "category": "farm",
+    "verification": "community",
+    "topics": [
+      "farmers-market",
+      "food-drink"
     ]
   },
   {
@@ -700,462 +1353,297 @@
     ]
   },
   {
-    "id": "shows:osher-marin-jcc:israeli-folk-dance:https-www-marinjcc-org-event-israeli-folk-dance-jan-feb-2026-03-24",
-    "title": "Israeli Folk Dance!",
-    "link": "https://www.marinjcc.org/event/israeli-folk-dance-jan-feb/2026-03-24/",
-    "pubDate": "2026-03-24T20:00:00.000Z",
-    "timestamp": 1774382400000,
-    "description": "January 6-February 10 Tuesdays from 1:00-2:45 PM Dancing is great for the mind, body, and soul, and it’s also fun! We’ll be dancing to a wonderful assortment of Israeli and world music. The first hour is tailored to beg…",
-    "content": "Osher Marin JCC · Taube Center for Jewish Peoplehood · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
-    "source": "Osher Marin JCC",
-    "category": "shows",
-    "verification": "community",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9557,
-    "lon": -122.5376,
-    "locationConfidence": "exact",
-    "locationEvidence": "Osher Marin JCC",
-    "topics": [
-      "community-events",
-      "arts"
-    ]
-  },
-  {
-    "id": "shows:dance-palace:pilates-with-lorraine-fisher-smith:https-dancepalace-org-event-pilates-with-lorraine-fisher-smith-12-2026-03-24",
-    "title": "Pilates with Lorraine Fisher-Smith*",
-    "link": "https://dancepalace.org/event/pilates-with-lorraine-fisher-smith-12/2026-03-24/",
-    "pubDate": "2026-03-24T16:00:00.000Z",
-    "timestamp": 1774368000000,
-    "description": "Pilates with Lorraine Fisher-Smith* – In Person & Online via Zoom! West Marin personal trainer, yoga and Pilates instructor Lorraine Fisher-Smith guides a morning Pilates class. Pilates builds a strong core to promote g…",
-    "content": "Main Hall · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
-    "source": "Dance Palace",
-    "category": "shows",
-    "verification": "community",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0699,
-    "lon": -122.8089,
-    "locationConfidence": "exact",
-    "locationEvidence": "Dance Palace",
-    "topics": [
-      "music",
-      "community-events",
-      "west-marin"
-    ]
-  },
-  {
-    "id": "outdoors:california-department-of-fish-wildlife:crab-trap-and-season-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-crab",
-    "title": "Crab trap and season regulations",
-    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Crab",
-    "pubDate": "2026-03-24T14:34:48.000Z",
-    "timestamp": 1774362888000,
-    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
-    "source": "California Department of Fish & Wildlife",
-    "category": "outdoors",
-    "verification": "official",
-    "topics": [
-      "fishing",
-      "regulations"
-    ]
-  },
-  {
-    "id": "outdoors:california-department-of-fish-wildlife:san-francisco-ocean-fishing-map-and-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-fishing-map-sf",
-    "title": "San Francisco ocean fishing map and regulations",
-    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Fishing-Map/SF",
-    "pubDate": "2026-03-24T14:34:47.000Z",
-    "timestamp": 1774362887000,
-    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
-    "source": "California Department of Fish & Wildlife",
-    "category": "outdoors",
-    "verification": "official",
-    "topics": [
-      "fishing",
-      "regulations"
-    ]
-  },
-  {
-    "id": "outdoors:california-department-of-fish-wildlife:ocean-salmon-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-salmon",
-    "title": "Ocean salmon sport fishing regulations",
-    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Salmon",
-    "pubDate": "2026-03-24T14:34:47.000Z",
-    "timestamp": 1774362887000,
-    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
-    "source": "California Department of Fish & Wildlife",
-    "category": "outdoors",
-    "verification": "official",
-    "topics": [
-      "fishing",
-      "regulations"
-    ]
-  },
-  {
-    "id": "farm:point-reyes-farmstead-cheese:point-reyes-farmstead-cheese-journal:https-www-pointreyescheese-com-blogs-news",
-    "title": "Point Reyes Farmstead Cheese journal",
-    "link": "https://www.pointreyescheese.com/blogs/news",
-    "pubDate": "2026-03-24T14:34:46.000Z",
-    "timestamp": 1774362886000,
-    "description": "Official Point Reyes Farmstead Cheese news and seasonal product updates.",
-    "source": "Point Reyes Farmstead Cheese",
+    "id": "farm:agricultural-institute-of-marin:rollin-root-mobile-market-schedule:https-www-agriculturalinstitute-org-rollin-root",
+    "title": "Rollin' Root mobile market schedule",
+    "link": "https://www.agriculturalinstitute.org/rollin-root",
+    "pubDate": "2026-03-24T22:18:55.000Z",
+    "timestamp": 1774390735000,
+    "description": "Official market schedule from the Agricultural Institute of Marin.",
+    "source": "Agricultural Institute of Marin",
     "category": "farm",
     "verification": "official",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0764,
-    "lon": -122.8012,
-    "locationConfidence": "exact",
-    "locationEvidence": "Point Reyes Farmstead Cheese",
     "topics": [
-      "cheese",
-      "farm-market"
+      "farmers-market",
+      "produce"
     ]
   },
   {
-    "id": "outdoors:california-department-of-fish-wildlife:ocean-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations",
-    "title": "Ocean sport fishing regulations",
-    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations",
-    "pubDate": "2026-03-24T14:34:46.000Z",
-    "timestamp": 1774362886000,
-    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
-    "source": "California Department of Fish & Wildlife",
-    "category": "outdoors",
+    "id": "farm:agricultural-institute-of-marin:sunday-marin-farmers-market-every-sunday-8am-1pm-year-round:https-www-agriculturalinstitute-org-sunday-marin",
+    "title": "Sunday Marin farmers market · Every Sunday, 8am - 1pm, Year-round",
+    "link": "https://www.agriculturalinstitute.org/sunday-marin",
+    "pubDate": "2026-03-24T22:17:10.000Z",
+    "timestamp": 1774390630000,
+    "description": "Every Sunday · 8am - 1pm · Year-round at Marin County Civic Center",
+    "source": "Agricultural Institute of Marin",
+    "category": "farm",
     "verification": "official",
-    "topics": [
-      "fishing",
-      "regulations"
-    ]
-  },
-  {
-    "id": "prep:marin-highlanders-rugby:marin-highlanders-rugby-club-hub:https-www-marinhighlandersrugby-org",
-    "title": "Marin Highlanders Rugby club hub",
-    "link": "https://www.marinhighlandersrugby.org/",
-    "pubDate": "2026-03-24T14:34:43.000Z",
-    "timestamp": 1774362883000,
-    "description": "Local sports hub for schedules, fixtures, club updates, or season information.",
-    "source": "Marin Highlanders Rugby",
-    "category": "prep",
-    "verification": "community",
     "town": "San Rafael",
     "townSlug": "san-rafael",
-    "lat": 37.9756,
-    "lon": -122.5123,
+    "lat": 37.9991,
+    "lon": -122.5234,
     "locationConfidence": "exact",
-    "locationEvidence": "Marin Highlanders Rugby",
+    "locationEvidence": "Agricultural Institute of Marin",
     "topics": [
-      "rugby",
+      "farmers-market",
+      "produce"
+    ]
+  },
+  {
+    "id": "farm:agricultural-institute-of-marin:san-rafael-summer-market-schedule:https-www-agriculturalinstitute-org-san-rafael-summer-1",
+    "title": "San Rafael Summer market schedule",
+    "link": "https://www.agriculturalinstitute.org/san-rafael-summer-1",
+    "pubDate": "2026-03-24T22:06:42.000Z",
+    "timestamp": 1774390002000,
+    "description": "Official market schedule from the Agricultural Institute of Marin.",
+    "source": "Agricultural Institute of Marin",
+    "category": "farm",
+    "verification": "official",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9735,
+    "lon": -122.5311,
+    "locationConfidence": "exact",
+    "locationEvidence": "Agricultural Institute of Marin",
+    "topics": [
+      "farmers-market",
+      "produce"
+    ]
+  },
+  {
+    "id": "farm:agricultural-institute-of-marin:thursday-marin-farmers-market-every-thursday-8am-1pm-year-round:https-www-agriculturalinstitute-org-thursday-marin",
+    "title": "Thursday Marin farmers market · Every Thursday, 8am - 1pm, Year-round",
+    "link": "https://www.agriculturalinstitute.org/thursday-marin",
+    "pubDate": "2026-03-24T22:00:42.000Z",
+    "timestamp": 1774389642000,
+    "description": "Every Thursday · 8am - 1pm · Year-round at Marin County Civic Center",
+    "source": "Agricultural Institute of Marin",
+    "category": "farm",
+    "verification": "official",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9991,
+    "lon": -122.5234,
+    "locationConfidence": "exact",
+    "locationEvidence": "Agricultural Institute of Marin",
+    "topics": [
+      "farmers-market",
+      "produce"
+    ]
+  },
+  {
+    "id": "prep:redwood-bark:sports-spotlight-kitty-white-rewrites-the-record-books:https-redwoodbark-org-109053-sports-sports-spotlight-kitty-white-rewrites-the-record-books",
+    "title": "Sports Spotlight: Kitty White rewrites the record books",
+    "link": "https://redwoodbark.org/109053/sports/sports-spotlight-kitty-white-rewrites-the-record-books/",
+    "pubDate": "2026-03-24T21:48:53.000Z",
+    "timestamp": 1774388933000,
+    "description": "For varsity girls basketball senior Kitty White, confidence on the court wasn’t always guaranteed, but it is something she has grown into over the course of her four-year career at Redwood. Basketball wasn’t always her…",
+    "content": "F or varsity girls basketball senior Kitty White, confidence on the court wasn’t always guaranteed, but it is something she has grown into over the course of her four-year career at Redwood. Basketball wasn’t always her focus; growing up in Australia, she played rugby before moving to the United States in elementary school. After arriving, she decided to try a few new sports and eventually started playing basketball in fourth grade. “I had only ever played rugby in Australia,” White said. “So I just decided to try out some new sports like soccer and basketball, and then I really enjoyed the game.” That rugby background still shows up in the way she plays today. Before discovering her love for basketball, White was a key member on the Marin Highlanders Rugby team. (photo courtesy of Tessa White) “I definitely wasn’t afraid of being physical,” White said. “In rugby you’re going to get tackled and you’re trying to run through people. I think you can kind of see that in my basketball.” Over the years, White’s role on the court has shifted. As a freshman starter, she had the skill but not always the confidence to take over offensively. “I was a very timid player,” White said. “I could score, but I wasn’t always looking for myself to score. I was more focused on setting up my teammates.” Redwood varsity girls basketball head coach Zach Borello highlighted the impact White has had since the start of her high school career. “To start as a freshman is never easy, especially in a big role,” Borello said. “But she handled it flawlessly and continued to grow every year. Her scoring, defen se, rebounding and maturity just kept getting better season after season.” Now, as a senior captain, that mindset has evolved. While White still prioritizes teamwork, she has also grown comfortable stepping up when her team needs it most. “Especially this season, I know my ability to score against anyone,” White said. “If we’re down and we need buckets, I can go get them.” One of White’s biggest strengths is her ability to control the flow of the game and ease the nerves of her teammates. “In really messy games, I think I’m able to calm my teammates down and make sure we’re playing our game. When we get sped up, mistakes happen,” White said. That leadership is something Borello says has defined White’s presence on the team. “She’s a once-in-a-generation player,” Borello said. “She’s the school’s all-time leading scorer and a four-year varsity starter. She uplifts everyone around her and always thinks of others before herself. She’s just a great leader and teammate.” That leadership became especially clear during one of the most memorable moments of her career: Redwood’s North Coast Sections (NCS) semifinal game against Acalanes earlier this season. After losing to the same team earlier in the year, the rematch came down to the wire. “It went to overtime, and I got the game-winner with three seconds left,” White said. “It was definitely a really special game for me.” Borello recalls that game-winning shot as a moment that perfectly captured White’s competitiveness. “We drew up a play for her with eight seconds left, but the play kind of broke down,” Borello said. “She went through three defenders and finished with her left hand for the game-winner. It was a special moment.” White’s mom, Tessa White, reflects on the shot as just one example of the determination she has seen throughout Kitty’s basketball journey. Girls Varsity team holds up their banner celebrating their most successful season in Redwood history. (photo by Joel Kurtzman) “She just wants the team to win,” Tessa White said. “She doesn’t care who scores the points, but when it’s a clutch moment she’ll take it on her back.” That “team-first” mentality has defined White’s career. According to her mother, it is part of what made another milestone especially meaningful this season: becoming Redwood’s all-time leading scorer. “She got a beautiful note from the previous record holder,” Tessa White said. “She said she was proud of Kitty because she’s a team player who scores for the team, not for herself.” Borello expanded on this, mentioning that this mindset has influenced the entire program. “Her leadership and energy set the tone for the team,” Borello said. “When she came with great focus and energy, everyone else followed.” This success, however, did not come without sacrifice. Basketball became a year-round commitment for the White family, with travel, training and club seasons filling much of the calendar. “School holidays were eaten up by travel,” Tessa White said. “But she was lucky because she was doing it with teammates and doing what she loved.” White’s work ethic also stood out to her coaches and teammates. “She was in the gym every morning at 7 a.m. getting shots up,” Borello said. “After practice she would often stay longer to keep shooting. When she was in the gym, others wanted to be there too.” Despite the time commitment, White said her love for the game and her teammates has always been the biggest motivation. “It’s a team sport,” White said. “Even if you’re not feeling great about how you’re playing, you want to be better for your teammates.” Next year, White will continue her basketball career at Cal State Monterey Bay, a decision largely driven by the connection she built with the coaching staff. “The head coach was one of the first college coaches who really showed genuine interest in me,” White said. “When I visited and practiced with the team, I really enjoyed the players and the environment.” That relationship helped White open another opportunity: playing internationally for Great Britain’s youth national team. But for White, the lessons from basketball extend beyond the court. “Hard work pays off,” Tessa White said. “You might not always see it right away, but if you keep showing up and believing, things eventually work out.” For Redwood basketball, those years of hard work have already left their mark. With a record-breaking career and unforgettable moments along the way, White’s legacy on the court is firmly set.",
+    "source": "Redwood Bark",
+    "category": "prep",
+    "verification": "community",
+    "town": "Larkspur",
+    "townSlug": "larkspur",
+    "lat": 37.9341,
+    "lon": -122.5353,
+    "locationConfidence": "exact",
+    "locationEvidence": "Redwood Bark",
+    "topics": [
+      "prep-sports"
+    ]
+  },
+  {
+    "id": "prep:redwood-bark:march-madness-how-to-pick-a-bracket-and-upsets-to-look-out-for:https-redwoodbark-org-109049-sports-march-madness-how-to-pick-a-bracket-and-upsets-to-look-out-for",
+    "title": "March Madness: How to pick a bracket and upsets to look out for",
+    "link": "https://redwoodbark.org/109049/sports/march-madness-how-to-pick-a-bracket-and-upsets-to-look-out-for/",
+    "pubDate": "2026-03-24T21:40:12.000Z",
+    "timestamp": 1774388412000,
+    "description": "Every March, college basketball fans have the opportunity to fill out a free bracket with dreams of taking home a $1 billion prize awarded to the first perfect bracket ever. The odds of this happening are 1 in 9.22 quin…",
+    "content": "Every March, college basketball fans have the opportunity to fill out a free bracket with dreams of taking home a $1 billion prize awarded to the first perfect bracket ever. The odds of this happening are 1 in 9.22 quintillion. To put that into perspective, you would have a better chance of picking out one single grain of sand on Earth than filling out a perfect bracket, yet millions of brackets are filled out every year only to fail. Red-hot Virginia Cavaliers are a team to look out for when picking this year's bracket. (Photo courtesy of Virginia Sports) Whether you filled out a bracket in your family pool or paid a sum to compete in an expert tournament, it’s important that you didn’t pick teams based on the best logo or funniest mascot. Below, we share our top picks for a winning bracket. For our bracket, we used websites like March Madness Live or the ESPN Tournament Challenge to review a set of metrics for each team before deciding on a matchup. Experts suggest focusing on offensive efficiency when determining first-round success, so we made sure to look at points per game, 3-pointers per game and free throws per game. However, with the transfer portal, name, image and likeness reshaping mid-major rosters, it has become more difficult for No. 13-16 seeds to win games and make deep runs. Bark stuck with the higher seeds early; it is very unlikely that any No. 1 or No. 2 seed loses in the first round, and at most one No. 3 seed will lose. Moving beyond the top seed matchups, when searching for upsets from No. 12-14 seeds, we did not pick teams with a high rank of kill shots against and a low rank of kill shots for. (Kill shots refer to the number of times teams score 10 points without the opposing team scoring a single point. It suggests teams that are streaky and play with a high tempo). Teams like Iowa, Iowa State and Kansas allow a high number of kill shots against them. Another metric that highlights potential vulnerability in the early rounds is a team's tempo ranking. A slower tempo usually means fewer possessions per game and fewer shot attempts. Houston and Virginia both play at a slow pace. Historically, No. 12 seeds beat No. 5 seeds 37 percent of the time, so it's important to have one or two No. 12 seeds advancing to the round of thirty-two. No.13 seeds beat No. 4 seeds 21 percent of the time, so pick at most one No. 13 seed to advance. Round of 64 upsets: East Region: No. 11. South Florida over No. 6. Louisville The University of South Florida (USF) is 14-1 in their last 15 games and are the current American Athletic Conference champions. Louisville, on the other hand, has lost four of its last eight, including losses to Clemson, Miami, Southern Methodist University and the University of North Carolina. Look for USF's strong defense to slow Louisville's fast pace. South Region: No. 12. McNeese over No. 5. Vanderbilt The No. 5 vs. No. 12 matchup in every region could go either way. Vanderbilt has struggled against lackadaisical Southeastern Conference (SEC) play, and McNeese ranks in the top 10 nationally in KenPom offensive efficiency among mid-majors. Look for a high-scoring game with strong performances from McNeese’s guards. West Region: No. 11. Texas/North Carolina State over No. 6. Brigham Young University (BYU) While BYU has shown an ability to play with the best of the BIG 12, in losses, their offense is stagnant, and they tend to take early and mediocre shots due to their inexperience. We predict Texas will take care of the first four matchups and have a field day on the boards and be able to force a grind-it-out game with BYU. No. 10. Missouri over No. 7. Miami (FL) With Miami (FL) coming off a trouncing 84-62 loss to Virginia, and holding only two ranked wins this year, the odds do not appear to be in their favor. To make matters worse for the Miami Canes, this first-round matchup is being played in St. Louis, just a short distance from Missouri’s campus. With many Tigers’ fans expected to be in attendance, the environment is likely to resemble that of a home game and will sway the result in Missouri’s favor. Midwest Region: No. 9. Saint Louis over No. 8. Georgia The Saint Louis Billikens enter the tournament with a roster built for March success, mixing experienced transfers from power conference programs with impressive size. Several rotation players for the Billikens have competed at the highest level before, making the team one of the deepest in the nation. Additionally, most of these rotational players stand at least 6-foot-5, which has led the team to nationally ranked rebounding success throughout the season. If Saint Louis is able to control the boards and use its experience, the 9 seed Billikens could grind out an upset win to kick off the tournament. No. 10. Santa Clara over No. 7. Kentucky After beating Saint Mary’s to play in the West Coast Conference championship, Santa Clara has been riding high on their quick offensive attacks, with four lethal 3-point shooters on the court at all times. We don’t believe in Kentucky's resume and inexperience, and the 3-point volatility from Santa Clara plays in March Madness. Round of 32 upsets: East Region: No. 7. University of California, Los Angeles (UCLA) over No. 2. University of Connecticut If leading senior scorer Tyler Bilodeau is labeled healthy for this week, UCLA is a team to watch this March. The team holds top 25 wins against Purdue, Nebraska, Michigan State and Iowa. While they did struggle on the road this season, guard Donovan Dent is playing at an elite level, with recent assist-to-turnover numbers through the roof. The Bruins are peaking at the right time, and their recent consistent play gives them the chance to beat anyone. Battle-tested Wisconsin Badgers have the roster and experience to make a push in this year's tournament. (Photo courtesy of USA Today) West Region: No. 5. Wisconsin over No. 4. Arkansas Wisconsin has undoubtedly had one of the toughest schedules in the country this year, making them battle-tested ahead of the dance. The Badgers have picked up some impressive wins this year over No. 3 Michigan, No. 9 Illinois (2x), No. 10 Michigan St. and No. 15 Purdue, showing they can compete with the best. Arkansas being the SEC champions means much less this year as the conference holds one top 10 team (Florida), who just lost by 17 points to SEC runner-up Vanderbilt. Wisconsin's quality experience in high-level matchups should be enough to give them an edge in a highly competitive second-round matchup. Sweet 16 upsets: No. 7. UCLA over No. 3. Michigan State UCLA recently proved they can beat Michigan State, knocking off the Spartans 88-84 in the Big Ten Tournament quarterfinals. UCLA guard Donovan Dent led the charge with 23 points and 12 assists while the Bruins shot 55 percent from the field, knocking down 13 3-pointers. Michigan State attempted a late comeback, outscoring the Bruins 51-44 in the second half, but due to their poor first-half performance, the Spartans fell just short. If UCLA’s guards continue to control the game and create scoring opportunities as they did in that matchup, then there is no reason why the Bruins aren’t set up for yet another upset. South: No. 4. Nebraska over No. 1. Florida Our first No. 1 seed to vacate, Florida, was recently smacked by Vanderbilt (91-74) in the SEC championship and has lost games to Auburn, Missouri, UConn, Texas Christian University and Arizona. Nebraska, on the other hand, has faced the gauntlet in the BIG 10 and is getting healthy at the right time. Look for a low-scoring mismatch and the Cornhuskers to slow down the pace and limit Florida's kill shots. Midwest: No. 3. Virginia over No. 2. Iowa State The 29-5 Virginia Cavaliers rank near the top 25 nationally in both offensive and defensive efficiency, often doing a good job at limiting opponents’ three-point success, forcing the Duke Blue Devils to shoot 32 percent from three in their last matchup. The Cavaliers also rely on depth with nine different players averaging at least 16 minutes per game, helping them stay fresh towards the end of tight matchups. If Virginia can continue their strong defense, the high-scoring Cyclones’ offense will be forced into tougher shots and poor possessions that will see the Cavaliers punch their ticket to the Elite Eight. Our Final Four: Duke vs Illinois Purdue vs Michigan Our Championship and Winner: Duke over Michigan 74-63",
+    "source": "Redwood Bark",
+    "category": "prep",
+    "verification": "community",
+    "town": "Larkspur",
+    "townSlug": "larkspur",
+    "lat": 37.9341,
+    "lon": -122.5353,
+    "locationConfidence": "exact",
+    "locationEvidence": "Redwood Bark",
+    "topics": [
+      "prep-sports"
+    ]
+  },
+  {
+    "id": "prep:marin-rowing-association:marin-rowing-association-calendar:https-www-marinrowing-org-calendar",
+    "title": "Marin Rowing Association calendar",
+    "link": "https://www.marinrowing.org/calendar",
+    "pubDate": "2026-03-24T19:30:46.000Z",
+    "timestamp": 1774380646000,
+    "description": "Local sports hub for schedules, fixtures, club updates, or season information.",
+    "source": "Marin Rowing Association",
+    "category": "prep",
+    "verification": "community",
+    "town": "Greenbrae",
+    "townSlug": "greenbrae",
+    "lat": 37.9435,
+    "lon": -122.5314,
+    "locationConfidence": "exact",
+    "locationEvidence": "Marin Rowing Association",
+    "topics": [
+      "rowing",
       "club-sports"
     ]
   },
   {
-    "id": "prep:archie-williams-mtb:archie-williams-mountain-bike-team-hub:https-www-awmtb-com",
-    "title": "Archie Williams mountain bike team hub",
-    "link": "https://www.awmtb.com/",
-    "pubDate": "2026-03-24T14:34:32.000Z",
-    "timestamp": 1774362872000,
-    "description": "Official athletics or team hub for a Marin-area school or league program.",
-    "source": "Archie Williams MTB",
-    "category": "prep",
-    "verification": "official",
-    "town": "San Anselmo",
-    "townSlug": "san-anselmo",
-    "lat": 37.9746,
-    "lon": -122.5648,
-    "locationConfidence": "exact",
-    "locationEvidence": "Archie Williams MTB",
-    "topics": [
-      "prep-sports",
-      "mountain-bike"
-    ]
-  },
-  {
-    "id": "prep:tamalpais-union-high-school-district:tuhsd-athletics-hub:https-www-tamdistrict-org-students-athletics",
-    "title": "TUHSD athletics hub",
-    "link": "https://www.tamdistrict.org/students/athletics",
-    "pubDate": "2026-03-24T14:34:31.000Z",
-    "timestamp": 1774362871000,
-    "description": "Official athletics or team hub for a Marin-area school or league program.",
-    "source": "Tamalpais Union High School District",
-    "category": "prep",
-    "verification": "official",
-    "lat": 37.9341,
-    "lon": -122.5353,
-    "locationConfidence": "exact",
-    "locationEvidence": "Tamalpais Union High School District",
-    "topics": [
-      "prep-sports",
-      "district"
-    ]
-  },
-  {
-    "id": "prep:san-rafael-athletics:san-rafael-high-athletics-hub:https-sanrafael-srcs-org-athletics",
-    "title": "San Rafael High athletics hub",
-    "link": "https://sanrafael.srcs.org/athletics",
-    "pubDate": "2026-03-24T14:34:29.000Z",
-    "timestamp": 1774362869000,
-    "description": "Official athletics or team hub for a Marin-area school or league program.",
-    "source": "San Rafael Athletics",
-    "category": "prep",
-    "verification": "official",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9752,
-    "lon": -122.5248,
-    "locationConfidence": "exact",
-    "locationEvidence": "San Rafael Athletics",
-    "topics": [
-      "prep-sports",
-      "schedule"
-    ]
-  },
-  {
-    "id": "prep:archie-williams-athletics:archie-williams-athletics-hub:https-archiewilliams-tamdistrict-org-athletics",
-    "title": "Archie Williams athletics hub",
-    "link": "https://archiewilliams.tamdistrict.org/athletics",
-    "pubDate": "2026-03-24T14:34:28.000Z",
-    "timestamp": 1774362868000,
-    "description": "Official athletics or team hub for a Marin-area school or league program.",
-    "source": "Archie Williams Athletics",
-    "category": "prep",
-    "verification": "official",
-    "town": "San Anselmo",
-    "townSlug": "san-anselmo",
-    "lat": 37.9746,
-    "lon": -122.5648,
-    "locationConfidence": "exact",
-    "locationEvidence": "Archie Williams Athletics",
-    "topics": [
-      "prep-sports",
-      "schedule"
-    ]
-  },
-  {
-    "id": "prep:marin-catholic-athletics:marin-catholic-athletic-calendar:https-www-marincatholic-org-athletics-athletic-calendar",
-    "title": "Marin Catholic athletic calendar",
-    "link": "https://www.marincatholic.org/athletics/athletic-calendar",
-    "pubDate": "2026-03-24T14:34:26.000Z",
-    "timestamp": 1774362866000,
-    "description": "Official athletics or team hub for a Marin-area school or league program.",
-    "source": "Marin Catholic Athletics",
-    "category": "prep",
-    "verification": "official",
-    "town": "Kentfield",
-    "townSlug": "kentfield",
-    "lat": 37.9506,
-    "lon": -122.5578,
-    "locationConfidence": "exact",
-    "locationEvidence": "Marin Catholic Athletics",
-    "topics": [
-      "prep-sports",
-      "schedule"
-    ]
-  },
-  {
-    "id": "endurance:dipsea-race:dipsea-race-hub-and-season-updates:https-www-dipsea-org",
-    "title": "Dipsea race hub and season updates",
-    "link": "https://www.dipsea.org/",
-    "pubDate": "2026-03-24T14:34:24.000Z",
-    "timestamp": 1774362864000,
-    "description": "Official Dipsea race site for race information, entry details, and latest news.",
-    "source": "Dipsea Race",
-    "category": "endurance",
-    "verification": "official",
+    "id": "shows:sweetwater-music-hall:the-high-green-chilly-winds:https-sweetwatermusichall-org-event-the-high-green-chilly-winds-sweetwater-music-hall-mill-valley-california",
+    "title": "The High Green Chilly Winds",
+    "link": "https://sweetwatermusichall.org/event/the-high-green-chilly-winds/sweetwater-music-hall/mill-valley-california/",
+    "pubDate": "2026-03-24T17:00:00.000Z",
+    "timestamp": 1774371600000,
+    "description": "The High Green Chilly Winds manage to channel that elusive Dead vibe uniquely, with wide-open guitar tones, effortless three-part vocal harmonies, choogling beats, and yes, plenty of tripped out, shredded solos. The loo…",
+    "content": "The High Green Chilly Winds manage to channel that elusive Dead vibe uniquely, with wide-open guitar tones, effortless three-part vocal harmonies, choogling beats, and yes, plenty of tripped out, shredded solos. The look, the sound, the atmosphere is uncanny. Far from being a historical re-enactment, this band's laissez faire flow infuses the band with a gentle spirit, warmth, and (dare we say it) authenticity. From their killer merch game to their eminently watchable YouTube channel, they're clearly having a real good time spreading the love. Strangely enough, in a world overflowing with wax museum nostalgia and Deadly sentimentalism, we need the Chilly Winds, now more than ever.",
+    "source": "Sweetwater Music Hall",
+    "category": "shows",
+    "verification": "community",
     "town": "Mill Valley",
     "townSlug": "mill-valley",
-    "lat": 37.906,
+    "lat": 37.9059,
     "lon": -122.5491,
     "locationConfidence": "exact",
-    "locationEvidence": "Dipsea Race",
-    "topics": [
-      "running",
-      "trail-race"
-    ]
-  },
-  {
-    "id": "shows:marin-county-free-library:marin-county-free-library-events:https-marinlibrary-bibliocommons-com-v2-events",
-    "title": "Marin County Free Library events",
-    "link": "https://marinlibrary.bibliocommons.com/v2/events",
-    "pubDate": "2026-03-24T14:34:20.000Z",
-    "timestamp": 1774362860000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Marin County Free Library",
-    "category": "shows",
-    "verification": "community",
-    "lat": 37.9991,
-    "lon": -122.5234,
-    "locationConfidence": "exact",
-    "locationEvidence": "Marin County Free Library",
-    "topics": [
-      "community-events",
-      "library"
-    ]
-  },
-  {
-    "id": "shows:sausalito-seahorse:sausalito-seahorse-calendar:https-www-sausalitoseahorse-com-calendar",
-    "title": "Sausalito Seahorse calendar",
-    "link": "https://www.sausalitoseahorse.com/calendar/",
-    "pubDate": "2026-03-24T14:34:19.000Z",
-    "timestamp": 1774362859000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Sausalito Seahorse",
-    "category": "shows",
-    "verification": "community",
-    "town": "Sausalito",
-    "townSlug": "sausalito",
-    "lat": 37.8584,
-    "lon": -122.4853,
-    "locationConfidence": "exact",
-    "locationEvidence": "Sausalito Seahorse",
+    "locationEvidence": "Sweetwater Music Hall",
     "topics": [
       "music",
       "shows"
     ]
   },
   {
-    "id": "shows:marin-symphony:marin-symphony-tickets-and-events:https-marinsymphony-org-tickets-events",
-    "title": "Marin Symphony tickets and events",
-    "link": "https://marinsymphony.org/tickets-events/",
-    "pubDate": "2026-03-24T14:34:19.000Z",
-    "timestamp": 1774362859000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Marin Symphony",
-    "category": "shows",
-    "verification": "community",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9715,
-    "lon": -122.52,
-    "locationConfidence": "exact",
-    "locationEvidence": "Marin Symphony",
-    "topics": [
-      "music",
-      "classical"
-    ]
-  },
-  {
-    "id": "shows:mill-valley-library:mill-valley-library-calendar:https-millvalleylibrary-gov-calendar-aspx",
-    "title": "Mill Valley Library calendar",
-    "link": "https://millvalleylibrary.gov/calendar.aspx",
-    "pubDate": "2026-03-24T14:34:19.000Z",
-    "timestamp": 1774362859000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Mill Valley Library",
+    "id": "shows:sweetwater-music-hall:moonalice-sunday-matinee:https-sweetwatermusichall-org-event-moonalice-sunday-matinee-2-sweetwater-music-hall-mill-valley-california",
+    "title": "Moonalice Sunday Matinee",
+    "link": "https://sweetwatermusichall.org/event/moonalice-sunday-matinee-2/sweetwater-music-hall/mill-valley-california/",
+    "pubDate": "2026-03-24T17:00:00.000Z",
+    "timestamp": 1774371600000,
+    "description": "Moonalice is an exuberant Bay Area ten-piece known for delivering a unique brand of psychedelic soul and rock-tinged Americana. With an unparalleled list of collaborations with some of the biggest names in music, the fa…",
+    "content": "Moonalice is an exuberant Bay Area ten-piece known for delivering a unique brand of psychedelic soul and rock-tinged Americana. With an unparalleled list of collaborations with some of the biggest names in music, the family tree of Moonalice has touchedevery corner of rock and roll history. Led by vocalist Lester Chambers, who co-founded pioneering '60s psychedelic soul group The Chambers Brothers; bassist Pete Sears, a founding member of Jefferson Starship who has played with everyone from Rod Stewart to Jimi Hendrix, and guitarist Roger McNamee, who was an advisor to Grateful Dead and U2 and fights against entrenched power in the tech industry - their incredible chemistry shines through in their live performances and the recent release of the Chambers Brothers classic, \"Time Has Come Today.\" Moonalice also features esteemed members Barry Sless (lead guitar and pedal steel), Jason Crosby (keyboards), Grammy winner John Molo (drums), along with the next generation of legends including Lester's son Dylan Chambers, and Erika, Rachel, and Chloe Tietjen of acclaimed Americana band the T Sisters. Moonalice has a renegade spirit and an ethos of love, peace, and happiness that permeates everything they do.",
+    "source": "Sweetwater Music Hall",
     "category": "shows",
     "verification": "community",
     "town": "Mill Valley",
     "townSlug": "mill-valley",
-    "lat": 37.9058,
-    "lon": -122.5478,
+    "lat": 37.9059,
+    "lon": -122.5491,
     "locationConfidence": "exact",
-    "locationEvidence": "Mill Valley Library",
-    "topics": [
-      "community-events",
-      "library"
-    ]
-  },
-  {
-    "id": "shows:kwmr:kwmr-events-and-tickets-hub:https-kwmr-org-events",
-    "title": "KWMR events and tickets hub",
-    "link": "https://kwmr.org/events",
-    "pubDate": "2026-03-24T14:34:15.000Z",
-    "timestamp": 1774362855000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "KWMR",
-    "category": "shows",
-    "verification": "community",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0699,
-    "lon": -122.8097,
-    "locationConfidence": "exact",
-    "locationEvidence": "KWMR",
-    "topics": [
-      "music",
-      "community-events",
-      "west-marin"
-    ]
-  },
-  {
-    "id": "shows:smiley-s-saloon:smiley-s-saloon-shows-and-supper-club-hub:https-smileyssaloon-com",
-    "title": "Smiley's Saloon shows and supper club hub",
-    "link": "https://smileyssaloon.com/",
-    "pubDate": "2026-03-24T14:34:12.000Z",
-    "timestamp": 1774362852000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Smiley's Saloon",
-    "category": "shows",
-    "verification": "community",
-    "town": "Bolinas",
-    "townSlug": "bolinas",
-    "lat": 37.9096,
-    "lon": -122.6864,
-    "locationConfidence": "exact",
-    "locationEvidence": "Smiley's Saloon",
-    "topics": [
-      "music",
-      "west-marin"
-    ]
-  },
-  {
-    "id": "shows:peri-s-tavern:peri-s-tavern-music-calendar:https-peristavern-com-music-calendar",
-    "title": "Peri's Tavern music calendar",
-    "link": "https://peristavern.com/music-calendar/",
-    "pubDate": "2026-03-24T14:34:11.000Z",
-    "timestamp": 1774362851000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Peri's Tavern",
-    "category": "shows",
-    "verification": "community",
-    "town": "Fairfax",
-    "townSlug": "fairfax",
-    "lat": 37.9871,
-    "lon": -122.5889,
-    "locationConfidence": "exact",
-    "locationEvidence": "Peri's Tavern",
+    "locationEvidence": "Sweetwater Music Hall",
     "topics": [
       "music",
       "shows"
     ]
   },
   {
-    "id": "shows:the-junction:the-junction-music-calendar:https-www-thejunc-com-music-calendar",
-    "title": "The Junction music calendar",
-    "link": "https://www.thejunc.com/music-calendar",
-    "pubDate": "2026-03-24T14:34:11.000Z",
-    "timestamp": 1774362851000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "The Junction",
+    "id": "shows:sweetwater-music-hall:black-uhuru:https-sweetwatermusichall-org-event-black-uhuru-sweetwater-music-hall-mill-valley-california",
+    "title": "Black Uhuru",
+    "link": "https://sweetwatermusichall.org/event/black-uhuru/sweetwater-music-hall/mill-valley-california/",
+    "pubDate": "2026-03-24T17:00:00.000Z",
+    "timestamp": 1774371600000,
+    "description": "For over 50 years Black Uhuru has remained one of the most popular recognized prolific reggae band from Jamaica. The living legends have earned several achievements in the music industry including winning the first ever…",
+    "content": "For over 50 years Black Uhuru has remained one of the most popular recognized prolific reggae band from Jamaica. The living legends have earned several achievements in the music industry including winning the first ever Grammy Award for reggae music. They're long success along with having the highest reggae record sales after Bob Marley & the most songs sampled by other artist over the years has allowed them to become Ambassadors of reggae.",
+    "source": "Sweetwater Music Hall",
     "category": "shows",
     "verification": "community",
     "town": "Mill Valley",
     "townSlug": "mill-valley",
-    "lat": 37.906,
-    "lon": -122.5458,
+    "lat": 37.9059,
+    "lon": -122.5491,
     "locationConfidence": "exact",
-    "locationEvidence": "The Junction",
+    "locationEvidence": "Sweetwater Music Hall",
     "topics": [
       "music",
       "shows"
     ]
   },
   {
-    "id": "shows:san-rafael-elks:san-rafael-elks-lodge-calendar:https-www-elks1108-org-calendar",
-    "title": "San Rafael Elks Lodge calendar",
-    "link": "https://www.elks1108.org/calendar",
-    "pubDate": "2026-03-24T08:33:41.000Z",
-    "timestamp": 1774341221000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "San Rafael Elks",
+    "id": "shows:sweetwater-music-hall:dark-n-stormy:https-sweetwatermusichall-org-event-dark-n-stormy-sweetwater-music-hall-mill-valley-california",
+    "title": "Dark N Stormy",
+    "link": "https://sweetwatermusichall.org/event/dark-n-stormy/sweetwater-music-hall/mill-valley-california/",
+    "pubDate": "2026-03-24T17:00:00.000Z",
+    "timestamp": 1774371600000,
+    "description": "Dark N Stormy has been delivering sets of original renditions of timeless jam-based and funky classics to packed crowds in the San Francisco Bay Area since their formation in 2015. Guitarists Jeff Webb and Pete Petitt l…",
+    "content": "Dark N Stormy has been delivering sets of original renditions of timeless jam-based and funky classics to packed crowds in the San Francisco Bay Area since their formation in 2015. Guitarists Jeff Webb and Pete Petitt lead the way with intertwining and alternating string work, complemented by the driving keys of John Amster. Each trades off with lead vocals, and three-part harmonies rise from the mix. All is stacked on a rock-solid rhythm section coupling Kevin Woodhouse on drums with Scott Lipsitz on bass. We play our own revival of jam-based and funky classics, rooted in the nostalgic sounds the Grateful Dead, the Allman Brothers Band, Little Feat and other giants of jam. Our music is familiar and never the same twice! Visit us at www.darknstormy.band.",
+    "source": "Sweetwater Music Hall",
     "category": "shows",
     "verification": "community",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9735,
-    "lon": -122.5241,
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9059,
+    "lon": -122.5491,
     "locationConfidence": "exact",
-    "locationEvidence": "San Rafael Elks",
+    "locationEvidence": "Sweetwater Music Hall",
     "topics": [
-      "community-events",
-      "fraternal"
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:sweetwater-music-hall:teddy-thompson:https-sweetwatermusichall-org-event-teddy-thompson-sweetwater-music-hall-mill-valley-california",
+    "title": "Teddy Thompson",
+    "link": "https://sweetwatermusichall.org/event/teddy-thompson/sweetwater-music-hall/mill-valley-california/",
+    "pubDate": "2026-03-24T17:00:00.000Z",
+    "timestamp": 1774371600000,
+    "description": "Beloved London-born, Brooklyn-based singer/songwriter Teddy Thompson has returned with the exquisitely crafted Never Be The Same, his first collection of original material since 2020. Across ten tracks, Thompson refines…",
+    "content": "Beloved London-born, Brooklyn-based singer/songwriter Teddy Thompson has returned with the exquisitely crafted Never Be The Same, his first collection of original material since 2020. Across ten tracks, Thompson refines his craft via an exploration of music's enduring preoccupations — love, longing, and the uneasy passage of time. This album wasn't built upon a grand narrative. There was no self-imposed exile, no forced reinvention. Instead, it is centered around an exhortation that is threaded through the songs like a refrain: \"Never Be The Same,\" its title only revealing itself to Thompson after he'd completed the recording. \"It's a phrase that, unconsciously, I used twice. And when I saw it on the page, I realized, this is the message of this album,\" says Thompson. \"Don't ever be the same. Change. Grow! Even when the sentiment is, woe is me, I'll never recover after that love or loss. The message is still, change. Don't get too comfortable. Everything is temporary, so evolve or perish!\" For Thompson, the search for this truth starts with authenticity and personal experience. \"Songwriting is magical. You can hear one hundred people sing ‘I love you,' and you know which one is telling the truth,\" Thompson says. \"If the root of the sentiment is authentic, it will resonate.\"",
+    "source": "Sweetwater Music Hall",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9059,
+    "lon": -122.5491,
+    "locationConfidence": "exact",
+    "locationEvidence": "Sweetwater Music Hall",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:sweetwater-music-hall:san-miguel-fraser:https-sweetwatermusichall-org-event-san-miguel-fraser-sweetwater-music-hall-mill-valley-california",
+    "title": "San Miguel Fraser",
+    "link": "https://sweetwatermusichall.org/event/san-miguel-fraser/sweetwater-music-hall/mill-valley-california/",
+    "pubDate": "2026-03-24T17:00:00.000Z",
+    "timestamp": 1774371600000,
+    "description": "San Miguel Fraser is redefining folk music with their dynamic fusion of Castilian and Celtic traditions. The duo, featuring María San Miguel—an Oviedo Conservatory graduate deeply rooted in the vibrant music of Castile—…",
+    "content": "San Miguel Fraser is redefining folk music with their dynamic fusion of Castilian and Celtic traditions. The duo, featuring María San Miguel—an Oviedo Conservatory graduate deeply rooted in the vibrant music of Castile—and Galen Fraser—a Berklee College of Music alumnus and son of the legendary fiddler Alasdair Fraser, blends heartfelt vocals, intricate string arrangements, and the lively charm of the cittern. Their music celebrates the shared spirit of their homelands while embracing the beauty of innovation. Their latest album, Dots of Light, is a testament to their artistry, shining with vibrant new compositions and imaginative reworkings of traditional tunes. With their unique chamber-folk style, San Miguel Fraser crafts performances that resonate deeply with audiences worldwide. The band has captivated listeners at prestigious festivals and venues, including Celtic Connections, Festival Internacional de Ortigueira, Sisters Folk Fest, KVMR Celtic Festival, and Miguel Delibes Auditorium. Whether performing at intimate gatherings or grand stages, they bring a heartfelt connection and a celebratory spirit to every performance.",
+    "source": "Sweetwater Music Hall",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9059,
+    "lon": -122.5491,
+    "locationConfidence": "exact",
+    "locationEvidence": "Sweetwater Music Hall",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:hopmonk-novato:hopmonk-novato-live-music-calendar:https-www-hopmonk-com-livemusic",
+    "title": "HopMonk Novato live music calendar",
+    "link": "https://www.hopmonk.com/livemusic",
+    "pubDate": "2026-03-24T15:46:31.000Z",
+    "timestamp": 1774367191000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "HopMonk Novato",
+    "category": "shows",
+    "verification": "community",
+    "town": "Novato",
+    "townSlug": "novato",
+    "lat": 38.1074,
+    "lon": -122.5697,
+    "locationConfidence": "exact",
+    "locationEvidence": "HopMonk Novato",
+    "topics": [
+      "music",
+      "shows"
     ]
   },
   {
@@ -1181,216 +1669,6 @@
     ]
   },
   {
-    "id": "farm:agricultural-institute-of-marin:rollin-root-mobile-market-schedule:https-www-agriculturalinstitute-org-rollin-root",
-    "title": "Rollin' Root mobile market schedule",
-    "link": "https://www.agriculturalinstitute.org/rollin-root",
-    "pubDate": "2026-03-24T02:33:21.000Z",
-    "timestamp": 1774319601000,
-    "description": "Official market schedule from the Agricultural Institute of Marin.",
-    "source": "Agricultural Institute of Marin",
-    "category": "farm",
-    "verification": "official",
-    "topics": [
-      "farmers-market",
-      "produce"
-    ]
-  },
-  {
-    "id": "farm:agricultural-institute-of-marin:point-reyes-farmers-market-every-saturday-9am-2pm-may-2-october-10-2026:https-www-agriculturalinstitute-org-point-reyes",
-    "title": "Point Reyes farmers market · Every Saturday, 9am–2pm, May 2 – October 10, 2026",
-    "link": "https://www.agriculturalinstitute.org/point-reyes",
-    "pubDate": "2026-03-24T01:53:25.000Z",
-    "timestamp": 1774317205000,
-    "description": "Every Saturday · 9am–2pm · May 2 – October 10, 2026 at Toby’s Feed Barn",
-    "source": "Agricultural Institute of Marin",
-    "category": "farm",
-    "verification": "official",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0702,
-    "lon": -122.8105,
-    "locationConfidence": "exact",
-    "locationEvidence": "Agricultural Institute of Marin",
-    "topics": [
-      "farmers-market",
-      "produce"
-    ]
-  },
-  {
-    "id": "shows:dance-palace:sewing-lab-independent-projects:https-dancepalace-org-event-sewing-lab-independent-projects-2026-03-23",
-    "title": "Sewing Lab: Independent Projects",
-    "link": "https://dancepalace.org/event/sewing-lab-independent-projects/2026-03-23/",
-    "pubDate": "2026-03-24T01:00:00.000Z",
-    "timestamp": 1774314000000,
-    "description": "Intermediate to advanced sewing classes for adults. This series of 8 classes offers a supportive, hands-on space to help you master sewing patterns and project construction. This course will provide personalized guidanc…",
-    "content": "Board Room · The Dance Palace Community & Cultural Center · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
-    "source": "Dance Palace",
-    "category": "shows",
-    "verification": "community",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0699,
-    "lon": -122.8089,
-    "locationConfidence": "exact",
-    "locationEvidence": "Dance Palace",
-    "topics": [
-      "music",
-      "community-events",
-      "west-marin"
-    ]
-  },
-  {
-    "id": "shows:dance-palace:ballet-in-the-palace-ages-6-9:https-dancepalace-org-event-ballet-in-the-palace-ages-6-9-6-2026-03-23",
-    "title": "Ballet in the Palace (Ages 6-9)",
-    "link": "https://dancepalace.org/event/ballet-in-the-palace-ages-6-9-6/2026-03-23/",
-    "pubDate": "2026-03-24T00:00:00.000Z",
-    "timestamp": 1774310400000,
-    "description": "Ballet for children ages 6-9. Move and learn through the classic art of ballet! We will combine creativity, play, stretching, strength building and musicality using the language of ballet. Instructor Bridget Bartholome…",
-    "content": "Main Hall · The Dance Palace Community & Cultural Center · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
-    "source": "Dance Palace",
-    "category": "shows",
-    "verification": "community",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0699,
-    "lon": -122.8089,
-    "locationConfidence": "exact",
-    "locationEvidence": "Dance Palace",
-    "topics": [
-      "music",
-      "community-events",
-      "west-marin"
-    ]
-  },
-  {
-    "id": "farm:agricultural-institute-of-marin:san-rafael-summer-market-schedule:https-www-agriculturalinstitute-org-san-rafael-summer-1",
-    "title": "San Rafael Summer market schedule",
-    "link": "https://www.agriculturalinstitute.org/san-rafael-summer-1",
-    "pubDate": "2026-03-23T23:54:24.000Z",
-    "timestamp": 1774310064000,
-    "description": "Official market schedule from the Agricultural Institute of Marin.",
-    "source": "Agricultural Institute of Marin",
-    "category": "farm",
-    "verification": "official",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9735,
-    "lon": -122.5311,
-    "locationConfidence": "exact",
-    "locationEvidence": "Agricultural Institute of Marin",
-    "topics": [
-      "farmers-market",
-      "produce"
-    ]
-  },
-  {
-    "id": "farm:agricultural-institute-of-marin:thursday-marin-farmers-market-every-thursday-8am-1pm-year-round:https-www-agriculturalinstitute-org-thursday-marin",
-    "title": "Thursday Marin farmers market · Every Thursday, 8am - 1pm, Year-round",
-    "link": "https://www.agriculturalinstitute.org/thursday-marin",
-    "pubDate": "2026-03-23T23:54:09.000Z",
-    "timestamp": 1774310049000,
-    "description": "Every Thursday · 8am - 1pm · Year-round at Marin County Civic Center",
-    "source": "Agricultural Institute of Marin",
-    "category": "farm",
-    "verification": "official",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9991,
-    "lon": -122.5234,
-    "locationConfidence": "exact",
-    "locationEvidence": "Agricultural Institute of Marin",
-    "topics": [
-      "farmers-market",
-      "produce"
-    ]
-  },
-  {
-    "id": "farm:agricultural-institute-of-marin:sunday-marin-farmers-market-every-sunday-8am-1pm-year-round:https-www-agriculturalinstitute-org-sunday-marin",
-    "title": "Sunday Marin farmers market · Every Sunday, 8am - 1pm, Year-round",
-    "link": "https://www.agriculturalinstitute.org/sunday-marin",
-    "pubDate": "2026-03-23T23:53:56.000Z",
-    "timestamp": 1774310036000,
-    "description": "Every Sunday · 8am - 1pm · Year-round at Marin County Civic Center",
-    "source": "Agricultural Institute of Marin",
-    "category": "farm",
-    "verification": "official",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9991,
-    "lon": -122.5234,
-    "locationConfidence": "exact",
-    "locationEvidence": "Agricultural Institute of Marin",
-    "topics": [
-      "farmers-market",
-      "produce"
-    ]
-  },
-  {
-    "id": "shows:dance-palace:ballet-in-the-palace-ages-3-5:https-dancepalace-org-event-ballet-in-the-palace-ages-3-5-6-2026-03-23",
-    "title": "Ballet in the Palace (Ages 3-5)",
-    "link": "https://dancepalace.org/event/ballet-in-the-palace-ages-3-5-6/2026-03-23/",
-    "pubDate": "2026-03-23T23:00:00.000Z",
-    "timestamp": 1774306800000,
-    "description": "Ballet for children ages 3-5. Move and learn through the classic art of ballet! We will combine creativity, play, stretching, strength building and musicality using the language of ballet. Instructor Bridget Bartholome…",
-    "content": "Main Hall · The Dance Palace Community & Cultural Center · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
-    "source": "Dance Palace",
-    "category": "shows",
-    "verification": "community",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0699,
-    "lon": -122.8089,
-    "locationConfidence": "exact",
-    "locationEvidence": "Dance Palace",
-    "topics": [
-      "music",
-      "community-events",
-      "west-marin"
-    ]
-  },
-  {
-    "id": "prep:marin-rowing-association:marin-rowing-association-calendar:https-www-marinrowing-org-calendar",
-    "title": "Marin Rowing Association calendar",
-    "link": "https://www.marinrowing.org/calendar",
-    "pubDate": "2026-03-23T22:14:35.000Z",
-    "timestamp": 1774304075000,
-    "description": "Local sports hub for schedules, fixtures, club updates, or season information.",
-    "source": "Marin Rowing Association",
-    "category": "prep",
-    "verification": "community",
-    "town": "Greenbrae",
-    "townSlug": "greenbrae",
-    "lat": 37.9435,
-    "lon": -122.5314,
-    "locationConfidence": "exact",
-    "locationEvidence": "Marin Rowing Association",
-    "topics": [
-      "rowing",
-      "club-sports"
-    ]
-  },
-  {
-    "id": "shows:hopmonk-novato:hopmonk-novato-live-music-calendar:https-www-hopmonk-com-livemusic",
-    "title": "HopMonk Novato live music calendar",
-    "link": "https://www.hopmonk.com/livemusic",
-    "pubDate": "2026-03-23T21:55:55.000Z",
-    "timestamp": 1774302955000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "HopMonk Novato",
-    "category": "shows",
-    "verification": "community",
-    "town": "Novato",
-    "townSlug": "novato",
-    "lat": 38.1074,
-    "lon": -122.5697,
-    "locationConfidence": "exact",
-    "locationEvidence": "HopMonk Novato",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
     "id": "shows:sweetwater-music-hall:duane-betts-palmetto-motel-with-miko-marks:https-sweetwatermusichall-org-event-duane-betts-palmetto-motel-with-miko-marks-sweetwater-music-hall-mill-valley-california",
     "title": "Duane Betts & Palmetto Motel with Miko Marks",
     "link": "https://sweetwatermusichall.org/event/duane-betts-palmetto-motel-with-miko-marks/sweetwater-music-hall/mill-valley-california/",
@@ -1410,29 +1688,6 @@
     "topics": [
       "music",
       "shows"
-    ]
-  },
-  {
-    "id": "shows:dance-palace:yoga-tonic:https-dancepalace-org-event-easy-does-it-yoga-for-everybody-2026-03-23",
-    "title": "Yoga Tonic*",
-    "link": "https://dancepalace.org/event/easy-does-it-yoga-for-everybody/2026-03-23/",
-    "pubDate": "2026-03-23T16:30:00.000Z",
-    "timestamp": 1774283400000,
-    "description": "Maryclare first trained to be a Yoga Flow teacher 30 years ago and co-founded the Berkeley Yoga Center. Her personal practice has been mostly in Shadow Yoga, which integrates hatha yoga, martial arts, and southern India…",
-    "content": "Main Hall · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
-    "source": "Dance Palace",
-    "category": "shows",
-    "verification": "community",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0699,
-    "lon": -122.8089,
-    "locationConfidence": "exact",
-    "locationEvidence": "Dance Palace",
-    "topics": [
-      "music",
-      "community-events",
-      "west-marin"
     ]
   },
   {
@@ -1478,50 +1733,6 @@
     ]
   },
   {
-    "id": "shows:mac-s-at-19-broadway:sunday-dance-party-with-lady-d-her-band-of-brothers-live-at-mac-s-at-19:https-www-eventbrite-com-e-sunday-dance-party-with-lady-d-her-band-of-brothers-live-at-macs-at-19-tickets-1984667394603",
-    "title": "Sunday Dance Party with Lady D & Her Band of Brothers | Live at Mac’s at 19",
-    "link": "https://www.eventbrite.com/e/sunday-dance-party-with-lady-d-her-band-of-brothers-live-at-macs-at-19-tickets-1984667394603",
-    "pubDate": "2026-03-22T07:00:00.000Z",
-    "timestamp": 1774162800000,
-    "description": "Upcoming Fairfax show at Mac’s at 19 Broadway.",
-    "content": "Fairfax live music, comedy, and nightlife calendar.",
-    "source": "Mac's at 19 Broadway",
-    "category": "shows",
-    "verification": "community",
-    "town": "Fairfax",
-    "townSlug": "fairfax",
-    "lat": 37.9871,
-    "lon": -122.5889,
-    "locationConfidence": "exact",
-    "locationEvidence": "Mac's at 19 Broadway",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:mac-s-at-19-broadway:us-1-sinatra-tribute-show-by-perry-at-mac-s:https-www-eventbrite-com-e-us-1-sinatra-tribute-show-by-perry-at-macs-tickets-1984079746933",
-    "title": "US #1 Sinatra Tribute Show by Perry at Mac's",
-    "link": "https://www.eventbrite.com/e/us-1-sinatra-tribute-show-by-perry-at-macs-tickets-1984079746933",
-    "pubDate": "2026-03-22T07:00:00.000Z",
-    "timestamp": 1774162800000,
-    "description": "Upcoming Fairfax show at Mac’s at 19 Broadway.",
-    "content": "Fairfax live music, comedy, and nightlife calendar.",
-    "source": "Mac's at 19 Broadway",
-    "category": "shows",
-    "verification": "community",
-    "town": "Fairfax",
-    "townSlug": "fairfax",
-    "lat": 37.9871,
-    "lon": -122.5889,
-    "locationConfidence": "exact",
-    "locationEvidence": "Mac's at 19 Broadway",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
     "id": "shows:rancho-nicasio:lowatters:https-ranchonicasio-com-event-lowatters-5",
     "title": "LOWATTERS",
     "link": "https://ranchonicasio.com/event/lowatters-5/",
@@ -1538,28 +1749,6 @@
     "lon": -122.7028,
     "locationConfidence": "exact",
     "locationEvidence": "Rancho Nicasio",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:mac-s-at-19-broadway:robert-m-powell-sonic-food-truck-live-at-mac-s-fairfax-ca-march-21:https-www-eventbrite-com-e-robert-m-powell-sonic-food-truck-live-at-macs-fairfax-ca-march-21-tickets-1984164377064",
-    "title": "Robert M. Powell & Sonic Food Truck LIVE at Mac’s | Fairfax CA | March 21",
-    "link": "https://www.eventbrite.com/e/robert-m-powell-sonic-food-truck-live-at-macs-fairfax-ca-march-21-tickets-1984164377064",
-    "pubDate": "2026-03-21T07:00:00.000Z",
-    "timestamp": 1774076400000,
-    "description": "Upcoming Fairfax show at Mac’s at 19 Broadway.",
-    "content": "Fairfax live music, comedy, and nightlife calendar.",
-    "source": "Mac's at 19 Broadway",
-    "category": "shows",
-    "verification": "community",
-    "town": "Fairfax",
-    "townSlug": "fairfax",
-    "lat": 37.9871,
-    "lon": -122.5889,
-    "locationConfidence": "exact",
-    "locationEvidence": "Mac's at 19 Broadway",
     "topics": [
       "music",
       "shows"
@@ -1950,48 +2139,6 @@
     ]
   },
   {
-    "id": "prep:redwood-bark:varsity-swim-and-dive-team-competitively-sinks-the-branson-bulls:https-redwoodbark-org-108264-sports-varsity-swim-and-dive-team-competitively-sinks-the-branson-bulls",
-    "title": "Varsity swim and dive team competitively sinks the Branson Bulls",
-    "link": "https://redwoodbark.org/108264/sports/varsity-swim-and-dive-team-competitively-sinks-the-branson-bulls/",
-    "pubDate": "2026-03-07T23:27:50.000Z",
-    "timestamp": 1772926070000,
-    "description": "On Friday, Mar. 6, the varsity swim and dive team competed in a high-energy meet against the Branson High School Bulls. The girls had previously lost to the Tamalipas Hawks on Mar. 3 and looked to give their all in the…",
-    "content": "Gallery &bull; 9 Photos Sophmore Alex Marron prepares for his first race, waiting for the start signal. On Friday, Mar. 6, the varsity swim and dive team competed in a high-energy meet against the Branson High School Bulls. The girls had previously lost to the Tamalipas Hawks on Mar. 3 and looked to give their all in the next meet. Both the girls and boys teams came out with a strong win on Friday, with the boys taking home a win and the girls demolishing the Bulls, also securing a win. Key Giants leaders included junior Avery Gunst and senior Oliver Meyers, who each secured victories in their respective heats. By winning both of their events, they helped the Giants achieve victory in the meet against the Bulls.",
-    "source": "Redwood Bark",
-    "category": "prep",
-    "verification": "community",
-    "town": "Larkspur",
-    "townSlug": "larkspur",
-    "lat": 37.9341,
-    "lon": -122.5353,
-    "locationConfidence": "exact",
-    "locationEvidence": "Redwood Bark",
-    "topics": [
-      "prep-sports"
-    ]
-  },
-  {
-    "id": "prep:redwood-bark:girls-varsity-lacrosse-demolishes-carondelet-in-a-20-6-win:https-redwoodbark-org-108194-sports-girls-varsity-lacrosse-demolishes-carondelet-in-a-20-6-win",
-    "title": "Girls varsity lacrosse demolishes Carondelet in a 20-6 win",
-    "link": "https://redwoodbark.org/108194/sports/girls-varsity-lacrosse-demolishes-carondelet-in-a-20-6-win/",
-    "pubDate": "2026-03-05T22:14:20.000Z",
-    "timestamp": 1772748860000,
-    "description": "On Tuesday, March 1, the girls varsity lacrosse team faced Carondelet in a non-league matchup of the season. From the first draw, Redwood dominated the game, allowing them to secure a comfortable lead of 13-3 in the fir…",
-    "content": "Gallery &bull; 8 Photos Passing the ball over a defender, senior Lucy Miller assists a goal. On Tuesday, March 1, the girls varsity lacrosse team faced Carondelet in a non-league matchup of the season. From the first draw, Redwood dominated the game, allowing them to secure a comfortable lead of 13-3 in the first half. Holding the offensive possession throughout the game, the Giants ended in a 20-6 victory. Top scorers included junior Phoebe Miller and junior Ellie Washing, who scored three goals to complete a hat trick. As the score continued to climb in the second half, defenders also got action in the crease, with senior Nina Baker and junior Rose Muller each scoring two goals. Hoping to continue their undefeated streak, girls lacrosse will take on San Francisco University on March 10 at 3:30 p.m. at home.",
-    "source": "Redwood Bark",
-    "category": "prep",
-    "verification": "community",
-    "town": "Larkspur",
-    "townSlug": "larkspur",
-    "lat": 37.9341,
-    "lon": -122.5353,
-    "locationConfidence": "exact",
-    "locationEvidence": "Redwood Bark",
-    "topics": [
-      "prep-sports"
-    ]
-  },
-  {
     "id": "shows:sweetwater-music-hall:crossroads-showcase:https-sweetwatermusichall-org-event-crossroads-showcase-4-sweetwater-music-hall-mill-valley-california",
     "title": "Crossroads Showcase",
     "link": "https://sweetwatermusichall.org/event/crossroads-showcase-4/sweetwater-music-hall/mill-valley-california/",
@@ -2212,9 +2359,9 @@
     ]
   },
   {
-    "id": "shows:sweetwater-music-hall:school-of-rock:https-sweetwatermusichall-org-event-school-of-rock-19-sweetwater-music-hall-mill-valley-california",
+    "id": "shows:sweetwater-music-hall:school-of-rock:https-sweetwatermusichall-org-event-school-of-rock-20-sweetwater-music-hall-mill-valley-california",
     "title": "School of Rock",
-    "link": "https://sweetwatermusichall.org/event/school-of-rock-19/sweetwater-music-hall/mill-valley-california/",
+    "link": "https://sweetwatermusichall.org/event/school-of-rock-20/sweetwater-music-hall/mill-valley-california/",
     "pubDate": "2026-02-17T18:00:00.000Z",
     "timestamp": 1771351200000,
     "description": "Children age 6 and under are free. Join us as we celebrate our 12th season bringing rock bands to the stages of Marin County. Featuring performances by three Rock 101 bands and three Performance Program bands paying tri…",
@@ -2608,28 +2755,6 @@
     ]
   },
   {
-    "id": "shows:sweetwater-music-hall:westerly-with-travis-hayes-and-the-new-westerns:https-sweetwatermusichall-org-event-westerly-with-travis-hayes-and-the-new-westerns-sweetwater-music-hall-mill-valley-california",
-    "title": "Westerly with Travis Hayes and the New Westerns",
-    "link": "https://sweetwatermusichall.org/event/westerly-with-travis-hayes-and-the-new-westerns/sweetwater-music-hall/mill-valley-california/",
-    "pubDate": "2026-02-03T18:00:00.000Z",
-    "timestamp": 1770141600000,
-    "description": "Originating in the San Francisco Bay Area, Westerly is a six piece band that writes about spirituality, love, and the state of the world. Though they integrate roots influences, the band is expressly not a retrospective…",
-    "content": "Originating in the San Francisco Bay Area, Westerly is a six piece band that writes about spirituality, love, and the state of the world. Though they integrate roots influences, the band is expressly not a retrospective. Their sound brings contemporary flourishes that often give nod to the Americana, Rock, and other various forms of Roots Music that have characterized the West Coast musical landscape. Most recently the band is promoting their new singles \"They Will Test You\", \"This Weapon\", and \"Give Me A Song\". All three tunes were penned by Westerly's lead singer and principal songwriter Sterling Spence and showcase the band at its creative best. In addition to Spence, Westerly's lineup includes Scott Wilson (lead guitar), Mike Bond (drums), Shiva Garshasbi (vocals), Spencer Hatfield (bass), and Evelyn Yining Hong (keys). A force to be reckoned with live, the band actively performs all over the state of California, gracing clubs, bars, coffee shops, radio stations, old folks homes and circus tents. They have shared stages with the likes of guitar virtuoso Grace Bowers and Latin Music Legends Ozomatli as well as being featured extensively on Bay Area radio stations including KPFA, KALW, and KALX. 2026 will see the band continuing to release new material and expanding their presence on stages up and down the West Coast. Travis Hayes has shared the stage with Matt Skiba (Alkaline Trio, blink-182), Graham Coxon (Blur), John Nolan (Taking Back Sunday, Straylight Run), Nathaniel Rateliff (The Night Sweats), The Band Perry, Langhorne Slim, Blitzen Trapper, John Moreland, The Record Company, Chuck Ragan (Hot Water Music), Lucero, Tim Barry (Avail) and more. In addition to traveling the country (10+ cross-country tours, SXSW x3, Rockwood Music Hall NYC, Hotel Cafe LA, Off Beat Music Festival Reno), Travis Hayes has performed locally at The Fillmore, The Warfield, The Mountain Winery, Bimbo's 365 Club, Rickshaw Stop, The Chapel, August Hall, Sweetwater Music Hall and has headlined Great American Music Hall, The Independent and Bottom of the Hill for the Noise Pop Music Festival.",
-    "source": "Sweetwater Music Hall",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.9059,
-    "lon": -122.5491,
-    "locationConfidence": "exact",
-    "locationEvidence": "Sweetwater Music Hall",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
     "id": "shows:sweetwater-music-hall:you-should-be-dancing-a-tribute-to-the-bee-gees:https-sweetwatermusichall-org-event-you-should-be-dancing-a-tribute-to-the-bee-gees-sweetwater-music-hall-mill-valley-california",
     "title": "You Should Be Dancing: A Tribute to the Bee Gees",
     "link": "https://sweetwatermusichall.org/event/you-should-be-dancing-a-tribute-to-the-bee-gees/sweetwater-music-hall/mill-valley-california/",
@@ -2681,6 +2806,28 @@
     "timestamp": 1770141600000,
     "description": "Israel Vibration A living lesson in fortitude, the vocal trio of Cecil \"Skeley\" Spence, Albert \"Apple Gabriel\" Craig, and Lascelle \"Wiss\" Bulgin overcame adversity, illness, and poverty to become one of the finest roots…",
     "content": "Israel Vibration A living lesson in fortitude, the vocal trio of Cecil \"Skeley\" Spence, Albert \"Apple Gabriel\" Craig, and Lascelle \"Wiss\" Bulgin overcame adversity, illness, and poverty to become one of the finest roots groups in Jamaica's history. All three had been afflicted by polio and first became acquainted, albeit briefly, at Kingston's Mona Rehabilitation Clinic. The three teens had individually all previously converted to rastafarianism, now their shared faith and childhood experiences helped forge a strong friendship. They spent the next six years singing around Kingston for their suppers and by 1975, Israel Vibration was a vocal force to be reckoned with. The group's exquisite dread sound and militant cultural themes made an instant impression and the trio now found themselves on-stage opening for the likes of Bob Marley and Dennis Brown. The trio's deeply devotional songs, cultural themes, inspirational lyrics, and original take on the roots style had struck a chord with reggae fans around the world. They relocated to New York City, perhaps believing that the large immigrant community could sustain them, or that America was now ready to embrace roots. But a few occasional live appearances aside, the group swiftly disappeared from view. All three attempted solo careers, but only Bulgin made it on to record; his Mr. Sunshine album paired him with the Freedom Fighters Band. In 1997, Apple Gabriel left the group to pursue a solo career, releasing the album Another Moses in 1999. Skelly and Wiss continue to record albums and tour the world as Israel Vibration, backed by longtime associates Roots Radics.In December 2014 they were reportedly recording a new album set for release in early 2015. The new album, entitled \"Play It Real\" was released on 31 March 2015 via Utopia. On March 23rd, 2020, Albert \"Apple Gabriel\" co-founder and former member of the group died due to 'compilation sickness', earlier reports indicated that Albert was not well for quite some time, this was supposedly due to some of the polio infections left in his body. On a Facebook post on March 7, 2020, he had indicated that he had suffered a stroke. He died on March 23, 2020. On August 26th, 2022, Cecil \"Skelly\" Spence died of lung cancer. Wiss carries on the music with the Roots Radics, and Israel Vibration continues to keep audiences dancing worldwide.",
+    "source": "Sweetwater Music Hall",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9059,
+    "lon": -122.5491,
+    "locationConfidence": "exact",
+    "locationEvidence": "Sweetwater Music Hall",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:sweetwater-music-hall:westerly-with-travis-hayes-and-the-new-westerns:https-sweetwatermusichall-org-event-westerly-with-travis-hayes-and-the-new-westerns-sweetwater-music-hall-mill-valley-california",
+    "title": "Westerly with Travis Hayes and the New Westerns",
+    "link": "https://sweetwatermusichall.org/event/westerly-with-travis-hayes-and-the-new-westerns/sweetwater-music-hall/mill-valley-california/",
+    "pubDate": "2026-02-03T18:00:00.000Z",
+    "timestamp": 1770141600000,
+    "description": "Originating in the San Francisco Bay Area, Westerly is a six piece band that writes about spirituality, love, and the state of the world. Though they integrate roots influences, the band is expressly not a retrospective…",
+    "content": "Originating in the San Francisco Bay Area, Westerly is a six piece band that writes about spirituality, love, and the state of the world. Though they integrate roots influences, the band is expressly not a retrospective. Their sound brings contemporary flourishes that often give nod to the Americana, Rock, and other various forms of Roots Music that have characterized the West Coast musical landscape. Most recently the band is promoting their new singles \"They Will Test You\", \"This Weapon\", and \"Give Me A Song\". All three tunes were penned by Westerly's lead singer and principal songwriter Sterling Spence and showcase the band at its creative best. In addition to Spence, Westerly's lineup includes Scott Wilson (lead guitar), Mike Bond (drums), Shiva Garshasbi (vocals), Spencer Hatfield (bass), and Evelyn Yining Hong (keys). A force to be reckoned with live, the band actively performs all over the state of California, gracing clubs, bars, coffee shops, radio stations, old folks homes and circus tents. They have shared stages with the likes of guitar virtuoso Grace Bowers and Latin Music Legends Ozomatli as well as being featured extensively on Bay Area radio stations including KPFA, KALW, and KALX. 2026 will see the band continuing to release new material and expanding their presence on stages up and down the West Coast. Travis Hayes has shared the stage with Matt Skiba (Alkaline Trio, blink-182), Graham Coxon (Blur), John Nolan (Taking Back Sunday, Straylight Run), Nathaniel Rateliff (The Night Sweats), The Band Perry, Langhorne Slim, Blitzen Trapper, John Moreland, The Record Company, Chuck Ragan (Hot Water Music), Lucero, Tim Barry (Avail) and more. In addition to traveling the country (10+ cross-country tours, SXSW x3, Rockwood Music Hall NYC, Hotel Cafe LA, Off Beat Music Festival Reno), Travis Hayes has performed locally at The Fillmore, The Warfield, The Mountain Winery, Bimbo's 365 Club, Rickshaw Stop, The Chapel, August Hall, Sweetwater Music Hall and has headlined Great American Music Hall, The Independent and Bottom of the Hill for the Noise Pop Music Festival.",
     "source": "Sweetwater Music Hall",
     "category": "shows",
     "verification": "community",

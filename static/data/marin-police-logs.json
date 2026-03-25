@@ -1022,27 +1022,5 @@
     "townSlug": "san-rafael",
     "locationConfidence": "town",
     "locationEvidence": "San Rafael"
-  },
-  {
-    "id": "tiburon-police-737",
-    "title": "December 2025 Tiburon Police Stats",
-    "link": "https://www.townoftiburon.org/CivicAlerts.aspx?AID=737",
-    "pubDate": "2026-01-08T20:00:00.000Z",
-    "timestamp": 1767902400000,
-    "description": "Official Tiburon Police monthly statistics post.",
-    "content": "DECEMBER 2025 STATS 671 Calls for Service 1 Theft From Vehicle 24 Reports 15 Traffic Citations 7 Arrests 1 DUI Arrest 0 Traffic Collisions",
-    "source": "Tiburon Police Department",
-    "category": "safety",
-    "verification": "official",
-    "topics": [
-      "crime",
-      "police-stats",
-      "monthly-report"
-    ],
-    "isAlert": false,
-    "town": "Tiburon",
-    "townSlug": "tiburon",
-    "locationConfidence": "town",
-    "locationEvidence": "Tiburon"
   }
 ]
