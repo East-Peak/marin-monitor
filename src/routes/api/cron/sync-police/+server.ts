@@ -17,6 +17,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			access: 'private',
 			contentType: 'application/json',
 			addRandomSuffix: false,
+			allowOverwrite: true,
 			token: env.BLOB_READ_WRITE_TOKEN
 		});
 
