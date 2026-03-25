@@ -4,12 +4,13 @@ import { scrapeActivity } from '$lib/server/scrapers/activity';
 import { verifyCronAuth } from '$lib/server/cron-auth';
 import type { RequestHandler } from './$types';
 
-export const config = { maxDuration: 60 };
+export const config = { maxDuration: 120 };
 
 export const GET: RequestHandler = async ({ request }) => {
 	const authError = verifyCronAuth(request);
 	if (authError) return authError;
 
+	const start = Date.now();
 	try {
 		const items = await scrapeActivity();
 		await put('marin-activity.json', JSON.stringify(items), {
@@ -19,12 +20,13 @@ export const GET: RequestHandler = async ({ request }) => {
 			token: env.BLOB_READ_WRITE_TOKEN
 		});
 
+		console.log(`[sync-activity] OK: ${items.length} items in ${Date.now() - start}ms`);
 		return new Response(JSON.stringify({ ok: true, count: items.length }), {
 			headers: { 'Content-Type': 'application/json' }
 		});
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);
-		console.error('[sync-activity]', message);
+		console.error(`[sync-activity] FAILED after ${Date.now() - start}ms:`, message);
 		return new Response(JSON.stringify({ ok: false, error: message }), {
 			status: 500,
 			headers: { 'Content-Type': 'application/json' }

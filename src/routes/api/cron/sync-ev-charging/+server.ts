@@ -30,6 +30,7 @@ export const GET: RequestHandler = async ({ request }) => {
 	const authError = verifyCronAuth(request);
 	if (authError) return authError;
 
+	const start = Date.now();
 	try {
 		const snapshot = await scrapeEvCharging();
 
@@ -66,6 +67,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			token: env.BLOB_READ_WRITE_TOKEN
 		});
 
+		console.log(`[sync-ev-charging] OK: ${snapshot.stationCount} stations in ${Date.now() - start}ms`);
 		return new Response(
 			JSON.stringify({
 				ok: true,
@@ -76,7 +78,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		);
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);
-		console.error('[sync-ev-charging]', message);
+		console.error(`[sync-ev-charging] FAILED after ${Date.now() - start}ms:`, message);
 		return new Response(JSON.stringify({ ok: false, error: message }), {
 			status: 500,
 			headers: { 'Content-Type': 'application/json' }

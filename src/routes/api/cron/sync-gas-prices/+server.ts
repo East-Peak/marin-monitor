@@ -31,6 +31,7 @@ export const GET: RequestHandler = async ({ request }) => {
 	const authError = verifyCronAuth(request);
 	if (authError) return authError;
 
+	const start = Date.now();
 	try {
 		const snapshot = await scrapeGasPrices();
 
@@ -64,13 +65,14 @@ export const GET: RequestHandler = async ({ request }) => {
 			token: env.BLOB_READ_WRITE_TOKEN
 		});
 
+		console.log(`[sync-gas-prices] OK: ${snapshot.stationCount} stations in ${Date.now() - start}ms`);
 		return new Response(
 			JSON.stringify({ ok: true, stationCount: snapshot.stationCount, avgRegular: snapshot.avgRegular }),
 			{ headers: { 'Content-Type': 'application/json' } }
 		);
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);
-		console.error('[sync-gas-prices]', message);
+		console.error(`[sync-gas-prices] FAILED after ${Date.now() - start}ms:`, message);
 		return new Response(JSON.stringify({ ok: false, error: message }), {
 			status: 500,
 			headers: { 'Content-Type': 'application/json' }
