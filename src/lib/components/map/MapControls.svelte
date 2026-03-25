@@ -70,6 +70,17 @@
 	{/each}
 
 	<button
+		class="layer-toggle eq-toggle"
+		class:active={earthquakesVisible}
+		style:--layer-color={'#f59e0b'}
+		onclick={toggleEarthquakes}
+		title="Earthquakes (sized by magnitude)"
+	>
+		<span class="eq-dot"></span>
+		<span class="layer-label">Earthquakes</span>
+	</button>
+
+	<button
 		class="layer-toggle traffic-toggle"
 		class:active={$showTraffic}
 		style:--layer-color={'#f97316'}
@@ -101,17 +112,6 @@
 			{/if}
 		</div>
 	{/if}
-
-	<button
-		class="layer-toggle eq-toggle"
-		class:active={earthquakesVisible}
-		style:--layer-color={'#f59e0b'}
-		onclick={toggleEarthquakes}
-		title="Earthquakes (sized by magnitude)"
-	>
-		<span class="eq-dot"></span>
-		<span class="layer-label">Earthquakes</span>
-	</button>
 </div>
 
 <style>
