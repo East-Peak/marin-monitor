@@ -57,32 +57,34 @@ Settings:
 - Panel order (drag-and-drop wire columns)
 - Preset layouts (quick-switch)
 
+TV Mode (`/tv`):
+
+- 12-screen auto-rotating carousel: 5 map regions (county, south, central, north, west), news wire, safety & alerts, 3 geographic camera clusters (Tam & Coast, Central & Highway, West & North), conditions & trails, outdoors & community
+- Scrolling chyron news ticker at bottom (8 data categories)
+- Per-region weather sidebar on map screens
+- Keyboard shortcuts: arrows (navigate), space (pause), M (exit), R (refresh), F (fullscreen)
+- 24 cameras organized by geographic clusters, not operational categories
+- 6-hour periodic page reload for memory management on TV browsers
+- Press M on the main dashboard or click the TV button to enter
+
 ## Core Architecture
 
 Current stack:
 
-- SvelteKit 2
+- SvelteKit 2 with SSR enabled
 - Svelte 5 runes ($state, $derived, $effect, $props)
 - MapLibre GL (base map) + Mapbox (traffic overlay)
 - D3 for charts
 - static JSON artifacts for supplemental datasets
-- `@sveltejs/adapter-static` right now
+- `@sveltejs/adapter-vercel` with server routes
 
-Important current architectural reality:
+Architecture:
 
-- the app still does too much client-side fanout on first load
-- hard refresh is slower than it should be
-- this is acceptable for current development, but not the final production architecture
-
-Recommended future production architecture:
-
-- move to `@sveltejs/adapter-vercel`
-- create a server-side bootstrap payload for the first screen
-- use edge caching with `s-maxage` + `stale-while-revalidate`
-- dedupe repeated panel fetches
-- optionally keep a last-known snapshot for instant first paint
-
-This is the main performance item still open.
+- **Server-side bootstrap** (`+page.server.ts`): Weather and earthquake data pre-fetched server-side with `s-maxage=120, stale-while-revalidate=300` CDN caching. First paint gets real weather data.
+- **Client-side news**: RSS feeds use `DOMParser` (browser-only), so news data loads client-side in `onMount` via `loadAllNews()`. Sprint 2 target: replace DOMParser with server-compatible XML parser to enable full server-side rendering.
+- **Dashboard split**: `+page.svelte` (~555 lines) is an orchestration shell. Presentation extracted to `src/lib/components/dashboard/` (LayoutEditMode, SignalDeck, MapStage, WireGrid).
+- **TV Mode** (`/tv`): 12-screen auto-rotating carousel for wall-mounted TVs. Persistent map instance (single MapContainer, CSS visibility toggle), geographic camera clusters, scrolling chyron ticker, 6-hour periodic page reload. See `src/lib/components/tv/`.
+- **Shared data orchestration**: `src/lib/api/marin/load-all.ts` used by both main dashboard and TV mode.
 
 ## Current Data Model
 

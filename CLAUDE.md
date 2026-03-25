@@ -39,13 +39,15 @@ npm run sync:police    # Regenerate static/data/marin-police-logs.json
 
 ### Core Directories (`src/lib/`)
 
-- **`api/marin/`** — Data adapters (RSS, NWS, NWS hourly/QPF, NOAA tides, NOAA marine, AirNow, USGS, NPS, UV, sun, CalFire, transit, housing, activity, blotter, police-logs, article-enrichment)
+- **`api/marin/`** — Data adapters (RSS, NWS, NWS hourly/QPF, NOAA tides, NOAA marine, AirNow, USGS, NPS, UV, sun, CalFire, transit, housing, activity, blotter, police-logs, article-enrichment, load-all)
 - **`analysis/`** — Story correlation, narrative tracking, entity extraction
-- **`components/`** — Svelte components: layout/, panels/, modals/, common/
-- **`config/`** — Configuration-driven: feeds, keywords, towns, map, panels, cameras, presets, relevance, analysis, api
+- **`components/`** — Svelte components: layout/, panels/, modals/, common/, dashboard/, tv/
+- **`components/dashboard/`** — Extracted dashboard sections: LayoutEditMode, SignalDeck, MapStage, WireGrid
+- **`components/tv/`** — TV mode: TvWallboard (carousel controller), TvScreen, TvChyron, TvAutoScroll, TvMapPosition, TvMapSidebar, TvWallboardHeader, screens/ (12 carousel screens)
+- **`config/`** — Configuration-driven: feeds, keywords, towns, map, panels, cameras, presets, relevance, analysis, api, tv, wire-columns, edit-grid
 - **`geo/`** — Town geo-tagging, H3 hex grid utilities
-- **`services/`** — Resilience layer: CacheManager, CircuitBreaker, RequestDeduplicator, ServiceClient
-- **`stores/`** — Svelte stores: news, settings, monitors, refresh orchestration
+- **`services/`** — ServiceClient (used by NWS, tides, USGS, blotter adapters). Internal: CacheManager, CircuitBreaker, RequestDeduplicator
+- **`stores/`** — Svelte stores: news, settings, monitors, refresh orchestration, tv (ticker)
 - **`types/`** — TypeScript interfaces
 
 ### Path Aliases
@@ -61,13 +63,17 @@ $types      → src/lib/types
 
 ## Key Architectural Patterns
 
+### Server-Side Bootstrap (`src/routes/+page.server.ts`)
+
+Weather and earthquake data are pre-fetched server-side with CDN caching (`s-maxage=120, stale-while-revalidate=300`). News data loads client-side (RSS parsing uses `DOMParser`, a browser-only API). SSR is enabled globally; `/tv` route has `ssr = false`.
+
 ### Service Layer (`src/lib/services/`)
 
-API adapters call fetch directly (with timeout wrappers). A resilience layer exists in `services/` but is not yet wired into adapters:
+`ServiceClient` is used by 5 adapters (NWS, tides, USGS, blotter, NWS hourly) for request deduplication and caching. Internal classes (CacheManager, CircuitBreaker, RequestDeduplicator) support ServiceClient but are not exported.
 
-- **CacheManager**: Per-service caching with TTL and stale-while-revalidate
-- **CircuitBreaker**: Prevents cascading failures from flaky sources
-- **RequestDeduplicator**: Prevents concurrent duplicate requests
+### TV Mode (`/tv`)
+
+Full-screen carousel for wall-mounted TVs. 12 screens (5 map regions, news, safety, 3 camera clusters, conditions, community). Persistent MapContainer (single WebGL context), scrolling chyron, 3-minute data refresh, 6-hour page reload. See `src/lib/components/tv/`.
 
 ### Multi-Stage Refresh (`src/lib/stores/refresh.ts`)
 

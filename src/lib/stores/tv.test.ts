@@ -3,7 +3,7 @@ import { get } from 'svelte/store';
 
 // Mock the news stores before importing tv.ts
 vi.mock('$lib/stores/news', () => {
-	const { writable, derived } = require('svelte/store');
+	const { writable } = require('svelte/store');
 
 	const mockSafetyState = writable({ items: [], loading: false, error: null, lastUpdated: null });
 	const mockLocalState = writable({ items: [], loading: false, error: null, lastUpdated: null });
