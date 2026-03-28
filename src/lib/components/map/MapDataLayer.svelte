@@ -839,11 +839,13 @@
 				});
 
 			map.on('click', 'news-pins-hit-layer', (e: MapLayerMouseEvent) => {
+				if (clickHitsVisibleStravaFeature(map, e)) return;
 				const id = e.features?.[0]?.properties?.id;
 				if (id && onPinClick) onPinClick(String(id));
 			});
 
 			map.on('click', 'landmarks-layer', (e: MapLayerMouseEvent) => {
+				if (clickHitsVisibleStravaFeature(map, e)) return;
 				const feature = e.features?.[0];
 				const name = String(feature?.properties?.name ?? 'Landmark');
 				const type = String(feature?.properties?.type ?? 'reference point');
@@ -856,6 +858,7 @@
 			});
 
 			map.on('click', 'fire-zones-layer', (e: MapLayerMouseEvent) => {
+				if (clickHitsVisibleStravaFeature(map, e)) return;
 				const feature = e.features?.[0];
 				const name = String(feature?.properties?.name ?? 'Fire zone');
 				const desc = String(feature?.properties?.desc ?? '').trim();
@@ -869,6 +872,7 @@
 			});
 
 			map.on('click', 'traffic-events-layer', (e: MapLayerMouseEvent) => {
+				if (clickHitsVisibleStravaFeature(map, e)) return;
 				const feature = e.features?.[0];
 				const title = String(feature?.properties?.title ?? 'Traffic event');
 				const severity = String(feature?.properties?.severity ?? 'UNKNOWN');
@@ -883,6 +887,7 @@
 			});
 
 			map.on('click', 'earthquakes-layer', (e: MapLayerMouseEvent) => {
+				if (clickHitsVisibleStravaFeature(map, e)) return;
 				const feature = e.features?.[0];
 				const title = String(feature?.properties?.title ?? 'Earthquake');
 				const magnitude = String(feature?.properties?.magnitude ?? '');
@@ -895,6 +900,7 @@
 			});
 
 			map.on('click', 'gas-stations-layer', (e: MapLayerMouseEvent) => {
+				if (clickHitsVisibleStravaFeature(map, e)) return;
 				const feature = e.features?.[0];
 				const name = String(feature?.properties?.name ?? 'Gas Station');
 				const price = String(feature?.properties?.price ?? '');
@@ -909,6 +915,7 @@
 			});
 
 			map.on('click', 'ev-charging-stations-layer', (e: MapLayerMouseEvent) => {
+				if (clickHitsVisibleStravaFeature(map, e)) return;
 				const feature = e.features?.[0];
 				const name = String(feature?.properties?.name ?? 'EV Station');
 				const network = String(feature?.properties?.network ?? '');
@@ -925,6 +932,7 @@
 			});
 
 			map.on('click', 'fire-incidents-layer', (e: MapLayerMouseEvent) => {
+				if (clickHitsVisibleStravaFeature(map, e)) return;
 				const feature = e.features?.[0];
 				const name = String(feature?.properties?.name ?? 'Fire');
 				const acres = Number(feature?.properties?.acres ?? 0);
@@ -940,6 +948,7 @@
 			});
 
 			map.on('click', 'airports-layer', (e: MapLayerMouseEvent) => {
+				if (clickHitsVisibleStravaFeature(map, e)) return;
 				const feature = e.features?.[0];
 				const code = String(feature?.properties?.code ?? '');
 				const name = String(feature?.properties?.name ?? 'Airport');
