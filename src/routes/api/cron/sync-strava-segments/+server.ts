@@ -49,8 +49,11 @@ export const GET: RequestHandler = async ({ request }) => {
 			const cid = env.STRAVA_CLIENT_ID;
 			const cs = env.STRAVA_CLIENT_SECRET;
 			const rt = env.STRAVA_REFRESH_TOKEN;
-			const body = new URLSearchParams({ client_id: cid!, client_secret: cs!, grant_type: 'refresh_token', refresh_token: rt! });
-			const tr = await fetch('https://www.strava.com/oauth/token', { method: 'POST', body });
+			const tr = await fetch('https://www.strava.com/oauth/token', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: `client_id=${cid}&client_secret=${cs}&grant_type=refresh_token&refresh_token=${rt}`
+			});
 			if (!tr.ok) {
 				const tb = await tr.text();
 				diagResult = `token_refresh: ${tr.status} — ${tb} — cid_len=${cid?.length} cs_len=${cs?.length} rt_len=${rt?.length}`;
