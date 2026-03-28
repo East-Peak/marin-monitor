@@ -310,8 +310,7 @@
 
 <style>
 	.segment-card {
-		display: flex;
-		flex-direction: column;
+		flex-shrink: 0;
 		border: 1px solid var(--border);
 		border-radius: 8px;
 		background: rgba(255, 255, 255, 0.03);
