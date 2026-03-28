@@ -156,8 +156,10 @@ export async function buildSegmentCatalog(
 			if (detail && detail.map?.polyline) {
 				const existing = existingById.get(seed.id);
 				catalog.set(seed.id, {
-					id: detail.id,
-					name: detail.name,
+					// Keep the curated seed identity stable even when Strava resolves the
+					// detail request to a different canonical segment ID/name.
+					id: seed.id,
+					name: seed.name,
 					activityType: seed.activityType,
 					polyline: detail.map.polyline,
 					startLatlng: detail.start_latlng,

@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { getContext, onMount, onDestroy } from 'svelte';
 	import { get, type Writable } from 'svelte/store';
-	import type { Map as MapLibreMap, GeoJSONSource, MapLayerMouseEvent } from 'maplibre-gl';
+	import type {
+		Map as MapLibreMap,
+		GeoJSONSource,
+		MapGeoJSONFeature,
+		MapMouseEvent
+	} from 'maplibre-gl';
 	import { stravaSegments, loadLeaderboard } from '$lib/stores/strava';
 	import { showSegments } from '$lib/stores/map';
 	import type { StravaSegment } from '$lib/types/strava';
@@ -12,8 +17,10 @@
 	}>('maplibre-map');
 
 	let removeStyleLoadListener: (() => void) | null = null;
+	let removeInteractionListeners: (() => void) | null = null;
 	let interactionsBound = false;
 	let activePopup: { remove: () => void } | null = null;
+	let popupToken = 0;
 
 	// Layer IDs used by this component
 	const SEGMENT_LAYERS = [
@@ -268,7 +275,18 @@
 		}
 	}
 
-	function buildPopupHTML(props: Record<string, unknown>): string {
+	interface PopupRefs {
+		root: HTMLDivElement;
+		statsEl: HTMLDivElement;
+		attemptsEl: HTMLDivElement;
+		leaderboardEl: HTMLDivElement;
+	}
+
+	function buildPopupContent(props: Record<string, unknown>): {
+		content: HTMLDivElement;
+		refs: PopupRefs;
+		segmentId: number;
+	} {
 		const name = escapeHtml(String(props.name ?? 'Segment'));
 		const activityType = String(props.activityType ?? 'ride');
 		const distance = Number(props.distance ?? 0);
@@ -289,18 +307,19 @@
 			? `${totalAttempts.toLocaleString()} attempts &middot; ${totalAthletes.toLocaleString()} athletes`
 			: '';
 
-		return `
+		const content = document.createElement('div');
+		content.innerHTML = `
 			<div style="font-family: system-ui, sans-serif; min-width: 180px; max-width: 260px;">
 				<div style="font-weight: 600; font-size: 13px; color: ${typeColor}; margin-bottom: 4px;">
 					${typeIcon} ${name}
 				</div>
-				<div id="strava-popup-stats-${segId}" style="font-size: 11px; color: #a1a1aa; margin-bottom: 6px;">
+				<div data-popup-role="stats" style="font-size: 11px; color: #a1a1aa; margin-bottom: 6px;">
 					${statsLine}
 				</div>
-				<div id="strava-popup-attempts-${segId}" style="font-size: 10px; color: #71717a;">
+				<div data-popup-role="attempts" style="font-size: 10px; color: #71717a;">
 					${attemptsLine}
 				</div>
-				<div id="strava-popup-lb-${segId}" style="margin-top: 6px; font-size: 10px; color: #71717a;">
+				<div data-popup-role="leaderboard" style="margin-top: 6px; font-size: 10px; color: #71717a;">
 					Loading leaderboard...
 				</div>
 				<div style="margin-top: 6px; font-size: 9px;">
@@ -311,39 +330,49 @@
 				</div>
 			</div>
 		`;
+
+		return {
+			content,
+			refs: {
+				root: content,
+				statsEl: content.querySelector('[data-popup-role="stats"]') as HTMLDivElement,
+				attemptsEl: content.querySelector('[data-popup-role="attempts"]') as HTMLDivElement,
+				leaderboardEl: content.querySelector(
+					'[data-popup-role="leaderboard"]'
+				) as HTMLDivElement
+			},
+			segmentId: segId
+		};
 	}
 
-	async function populateLeaderboard(segId: number): Promise<void> {
-		const el = document.getElementById(`strava-popup-lb-${segId}`);
-		if (!el) return;
-
+	async function populateLeaderboard(segId: number, refs: PopupRefs, currentToken: number): Promise<void> {
 		const lb = await loadLeaderboard(segId);
+		if (currentToken !== popupToken || !refs.root.isConnected) return;
+
 		if (!lb) {
-			el.textContent = 'Leaderboard unavailable';
+			refs.leaderboardEl.textContent = 'Leaderboard unavailable';
 			return;
 		}
 
 		// Update stats line with real data from leaderboard scrape
-		const statsEl = document.getElementById(`strava-popup-stats-${segId}`);
-		if (statsEl) {
-			const parts = buildStatsParts(lb.distance, lb.elevationGain, lb.avgGrade);
-			if (parts.length > 0) {
-				statsEl.innerHTML = parts.join(' &middot; ');
-			} else {
-				statsEl.textContent = 'Stats unavailable';
-			}
+		const parts = buildStatsParts(lb.distance, lb.elevationGain, lb.avgGrade);
+		if (parts.length > 0) {
+			refs.statsEl.innerHTML = parts.join(' &middot; ');
+		} else {
+			refs.statsEl.textContent = 'Stats unavailable';
 		}
 
 		// Update attempts/athletes line with real data
-		const attemptsEl = document.getElementById(`strava-popup-attempts-${segId}`);
-		if (attemptsEl && (lb.totalAttempts > 0 || lb.totalAthletes > 0)) {
-			attemptsEl.innerHTML = `${lb.totalAttempts.toLocaleString()} attempts &middot; ${lb.totalAthletes.toLocaleString()} athletes`;
+		if (lb.totalAttempts > 0 || lb.totalAthletes > 0) {
+			refs.attemptsEl.innerHTML = `${lb.totalAttempts.toLocaleString()} attempts &middot; ${lb.totalAthletes.toLocaleString()} athletes`;
+		} else {
+			refs.attemptsEl.textContent = '';
 		}
 
 		const lbParts: string[] = [];
 		if (lb.cr) {
 			lbParts.push(
-				`<div><strong style="color:#f59e0b;">CR:</strong> ${escapeHtml(lb.cr.athleteName)} — ${escapeHtml(formatTime(lb.cr.time))}</div>`
+				`<div><strong style="color:#f59e0b;">KOM:</strong> ${escapeHtml(lb.cr.athleteName)} — ${escapeHtml(formatTime(lb.cr.time))}</div>`
 			);
 		}
 		if (lb.qom) {
@@ -362,18 +391,42 @@
 			lbParts.push('</div>');
 		}
 
-		el.innerHTML = lbParts.length > 0 ? lbParts.join('') : 'No public leaderboard rows available right now.';
+		refs.leaderboardEl.innerHTML =
+			lbParts.length > 0 ? lbParts.join('') : 'No public leaderboard rows available right now.';
 	}
 
-	async function showPopup(map: MapLibreMap, e: MapLayerMouseEvent): Promise<void> {
-		const feature = e.features?.[0];
-		if (!feature) return;
+	function getInteractiveLayerIds(map: MapLibreMap): string[] {
+		return SEGMENT_LAYERS.filter((layerId) => Boolean(map.getLayer(layerId)));
+	}
 
+	function getFeaturePriority(feature: MapGeoJSONFeature): number {
+		if (feature.layer.id === 'strava-lines-ride' || feature.layer.id === 'strava-lines-run') return 0;
+		if (feature.layer.id === 'strava-pins') return 1;
+		if (feature.layer.id === 'strava-pins-labels') return 2;
+		return 3;
+	}
+
+	function getPopupFeature(map: MapLibreMap, e: MapMouseEvent): MapGeoJSONFeature | null {
+		const layers = getInteractiveLayerIds(map);
+		if (layers.length === 0) return null;
+
+		const features = map.queryRenderedFeatures(e.point, { layers });
+		if (features.length === 0) return null;
+
+		return [...features].sort((a, b) => getFeaturePriority(a) - getFeaturePriority(b))[0] ?? null;
+	}
+
+	async function showPopup(
+		map: MapLibreMap,
+		e: MapMouseEvent,
+		feature: MapGeoJSONFeature
+	): Promise<void> {
 		const props = feature.properties ?? {};
-		const segId = Number(props.id ?? 0);
+		const { content, refs, segmentId } = buildPopupContent(props);
+		const currentToken = ++popupToken;
 
 		// Get coordinates for popup placement
-		let lngLat = e.lngLat;
+		const lngLat = e.lngLat;
 
 		// Close existing popup
 		activePopup?.remove();
@@ -386,14 +439,19 @@
 			maxWidth: '280px'
 		})
 			.setLngLat(lngLat)
-			.setHTML(buildPopupHTML(props))
+			.setDOMContent(content)
 			.addTo(map);
+
+		if (currentToken !== popupToken) {
+			popup.remove();
+			return;
+		}
 
 		activePopup = popup;
 
 		// Lazy-load leaderboard data
-		if (segId) {
-			void populateLeaderboard(segId);
+		if (segmentId) {
+			void populateLeaderboard(segmentId, refs, currentToken);
 		}
 	}
 
@@ -401,21 +459,29 @@
 		if (interactionsBound) return;
 		interactionsBound = true;
 
-		// Click handlers for all segment layers
-		const clickLayers = ['strava-lines-ride', 'strava-lines-run', 'strava-pins'] as const;
-		for (const layerId of clickLayers) {
-			map.on('click', layerId, (e: MapLayerMouseEvent) => {
-				void showPopup(map, e);
-			});
+		const handleClick = (e: MapMouseEvent) => {
+			const feature = getPopupFeature(map, e);
+			if (!feature) return;
+			void showPopup(map, e, feature);
+		};
 
-			map.on('mouseenter', layerId, () => {
-				map.getCanvas().style.cursor = 'pointer';
-			});
+		const handleMouseMove = (e: MapMouseEvent) => {
+			map.getCanvas().style.cursor = getPopupFeature(map, e) ? 'pointer' : '';
+		};
 
-			map.on('mouseleave', layerId, () => {
-				map.getCanvas().style.cursor = '';
-			});
-		}
+		const handleMouseOut = () => {
+			map.getCanvas().style.cursor = '';
+		};
+
+		map.on('click', handleClick);
+		map.on('mousemove', handleMouseMove);
+		map.on('mouseout', handleMouseOut);
+
+		removeInteractionListeners = () => {
+			map.off('click', handleClick);
+			map.off('mousemove', handleMouseMove);
+			map.off('mouseout', handleMouseOut);
+		};
 	}
 
 	/** Toggle visibility of all segment layers */
@@ -449,10 +515,8 @@
 			// Re-setup after theme/style change
 			removeStyleLoadListener?.();
 			const handleStyleLoad = () => {
-				interactionsBound = false;
 				setupSources(map);
 				updateData(map);
-				bindInteractions(map);
 				setVisible(get(showSegments));
 			};
 			map.on('style.load', handleStyleLoad);
@@ -484,6 +548,7 @@
 
 	onDestroy(() => {
 		removeStyleLoadListener?.();
+		removeInteractionListeners?.();
 		unsubscribeSegments?.();
 		unsubscribeVisibility?.();
 		activePopup?.remove();

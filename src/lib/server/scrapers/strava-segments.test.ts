@@ -188,6 +188,47 @@ describe('buildSegmentCatalog', () => {
 			}
 		});
 	});
+
+	describe('when Strava detail API resolves to a different canonical ID', () => {
+		it('keeps the seed ID and curated name stable in the catalog', async () => {
+			const auth = await import('./strava-auth');
+			vi.spyOn(auth, 'getStravaAccessToken').mockResolvedValue('token');
+
+			const seed = SEED_SEGMENTS.find((segment) => segment.id === 15160205)!;
+			const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+				const url = String(input);
+				if (!url.includes('/segments/15160205')) {
+					return new Response(null, { status: 404 });
+				}
+
+				return new Response(
+					JSON.stringify({
+						id: 668182,
+						name: 'Canonical Strava Name',
+						activity_type: 'Run',
+						distance: 1300,
+						average_grade: 5.4,
+						total_elevation_gain: 88,
+						climb_category: 0,
+						start_latlng: seed.startLatlng,
+						end_latlng: seed.startLatlng,
+						map: { polyline: 'encoded-polyline' }
+					}),
+					{ status: 200, headers: { 'Content-Type': 'application/json' } }
+				);
+			});
+
+			const catalog = await buildSegmentCatalog(null);
+			const segment = catalog.segments.find((entry) => entry.id === seed.id);
+
+			expect(segment).toBeDefined();
+			expect(segment?.id).toBe(seed.id);
+			expect(segment?.name).toBe(seed.name);
+			expect(segment?.polyline).toBe('encoded-polyline');
+
+			fetchMock.mockRestore();
+		});
+	});
 });
 
 describe('seed catalog helpers', () => {
