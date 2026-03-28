@@ -45,14 +45,22 @@ export const GET: RequestHandler = async ({ request }) => {
 		// Diagnostic: also try one direct fetch to see if Strava API works from this runtime
 		let diagResult = 'not run';
 		try {
-			const { getStravaAccessToken } = await import('$lib/server/scrapers/strava-auth');
-			const tk = await getStravaAccessToken();
-			const r = await fetch(`https://www.strava.com/api/v3/segments/229781`, {
-				headers: { Authorization: `Bearer ${tk}` }
-			});
-			const d = await r.json() as Record<string, unknown>;
-			const m = d.map as Record<string, unknown> | undefined;
-			diagResult = `HTTP ${r.status}, name=${d.name}, polyline=${m?.polyline ? 'yes' : 'no'}`;
+			// Direct token refresh test from this runtime
+			const cid = env.STRAVA_CLIENT_ID;
+			const cs = env.STRAVA_CLIENT_SECRET;
+			const rt = env.STRAVA_REFRESH_TOKEN;
+			const body = new URLSearchParams({ client_id: cid!, client_secret: cs!, grant_type: 'refresh_token', refresh_token: rt! });
+			const tr = await fetch('https://www.strava.com/oauth/token', { method: 'POST', body });
+			if (!tr.ok) {
+				const tb = await tr.text();
+				diagResult = `token_refresh: ${tr.status} — ${tb} — cid_len=${cid?.length} cs_len=${cs?.length} rt_len=${rt?.length}`;
+			} else {
+				const td = await tr.json() as Record<string, string>;
+				const sr = await fetch('https://www.strava.com/api/v3/segments/229781', { headers: { Authorization: `Bearer ${td.access_token}` } });
+				const sd = await sr.json() as Record<string, unknown>;
+				const m = sd.map as Record<string, unknown> | undefined;
+				diagResult = `token=ok segment=${sr.status} name=${sd.name} polyline=${m?.polyline ? 'yes' : 'no'}`;
+			}
 		} catch (e) {
 			diagResult = `error: ${e instanceof Error ? e.message : String(e)}`;
 		}
