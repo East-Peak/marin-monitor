@@ -26,15 +26,17 @@ export async function getStravaAccessToken(): Promise<string> {
 		);
 	}
 
+	const body = new URLSearchParams({
+		client_id: clientId,
+		client_secret: clientSecret,
+		grant_type: 'refresh_token',
+		refresh_token: refreshToken
+	});
+
 	const response = await fetch('https://www.strava.com/oauth/token', {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			client_id: clientId,
-			client_secret: clientSecret,
-			grant_type: 'refresh_token',
-			refresh_token: refreshToken
-		})
+		headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+		body: body.toString()
 	});
 
 	if (!response.ok) {
