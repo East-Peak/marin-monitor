@@ -76,7 +76,8 @@ async function fetchSegmentDetail(
 		});
 
 		if (!response.ok) {
-			console.warn(`[strava-segments] Segment ${segmentId} detail API: ${response.status}`);
+			const body = await response.text();
+			console.warn(`[strava-segments] Segment ${segmentId} detail API: ${response.status} — ${body.slice(0, 200)}`);
 			return null;
 		}
 
@@ -127,7 +128,10 @@ export async function buildSegmentCatalog(
 		let enriched = 0;
 
 		for (const seed of SEED_SEGMENTS) {
+			// Small delay between requests to avoid rate limiting
+			if (enriched > 0) await new Promise((r) => setTimeout(r, 500));
 			const detail = await fetchSegmentDetail(token, seed.id);
+			console.log(`[strava-segments] Segment ${seed.id} (${seed.name}): detail=${detail ? 'ok' : 'null'}, polyline=${detail?.map?.polyline ? 'yes' : 'no'}`);
 			if (detail && detail.map?.polyline) {
 				const existing = existingById.get(seed.id);
 				catalog.set(seed.id, {
