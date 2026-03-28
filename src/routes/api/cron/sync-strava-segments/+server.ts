@@ -56,7 +56,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			});
 			if (!tr.ok) {
 				const tb = await tr.text();
-				diagResult = `token_refresh: ${tr.status} — ${tb} — cid_len=${cid?.length} cs_len=${cs?.length} rt_len=${rt?.length}`;
+				diagResult = `token_refresh: ${tr.status} — ${tb} — cid=${cid?.slice(0,3)}...${cid?.slice(-3)} cs=${cs?.slice(0,4)}...${cs?.slice(-4)} rt=${rt?.slice(0,4)}...${rt?.slice(-4)}`;
 			} else {
 				const td = await tr.json() as Record<string, string>;
 				const sr = await fetch('https://www.strava.com/api/v3/segments/229781', { headers: { Authorization: `Bearer ${td.access_token}` } });
