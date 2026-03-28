@@ -1,5 +1,51 @@
 [
   {
+    "id": "nixle-novato-pd-h6zsd",
+    "title": "***UPDATE*** Ignacio Blvd reopened between Country Club Dr & Fairway Dr",
+    "link": "https://nixle.us/H6ZSD",
+    "pubDate": "2026-03-26T06:25:00.000Z",
+    "timestamp": 1774506300000,
+    "description": "Novato PD advises that Eastbound Ignacio Blvd between Country Club Dr & Fairway Dr is now OPEN. The roadway has been cleared and traffic may resume.",
+    "content": "Novato PD advises that Eastbound Ignacio Blvd between Country Club Dr & Fairway Dr is now OPEN. The roadway has been cleared and traffic may resume.",
+    "source": "Novato PD",
+    "category": "safety",
+    "verification": "official",
+    "topics": [
+      "public-safety",
+      "police-alert",
+      "advisory",
+      "official-update"
+    ],
+    "isAlert": true,
+    "town": "Novato",
+    "townSlug": "novato",
+    "locationConfidence": "town",
+    "locationEvidence": "Novato"
+  },
+  {
+    "id": "nixle-novato-pd-h6zk5",
+    "title": "AVOID Eastbound Ignacio Blvd between Country Club Dr & Fairway Dr due to fallen tree. Roadway closed. Use alternate routes at this time.",
+    "link": "https://nixle.us/H6ZK5",
+    "pubDate": "2026-03-26T03:16:00.000Z",
+    "timestamp": 1774494960000,
+    "description": "Novato PD advises you to AVOID Eastbound Ignacio Blvd between Country Club Dr & Fairway Dr due to a fallen tree. Roadway is closed at this time. Please use alternate routes and expect delays. Emergency crews are on scene. Update will be pr…",
+    "content": "Novato PD advises you to AVOID Eastbound Ignacio Blvd between Country Club Dr & Fairway Dr due to a fallen tree. Roadway is closed at this time. Please use alternate routes and expect delays. Emergency crews are on scene. Update will be provided when roadway is open.",
+    "source": "Novato PD",
+    "category": "safety",
+    "verification": "official",
+    "topics": [
+      "public-safety",
+      "police-alert",
+      "advisory",
+      "official-update"
+    ],
+    "isAlert": true,
+    "town": "Novato",
+    "townSlug": "novato",
+    "locationConfidence": "town",
+    "locationEvidence": "Novato"
+  },
+  {
     "id": "mill-valley-police-log-11759",
     "title": "Weekly calls for service · March 12, 2026 to March 19, 2026",
     "link": "https://www.cityofmillvalley.gov/DocumentCenter/View/11759/Calls-for-Service-03March-12-2026-to-03March-19-2026",
@@ -999,28 +1045,5 @@
     "townSlug": "novato",
     "locationConfidence": "town",
     "locationEvidence": "Novato"
-  },
-  {
-    "id": "nixle-san-rafael-pd-gyrhr",
-    "title": "POWER HAS BEEN RESTORED IN THE AREA OF ARIAS AND LAS PAVADAS",
-    "link": "https://nixle.us/GYRHR",
-    "pubDate": "2026-01-10T13:16:00.000Z",
-    "timestamp": 1768050960000,
-    "description": "POWER HAS BEEN RESTORED IN THE AREA OF ARIAS, LAS PAVADAS, AND NOVA ALBION",
-    "content": "POWER HAS BEEN RESTORED IN THE AREA OF ARIAS, LAS PAVADAS, AND NOVA ALBION",
-    "source": "San Rafael PD",
-    "category": "safety",
-    "verification": "official",
-    "topics": [
-      "public-safety",
-      "police-alert",
-      "advisory",
-      "official-update"
-    ],
-    "isAlert": true,
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "locationConfidence": "town",
-    "locationEvidence": "San Rafael"
   }
 ]

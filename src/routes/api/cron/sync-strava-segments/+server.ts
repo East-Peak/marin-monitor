@@ -54,10 +54,13 @@ export const GET: RequestHandler = async ({ request }) => {
 		const segmentCount = catalog.segments.length;
 		const withPolylines = catalog.segments.filter((s) => s.polyline !== null).length;
 
+		// Check if env vars are present (for diagnostics)
+		const hasOAuth = Boolean(env.STRAVA_CLIENT_ID && env.STRAVA_CLIENT_SECRET && env.STRAVA_REFRESH_TOKEN);
+
 		console.log(
-			`[sync-strava-segments] OK: ${segmentCount} segments (${withPolylines} with polylines) in ${Date.now() - start}ms`
+			`[sync-strava-segments] OK: ${segmentCount} segments (${withPolylines} with polylines) hasOAuth=${hasOAuth} in ${Date.now() - start}ms`
 		);
-		return new Response(JSON.stringify({ ok: true, segmentCount, withPolylines }), {
+		return new Response(JSON.stringify({ ok: true, segmentCount, withPolylines, hasOAuth }), {
 			headers: { 'Content-Type': 'application/json' }
 		});
 	} catch (err) {
