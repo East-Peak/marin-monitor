@@ -92,6 +92,17 @@
 		return `${grade.toFixed(1)}% avg`;
 	}
 
+	function hasRenderableLeaderboardData(data: StravaLeaderboard | null): boolean {
+		return Boolean(
+			data &&
+				(data.cr ||
+					data.qom ||
+					data.rows.length > 0 ||
+					data.totalAttempts > 0 ||
+					data.totalAthletes > 0)
+		);
+	}
+
 	async function ensureLeaderboardLoaded(force = false) {
 		if ((leaderboard || loading) && !force) return;
 		loading = true;
@@ -114,7 +125,7 @@
 		const nextExpanded = !expanded;
 		expanded = nextExpanded;
 		if (nextExpanded) {
-			await ensureLeaderboardLoaded(!leaderboard);
+			await ensureLeaderboardLoaded(!hasRenderableLeaderboardData(leaderboard));
 		}
 	}
 

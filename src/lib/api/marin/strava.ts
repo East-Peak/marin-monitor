@@ -10,7 +10,7 @@ export async function fetchStravaSegments(): Promise<StravaSegmentCatalog> {
 	try {
 		logger.log('Strava', 'Loading Strava segments from /api/data/strava-segments');
 
-		const response = await fetchWithTimeout('/api/data/strava-segments');
+		const response = await fetchWithTimeout('/api/data/strava-segments', { cache: 'no-store' });
 		if (!response.ok) {
 			throw new Error(`Strava segments fetch failed: ${response.status}`);
 		}
@@ -28,7 +28,9 @@ export async function fetchStravaLeaderboard(segmentId: number): Promise<StravaL
 	try {
 		logger.log('Strava', `Loading Strava leaderboard for segment ${segmentId}`);
 
-		const response = await fetchWithTimeout(`/api/data/strava-leaderboard/${segmentId}`);
+		const response = await fetchWithTimeout(`/api/data/strava-leaderboard/${segmentId}`, {
+			cache: 'no-store'
+		});
 		if (!response.ok) {
 			throw new Error(`Strava leaderboard fetch failed: ${response.status}`);
 		}
@@ -44,7 +46,7 @@ export async function fetchStravaEvents(): Promise<StravaEventLog> {
 	try {
 		logger.log('Strava', 'Loading Strava events from /api/data/strava-events');
 
-		const response = await fetchWithTimeout('/api/data/strava-events');
+		const response = await fetchWithTimeout('/api/data/strava-events', { cache: 'no-store' });
 		if (!response.ok) {
 			throw new Error(`Strava events fetch failed: ${response.status}`);
 		}
