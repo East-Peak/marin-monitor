@@ -42,6 +42,20 @@ export const GET: RequestHandler = async ({ request }) => {
 		const existing = await readBlob<StravaSegmentCatalog>(STRAVA_SEGMENTS_BLOB);
 
 		const catalog = await buildSegmentCatalog(existing);
+		// Diagnostic: also try one direct fetch to see if Strava API works from this runtime
+		let diagResult = 'not run';
+		try {
+			const { getStravaAccessToken } = await import('$lib/server/scrapers/strava-auth');
+			const tk = await getStravaAccessToken();
+			const r = await fetch(`https://www.strava.com/api/v3/segments/229781`, {
+				headers: { Authorization: `Bearer ${tk}` }
+			});
+			const d = await r.json() as Record<string, unknown>;
+			const m = d.map as Record<string, unknown> | undefined;
+			diagResult = `HTTP ${r.status}, name=${d.name}, polyline=${m?.polyline ? 'yes' : 'no'}`;
+		} catch (e) {
+			diagResult = `error: ${e instanceof Error ? e.message : String(e)}`;
+		}
 
 		await put(STRAVA_SEGMENTS_BLOB, JSON.stringify(catalog), {
 			access: 'private',
@@ -60,7 +74,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		console.log(
 			`[sync-strava-segments] OK: ${segmentCount} segments (${withPolylines} with polylines) hasOAuth=${hasOAuth} in ${Date.now() - start}ms`
 		);
-		return new Response(JSON.stringify({ ok: true, segmentCount, withPolylines, hasOAuth }), {
+		return new Response(JSON.stringify({ ok: true, segmentCount, withPolylines, hasOAuth, diagResult }), {
 			headers: { 'Content-Type': 'application/json' }
 		});
 	} catch (err) {
