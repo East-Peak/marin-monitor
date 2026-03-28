@@ -13,7 +13,8 @@ export type TvScreenId =
   | 'cameras-central-highway'
   | 'cameras-west-north'
   | 'conditions'
-  | 'community';
+  | 'community'
+  | 'leaderboards';
 
 export interface TvScreenConfig {
   id: TvScreenId;
@@ -36,7 +37,8 @@ export const TV_SCREENS: TvScreenConfig[] = [
   { id: 'cameras-central-highway', name: 'Central & Highway', description: '101 corridor and central Marin cameras', durationMs: 20_000 },
   { id: 'cameras-west-north', name: 'West & North', description: 'West Marin and Novato hill cameras', durationMs: 20_000 },
   { id: 'conditions', name: 'Conditions & Trails', description: 'AQI, tides, streams, Hero Dirt', durationMs: 20_000 },
-  { id: 'community', name: 'Outdoors & Community', description: 'Outdoor and civic news', durationMs: 20_000 }
+  { id: 'community', name: 'Outdoors & Community', description: 'Outdoor and civic news', durationMs: 20_000 },
+  { id: 'leaderboards', name: 'Marin Leaderboards', description: 'Strava KOMs and course records', durationMs: 20_000 },
 ];
 export const TV_REFRESH_INTERVAL_MS = 3 * 60 * 1000; // 3 minutes
 export const CURSOR_HIDE_MS = 5_000;

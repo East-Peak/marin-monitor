@@ -11,6 +11,7 @@
   import TvCameraClusterScreen from './screens/TvCameraClusterScreen.svelte';
   import TvConditionsScreen from './screens/TvConditionsScreen.svelte';
   import TvCommunityScreen from './screens/TvCommunityScreen.svelte';
+  import TvLeaderboardsScreen from './screens/TvLeaderboardsScreen.svelte';
   import {
     TV_SCREENS,
     TV_MAP_VIEWS,
@@ -336,6 +337,8 @@
             <TvCameraClusterScreen clusterId="west-north" />
           {:else if screen.id === 'community'}
             <TvCommunityScreen />
+          {:else if screen.id === 'leaderboards'}
+            <TvLeaderboardsScreen />
           {/if}
         </TvScreen>
       {/if}
