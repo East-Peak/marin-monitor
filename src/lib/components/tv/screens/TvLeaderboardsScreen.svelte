@@ -2,7 +2,11 @@
 	import { onMount } from 'svelte';
 	import { stravaSegments, stravaEvents, stravaLeaderboards, loadStravaData, loadLeaderboard } from '$lib/stores/strava';
 	import TvAutoScroll from '$lib/components/tv/TvAutoScroll.svelte';
-	import type { StravaSegment, StravaLeaderboard } from '$lib/types/strava';
+	import type { StravaSegment, StravaLeaderboard, StravaLeaderboardRow } from '$lib/types/strava';
+
+	type VisibleLeaderboardRow = StravaLeaderboardRow & {
+		displayRank: number;
+	};
 
 	// ---- Derived segment lists ----
 	const cyclingSegments = $derived(
@@ -45,6 +49,13 @@
 		const distance = leaderboard?.distance ?? segment.distance;
 		if (!distance || distance <= 0) return null;
 		return `${(distance / 1000).toFixed(1)}km`;
+	}
+
+	function visibleTopRows(leaderboard: StravaLeaderboard | undefined): VisibleLeaderboardRow[] {
+		return (leaderboard?.rows.slice(0, 3) ?? []).map((row, index) => ({
+			...row,
+			displayRank: index + 1
+		}));
 	}
 
 	// ---- Leaderboard lookup ----
@@ -103,7 +114,7 @@
 	<!-- Header -->
 	<div class="shrink-0 px-4 py-2 flex items-center gap-3 border-b border-gray-800">
 		<span class="text-lg font-bold tracking-wide" style="color:#fc4c02;">MARIN LEADERBOARDS</span>
-		<span class="text-xs text-gray-500 uppercase tracking-widest">Strava KOMs &amp; Course Records</span>
+		<span class="text-xs text-gray-500 uppercase tracking-widest">Strava KOMs &amp; QOMs</span>
 	</div>
 
 	<!-- Two-column body -->
@@ -117,6 +128,7 @@
 					<div class="flex flex-col gap-2">
 						{#each cyclingSegments as seg (seg.id)}
 							{@const lb = getLeaderboard(seg.id)}
+							{@const topRows = visibleTopRows(lb)}
 							{@const climbLabel = categoryLabel(seg.climbCategory)}
 							{@const distanceLabel = segmentDistanceLabel(seg, lb)}
 							<div class="rounded-lg border border-gray-800 p-2.5" style="background:#111;">
@@ -159,16 +171,20 @@
 										</div>
 
 										<div class="min-w-0 flex-1 border-l border-gray-800 pl-2">
-											<div class="text-[8px] uppercase tracking-widest text-gray-600 mb-1">Top 3</div>
-											<div class="flex flex-col gap-0.5">
-												{#each lb.rows.slice(0, 3) as row}
-													<div class="flex items-center gap-1.5 text-[9px]">
-														<span class="w-4 text-right font-mono text-gray-600">#{row.rank}</span>
-														<span class="truncate flex-1 text-gray-400">{row.athleteName}</span>
-														<span class="font-mono text-gray-300">{row.time}</span>
-													</div>
-												{/each}
-											</div>
+											<div class="text-[8px] uppercase tracking-widest text-gray-600 mb-1">Visible Top 3</div>
+											{#if topRows.length > 0}
+												<div class="flex flex-col gap-0.5">
+													{#each topRows as row}
+														<div class="flex items-center gap-1.5 text-[9px]">
+															<span class="w-4 text-right font-mono text-gray-600">#{row.displayRank}</span>
+															<span class="truncate flex-1 text-gray-400">{row.athleteName}</span>
+															<span class="font-mono text-gray-300">{row.time}</span>
+														</div>
+													{/each}
+												</div>
+											{:else}
+												<div class="text-[9px] text-gray-600 italic">No public rows right now</div>
+											{/if}
 										</div>
 									</div>
 								{:else}
@@ -196,6 +212,7 @@
 					<div class="flex flex-col gap-2">
 						{#each runningSegments as seg (seg.id)}
 							{@const lb = getLeaderboard(seg.id)}
+							{@const topRows = visibleTopRows(lb)}
 							{@const distanceLabel = segmentDistanceLabel(seg, lb)}
 							<div class="rounded-lg border border-gray-800 p-2.5" style="background:#111;">
 								<!-- Segment header -->
@@ -211,7 +228,7 @@
 										<div class="min-w-0 basis-[54%] flex flex-col gap-1.5">
 											{#if lb.cr}
 												<div class="flex items-center gap-1.5">
-													<span class="text-[9px] font-bold px-1 py-0.5 rounded" style="background:#2dd4bf22; color:#2dd4bf; border:1px solid #2dd4bf44;">CR</span>
+													<span class="text-[9px] font-bold px-1 py-0.5 rounded" style="background:#2dd4bf22; color:#2dd4bf; border:1px solid #2dd4bf44;">KOM</span>
 													<span class="text-[10px] text-gray-300 truncate flex-1">{lb.cr.athleteName}</span>
 													<span class="text-[10px] font-mono" style="color:#2dd4bf;">{lb.cr.time}</span>
 												</div>
@@ -229,16 +246,20 @@
 										</div>
 
 										<div class="min-w-0 flex-1 border-l border-gray-800 pl-2">
-											<div class="text-[8px] uppercase tracking-widest text-gray-600 mb-1">Top 3</div>
-											<div class="flex flex-col gap-0.5">
-												{#each lb.rows.slice(0, 3) as row}
-													<div class="flex items-center gap-1.5 text-[9px]">
-														<span class="w-4 text-right font-mono text-gray-600">#{row.rank}</span>
-														<span class="truncate flex-1 text-gray-400">{row.athleteName}</span>
-														<span class="font-mono text-gray-300">{row.time}</span>
-													</div>
-												{/each}
-											</div>
+											<div class="text-[8px] uppercase tracking-widest text-gray-600 mb-1">Visible Top 3</div>
+											{#if topRows.length > 0}
+												<div class="flex flex-col gap-0.5">
+													{#each topRows as row}
+														<div class="flex items-center gap-1.5 text-[9px]">
+															<span class="w-4 text-right font-mono text-gray-600">#{row.displayRank}</span>
+															<span class="truncate flex-1 text-gray-400">{row.athleteName}</span>
+															<span class="font-mono text-gray-300">{row.time}</span>
+														</div>
+													{/each}
+												</div>
+											{:else}
+												<div class="text-[9px] text-gray-600 italic">No public rows right now</div>
+											{/if}
 										</div>
 									</div>
 								{:else}

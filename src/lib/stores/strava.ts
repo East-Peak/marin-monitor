@@ -12,6 +12,7 @@ interface CachedLeaderboard {
 }
 
 const LEADERBOARD_CACHE_TTL_MS = 5 * 60 * 1000;
+const pendingLeaderboardRequests = new Map<number, Promise<StravaLeaderboard | null>>();
 
 const leaderboardCache = writable<Map<number, CachedLeaderboard>>(new Map());
 export const stravaLeaderboards = derived(leaderboardCache, ($cache) => {
@@ -57,16 +58,31 @@ export async function loadLeaderboard(segmentId: number): Promise<StravaLeaderbo
 		return cached.data;
 	}
 
-	const data = await fetchStravaLeaderboard(segmentId);
-	if (data && shouldCacheLeaderboard(data)) {
-		leaderboardCache.update(($cache) => {
-			const next = new Map($cache);
-			next.set(segmentId, {
-				data,
-				fetchedAt: Date.now()
-			});
-			return next;
-		});
+	const pending = pendingLeaderboardRequests.get(segmentId);
+	if (pending) {
+		return pending;
 	}
-	return data;
+
+	const request = (async () => {
+		const data = await fetchStravaLeaderboard(segmentId);
+		if (data && shouldCacheLeaderboard(data)) {
+			leaderboardCache.update(($cache) => {
+				const next = new Map($cache);
+				next.set(segmentId, {
+					data,
+					fetchedAt: Date.now()
+				});
+				return next;
+			});
+		}
+		return data;
+	})();
+
+	pendingLeaderboardRequests.set(segmentId, request);
+
+	try {
+		return await request;
+	} finally {
+		pendingLeaderboardRequests.delete(segmentId);
+	}
 }

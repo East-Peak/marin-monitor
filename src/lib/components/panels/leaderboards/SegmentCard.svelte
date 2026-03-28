@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import type { StravaSegment, StravaLeaderboard } from '$lib/types/strava';
+	import type { StravaSegment, StravaLeaderboard, StravaLeaderboardRow } from '$lib/types/strava';
 	import { loadLeaderboard } from '$lib/stores/strava';
+
+	interface VisibleLeaderboardRow extends StravaLeaderboardRow {
+		displayRank: number;
+	}
 
 	interface Props {
 		segment: StravaSegment;
@@ -9,16 +13,23 @@
 
 	let { segment }: Props = $props();
 
+	let cardElement = $state<HTMLDivElement | null>(null);
 	let expanded = $state(false);
 	let leaderboard = $state<StravaLeaderboard | null>(null);
 	let loading = $state(false);
 	let loadError = $state<string | null>(null);
 	const climbLabel = $derived(climbCategoryLabel(segment.climbCategory));
-	const primaryRecordLabel = $derived(segment.activityType === 'ride' ? 'KOM' : 'CR');
+	const primaryRecordLabel = $derived('KOM');
 	const distanceValue = $derived(leaderboard?.distance ?? segment.distance);
 	const elevationValue = $derived(leaderboard?.elevationGain ?? segment.elevationGain);
 	const avgGradeValue = $derived(leaderboard?.avgGrade ?? segment.avgGrade);
-	const topRows = $derived(leaderboard?.rows.slice(0, 3) ?? []);
+	const topRows = $derived.by<VisibleLeaderboardRow[]>(() =>
+		(leaderboard?.rows.slice(0, 3) ?? []).map((row, index) => ({
+			...row,
+			displayRank: index + 1
+		}))
+	);
+	const hasVisibleRankGaps = $derived(topRows.some((row, index) => row.rank !== index + 1));
 	const summaryItems = $derived.by(() => {
 		const items: string[] = [];
 		const distance = formatDistance(distanceValue);
@@ -80,12 +91,17 @@
 		return `${grade.toFixed(1)}% avg`;
 	}
 
-	async function ensureLeaderboardLoaded() {
-		if (leaderboard || loading) return;
+	async function ensureLeaderboardLoaded(force = false) {
+		if ((leaderboard || loading) && !force) return;
 		loading = true;
 		loadError = null;
 		try {
-			leaderboard = await loadLeaderboard(segment.id);
+			const data = await loadLeaderboard(segment.id);
+			if (!data) {
+				loadError = 'Leaderboard unavailable';
+				return;
+			}
+			leaderboard = data;
 		} catch {
 			loadError = 'Failed to load leaderboard';
 		} finally {
@@ -97,16 +113,36 @@
 		const nextExpanded = !expanded;
 		expanded = nextExpanded;
 		if (nextExpanded) {
-			await ensureLeaderboardLoaded();
+			await ensureLeaderboardLoaded(!leaderboard);
 		}
 	}
 
 	onMount(() => {
-		void ensureLeaderboardLoaded();
+		if (!cardElement || typeof IntersectionObserver === 'undefined') {
+			void ensureLeaderboardLoaded();
+			return;
+		}
+
+		const root = cardElement.closest('.column-body');
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries.some((entry) => entry.isIntersecting)) {
+					void ensureLeaderboardLoaded();
+					observer.disconnect();
+				}
+			},
+			{
+				root: root instanceof Element ? root : null,
+				rootMargin: '240px 0px'
+			}
+		);
+
+		observer.observe(cardElement);
+		return () => observer.disconnect();
 	});
 </script>
 
-<div class="segment-card" class:expanded>
+<div class="segment-card" class:expanded bind:this={cardElement}>
 	<button class="segment-header" onclick={toggle}>
 		<div class="segment-main">
 			<div class="segment-header-top">
@@ -135,63 +171,69 @@
 							class:ride={segment.activityType === 'ride'}
 							class:run={segment.activityType === 'run'}
 						>
-							<div class="record-card-top">
-								<span class="record-label">{primaryRecordLabel}</span>
+								<div class="record-card-top">
+									<span class="record-label">{primaryRecordLabel}</span>
+									{#if leaderboard?.cr}
+										<span class="record-time">{leaderboard.cr.time}</span>
+									{/if}
+								</div>
 								{#if leaderboard?.cr}
-									<span class="record-time">{leaderboard.cr.time}</span>
+									<span class="record-holder">{leaderboard.cr.athleteName}</span>
+								{:else if loading}
+									<span class="record-empty">Loading…</span>
+								{:else if loadError}
+									<span class="record-empty error">{loadError}</span>
+								{:else if leaderboard}
+									<span class="record-empty">No record yet</span>
+								{:else}
+									<span class="record-empty">Waiting to load…</span>
 								{/if}
 							</div>
-							{#if leaderboard?.cr}
-								<span class="record-holder">{leaderboard.cr.athleteName}</span>
-							{:else if loading && !leaderboard}
-								<span class="record-empty">Loading…</span>
-							{:else if loadError}
-								<span class="record-empty error">{loadError}</span>
-							{:else}
-								<span class="record-empty">No record yet</span>
-							{/if}
-						</div>
 
 						<div class="record-card secondary">
-							<div class="record-card-top">
-								<span class="record-label">QOM</span>
+								<div class="record-card-top">
+									<span class="record-label">QOM</span>
+									{#if leaderboard?.qom}
+										<span class="record-time">{leaderboard.qom.time}</span>
+									{/if}
+								</div>
 								{#if leaderboard?.qom}
-									<span class="record-time">{leaderboard.qom.time}</span>
+									<span class="record-holder">{leaderboard.qom.athleteName}</span>
+								{:else if loading}
+									<span class="record-empty">Loading…</span>
+								{:else if loadError}
+									<span class="record-empty error">{loadError}</span>
+								{:else if leaderboard}
+									<span class="record-empty">No record yet</span>
+								{:else}
+									<span class="record-empty">Waiting to load…</span>
 								{/if}
 							</div>
-							{#if leaderboard?.qom}
-								<span class="record-holder">{leaderboard.qom.athleteName}</span>
-							{:else if loading && !leaderboard}
-								<span class="record-empty">Loading…</span>
-							{:else if loadError}
-								<span class="record-empty error">{loadError}</span>
-							{:else}
-								<span class="record-empty">No record yet</span>
-							{/if}
 						</div>
 					</div>
-				</div>
 
-				<div class="segment-section top-three-section">
-					<span class="section-label">Top 3</span>
-					{#if topRows.length > 0}
-						<div class="top-rows">
-							{#each topRows as row}
-								<div class="top-row">
-									<span class="top-rank">#{row.rank}</span>
-									<span class="top-athlete">{row.athleteName}</span>
-									<span class="top-time">{row.time}</span>
-								</div>
-							{/each}
-						</div>
-					{:else if loading && !leaderboard}
-						<span class="top-empty">Loading…</span>
-					{:else if loadError}
-						<span class="top-empty error">{loadError}</span>
-					{:else}
-						<span class="top-empty">No public leaderboard rows right now.</span>
-					{/if}
-				</div>
+					<div class="segment-section top-three-section">
+						<span class="section-label">Visible Top 3</span>
+						{#if topRows.length > 0}
+							<div class="top-rows">
+								{#each topRows as row}
+									<div class="top-row">
+										<span class="top-rank">#{row.displayRank}</span>
+										<span class="top-athlete">{row.athleteName}</span>
+										<span class="top-time">{row.time}</span>
+									</div>
+								{/each}
+							</div>
+						{:else if loading}
+							<span class="top-empty">Loading…</span>
+						{:else if loadError}
+							<span class="top-empty error">{loadError}</span>
+						{:else if leaderboard}
+							<span class="top-empty">No public leaderboard rows right now.</span>
+						{:else}
+							<span class="top-empty">Waiting to load…</span>
+						{/if}
+					</div>
 			</div>
 
 		</div>
@@ -218,6 +260,11 @@
 					</div>
 
 					{#if leaderboard.rows.length > 0}
+						{#if hasVisibleRankGaps}
+							<div class="rank-note">
+								Visible rows can skip official ranks when Strava hides efforts or multiple athletes tie.
+							</div>
+						{/if}
 						<div class="leaderboard-table-wrap">
 							<table class="leaderboard-table">
 							<thead>
@@ -263,6 +310,8 @@
 
 <style>
 	.segment-card {
+		display: flex;
+		flex-direction: column;
 		border: 1px solid var(--border);
 		border-radius: 8px;
 		background: rgba(255, 255, 255, 0.03);
@@ -282,10 +331,13 @@
 
 	.segment-card.expanded {
 		border-color: rgba(252, 76, 2, 0.3);
+		min-height: 0;
+		height: auto;
 	}
 
 	.segment-header {
 		display: block;
+		flex-shrink: 0;
 		width: 100%;
 		padding: 0.85rem 0.95rem;
 		background: none;
@@ -528,6 +580,7 @@
 	}
 
 	.segment-body {
+		flex-shrink: 0;
 		padding: 0.7rem 0.95rem 0.85rem;
 		background: rgba(2, 6, 23, 0.22);
 		border-top: 1px solid var(--border);
@@ -559,6 +612,12 @@
 		color: var(--text-muted);
 	}
 
+	.rank-note {
+		font-size: 0.6rem;
+		color: var(--text-muted);
+		font-style: italic;
+	}
+
 	.leaderboard-table {
 		width: 100%;
 		border-collapse: collapse;
@@ -566,7 +625,7 @@
 	}
 
 	.leaderboard-table-wrap {
-		max-height: 10rem;
+		max-height: 12rem;
 		overflow: auto;
 		border: 1px solid rgba(255, 255, 255, 0.05);
 		border-radius: 6px;
