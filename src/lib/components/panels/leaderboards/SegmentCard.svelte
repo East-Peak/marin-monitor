@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import type { StravaSegment, StravaLeaderboard } from '$lib/types/strava';
 	import { loadLeaderboard } from '$lib/stores/strava';
 
@@ -13,12 +13,15 @@
 	let leaderboard = $state<StravaLeaderboard | null>(null);
 	let loading = $state(false);
 	let loadError = $state<string | null>(null);
+	let cardEl = $state<HTMLDivElement>(undefined!);
+	let bodyEl = $state<HTMLDivElement>(undefined!);
 
 	const climbLabel = $derived(climbCategoryLabel(segment.climbCategory));
 	const primaryRecordLabel = $derived(segment.activityType === 'ride' ? 'KOM' : 'CR');
 	const distanceValue = $derived(leaderboard?.distance ?? segment.distance);
 	const elevationValue = $derived(leaderboard?.elevationGain ?? segment.elevationGain);
 	const avgGradeValue = $derived(leaderboard?.avgGrade ?? segment.avgGrade);
+	const topRows = $derived(leaderboard?.rows.slice(0, 3) ?? []);
 	const summaryItems = $derived.by(() => {
 		const items: string[] = [];
 		const distance = formatDistance(distanceValue);
@@ -97,6 +100,11 @@
 		expanded = !expanded;
 		if (expanded) {
 			await ensureLeaderboardLoaded();
+			await tick();
+			bodyEl?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+		} else {
+			await tick();
+			cardEl?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 		}
 	}
 
@@ -105,7 +113,7 @@
 	});
 </script>
 
-<div class="segment-card" class:expanded>
+<div class="segment-card" class:expanded bind:this={cardEl}>
 	<button class="segment-header" onclick={toggle}>
 		<div class="segment-main">
 			<div class="segment-header-top">
@@ -125,48 +133,71 @@
 				</div>
 			{/if}
 
-			<div class="segment-section">
-				<span class="section-label">Records</span>
-				<div class="record-grid">
-					<div
-						class="record-card primary"
-						class:ride={segment.activityType === 'ride'}
-						class:run={segment.activityType === 'run'}
-					>
-						<div class="record-card-top">
-							<span class="record-label">{primaryRecordLabel}</span>
+			<div class="segment-overview">
+				<div class="segment-section">
+					<span class="section-label">Records</span>
+					<div class="record-grid">
+						<div
+							class="record-card primary"
+							class:ride={segment.activityType === 'ride'}
+							class:run={segment.activityType === 'run'}
+						>
+							<div class="record-card-top">
+								<span class="record-label">{primaryRecordLabel}</span>
+								{#if leaderboard?.cr}
+									<span class="record-time">{leaderboard.cr.time}</span>
+								{/if}
+							</div>
 							{#if leaderboard?.cr}
-								<span class="record-time">{leaderboard.cr.time}</span>
+								<span class="record-holder">{leaderboard.cr.athleteName}</span>
+							{:else if loading && !leaderboard}
+								<span class="record-empty">Loading…</span>
+							{:else if loadError}
+								<span class="record-empty error">{loadError}</span>
+							{:else}
+								<span class="record-empty">No record yet</span>
 							{/if}
 						</div>
-						{#if leaderboard?.cr}
-							<span class="record-holder">{leaderboard.cr.athleteName}</span>
-						{:else if loading && !leaderboard}
-							<span class="record-empty">Loading…</span>
-						{:else if loadError}
-							<span class="record-empty error">{loadError}</span>
-						{:else}
-							<span class="record-empty">No record yet</span>
-						{/if}
-					</div>
 
-					<div class="record-card secondary">
-						<div class="record-card-top">
-							<span class="record-label">QOM</span>
+						<div class="record-card secondary">
+							<div class="record-card-top">
+								<span class="record-label">QOM</span>
+								{#if leaderboard?.qom}
+									<span class="record-time">{leaderboard.qom.time}</span>
+								{/if}
+							</div>
 							{#if leaderboard?.qom}
-								<span class="record-time">{leaderboard.qom.time}</span>
+								<span class="record-holder">{leaderboard.qom.athleteName}</span>
+							{:else if loading && !leaderboard}
+								<span class="record-empty">Loading…</span>
+							{:else if loadError}
+								<span class="record-empty error">{loadError}</span>
+							{:else}
+								<span class="record-empty">No record yet</span>
 							{/if}
 						</div>
-						{#if leaderboard?.qom}
-							<span class="record-holder">{leaderboard.qom.athleteName}</span>
-						{:else if loading && !leaderboard}
-							<span class="record-empty">Loading…</span>
-						{:else if loadError}
-							<span class="record-empty error">{loadError}</span>
-						{:else}
-							<span class="record-empty">No record yet</span>
-						{/if}
 					</div>
+				</div>
+
+				<div class="segment-section top-three-section">
+					<span class="section-label">Top 3</span>
+					{#if topRows.length > 0}
+						<div class="top-rows">
+							{#each topRows as row}
+								<div class="top-row">
+									<span class="top-rank">#{row.rank}</span>
+									<span class="top-athlete">{row.athleteName}</span>
+									<span class="top-time">{row.time}</span>
+								</div>
+							{/each}
+						</div>
+					{:else if loading && !leaderboard}
+						<span class="top-empty">Loading…</span>
+					{:else if loadError}
+						<span class="top-empty error">{loadError}</span>
+					{:else}
+						<span class="top-empty">No public leaderboard rows right now.</span>
+					{/if}
 				</div>
 			</div>
 
@@ -174,7 +205,7 @@
 	</button>
 
 	{#if expanded}
-		<div class="segment-body">
+		<div class="segment-body" bind:this={bodyEl}>
 			{#if loading}
 				<div class="loading">Loading leaderboard...</div>
 			{:else if loadError}
@@ -194,30 +225,32 @@
 					</div>
 
 					{#if leaderboard.rows.length > 0}
-						<table class="leaderboard-table">
-						<thead>
-							<tr>
-								<th class="col-rank">#</th>
-								<th class="col-name">Name</th>
-								<th class="col-time">Time</th>
-								{#if segment.activityType === 'ride'}
-									<th class="col-speed">Speed</th>
-								{/if}
-							</tr>
-						</thead>
-						<tbody>
-							{#each leaderboard.rows as row (`${row.activityId}-${row.rank}`)}
+						<div class="leaderboard-table-wrap">
+							<table class="leaderboard-table">
+							<thead>
 								<tr>
-									<td class="col-rank">{row.rank}</td>
-									<td class="col-name">{row.athleteName}</td>
-									<td class="col-time">{row.time}</td>
+									<th class="col-rank">#</th>
+									<th class="col-name">Name</th>
+									<th class="col-time">Time</th>
 									{#if segment.activityType === 'ride'}
-										<td class="col-speed">{row.speed ?? '-'}</td>
+										<th class="col-speed">Speed</th>
 									{/if}
 								</tr>
-							{/each}
-							</tbody>
-						</table>
+							</thead>
+							<tbody>
+								{#each leaderboard.rows as row (`${row.activityId}-${row.rank}`)}
+									<tr>
+										<td class="col-rank">{row.rank}</td>
+										<td class="col-name">{row.athleteName}</td>
+										<td class="col-time">{row.time}</td>
+										{#if segment.activityType === 'ride'}
+											<td class="col-speed">{row.speed ?? '-'}</td>
+										{/if}
+									</tr>
+								{/each}
+								</tbody>
+							</table>
+						</div>
 					{:else}
 						<div class="empty-table">No public leaderboard rows available right now.</div>
 					{/if}
@@ -328,6 +361,13 @@
 		gap: 0.25rem;
 	}
 
+	.segment-overview {
+		display: grid;
+		grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
+		gap: 0.55rem;
+		align-items: start;
+	}
+
 	.section-label {
 		font-size: 0.48rem;
 		font-weight: 700;
@@ -425,6 +465,55 @@
 		color: #fca5a5;
 	}
 
+	.top-three-section {
+		min-width: 0;
+	}
+
+	.top-rows {
+		display: flex;
+		flex-direction: column;
+		gap: 0.24rem;
+		padding: 0.15rem 0;
+	}
+
+	.top-row {
+		display: grid;
+		grid-template-columns: 1.75rem minmax(0, 1fr) auto;
+		gap: 0.4rem;
+		align-items: center;
+	}
+
+	.top-rank {
+		font-size: 0.53rem;
+		color: var(--text-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.top-athlete {
+		font-size: 0.57rem;
+		color: var(--text-dim);
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.top-time {
+		font-size: 0.58rem;
+		color: var(--text);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.top-empty {
+		font-size: 0.56rem;
+		color: var(--text-muted);
+		font-style: italic;
+	}
+
+	.top-empty.error {
+		color: #fca5a5;
+	}
+
 	.expand-icon {
 		font-size: 0.5rem;
 		color: var(--text-muted);
@@ -467,6 +556,13 @@
 		width: 100%;
 		border-collapse: collapse;
 		font-size: 0.55rem;
+	}
+
+	.leaderboard-table-wrap {
+		max-height: 12rem;
+		overflow: auto;
+		border: 1px solid rgba(255, 255, 255, 0.05);
+		border-radius: 6px;
 	}
 
 	.empty-table {
@@ -520,6 +616,12 @@
 		text-decoration: none;
 		font-weight: 600;
 		align-self: flex-end;
+	}
+
+	@media (max-width: 760px) {
+		.segment-overview {
+			grid-template-columns: 1fr;
+		}
 	}
 
 	.strava-link:hover {

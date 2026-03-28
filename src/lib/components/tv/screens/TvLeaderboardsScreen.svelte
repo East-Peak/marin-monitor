@@ -137,24 +137,39 @@
 								</div>
 
 								{#if lb}
-									<!-- CR row -->
-									{#if lb.cr}
-										<div class="flex items-center gap-1.5 mb-1.5">
-											<span class="text-[9px] font-bold px-1 py-0.5 rounded" style="background:#fc4c0222; color:#fc4c02; border:1px solid #fc4c0244;">KOM</span>
-											<span class="text-[10px] text-gray-300 truncate flex-1">{lb.cr.athleteName}</span>
-											<span class="text-[10px] font-mono" style="color:#fc4c02;">{lb.cr.time}</span>
+									<div class="flex gap-2 min-w-0">
+										<div class="min-w-0 basis-[54%] flex flex-col gap-1.5">
+											{#if lb.cr}
+												<div class="flex items-center gap-1.5">
+													<span class="text-[9px] font-bold px-1 py-0.5 rounded" style="background:#fc4c0222; color:#fc4c02; border:1px solid #fc4c0244;">KOM</span>
+													<span class="text-[10px] text-gray-300 truncate flex-1">{lb.cr.athleteName}</span>
+													<span class="text-[10px] font-mono" style="color:#fc4c02;">{lb.cr.time}</span>
+												</div>
+											{/if}
+											{#if lb.qom}
+												<div class="flex items-center gap-1.5">
+													<span class="text-[9px] font-bold px-1 py-0.5 rounded" style="background:#a855f722; color:#a855f7; border:1px solid #a855f744;">QOM</span>
+													<span class="text-[10px] text-gray-300 truncate flex-1">{lb.qom.athleteName}</span>
+													<span class="text-[10px] font-mono" style="color:#a855f7;">{lb.qom.time}</span>
+												</div>
+											{/if}
+											{#if !lb.cr && !lb.qom}
+												<div class="text-[9px] text-gray-600 italic">No public records right now</div>
+											{/if}
 										</div>
-									{/if}
 
-									<!-- Top 3 rows -->
-									<div class="flex flex-col gap-0.5">
-										{#each lb.rows.slice(0, 3) as row}
-											<div class="flex items-center gap-1.5 text-[9px]">
-												<span class="w-4 text-right font-mono text-gray-600">#{row.rank}</span>
-												<span class="truncate flex-1 text-gray-400">{row.athleteName}</span>
-												<span class="font-mono text-gray-300">{row.time}</span>
+										<div class="min-w-0 flex-1 border-l border-gray-800 pl-2">
+											<div class="text-[8px] uppercase tracking-widest text-gray-600 mb-1">Top 3</div>
+											<div class="flex flex-col gap-0.5">
+												{#each lb.rows.slice(0, 3) as row}
+													<div class="flex items-center gap-1.5 text-[9px]">
+														<span class="w-4 text-right font-mono text-gray-600">#{row.rank}</span>
+														<span class="truncate flex-1 text-gray-400">{row.athleteName}</span>
+														<span class="font-mono text-gray-300">{row.time}</span>
+													</div>
+												{/each}
 											</div>
-										{/each}
+										</div>
 									</div>
 								{:else}
 									<div class="text-[9px] text-gray-600 italic">Loading...</div>
@@ -192,31 +207,39 @@
 								</div>
 
 								{#if lb}
-									<!-- CR row -->
-									{#if lb.cr}
-										<div class="flex items-center gap-1.5 mb-1.5">
-											<span class="text-[9px] font-bold px-1 py-0.5 rounded" style="background:#2dd4bf22; color:#2dd4bf; border:1px solid #2dd4bf44;">CR</span>
-											<span class="text-[10px] text-gray-300 truncate flex-1">{lb.cr.athleteName}</span>
-											<span class="text-[10px] font-mono" style="color:#2dd4bf;">{lb.cr.time}</span>
+									<div class="flex gap-2 min-w-0">
+										<div class="min-w-0 basis-[54%] flex flex-col gap-1.5">
+											{#if lb.cr}
+												<div class="flex items-center gap-1.5">
+													<span class="text-[9px] font-bold px-1 py-0.5 rounded" style="background:#2dd4bf22; color:#2dd4bf; border:1px solid #2dd4bf44;">CR</span>
+													<span class="text-[10px] text-gray-300 truncate flex-1">{lb.cr.athleteName}</span>
+													<span class="text-[10px] font-mono" style="color:#2dd4bf;">{lb.cr.time}</span>
+												</div>
+											{/if}
+											{#if lb.qom}
+												<div class="flex items-center gap-1.5">
+													<span class="text-[9px] font-bold px-1 py-0.5 rounded" style="background:#a855f722; color:#a855f7; border:1px solid #a855f744;">QOM</span>
+													<span class="text-[10px] text-gray-300 truncate flex-1">{lb.qom.athleteName}</span>
+													<span class="text-[10px] font-mono" style="color:#a855f7;">{lb.qom.time}</span>
+												</div>
+											{/if}
+											{#if !lb.cr && !lb.qom}
+												<div class="text-[9px] text-gray-600 italic">No public records right now</div>
+											{/if}
 										</div>
-									{/if}
-									{#if lb.qom}
-										<div class="flex items-center gap-1.5 mb-1.5">
-											<span class="text-[9px] font-bold px-1 py-0.5 rounded" style="background:#a855f722; color:#a855f7; border:1px solid #a855f744;">QOM</span>
-											<span class="text-[10px] text-gray-300 truncate flex-1">{lb.qom.athleteName}</span>
-											<span class="text-[10px] font-mono" style="color:#a855f7;">{lb.qom.time}</span>
-										</div>
-									{/if}
 
-									<!-- Top 3 rows -->
-									<div class="flex flex-col gap-0.5">
-										{#each lb.rows.slice(0, 3) as row}
-											<div class="flex items-center gap-1.5 text-[9px]">
-												<span class="w-4 text-right font-mono text-gray-600">#{row.rank}</span>
-												<span class="truncate flex-1 text-gray-400">{row.athleteName}</span>
-												<span class="font-mono text-gray-300">{row.time}</span>
+										<div class="min-w-0 flex-1 border-l border-gray-800 pl-2">
+											<div class="text-[8px] uppercase tracking-widest text-gray-600 mb-1">Top 3</div>
+											<div class="flex flex-col gap-0.5">
+												{#each lb.rows.slice(0, 3) as row}
+													<div class="flex items-center gap-1.5 text-[9px]">
+														<span class="w-4 text-right font-mono text-gray-600">#{row.rank}</span>
+														<span class="truncate flex-1 text-gray-400">{row.athleteName}</span>
+														<span class="font-mono text-gray-300">{row.time}</span>
+													</div>
+												{/each}
 											</div>
-										{/each}
+										</div>
 									</div>
 								{:else}
 									<div class="text-[9px] text-gray-600 italic">Loading...</div>
