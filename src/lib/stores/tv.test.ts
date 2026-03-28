@@ -22,6 +22,16 @@ vi.mock('$lib/stores/news', () => {
 	};
 });
 
+// Mock the strava store (5th derived input) with empty default
+vi.mock('$lib/stores/strava', () => {
+	const { writable } = require('svelte/store');
+	const mockStravaEvents = writable({ events: [], lastUpdated: '' });
+	return {
+		stravaEvents: mockStravaEvents,
+		__mockStravaEvents: mockStravaEvents
+	};
+});
+
 describe('tvTickerItems', () => {
 	let tvTickerItems: typeof import('./tv').tvTickerItems;
 	let mocks: {

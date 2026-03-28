@@ -42,7 +42,7 @@ export const TV_REFRESH_INTERVAL_MS = 3 * 60 * 1000; // 3 minutes
 export const CURSOR_HIDE_MS = 5_000;
 
 /** Chyron ticker category badges and colors */
-export type TickerCategory = 'WX' | 'PD' | 'LW' | 'FI' | 'EQ' | 'TD' | 'GG' | 'CV';
+export type TickerCategory = 'WX' | 'PD' | 'LW' | 'FI' | 'EQ' | 'TD' | 'GG' | 'CV' | 'KOM';
 export type TickerStatus = 'normal' | 'elevated' | 'critical';
 
 export interface TickerItem {
@@ -89,4 +89,5 @@ export const CATEGORY_COLORS: Record<TickerCategory, string> = {
   TD: '#22d3ee',  // cyan (tides)
   GG: '#facc15',  // yellow (transit)
   CV: '#34d399',  // green (civic)
+  KOM: '#fc4c02', // Strava orange (KOM/QOM)
 };

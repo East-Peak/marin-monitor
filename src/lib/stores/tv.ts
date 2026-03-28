@@ -7,6 +7,8 @@ import {
   civicNews,
   alerts
 } from '$lib/stores/news';
+import { stravaEvents } from '$lib/stores/strava';
+import { STRAVA_CHYRON_MAX_AGE_MS } from '$lib/config/strava';
 import type { TickerItem, TickerCategory, TickerStatus } from '$lib/config/tv';
 import type { NewsItem } from '$lib/types';
 
@@ -31,8 +33,8 @@ function newsToTicker(
  * Items that fail or are empty are silently excluded.
  */
 export const tvTickerItems = derived(
-  [safetyNews, localNews, civicNews, alerts],
-  ([$safety, $local, $civic, $alerts]) => {
+  [safetyNews, localNews, civicNews, alerts, stravaEvents],
+  ([$safety, $local, $civic, $alerts, $strava]) => {
     // NOTE: $safety, $local, $civic are CategoryState objects — access .items for NewsItem[]
     // $alerts is already NewsItem[]
     const safetyItems = $safety.items ?? [];
@@ -88,6 +90,25 @@ export const tvTickerItems = derived(
       // Civic — latest 2
       for (const item of civicItems.slice(0, 2)) {
         items.push(newsToTicker(item, 'CV'));
+      }
+
+      // Strava KOM/QOM events (max 4, within 48h)
+      const now = Date.now();
+      const recentStravaEvents = ($strava.events ?? [])
+        .filter((e) => now - new Date(e.detectedAt).getTime() < STRAVA_CHYRON_MAX_AGE_MS)
+        .slice(0, 4);
+
+      for (const event of recentStravaEvents) {
+        const prefix = event.type === 'new_kom' ? 'NEW KOM' : 'NEW QOM';
+        const prev = event.previous ? ` (prev: ${event.previous.time})` : '';
+        items.push({
+          id: `KOM-${event.effortId}`,
+          badge: 'KOM' as TickerCategory,
+          category: 'KOM',
+          text: `${prefix}: ${event.segmentName} — ${event.time} by ${event.athlete}${prev}`,
+          timestamp: new Date(event.detectedAt).getTime(),
+          status: 'normal' as TickerStatus
+        });
       }
     } catch {
       // Silent fail — don't break chyron
