@@ -28,6 +28,7 @@ export type PanelId =
 	| 'narrative'
 	| 'satire'
 	| 'gas-prices'
+	| 'leaderboards'
 	| 'ev-charging'
 	| 'wastewater'
 	| 'airport-status';
@@ -75,6 +76,11 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 		name: 'Cycling & Endurance',
 		priority: 3,
 		description: 'Race calendars, results, trail events, and local human-powered competition'
+	},
+	leaderboards: {
+		name: 'Leaderboards',
+		priority: 2,
+		description: 'Strava segment KOMs and course records for Marin'
 	},
 	shows: {
 		name: 'Shows & Events',
@@ -142,6 +148,7 @@ export const DEFAULT_PANEL_ORDER: PanelId[] = [
 	'gas-prices',
 	'ev-charging',
 	'cycling',
+	'leaderboards',
 	'shows',
 	'prep',
 	'farm',

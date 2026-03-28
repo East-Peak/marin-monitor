@@ -16,3 +16,4 @@ export { default as EvChargingPanel } from './EvChargingPanel.svelte';
 export { default as ExpandedCamerasPanel } from './ExpandedCamerasPanel.svelte';
 export { default as WastewaterPanel } from './WastewaterPanel.svelte';
 export { default as AirportStatusPanel } from './AirportStatusPanel.svelte';
+export { default as LeaderboardsPanel } from './LeaderboardsPanel.svelte';

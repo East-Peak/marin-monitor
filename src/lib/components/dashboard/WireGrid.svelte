@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { NewsPanel, CommunityPanel } from '$lib/components/panels';
+	import LeaderboardsPanel from '$lib/components/panels/LeaderboardsPanel.svelte';
+	import { STRAVA_ENABLED } from '$lib/config/strava';
 	import { settings } from '$lib/stores';
 	import { WIRE_COLUMNS } from '$lib/config/wire-columns';
 
@@ -23,6 +25,11 @@
 				</div>
 			{/if}
 		{/each}
+		{#if STRAVA_ENABLED && isPanelVisible('leaderboards')}
+			<div class="wire-slot">
+				<LeaderboardsPanel />
+			</div>
+		{/if}
 		<div class="wire-slot">
 			<CommunityPanel {onFeedback} />
 		</div>
