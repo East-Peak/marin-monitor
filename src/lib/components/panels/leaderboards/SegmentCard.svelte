@@ -9,9 +9,10 @@
 
 	interface Props {
 		segment: StravaSegment;
+		prefetch?: boolean;
 	}
 
-	let { segment }: Props = $props();
+	let { segment, prefetch = false }: Props = $props();
 
 	let cardElement = $state<HTMLDivElement | null>(null);
 	let expanded = $state(false);
@@ -118,6 +119,11 @@
 	}
 
 	onMount(() => {
+		if (prefetch) {
+			void ensureLeaderboardLoaded();
+			return;
+		}
+
 		if (!cardElement || typeof IntersectionObserver === 'undefined') {
 			void ensureLeaderboardLoaded();
 			return;

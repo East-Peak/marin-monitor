@@ -8,6 +8,7 @@
 
 	const CYCLING_SEGMENT_LIMIT = 25;
 	const RUNNING_SEGMENT_LIMIT = 12;
+	const PREFETCH_SEGMENT_LIMIT = 6;
 
 	const cyclingSegments = $derived(
 		$stravaSegments.segments
@@ -43,8 +44,8 @@
 						{#if cyclingSegments.length === 0}
 							<div class="empty">No cycling segments loaded</div>
 						{:else}
-							{#each cyclingSegments as segment (segment.id)}
-								<SegmentCard {segment} />
+							{#each cyclingSegments as segment, index (segment.id)}
+								<SegmentCard {segment} prefetch={index < PREFETCH_SEGMENT_LIMIT} />
 							{/each}
 						{/if}
 					</div>
@@ -59,8 +60,8 @@
 						{#if runningSegments.length === 0}
 							<div class="empty">No running segments loaded</div>
 						{:else}
-							{#each runningSegments as segment (segment.id)}
-								<SegmentCard {segment} />
+							{#each runningSegments as segment, index (segment.id)}
+								<SegmentCard {segment} prefetch={index < PREFETCH_SEGMENT_LIMIT} />
 							{/each}
 						{/if}
 					</div>
