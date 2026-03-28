@@ -12,7 +12,11 @@ vi.mock('$env/dynamic/private', () => ({
 }));
 
 // Import after mock is set up
-const { buildSegmentCatalog } = await import('./strava-segments');
+const {
+	buildSegmentCatalog,
+	normalizeCatalogToSeedSegments,
+	catalogHasAllSeedSegments
+} = await import('./strava-segments');
 
 describe('buildSegmentCatalog', () => {
 	beforeEach(() => {
@@ -183,5 +187,66 @@ describe('buildSegmentCatalog', () => {
 				expect(seg.activityType).toBe(seed!.activityType);
 			}
 		});
+	});
+});
+
+describe('seed catalog helpers', () => {
+	it('normalizes an incomplete catalog back to the full seed list', () => {
+		const existingCatalog: StravaSegmentCatalog = {
+			segments: [
+				{
+					id: SEED_SEGMENTS[0].id,
+					name: SEED_SEGMENTS[0].name,
+					activityType: SEED_SEGMENTS[0].activityType,
+					polyline: 'seed-polyline',
+					startLatlng: SEED_SEGMENTS[0].startLatlng,
+					endLatlng: SEED_SEGMENTS[0].startLatlng,
+					distance: 3200,
+					elevationGain: 155,
+					avgGrade: 7.5,
+					climbCategory: 2,
+					totalAttempts: 123,
+					totalAthletes: 45
+				}
+			],
+			lastUpdated: '2026-03-01T00:00:00.000Z'
+		};
+
+		const normalized = normalizeCatalogToSeedSegments(existingCatalog);
+		const preserved = normalized.segments.find((segment) => segment.id === SEED_SEGMENTS[0].id);
+		const added = normalized.segments.find((segment) => segment.id === SEED_SEGMENTS[1].id);
+
+		expect(normalized.segments).toHaveLength(SEED_SEGMENTS.length);
+		expect(preserved?.polyline).toBe('seed-polyline');
+		expect(preserved?.totalAttempts).toBe(123);
+		expect(added?.polyline).toBeNull();
+		expect(added?.distance).toBe(0);
+	});
+
+	it('detects when a catalog is missing current seed segments', () => {
+		const incompleteCatalog: StravaSegmentCatalog = {
+			segments: [
+				{
+					id: SEED_SEGMENTS[0].id,
+					name: SEED_SEGMENTS[0].name,
+					activityType: SEED_SEGMENTS[0].activityType,
+					polyline: null,
+					startLatlng: SEED_SEGMENTS[0].startLatlng,
+					endLatlng: SEED_SEGMENTS[0].startLatlng,
+					distance: 0,
+					elevationGain: 0,
+					avgGrade: 0,
+					climbCategory: 0,
+					totalAttempts: 0,
+					totalAthletes: 0
+				}
+			],
+			lastUpdated: '2026-03-01T00:00:00.000Z'
+		};
+
+		const completeCatalog = normalizeCatalogToSeedSegments(incompleteCatalog);
+
+		expect(catalogHasAllSeedSegments(incompleteCatalog)).toBe(false);
+		expect(catalogHasAllSeedSegments(completeCatalog)).toBe(true);
 	});
 });

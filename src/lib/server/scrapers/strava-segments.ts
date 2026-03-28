@@ -42,6 +42,34 @@ function seedToSegment(
 	};
 }
 
+export function normalizeCatalogToSeedSegments(
+	existingCatalog: StravaSegmentCatalog | null
+): StravaSegmentCatalog {
+	const existingById = new Map<number, StravaSegment>(
+		existingCatalog?.segments.map((segment) => [segment.id, segment]) ?? []
+	);
+
+	return {
+		segments: SEED_SEGMENTS.map((seed) =>
+			seedToSegment(
+				seed.id,
+				seed.name,
+				seed.activityType,
+				seed.startLatlng,
+				existingById.get(seed.id)
+			)
+		),
+		lastUpdated: existingCatalog?.lastUpdated ?? new Date().toISOString()
+	};
+}
+
+export function catalogHasAllSeedSegments(catalog: StravaSegmentCatalog | null): boolean {
+	if (!catalog) return false;
+
+	const ids = new Set(catalog.segments.map((segment) => segment.id));
+	return SEED_SEGMENTS.every((seed) => ids.has(seed.id));
+}
+
 // ---------------------------------------------------------------------------
 // Segment Detail API fetch
 // ---------------------------------------------------------------------------
@@ -102,17 +130,12 @@ async function fetchSegmentDetail(
 export async function buildSegmentCatalog(
 	existingCatalog: StravaSegmentCatalog | null
 ): Promise<StravaSegmentCatalog> {
-	// Index existing segments by ID for O(1) lookup
+	const baseCatalog = normalizeCatalogToSeedSegments(existingCatalog);
 	const existingById = new Map<number, StravaSegment>(
-		existingCatalog?.segments.map((s) => [s.id, s]) ?? []
+		baseCatalog.segments.map((segment) => [segment.id, segment])
 	);
-
-	// Build initial catalog from seeds (preserving any existing data)
 	const catalog = new Map<number, StravaSegment>(
-		SEED_SEGMENTS.map((seed) => [
-			seed.id,
-			seedToSegment(seed.id, seed.name, seed.activityType, seed.startLatlng, existingById.get(seed.id))
-		])
+		baseCatalog.segments.map((segment) => [segment.id, segment])
 	);
 
 	// Try to enrich each seed segment with detail API data (polylines + stats)
