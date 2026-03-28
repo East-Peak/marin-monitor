@@ -30,25 +30,6 @@ export interface AdConfig {
  */
 export const ADS: AdConfig[] = [
 	{
-		id: '597-ethel-ave',
-		type: 'listing',
-		placement: 'wire',
-		headline: 'Cape Cod Charm | Mill Valley Vibe',
-		body: '',
-		image: '/images/597-ethel-ave.jpg',
-		bullets: [
-			'My friend Zack is selling his house.',
-			"It's right next to Super Duper Burger.",
-			'You should buy it.'
-		],
-		sponsor: 'Lisa Smith & Co. | Susannah Searson',
-		url: 'https://597ethel.com',
-		priority: 8,
-		position: 3,
-		targetCategories: ['local'],
-		label: 'Featured Listing'
-	},
-	{
 		id: 'marin-families',
 		type: 'community',
 		placement: 'wire',

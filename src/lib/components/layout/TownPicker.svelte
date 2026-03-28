@@ -295,9 +295,10 @@
 		color: var(--text-muted);
 	}
 
-	@media (max-width: 480px) {
+	@media (max-width: 720px) {
 		.picker-trigger {
 			padding: 0.4rem 0.5rem;
+			min-height: 2.5rem;
 		}
 
 		.picker-label,

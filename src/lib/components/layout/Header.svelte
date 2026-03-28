@@ -196,4 +196,58 @@
 			display: inline;
 		}
 	}
+
+	@media (max-width: 720px) {
+		.header {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto;
+			grid-template-areas:
+				'logo actions'
+				'status status';
+			align-items: center;
+			padding: 0.75rem 1rem;
+			gap: 0.65rem;
+		}
+
+		.header-left {
+			grid-area: logo;
+			min-width: 0;
+		}
+
+		.header-center {
+			grid-area: status;
+			justify-content: space-between;
+			gap: 0.5rem;
+			width: 100%;
+		}
+
+		.header-right {
+			grid-area: actions;
+			gap: 0.45rem;
+			margin-left: auto;
+		}
+
+		.logo {
+			font-size: 0.88rem;
+			letter-spacing: 0.12em;
+		}
+
+		.datetime-text {
+			display: none;
+		}
+
+		.refresh-status {
+			padding: 0.25rem 0.65rem;
+			max-width: 100%;
+		}
+
+		.status-text {
+			font-size: 0.58rem;
+		}
+
+		.header-btn {
+			min-height: 2.5rem;
+			padding: 0.35rem 0.75rem;
+		}
+	}
 </style>
