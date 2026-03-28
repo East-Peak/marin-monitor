@@ -82,6 +82,28 @@ export const GET: RequestHandler = async () => {
 		...(!housingBlob.exists && { error: 'Blob not found' })
 	});
 
+	// Check Strava segments blob (weekly cron — 7 day freshness)
+	const stravaSegmentsBlob = await checkBlob('strava-segments.json');
+	sources.push({
+		name: 'Strava Segments',
+		source: 'blob',
+		status: stravaSegmentsBlob.exists ? 'ok' : 'error',
+		lastUpdated: stravaSegmentsBlob.uploadedAt,
+		itemCount: null,
+		...(!stravaSegmentsBlob.exists && { error: 'Blob not found' })
+	});
+
+	// Check Strava events blob (daily cron — 1 day freshness)
+	const stravaEventsBlob = await checkBlob('strava-events.json');
+	sources.push({
+		name: 'Strava Events',
+		source: 'blob',
+		status: stravaEventsBlob.exists ? 'ok' : 'error',
+		lastUpdated: stravaEventsBlob.uploadedAt,
+		itemCount: null,
+		...(!stravaEventsBlob.exists && { error: 'Blob not found' })
+	});
+
 	// Check API key availability
 	const keys = [
 		{ name: 'GOOGLE_PLACES_API_KEY', set: !!env.GOOGLE_PLACES_API_KEY },
@@ -97,7 +119,8 @@ export const GET: RequestHandler = async () => {
 	for (const source of sources) {
 		if (source.lastUpdated) {
 			const age = now - new Date(source.lastUpdated).getTime();
-			const maxAge = source.name === 'Housing' ? 8 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+			const sevenDaySources = ['Housing', 'Strava Segments'];
+			const maxAge = sevenDaySources.includes(source.name) ? 8 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
 			if (age > maxAge) {
 				source.status = 'stale';
 			}
