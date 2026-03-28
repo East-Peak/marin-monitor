@@ -1,0 +1,1592 @@
+<!-- Orion-App Layout -->
+<!DOCTYPE html>
+<html class='logged-out responsive feed3p0 old-login strava-orion responsive' dir='ltr' lang='en-US' xmlns='http://www.w3.org/TR/html5' xmlns:fb='http://www.facebook.com/2008/fbml' xmlns:og='http://opengraphprotocol.org/schema/'>
+<!--
+layout orion app
+-->
+<head>
+<head>
+<meta charset='UTF-8'>
+<meta content='width = device-width, initial-scale = 1, maximum-scale = 5, user-scalable = yes' name='viewport'>
+<style nonce='' type='text/css'>
+.spinner, .spinner .status {
+  position: relative;
+}
+.spinner {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+.spinner .status {
+  top: 2px;
+  margin-left: 0.5em;
+}
+.spinner .status:empty {
+  display: none;
+}
+.spinner.lg .graphic {
+  border-width: 3px;
+  height: 32px;
+  width: 32px;
+}
+.spinner.tiny {
+  height: 10px;
+  width: 10px;
+}
+.spinner.centered, .spinner.vcentered {
+  box-sizing: border-box;
+  width: 100%;
+}
+.spinner.vcentered {
+  left: 0;
+  margin-top: -12px;
+  position: absolute;
+  right: 0;
+  text-align: center;
+  top: 50%;
+}
+.spinner .graphic, .ajax-loading-image {
+  animation: spin 1.2s infinite linear;
+  box-sizing: border-box;
+  border-color: #eee;
+  border-radius: 50%;
+  border-style: solid;
+  border-top-color: #666;
+  border-top-style: solid;
+  border-width: 2px;
+  content: "";
+  display: inline-block;
+  height: 20px;
+  position: relative;
+  vertical-align: middle;
+  width: 20px;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
+</style>
+
+<link rel="stylesheet" href="https://d3nn82uaxijpm6.cloudfront.net/assets/strava-app-icons-8412f00f37ee00437d26b8b6d79c55a1a9575f654a1e31690131287dfb0b2698.css" media="screen" />
+<link rel="stylesheet" href="https://d3nn82uaxijpm6.cloudfront.net/assets/strava-orion-f7ca8bf61eb8c808cc10779a7f8b5cdf9cd4e03926cc188d42b556fb48b00bad.css" media="screen" />
+
+<link href='https://d3nn82uaxijpm6.cloudfront.net/apple-touch-icon-180x180.png?v=dLlWydWlG8' rel='apple-touch-icon' sizes='180x180'>
+<link href='https://d3nn82uaxijpm6.cloudfront.net/apple-touch-icon-152x152.png?v=dLlWydWlG8' rel='apple-touch-icon' sizes='152x152'>
+<link href='https://d3nn82uaxijpm6.cloudfront.net/apple-touch-icon-144x144.png?v=dLlWydWlG8' rel='apple-touch-icon' sizes='144x144'>
+<link href='https://d3nn82uaxijpm6.cloudfront.net/apple-touch-icon-120x120.png?v=dLlWydWlG8' rel='apple-touch-icon' sizes='120x120'>
+<link href='https://d3nn82uaxijpm6.cloudfront.net/apple-touch-icon-114x114.png?v=dLlWydWlG8' rel='apple-touch-icon' sizes='114x114'>
+<link href='https://d3nn82uaxijpm6.cloudfront.net/apple-touch-icon-76x76.png?v=dLlWydWlG8' rel='apple-touch-icon' sizes='76x76'>
+<link href='https://d3nn82uaxijpm6.cloudfront.net/apple-touch-icon-72x72.png?v=dLlWydWlG8' rel='apple-touch-icon' sizes='72x72'>
+<link href='https://d3nn82uaxijpm6.cloudfront.net/apple-touch-icon-60x60.png?v=dLlWydWlG8' rel='apple-touch-icon' sizes='60x60'>
+<link href='https://d3nn82uaxijpm6.cloudfront.net/apple-touch-icon-57x57.png?v=dLlWydWlG8' rel='apple-touch-icon' sizes='57x57'>
+<link href='https://d3nn82uaxijpm6.cloudfront.net/favicon-32x32.png?v=dLlWydWlG8' rel='icon' sizes='32x32' type='image/png'>
+<link href='https://d3nn82uaxijpm6.cloudfront.net/icon-strava-chrome-192.png?v=dLlWydWlG8' rel='icon' sizes='192x192' type='image/png'>
+<link href='https://d3nn82uaxijpm6.cloudfront.net/favicon-96x96.png?v=dLlWydWlG8' rel='icon' sizes='96x96' type='image/png'>
+<link href='https://d3nn82uaxijpm6.cloudfront.net/favicon-16x16.png?v=dLlWydWlG8' rel='icon' sizes='16x16' type='image/png'>
+<link href='/manifest.json?v=dLlWydWlG8' rel='manifest'>
+<meta content='#FC5200' name='msapplication-TileColor'>
+<meta content='https://d3nn82uaxijpm6.cloudfront.net/mstile-144x144.png?v=dLlWydWlG8' name='msapplication-TileImage'>
+<meta content='#F7F7FA' name='theme-color'>
+<meta content='Strava' name='apple-mobile-web-app-title'>
+<meta content='Strava' name='application-name'>
+<meta content='yes' name='mobile-web-app-capable'>
+<meta content='black' name='apple-mobile-web-app-status-bar-style'>
+
+<link as='script' href='https://consent.cookiebot.com/uc.js' rel='preload'>
+<script data-cookieconsent='ignore' type='text/javascript'>
+// Consent default script for GTM - should be loaded before any other GTM / CMP scripts
+window.googleTagManagerDataLayer = window.googleTagManagerDataLayer || [];
+function gtag() {
+  googleTagManagerDataLayer.push(arguments);
+}
+gtag("consent", "default", {
+  ad_personalization: "denied",
+  ad_storage: "denied",
+  ad_user_data: "denied",
+  analytics_storage: "denied",
+  functionality_storage: "denied",
+  personalization_storage: "denied",
+  security_storage: "granted",
+  wait_for_update: 500,
+});
+gtag("set", "ads_data_redaction", true);
+gtag("set", "url_passthrough", false);
+</script>
+
+<script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="e47bebbc-d5c7-470a-a8f6-6d858aa50ff4" data-georegions="{&#39;region&#39;:&#39;US,AU,NZ&#39;,&#39;cbid&#39;: &#39;29065233-759b-47fb-b38d-6dc38804c519&#39;}" data-culture="en" data-layer-name="googleTagManagerDataLayer" type="text/javascript"></script>
+<script data-cookieconsent='ignore' type='text/javascript'>
+<!-- / Initialize GTM -->
+(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push(
+{'gtm.start': new Date().getTime(),event:'gtm.js'}
+);var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;j.setAttribute('data-cookieconsent','ignore');f.parentNode.insertBefore(j,f);
+})(window,document,'script','googleTagManagerDataLayer', "GTM-TP845S");
+</script>
+
+<script type='application/ld+json'>
+{
+  "@context": "http://schema.org",
+  "@type": "Organization",
+  "name": "Strava",
+  "url": "https://www.strava.com/",
+  "logo": "https://d3nn82uaxijpm6.cloudfront.net/assets/website_v2/svgs/strava-orange-7c13281bc329c07fcfeb4d4ca6e7a74e5a4ade915bc02b87d4b9b36da3117e30.svg",
+  "sameAs": [
+    "https://facebook.com/Strava",
+    "https://twitter.com/strava",
+    "https://instagram.com/strava",
+    "https://youtube.com/stravainc",
+    "https://www.linkedin.com/company/strava-inc./",
+    "https://stories.strava.com",
+    "https://github.com/strava",
+    "https://medium.com/strava-engineering"
+  ]
+}
+
+
+</script>
+<meta name="csrf-param" content="authenticity_token" />
+<meta name="csrf-token" content="AdLfyk7B6uNljDDZ2nOomrlMOP3Y1mlDxOJBSh6Casd1gq3BtGGl5Z3zyU1UyHjrf-aXlfVrH2Rh6lAjYBkrAQ" />
+<script>
+  window.StravaSentry = {
+   enabled: true,
+   release: "36cc62c4fc239dbd2e1263a4d111744e612680d6",
+   userId: null,
+   environment: "production",
+   dsn: "https://6ffc1c27d92347b49d7659886aab9deb@o352714.ingest.sentry.io/5816222",
+   debug: "false",
+   sampleRate: 1,
+   pageProperties: null,
+   mobileOS: "Web",
+   isMobile: false
+ }
+ 
+ window.StravaDevTools = {
+   enabled: null
+ }
+</script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/runtime-dcd45feff364286ac7a9.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/65097-9d825e8e3b8fac1ec5ee.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/69831-a4cd6ab862c62e667fb2.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/10603-0d2522db11b3d61a86c0.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/20459-3bc8c6cf573225ac4291.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/94409-be9b9c0ade04bc9f598f.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/76778-de8b21ba03652afc71f2.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/9669-cf2a76f269c9981d9da6.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/43815-6b41d55c250deb8b5d08.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/96757-47922202032b4b1aba56.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/37661-f4df074888da4e37405a.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/57881-d3eeb81ba2e34bdc0cbe.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/72937-3b85a5a103aa8de57af0.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/5202-7c8135a8108775cd759d.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/81025-ff4731b4ff6ab694420b.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/79498-941ed3861fcad5643538.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/73170-06f8a30d2cbb915b8c0f.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/59859-844166853de8ceb02027.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/18010-71bf6c6921f21868cae9.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/74015-4da1ccf7d4e1fc2667e1.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/72262-93b7928ff9f871c465f7.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/97154-2ec47356d61276e0c17a.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/67871-514f8d9a3f338759be77.js"></script>
+<script src="//d3nn82uaxijpm6.cloudfront.net/packs/js/strava_with_framework-d87f0a8bfb9c2c245e4b.js"></script>
+
+<script>
+  !function() {
+   if (!!window.stravaPublicServiceEnv) {
+     // Object containing no secret key value pairs that are expected to be seen and used in the browser.
+     // This keys are commonly passed to 3rd party libs or tooling.
+     window.stravaPublicServiceEnv({
+       VIDEOJS_LOG_LEVEL: "error"
+     });
+   }
+ }();
+</script>
+
+<script src="https://d3nn82uaxijpm6.cloudfront.net/assets/strava-head-9524f11efa8de11196182491905bd7d09f4620ce45dc1ad372104e30e172f346.js"></script>
+
+<link href='https://www.strava.com/segments/907022' rel='canonical'>
+<link href='https://www.strava.com/segments/907022' hreflang='x-default' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=pt-BR' hreflang='pt-br' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=cs-CZ' hreflang='cs-CZ' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=da-DK' hreflang='da-DK' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=nl-NL' hreflang='nl' rel='alternate'>
+<link href='https://www.strava.com/segments/907022' hreflang='en' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=fr-FR' hreflang='fr' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=de-DE' hreflang='de' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=id-ID' hreflang='id-id' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=it-IT' hreflang='it' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=ja-JP' hreflang='ja' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=ms-MY' hreflang='ms-MY' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=nb-NO' hreflang='nb-NO' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=pl-PL' hreflang='pl-PL' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=pt-PT' hreflang='pt-pt' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=ru-RU' hreflang='ru' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=zh-CN' hreflang='zh-cn' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=es-419' hreflang='es-419' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=es-ES' hreflang='es-es' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=sv-SE' hreflang='sv-SE' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=tl-PH' hreflang='tl-PH' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=th-TH' hreflang='th-TH' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=zh-TW' hreflang='zh-tw' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=tr-TR' hreflang='tr-TR' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=vi-VN' hreflang='vi-VN' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=pt-PT' hreflang='pt' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=es-ES' hreflang='es' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=zh-CN' hreflang='zh' rel='alternate'>
+
+<link rel="stylesheet" href="https://d3nn82uaxijpm6.cloudfront.net/assets/segments/show-6f6688a901ed7adf6d2625032455ef14381e674920828637d6cefa6dd02d4356.css" media="screen" />
+<link rel="stylesheet" href="//d3nn82uaxijpm6.cloudfront.net/packs/css/76778-bf1a459c.css" media="screen" />
+<link rel="stylesheet" href="//d3nn82uaxijpm6.cloudfront.net/packs/css/43815-c376ca3d.css" media="screen" />
+<link rel="stylesheet" href="//d3nn82uaxijpm6.cloudfront.net/packs/css/57881-a2377f01.css" media="screen" />
+<link rel="stylesheet" href="//d3nn82uaxijpm6.cloudfront.net/packs/css/79498-3fff2bb1.css" media="screen" />
+<link rel="stylesheet" href="//d3nn82uaxijpm6.cloudfront.net/packs/css/strava_with_framework-15158e80.css" media="screen" />
+<title>Dipsea/Steep Ravine (Stinson To Pantoll) | Strava Run Segment in Marin County, California</title>
+<meta content='View bike ride segment, 4.1 kilometers long, starting in Stinson Beach, CA, with 493 meters in elevation gain.' type='description'>
+<meta content='noindex' name='robots'>
+<link href='https://www.strava.com/segments/907022' rel='canonical'>
+<link href='https://www.strava.com/segments/907022' rel='canonical'>
+<link href='https://www.strava.com/segments/907022' hreflang='x-default' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=pt-BR' hreflang='pt-br' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=cs-CZ' hreflang='cs-CZ' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=da-DK' hreflang='da-DK' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=nl-NL' hreflang='nl' rel='alternate'>
+<link href='https://www.strava.com/segments/907022' hreflang='en' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=fr-FR' hreflang='fr' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=de-DE' hreflang='de' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=id-ID' hreflang='id-id' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=it-IT' hreflang='it' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=ja-JP' hreflang='ja' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=ms-MY' hreflang='ms-MY' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=nb-NO' hreflang='nb-NO' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=pl-PL' hreflang='pl-PL' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=pt-PT' hreflang='pt-pt' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=ru-RU' hreflang='ru' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=zh-CN' hreflang='zh-cn' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=es-419' hreflang='es-419' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=es-ES' hreflang='es-es' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=sv-SE' hreflang='sv-SE' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=tl-PH' hreflang='tl-PH' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=th-TH' hreflang='th-TH' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=zh-TW' hreflang='zh-tw' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=tr-TR' hreflang='tr-TR' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=vi-VN' hreflang='vi-VN' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=pt-PT' hreflang='pt' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=es-ES' hreflang='es' rel='alternate'>
+<link href='https://www.strava.com/segments/907022?hl=zh-CN' hreflang='zh' rel='alternate'>
+
+
+</head>
+
+<script>
+  !function(options){
+   window.Strava = window.Strava || {};
+   var _enabled = true;
+   var _options = options;
+   var _snowplowReady = null;
+ 
+   window.Strava.ExternalAnalytics = window.Strava.ExternalAnalytics || (
+     {
+       isEnabled: function() {
+         // snowplow script can be blocked by our consent management tool
+         return _enabled && typeof snowplow !== 'undefined' && typeof snowplow === 'function';
+       },
+       isDebug: function() {
+         return _options.debug;
+       },
+       track: function() {
+       },
+       trackV2: function(event) {
+         var eventData = {
+           'category': event.category,
+           'page': event.page,
+           'action': event.action,
+           'element': event.element || null,
+           'properties': event.properties || {}
+         }
+         if (this.isEnabled()) {
+           var a = snowplow('getUserId');
+           this.log("trackV2", {athleteId: a});
+           snowplow('trackSelfDescribingEvent', {
+             schema: 'iglu:com.strava/track/jsonschema/1-0-0',
+             data: eventData
+           });
+         } else {
+           if(this.isDebug()){
+             // toggle defined in - https://github.com/strava/active/blob/main/lib/strava/external_analytics.rb
+             // to turn on - Strava::ExternalAnalytics.turn_on_debug
+             // to turn off - Strava::ExternalAnalytics.turn_off_debug
+             !!console.table && console.table(eventData);
+           }
+         }
+       },
+       trackLink: function() {
+       },
+       trackForm: function() {
+       },
+       identifyV2: function () {
+       },
+       getExperimentContext: function(pageProperties) {
+         var experiment = ( pageProperties || {} ).experiment_info || {};
+         if (experiment.experiment_cohort && experiment.experiment_name) {
+           this.log('found experiment with values', experiment);
+           return {
+             schema: 'iglu:com.strava/web_experiment/jsonschema/1-0-0',
+             data: {
+               experiment_name: experiment.experiment_name,
+               cohort: experiment.experiment_cohort,
+               forced: experiment.experiment_forced === true
+             }
+           };
+         } else {
+           return null;
+         }
+       },
+       page: function(pageProperties) {
+         if(this.isEnabled()) {
+           snowplow('trackPageView');
+         }
+       },
+       identify: function(athleteId, options, eventName) {
+         if (this.isEnabled()) {
+           this.log("identify user", {athleteId: athleteId});
+           var properties = options || {}
+           properties.athlete_id = athleteId;
+           var eventData = {
+             'category': 'identify',
+             'page': null,
+             'action': eventName,
+             'element': null,
+             'properties': properties
+           };
+           snowplow('trackSelfDescribingEvent', {
+             schema: 'iglu:com.strava/track/jsonschema/1-0-0',
+             data: eventData
+           });
+         }
+       },
+       reset: function() {
+         if(this.isEnabled()) {
+           this.log("reseting athlete id",{});
+           snowplow('setUserId', null)
+           var spCookie = document.cookie.match('_sp_id\\.[a-f0-9]+')
+           if(spCookie != null) {
+             document.cookie = spCookie[0] + "= ; expires = Thu, 01 Jan 1970 00:00:00 GMT"
+           }
+         }
+       },
+       setup: function(athleteId, pageProperties) {
+         if(this.isEnabled()) {
+           this.log("setup snowplow", {athleteId: athleteId});
+           snowplow("newTracker", "cf", "c.strava.com", {
+             appId: "strava-web",
+             platform: "web"
+           });
+ 
+           /*
+           * Disable anonymous tracking and set userId if we have athleteId
+           * this assumes that performance consent is given at this point
+           * so we can enable non-anonymous tracking.
+           *
+           * Anonymous tracking could be enabled if an athlete revoked performance consent
+           * and before giving consent again.
+           */
+           snowplow('disableAnonymousTracking');
+           snowplow('setUserId', athleteId);
+           /*
+            * This allows sending of page pings after an initial page view
+            * is generated. This should allow us to track page pings when
+            * the user continues interacting with the page after the initial page
+            * view event is generated.
+            */
+           snowplow('enableActivityTracking', 30, 30);
+ 
+           var experimentContext = this.getExperimentContext(pageProperties);
+           if (experimentContext) {
+             snowplow('addGlobalContexts', [experimentContext]);
+           }
+           snowplow('enableFormTracking');
+         }
+       },
+       getDomainUserId: function() {
+         var d = jQuery.Deferred();
+         if (this.isEnabled()) {
+           if (!_snowplowReady) {
+             _snowplowReady = jQuery.Deferred();
+             snowplow(function(){
+               _snowplowReady.resolve(this.cf.getDomainUserId());
+             });
+           }
+           _snowplowReady.always(function(getDomainUserId){
+             d.resolve(getDomainUserId);
+           });
+         } else {
+           d.reject(null);
+         }
+         return d;
+       },
+       log: function(message, values) {
+         if(this.isDebug()) {
+           console.log(message, 'background-color: yellow; color: blue; font-size: medium;', values);
+         }
+       },
+       debug: function(value) {
+         _options.debug = value;
+       }
+     }
+   )
+ }({
+   is_mobile: false,
+   os: "",
+   debug: false,
+   athlete_id: null,
+   locale: "en-US"
+ });
+</script>
+
+<script>
+  // Set data-cookieconsent='ignore' on the current script tag to tell Cookiebot
+ // to ignore this script since it's managed by our consent management system
+ document.currentScript && document.currentScript.setAttribute('data-cookieconsent', 'ignore');
+ 
+ function loadSnowplow() {
+   var analytics = window.analytics = window.analytics || [];
+   if(analytics.invoked) {
+     window.console && console.error && console.error("Segment snippet included twice.");
+   } else {
+     (function(p,l,o,w,i,n,g){if(!p[i]){p.GlobalSnowplowNamespace=p.GlobalSnowplowNamespace||[];p.GlobalSnowplowNamespace.push(i);p[i]=function(){(p[i].q=p[i].q||[]).push(arguments)};p[i].q=p[i].q||[];n=l.createElement(o);g=l.getElementsByTagName(o)[0];n.async=1;n.src=w;g.parentNode.insertBefore(n,g)}}(window,document,"script","https://d3nn82uaxijpm6.cloudfront.net/8f96b1247cf4359f8fec.js","snowplow"));
+     var pageProperties = null;
+     var athleteId = null;
+     Strava.ExternalAnalytics.setup(athleteId, pageProperties);
+     Strava.ExternalAnalytics.page(pageProperties);
+   }
+ }
+ 
+ window.addEventListener('strava:cmp:consent-accepted:performance', function() {
+   loadSnowplow();
+ });
+</script>
+
+<script>
+  !function(debug){
+   window.Strava = window.Strava || {};
+   var _enabled = true;
+   var _debug = !!debug;
+   var _branchData = null;
+ 
+   window.Strava.BranchIO = window.Strava.BranchIO || (
+     {
+       isEnabled: function() {
+         // branch script can be blocked by our consent management tool
+         return _enabled && typeof branch === 'object' && branch !== null;
+       },
+       isDebug: function() {
+         return _debug;
+       },
+       dataToLocalStorage: function() {
+         if (!_branchData) {
+           _branchData = new Strava.BranchAnalytics.BranchData();
+         }
+ 
+         var d = this.data()
+         var that = this;
+         d.done(function(data) {
+           that.log('storing data %o to local storage', data)
+           _branchData.data(data)
+         });
+         d.fail(function(message) {
+           that.log('failed to retrieve data from branch');
+           _branchData.data({})
+         });
+         return d;
+       },
+       createLink: function(options) {
+         var d = jQuery.Deferred();
+         var data = null;
+         const that = this;
+         var callback = function(e, l) {
+           if (!e) {
+             d.resolve(l);
+           } else {
+             d.reject(e);
+           }
+         }
+ 
+         Strava.ExternalAnalytics
+           .getDomainUserId()
+           .always(function(domainUserId){
+             if (domainUserId) {
+               options.data['domainUserId'] = domainUserId;
+             }
+ 
+             if(that.isEnabled()) {
+               branch.link(options, callback);
+             };
+         });
+ 
+         return d;
+       },
+       dataFromLocalStorage: function() {
+         if (!_branchData) {
+           _branchData = new Strava.BranchAnalytics.BranchData();
+         }
+         return _branchData.data();
+       },
+       clearLocalStorage: function() {
+         if (!_branchData) {
+           _branchData = new Strava.BranchAnalytics.BranchData();
+         }
+         _branchData.data({});
+       },
+       data: function(checkLocalStorage) {
+         var d = jQuery.Deferred();
+         var that = this;
+         var c = function(message, meta_data) {
+           var storedData = null;
+ 
+           if(message) {
+             d.reject(message);
+           } else {
+             if (checkLocalStorage == true && (meta_data == null || meta_data.data == "" || meta_data.data == null)) {
+               storedData = that.dataFromLocalStorage();
+               that.clearLocalStorage();
+ 
+               d.resolve(storedData);
+             } else {
+               d.resolve(meta_data);
+             }
+           }
+         };
+ 
+         if(this.isEnabled()) {
+           branch.data(c);
+           this.log('%cdata (branch enabled)');
+         } else {
+           this.log('%cdata (branch disabled)');
+           d.resolve({});
+         }
+         return d;
+       },
+       identify: function(hashedAthleteId) {
+         var that = this;
+         var callback = function(error, data) {
+           if (error) {
+             console.log(error);
+           }
+         }
+         if(this.isEnabled() && hashedAthleteId) {
+           branch.setIdentity(hashedAthleteId, callback);
+           this.log('identifying athlete %o', hashedAthleteId);
+         }
+       },
+       logout: function() {
+         var that = this;
+         var callback = function(error) {
+           if (error) {
+             console.log(error);
+           }
+         }
+         branch.logout(callback);
+       },
+       track: function(eventName, metaData) {
+         var that = this;
+         var callback = function(error, data) {
+           if (error) {
+             console.log(error);
+           }
+         }
+         if(this.isEnabled()) {
+             this.log('tracking event - ', eventName);
+             branch.logEvent(eventName, metaData, callback);
+         }
+       },
+       log: function(message, values = '') {
+         if(this.isDebug()) {
+           console.log(`[branch] :::  ${message}`, values);
+         }
+       },
+       debug: function(value) {
+         _debug = value;
+       }
+     }
+   )
+ }(false);
+</script>
+
+<div>
+<script data-cookieconsent='ignore' type='text/javascript'>
+function loadBranch() {
+  // load Branch
+  (function(b,r,a,n,c,h,_,s,d,k){if(!b[n]||!b[n]._q){for(;s<_.length;)c(h,_[s++]);d=r.createElement(a);d.async=1;d.src="https://cdn.branch.io/branch-latest.min.js";k=r.getElementsByTagName(a)[0];k.parentNode.insertBefore(d,k);b[n]=h}})(window,document,"script","branch",function(b,r){b[r]=function(){b._q.push([r,arguments])}},{_q:[],_v:1},"addListener banner closeBanner closeJourney data deepview deepviewCta first init link logout removeListener setBranchViewData setIdentity track trackCommerceEvent logEvent disableTracking getBrowserFingerprintId crossPlatformIds lastAttributedTouchData setAPIResponseCallback qrCode".split(" "), 0);
+
+  var options = {"metadata":{"external_identity_version":5,"next":false,"external_identity_hash":null}}
+
+  // clean legacy identities (non-hashed athlete ids)
+  var branchSessionIdentity = JSON.parse(sessionStorage.getItem('branch_session') || '{}').identity;
+  options.metadata.session_identity = branchSessionIdentity;
+
+  if(branchSessionIdentity && branchSessionIdentity.length !== 64) {
+    Strava.BranchIO.log('clearing legacy branch session identity %o', branchSessionIdentity);
+    sessionStorage.removeItem('branch_session');
+    options.metadata.session_identity_cleared = true;
+  }else{
+    options.metadata.session_identity_cleared = false;
+  }
+
+  // disable journeys on web
+  // we currently do not use journeys on web and they conflict with our cookie consent management
+  options.no_journeys = true;
+
+  // init Branch
+  branch.init("key_live_lmpPsfj2DP8CflI4rmzfiemerte7sgwm", options, (err, data) => {
+    const branchInitialized = new CustomEvent('BranchInitialized', { detail: { err, data } });
+    window.dispatchEvent(branchInitialized);
+
+    var identity = data && data['identity'];
+    var hashedAthleteId = "";
+
+    if(hashedAthleteId && identity && identity.length !== 64) {
+      Strava.BranchIO.log('purging branch session %o', identity);
+      Strava.BranchIO.track("web_session_reset", {identity: identity});
+      Strava.BranchIO.logout();
+      Strava.BranchIO.identify(hashedAthleteId);
+    }else{
+      if (hashedAthleteId) {
+        Strava.BranchIO.identify(hashedAthleteId);
+      }else{
+        Strava.BranchIO.log('no athlete to identify');
+        Strava.BranchIO.logout();
+      }
+    }
+  });
+}
+
+
+</script>
+<script data-cookieconsent='ignore' type='text/javascript'>
+window.addEventListener('strava:cmp:consent-accepted:targeting', () => {
+  loadBranch();
+});
+</script>
+</div>
+
+</head>
+<body>
+<noscript>
+<iframe height='0' src='//www.googletagmanager.com/ns.html?id=GTM-TP845S' style='display:none;visibility:hidden' width='0'></iframe>
+</noscript>
+
+
+<header id='global-header'><!--
+deploy: 36cc62c4fc239dbd2e1263a4d111744e612680d6
+-->
+<!--[if lte IE 8]>
+<div class='alert alert-warning message warning mb-0 text-center'>
+<p>It looks like you're using a version of Internet Explorer that Strava no longer supports. Please <a href='http://www.microsoft.com/en-us/download/ie.aspx?q=internet+explorer'>upgrade your web browser</a> &mdash; <a href='https://strava.zendesk.com/entries/20420212-Supported-Browsers-on-Strava'>Learn more</a>.</p>
+</div>
+<![endif]-->
+<nav class='nav-bar container collapsable-nav' role='navigation'>
+<div title="Return to the Strava home page" class="branding"><a class="branding-content" href="/"><span class="sr-only">Strava</span></a></div>
+<!-- / Nav Menu Button -->
+<a href="#container-nav" aria-expanded="false" aria-controls="container-nav" data-toggle="collapse" class="btn btn-default btn-mobile-menu" role="button">Menu</a>
+<div class='nav-container collapse' id='container-nav'>
+<ul class='user-nav nav-group'>
+<li class='nav-item'>
+<a class="nav-link" href="/mobile">Mobile</a>
+</li>
+<li class='nav-item'>
+<a class="nav-link" href="/features">Features</a>
+</li>
+<li class='nav-item'>
+<a class="nav-link" href="/subscribe?cta=premium&amp;element=nav&amp;origin=logged_out_global_nav">Subscription</a>
+</li>
+<li class='nav-item selected'>
+<a class="nav-link" href="/maps">Maps</a>
+</li>
+<li class='nav-item'>
+<a class="nav-link" href="https://stories.strava.com/?utm_source=website-header">Stories</a>
+</li>
+<li class='nav-item'>
+<a class="nav-link" href="/gift">Give a Gift</a>
+</li>
+<li class='nav-object-group'>
+<div class='nav-item logged_out_nav'>
+<a class='btn btn-primary btn-signup' data-segioevent='{&quot;name&quot;:&quot;Signup Flow&quot;,&quot;method&quot;:&quot;web&quot;,&quot;source&quot;:&quot;Global Header&quot;}' href='/register?cta=sign-up&amp;element=global-header&amp;plan=free&amp;source=segments_show'>
+Sign Up
+</a>
+</div>
+<div class='nav-item logged_out_nav'>
+<a class='btn btn-default btn-login' data-segioevent='{&quot;name&quot;:&quot;Login Flow&quot;,&quot;method&quot;:&quot;web&quot;,&quot;source&quot;:&quot;Global Header&quot;}' href='https://www.strava.com/login?cta=log-in&amp;element=global-header&amp;source=segments_show'>
+Log In
+</a>
+</div>
+</li>
+</ul>
+
+</div>
+</nav>
+</header>
+
+
+
+<script id='custom-map-controls-show-privacy-fullscreen-template' type='text/template'>
+<div id='map-control-container' style='padding: 5px'>
+<div class='js-map-control' id='map-control-container' index='1'>
+<div class='inline-inputs' id='strava-map-controls'>
+
+
+<div class='drop-down-menu' id='map-type-control'>
+<a class='selection' data-map-type-id='standard' id='selected-map'>Standard Map</a>
+<ul class='options'>
+<li>
+<a class='map-type-selector' data-map-type-id='satellite'>Satellite Map</a>
+</li>
+<li>
+<a id='start-street-view'>Street View (Start)</a>
+</li>
+<li>
+<a id='end-street-view'>Street View (End)</a>
+</li>
+<li>
+<label>
+<input id='privacy_toggle' type='checkbox'>Show Privacy Zone</input>
+</label>
+</li>
+</ul>
+</div>
+
+<a class='button' id='toggle-fullscreen'></a>
+</div>
+</div>
+</div>
+</script>
+<script id='custom-map-controls-show-privacy-template' type='text/template'>
+<div id='map-control-container' style='padding: 5px'>
+<div class='js-map-control' id='map-control-container' index='1'>
+<div class='inline-inputs' id='strava-map-controls'>
+
+
+<div class='drop-down-menu' id='map-type-control'>
+<a class='selection' data-map-type-id='standard' id='selected-map'>Standard Map</a>
+<ul class='options'>
+<li>
+<a class='map-type-selector' data-map-type-id='satellite'>Satellite Map</a>
+</li>
+<li>
+<a id='start-street-view'>Street View (Start)</a>
+</li>
+<li>
+<a id='end-street-view'>Street View (End)</a>
+</li>
+<li>
+<label>
+<input id='privacy_toggle' type='checkbox'>Show Privacy Zone</input>
+</label>
+</li>
+</ul>
+</div>
+
+</div>
+</div>
+</div>
+</script>
+<script id='custom-map-controls-fullscreen-template' type='text/template'>
+<div id='map-control-container' style='padding: 5px'>
+<div class='js-map-control' id='map-control-container' index='1'>
+<div class='inline-inputs' id='strava-map-controls'>
+
+
+<div class='drop-down-menu' id='map-type-control'>
+<a class='selection' data-map-type-id='standard' id='selected-map'>Standard Map</a>
+<ul class='options'>
+<li>
+<a class='map-type-selector' data-map-type-id='satellite'>Satellite Map</a>
+</li>
+<li>
+<a id='start-street-view'>Street View (Start)</a>
+</li>
+<li>
+<a id='end-street-view'>Street View (End)</a>
+</li>
+</ul>
+</div>
+
+<a class='button' id='toggle-fullscreen'></a>
+</div>
+</div>
+</div>
+</script>
+<script id='custom-map-controls-template' type='text/template'>
+<div id='map-control-container' style='padding: 5px'>
+<div class='js-map-control' id='map-control-container' index='1'>
+<div class='inline-inputs' id='strava-map-controls'>
+
+
+<div class='drop-down-menu' id='map-type-control'>
+<a class='selection' data-map-type-id='standard' id='selected-map'>Standard Map</a>
+<ul class='options'>
+<li>
+<a class='map-type-selector' data-map-type-id='satellite'>Satellite Map</a>
+</li>
+<li>
+<a id='start-street-view'>Street View (Start)</a>
+</li>
+<li>
+<a id='end-street-view'>Street View (End)</a>
+</li>
+</ul>
+</div>
+
+</div>
+</div>
+</div>
+</script>
+<script id='custom-map-controls-show-privacy-legend-fullscreen-template' type='text/template'>
+<div id='map-control-container' style='padding: 5px'>
+<div class='js-map-control' id='map-control-container' index='1'>
+<div class='inline-inputs' id='strava-map-controls'>
+
+
+<div class='drop-down-menu' id='map-type-control'>
+<a class='selection' data-map-type-id='standard' id='selected-map'>Standard Map</a>
+<ul class='options'>
+<li>
+<a class='map-type-selector' data-map-type-id='satellite'>Satellite Map</a>
+</li>
+<li>
+<a id='start-street-view'>Street View (Start)</a>
+</li>
+<li>
+<a id='end-street-view'>Street View (End)</a>
+</li>
+</ul>
+</div>
+
+<a class='button' id='toggle-fullscreen'></a>
+</div>
+<div id='privacy-legend'>
+<div class='legend-options'>
+<div class='legend-line' id='visible-line'></div>
+<div class='legend-label'>Visible</div>
+</div>
+<div class='legend-options'>
+<div class='legend-line' id='hidden-line'></div>
+<div class='legend-label'>Hidden</div>
+</div>
+</div>
+
+</div>
+</div>
+</script>
+<script id='custom-map-controls-show-privacy-legend-template' type='text/template'>
+<div id='map-control-container' style='padding: 5px'>
+<div class='js-map-control' id='map-control-container' index='1'>
+<div class='inline-inputs' id='strava-map-controls'>
+
+
+<div class='drop-down-menu' id='map-type-control'>
+<a class='selection' data-map-type-id='standard' id='selected-map'>Standard Map</a>
+<ul class='options'>
+<li>
+<a class='map-type-selector' data-map-type-id='satellite'>Satellite Map</a>
+</li>
+<li>
+<a id='start-street-view'>Street View (Start)</a>
+</li>
+<li>
+<a id='end-street-view'>Street View (End)</a>
+</li>
+</ul>
+</div>
+
+</div>
+<div id='privacy-legend'>
+<div class='legend-options'>
+<div class='legend-line' id='visible-line'></div>
+<div class='legend-label'>Visible</div>
+</div>
+<div class='legend-options'>
+<div class='legend-line' id='hidden-line'></div>
+<div class='legend-label'>Hidden</div>
+</div>
+</div>
+
+</div>
+</div>
+</script>
+<script id='custom-map-controls-pzones-admin-fullscreen-template' type='text/template'>
+<div id='map-control-container' style='padding: 5px'>
+<div class='js-map-control' id='map-control-container' index='1'>
+<div class='inline-inputs' id='strava-map-controls'>
+
+
+<div class='drop-down-menu' id='map-type-control'>
+<a class='selection' data-map-type-id='standard' id='selected-map'>Standard Map</a>
+<ul class='options'>
+<li>
+<a class='map-type-selector' data-map-type-id='satellite'>Satellite Map</a>
+</li>
+<li>
+<a id='start-street-view'>Street View (Start)</a>
+</li>
+<li>
+<a id='end-street-view'>Street View (End)</a>
+</li>
+<li>
+<label>
+<input id='privacy_toggle' type='checkbox'>Show Privacy Zone</input>
+</label>
+</li>
+</ul>
+</div>
+
+<a class='button' id='toggle-fullscreen'></a>
+</div>
+<div id='privacy-legend'>
+<div class='legend-options'>
+<div class='legend-line' id='visible-line'></div>
+<div class='legend-label'>Visible</div>
+</div>
+<div class='legend-options'>
+<div class='legend-line' id='hidden-line'></div>
+<div class='legend-label'>Hidden</div>
+</div>
+</div>
+
+</div>
+</div>
+</script>
+<script id='custom-map-controls-pzones-admin-template' type='text/template'>
+<div id='map-control-container' style='padding: 5px'>
+<div class='js-map-control' id='map-control-container' index='1'>
+<div class='inline-inputs' id='strava-map-controls'>
+
+
+<div class='drop-down-menu' id='map-type-control'>
+<a class='selection' data-map-type-id='standard' id='selected-map'>Standard Map</a>
+<ul class='options'>
+<li>
+<a class='map-type-selector' data-map-type-id='satellite'>Satellite Map</a>
+</li>
+<li>
+<a id='start-street-view'>Street View (Start)</a>
+</li>
+<li>
+<a id='end-street-view'>Street View (End)</a>
+</li>
+<li>
+<label>
+<input id='privacy_toggle' type='checkbox'>Show Privacy Zone</input>
+</label>
+</li>
+</ul>
+</div>
+
+</div>
+<div id='privacy-legend'>
+<div class='legend-options'>
+<div class='legend-line' id='visible-line'></div>
+<div class='legend-label'>Visible</div>
+</div>
+<div class='legend-options'>
+<div class='legend-line' id='hidden-line'></div>
+<div class='legend-label'>Hidden</div>
+</div>
+</div>
+
+</div>
+</div>
+</script>
+
+<div class='container'>
+<div class='section row' id='segment'>
+<div class='segment-heading col-md-12'>
+<div class='segment-name col-md-8'>
+<div class='name'>
+<h1 class='mb-0'>
+<span data-full-name='Dipsea/Steep Ravine (Stinson To Pantoll)' id='js-full-name'>Dipsea/Steep Ravine (Stinson To Pantoll)</span>
+<a class='btn btn-xs btn-icon-only btn-icon btn-unstyled starred' href='/register?redirect=https%253A%252F%252Fwww.strava.com%252Fsegments%252F907022'>
+<span class="app-icon-wrapper  "><span class="app-icon icon-star icon-lg icon-dark"></span></span>
+</a>
+</h1>
+</div>
+</div>
+<div class='segment-action col-md-4'>
+</div>
+<div class='col-md-8'>
+<div class='location'>
+<strong>Run Segment</strong>
+Marin County, California
+</div>
+<ul class='list-stats inline-stats stats-lg mt-md' id=''>
+<li><div class="stat"><span class="stat-subtext">Distance</span><b class="stat-text">4.11<abbr class='unit' title='kilometers'>km</abbr></b></div></li>
+<li><div class="stat"><span class="stat-subtext">Elevation Gain</span><b class="stat-text">493<abbr class='unit' title='meters'>m</abbr></b></div></li>
+<li><div class="stat"><span class="stat-subtext">Avg Grade</span><b class="stat-text">9.9<abbr class='unit' title='percent'>%</abbr></b></div></li>
+<li><div class="stat"><span class="stat-subtext">Lowest Elev</span><b class="stat-text">42<abbr class='unit' title='meters'>m</abbr></b></div></li>
+<li><div class="stat"><span class="stat-subtext">Highest Elev</span><b class="stat-text">449<abbr class='unit' title='meters'>m</abbr></b></div></li>
+<li><div class="stat"><span class="stat-subtext">Elev Difference</span><b class="stat-text">407<abbr class='unit' title='meters'>m</abbr></b></div></li>
+<li><div class="stat climb-category"><span class="stat-subtext">Climb Category</span><b class="stat-text">2</b></div></li>
+<li><div class="stat attempts"><span class="stat-subtext">9,397 Attempts By 5,841 People</span><b class="stat-text"></b></div></li>
+</ul>
+
+</div>
+</div>
+</div>
+<div class='row'>
+<div class='col-md-8'>
+<div class='map-container map-large' id='map_canvas'></div>
+<div class='elevation-chart chart-container mb-sm mt-sm' id='chart-container'>
+<div id='elev-chart'></div>
+</div>
+</div>
+<div class='sidebar col-md-4'>
+
+<div class='' data-is-published='' data-react-class='SegmentDetailsSideBar' data-react-props='{&quot;loggedIn&quot;:false,&quot;sideBarProps&quot;:{&quot;segmentId&quot;:907022,&quot;fastestTimes&quot;:{&quot;overall&quot;:{&quot;id&quot;:1733803,&quot;name&quot;:&quot;David Roche&quot;,&quot;stats&quot;:[{&quot;label&quot;:&quot;CR (Everyone)&quot;,&quot;value&quot;:&quot;23:19&quot;}],&quot;date&quot;:&quot;Nov 15, 2014&quot;,&quot;profile&quot;:&quot;https://dgalywyr863hv.cloudfront.net/pictures/athletes/1733803/4827108/3/large.jpg&quot;,&quot;segmentEffortId&quot;:&quot;5186850035&quot;,&quot;activityId&quot;:219534604},&quot;men&quot;:{&quot;id&quot;:1733803,&quot;name&quot;:&quot;David Roche&quot;,&quot;stats&quot;:[{&quot;label&quot;:&quot;CR (Men)&quot;,&quot;value&quot;:&quot;23:19&quot;}],&quot;date&quot;:&quot;Nov 15, 2014&quot;,&quot;profile&quot;:&quot;https://dgalywyr863hv.cloudfront.net/pictures/athletes/1733803/4827108/3/large.jpg&quot;,&quot;segmentEffortId&quot;:&quot;5186850035&quot;,&quot;activityId&quot;:219534604},&quot;women&quot;:{&quot;id&quot;:3445498,&quot;name&quot;:&quot;Megan Roche&quot;,&quot;stats&quot;:[{&quot;label&quot;:&quot;CR (Women)&quot;,&quot;value&quot;:&quot;26:05&quot;}],&quot;date&quot;:&quot;Nov 15, 2014&quot;,&quot;profile&quot;:&quot;https://dgalywyr863hv.cloudfront.net/pictures/athletes/3445498/1109983/5/large.jpg&quot;,&quot;segmentEffortId&quot;:&quot;5186947638&quot;,&quot;activityId&quot;:219539282}},&quot;localLegend&quot;:{&quot;id&quot;:84372661,&quot;name&quot;:&quot;Chris Rodriguez&quot;,&quot;stats&quot;:[{&quot;label&quot;:&quot;Local Legend&quot;,&quot;value&quot;:&quot;2 efforts&quot;}],&quot;mayorEffortCount&quot;:2,&quot;profile&quot;:&quot;https://dgalywyr863hv.cloudfront.net/pictures/athletes/84372661/25602945/1/large.jpg&quot;}},&quot;experiments&quot;:{}}' style=''></div>
+
+</div>
+</div>
+<div class='row' id='segment-leaderboard'>
+<div class='col-sm-12'>
+<h2 class='text-title1'>Overall Leaderboard</h2>
+<table class='table table-striped table-leaderboard'>
+<thead>
+<tr>
+<th>Rank</th>
+<th class='name'>Name</th>
+<th class='pace hidden-xs'>Pace</th>
+<th class='vam hidden-xs'>VAM</th>
+<th class='time last-child'>Time</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>David Roche</td>
+<td class='hidden-xs'>5:40<abbr class='unit' title='minutes per kilometer'> /km</abbr></td>
+<td class='hidden-xs'>1047</td>
+<td><a href="/activities/219534604">23:19</a></td>
+</tr>
+<tr>
+<td>2</td>
+<td>Anders Fox</td>
+<td class='hidden-xs'>5:42<abbr class='unit' title='minutes per kilometer'> /km</abbr></td>
+<td class='hidden-xs'>1041</td>
+<td><a href="/activities/8295831934">23:27</a></td>
+</tr>
+<tr>
+<td>4</td>
+<td>Ryan Woods</td>
+<td class='hidden-xs'>5:50<abbr class='unit' title='minutes per kilometer'> /km</abbr></td>
+<td class='hidden-xs'>1017</td>
+<td><a href="/activities/144043008">24:01</a></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Nick Handel</td>
+<td class='hidden-xs'>5:51<abbr class='unit' title='minutes per kilometer'> /km</abbr></td>
+<td class='hidden-xs'>1013</td>
+<td><a href="/activities/1270909872">24:07</a></td>
+</tr>
+<tr>
+<td>6</td>
+<td>Alex Varner</td>
+<td class='hidden-xs'>5:53<abbr class='unit' title='minutes per kilometer'> /km</abbr></td>
+<td class='hidden-xs'>1009</td>
+<td><a href="/activities/432792235">24:12</a></td>
+</tr>
+<tr>
+<td>7</td>
+<td>David Sinclair</td>
+<td class='hidden-xs'>5:58<abbr class='unit' title='minutes per kilometer'> /km</abbr></td>
+<td class='hidden-xs'>993</td>
+<td><a href="/activities/6253459704">24:36</a></td>
+</tr>
+<tr>
+<td>8</td>
+<td>Drew Holmen</td>
+<td class='hidden-xs'>6:00<abbr class='unit' title='minutes per kilometer'> /km</abbr></td>
+<td class='hidden-xs'>989</td>
+<td><a href="/activities/6253985557">24:42</a></td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+<div class='alert alert-info'>
+<p><a href='/register/free?cta=join-strava&amp;element=link&amp;placement=bottom&amp;source=segments_show'>Join Strava</a> to see the full leaderboard</p>
+</div>
+</div>
+
+<footer class='' id='global-footer'>
+<div class='container-fluid'>
+<div class='row footer-nav footer-row'>
+<div class='footer-nav-wrapper'>
+<div class='footer-nav-menu col-lg-2 col-md-3 col-sm-3 col-xs-6'>
+<h4 tabindex='0'>
+Our Community
+</h4>
+<ul class='footer-nav-submenu list-unstyled text-left'>
+<li>
+<a href='/about' target=''>
+About
+</a>
+</li>
+<li>
+<a href='/community-standards' target=''>
+Strava Community Standards
+</a>
+</li>
+<li>
+<a href='/careers' target=''>
+Careers
+</a>
+</li>
+<li>
+<a href='https://press.strava.com' target=''>
+Press
+</a>
+</li>
+</ul>
+</div>
+<div class='footer-nav-menu col-lg-2 col-md-3 col-sm-3 col-xs-6'>
+<h4 tabindex='0'>
+Follow
+</h4>
+<ul class='footer-nav-submenu list-unstyled text-left'>
+<li>
+<a href='https://stories.strava.com/' target='_blank'>
+Stories
+</a>
+</li>
+<li>
+<a href='https://www.facebook.com/Strava/' target='_blank'>
+Facebook
+</a>
+</li>
+<li>
+<a href='https://instagram.com/strava' target='_blank'>
+Instagram
+</a>
+</li>
+<li>
+<a href='http://twitter.com/strava' target='_blank'>
+Twitter
+</a>
+</li>
+</ul>
+</div>
+<div class='footer-nav-menu col-lg-2 col-md-3 col-sm-3 col-xs-6'>
+<h4 tabindex='0'>
+Support
+</h4>
+<ul class='footer-nav-submenu list-unstyled text-left'>
+<li>
+<a href='https://strava.zendesk.com/entries/61608110-How-to-contact-Strava-Support-Submit-a-ticket' target=''>
+Contact
+</a>
+</li>
+<li>
+<a href='https://communityhub.strava.com' target=''>
+Community Forum
+</a>
+</li>
+<li>
+<a href='https://support.strava.com/hc/en-us/articles/216917717-About-Strava-Maps' target=''>
+About Our Maps
+</a>
+</li>
+</ul>
+</div>
+<div class='footer-nav-menu col-lg-2 col-md-3 col-sm-3 col-xs-6 visible-lg-block'>
+<h4>
+<a href='https://partners.strava.com/business?utm_source=footer&amp;utm_medium=referral' target=''>
+Business
+</a>
+</h4>
+</div>
+<div class='footer-nav-menu col-lg-2 col-md-3 col-sm-3 col-xs-6 visible-lg-block'>
+<h4>
+<a href='/mobile' target=''>
+Mobile
+</a>
+</h4>
+</div>
+<div class='footer-nav-menu col-lg-2 col-md-3 col-sm-3 col-xs-6 visible-lg-block'>
+<h4>
+<a href='/subscribe?origin=global_footer' target=''>
+Subscription
+</a>
+</h4>
+</div>
+<div class='footer-nav-menu col-lg-2 col-md-3 col-sm-3 col-xs-6 visible-lg-block'>
+<h4>
+<a href='/family?origin=global_footer' target=''>
+Family Plan
+</a>
+</h4>
+</div>
+<div class='footer-nav-menu col-lg-2 col-md-3 col-sm-3 col-xs-6 visible-lg-block'>
+<h4>
+<a href='https://business.strava.com/subscription-partnerships?utm_source=subsfooter&amp;utm_medium=referral' target=''>
+Subscription Partnerships
+</a>
+</h4>
+</div>
+<div class='footer-nav-menu col-lg-2 col-md-3 col-sm-3 col-xs-6 visible-lg-block'>
+<h4>
+<a href='/student?origin=global_footer' target=''>
+Student Discount
+</a>
+</h4>
+</div>
+<div class='footer-nav-menu col-lg-2 col-md-3 col-sm-3 col-xs-6 visible-lg-block'>
+<h4>
+<a href='/subscribe?origin=global_footer#discount-plans' target=''>
+Teacher, Military &amp; Medical Discount (US Only)
+</a>
+</h4>
+</div>
+<div class='footer-nav-menu col-lg-2 col-md-3 col-sm-3 col-xs-6 visible-lg-block'>
+<h4>
+<a href='/gift?origin=global_footer' target=''>
+Send a Gift
+</a>
+</h4>
+</div>
+<div class='footer-nav-menu col-md-3 col-sm-3 col-xs-6 hidden-lg'>
+<h4 class='more'>
+<span class="app-icon-wrapper  "><span class="app-icon icon-ellipsis icon-xl">More</span></span>
+</h4>
+<ul class='footer-nav-submenu list-unstyled text-left'>
+<li>
+<a href='/mobile' target=''>
+Mobile
+</a>
+</li>
+<li>
+<a href='/premium' target=''>
+Subscription
+</a>
+</li>
+<li>
+<a href='https://partners.strava.com/business?utm_source=footer&amp;utm_medium=referral' target=''>
+Business
+</a>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class='row footer-other'>
+<div class='col-md-12'>
+<div class='privacy-terms'>
+<a href='/legal/privacy'>
+Privacy Policy
+</a>
+|
+<a href='/legal/terms'>
+Terms
+</a>
+|
+<a href='/legal/cookie_policy'>
+Cookie Policy
+</a>
+</div>
+<div class='copyright'>
+<p>© 2026 Strava</p>
+</div>
+</div>
+</div>
+</div>
+</footer>
+
+
+
+<script src="https://d3nn82uaxijpm6.cloudfront.net/assets/mapbox-af58fd070c2204600c27785188b99609423ca4e0c2888ac1de92fb069be2b94c.js"></script>
+<script>
+  window._maps_api = "pk.eyJ1Ijoic3RyYXZhIiwiYSI6ImNtMWp3M2UyZDAydzIyam9zaTh6OTNiZm0ifQ.AOpRu_eeNKWg6r-4GS52Kw"
+ jQuery(document).ready(function(){
+   // TODO: no need for locale
+   Strava.Maps.Mapbox.Base.setMapIds({"dark_id":"strava/ckzn9ervt003j15p7z9y0t2yz","satellite_id":"strava/ckzn9habn001i15qtww7535k9","standard_id":"strava/cm1rtwclf00x401qv2ky2e5d2"});
+ });
+</script>
+<script id='lightbox-template' type='text/template'>
+<div class='lightbox-window modal-content'>
+<div class='close-lightbox'>
+<button class='btn btn-unstyled btn-close'>
+<div class='app-icon icon-close icon-xs icon-dark'></div>
+</button>
+</div>
+</div>
+</script>
+<script id='popover-template' type='text/template'>
+<div class='popover'></div>
+</script>
+<script>
+  window._asset_host = "https://d3nn82uaxijpm6.cloudfront.net";
+ window._measurement_preference = "meters";
+ window._date_preference = "%m/%d/%Y";
+ window._datepicker_preference_format = "mm/dd/yy";
+ 
+ jQuery(document).ready(function() {
+   Strava.Util.EventLogging.createInstance("https://analytics.strava.com","7215fa60b5f01ecc3967543619f7e3d9", null);
+ });
+</script>
+<script src="https://d3nn82uaxijpm6.cloudfront.net/assets/strava/i18n/locales/en-US-f67a60ec2d31172ce2fc426a65698d82f2b72d3736003136e3b5bf1d1d8c068c.js"></script>
+<script src="https://d3nn82uaxijpm6.cloudfront.net/assets/application-46fe8b96ef784c6354844140bb6cdd3782ae494e206d27e6e1c5a2bfe88280bb.js"></script>
+
+<script src="https://www.strava.com/cmp?t=1774717473" defer="defer" data-cookieconsent="ignore" id="strava-cmp-script"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+   (function() {
+     var cmpScript = document.getElementById('strava-cmp-script');
+     var MAX_WAIT_TIME = 10000;
+     var timeoutId;
+     var initialized = false;
+ 
+     function initializeCMP() {
+       if (initialized) return;
+       initialized = true;
+ 
+       if (timeoutId) {
+         clearTimeout(timeoutId);
+       }
+ 
+       if (typeof StravaCookieManagementPlatform !== 'undefined') {
+         StravaCookieManagementPlatform.init({
+           logError: function(e, context) { window.StravaSentry?.logError(e, context); },
+           setTags: function(tags) { window.StravaSentry?.setTags(tags); },
+           withScope: function(callback) { window.StravaSentry?.withScope(callback); },
+         });
+       } else {
+         window.StravaSentry?.logError(
+           new Error('StravaCookieManagementPlatform not initialized'),
+           {
+             fingerprint: ['cmp-script-loaded-object-missing'],
+             tags: {
+               'stravaCmp.load_attempt': 'script_loaded_but_object_missing',
+               'stravaCmp.script_exists': !!cmpScript
+             }
+           }
+         );
+       }
+     }
+ 
+     function handleScriptError() {
+       if (initialized) return;
+       initialized = true;
+ 
+       if (timeoutId) {
+         clearTimeout(timeoutId);
+       }
+ 
+       window.StravaSentry?.logError(
+         new Error('StravaCookieManagementPlatform script failed to load'),
+         {
+           fingerprint: ['cmp-script-load-error'],
+           tags: {
+             'stravaCmp.load_error': true,
+             'stravaCmp.script_url': cmpScript ? cmpScript.src : 'unknown',
+             'stravaCmp.network_online': navigator.onLine
+           }
+         }
+       );
+     }
+ 
+     function handleTimeout() {
+       if (initialized) return;
+       initialized = true;
+ 
+       window.StravaSentry?.logError(
+         new Error('StravaCookieManagementPlatform script load timeout'),
+         {
+           fingerprint: ['cmp-script-load-timeout'],
+           tags: {
+             'stravaCmp.load_timeout': true,
+             'stravaCmp.max_wait_ms': MAX_WAIT_TIME,
+             'stravaCmp.script_exists': !!cmpScript,
+             'stravaCmp.object_defined': typeof StravaCookieManagementPlatform !== 'undefined'
+           }
+         }
+       );
+     }
+ 
+     if (!cmpScript) {
+       window.StravaSentry?.logError(
+         new Error('StravaCookieManagementPlatform script element not found'),
+         {
+           fingerprint: ['cmp-script-element-missing'],
+           tags: {
+             'stravaCmp.script_element_missing': true
+           }
+         }
+       );
+       return;
+     }
+ 
+     // Check if script already loaded and executed (object is defined)
+     if (typeof StravaCookieManagementPlatform !== 'undefined') {
+       initializeCMP();
+       return;
+     }
+ 
+     // Attach event listeners
+     cmpScript.addEventListener('load', initializeCMP);
+     cmpScript.addEventListener('error', handleScriptError);
+ 
+     // Set timeout fallback
+     timeoutId = setTimeout(handleTimeout, MAX_WAIT_TIME);
+ 
+     // Handle case where script already loaded but not yet executed (cached)
+     if (cmpScript.readyState === 'complete' || cmpScript.readyState === 'loaded') {
+       initializeCMP();
+     }
+   })();
+ });
+</script>
+
+
+<div id='fb-root'>
+<script data-cookieconsent='ignore' type='text/javascript'>
+function loadFacebook() {
+  // set fbInitialized so we know FB is being initialized async (safegaurd against react loading FB twice)
+  if (window.Strava) window.Strava.fbInitialized = true;
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId: "284597785309",
+      status: true,
+      cookie: true,
+      xfbml: true,
+      version: "v7.0"
+    });
+    Strava.Facebook.PermissionsManager.getInstance().facebookReady();
+    jQuery('#fb-root').trigger('facebook:init');
+  };
+  (function(d){
+    var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+    if (d.getElementById(id)) {return;}
+    js = d.createElement('script'); js.id = id; js.async = true;
+    js.src = "//connect.facebook.net/en_US/sdk.js";
+    ref.parentNode.insertBefore(js, ref);
+  }(document));
+}
+
+
+</script>
+<script data-cookieconsent='ignore' type='text/javascript'>
+window.addEventListener('strava:cmp:consent-accepted:targeting', () => {
+  loadFacebook();
+});
+</script>
+</div>
+
+
+<script>
+  var currentAthlete = new Strava.Models.CurrentAthlete({"logged_in":false});
+ HAML.globals = function() {
+   return {
+     currentAthlete: currentAthlete,
+     renderPartial: function(name, context) {
+       if (context == null) {
+         context = this;
+       }
+       return JST[name](context);
+     }
+   }
+ }
+</script>
+
+<script>
+  new Strava.Initializer();
+</script>
+<script src="https://d3nn82uaxijpm6.cloudfront.net/assets/strava/maps/mapbox/manifest-b74622393e683e8aa38b632d7fadfe5f4bf5df505877187578e9f56deacfadc0.js"></script>
+<script src="https://d3nn82uaxijpm6.cloudfront.net/assets/strava/segments/manifest-34fa548e215baa58026b5362e5640423484a5ed62ed42eba03b6e71e4a6984d8.js"></script>
+<script src="https://d3nn82uaxijpm6.cloudfront.net/assets/strava/segments/history/manifest-34ef211c4e293314f5ca2116330c28a2f999c7d8e1236a7651ddac6ea4671562.js"></script>
+<script src="https://d3nn82uaxijpm6.cloudfront.net/assets/strava/directory/manifest-9a8506bf8e8d18736bc7ca9869ceb83d23b32557b996c7046aa5dbf965d33853.js"></script>
+<script>
+  jQuery(document).ready(function() {
+   Strava.ExternalAnalytics.trackV2({
+     category: 'segments',
+     page: 'segment_detail_compare_efforts_upsell',
+     action: 'screen_enter',
+     properties: {
+       segment_id: 907022,
+     }
+   });
+   jQuery('#recent-efforts-cta').on('click', function() {
+     Strava.ExternalAnalytics.trackV2({
+       category: 'segments',
+       page: 'segment_detail_compare_efforts_upsell',
+       action: 'click',
+       element: 'subscribe_button',
+       properties: {
+         segment_id: 907022
+       }
+     });
+   });
+ });
+</script>
+<script>
+  jQuery(document).ready(function() {
+   jQuery('#compare-efforts-cta').on('click', function() {
+     Strava.ExternalAnalytics.trackV2({
+       category: 'segments',
+       page: 'segment_detail',
+       action: 'click',
+       element: 'compare_efforts',
+       properties: {
+         segment_id: 907022
+       }
+     });
+   });
+ 
+   new Strava.Segments.Initializer({
+     segmentId: 907022,
+     segmentName: "Dipsea/Steep Ravine (Stinson To Pantoll)",
+     segmentHazard: false,
+     segmentHazardWaived: false,
+     showWaiver: false,
+     canStarSegment: false
+   });
+ });
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+   window.addEventListener('load', function() {
+     navigator.serviceWorker.register("/service_worker.js?v=dLlWydWlG8").then(function(registration) {
+     }, function(err) {
+       console.log('ServiceWorker registration failed: ', err);
+     });
+   });
+ }
+</script>
+<script>
+  jQuery(document).ready(function() {
+   // Scroll Tracking
+   jQuery(document).one('scroll', function(){
+     Strava.ExternalAnalytics.trackV2({
+       category: 'page_scrolled'
+     });
+   });
+ });
+</script>
+<script>
+  // Mobile Menu transition handler
+ jQuery('.collapsable-nav #container-nav')
+   .on('show.bs.collapse', function(){
+     jQuery('#smartbanner-loading-placeholder').slideUp(100);
+     jQuery('html').addClass('mobile-menu-open');
+   })
+   .on('hidden.bs.collapse', function(){
+     jQuery('#smartbanner-loading-placeholder').slideDown(100);
+     jQuery('html').removeClass('mobile-menu-open');
+   });
+</script>
+
+<script src="https://d3nn82uaxijpm6.cloudfront.net/assets/bootstrap.min-d00f21189d04aca979a7f293ac5cc8a05a6f4519bca6840d46d2aebe367f2881.js"></script>
+
+</body>
+</html>
