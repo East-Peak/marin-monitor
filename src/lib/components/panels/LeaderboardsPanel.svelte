@@ -136,7 +136,6 @@
 		max-height: 58rem;
 		min-height: 32rem;
 		overflow-y: auto;
-		overscroll-behavior: contain;
 		padding-right: 0.35rem;
 	}
 
