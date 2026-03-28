@@ -19,7 +19,6 @@
 	const distanceValue = $derived(leaderboard?.distance ?? segment.distance);
 	const elevationValue = $derived(leaderboard?.elevationGain ?? segment.elevationGain);
 	const avgGradeValue = $derived(leaderboard?.avgGrade ?? segment.avgGrade);
-	const topRows = $derived(leaderboard?.rows.slice(0, 3) ?? []);
 	const summaryItems = $derived.by(() => {
 		const items: string[] = [];
 		const distance = formatDistance(distanceValue);
@@ -171,20 +170,6 @@
 				</div>
 			</div>
 
-			{#if topRows.length > 0}
-				<div class="segment-section">
-					<span class="section-label">Top 3</span>
-					<div class="top-rows">
-						{#each topRows as row}
-							<div class="top-row" class:has-speed={segment.activityType === 'ride'}>
-								<span class="top-rank">#{row.rank}</span>
-								<span class="top-athlete">{row.athleteName}</span>
-								<span class="top-time">{row.time}</span>
-							</div>
-						{/each}
-					</div>
-				</div>
-			{/if}
 		</div>
 	</button>
 
@@ -272,7 +257,7 @@
 
 	.segment-header {
 		width: 100%;
-		padding: 0.65rem 0.75rem;
+		padding: 0.75rem 0.85rem;
 		background: none;
 		border: none;
 		cursor: pointer;
@@ -283,7 +268,7 @@
 	.segment-main {
 		display: flex;
 		flex-direction: column;
-		gap: 0.45rem;
+		gap: 0.55rem;
 		min-width: 0;
 	}
 
@@ -296,17 +281,22 @@
 
 	.segment-title {
 		display: flex;
-		align-items: center;
+		align-items: flex-start;
 		gap: 0.35rem;
 		min-width: 0;
 	}
 
 	.segment-name {
-		font-size: 0.72rem;
+		font-size: 0.78rem;
 		font-weight: 600;
 		color: var(--text);
 		line-height: 1.15;
 		min-width: 0;
+		display: -webkit-box;
+		line-clamp: 2;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
 	}
 
 	.climb-badge {
@@ -350,13 +340,14 @@
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 0.4rem;
+		align-items: stretch;
 	}
 
 	.record-card {
 		display: flex;
 		flex-direction: column;
-		gap: 0.18rem;
-		padding: 0.38rem 0.45rem;
+		gap: 0.22rem;
+		padding: 0.45rem 0.5rem;
 		border-radius: 6px;
 		background: rgba(255, 255, 255, 0.03);
 		border: 1px solid rgba(255, 255, 255, 0.06);
@@ -387,7 +378,7 @@
 
 	.record-label {
 		font-weight: 700;
-		font-size: 0.5rem;
+		font-size: 0.52rem;
 		padding: 0.08rem 0.24rem;
 		border-radius: 999px;
 	}
@@ -408,6 +399,8 @@
 	}
 
 	.record-holder {
+		font-size: 0.58rem;
+		line-height: 1.2;
 		color: var(--text-dim, rgba(255, 255, 255, 0.72));
 		max-width: 100%;
 		overflow: hidden;
@@ -419,48 +412,17 @@
 		color: var(--text);
 		font-variant-numeric: tabular-nums;
 		font-weight: 600;
+		font-size: 0.72rem;
 	}
 
 	.record-empty {
-		font-size: 0.54rem;
+		font-size: 0.56rem;
 		color: var(--text-muted);
 		font-style: italic;
 	}
 
 	.record-empty.error {
 		color: #fca5a5;
-	}
-
-	.top-rows {
-		display: flex;
-		flex-direction: column;
-		gap: 0.18rem;
-	}
-
-	.top-row {
-		display: grid;
-		grid-template-columns: 1.8rem minmax(0, 1fr) auto;
-		align-items: center;
-		gap: 0.35rem;
-		font-size: 0.54rem;
-		color: var(--text-dim);
-	}
-
-	.top-rank {
-		color: var(--text-muted);
-		font-variant-numeric: tabular-nums;
-	}
-
-	.top-athlete {
-		min-width: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.top-time {
-		font-variant-numeric: tabular-nums;
-		color: var(--text);
 	}
 
 	.expand-icon {

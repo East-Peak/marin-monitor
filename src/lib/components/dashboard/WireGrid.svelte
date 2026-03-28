@@ -52,16 +52,12 @@
 	}
 
 	.wire-slot-leaderboards {
-		grid-column: span 2;
+		grid-column: 1 / -1;
 	}
 
 	@media (max-width: 1080px) {
 		.wire-grid {
 			grid-template-columns: repeat(3, minmax(0, 1fr));
-		}
-
-		.wire-slot-leaderboards {
-			grid-column: 1 / -1;
 		}
 	}
 

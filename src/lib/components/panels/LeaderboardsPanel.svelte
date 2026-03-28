@@ -10,14 +10,14 @@
 		$stravaSegments.segments
 			.filter((s) => s.activityType === 'ride')
 			.sort((a, b) => b.totalAttempts - a.totalAttempts)
-			.slice(0, 6)
+			.slice(0, 4)
 	);
 
 	const runningSegments = $derived(
 		$stravaSegments.segments
 			.filter((s) => s.activityType === 'run')
 			.sort((a, b) => b.totalAttempts - a.totalAttempts)
-			.slice(0, 6)
+			.slice(0, 4)
 	);
 
 	onMount(() => {
@@ -79,8 +79,8 @@
 <style>
 	.leaderboards-grid {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(240px, 0.8fr);
-		gap: 0.85rem;
+		grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(280px, 0.95fr);
+		gap: 1rem;
 		align-items: start;
 	}
 
@@ -128,10 +128,7 @@
 	.column-body {
 		display: flex;
 		flex-direction: column;
-		gap: 0.4rem;
-		max-height: 34rem;
-		overflow-y: auto;
-		padding-right: 0.15rem;
+		gap: 0.55rem;
 	}
 
 	.empty {
@@ -147,9 +144,7 @@
 		}
 
 		.column-body {
-			max-height: none;
-			overflow: visible;
-			padding-right: 0;
+			gap: 0.45rem;
 		}
 	}
 </style>
