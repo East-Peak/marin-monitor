@@ -6,18 +6,21 @@
 	import { stravaSegments, loadStravaData } from '$lib/stores/strava';
 	import { STRAVA_ENABLED } from '$lib/config/strava';
 
+	const CYCLING_SEGMENT_LIMIT = 25;
+	const RUNNING_SEGMENT_LIMIT = 12;
+
 	const cyclingSegments = $derived(
 		$stravaSegments.segments
 			.filter((s) => s.activityType === 'ride')
 			.sort((a, b) => b.totalAttempts - a.totalAttempts)
-			.slice(0, 4)
+			.slice(0, CYCLING_SEGMENT_LIMIT)
 	);
 
 	const runningSegments = $derived(
 		$stravaSegments.segments
 			.filter((s) => s.activityType === 'run')
 			.sort((a, b) => b.totalAttempts - a.totalAttempts)
-			.slice(0, 4)
+			.slice(0, RUNNING_SEGMENT_LIMIT)
 	);
 
 	onMount(() => {
@@ -129,6 +132,9 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.55rem;
+		max-height: 44rem;
+		overflow-y: auto;
+		padding-right: 0.2rem;
 	}
 
 	.empty {
@@ -145,6 +151,9 @@
 
 		.column-body {
 			gap: 0.45rem;
+			max-height: none;
+			overflow: visible;
+			padding-right: 0;
 		}
 	}
 </style>

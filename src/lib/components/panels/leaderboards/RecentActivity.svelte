@@ -5,7 +5,7 @@
 		$stravaEvents.events
 			.slice()
 			.sort((a, b) => new Date(b.detectedAt).getTime() - new Date(a.detectedAt).getTime())
-			.slice(0, 20)
+			.slice(0, 50)
 	);
 
 	function timeAgo(iso: string): string {
