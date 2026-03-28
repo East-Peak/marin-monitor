@@ -42,31 +42,6 @@ export const GET: RequestHandler = async ({ request }) => {
 		const existing = await readBlob<StravaSegmentCatalog>(STRAVA_SEGMENTS_BLOB);
 
 		const catalog = await buildSegmentCatalog(existing);
-		// Diagnostic: also try one direct fetch to see if Strava API works from this runtime
-		let diagResult = 'not run';
-		try {
-			// Direct token refresh test from this runtime
-			const cid = env.STRAVA_CLIENT_ID;
-			const cs = env.STRAVA_CLIENT_SECRET;
-			const rt = env.STRAVA_REFRESH_TOKEN;
-			const tr = await fetch('https://www.strava.com/oauth/token', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-				body: `client_id=${cid}&client_secret=${cs}&grant_type=refresh_token&refresh_token=${rt}`
-			});
-			if (!tr.ok) {
-				const tb = await tr.text();
-				diagResult = `token_refresh: ${tr.status} — ${tb} — cid=${cid?.slice(0,3)}...${cid?.slice(-3)} cs=${cs?.slice(0,4)}...${cs?.slice(-4)} rt=${rt?.slice(0,4)}...${rt?.slice(-4)}`;
-			} else {
-				const td = await tr.json() as Record<string, string>;
-				const sr = await fetch('https://www.strava.com/api/v3/segments/229781', { headers: { Authorization: `Bearer ${td.access_token}` } });
-				const sd = await sr.json() as Record<string, unknown>;
-				const m = sd.map as Record<string, unknown> | undefined;
-				diagResult = `token=ok segment=${sr.status} name=${sd.name} polyline=${m?.polyline ? 'yes' : 'no'}`;
-			}
-		} catch (e) {
-			diagResult = `error: ${e instanceof Error ? e.message : String(e)}`;
-		}
 
 		await put(STRAVA_SEGMENTS_BLOB, JSON.stringify(catalog), {
 			access: 'private',
@@ -79,13 +54,10 @@ export const GET: RequestHandler = async ({ request }) => {
 		const segmentCount = catalog.segments.length;
 		const withPolylines = catalog.segments.filter((s) => s.polyline !== null).length;
 
-		// Check if env vars are present (for diagnostics)
-		const hasOAuth = Boolean(env.STRAVA_CLIENT_ID && env.STRAVA_CLIENT_SECRET && env.STRAVA_REFRESH_TOKEN);
-
 		console.log(
-			`[sync-strava-segments] OK: ${segmentCount} segments (${withPolylines} with polylines) hasOAuth=${hasOAuth} in ${Date.now() - start}ms`
+			`[sync-strava-segments] OK: ${segmentCount} segments (${withPolylines} with polylines) in ${Date.now() - start}ms`
 		);
-		return new Response(JSON.stringify({ ok: true, segmentCount, withPolylines, hasOAuth, diagResult }), {
+		return new Response(JSON.stringify({ ok: true, segmentCount, withPolylines }), {
 			headers: { 'Content-Type': 'application/json' }
 		});
 	} catch (err) {
