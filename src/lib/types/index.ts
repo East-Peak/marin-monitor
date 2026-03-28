@@ -222,3 +222,15 @@ export interface SettingsState {
 	enableVibes: boolean; // Toggle for satire/Marin Lately content
 }
 
+export type {
+	StravaActivityType,
+	StravaSegment,
+	StravaRecordHolder,
+	StravaLeaderboardRow,
+	StravaLeaderboard,
+	StravaEvent,
+	StravaSegmentCatalog,
+	StravaEventLog,
+	StravaSeedSegment
+} from './strava';
+
