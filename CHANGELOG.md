@@ -4,6 +4,18 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-03-28
+
+### Added
+- **Strava KOM Tracker** — Curated Marin cycling and trail segment catalog with live leaderboards, map overlays, TV mode cards, and chyron-ready event data. Expanded seed coverage to 17 cycling segments and 9 running/trail segments across Headlands, Tam, West Marin, and Tennessee Valley classics.
+
+### Fixed
+- **Leaderboard panel rendering** — tied Strava ranks no longer break the segment table render, and collapsed cards now surface record holders and segment stats without needing expansion.
+- **Strava parser cleanup** — stripped inline HTML from scraped leaderboard times, decoded athlete names safely, and hardened the cron path so deleted/unavailable segments write an empty placeholder while transient Strava failures preserve existing data.
+- **TV leaderboard badges** — climb-category labels now match Strava’s category scale and zero-distance placeholders are hidden until real segment stats are available.
+
+---
+
 ## 2026-03-24
 
 ### Added

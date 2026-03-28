@@ -34,13 +34,16 @@ export const GET: RequestHandler = async ({ params }) => {
 
 	return new Response(
 		JSON.stringify({
-			segmentId: 0,
+			segmentId,
 			segmentName: '',
 			cr: null,
 			qom: null,
 			rows: [],
 			totalAttempts: 0,
 			totalAthletes: 0,
+			distance: null,
+			elevationGain: null,
+			avgGrade: null,
 			scrapedAt: ''
 		}),
 		{

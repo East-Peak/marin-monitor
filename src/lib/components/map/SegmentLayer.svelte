@@ -66,6 +66,15 @@
 		return `${miles.toFixed(1)} mi`;
 	}
 
+	function escapeHtml(value: string): string {
+		return value
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#39;');
+	}
+
 	function buildFeatures(segments: StravaSegment[]): GeoJSON.Feature[] {
 		const features: GeoJSON.Feature[] = [];
 
@@ -241,7 +250,7 @@
 	}
 
 	function buildPopupHTML(props: Record<string, unknown>): string {
-		const name = String(props.name ?? 'Segment');
+		const name = escapeHtml(String(props.name ?? 'Segment'));
 		const activityType = String(props.activityType ?? 'ride');
 		const distance = Number(props.distance ?? 0);
 		const elevationGain = Number(props.elevationGain ?? 0);
@@ -323,16 +332,22 @@
 
 		const lbParts: string[] = [];
 		if (lb.cr) {
-			lbParts.push(`<div><strong style="color:#f59e0b;">CR:</strong> ${lb.cr.athleteName} — ${formatTime(lb.cr.time)}</div>`);
+			lbParts.push(
+				`<div><strong style="color:#f59e0b;">CR:</strong> ${escapeHtml(lb.cr.athleteName)} — ${escapeHtml(formatTime(lb.cr.time))}</div>`
+			);
 		}
 		if (lb.qom) {
-			lbParts.push(`<div><strong style="color:#ec4899;">QOM:</strong> ${lb.qom.athleteName} — ${formatTime(lb.qom.time)}</div>`);
+			lbParts.push(
+				`<div><strong style="color:#ec4899;">QOM:</strong> ${escapeHtml(lb.qom.athleteName)} — ${escapeHtml(formatTime(lb.qom.time))}</div>`
+			);
 		}
 		if (lb.rows.length > 0) {
 			const topRows = lb.rows.slice(0, 3);
 			lbParts.push('<div style="margin-top: 3px;">');
 			for (const row of topRows) {
-				lbParts.push(`<div style="color: #a1a1aa;">#${row.rank} ${row.athleteName} — ${row.time}</div>`);
+				lbParts.push(
+					`<div style="color: #a1a1aa;">#${row.rank} ${escapeHtml(row.athleteName)} — ${escapeHtml(row.time)}</div>`
+				);
 			}
 			lbParts.push('</div>');
 		}

@@ -1,6 +1,6 @@
 import { put, head } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
-import { scrapeSegmentLeaderboard } from '$lib/server/scrapers/strava-leaderboards';
+import { scrapeSegmentLeaderboardResult } from '$lib/server/scrapers/strava-leaderboards';
 import { verifyCronAuth } from '$lib/server/cron-auth';
 import {
 	STRAVA_ENABLED,
@@ -92,16 +92,35 @@ function detectChanges(
 	return events;
 }
 
+function emptyLeaderboard(segment: StravaSegment): StravaLeaderboard {
+	return {
+		segmentId: segment.id,
+		segmentName: segment.name,
+		cr: null,
+		qom: null,
+		rows: [],
+		totalAttempts: 0,
+		totalAthletes: 0,
+		distance: segment.distance > 0 ? segment.distance : null,
+		elevationGain: segment.elevationGain > 0 ? segment.elevationGain : null,
+		avgGrade: segment.avgGrade > 0 ? segment.avgGrade : null,
+		scrapedAt: new Date().toISOString()
+	};
+}
+
 /** Process a single segment: scrape, detect changes, write leaderboard blob. */
 async function processSegment(segment: StravaSegment): Promise<StravaEvent[]> {
 	const blobKey = stravaLeaderboardBlob(segment.id);
 
-	const [current, previous] = await Promise.all([
-		scrapeSegmentLeaderboard(segment.id),
+	const [scrapeResult, previous] = await Promise.all([
+		scrapeSegmentLeaderboardResult(segment.id),
 		readBlob<StravaLeaderboard>(blobKey)
 	]);
 
-	if (!current) return [];
+	if (scrapeResult.kind === 'error') return [];
+
+	const current =
+		scrapeResult.kind === 'ok' ? scrapeResult.leaderboard : emptyLeaderboard(segment);
 
 	// Write new leaderboard to blob
 	await put(blobKey, JSON.stringify(current), {
@@ -111,6 +130,11 @@ async function processSegment(segment: StravaSegment): Promise<StravaEvent[]> {
 		allowOverwrite: true,
 		token: env.BLOB_READ_WRITE_TOKEN
 	});
+
+	if (scrapeResult.kind === 'not_found') {
+		console.warn(`[sync-strava-leaderboards] Segment ${segment.id} unavailable on Strava; wrote empty leaderboard placeholder`);
+		return [];
+	}
 
 	return detectChanges(current, previous);
 }

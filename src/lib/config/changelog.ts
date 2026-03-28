@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-03-28',
+		title: 'Strava KOM Tracker',
+		description:
+			'Curated Marin cycling and trail segments with live Strava leaderboards across the Leaderboards panel, interactive map overlays, TV mode, and chyron updates.'
+	},
+	{
 		date: '2026-03-24',
 		title: 'TV Mode v2',
 		description:

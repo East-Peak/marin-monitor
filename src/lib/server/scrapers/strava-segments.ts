@@ -119,7 +119,6 @@ export async function buildSegmentCatalog(
 	let token: string | null = null;
 	try {
 		token = await getStravaAccessToken();
-		console.log('[strava-segments] OAuth token obtained successfully');
 	} catch (err) {
 		console.error('[strava-segments] OAuth FAILED — falling back to seed list only:', String(err));
 	}
@@ -131,7 +130,6 @@ export async function buildSegmentCatalog(
 			// Small delay between requests to avoid rate limiting
 			if (enriched > 0) await new Promise((r) => setTimeout(r, 500));
 			const detail = await fetchSegmentDetail(token, seed.id);
-			console.log(`[strava-segments] Segment ${seed.id} (${seed.name}): detail=${detail ? 'ok' : 'null'}, polyline=${detail?.map?.polyline ? 'yes' : 'no'}`);
 			if (detail && detail.map?.polyline) {
 				const existing = existingById.get(seed.id);
 				catalog.set(seed.id, {
@@ -149,11 +147,8 @@ export async function buildSegmentCatalog(
 					totalAthletes: existing?.totalAthletes ?? 0
 				});
 				enriched++;
-				console.log(`[strava-segments] Enriched ${detail.name} (${seed.id}) with polyline`);
 			}
 		}
-
-		console.log(`[strava-segments] Enriched ${enriched}/${SEED_SEGMENTS.length} segments with polylines`);
 	} else {
 		console.warn('[strava-segments] No OAuth token — all segments will have polyline: null');
 	}

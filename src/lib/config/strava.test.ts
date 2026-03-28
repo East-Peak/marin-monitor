@@ -22,6 +22,11 @@ describe('strava config', () => {
 		}
 	});
 
+	it('has expanded coverage for cycling and trail segments', () => {
+		expect(SEED_SEGMENTS.filter((seg) => seg.activityType === 'ride')).toHaveLength(17);
+		expect(SEED_SEGMENTS.filter((seg) => seg.activityType === 'run')).toHaveLength(9);
+	});
+
 	it('bounding boxes cover Marin latitude range', () => {
 		const allSouth = MARIN_BOUNDING_BOXES.map((b) => b[0]);
 		const allNorth = MARIN_BOUNDING_BOXES.map((b) => b[2]);

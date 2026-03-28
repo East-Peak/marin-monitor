@@ -21,7 +21,10 @@
 
 <div class="recent-activity">
 	{#if events.length === 0}
-		<div class="empty">No recent leaderboard changes</div>
+		<div class="empty">
+			<span class="empty-title">No recent leaderboard changes</span>
+			<span class="empty-detail">New KOM and QOM swaps from the last 30 days will show up here.</span>
+		</div>
 	{:else}
 		{#each events as event (event.effortId)}
 			<div class="event-row">
@@ -52,10 +55,30 @@
 	}
 
 	.empty {
-		font-size: 0.6rem;
-		color: var(--text-muted);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.35rem;
+		min-height: 8rem;
+		padding: 1rem;
+		border: 1px dashed rgba(255, 255, 255, 0.08);
+		border-radius: 8px;
+		background: rgba(255, 255, 255, 0.02);
 		text-align: center;
-		padding: 1.5rem 0;
+	}
+
+	.empty-title {
+		font-size: 0.62rem;
+		font-weight: 600;
+		color: var(--text);
+	}
+
+	.empty-detail {
+		max-width: 18rem;
+		font-size: 0.55rem;
+		line-height: 1.4;
+		color: var(--text-muted);
 	}
 
 	.event-row {

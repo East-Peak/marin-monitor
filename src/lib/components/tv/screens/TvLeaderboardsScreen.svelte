@@ -24,21 +24,27 @@
 
 	// ---- Climb category labels ----
 	function categoryLabel(cat: number): string {
-		if (cat === 0) return 'HC';
-		if (cat === 1) return 'Cat 1';
-		if (cat === 2) return 'Cat 2';
-		if (cat === 3) return 'Cat 3';
-		if (cat === 4) return 'Cat 4';
+		if (cat === 5) return 'HC';
+		if (cat === 4) return 'Cat 1';
+		if (cat === 3) return 'Cat 2';
+		if (cat === 2) return 'Cat 3';
+		if (cat === 1) return 'Cat 4';
 		return '';
 	}
 
 	function categoryColor(cat: number): string {
-		if (cat === 0) return '#ef4444'; // HC — red
-		if (cat === 1) return '#f97316'; // Cat 1 — orange
-		if (cat === 2) return '#eab308'; // Cat 2 — yellow
-		if (cat === 3) return '#22c55e'; // Cat 3 — green
-		if (cat === 4) return '#60a5fa'; // Cat 4 — blue
+		if (cat === 5) return '#ef4444'; // HC — red
+		if (cat === 4) return '#f97316'; // Cat 1 — orange
+		if (cat === 3) return '#eab308'; // Cat 2 — yellow
+		if (cat === 2) return '#22c55e'; // Cat 3 — green
+		if (cat === 1) return '#60a5fa'; // Cat 4 — blue
 		return '#6b7280';
+	}
+
+	function segmentDistanceLabel(segment: StravaSegment, leaderboard: StravaLeaderboard | undefined): string | null {
+		const distance = leaderboard?.distance ?? segment.distance;
+		if (!distance || distance <= 0) return null;
+		return `${(distance / 1000).toFixed(1)}km`;
 	}
 
 	// ---- Leaderboard lookup ----
@@ -111,19 +117,23 @@
 					<div class="flex flex-col gap-2">
 						{#each cyclingSegments as seg (seg.id)}
 							{@const lb = getLeaderboard(seg.id)}
+							{@const climbLabel = categoryLabel(seg.climbCategory)}
+							{@const distanceLabel = segmentDistanceLabel(seg, lb)}
 							<div class="rounded-lg border border-gray-800 p-2.5" style="background:#111;">
 								<!-- Segment header -->
 								<div class="flex items-center gap-2 mb-1">
 									<span class="text-xs font-semibold text-gray-100 truncate flex-1">{seg.name}</span>
-									{#if seg.climbCategory > 0 || seg.climbCategory === 0 && seg.elevationGain > 50}
+									{#if climbLabel}
 										<span
 											class="text-[9px] font-bold px-1.5 py-0.5 rounded"
 											style="background:{categoryColor(seg.climbCategory)}22; color:{categoryColor(seg.climbCategory)}; border:1px solid {categoryColor(seg.climbCategory)}44;"
 										>
-											{categoryLabel(seg.climbCategory)}
+											{climbLabel}
 										</span>
 									{/if}
-									<span class="text-[9px] text-gray-500">{(seg.distance / 1000).toFixed(1)}km</span>
+									{#if distanceLabel}
+										<span class="text-[9px] text-gray-500">{distanceLabel}</span>
+									{/if}
 								</div>
 
 								{#if lb}
@@ -171,11 +181,14 @@
 					<div class="flex flex-col gap-2">
 						{#each runningSegments as seg (seg.id)}
 							{@const lb = getLeaderboard(seg.id)}
+							{@const distanceLabel = segmentDistanceLabel(seg, lb)}
 							<div class="rounded-lg border border-gray-800 p-2.5" style="background:#111;">
 								<!-- Segment header -->
 								<div class="flex items-center gap-2 mb-1">
 									<span class="text-xs font-semibold text-gray-100 truncate flex-1">{seg.name}</span>
-									<span class="text-[9px] text-gray-500">{(seg.distance / 1000).toFixed(1)}km</span>
+									{#if distanceLabel}
+										<span class="text-[9px] text-gray-500">{distanceLabel}</span>
+									{/if}
 								</div>
 
 								{#if lb}

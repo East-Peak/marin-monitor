@@ -16,16 +16,36 @@ import type { StravaLeaderboard, StravaRecordHolder, StravaLeaderboardRow } from
 // HTML entity decoding
 // ---------------------------------------------------------------------------
 
-/** Decode HTML entities (&quot; &amp; &lt; &gt; &#39; &#x27; &#NNN;) */
+const HTML_ENTITY_MAP: Record<string, string> = {
+	amp: '&',
+	lt: '<',
+	gt: '>',
+	quot: '"',
+	apos: "'",
+	nbsp: ' '
+};
+
+/** Decode common HTML entities and numeric references. */
 function decodeEntities(s: string): string {
-	return s
-		.replace(/&quot;/g, '"')
-		.replace(/&amp;/g, '&')
-		.replace(/&lt;/g, '<')
-		.replace(/&gt;/g, '>')
-		.replace(/&#39;/g, "'")
-		.replace(/&#x27;/g, "'")
-		.replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)));
+	return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (match, entity) => {
+		if (entity.startsWith('#x') || entity.startsWith('#X')) {
+			const codepoint = Number.parseInt(entity.slice(2), 16);
+			return Number.isFinite(codepoint) ? String.fromCodePoint(codepoint) : match;
+		}
+		if (entity.startsWith('#')) {
+			const codepoint = Number.parseInt(entity.slice(1), 10);
+			return Number.isFinite(codepoint) ? String.fromCodePoint(codepoint) : match;
+		}
+		return HTML_ENTITY_MAP[entity] ?? match;
+	});
+}
+
+function stripTags(s: string): string {
+	return s.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, '');
+}
+
+function cleanText(s: string): string {
+	return decodeEntities(stripTags(s)).replace(/\s+/g, ' ').trim();
 }
 
 // ---------------------------------------------------------------------------
@@ -56,11 +76,11 @@ interface ReactProps {
 
 function toRecordHolder(entry: ReactFastestTimeEntry | undefined): StravaRecordHolder | null {
 	if (!entry) return null;
-	const time = entry.stats?.[0]?.value ?? '';
+	const time = cleanText(entry.stats?.[0]?.value ?? '');
 	if (!time) return null;
 	return {
 		athleteId: entry.id,
-		athleteName: entry.name,
+		athleteName: cleanText(entry.name),
 		time,
 		date: entry.date,
 		effortId: parseEffortId(entry.segmentEffortId),
@@ -121,7 +141,7 @@ function extractLeaderboardRows(html: string): StravaLeaderboardRow[] {
 		const thRegex = /<th[^>]*>(.*?)<\/th>/g;
 		let thMatch;
 		while ((thMatch = thRegex.exec(theadMatch[1])) !== null) {
-			headers.push(thMatch[1].trim().toLowerCase());
+			headers.push(cleanText(thMatch[1]).toLowerCase());
 		}
 	}
 
@@ -156,7 +176,8 @@ function extractLeaderboardRows(html: string): StravaLeaderboardRow[] {
 		if (isNaN(rank)) continue;
 
 		// Second cell: athlete name
-		const athleteName = cells[1].trim();
+		const athleteName = cleanText(cells[1]);
+		if (!athleteName) continue;
 
 		// Last cell: time with activity link
 		const lastCell = cells[cells.length - 1];
@@ -164,7 +185,8 @@ function extractLeaderboardRows(html: string): StravaLeaderboardRow[] {
 		if (!timeMatch) continue;
 
 		const activityId = parseInt(timeMatch[1], 10);
-		const time = timeMatch[2].trim();
+		const time = cleanText(timeMatch[2]);
+		if (!time) continue;
 
 		// Middle cells: speed/pace, power, vam — varies by segment type
 		let speed: string | null = null;
@@ -194,8 +216,7 @@ function extractLeaderboardRows(html: string): StravaLeaderboardRow[] {
 
 /** Strip HTML tags and unit abbreviations to get the core numeric value */
 function extractNumericValue(cellHtml: string): string | null {
-	// Remove HTML tags
-	const text = cellHtml.replace(/<[^>]+>/g, '').trim();
+	const text = cleanText(cellHtml);
 	if (!text || text === '-') return null;
 	// Extract leading numeric part (e.g., "29.3 km/h" → "29.3", "5:40 /km" → "5:40")
 	const match = text.match(/^[\d:.,]+/);
@@ -278,13 +299,13 @@ function extractAttemptCounts(html: string): { attempts: number; athletes: numbe
 function extractSegmentName(html: string): string {
 	// <span data-full-name='Hawk Hill' id='js-full-name'>
 	const match = html.match(/data-full-name='([^']+)'/);
-	if (match) return match[1];
+	if (match) return cleanText(match[1]);
 	// Fallback: double-quote variant
 	const match2 = html.match(/data-full-name="([^"]+)"/);
-	if (match2) return match2[1];
+	if (match2) return cleanText(match2[1]);
 	// Fallback: title tag
 	const titleMatch = html.match(/<title>([^<]+)<\/title>/);
-	if (titleMatch) return titleMatch[1].replace(/\s*\|.*$/, '').trim();
+	if (titleMatch) return cleanText(titleMatch[1].replace(/\s*\|.*$/, ''));
 	return 'Unknown Segment';
 }
 
@@ -335,9 +356,14 @@ export function parseSegmentPage(segmentId: number, html: string): StravaLeaderb
 /**
  * Fetch and parse a Strava segment's public page.
  */
-export async function scrapeSegmentLeaderboard(
+export type StravaSegmentScrapeResult =
+	| { kind: 'ok'; leaderboard: StravaLeaderboard }
+	| { kind: 'not_found' }
+	| { kind: 'error' };
+
+export async function scrapeSegmentLeaderboardResult(
 	segmentId: number
-): Promise<StravaLeaderboard | null> {
+): Promise<StravaSegmentScrapeResult> {
 	const url = `https://www.strava.com/segments/${segmentId}`;
 
 	try {
@@ -348,15 +374,32 @@ export async function scrapeSegmentLeaderboard(
 			}
 		});
 
+		if (response.status === 404 || response.status === 410) {
+			console.warn(`[strava-leaderboards] Segment ${segmentId} is no longer available (${response.status})`);
+			return { kind: 'not_found' };
+		}
+
 		if (!response.ok) {
 			console.warn(`[strava-leaderboards] HTTP ${response.status} for segment ${segmentId}`);
-			return null;
+			return { kind: 'error' };
 		}
 
 		const html = await response.text();
-		return parseSegmentPage(segmentId, html);
+		const leaderboard = parseSegmentPage(segmentId, html);
+		if (!leaderboard) {
+			console.warn(`[strava-leaderboards] Segment ${segmentId} returned unparsable HTML`);
+			return { kind: 'error' };
+		}
+		return { kind: 'ok', leaderboard };
 	} catch (err) {
 		console.warn(`[strava-leaderboards] Failed to fetch segment ${segmentId}:`, err);
-		return null;
+		return { kind: 'error' };
 	}
+}
+
+export async function scrapeSegmentLeaderboard(
+	segmentId: number
+): Promise<StravaLeaderboard | null> {
+	const result = await scrapeSegmentLeaderboardResult(segmentId);
+	return result.kind === 'ok' ? result.leaderboard : null;
 }

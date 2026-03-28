@@ -175,4 +175,60 @@ describe('parseSegmentPage', () => {
 			expect(parseSegmentPage(1, 'hello world')).toBeNull();
 		});
 	});
+
+	describe('HTML cleanup', () => {
+		it('strips inline tags and decodes entities in leaderboard cells', () => {
+			const html = `
+				<html>
+					<head>
+						<title>Encoded &amp; Scenic | Strava Ride Segment in Marin County, California</title>
+					</head>
+					<body>
+						<div
+							data-react-class='SegmentDetailsSideBar'
+							data-react-props='{&quot;sideBarProps&quot;:{&quot;segmentId&quot;:99,&quot;fastestTimes&quot;:{&quot;overall&quot;:{&quot;id&quot;:1,&quot;name&quot;:&quot;Ana &amp; Co&quot;,&quot;stats&quot;:[{&quot;label&quot;:&quot;CR (Everyone)&quot;,&quot;value&quot;:&quot;31s&quot;}],&quot;date&quot;:&quot;Jan 1, 2026&quot;,&quot;segmentEffortId&quot;:&quot;10&quot;,&quot;activityId&quot;:20}}}}'
+						></div>
+						<span data-full-name='Encoded &amp; Scenic' id='js-full-name'></span>
+						<table class='table table-striped table-leaderboard'>
+							<thead>
+								<tr>
+									<th>Rank</th>
+									<th>Name</th>
+									<th>Speed</th>
+									<th>Power</th>
+									<th>VAM</th>
+									<th>Time</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>1</td>
+									<td>Ana &amp; Co</td>
+									<td>29.3<abbr title='kilometers per hour'> km/h</abbr></td>
+									<td>355<abbr title='watts'>w</abbr></td>
+									<td>900<abbr title='meters per hour'>vam</abbr></td>
+									<td><a href="/activities/20">31<abbr class='unit' title='second'>s</abbr></a></td>
+								</tr>
+							</tbody>
+						</table>
+						12 Attempts By 7 People
+						<span class="stat-subtext">Distance</span><b class="stat-text">1.23<abbr title='kilometers'>km</abbr></b>
+						<span class="stat-subtext">Elevation Gain</span><b class="stat-text">45<abbr title='meters'>m</abbr></b>
+						<span class="stat-subtext">Avg Grade</span><b class="stat-text">3.7<abbr title='percent'>%</abbr></b>
+					</body>
+				</html>
+			`;
+
+			const result = parseSegmentPage(99, html);
+
+			expect(result).not.toBeNull();
+			expect(result!.segmentName).toBe('Encoded & Scenic');
+			expect(result!.cr?.athleteName).toBe('Ana & Co');
+			expect(result!.cr?.time).toBe('31s');
+			expect(result!.rows[0]?.athleteName).toBe('Ana & Co');
+			expect(result!.rows[0]?.time).toBe('31s');
+			expect(result!.rows[0]?.speed).toBe('29.3');
+			expect(result!.rows[0]?.power).toBe('355');
+		});
+	});
 });

@@ -1,4 +1,4 @@
-import { writable, derived } from 'svelte/store';
+import { writable, derived, get } from 'svelte/store';
 import { fetchStravaSegments, fetchStravaLeaderboard, fetchStravaEvents } from '$lib/api/marin/strava';
 import { STRAVA_ENABLED } from '$lib/config/strava';
 import type { StravaSegmentCatalog, StravaLeaderboard, StravaEventLog } from '$lib/types/strava';
@@ -17,10 +17,7 @@ export async function loadStravaData(): Promise<void> {
 }
 
 export async function loadLeaderboard(segmentId: number): Promise<StravaLeaderboard | null> {
-	let cached: StravaLeaderboard | undefined;
-	leaderboardCache.subscribe(($cache) => {
-		cached = $cache.get(segmentId);
-	})();
+	const cached = get(leaderboardCache).get(segmentId);
 	if (cached) return cached;
 
 	const data = await fetchStravaLeaderboard(segmentId);

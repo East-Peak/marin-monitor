@@ -69,6 +69,7 @@
 	const TRAFFIC_REFRESH_MS = 3 * 60 * 1000;
 	const TRAFFIC_BOUNDS_BUFFER = 0.12;
 	const mapboxToken = MAPBOX_TOKEN.trim();
+	const STRAVA_CLICK_LAYERS = ['strava-lines-ride', 'strava-lines-run', 'strava-pins'] as const;
 
 	function toNumber(value: unknown): number | null {
 		if (typeof value === 'number' && Number.isFinite(value)) return value;
@@ -132,6 +133,15 @@
 		}
 
 		return null;
+	}
+
+	function clickHitsVisibleStravaFeature(map: MapLibreMap, e: MapLayerMouseEvent): boolean {
+		const interactiveLayers = STRAVA_CLICK_LAYERS.filter((layerId) => {
+			if (!map.getLayer(layerId)) return false;
+			return map.getLayoutProperty(layerId, 'visibility') !== 'none';
+		});
+		if (interactiveLayers.length === 0) return false;
+		return map.queryRenderedFeatures(e.point, { layers: [...interactiveLayers] }).length > 0;
 	}
 
 	function parseTrafficSeverity(
@@ -822,10 +832,11 @@
 		if (!interactionsBound) {
 			interactionsBound = true;
 
-			map.on('click', 'towns-layer', (e: MapLayerMouseEvent) => {
-				const slug = e.features?.[0]?.properties?.slug;
-				if (slug && onTownClick) onTownClick(slug);
-			});
+				map.on('click', 'towns-layer', (e: MapLayerMouseEvent) => {
+					if (clickHitsVisibleStravaFeature(map, e)) return;
+					const slug = e.features?.[0]?.properties?.slug;
+					if (slug && onTownClick) onTownClick(slug);
+				});
 
 			map.on('click', 'news-pins-hit-layer', (e: MapLayerMouseEvent) => {
 				const id = e.features?.[0]?.properties?.id;
