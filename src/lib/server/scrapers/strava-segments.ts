@@ -11,56 +11,14 @@
  */
 
 import type { StravaSegment, StravaSegmentCatalog } from '$lib/types/strava';
-import { SEED_SEGMENTS, MARIN_BOUNDING_BOXES } from '$lib/config/strava';
+import { SEED_SEGMENTS } from '$lib/config/strava';
 import { getStravaAccessToken } from './strava-auth';
-
-// ---------------------------------------------------------------------------
-// Explore API types
-// ---------------------------------------------------------------------------
-
-interface ExploreSegment {
-	id: number;
-	name: string;
-	climb_category: number;
-	avg_grade: number;
-	elev_difference: number;
-	distance: number;
-	start_latlng: [number, number];
-	end_latlng: [number, number];
-	points: string; // encoded polyline
-}
-
-interface ExploreResponse {
-	segments: ExploreSegment[];
-}
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Convert an ExploreSegment into a StravaSegment, merging existing data if present. */
-function exploreToSegment(
-	raw: ExploreSegment,
-	existing: StravaSegment | undefined,
-	activityType: 'ride' | 'run'
-): StravaSegment {
-	return {
-		id: raw.id,
-		name: raw.name,
-		activityType,
-		polyline: raw.points || existing?.polyline || null,
-		startLatlng: raw.start_latlng,
-		endLatlng: raw.end_latlng,
-		distance: raw.distance,
-		elevationGain: raw.elev_difference,
-		avgGrade: raw.avg_grade,
-		climbCategory: raw.climb_category,
-		totalAttempts: existing?.totalAttempts ?? 0,
-		totalAthletes: existing?.totalAthletes ?? 0
-	};
-}
-
-/** Build a seed-only StravaSegment (no explore data yet). */
+/** Build a seed-only StravaSegment (no detail API data yet). */
 function seedToSegment(
 	seedId: number,
 	seedName: string,
@@ -85,24 +43,32 @@ function seedToSegment(
 }
 
 // ---------------------------------------------------------------------------
-// Explore API fetch
+// Segment Detail API fetch
 // ---------------------------------------------------------------------------
 
-/**
- * Query the Strava Explore API for one bounding box + activity type.
- * Returns an empty array on any failure.
- */
-async function exploreBox(
-	token: string,
-	bounds: [number, number, number, number],
-	activityType: 'riding' | 'running'
-): Promise<ExploreSegment[]> {
-	const [swLat, swLng, neLat, neLng] = bounds;
-	const boundsParam = `${swLat},${swLng},${neLat},${neLng}`;
-	const url = `https://www.strava.com/api/v3/segments/explore?bounds=${boundsParam}&activity_type=${activityType}`;
+interface SegmentDetail {
+	id: number;
+	name: string;
+	activity_type: string;
+	distance: number;
+	average_grade: number;
+	total_elevation_gain: number;
+	climb_category: number;
+	start_latlng: [number, number];
+	end_latlng: [number, number];
+	map: { polyline: string };
+}
 
+/**
+ * Fetch individual segment details via GET /segments/{id}.
+ * This returns the full polyline, stats, and metadata for a specific segment.
+ */
+async function fetchSegmentDetail(
+	token: string,
+	segmentId: number
+): Promise<SegmentDetail | null> {
 	try {
-		const response = await fetch(url, {
+		const response = await fetch(`https://www.strava.com/api/v3/segments/${segmentId}`, {
 			headers: {
 				Authorization: `Bearer ${token}`,
 				Accept: 'application/json'
@@ -110,15 +76,14 @@ async function exploreBox(
 		});
 
 		if (!response.ok) {
-			console.warn(`[strava-segments] Explore API ${response.status} for bounds ${boundsParam}`);
-			return [];
+			console.warn(`[strava-segments] Segment ${segmentId} detail API: ${response.status}`);
+			return null;
 		}
 
-		const data = (await response.json()) as ExploreResponse;
-		return data.segments ?? [];
+		return (await response.json()) as SegmentDetail;
 	} catch (err) {
-		console.warn(`[strava-segments] Explore API error for bounds ${boundsParam}:`, err);
-		return [];
+		console.warn(`[strava-segments] Segment ${segmentId} detail fetch error:`, err);
+		return null;
 	}
 }
 
@@ -142,7 +107,6 @@ export async function buildSegmentCatalog(
 	);
 
 	// Build initial catalog from seeds (preserving any existing data)
-	const seedIds = new Set(SEED_SEGMENTS.map((s) => s.id));
 	const catalog = new Map<number, StravaSegment>(
 		SEED_SEGMENTS.map((seed) => [
 			seed.id,
@@ -150,7 +114,7 @@ export async function buildSegmentCatalog(
 		])
 	);
 
-	// Try to enrich with Explore API data
+	// Try to enrich each seed segment with detail API data (polylines + stats)
 	let token: string | null = null;
 	try {
 		token = await getStravaAccessToken();
@@ -160,37 +124,32 @@ export async function buildSegmentCatalog(
 	}
 
 	if (token) {
-		const activityTypes: Array<'riding' | 'running'> = ['riding', 'running'];
-		let totalExploreResults = 0;
-		let seedMatches = 0;
+		let enriched = 0;
 
-		for (const bounds of MARIN_BOUNDING_BOXES) {
-			for (const activityType of activityTypes) {
-				// Map explore activity_type to segment activityType
-				const segmentActivityType = activityType === 'riding' ? 'ride' : 'run';
-
-				const results = await exploreBox(token, bounds, activityType);
-				totalExploreResults += results.length;
-
-				for (const raw of results) {
-					if (seedIds.has(raw.id)) {
-						// Update the seed segment with explore data
-						const existing = existingById.get(raw.id);
-						catalog.set(raw.id, exploreToSegment(raw, existing, segmentActivityType));
-						seedMatches++;
-					} else {
-						// Log non-seed segments found — do NOT auto-add
-						console.log(
-							`[strava-segments] Found non-seed segment via explore: ${raw.id} "${raw.name}" (${activityType})`
-						);
-					}
-				}
+		for (const seed of SEED_SEGMENTS) {
+			const detail = await fetchSegmentDetail(token, seed.id);
+			if (detail && detail.map?.polyline) {
+				const existing = existingById.get(seed.id);
+				catalog.set(seed.id, {
+					id: detail.id,
+					name: detail.name,
+					activityType: seed.activityType,
+					polyline: detail.map.polyline,
+					startLatlng: detail.start_latlng,
+					endLatlng: detail.end_latlng,
+					distance: detail.distance,
+					elevationGain: detail.total_elevation_gain,
+					avgGrade: detail.average_grade,
+					climbCategory: detail.climb_category,
+					totalAttempts: existing?.totalAttempts ?? 0,
+					totalAthletes: existing?.totalAthletes ?? 0
+				});
+				enriched++;
+				console.log(`[strava-segments] Enriched ${detail.name} (${seed.id}) with polyline`);
 			}
 		}
 
-		console.log(
-			`[strava-segments] Explore API returned ${totalExploreResults} total results, ${seedMatches} matched seeds`
-		);
+		console.log(`[strava-segments] Enriched ${enriched}/${SEED_SEGMENTS.length} segments with polylines`);
 	} else {
 		console.warn('[strava-segments] No OAuth token — all segments will have polyline: null');
 	}
