@@ -67,6 +67,24 @@
 		return `${miles.toFixed(1)} mi`;
 	}
 
+	function buildStatsParts(
+		distance: number | null | undefined,
+		elevationGain: number | null | undefined,
+		avgGrade: number | null | undefined
+	): string[] {
+		const parts: string[] = [];
+		if (distance != null && distance > 0) {
+			parts.push(formatDistance(distance));
+		}
+		if (elevationGain != null && elevationGain > 0) {
+			parts.push(`${elevationGain.toFixed(0)}m gain`);
+		}
+		if (avgGrade != null && Math.abs(avgGrade) > 0.05) {
+			parts.push(`${avgGrade.toFixed(1)}% avg`);
+		}
+		return parts;
+	}
+
 	function escapeHtml(value: string): string {
 		return value
 			.replace(/&/g, '&amp;')
@@ -263,10 +281,8 @@
 		const typeColor = activityType === 'ride' ? '#f59e0b' : '#22d3ee';
 
 		// Show placeholder stats from catalog; leaderboard callback will overwrite with real data
-		const hasStats = distance > 0 || elevationGain > 0 || avgGrade > 0;
-		const statsLine = hasStats
-			? `${formatDistance(distance)} &middot; ${elevationGain.toFixed(0)}m gain &middot; ${avgGrade.toFixed(1)}% avg`
-			: 'Loading stats...';
+		const statsParts = buildStatsParts(distance, elevationGain, avgGrade);
+		const statsLine = statsParts.length > 0 ? statsParts.join(' &middot; ') : 'Loading stats...';
 
 		const hasAttempts = totalAttempts > 0 || totalAthletes > 0;
 		const attemptsLine = hasAttempts
@@ -310,18 +326,11 @@
 		// Update stats line with real data from leaderboard scrape
 		const statsEl = document.getElementById(`strava-popup-stats-${segId}`);
 		if (statsEl) {
-			const parts: string[] = [];
-			if (lb.distance != null && lb.distance > 0) {
-				parts.push(formatDistance(lb.distance));
-			}
-			if (lb.elevationGain != null && lb.elevationGain > 0) {
-				parts.push(`${lb.elevationGain.toFixed(0)}m gain`);
-			}
-			if (lb.avgGrade != null && lb.avgGrade > 0) {
-				parts.push(`${lb.avgGrade.toFixed(1)}% avg`);
-			}
+			const parts = buildStatsParts(lb.distance, lb.elevationGain, lb.avgGrade);
 			if (parts.length > 0) {
 				statsEl.innerHTML = parts.join(' &middot; ');
+			} else {
+				statsEl.textContent = 'Stats unavailable';
 			}
 		}
 
@@ -353,7 +362,7 @@
 			lbParts.push('</div>');
 		}
 
-		el.innerHTML = lbParts.length > 0 ? lbParts.join('') : 'No leaderboard data';
+		el.innerHTML = lbParts.length > 0 ? lbParts.join('') : 'No public leaderboard rows available right now.';
 	}
 
 	async function showPopup(map: MapLibreMap, e: MapLayerMouseEvent): Promise<void> {

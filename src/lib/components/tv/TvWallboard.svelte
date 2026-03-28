@@ -12,6 +12,7 @@
   import TvConditionsScreen from './screens/TvConditionsScreen.svelte';
   import TvCommunityScreen from './screens/TvCommunityScreen.svelte';
   import TvLeaderboardsScreen from './screens/TvLeaderboardsScreen.svelte';
+  import { loadStravaData } from '$lib/stores/strava';
   import {
     TV_SCREENS,
     TV_MAP_VIEWS,
@@ -225,7 +226,7 @@
     refreshInFlight = true;
     refresh.startRefresh();
     try {
-      await Promise.all([loadNews(), loadWeather(), loadFireIncidents()]);
+      await Promise.all([loadNews(), loadWeather(), loadFireIncidents(), loadStravaData()]);
       refresh.endRefresh();
     } catch (error) {
       refresh.endRefresh([String(error)]);

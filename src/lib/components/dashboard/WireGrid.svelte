@@ -26,7 +26,7 @@
 			{/if}
 		{/each}
 		{#if STRAVA_ENABLED && isPanelVisible('leaderboards')}
-			<div class="wire-slot">
+			<div class="wire-slot wire-slot-leaderboards">
 				<LeaderboardsPanel />
 			</div>
 		{/if}
@@ -51,9 +51,17 @@
 		min-width: 0;
 	}
 
+	.wire-slot-leaderboards {
+		grid-column: span 2;
+	}
+
 	@media (max-width: 1080px) {
 		.wire-grid {
 			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+
+		.wire-slot-leaderboards {
+			grid-column: 1 / -1;
 		}
 	}
 

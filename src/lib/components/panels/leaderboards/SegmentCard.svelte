@@ -15,11 +15,11 @@
 	let loadError = $state<string | null>(null);
 
 	const climbLabel = $derived(climbCategoryLabel(segment.climbCategory));
+	const primaryRecordLabel = $derived(segment.activityType === 'ride' ? 'KOM' : 'CR');
 	const distanceValue = $derived(leaderboard?.distance ?? segment.distance);
 	const elevationValue = $derived(leaderboard?.elevationGain ?? segment.elevationGain);
 	const avgGradeValue = $derived(leaderboard?.avgGrade ?? segment.avgGrade);
-	const attemptsValue = $derived(leaderboard?.totalAttempts ?? segment.totalAttempts);
-	const athletesValue = $derived(leaderboard?.totalAthletes ?? segment.totalAthletes);
+	const topRows = $derived(leaderboard?.rows.slice(0, 3) ?? []);
 	const summaryItems = $derived.by(() => {
 		const items: string[] = [];
 		const distance = formatDistance(distanceValue);
@@ -28,8 +28,6 @@
 		if (distance) items.push(distance);
 		if (elevation) items.push(`${elevation} gain`);
 		if (avgGrade) items.push(avgGrade);
-		if (attemptsValue > 0) items.push(`${attemptsValue.toLocaleString()} attempts`);
-		if (athletesValue > 0) items.push(`${athletesValue.toLocaleString()} athletes`);
 		return items;
 	});
 	const detailItems = $derived.by(() => {
@@ -111,44 +109,83 @@
 <div class="segment-card" class:expanded>
 	<button class="segment-header" onclick={toggle}>
 		<div class="segment-main">
+			<div class="segment-header-top">
 				<div class="segment-title">
 					<span class="segment-name">{segment.name}</span>
 					{#if climbLabel}
 						<span class="climb-badge">{climbLabel}</span>
 					{/if}
 				</div>
+				<span class="expand-icon">{expanded ? '\u25B2' : '\u25BC'}</span>
+			</div>
+			{#if summaryItems.length > 0}
 				<div class="segment-summary">
 					{#each summaryItems as item (item)}
 						<span class="summary-item">{item}</span>
 					{/each}
 				</div>
+			{/if}
+
+			<div class="segment-section">
+				<span class="section-label">Records</span>
+				<div class="record-grid">
+					<div
+						class="record-card primary"
+						class:ride={segment.activityType === 'ride'}
+						class:run={segment.activityType === 'run'}
+					>
+						<div class="record-card-top">
+							<span class="record-label">{primaryRecordLabel}</span>
+							{#if leaderboard?.cr}
+								<span class="record-time">{leaderboard.cr.time}</span>
+							{/if}
+						</div>
+						{#if leaderboard?.cr}
+							<span class="record-holder">{leaderboard.cr.athleteName}</span>
+						{:else if loading && !leaderboard}
+							<span class="record-empty">Loading…</span>
+						{:else if loadError}
+							<span class="record-empty error">{loadError}</span>
+						{:else}
+							<span class="record-empty">No record yet</span>
+						{/if}
+					</div>
+
+					<div class="record-card secondary">
+						<div class="record-card-top">
+							<span class="record-label">QOM</span>
+							{#if leaderboard?.qom}
+								<span class="record-time">{leaderboard.qom.time}</span>
+							{/if}
+						</div>
+						{#if leaderboard?.qom}
+							<span class="record-holder">{leaderboard.qom.athleteName}</span>
+						{:else if loading && !leaderboard}
+							<span class="record-empty">Loading…</span>
+						{:else if loadError}
+							<span class="record-empty error">{loadError}</span>
+						{:else}
+							<span class="record-empty">No record yet</span>
+						{/if}
+					</div>
+				</div>
 			</div>
-		<div class="segment-records">
-			{#if leaderboard?.cr}
-				<span class="record cr" title="Course Record">
-					<span class="record-top">
-						<span class="record-label">CR</span>
-						<span class="record-time">{leaderboard.cr.time}</span>
-					</span>
-					<span class="record-holder">{leaderboard.cr.athleteName}</span>
-				</span>
-			{/if}
-			{#if leaderboard?.qom}
-				<span class="record qom" title="Queen of the Mountain">
-					<span class="record-top">
-						<span class="record-label">QOM</span>
-						<span class="record-time">{leaderboard.qom.time}</span>
-					</span>
-					<span class="record-holder">{leaderboard.qom.athleteName}</span>
-				</span>
-			{/if}
-			{#if loading && !leaderboard}
-				<span class="record-pending">Loading records…</span>
-			{:else if loadError && !leaderboard}
-				<span class="record-pending error">{loadError}</span>
+
+			{#if topRows.length > 0}
+				<div class="segment-section">
+					<span class="section-label">Top 3</span>
+					<div class="top-rows">
+						{#each topRows as row}
+							<div class="top-row" class:has-speed={segment.activityType === 'ride'}>
+								<span class="top-rank">#{row.rank}</span>
+								<span class="top-athlete">{row.athleteName}</span>
+								<span class="top-time">{row.time}</span>
+							</div>
+						{/each}
+					</div>
+				</div>
 			{/if}
 		</div>
-		<span class="expand-icon">{expanded ? '\u25B2' : '\u25BC'}</span>
 	</button>
 
 	{#if expanded}
@@ -234,9 +271,6 @@
 	}
 
 	.segment-header {
-		display: flex;
-		align-items: flex-start;
-		gap: 0.65rem;
 		width: 100%;
 		padding: 0.65rem 0.75rem;
 		background: none;
@@ -249,9 +283,15 @@
 	.segment-main {
 		display: flex;
 		flex-direction: column;
-		gap: 0.3rem;
-		flex: 1;
+		gap: 0.45rem;
 		min-width: 0;
+	}
+
+	.segment-header-top {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 0.65rem;
 	}
 
 	.segment-title {
@@ -292,28 +332,53 @@
 		font-variant-numeric: tabular-nums;
 	}
 
-	.segment-records {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: flex-end;
-		gap: 0.35rem;
-		flex-shrink: 0;
-		max-width: 14rem;
-	}
-
-	.record {
+	.segment-section {
 		display: flex;
 		flex-direction: column;
-		gap: 0.15rem;
-		min-width: 6.35rem;
-		padding: 0.3rem 0.4rem;
-		border-radius: 6px;
-		font-size: 0.55rem;
-		background: rgba(255, 255, 255, 0.03);
-		border: 1px solid rgba(255, 255, 255, 0.06);
+		gap: 0.25rem;
 	}
 
-	.record-top {
+	.section-label {
+		font-size: 0.48rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	.record-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.4rem;
+	}
+
+	.record-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.18rem;
+		padding: 0.38rem 0.45rem;
+		border-radius: 6px;
+		background: rgba(255, 255, 255, 0.03);
+		border: 1px solid rgba(255, 255, 255, 0.06);
+		min-width: 0;
+	}
+
+	.record-card.primary.ride {
+		border-color: rgba(252, 76, 2, 0.18);
+		background: rgba(252, 76, 2, 0.06);
+	}
+
+	.record-card.primary.run {
+		border-color: rgba(45, 212, 191, 0.18);
+		background: rgba(45, 212, 191, 0.06);
+	}
+
+	.record-card.secondary {
+		border-color: rgba(236, 72, 153, 0.16);
+		background: rgba(236, 72, 153, 0.05);
+	}
+
+	.record-card-top {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -327,12 +392,17 @@
 		border-radius: 999px;
 	}
 
-	.record.cr .record-label {
-		color: #f59e0b;
-		background: rgba(245, 158, 11, 0.18);
+	.record-card.primary.ride .record-label {
+		color: #fc4c02;
+		background: rgba(252, 76, 2, 0.16);
 	}
 
-	.record.qom .record-label {
+	.record-card.primary.run .record-label {
+		color: #2dd4bf;
+		background: rgba(45, 212, 191, 0.16);
+	}
+
+	.record-card.secondary .record-label {
 		color: #ec4899;
 		background: rgba(236, 72, 153, 0.18);
 	}
@@ -351,21 +421,53 @@
 		font-weight: 600;
 	}
 
-	.record-pending {
-		font-size: 0.55rem;
+	.record-empty {
+		font-size: 0.54rem;
 		color: var(--text-muted);
-		padding: 0.35rem 0;
+		font-style: italic;
 	}
 
-	.record-pending.error {
+	.record-empty.error {
 		color: #fca5a5;
+	}
+
+	.top-rows {
+		display: flex;
+		flex-direction: column;
+		gap: 0.18rem;
+	}
+
+	.top-row {
+		display: grid;
+		grid-template-columns: 1.8rem minmax(0, 1fr) auto;
+		align-items: center;
+		gap: 0.35rem;
+		font-size: 0.54rem;
+		color: var(--text-dim);
+	}
+
+	.top-rank {
+		color: var(--text-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.top-athlete {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.top-time {
+		font-variant-numeric: tabular-nums;
+		color: var(--text);
 	}
 
 	.expand-icon {
 		font-size: 0.5rem;
 		color: var(--text-muted);
 		flex-shrink: 0;
-		padding-top: 0.15rem;
+		padding-top: 0.1rem;
 	}
 
 	.segment-body {

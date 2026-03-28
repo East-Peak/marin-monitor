@@ -8,6 +8,7 @@
 	import { townLocation } from '$lib/stores/town-filter';
 	import { AdBanner } from '$lib/components/common';
 	import { pickAds } from '$lib/config/ads';
+	import { loadStravaData } from '$lib/stores/strava';
 	import type {
 		NewsItem,
 		WeatherData,
@@ -90,7 +91,7 @@
 	async function handleRefresh() {
 		refresh.startRefresh();
 		try {
-			await Promise.all([loadNews(), loadWeather()]);
+			await Promise.all([loadNews(), loadWeather(), loadStravaData()]);
 			refresh.endRefresh();
 		} catch (error) {
 			refresh.endRefresh([String(error)]);
@@ -150,7 +151,7 @@
 			try {
 				// News always loads client-side (uses DOMParser for RSS)
 				// Weather: skip if already hydrated from server bootstrap
-				const fetches: Promise<void>[] = [loadNews()];
+				const fetches: Promise<void>[] = [loadNews(), loadStravaData()];
 				if (!data?.bootstrap?.weather) {
 					fetches.push(loadWeather());
 				}

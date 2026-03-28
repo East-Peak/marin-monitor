@@ -6,128 +6,132 @@
 	import { stravaSegments, loadStravaData } from '$lib/stores/strava';
 	import { STRAVA_ENABLED } from '$lib/config/strava';
 
-	type Tab = 'cycling' | 'running' | 'recent';
-
-	let activeTab = $state<Tab>('cycling');
-
 	const cyclingSegments = $derived(
 		$stravaSegments.segments
 			.filter((s) => s.activityType === 'ride')
 			.sort((a, b) => b.totalAttempts - a.totalAttempts)
+			.slice(0, 6)
 	);
 
 	const runningSegments = $derived(
 		$stravaSegments.segments
 			.filter((s) => s.activityType === 'run')
 			.sort((a, b) => b.totalAttempts - a.totalAttempts)
+			.slice(0, 6)
 	);
 
 	onMount(() => {
 		if (STRAVA_ENABLED) {
-			loadStravaData();
+			void loadStravaData();
 		}
 	});
 </script>
 
 {#if STRAVA_ENABLED}
 	<Panel id="leaderboards" title="Leaderboards" variant="cycling">
-		{#snippet header()}
-			<div class="tab-bar">
-				<button
-					class="tab"
-					class:active={activeTab === 'cycling'}
-					onclick={() => (activeTab = 'cycling')}
-				>
-					Cycling
-				</button>
-				<button
-					class="tab"
-					class:active={activeTab === 'running'}
-					onclick={() => (activeTab = 'running')}
-				>
-					Running
-				</button>
-				<button
-					class="tab"
-					class:active={activeTab === 'recent'}
-					onclick={() => (activeTab = 'recent')}
-				>
-					Recent
-				</button>
-			</div>
-		{/snippet}
-
 		{#snippet children()}
-			<div class="leaderboards-content">
-				{#if activeTab === 'cycling'}
-					{#if cyclingSegments.length === 0}
-						<div class="empty">No cycling segments loaded</div>
-					{:else}
-						<div class="segment-list">
+			<div class="leaderboards-grid">
+				<section class="leaderboard-column">
+					<div class="column-header">
+						<span class="column-title cycling">Cycling</span>
+						<span class="column-count">{cyclingSegments.length}</span>
+					</div>
+					<div class="column-body">
+						{#if cyclingSegments.length === 0}
+							<div class="empty">No cycling segments loaded</div>
+						{:else}
 							{#each cyclingSegments as segment (segment.id)}
 								<SegmentCard {segment} />
 							{/each}
-						</div>
-					{/if}
-				{:else if activeTab === 'running'}
-					{#if runningSegments.length === 0}
-						<div class="empty">No running segments loaded</div>
-					{:else}
-						<div class="segment-list">
+						{/if}
+					</div>
+				</section>
+
+				<section class="leaderboard-column">
+					<div class="column-header">
+						<span class="column-title running">Running</span>
+						<span class="column-count">{runningSegments.length}</span>
+					</div>
+					<div class="column-body">
+						{#if runningSegments.length === 0}
+							<div class="empty">No running segments loaded</div>
+						{:else}
 							{#each runningSegments as segment (segment.id)}
 								<SegmentCard {segment} />
 							{/each}
-						</div>
-					{/if}
-				{:else if activeTab === 'recent'}
-					<RecentActivity />
-				{/if}
+						{/if}
+					</div>
+				</section>
+
+				<section class="leaderboard-column recent-column">
+					<div class="column-header">
+						<span class="column-title recent">Recent Changes</span>
+					</div>
+					<div class="column-body">
+						<RecentActivity />
+					</div>
+				</section>
 			</div>
 		{/snippet}
 	</Panel>
 {/if}
 
 <style>
-	.tab-bar {
+	.leaderboards-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(240px, 0.8fr);
+		gap: 0.85rem;
+		align-items: start;
+	}
+
+	.leaderboard-column {
 		display: flex;
-		gap: 0;
-		margin-left: auto;
+		flex-direction: column;
+		gap: 0.5rem;
+		min-width: 0;
 	}
 
-	.tab {
-		background: none;
-		border: none;
-		border-bottom: 2px solid transparent;
-		padding: 0.2rem 0.5rem;
-		font-size: 0.55rem;
-		font-weight: 600;
-		color: var(--text-muted);
-		cursor: pointer;
-		transition:
-			color 0.15s,
-			border-color 0.15s;
+	.column-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding-bottom: 0.2rem;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 	}
 
-	.tab:hover {
-		color: var(--text-dim);
+	.column-title {
+		font-size: 0.58rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
 	}
 
-	.tab.active {
+	.column-title.cycling {
 		color: #fc4c02;
-		border-bottom-color: #fc4c02;
 	}
 
-	.leaderboards-content {
+	.column-title.running {
+		color: #2dd4bf;
+	}
+
+	.column-title.recent {
+		color: #f59e0b;
+	}
+
+	.column-count {
+		font-size: 0.5rem;
+		color: var(--text-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.column-body {
 		display: flex;
 		flex-direction: column;
-		max-height: 500px;
+		gap: 0.4rem;
+		max-height: 34rem;
 		overflow-y: auto;
-	}
-
-	.segment-list {
-		display: flex;
-		flex-direction: column;
-		gap: 0.35rem;
+		padding-right: 0.15rem;
 	}
 
 	.empty {
@@ -135,5 +139,17 @@
 		color: var(--text-muted);
 		text-align: center;
 		padding: 1.5rem 0;
+	}
+
+	@media (max-width: 1180px) {
+		.leaderboards-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.column-body {
+			max-height: none;
+			overflow: visible;
+			padding-right: 0;
+		}
 	}
 </style>
