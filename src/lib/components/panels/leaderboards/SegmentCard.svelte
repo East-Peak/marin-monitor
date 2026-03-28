@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
+	import { onMount } from 'svelte';
 	import type { StravaSegment, StravaLeaderboard } from '$lib/types/strava';
 	import { loadLeaderboard } from '$lib/stores/strava';
 
@@ -13,9 +13,6 @@
 	let leaderboard = $state<StravaLeaderboard | null>(null);
 	let loading = $state(false);
 	let loadError = $state<string | null>(null);
-	let cardEl = $state<HTMLDivElement>(undefined!);
-	let bodyEl = $state<HTMLDivElement>(undefined!);
-
 	const climbLabel = $derived(climbCategoryLabel(segment.climbCategory));
 	const primaryRecordLabel = $derived(segment.activityType === 'ride' ? 'KOM' : 'CR');
 	const distanceValue = $derived(leaderboard?.distance ?? segment.distance);
@@ -97,14 +94,10 @@
 	}
 
 	async function toggle() {
-		expanded = !expanded;
-		if (expanded) {
+		const nextExpanded = !expanded;
+		expanded = nextExpanded;
+		if (nextExpanded) {
 			await ensureLeaderboardLoaded();
-			await tick();
-			bodyEl?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-		} else {
-			await tick();
-			cardEl?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 		}
 	}
 
@@ -113,7 +106,7 @@
 	});
 </script>
 
-<div class="segment-card" class:expanded bind:this={cardEl}>
+<div class="segment-card" class:expanded>
 	<button class="segment-header" onclick={toggle}>
 		<div class="segment-main">
 			<div class="segment-header-top">
@@ -205,7 +198,7 @@
 	</button>
 
 	{#if expanded}
-		<div class="segment-body" bind:this={bodyEl}>
+		<div class="segment-body">
 			{#if loading}
 				<div class="loading">Loading leaderboard...</div>
 			{:else if loadError}
@@ -271,17 +264,20 @@
 <style>
 	.segment-card {
 		border: 1px solid var(--border);
-		border-radius: 6px;
+		border-radius: 8px;
 		background: rgba(255, 255, 255, 0.03);
 		overflow: hidden;
+		min-height: 10rem;
 		transition:
 			border-color 0.15s,
-			background-color 0.15s;
+			background-color 0.15s,
+			box-shadow 0.15s;
 	}
 
 	.segment-card:hover {
 		background: rgba(255, 255, 255, 0.045);
 		border-color: var(--border-light, rgba(255, 255, 255, 0.15));
+		box-shadow: 0 6px 18px rgba(2, 8, 23, 0.2);
 	}
 
 	.segment-card.expanded {
@@ -289,8 +285,9 @@
 	}
 
 	.segment-header {
+		display: block;
 		width: 100%;
-		padding: 0.75rem 0.85rem;
+		padding: 0.85rem 0.95rem;
 		background: none;
 		border: none;
 		cursor: pointer;
@@ -301,7 +298,7 @@
 	.segment-main {
 		display: flex;
 		flex-direction: column;
-		gap: 0.55rem;
+		gap: 0.75rem;
 		min-width: 0;
 	}
 
@@ -314,13 +311,13 @@
 
 	.segment-title {
 		display: flex;
-		align-items: flex-start;
-		gap: 0.35rem;
+		align-items: center;
+		gap: 0.45rem;
 		min-width: 0;
 	}
 
 	.segment-name {
-		font-size: 0.78rem;
+		font-size: 0.9rem;
 		font-weight: 600;
 		color: var(--text);
 		line-height: 1.15;
@@ -333,11 +330,11 @@
 	}
 
 	.climb-badge {
-		font-size: 0.52rem;
+		font-size: 0.58rem;
 		font-weight: 700;
 		color: #fc4c02;
 		background: rgba(252, 76, 2, 0.14);
-		padding: 0.1rem 0.35rem;
+		padding: 0.12rem 0.38rem;
 		border-radius: 999px;
 		white-space: nowrap;
 		flex-shrink: 0;
@@ -346,11 +343,11 @@
 	.segment-summary {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.25rem 0.45rem;
+		gap: 0.3rem 0.55rem;
 	}
 
 	.summary-item {
-		font-size: 0.52rem;
+		font-size: 0.62rem;
 		color: var(--text-muted);
 		font-variant-numeric: tabular-nums;
 	}
@@ -358,18 +355,18 @@
 	.segment-section {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
+		gap: 0.4rem;
 	}
 
 	.segment-overview {
 		display: grid;
-		grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.95fr);
-		gap: 0.55rem;
-		align-items: start;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: 0.8rem;
+		align-items: stretch;
 	}
 
 	.section-label {
-		font-size: 0.48rem;
+		font-size: 0.58rem;
 		font-weight: 700;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
@@ -379,18 +376,20 @@
 	.record-grid {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 0.4rem;
+		gap: 0.55rem;
 		align-items: stretch;
 	}
 
 	.record-card {
 		display: flex;
 		flex-direction: column;
-		gap: 0.22rem;
-		padding: 0.45rem 0.5rem;
+		justify-content: center;
+		gap: 0.32rem;
+		padding: 0.6rem 0.65rem;
 		border-radius: 6px;
 		background: rgba(255, 255, 255, 0.03);
 		border: 1px solid rgba(255, 255, 255, 0.06);
+		min-height: 4rem;
 		min-width: 0;
 	}
 
@@ -418,8 +417,8 @@
 
 	.record-label {
 		font-weight: 700;
-		font-size: 0.52rem;
-		padding: 0.08rem 0.24rem;
+		font-size: 0.56rem;
+		padding: 0.12rem 0.28rem;
 		border-radius: 999px;
 	}
 
@@ -439,7 +438,7 @@
 	}
 
 	.record-holder {
-		font-size: 0.58rem;
+		font-size: 0.66rem;
 		line-height: 1.2;
 		color: var(--text-dim, rgba(255, 255, 255, 0.72));
 		max-width: 100%;
@@ -452,11 +451,11 @@
 		color: var(--text);
 		font-variant-numeric: tabular-nums;
 		font-weight: 600;
-		font-size: 0.72rem;
+		font-size: 0.86rem;
 	}
 
 	.record-empty {
-		font-size: 0.56rem;
+		font-size: 0.64rem;
 		color: var(--text-muted);
 		font-style: italic;
 	}
@@ -467,30 +466,37 @@
 
 	.top-three-section {
 		min-width: 0;
+		padding-left: 0.8rem;
+		border-left: 1px solid rgba(255, 255, 255, 0.06);
 	}
 
 	.top-rows {
 		display: flex;
 		flex-direction: column;
-		gap: 0.24rem;
-		padding: 0.15rem 0;
+		gap: 0;
 	}
 
 	.top-row {
 		display: grid;
-		grid-template-columns: 1.75rem minmax(0, 1fr) auto;
-		gap: 0.4rem;
+		grid-template-columns: 1.9rem minmax(0, 1fr) auto;
+		gap: 0.5rem;
 		align-items: center;
+		padding: 0.3rem 0;
+	}
+
+	.top-row + .top-row {
+		border-top: 1px solid rgba(255, 255, 255, 0.05);
 	}
 
 	.top-rank {
-		font-size: 0.53rem;
+		font-size: 0.58rem;
+		font-weight: 600;
 		color: var(--text-muted);
 		font-variant-numeric: tabular-nums;
 	}
 
 	.top-athlete {
-		font-size: 0.57rem;
+		font-size: 0.66rem;
 		color: var(--text-dim);
 		min-width: 0;
 		overflow: hidden;
@@ -499,13 +505,14 @@
 	}
 
 	.top-time {
-		font-size: 0.58rem;
+		font-size: 0.7rem;
 		color: var(--text);
 		font-variant-numeric: tabular-nums;
+		font-weight: 600;
 	}
 
 	.top-empty {
-		font-size: 0.56rem;
+		font-size: 0.64rem;
 		color: var(--text-muted);
 		font-style: italic;
 	}
@@ -515,18 +522,18 @@
 	}
 
 	.expand-icon {
-		font-size: 0.5rem;
+		font-size: 0.56rem;
 		color: var(--text-muted);
 		flex-shrink: 0;
-		padding-top: 0.1rem;
 	}
 
 	.segment-body {
-		padding: 0.5rem 0.6rem;
+		padding: 0.7rem 0.95rem 0.85rem;
+		background: rgba(2, 6, 23, 0.22);
 		border-top: 1px solid var(--border);
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0.65rem;
 	}
 
 	.segment-meta {
@@ -537,36 +544,36 @@
 	}
 
 	.meta-item {
-		font-size: 0.55rem;
+		font-size: 0.62rem;
 		color: var(--text-dim);
 	}
 
 	.meta-empty {
-		font-size: 0.55rem;
+		font-size: 0.62rem;
 		color: var(--text-muted);
 		font-style: italic;
 	}
 
 	.meta-sep {
-		font-size: 0.5rem;
+		font-size: 0.56rem;
 		color: var(--text-muted);
 	}
 
 	.leaderboard-table {
 		width: 100%;
 		border-collapse: collapse;
-		font-size: 0.55rem;
+		font-size: 0.62rem;
 	}
 
 	.leaderboard-table-wrap {
-		max-height: 12rem;
+		max-height: 10rem;
 		overflow: auto;
 		border: 1px solid rgba(255, 255, 255, 0.05);
 		border-radius: 6px;
 	}
 
 	.empty-table {
-		font-size: 0.58rem;
+		font-size: 0.64rem;
 		color: var(--text-muted);
 		font-style: italic;
 	}
@@ -577,13 +584,13 @@
 		color: var(--text-muted);
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		font-size: 0.5rem;
-		padding: 0.25rem 0.3rem;
+		font-size: 0.56rem;
+		padding: 0.35rem 0.4rem;
 		border-bottom: 1px solid var(--border);
 	}
 
 	.leaderboard-table td {
-		padding: 0.25rem 0.3rem;
+		padding: 0.35rem 0.4rem;
 		color: var(--text-dim);
 		border-bottom: 1px solid rgba(255, 255, 255, 0.03);
 	}
@@ -611,15 +618,28 @@
 	}
 
 	.strava-link {
-		font-size: 0.55rem;
+		font-size: 0.62rem;
 		color: #fc4c02;
 		text-decoration: none;
 		font-weight: 600;
 		align-self: flex-end;
 	}
 
-	@media (max-width: 760px) {
+	@media (max-width: 900px) {
 		.segment-overview {
+			grid-template-columns: 1fr;
+		}
+
+		.top-three-section {
+			padding-left: 0;
+			border-left: none;
+			padding-top: 0.15rem;
+			border-top: 1px solid rgba(255, 255, 255, 0.06);
+		}
+	}
+
+	@media (max-width: 760px) {
+		.record-grid {
 			grid-template-columns: 1fr;
 		}
 	}
@@ -630,7 +650,7 @@
 
 	.loading,
 	.error {
-		font-size: 0.6rem;
+		font-size: 0.66rem;
 		text-align: center;
 		padding: 0.5rem;
 	}

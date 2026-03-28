@@ -82,7 +82,7 @@
 <style>
 	.leaderboards-grid {
 		display: grid;
-		grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(280px, 0.95fr);
+		grid-template-columns: minmax(0, 1.12fr) minmax(0, 1.12fr) minmax(300px, 0.9fr);
 		gap: 1rem;
 		align-items: start;
 	}
@@ -131,10 +131,12 @@
 	.column-body {
 		display: flex;
 		flex-direction: column;
-		gap: 0.55rem;
-		max-height: 44rem;
+		gap: 0.7rem;
+		max-height: 58rem;
+		min-height: 32rem;
 		overflow-y: auto;
-		padding-right: 0.2rem;
+		overscroll-behavior: contain;
+		padding-right: 0.35rem;
 	}
 
 	.empty {
@@ -150,8 +152,9 @@
 		}
 
 		.column-body {
-			gap: 0.45rem;
+			gap: 0.55rem;
 			max-height: none;
+			min-height: 0;
 			overflow: visible;
 			padding-right: 0;
 		}
