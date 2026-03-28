@@ -69,7 +69,12 @@
 	const TRAFFIC_REFRESH_MS = 3 * 60 * 1000;
 	const TRAFFIC_BOUNDS_BUFFER = 0.12;
 	const mapboxToken = MAPBOX_TOKEN.trim();
-	const STRAVA_CLICK_LAYERS = ['strava-lines-ride', 'strava-lines-run', 'strava-pins'] as const;
+	const STRAVA_CLICK_LAYERS = [
+		'strava-lines-ride',
+		'strava-lines-run',
+		'strava-pins',
+		'strava-pins-labels'
+	] as const;
 
 	function toNumber(value: unknown): number | null {
 		if (typeof value === 'number' && Number.isFinite(value)) return value;
