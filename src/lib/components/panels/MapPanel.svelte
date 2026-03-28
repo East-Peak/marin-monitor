@@ -7,8 +7,10 @@
 		MapControls,
 		MapTooltip,
 		MapInspector,
-		MapFeatureInspector
+		MapFeatureInspector,
+		SegmentLayer
 	} from '$lib/components/map';
+	import { STRAVA_ENABLED } from '$lib/config/strava';
 	import { mapStore, selectedTown, activeLayers, CATEGORY_TO_LAYER } from '$lib/stores/map';
 	import { townFilter } from '$lib/stores/town-filter';
 	import { allNewsItems } from '$lib/stores/news';
@@ -211,6 +213,9 @@
 				onPinClick={handlePinClick}
 				onFeatureClick={handleFeatureClick}
 			/>
+			{#if STRAVA_ENABLED}
+				<SegmentLayer />
+			{/if}
 			<MapControls />
 			<MapTooltip />
 			{#if inspectorModel}

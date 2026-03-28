@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { MapContainer, MapDataLayer } from '$lib/components/map';
+	import { MapContainer, MapDataLayer, SegmentLayer } from '$lib/components/map';
+	import { STRAVA_ENABLED } from '$lib/config/strava';
 	import TvMapPosition from '$lib/components/tv/TvMapPosition.svelte';
 	import TvMapSidebar from '$lib/components/tv/TvMapSidebar.svelte';
 	import { allNewsItems } from '$lib/stores';
@@ -51,6 +52,9 @@
 	<div class="flex-1 min-w-0 min-h-0 relative" style="height: 100%;">
 		<MapContainer>
 			<MapDataLayer earthquakes={earthquakeItems} {fireIncidents} />
+			{#if STRAVA_ENABLED}
+				<SegmentLayer />
+			{/if}
 			<TvMapPosition center={view.center} zoom={view.zoom} />
 		</MapContainer>
 		<div class="absolute top-16 left-3 z-10 px-3 py-1.5 rounded bg-gray-900/80 backdrop-blur-sm border border-gray-700/50">

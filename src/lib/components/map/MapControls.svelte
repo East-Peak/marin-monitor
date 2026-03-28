@@ -5,6 +5,7 @@
 	import { mapStore, activeLayers, showTraffic } from '$lib/stores/map';
 	import { MAPBOX_TOKEN } from '$lib/config/api';
 	import { LAYER_COLORS } from '$lib/config';
+	import { STRAVA_ENABLED } from '$lib/config/strava';
 	import type { MapLayer } from '$lib/types';
 
 	const { getMap } = getContext<{
@@ -13,6 +14,7 @@
 	}>('maplibre-map');
 
 	let earthquakesVisible = $state(true);
+	let segmentsVisible = $state(false);
 
 	function toggleEarthquakes() {
 		earthquakesVisible = !earthquakesVisible;
@@ -21,6 +23,19 @@
 			const vis = earthquakesVisible ? 'visible' : 'none';
 			if (map.getLayer('earthquakes-layer')) map.setLayoutProperty('earthquakes-layer', 'visibility', vis);
 			if (map.getLayer('earthquakes-ring-layer')) map.setLayoutProperty('earthquakes-ring-layer', 'visibility', vis);
+		}
+	}
+
+	const SEGMENT_LAYERS = ['strava-lines-ride', 'strava-lines-run', 'strava-pins', 'strava-pins-labels'] as const;
+
+	function toggleSegments() {
+		segmentsVisible = !segmentsVisible;
+		const map = getMap();
+		if (map) {
+			const vis = segmentsVisible ? 'visible' : 'none';
+			for (const layerId of SEGMENT_LAYERS) {
+				if (map.getLayer(layerId)) map.setLayoutProperty(layerId, 'visibility', vis);
+			}
 		}
 	}
 
@@ -79,6 +94,19 @@
 		<span class="eq-dot"></span>
 		<span class="layer-label">Earthquakes</span>
 	</button>
+
+	{#if STRAVA_ENABLED}
+		<button
+			class="layer-toggle segments-toggle"
+			class:active={segmentsVisible}
+			style:--layer-color={'#fc4c02'}
+			onclick={toggleSegments}
+			title="Strava segments (polylines at z12+, pins at overview)"
+		>
+			<span class="layer-dot"></span>
+			<span class="layer-label">Segments</span>
+		</button>
+	{/if}
 
 	<button
 		class="layer-toggle traffic-toggle"
