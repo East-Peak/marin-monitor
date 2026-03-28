@@ -3,6 +3,7 @@
 	import { get, type Writable } from 'svelte/store';
 	import type { Map as MapLibreMap, GeoJSONSource, MapLayerMouseEvent } from 'maplibre-gl';
 	import { stravaSegments, loadLeaderboard } from '$lib/stores/strava';
+	import { showSegments } from '$lib/stores/map';
 	import type { StravaSegment } from '$lib/types/strava';
 
 	const { getMap, mapReady } = getContext<{
@@ -422,6 +423,7 @@
 	}
 
 	let unsubscribeSegments: (() => void) | null = null;
+	let unsubscribeVisibility: (() => void) | null = null;
 	let updateTimer: ReturnType<typeof setTimeout> | null = null;
 
 	onMount(() => {
@@ -433,6 +435,7 @@
 			setupSources(map);
 			updateData(map);
 			bindInteractions(map);
+			setVisible(get(showSegments));
 
 			// Re-setup after theme/style change
 			removeStyleLoadListener?.();
@@ -441,6 +444,7 @@
 				setupSources(map);
 				updateData(map);
 				bindInteractions(map);
+				setVisible(get(showSegments));
 			};
 			map.on('style.load', handleStyleLoad);
 			removeStyleLoadListener = () => map.off('style.load', handleStyleLoad);
@@ -456,6 +460,12 @@
 					}, 100);
 				});
 			}
+
+			if (!unsubscribeVisibility) {
+				unsubscribeVisibility = showSegments.subscribe((visible) => {
+					setVisible(visible);
+				});
+			}
 		});
 
 		return () => {
@@ -466,6 +476,7 @@
 	onDestroy(() => {
 		removeStyleLoadListener?.();
 		unsubscribeSegments?.();
+		unsubscribeVisibility?.();
 		activePopup?.remove();
 		if (updateTimer) clearTimeout(updateTimer);
 

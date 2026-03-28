@@ -9,6 +9,7 @@ export interface MapState {
 	selectedTown: string | null;
 	activeLayers: Record<MapLayer, boolean>;
 	hoveredTown: string | null;
+	showSegments: boolean;
 	showTrafficCongestion: boolean;
 	showTrafficEvents: boolean;
 	initialized: boolean;
@@ -25,6 +26,7 @@ function createInitialState(): MapState {
 		selectedTown: null,
 		activeLayers,
 		hoveredTown: null,
+		showSegments: true,
 		showTrafficCongestion: true,
 		showTrafficEvents: true,
 		initialized: false
@@ -88,6 +90,13 @@ function createMapStore() {
 			}));
 		},
 
+		toggleSegments() {
+			update((state) => ({
+				...state,
+				showSegments: !state.showSegments
+			}));
+		},
+
 		toggleTrafficCongestion() {
 			update((state) => ({
 				...state,
@@ -134,6 +143,7 @@ export const mapStore = createMapStore();
 export const selectedTown = derived(mapStore, ($map) => $map.selectedTown);
 export const activeLayers = derived(mapStore, ($map) => $map.activeLayers);
 export const hoveredTown = derived(mapStore, ($map) => $map.hoveredTown);
+export const showSegments = derived(mapStore, ($map) => $map.showSegments);
 export const showTrafficCongestion = derived(mapStore, ($map) => $map.showTrafficCongestion);
 export const showTrafficEvents = derived(mapStore, ($map) => $map.showTrafficEvents);
 export const showTraffic = derived(

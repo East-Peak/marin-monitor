@@ -2,7 +2,7 @@
 	import { getContext } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import type { Map as MapLibreMap } from 'maplibre-gl';
-	import { mapStore, activeLayers, showTraffic } from '$lib/stores/map';
+	import { mapStore, activeLayers, showSegments, showTraffic } from '$lib/stores/map';
 	import { MAPBOX_TOKEN } from '$lib/config/api';
 	import { LAYER_COLORS } from '$lib/config';
 	import { STRAVA_ENABLED } from '$lib/config/strava';
@@ -14,7 +14,6 @@
 	}>('maplibre-map');
 
 	let earthquakesVisible = $state(true);
-	let segmentsVisible = $state(false);
 
 	function toggleEarthquakes() {
 		earthquakesVisible = !earthquakesVisible;
@@ -26,17 +25,8 @@
 		}
 	}
 
-	const SEGMENT_LAYERS = ['strava-lines-ride', 'strava-lines-run', 'strava-pins', 'strava-pins-labels'] as const;
-
 	function toggleSegments() {
-		segmentsVisible = !segmentsVisible;
-		const map = getMap();
-		if (map) {
-			const vis = segmentsVisible ? 'visible' : 'none';
-			for (const layerId of SEGMENT_LAYERS) {
-				if (map.getLayer(layerId)) map.setLayoutProperty(layerId, 'visibility', vis);
-			}
-		}
+		mapStore.toggleSegments();
 	}
 
 	const LAYER_LABELS: Record<MapLayer, string> = {
@@ -98,7 +88,7 @@
 	{#if STRAVA_ENABLED}
 		<button
 			class="layer-toggle segments-toggle"
-			class:active={segmentsVisible}
+			class:active={$showSegments}
 			style:--layer-color={'#fc4c02'}
 			onclick={toggleSegments}
 			title="Strava segments (polylines at z12+, pins at overview)"
