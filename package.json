@@ -14,6 +14,7 @@
 		"test:e2e": "playwright test",
 		"lint": "eslint . && prettier --check .",
 		"format": "prettier --write .",
+		"strava:explore": "node scripts/strava-explore.mjs",
 		"traffic:evaluate": "node scripts/evaluate-traffic-sources.mjs",
 		"sync:police": "node scripts/extract-police-logs.mjs",
 		"sync:activity": "node scripts/extract-activity-feeds.mjs",
