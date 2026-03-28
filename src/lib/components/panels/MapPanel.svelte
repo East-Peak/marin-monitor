@@ -167,6 +167,11 @@
 		inspectorState = null;
 	}
 
+	function handleSegmentClick() {
+		inspectorState = null;
+		featureInspector = null;
+	}
+
 	function closeInspector() {
 		inspectorState = null;
 	}
@@ -214,7 +219,7 @@
 				onFeatureClick={handleFeatureClick}
 			/>
 			{#if STRAVA_ENABLED}
-				<SegmentLayer />
+				<SegmentLayer onSegmentClick={handleSegmentClick} />
 			{/if}
 			<MapControls />
 			<MapTooltip />

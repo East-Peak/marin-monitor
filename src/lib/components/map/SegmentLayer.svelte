@@ -11,6 +11,8 @@
 	import { showSegments } from '$lib/stores/map';
 	import type { StravaSegment } from '$lib/types/strava';
 
+	export let onSegmentClick: ((segmentId: number) => void) | undefined = undefined;
+
 	const { getMap, mapReady } = getContext<{
 		getMap: () => MapLibreMap | null;
 		mapReady: Writable<boolean>;
@@ -448,6 +450,7 @@
 		}
 
 		activePopup = popup;
+		onSegmentClick?.(segmentId);
 
 		// Lazy-load leaderboard data
 		if (segmentId) {
