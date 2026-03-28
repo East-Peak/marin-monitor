@@ -46,10 +46,13 @@ function detectChanges(
 ): StravaEvent[] {
 	const events: StravaEvent[] = [];
 
+	// First scrape — no changes to detect (avoids flooding events on initial setup)
+	if (!previous) return events;
+
 	// Check CR change
 	if (current.cr && current.cr.effortId !== 0) {
-		const prevCr = previous?.cr ?? null;
-		if (!prevCr || prevCr.effortId !== current.cr.effortId) {
+		const prevCr = previous.cr ?? null;
+		if (prevCr && prevCr.effortId !== current.cr.effortId) {
 			events.push({
 				type: 'new_kom',
 				segmentId: current.segmentId,
@@ -68,8 +71,8 @@ function detectChanges(
 
 	// Check QOM change
 	if (current.qom && current.qom.effortId !== 0) {
-		const prevQom = previous?.qom ?? null;
-		if (!prevQom || prevQom.effortId !== current.qom.effortId) {
+		const prevQom = previous.qom ?? null;
+		if (prevQom && prevQom.effortId !== current.qom.effortId) {
 			events.push({
 				type: 'new_qom',
 				segmentId: current.segmentId,
