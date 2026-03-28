@@ -123,7 +123,6 @@
 			return;
 		}
 
-		const root = cardElement.closest('.column-body');
 		const observer = new IntersectionObserver(
 			(entries) => {
 				if (entries.some((entry) => entry.isIntersecting)) {
@@ -132,8 +131,9 @@
 				}
 			},
 			{
-				root: root instanceof Element ? root : null,
-				rootMargin: '240px 0px'
+				root: null,
+				rootMargin: '240px 0px',
+				threshold: 0.05
 			}
 		);
 
