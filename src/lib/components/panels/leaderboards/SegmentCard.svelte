@@ -96,11 +96,11 @@
 				<div class="error">{loadError}</div>
 			{:else if leaderboard}
 				<div class="segment-meta">
-					<span class="meta-item">{formatDistance(segment.distance)}</span>
+					<span class="meta-item">{formatDistance(leaderboard.distance ?? segment.distance)}</span>
 					<span class="meta-sep">/</span>
-					<span class="meta-item">{formatElevation(segment.elevationGain)} gain</span>
+					<span class="meta-item">{formatElevation(leaderboard.elevationGain ?? segment.elevationGain)} gain</span>
 					<span class="meta-sep">/</span>
-					<span class="meta-item">{segment.avgGrade.toFixed(1)}% avg</span>
+					<span class="meta-item">{(leaderboard.avgGrade ?? segment.avgGrade).toFixed(1)}% avg</span>
 					<span class="meta-sep">/</span>
 					<span class="meta-item">{leaderboard.totalAttempts.toLocaleString()} attempts</span>
 				</div>

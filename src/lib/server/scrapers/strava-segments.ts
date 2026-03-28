@@ -154,12 +154,15 @@ export async function buildSegmentCatalog(
 	let token: string | null = null;
 	try {
 		token = await getStravaAccessToken();
+		console.log('[strava-segments] OAuth token obtained successfully');
 	} catch (err) {
-		console.warn('[strava-segments] OAuth unavailable, using seed list only:', String(err));
+		console.error('[strava-segments] OAuth FAILED — falling back to seed list only:', String(err));
 	}
 
 	if (token) {
 		const activityTypes: Array<'riding' | 'running'> = ['riding', 'running'];
+		let totalExploreResults = 0;
+		let seedMatches = 0;
 
 		for (const bounds of MARIN_BOUNDING_BOXES) {
 			for (const activityType of activityTypes) {
@@ -167,12 +170,14 @@ export async function buildSegmentCatalog(
 				const segmentActivityType = activityType === 'riding' ? 'ride' : 'run';
 
 				const results = await exploreBox(token, bounds, activityType);
+				totalExploreResults += results.length;
 
 				for (const raw of results) {
 					if (seedIds.has(raw.id)) {
 						// Update the seed segment with explore data
 						const existing = existingById.get(raw.id);
 						catalog.set(raw.id, exploreToSegment(raw, existing, segmentActivityType));
+						seedMatches++;
 					} else {
 						// Log non-seed segments found — do NOT auto-add
 						console.log(
@@ -182,6 +187,12 @@ export async function buildSegmentCatalog(
 				}
 			}
 		}
+
+		console.log(
+			`[strava-segments] Explore API returned ${totalExploreResults} total results, ${seedMatches} matched seeds`
+		);
+	} else {
+		console.warn('[strava-segments] No OAuth token — all segments will have polyline: null');
 	}
 
 	return {

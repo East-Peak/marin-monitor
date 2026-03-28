@@ -147,12 +147,14 @@ export const GET: RequestHandler = async ({ request }) => {
 		let scraped = 0;
 		let failed = 0;
 		const newEvents: StravaEvent[] = [];
+		const leaderboardResults = new Map<number, StravaLeaderboard>();
 
 		for (let i = 0; i < segments.length; i += CONCURRENCY) {
 			const batch = segments.slice(i, i + CONCURRENCY);
 			const results = await Promise.allSettled(batch.map((seg) => processSegment(seg)));
 
-			for (const result of results) {
+			for (let j = 0; j < results.length; j++) {
+				const result = results[j];
 				if (result.status === 'fulfilled') {
 					scraped++;
 					newEvents.push(...result.value);
@@ -161,6 +163,56 @@ export const GET: RequestHandler = async ({ request }) => {
 					console.warn('[sync-strava-leaderboards] Segment failed:', result.reason);
 				}
 			}
+		}
+
+		// Read fresh leaderboard data to update segment catalog stats
+		let catalogUpdated = false;
+		for (const seg of segments) {
+			const blobKey = stravaLeaderboardBlob(seg.id);
+			const lb = await readBlob<StravaLeaderboard>(blobKey);
+			if (lb) {
+				leaderboardResults.set(seg.id, lb);
+			}
+		}
+
+		// Update segment catalog with fresh stats from leaderboard scrapes
+		for (const seg of catalog.segments) {
+			const lb = leaderboardResults.get(seg.id);
+			if (!lb) continue;
+
+			if (lb.totalAttempts > 0) {
+				seg.totalAttempts = lb.totalAttempts;
+				catalogUpdated = true;
+			}
+			if (lb.totalAthletes > 0) {
+				seg.totalAthletes = lb.totalAthletes;
+				catalogUpdated = true;
+			}
+			if (lb.distance != null && lb.distance > 0) {
+				seg.distance = lb.distance;
+				catalogUpdated = true;
+			}
+			if (lb.elevationGain != null && lb.elevationGain > 0) {
+				seg.elevationGain = lb.elevationGain;
+				catalogUpdated = true;
+			}
+			if (lb.avgGrade != null && lb.avgGrade > 0) {
+				seg.avgGrade = lb.avgGrade;
+				catalogUpdated = true;
+			}
+		}
+
+		// Write updated catalog back to blob if any stats changed
+		if (catalogUpdated) {
+			catalog.lastUpdated = new Date().toISOString();
+			await put(STRAVA_SEGMENTS_BLOB, JSON.stringify(catalog), {
+				access: 'private',
+				contentType: 'application/json',
+				addRandomSuffix: false,
+				allowOverwrite: true,
+				token: env.BLOB_READ_WRITE_TOKEN
+			});
+			console.log('[sync-strava-leaderboards] Updated segment catalog with fresh stats');
 		}
 
 		// Prepend new events and prune old ones
@@ -186,7 +238,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			`[sync-strava-leaderboards] OK: ${scraped} scraped, ${failed} failed, ${newEvents.length} new events in ${Date.now() - start}ms`
 		);
 		return new Response(
-			JSON.stringify({ ok: true, scraped, failed, newEvents: newEvents.length }),
+			JSON.stringify({ ok: true, scraped, failed, newEvents: newEvents.length, catalogUpdated }),
 			{ headers: { 'Content-Type': 'application/json' } }
 		);
 	} catch (err) {

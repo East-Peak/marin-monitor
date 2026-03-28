@@ -183,13 +183,12 @@
 			}
 		});
 
-		// Pin markers — visible below z12.5 (overview mode)
+		// Pin markers — always visible (no maxzoom so segments without polylines stay on map)
 		map.addLayer({
 			id: 'strava-pins',
 			type: 'circle',
 			source: SOURCE_ID,
 			filter: ['==', ['get', 'featureType'], 'point'],
-			maxzoom: 12.5,
 			layout: {
 				visibility: 'none'
 			},
@@ -207,13 +206,12 @@
 			}
 		});
 
-		// Pin labels — visible below z12.5
+		// Pin labels — visible at z10+ (no maxzoom to match pins)
 		map.addLayer({
 			id: 'strava-pins-labels',
 			type: 'symbol',
 			source: SOURCE_ID,
 			filter: ['==', ['get', 'featureType'], 'point'],
-			maxzoom: 12.5,
 			minzoom: 10,
 			layout: {
 				visibility: 'none',
@@ -254,16 +252,27 @@
 		const typeIcon = activityType === 'ride' ? '\u{1F6B4}' : '\u{1F3C3}';
 		const typeColor = activityType === 'ride' ? '#f59e0b' : '#22d3ee';
 
+		// Show placeholder stats from catalog; leaderboard callback will overwrite with real data
+		const hasStats = distance > 0 || elevationGain > 0 || avgGrade > 0;
+		const statsLine = hasStats
+			? `${formatDistance(distance)} &middot; ${elevationGain.toFixed(0)}m gain &middot; ${avgGrade.toFixed(1)}% avg`
+			: 'Loading stats...';
+
+		const hasAttempts = totalAttempts > 0 || totalAthletes > 0;
+		const attemptsLine = hasAttempts
+			? `${totalAttempts.toLocaleString()} attempts &middot; ${totalAthletes.toLocaleString()} athletes`
+			: '';
+
 		return `
 			<div style="font-family: system-ui, sans-serif; min-width: 180px; max-width: 260px;">
 				<div style="font-weight: 600; font-size: 13px; color: ${typeColor}; margin-bottom: 4px;">
 					${typeIcon} ${name}
 				</div>
-				<div style="font-size: 11px; color: #a1a1aa; margin-bottom: 6px;">
-					${formatDistance(distance)} &middot; ${elevationGain.toFixed(0)}m gain &middot; ${avgGrade.toFixed(1)}% avg
+				<div id="strava-popup-stats-${segId}" style="font-size: 11px; color: #a1a1aa; margin-bottom: 6px;">
+					${statsLine}
 				</div>
-				<div style="font-size: 10px; color: #71717a;">
-					${totalAttempts.toLocaleString()} attempts &middot; ${totalAthletes.toLocaleString()} athletes
+				<div id="strava-popup-attempts-${segId}" style="font-size: 10px; color: #71717a;">
+					${attemptsLine}
 				</div>
 				<div id="strava-popup-lb-${segId}" style="margin-top: 6px; font-size: 10px; color: #71717a;">
 					Loading leaderboard...
@@ -288,23 +297,47 @@
 			return;
 		}
 
-		const parts: string[] = [];
+		// Update stats line with real data from leaderboard scrape
+		const statsEl = document.getElementById(`strava-popup-stats-${segId}`);
+		if (statsEl) {
+			const parts: string[] = [];
+			if (lb.distance != null && lb.distance > 0) {
+				parts.push(formatDistance(lb.distance));
+			}
+			if (lb.elevationGain != null && lb.elevationGain > 0) {
+				parts.push(`${lb.elevationGain.toFixed(0)}m gain`);
+			}
+			if (lb.avgGrade != null && lb.avgGrade > 0) {
+				parts.push(`${lb.avgGrade.toFixed(1)}% avg`);
+			}
+			if (parts.length > 0) {
+				statsEl.innerHTML = parts.join(' &middot; ');
+			}
+		}
+
+		// Update attempts/athletes line with real data
+		const attemptsEl = document.getElementById(`strava-popup-attempts-${segId}`);
+		if (attemptsEl && (lb.totalAttempts > 0 || lb.totalAthletes > 0)) {
+			attemptsEl.innerHTML = `${lb.totalAttempts.toLocaleString()} attempts &middot; ${lb.totalAthletes.toLocaleString()} athletes`;
+		}
+
+		const lbParts: string[] = [];
 		if (lb.cr) {
-			parts.push(`<div><strong style="color:#f59e0b;">CR:</strong> ${lb.cr.athleteName} — ${formatTime(lb.cr.time)}</div>`);
+			lbParts.push(`<div><strong style="color:#f59e0b;">CR:</strong> ${lb.cr.athleteName} — ${formatTime(lb.cr.time)}</div>`);
 		}
 		if (lb.qom) {
-			parts.push(`<div><strong style="color:#ec4899;">QOM:</strong> ${lb.qom.athleteName} — ${formatTime(lb.qom.time)}</div>`);
+			lbParts.push(`<div><strong style="color:#ec4899;">QOM:</strong> ${lb.qom.athleteName} — ${formatTime(lb.qom.time)}</div>`);
 		}
 		if (lb.rows.length > 0) {
 			const topRows = lb.rows.slice(0, 3);
-			parts.push('<div style="margin-top: 3px;">');
+			lbParts.push('<div style="margin-top: 3px;">');
 			for (const row of topRows) {
-				parts.push(`<div style="color: #a1a1aa;">#${row.rank} ${row.athleteName} — ${row.time}</div>`);
+				lbParts.push(`<div style="color: #a1a1aa;">#${row.rank} ${row.athleteName} — ${row.time}</div>`);
 			}
-			parts.push('</div>');
+			lbParts.push('</div>');
 		}
 
-		el.innerHTML = parts.length > 0 ? parts.join('') : 'No leaderboard data';
+		el.innerHTML = lbParts.length > 0 ? lbParts.join('') : 'No leaderboard data';
 	}
 
 	async function showPopup(map: MapLibreMap, e: MapLayerMouseEvent): Promise<void> {

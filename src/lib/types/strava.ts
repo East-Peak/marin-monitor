@@ -47,6 +47,12 @@ export interface StravaLeaderboard {
 	rows: StravaLeaderboardRow[];
 	totalAttempts: number;
 	totalAthletes: number;
+	/** Distance in meters (from segment page stats) */
+	distance: number | null;
+	/** Elevation gain in meters (from segment page stats) */
+	elevationGain: number | null;
+	/** Average grade as percentage (from segment page stats) */
+	avgGrade: number | null;
 	scrapedAt: string;
 }
 

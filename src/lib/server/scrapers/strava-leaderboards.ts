@@ -203,6 +203,61 @@ function extractNumericValue(cellHtml: string): string | null {
 }
 
 // ---------------------------------------------------------------------------
+// Segment stats (distance, elevation gain, avg grade)
+// ---------------------------------------------------------------------------
+
+interface SegmentStats {
+	distance: number | null;
+	elevationGain: number | null;
+	avgGrade: number | null;
+}
+
+function extractSegmentStats(html: string): SegmentStats {
+	const stats: SegmentStats = { distance: null, elevationGain: null, avgGrade: null };
+
+	// Pattern: <span class="stat-subtext">Distance</span><b class="stat-text">2.65<abbr ...>km</abbr></b>
+	const distMatch = html.match(
+		/<span class="stat-subtext">Distance<\/span><b class="stat-text">([\d.]+)<abbr[^>]*title='([^']+)'/
+	);
+	if (distMatch) {
+		const value = parseFloat(distMatch[1]);
+		const unit = distMatch[2];
+		// Convert to meters
+		if (unit === 'kilometers') {
+			stats.distance = value * 1000;
+		} else if (unit === 'meters') {
+			stats.distance = value;
+		} else if (unit === 'miles') {
+			stats.distance = value * 1609.34;
+		} else {
+			stats.distance = value;
+		}
+	}
+
+	const elevMatch = html.match(
+		/<span class="stat-subtext">Elevation Gain<\/span><b class="stat-text">([\d.]+)<abbr[^>]*title='([^']+)'/
+	);
+	if (elevMatch) {
+		const value = parseFloat(elevMatch[1]);
+		const unit = elevMatch[2];
+		if (unit === 'feet') {
+			stats.elevationGain = value * 0.3048;
+		} else {
+			stats.elevationGain = value; // meters
+		}
+	}
+
+	const gradeMatch = html.match(
+		/<span class="stat-subtext">Avg Grade<\/span><b class="stat-text">([\d.]+)<abbr[^>]*title='([^']+)'/
+	);
+	if (gradeMatch) {
+		stats.avgGrade = parseFloat(gradeMatch[1]);
+	}
+
+	return stats;
+}
+
+// ---------------------------------------------------------------------------
 // Attempt counts
 // ---------------------------------------------------------------------------
 
@@ -260,6 +315,7 @@ export function parseSegmentPage(segmentId: number, html: string): StravaLeaderb
 
 	const rows = extractLeaderboardRows(html);
 	const { attempts, athletes } = extractAttemptCounts(html);
+	const segmentStats = extractSegmentStats(html);
 
 	return {
 		segmentId,
@@ -269,6 +325,9 @@ export function parseSegmentPage(segmentId: number, html: string): StravaLeaderb
 		rows,
 		totalAttempts: attempts,
 		totalAthletes: athletes,
+		distance: segmentStats.distance,
+		elevationGain: segmentStats.elevationGain,
+		avgGrade: segmentStats.avgGrade,
 		scrapedAt: new Date().toISOString()
 	};
 }

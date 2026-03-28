@@ -71,6 +71,22 @@ describe('parseSegmentPage', () => {
 			expect(result!.totalAthletes).toBeGreaterThan(70000);
 		});
 
+		it('extracts distance from stats section', () => {
+			expect(result!.distance).not.toBeNull();
+			// Hawk Hill is 2.65km = 2650m
+			expect(result!.distance).toBeCloseTo(2650, -1);
+		});
+
+		it('extracts elevation gain from stats section', () => {
+			expect(result!.elevationGain).not.toBeNull();
+			expect(result!.elevationGain).toBe(156);
+		});
+
+		it('extracts avg grade from stats section', () => {
+			expect(result!.avgGrade).not.toBeNull();
+			expect(result!.avgGrade).toBe(6.8);
+		});
+
 		it('extracts segment name', () => {
 			expect(result!.segmentName).toBe('Hawk Hill');
 		});
@@ -127,6 +143,22 @@ describe('parseSegmentPage', () => {
 		it('extracts attempt counts', () => {
 			expect(result!.totalAttempts).toBeGreaterThan(0);
 			expect(result!.totalAthletes).toBeGreaterThan(0);
+		});
+
+		it('extracts distance from stats section', () => {
+			expect(result!.distance).not.toBeNull();
+			// Dipsea is 4.11km = 4110m
+			expect(result!.distance).toBeCloseTo(4110, -1);
+		});
+
+		it('extracts elevation gain from stats section', () => {
+			expect(result!.elevationGain).not.toBeNull();
+			expect(result!.elevationGain).toBe(493);
+		});
+
+		it('extracts avg grade from stats section', () => {
+			expect(result!.avgGrade).not.toBeNull();
+			expect(result!.avgGrade).toBe(9.9);
 		});
 	});
 
