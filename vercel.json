@@ -12,6 +12,7 @@
 		{ "path": "/api/cron/sync-wine-index", "schedule": "0 10 * * 0" },
 		{ "path": "/api/cron/sync-school-tuition", "schedule": "0 12 1 * *" },
 		{ "path": "/api/cron/sync-fitness", "schedule": "0 12 15 * *" },
-		{ "path": "/api/cron/sync-driveway", "schedule": "0 12 2 * *" }
+		{ "path": "/api/cron/sync-driveway", "schedule": "0 12 2 * *" },
+		{ "path": "/api/cron/sync-composite", "schedule": "0 14 * * 1" }
 	]
 }

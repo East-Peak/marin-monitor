@@ -37,7 +37,8 @@ export type PanelId =
 	| 'wine-index'
 	| 'school-tuition'
 	| 'fitness'
-	| 'driveway';
+	| 'driveway'
+	| 'composite';
 
 export const PANELS: Record<PanelId, PanelConfig> = {
 	map: { name: 'Marin Map', priority: 1, description: 'County map with layered data' },
@@ -160,6 +161,11 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 		name: 'The Marin Driveway Index',
 		priority: 3,
 		description: 'Vehicle registrations by make and fuel type from California DMV data'
+	},
+	composite: {
+		name: 'Cost of Being Marin',
+		priority: 1,
+		description: 'Composite cost index and The Marin Number: the all-in monthly price of the Marin lifestyle'
 	}
 };
 
@@ -170,6 +176,7 @@ export const NON_DRAGGABLE_PANELS: PanelId[] = ['map'];
  */
 export const DEFAULT_PANEL_ORDER: PanelId[] = [
 	'map',
+	'composite',
 	'pulse',
 	'local-wire',
 	'safety',

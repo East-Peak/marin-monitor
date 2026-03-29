@@ -17,7 +17,8 @@
 		WineIndexPanel,
 		SchoolTuitionPanel,
 		FitnessPanel,
-		DrivewayPanel
+		DrivewayPanel,
+		CompositePanel
 	} from '$lib/components/panels';
 	import { settings, allNewsItems } from '$lib/stores';
 	import type { WeatherData, FireWeatherAlert, EarthquakeData } from '$lib/types';
@@ -49,6 +50,12 @@
 <!-- Signal deck -->
 <div class="signal-layout" class:collapsed={!$settings.dashboardExpanded}>
 	<div class="signal-column signal-column-left">
+		{#if isPanelVisible('composite')}
+			<div class="signal-card signal-composite animate-enter-up stagger-1 hover-lift">
+				<CompositePanel />
+			</div>
+		{/if}
+
 		{#if isPanelVisible('pulse')}
 			<div class="signal-card signal-pulse animate-enter-up stagger-1 hover-lift">
 				<PulsePanel forecast={weatherForecast} {weatherAlerts} earthquakes={earthquakesRaw} />
