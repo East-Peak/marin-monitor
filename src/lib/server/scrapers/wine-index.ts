@@ -20,11 +20,7 @@ import {
 	SHOPIFY_FETCH_TIMEOUT,
 	SHOPIFY_PAGE_LIMIT,
 	WINE_INDEX_COLLECTIONS,
-	WINE_LISTING_COLLECTIONS,
-	BASELINE_CATEGORY_PRODUCTS,
-	BASELINE_CATEGORY_MEDIANS,
-	BASELINE_STAFF_PICKS,
-	BASELINE_ALLOCATED_WINES
+	WINE_LISTING_COLLECTIONS
 } from '$lib/config/wine';
 
 // ---- Exported helpers (tested directly) ----
@@ -214,57 +210,6 @@ async function fetchCollectionProducts(collectionHandle: string): Promise<WinePr
 	return allProducts;
 }
 
-// ---- Fallback builder ----
-
-/**
- * Build a WineSnapshot from hardcoded baseline data.
- * Used when the Shopify API is unreachable (e.g., datacenter IP blocked).
- */
-function buildBaselineSnapshot(): WineSnapshot {
-	const categories: WineCategorySnapshot[] = WINE_INDEX_COLLECTIONS.map((collection) => {
-		const products = BASELINE_CATEGORY_PRODUCTS[collection.category];
-		const baselineMedian = BASELINE_CATEGORY_MEDIANS[collection.category];
-		return {
-			category: collection.category,
-			label: collection.label,
-			productCount: products.length,
-			medianPrice: baselineMedian,
-			minPrice: products.length > 0 ? Math.min(...products.map((p) => p.price)) : null,
-			maxPrice: products.length > 0 ? Math.max(...products.map((p) => p.price)) : null
-		};
-	});
-
-	let nextId = 90000; // Synthetic IDs for baseline data
-	const staffPicks: WineStaffPick[] = BASELINE_STAFF_PICKS.map((p) => ({
-		id: nextId++,
-		title: p.title,
-		handle: p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-		vendor: p.vendor,
-		price: p.price,
-		compareAtPrice: null,
-		available: true,
-		listingType: 'staff-pick' as const
-	}));
-
-	const allocatedWines: WineStaffPick[] = BASELINE_ALLOCATED_WINES.map((p) => ({
-		id: nextId++,
-		title: p.title,
-		handle: p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-		vendor: p.vendor,
-		price: p.price,
-		compareAtPrice: null,
-		available: true,
-		listingType: 'allocated' as const
-	}));
-
-	return {
-		timestamp: new Date().toISOString(),
-		categories,
-		staffPicks,
-		allocatedWines
-	};
-}
-
 // ---- Main export ----
 
 /**
@@ -274,20 +219,15 @@ function buildBaselineSnapshot(): WineSnapshot {
  * 2. Computes median prices per category
  * 3. Fetches staff picks and allocated wines for bottle listing
  * 4. Returns a complete WineSnapshot
- *
- * If ALL categories return 0 products (Shopify blocking datacenter IPs),
- * falls back to hardcoded baseline data from config.
  */
 export async function scrapeWineIndex(): Promise<WineSnapshot> {
 	// 1. Fetch index collections for median computation
 	const categorySnapshots: WineCategorySnapshot[] = [];
-	let totalProducts = 0;
 
 	for (const collection of WINE_INDEX_COLLECTIONS) {
 		console.log(`[wine-index] Fetching ${collection.handle}...`);
 		const products = await fetchCollectionProducts(collection.handle);
 		console.log(`[wine-index] ${collection.handle}: ${products.length} products`);
-		totalProducts += products.length;
 
 		const snapshot = buildCategorySnapshot(
 			collection.category,
@@ -298,14 +238,6 @@ export async function scrapeWineIndex(): Promise<WineSnapshot> {
 
 		// Polite delay between collections (1s)
 		await new Promise((resolve) => setTimeout(resolve, 1000));
-	}
-
-	// If ALL categories returned 0 products, Shopify is likely blocking us
-	if (totalProducts === 0) {
-		console.warn(
-			`[wine-index] All categories returned 0 products — Shopify likely blocking datacenter IPs. Falling back to baseline data.`
-		);
-		return buildBaselineSnapshot();
 	}
 
 	// 2. Fetch staff picks
@@ -327,21 +259,10 @@ export async function scrapeWineIndex(): Promise<WineSnapshot> {
 	const allocatedWines = allocatedProducts.map((p) => buildStaffPick(p, 'allocated'));
 	console.log(`[wine-index] Allocated wines: ${allocatedWines.length} wines`);
 
-	// If staff picks and allocated are both empty, supplement with baseline
-	const finalStaffPicks = staffPicks.length > 0 ? staffPicks : buildBaselineSnapshot().staffPicks;
-	const finalAllocated = allocatedWines.length > 0 ? allocatedWines : buildBaselineSnapshot().allocatedWines;
-
-	if (staffPicks.length === 0) {
-		console.warn(`[wine-index] Staff picks returned 0 — using baseline staff picks.`);
-	}
-	if (allocatedWines.length === 0) {
-		console.warn(`[wine-index] Allocated wines returned 0 — using baseline allocated wines.`);
-	}
-
 	return {
 		timestamp: new Date().toISOString(),
 		categories: categorySnapshots,
-		staffPicks: finalStaffPicks,
-		allocatedWines: finalAllocated
+		staffPicks,
+		allocatedWines
 	};
 }

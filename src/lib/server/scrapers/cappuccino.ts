@@ -220,31 +220,10 @@ function buildHardcodedResult(shop: CoffeeShopConfig): CoffeeShop {
 }
 
 /**
- * Build a CoffeeShop result from baseline price data for a Toast shop.
- * Used when the browser-based scraper fails (e.g., Vercel timeout or IP blocking).
- */
-function buildBaselineResult(shop: CoffeeShopConfig): CoffeeShop {
-	return {
-		id: shop.id,
-		name: shop.name,
-		address: shop.address,
-		town: shop.town,
-		lat: shop.lat,
-		lon: shop.lon,
-		price: shop.baselinePrice ?? null,
-		source: 'toast',
-		updateTime: new Date().toISOString()
-	};
-}
-
-/**
  * Scrape cappuccino prices from all configured coffee shops.
  *
  * Toast shops (8): scraped via @sparticuz/chromium + puppeteer-core.
  * Non-Toast shops (3): use hardcoded prices to avoid timeouts.
- *
- * If the browser fails to launch (common on Vercel due to IP blocking
- * or timeout), falls back to baseline prices from config.
  *
  * Each shop scrape is wrapped in its own try/catch so one failure
  * does not kill the entire job.
@@ -260,92 +239,43 @@ export async function scrapeCappuccino(): Promise<CoffeeSnapshot> {
 		}
 	}
 
-	// 2. Scrape Toast shops via browser (with baseline fallback)
+	// 2. Scrape Toast shops via browser
 	const toastShops = COFFEE_SHOPS.filter(
 		(s) => s.source === 'toast' && !(s.id in HARDCODED_PRICES)
 	);
 
 	if (toastShops.length > 0) {
-		let browser: Browser | null = null;
-		let usedBaseline = false;
+		const browser = await launchBrowser();
 
 		try {
-			browser = await launchBrowser();
-		} catch (err) {
-			console.warn(
-				`[cappuccino] Browser launch failed — falling back to baseline prices for all Toast shops.`,
-				(err as Error).message
-			);
-			usedBaseline = true;
-		}
-
-		if (browser) {
-			let scrapedCount = 0;
-
-			try {
-				for (const shop of toastShops) {
-					try {
-						const result = await scrapeToastShop(browser, shop);
-						results.push(result);
-						if (result.price !== null) scrapedCount++;
-					} catch (err) {
-						console.error(
-							`[cappuccino] Shop ${shop.id} failed (isolated):`,
-							(err as Error).message
-						);
-						// Use baseline price if available, otherwise null
-						if (shop.baselinePrice) {
-							results.push(buildBaselineResult(shop));
-							console.log(`[cappuccino] ${shop.id}: using baseline price $${shop.baselinePrice}`);
-						} else {
-							results.push({
-								id: shop.id,
-								name: shop.name,
-								address: shop.address,
-								town: shop.town,
-								lat: shop.lat,
-								lon: shop.lon,
-								price: null,
-								source: 'toast',
-								updateTime: new Date().toISOString()
-							});
-						}
-					}
-
-					// Reduced delay between requests (was 1500ms)
-					await new Promise((resolve) => setTimeout(resolve, 500));
-				}
-			} finally {
-				await browser.close();
-			}
-
-			// If ALL Toast shops returned null prices, the scraping is broken —
-			// backfill any null-price results with baseline prices
-			if (scrapedCount === 0) {
-				console.warn(
-					`[cappuccino] All ${toastShops.length} Toast shops returned null — backfilling with baseline prices.`
-				);
-				for (let i = 0; i < results.length; i++) {
-					if (results[i].source === 'toast' && results[i].price === null) {
-						const shop = toastShops.find((s) => s.id === results[i].id);
-						if (shop?.baselinePrice) {
-							results[i].price = shop.baselinePrice;
-						}
-					}
-				}
-			}
-		} else {
-			// Browser failed to launch — use baseline prices for all Toast shops
 			for (const shop of toastShops) {
-				results.push(buildBaselineResult(shop));
-				console.log(`[cappuccino] ${shop.id}: using baseline price $${shop.baselinePrice ?? 'N/A'}`);
-			}
-		}
+				try {
+					const result = await scrapeToastShop(browser, shop);
+					results.push(result);
+				} catch (err) {
+					console.error(
+						`[cappuccino] Shop ${shop.id} failed (isolated):`,
+						(err as Error).message
+					);
+					// Push a null-price result so the shop still appears in output
+					results.push({
+						id: shop.id,
+						name: shop.name,
+						address: shop.address,
+						town: shop.town,
+						lat: shop.lat,
+						lon: shop.lon,
+						price: null,
+						source: 'toast',
+						updateTime: new Date().toISOString()
+					});
+				}
 
-		if (usedBaseline) {
-			console.log(
-				`[cappuccino] Used baseline prices for ${toastShops.length} Toast shops due to browser launch failure.`
-			);
+				// Reduced delay between requests (was 1500ms)
+				await new Promise((resolve) => setTimeout(resolve, 500));
+			}
+		} finally {
+			await browser.close();
 		}
 	}
 
