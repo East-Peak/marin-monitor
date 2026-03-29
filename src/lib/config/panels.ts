@@ -31,7 +31,8 @@ export type PanelId =
 	| 'leaderboards'
 	| 'ev-charging'
 	| 'wastewater'
-	| 'airport-status';
+	| 'airport-status'
+	| 'cappuccino';
 
 export const PANELS: Record<PanelId, PanelConfig> = {
 	map: { name: 'Marin Map', priority: 1, description: 'County map with layered data' },
@@ -124,6 +125,11 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 		name: 'Airport Status',
 		priority: 2,
 		description: 'SFO and OAK delays, conditions, and TSA wait times'
+	},
+	cappuccino: {
+		name: 'Cappuccino Index',
+		priority: 3,
+		description: 'Cappuccino prices at coffee shops across Marin'
 	}
 };
 
@@ -147,6 +153,7 @@ export const DEFAULT_PANEL_ORDER: PanelId[] = [
 	'housing',
 	'gas-prices',
 	'ev-charging',
+	'cappuccino',
 	'cycling',
 	'leaderboards',
 	'shows',

@@ -7,6 +7,7 @@
 	import { townFilter } from '$lib/stores/town-filter';
 	import { TOWN_BY_SLUG } from '$lib/config/towns';
 	import { currentGasStations } from '$lib/stores/gas-prices';
+	import { currentCoffeeShops } from '$lib/stores/cappuccino';
 	import { currentChargingStations } from '$lib/stores/ev-charging';
 	import { MARIN_TOWNS, LAYER_COLORS, MARIN_BOUNDS } from '$lib/config';
 	import { FIRE_ZONES, LANDMARKS, AIRPORT_PINS, AIRPORT_STATUS_COLORS } from '$lib/config/map';
@@ -36,7 +37,7 @@
 		onTownHover?: (townSlug: string | null) => void;
 		onPinClick?: (itemId: string) => void;
 		onFeatureClick?: (feature: {
-			kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station' | 'ev-charging-station' | 'airport';
+			kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station' | 'ev-charging-station' | 'coffee-shop' | 'airport';
 			title: string;
 			subtitle?: string;
 			description?: string;
@@ -439,6 +440,12 @@
 			data: { type: 'FeatureCollection', features: [] }
 		});
 
+		// Coffee shops source
+		map.addSource('coffee-shops', {
+			type: 'geojson',
+			data: { type: 'FeatureCollection', features: [] }
+		});
+
 		// --- Layers ---
 
 		// Town boundary highlight (renders beneath everything)
@@ -757,6 +764,40 @@
 			}
 		});
 
+		// Coffee shop dots (warm brown)
+		map.addLayer({
+			id: 'coffee-shops-layer',
+			type: 'circle',
+			source: 'coffee-shops',
+			paint: {
+				'circle-radius': 5,
+				'circle-color': '#a16207',
+				'circle-opacity': 0.8,
+				'circle-stroke-width': 1,
+				'circle-stroke-color': 'rgba(10, 10, 10, 0.8)'
+			}
+		});
+
+		// Coffee shop labels (visible at higher zoom)
+		map.addLayer({
+			id: 'coffee-shops-label',
+			type: 'symbol',
+			source: 'coffee-shops',
+			minzoom: 12,
+			layout: {
+				'text-field': ['concat', ['get', 'name'], '\n', ['get', 'price']],
+				'text-size': 9,
+				'text-offset': [0, 1.4],
+				'text-anchor': 'top',
+				'text-optional': true
+			},
+			paint: {
+				'text-color': '#a16207',
+				'text-halo-color': 'rgba(10, 10, 10, 0.9)',
+				'text-halo-width': 1.5
+			}
+		});
+
 		// News pins (small dots per item)
 		map.addLayer({
 			id: 'news-pins-layer',
@@ -936,6 +977,21 @@
 				});
 			});
 
+			map.on('click', 'coffee-shops-layer', (e: MapLayerMouseEvent) => {
+				if (clickHitsVisibleStravaFeature(map, e)) return;
+				const feature = e.features?.[0];
+				const name = String(feature?.properties?.name ?? 'Coffee Shop');
+				const price = String(feature?.properties?.price ?? '');
+				const address = String(feature?.properties?.address ?? '');
+				onFeatureClick?.({
+					kind: 'coffee-shop',
+					title: name,
+					subtitle: price ? `Cappuccino: ${price}` : 'Price unavailable',
+					description: address,
+					source: 'Marin Monitor'
+				});
+			});
+
 			map.on('click', 'fire-incidents-layer', (e: MapLayerMouseEvent) => {
 				if (clickHitsVisibleStravaFeature(map, e)) return;
 				const feature = e.features?.[0];
@@ -989,6 +1045,14 @@
 			});
 
 			map.on('mouseleave', 'ev-charging-stations-layer', () => {
+				map.getCanvas().style.cursor = '';
+			});
+
+			map.on('mouseenter', 'coffee-shops-layer', () => {
+				map.getCanvas().style.cursor = 'pointer';
+			});
+
+			map.on('mouseleave', 'coffee-shops-layer', () => {
 				map.getCanvas().style.cursor = '';
 			});
 
@@ -1296,6 +1360,51 @@
 			);
 		}
 
+		// Coffee shops
+		const coffeeShops = get(currentCoffeeShops);
+		const mapCoffeeVisible = mapState.activeLayers['coffee'];
+		const coffeeFeatures: GeoJSON.Feature[] = mapCoffeeVisible
+			? coffeeShops
+					.filter(
+						(s) =>
+							!currentTownFilter || findNearestTown(s.lat, s.lon) === currentTownFilter
+					)
+					.filter((s) => s.price !== null)
+					.map((s) => ({
+						type: 'Feature' as const,
+						geometry: {
+							type: 'Point' as const,
+							coordinates: [s.lon, s.lat]
+						},
+						properties: {
+							name: s.name,
+							price: `$${s.price!.toFixed(2)}`,
+							address: s.address,
+							town: s.town
+						}
+					}))
+			: [];
+
+		const coffeeSource = map.getSource('coffee-shops') as GeoJSONSource;
+		if (coffeeSource) {
+			coffeeSource.setData({ type: 'FeatureCollection', features: coffeeFeatures });
+		}
+
+		if (map.getLayer('coffee-shops-layer')) {
+			map.setLayoutProperty(
+				'coffee-shops-layer',
+				'visibility',
+				mapCoffeeVisible ? 'visible' : 'none'
+			);
+		}
+		if (map.getLayer('coffee-shops-label')) {
+			map.setLayoutProperty(
+				'coffee-shops-label',
+				'visibility',
+				mapCoffeeVisible ? 'visible' : 'none'
+			);
+		}
+
 		applyTrafficVisibility(map);
 	}
 
@@ -1357,6 +1466,7 @@
 	let unsubscribeMap: (() => void) | null = null;
 	let unsubscribeGas: (() => void) | null = null;
 	let unsubscribeEv: (() => void) | null = null;
+	let unsubscribeCoffee: (() => void) | null = null;
 	let updateDataTimer: ReturnType<typeof setTimeout> | null = null;
 
 	onMount(() => {
@@ -1428,6 +1538,17 @@
 					updateDataTimer = setTimeout(() => {
 						const m = getMap();
 						if (!m || !m.getSource('ev-charging-stations')) return;
+						updateData(m);
+					}, 100);
+				});
+			}
+
+			if (!unsubscribeCoffee) {
+				unsubscribeCoffee = currentCoffeeShops.subscribe(() => {
+					if (updateDataTimer) clearTimeout(updateDataTimer);
+					updateDataTimer = setTimeout(() => {
+						const m = getMap();
+						if (!m || !m.getSource('coffee-shops')) return;
 						updateData(m);
 					}, 100);
 				});
@@ -1520,6 +1641,7 @@
 		unsubscribeMap?.();
 		unsubscribeGas?.();
 		unsubscribeEv?.();
+		unsubscribeCoffee?.();
 		unsubscribeTownFilter?.();
 		if (trafficRefreshTimer) {
 			clearInterval(trafficRefreshTimer);

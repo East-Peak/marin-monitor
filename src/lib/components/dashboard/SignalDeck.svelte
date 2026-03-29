@@ -11,7 +11,8 @@
 		EnvironmentPanel,
 		ConditionsPanel,
 		WastewaterPanel,
-		AirportStatusPanel
+		AirportStatusPanel,
+		CappuccinoPanel
 	} from '$lib/components/panels';
 	import { settings, allNewsItems } from '$lib/stores';
 	import type { WeatherData, FireWeatherAlert, EarthquakeData } from '$lib/types';
@@ -135,6 +136,12 @@
 		{#if isPanelVisible('ev-charging')}
 			<div class="signal-card signal-ev-charging animate-enter-up stagger-4 hover-lift">
 				<EvChargingPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('cappuccino')}
+			<div class="signal-card signal-cappuccino animate-enter-up stagger-4 hover-lift">
+				<CappuccinoPanel />
 			</div>
 		{/if}
 	</div>
