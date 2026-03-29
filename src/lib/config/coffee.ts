@@ -23,6 +23,8 @@ export interface CoffeeShopConfig {
 	url: string;
 	hasCappuccino: boolean;
 	altDrink?: string;
+	/** Hardcoded baseline cappuccino price for fallback when scraping fails (March 2026) */
+	baselinePrice?: number;
 }
 
 export const COFFEE_SHOPS: CoffeeShopConfig[] = [
@@ -35,7 +37,8 @@ export const COFFEE_SHOPS: CoffeeShopConfig[] = [
 		lon: -122.5480,
 		source: 'toast',
 		url: 'https://order.toasttab.com/online/equator-coffees-miller-ave',
-		hasCappuccino: true
+		hasCappuccino: true,
+		baselinePrice: 5.25
 	},
 	{
 		id: 'equator-proof-lab',
@@ -46,7 +49,8 @@ export const COFFEE_SHOPS: CoffeeShopConfig[] = [
 		lon: -122.5270,
 		source: 'toast',
 		url: 'https://order.toasttab.com/online/equator-coffees-proof-lab',
-		hasCappuccino: true
+		hasCappuccino: true,
+		baselinePrice: 5.25
 	},
 	{
 		id: 'equator-larkspur',
@@ -57,7 +61,8 @@ export const COFFEE_SHOPS: CoffeeShopConfig[] = [
 		lon: -122.5350,
 		source: 'toast',
 		url: 'https://order.toasttab.com/online/equator-coffees-larkspur',
-		hasCappuccino: true
+		hasCappuccino: true,
+		baselinePrice: 5.25
 	},
 	{
 		id: 'equator-sausalito',
@@ -68,7 +73,8 @@ export const COFFEE_SHOPS: CoffeeShopConfig[] = [
 		lon: -122.4850,
 		source: 'toast',
 		url: 'https://order.toasttab.com/online/sausalito-equator',
-		hasCappuccino: true
+		hasCappuccino: true,
+		baselinePrice: 5.25
 	},
 	{
 		id: 'equator-roundhouse',
@@ -79,7 +85,8 @@ export const COFFEE_SHOPS: CoffeeShopConfig[] = [
 		lon: -122.4745,
 		source: 'toast',
 		url: 'https://order.toasttab.com/online/equator-coffees-roundhouse-golden-gate-bridge-plaza',
-		hasCappuccino: true
+		hasCappuccino: true,
+		baselinePrice: 5.00
 	},
 	{
 		id: 'mcr-san-anselmo',
@@ -90,7 +97,8 @@ export const COFFEE_SHOPS: CoffeeShopConfig[] = [
 		lon: -122.5617,
 		source: 'toast',
 		url: 'https://order.toasttab.com/online/marin-coffee-roasters-san-anselmo-546-san-anselmo-ave',
-		hasCappuccino: true
+		hasCappuccino: true,
+		baselinePrice: 5.10
 	},
 	{
 		id: 'mcr-ignacio',
@@ -101,7 +109,8 @@ export const COFFEE_SHOPS: CoffeeShopConfig[] = [
 		lon: -122.5330,
 		source: 'toast',
 		url: 'https://order.toasttab.com/online/marin-coffee-roasters-ignacio-466-ignacio-blvd',
-		hasCappuccino: true
+		hasCappuccino: true,
+		baselinePrice: 5.10
 	},
 	{
 		id: 'mcr-novato',
@@ -112,7 +121,8 @@ export const COFFEE_SHOPS: CoffeeShopConfig[] = [
 		lon: -122.5700,
 		source: 'toast',
 		url: 'https://order.toasttab.com/online/marin-coffee-roasters-drive-through-1551-s-novato-blvd',
-		hasCappuccino: true
+		hasCappuccino: true,
+		baselinePrice: 5.10
 	},
 	{
 		id: 'firehouse-sausalito',
