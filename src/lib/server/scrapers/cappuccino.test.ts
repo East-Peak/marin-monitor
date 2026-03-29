@@ -1,7 +1,7 @@
 // src/lib/server/scrapers/cappuccino.test.ts
 
 import { describe, it, expect } from 'vitest';
-import { extractCappuccinoPrice, computeMedian, buildSnapshot } from './cappuccino';
+import { extractCappuccinoPrice, extractPriceFromState, computeMedian, buildSnapshot } from './cappuccino';
 import type { CoffeeShop } from '$lib/types/coffee';
 
 describe('extractCappuccinoPrice', () => {
@@ -57,6 +57,72 @@ $5.25
 Latte
 $5.75`;
 		expect(extractCappuccinoPrice(text)).toBe(5.25);
+	});
+});
+
+describe('extractPriceFromState', () => {
+	it('extracts cappuccino price from OO_STATE structure', () => {
+		const state = {
+			'Menu:abc123': {
+				groups: [{
+					name: 'Hot Drinks',
+					items: [
+						{ name: 'Cappuccino', prices: [5.25], description: '8oz', outOfStock: false },
+						{ name: 'Latte', prices: [5.75], description: '12oz', outOfStock: false }
+					]
+				}]
+			}
+		};
+		expect(extractPriceFromState(state, 'cappuccino')).toBe(5.25);
+	});
+
+	it('returns null when item not found', () => {
+		const state = {
+			'Menu:abc123': {
+				groups: [{
+					name: 'Hot Drinks',
+					items: [
+						{ name: 'Latte', prices: [5.75] }
+					]
+				}]
+			}
+		};
+		expect(extractPriceFromState(state, 'cappuccino')).toBeNull();
+	});
+
+	it('returns null for null/empty state', () => {
+		expect(extractPriceFromState(null as any, 'cappuccino')).toBeNull();
+		expect(extractPriceFromState({}, 'cappuccino')).toBeNull();
+	});
+
+	it('handles multiple menu keys', () => {
+		const state = {
+			'Menu:first': {
+				groups: [{
+					name: 'Food',
+					items: [{ name: 'Sandwich', prices: [12] }]
+				}]
+			},
+			'Menu:second': {
+				groups: [{
+					name: 'Drinks',
+					items: [{ name: 'Cappuccino', prices: [5.10] }]
+				}]
+			}
+		};
+		expect(extractPriceFromState(state, 'cappuccino')).toBe(5.10);
+	});
+
+	it('matches case-insensitively', () => {
+		const state = {
+			'Menu:abc': {
+				groups: [{
+					name: 'Drinks',
+					items: [{ name: 'CAPPUCCINO', prices: [5.00] }]
+				}]
+			}
+		};
+		expect(extractPriceFromState(state, 'cappuccino')).toBe(5.00);
 	});
 });
 

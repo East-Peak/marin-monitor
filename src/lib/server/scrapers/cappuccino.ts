@@ -1,10 +1,12 @@
 // src/lib/server/scrapers/cappuccino.ts
 
 /**
- * Server-side Playwright scraper for cappuccino prices across Marin coffee shops.
+ * Server-side scraper for cappuccino prices across Marin coffee shops.
  *
- * Scrapes Toast online ordering pages (7 shops), one Squarespace HTML menu,
- * and one DoorDash delivery listing. Computes aggregate statistics.
+ * Uses @sparticuz/chromium + puppeteer-core (Vercel serverless compatible).
+ *
+ * Toast shops: extracts prices from window.__OO_STATE__ structured JSON.
+ * Other shops: extracts prices from page innerText via regex.
  */
 
 import type { CoffeeShop, CoffeeSnapshot } from '$lib/types/coffee';
@@ -13,11 +15,44 @@ import {
 	TOAST_PAGE_TIMEOUT,
 	type CoffeeShopConfig
 } from '$lib/config/coffee';
+import type { Browser } from 'puppeteer-core';
 
 /**
- * Extract cappuccino price from page text content.
+ * Extract cappuccino price from Toast's window.__OO_STATE__ structured data.
  *
- * Handles multiple Toast text formats:
+ * The OO_STATE object contains menu data keyed by "Menu:<id>".
+ * Each menu has groups, and each group has items with names and prices.
+ * Prices are in dollars (not cents).
+ */
+export function extractPriceFromState(state: Record<string, any>, itemName: string): number | null {
+	if (!state) return null;
+
+	// Find menu keys
+	const menuKeys = Object.keys(state).filter(k => k.startsWith('Menu:'));
+
+	for (const menuKey of menuKeys) {
+		const menu = state[menuKey];
+		if (!menu?.groups) continue;
+
+		for (const group of menu.groups) {
+			if (!group?.items) continue;
+			for (const item of group.items) {
+				if (item?.name?.toLowerCase().includes(itemName.toLowerCase())) {
+					if (Array.isArray(item.prices) && item.prices.length > 0) {
+						return item.prices[0];
+					}
+				}
+			}
+		}
+	}
+
+	return null;
+}
+
+/**
+ * Extract cappuccino price from page text content (for non-Toast shops).
+ *
+ * Handles multiple text formats:
  *   - "Cappuccino$5.25" (no space)
  *   - "Cappuccino $5.25" (space before $)
  *   - "Cappuccino\n$5.25" (price on next line)
@@ -82,31 +117,54 @@ export function buildSnapshot(shops: CoffeeShop[]): CoffeeSnapshot {
 	};
 }
 
-/** Scrape a single Toast page using Playwright */
+/** Launch a puppeteer-core browser using @sparticuz/chromium */
+async function launchBrowser(): Promise<Browser> {
+	const chromium = (await import('@sparticuz/chromium')).default;
+	const puppeteer = (await import('puppeteer-core')).default;
+
+	return puppeteer.launch({
+		args: chromium.args,
+		defaultViewport: { width: 1920, height: 1080 },
+		executablePath: await chromium.executablePath(),
+		headless: true
+	});
+}
+
+/** Scrape a single Toast page — extract __OO_STATE__ for structured price data */
 async function scrapeToastShop(
-	browser: import('playwright').Browser,
+	browser: Browser,
 	shop: CoffeeShopConfig
 ): Promise<CoffeeShop> {
-	const context = await browser.newContext({
-		userAgent:
-			'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
-	});
-
-	const page = await context.newPage();
+	const page = await browser.newPage();
 	let price: number | null = null;
 
 	try {
+		await page.setUserAgent(
+			'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+		);
+
 		await page.goto(shop.url, {
-			waitUntil: 'networkidle',
+			waitUntil: 'networkidle0',
 			timeout: TOAST_PAGE_TIMEOUT
 		});
 
-		// Wait for menu items to render (Toast is a React SPA)
-		await page.waitForTimeout(3000);
+		// Wait for Toast React SPA to hydrate and populate __OO_STATE__
+		await new Promise((resolve) => setTimeout(resolve, 3000));
 
-		// Get all visible text from the page
-		const text = await page.evaluate(() => document.body.innerText);
-		price = extractCappuccinoPrice(text);
+		// Extract the __OO_STATE__ object from the window
+		const ooState = await page.evaluate(() => {
+			return (window as any).__OO_STATE__ ?? null;
+		});
+
+		if (ooState) {
+			price = extractPriceFromState(ooState, 'cappuccino');
+		}
+
+		if (price === null) {
+			// Fallback: try innerText extraction
+			const text = await page.evaluate(() => document.body.innerText);
+			price = extractCappuccinoPrice(text);
+		}
 
 		if (price === null) {
 			console.warn(`[cappuccino] No cappuccino price found at ${shop.id} (${shop.url})`);
@@ -114,7 +172,7 @@ async function scrapeToastShop(
 	} catch (err) {
 		console.error(`[cappuccino] Failed to scrape ${shop.id}:`, (err as Error).message);
 	} finally {
-		await context.close();
+		await page.close();
 	}
 
 	return {
@@ -132,11 +190,10 @@ async function scrapeToastShop(
 
 /** Scrape Firehouse Coffee Squarespace menu page */
 async function scrapeFirehouse(
-	browser: import('playwright').Browser,
+	browser: Browser,
 	shop: CoffeeShopConfig
 ): Promise<CoffeeShop> {
-	const context = await browser.newContext();
-	const page = await context.newPage();
+	const page = await browser.newPage();
 	let price: number | null = null;
 
 	try {
@@ -145,7 +202,7 @@ async function scrapeFirehouse(
 			timeout: TOAST_PAGE_TIMEOUT
 		});
 
-		await page.waitForTimeout(2000);
+		await new Promise((resolve) => setTimeout(resolve, 2000));
 
 		const text = await page.evaluate(() => document.body.innerText);
 		price = extractCappuccinoPrice(text);
@@ -156,7 +213,7 @@ async function scrapeFirehouse(
 	} catch (err) {
 		console.error(`[cappuccino] Failed to scrape ${shop.id}:`, (err as Error).message);
 	} finally {
-		await context.close();
+		await page.close();
 	}
 
 	return {
@@ -174,24 +231,23 @@ async function scrapeFirehouse(
 
 /** Scrape Fox & Kit from DoorDash page */
 async function scrapeDelivery(
-	browser: import('playwright').Browser,
+	browser: Browser,
 	shop: CoffeeShopConfig
 ): Promise<CoffeeShop> {
-	const context = await browser.newContext({
-		userAgent:
-			'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
-	});
-
-	const page = await context.newPage();
+	const page = await browser.newPage();
 	let price: number | null = null;
 
 	try {
+		await page.setUserAgent(
+			'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+		);
+
 		await page.goto(shop.url, {
-			waitUntil: 'networkidle',
+			waitUntil: 'networkidle0',
 			timeout: TOAST_PAGE_TIMEOUT
 		});
 
-		await page.waitForTimeout(3000);
+		await new Promise((resolve) => setTimeout(resolve, 3000));
 
 		const text = await page.evaluate(() => document.body.innerText);
 		price = extractCappuccinoPrice(text);
@@ -202,7 +258,7 @@ async function scrapeDelivery(
 	} catch (err) {
 		console.error(`[cappuccino] Failed to scrape ${shop.id}:`, (err as Error).message);
 	} finally {
-		await context.close();
+		await page.close();
 	}
 
 	return {
@@ -220,11 +276,10 @@ async function scrapeDelivery(
 
 /** Scrape Philz for the alt drink (pour-over) price */
 async function scrapePhilz(
-	browser: import('playwright').Browser,
+	browser: Browser,
 	shop: CoffeeShopConfig
 ): Promise<CoffeeShop> {
-	const context = await browser.newContext();
-	const page = await context.newPage();
+	const page = await browser.newPage();
 	let altPrice: number | null = null;
 
 	try {
@@ -233,7 +288,7 @@ async function scrapePhilz(
 			timeout: TOAST_PAGE_TIMEOUT
 		});
 
-		await page.waitForTimeout(2000);
+		await new Promise((resolve) => setTimeout(resolve, 2000));
 
 		const text = await page.evaluate(() => document.body.innerText);
 
@@ -251,7 +306,7 @@ async function scrapePhilz(
 	} catch (err) {
 		console.error(`[cappuccino] Failed to scrape ${shop.id}:`, (err as Error).message);
 	} finally {
-		await context.close();
+		await page.close();
 	}
 
 	return {
@@ -272,12 +327,11 @@ async function scrapePhilz(
 /**
  * Scrape cappuccino prices from all configured coffee shops.
  *
- * Launches a single Playwright browser instance, scrapes all shops
- * sequentially (to avoid rate-limiting), then returns a snapshot.
+ * Launches a single browser instance using @sparticuz/chromium + puppeteer-core,
+ * scrapes all shops sequentially (to avoid rate-limiting), then returns a snapshot.
  */
 export async function scrapeCappuccino(): Promise<CoffeeSnapshot> {
-	const { chromium } = await import('playwright');
-	const browser = await chromium.launch({ headless: true });
+	const browser = await launchBrowser();
 
 	try {
 		const results: CoffeeShop[] = [];
