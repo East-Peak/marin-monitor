@@ -993,28 +993,89 @@ async function parseRedwoodBarkSports(now: number): Promise<NewsItem[]> {
 
 async function parseNorcalRaces(now: number): Promise<NewsItem[]> {
 	const html = await safeFetch('https://www.norcalmtb.org/races/');
-	const text = stripHtml(html);
-	const match = text.match(/Race 4:\s*Stafford, Novato\s*4\/25\s*5\/2/i);
-	if (!match) return [];
-	const item = buildItem(
-		{
-			category: 'prep',
-			source: 'NorCal MTB',
-			title: 'Race 4: Stafford, Novato',
-			link: 'https://www.norcalmtb.org/races/',
-			pubDate: 'Apr 25, 2026 09:00:00 PST',
-			description:
-				'NorCal MTB race weekend at Stafford Lake with Novato on the league calendar.',
-			verification: 'official',
-			town: 'Novato',
-			townSlug: 'novato',
-			lat: 38.1285,
-			lon: -122.6041,
-			topics: ['prep-sports', 'mountain-bike']
-		},
-		now
-	);
-	return item ? [item] : [];
+	const doc = parseHtml(html);
+	const items: NewsItem[] = [];
+
+	// Parse the race schedule table — look for rows with race info
+	// Each row typically has: Race Name/Location, Central/East Bay date, Redwood/Repack date
+	const rows = [...doc.querySelectorAll('tr')];
+	for (const row of rows) {
+		const cells = [...row.querySelectorAll('td, th')];
+		if (cells.length < 2) continue;
+
+		const rowText = stripHtml(row.textContent || '');
+		// Look for rows mentioning race numbers or venue names
+		const raceMatch = rowText.match(
+			/Race\s+(\d+)[:\s]*([^0-9]*?)(\d{1,2}\/\d{1,2})/i
+		);
+		if (!raceMatch) continue;
+
+		const raceNum = raceMatch[1];
+		const venueName = raceMatch[2].replace(/[,\s]+$/, '').trim() || `Race ${raceNum}`;
+
+		// Extract all dates from the row — prefer later columns (Redwood/Repack league)
+		const dateMatches = [...rowText.matchAll(/(\d{1,2})\/(\d{1,2})/g)];
+		if (dateMatches.length === 0) continue;
+
+		// Use the last date found (Redwood/Repack league column)
+		const lastDate = dateMatches[dateMatches.length - 1];
+		const month = parseInt(lastDate[1], 10);
+		const day = parseInt(lastDate[2], 10);
+		const year = month >= 8 ? 2025 : 2026; // season spans fall-spring
+		const raceDate = new Date(year, month - 1, day, 9, 0, 0);
+		if (!Number.isFinite(raceDate.getTime())) continue;
+
+		const townData = inferTownFromText(venueName);
+		const isMarin = /stafford|novato|tam|fairfax|marin/i.test(venueName);
+
+		const item = buildItem(
+			{
+				category: 'cycling',
+				source: 'NorCal MTB League',
+				title: `NorCal MTB Race ${raceNum}: ${venueName}`,
+				link: 'https://www.norcalmtb.org/races/',
+				pubDate: raceDate.toISOString(),
+				description: `NorCal high school mountain bike league race at ${venueName}.`,
+				verification: 'official',
+				town: townData.town || (isMarin ? 'Novato' : undefined),
+				townSlug: townData.townSlug || (isMarin ? 'novato' : undefined),
+				lat: isMarin ? 38.1285 : undefined,
+				lon: isMarin ? -122.6041 : undefined,
+				topics: ['cycling', 'mtb', 'high-school']
+			},
+			now
+		);
+		if (item) items.push(item);
+	}
+
+	// Fallback: if table parsing found nothing, try the old regex approach
+	if (items.length === 0) {
+		const text = stripHtml(html);
+		const match = text.match(/Race 4:\s*Stafford,?\s*Novato/i);
+		if (match) {
+			const item = buildItem(
+				{
+					category: 'cycling',
+					source: 'NorCal MTB League',
+					title: 'NorCal MTB Race 4: Stafford, Novato',
+					link: 'https://www.norcalmtb.org/races/',
+					pubDate: 'Apr 25, 2026 09:00:00 PST',
+					description:
+						'NorCal MTB race weekend at Stafford Lake with Novato on the league calendar.',
+					verification: 'official',
+					town: 'Novato',
+					townSlug: 'novato',
+					lat: 38.1285,
+					lon: -122.6041,
+					topics: ['cycling', 'mtb', 'high-school']
+				},
+				now
+			);
+			if (item) items.push(item);
+		}
+	}
+
+	return items;
 }
 
 async function parsePacificsSchedule(now: number): Promise<NewsItem[]> {
@@ -1023,30 +1084,36 @@ async function parsePacificsSchedule(now: number): Promise<NewsItem[]> {
 	try {
 		const html = await safeFetch(scheduleUrl);
 		const items: NewsItem[] = [];
+		const doc = parseHtml(html);
 
-		// Match imagearray entries: ['img','eventUrl','','Opponent @ San Rafael Pacifics MM-DD-YYYY ...']
-		const gamePattern =
-			/','([A-Za-z\s]+?)\s+@\s+San Rafael Pacifics\s+(\d{2})-(\d{2})-(\d{4})\s+(\d{1,2}:\d{2}:\d{2}\s*(?:AM|PM))/gi;
-		// Extract event URLs from imagearray 2nd element (eventid links)
-		const eventUrlPattern =
-			/'(https?:\/\/[^']*eventid=\d+[^']*)','','[^']*@\s*San Rafael Pacifics\s+(\d{2})-(\d{2})-(\d{4})/gi;
-		const eventUrls = new Map<string, string>();
-		let urlMatch;
-		while ((urlMatch = eventUrlPattern.exec(html)) !== null) {
-			const dateKey = `${urlMatch[2]}-${urlMatch[3]}-${urlMatch[4]}`;
-			eventUrls.set(dateKey, urlMatch[1]);
-		}
+		// Parse calendar table cells — bgcolor indicates home (acd8ef) vs away (c0c0c0/5a007c)
+		const cells = [...doc.querySelectorAll('td')];
+		for (const cell of cells) {
+			const bg = (cell.getAttribute('bgcolor') || '').replace('#', '').toLowerCase();
+			const isHome = bg === 'acd8ef';
+			const isAway = bg === 'c0c0c0' || bg === '5a007c';
+			if (!isHome && !isAway) continue;
 
-		let match;
-		while ((match = gamePattern.exec(html)) !== null) {
-			const [, opponentRaw, month, day, year, timeRaw] = match;
-			const opponent = opponentRaw.replace(/^[^a-zA-Z]+/, '').trim();
-			const dateStr = `${month}/${day}/${year} ${timeRaw.replace(/\s+/g, ' ').trim()}`;
-			const gameDate = new Date(dateStr);
+			// Extract date/time from <small> tag: MM/DD/YYYY&nbsp;H:MMPM
+			const small = cell.querySelector('small');
+			if (!small) continue;
+			const dateText = (small.textContent || '').replace(/\s+/g, ' ').trim();
+			const dateMatch = dateText.match(
+				/(\d{1,2}\/\d{1,2}\/\d{4})\s*(\d{1,2}:\d{2}\s*(?:AM|PM))/i
+			);
+			if (!dateMatch) continue;
+
+			const gameDate = new Date(`${dateMatch[1]} ${dateMatch[2]}`);
 			if (!Number.isFinite(gameDate.getTime())) continue;
-			const gameTimestamp = gameDate.getTime();
 
-			if (gameTimestamp < now || gameTimestamp > now + 120 * 24 * 60 * 60 * 1000) continue;
+			// Extract event link if present
+			const eventLink = cell.querySelector('a[href*="eventid="]');
+			const eventUrl = eventLink
+				? new URL(
+						eventLink.getAttribute('href') || '',
+						'https://www.pacificsbaseball.com'
+					).toString()
+				: scheduleUrl;
 
 			const dayStr = gameDate.toLocaleDateString('en-US', {
 				weekday: 'short',
@@ -1057,17 +1124,19 @@ async function parsePacificsSchedule(now: number): Promise<NewsItem[]> {
 				hour: 'numeric',
 				minute: '2-digit'
 			});
-			const title = `Pacifics vs ${opponent} · ${dayStr}, ${timeStr}`;
-			const eventUrl = eventUrls.get(`${month}-${day}-${year}`);
+			const label = isHome ? 'Pacifics Home Game' : 'Pacifics Away Game';
+			const title = `${label} · ${dayStr}, ${timeStr}`;
 
 			const item = buildItem(
 				{
 					category: 'prep',
 					source: 'San Rafael Pacifics',
 					title,
-					link: eventUrl ?? scheduleUrl,
+					link: eventUrl,
 					pubDate: gameDate.toISOString(),
-					description: `San Rafael Pacifics home game at Albert Park. ${timeStr} first pitch.`,
+					description: isHome
+						? `San Rafael Pacifics home game at Albert Park. ${timeStr} first pitch.`
+						: `San Rafael Pacifics away game. ${timeStr} first pitch.`,
 					verification: 'community',
 					town: 'San Rafael',
 					townSlug: 'san-rafael',
@@ -1080,7 +1149,11 @@ async function parsePacificsSchedule(now: number): Promise<NewsItem[]> {
 			if (item) items.push(item);
 		}
 
-		if (items.length > 0) return items.slice(0, 5);
+		if (items.length > 0) {
+			return items
+				.sort((a, b) => a.timestamp - b.timestamp)
+				.slice(0, 20);
+		}
 	} catch {
 		// Fall through to hub fallback
 	}
@@ -1102,6 +1175,202 @@ async function parsePacificsSchedule(now: number): Promise<NewsItem[]> {
 		},
 		now
 	);
+}
+
+async function parseMarinRowingCalendar(now: number): Promise<NewsItem[]> {
+	try {
+		const json = await safeFetch('https://www.marinrowing.org/calendar?format=json');
+		const data = JSON.parse(json) as Record<string, unknown>;
+		const mainContent = (data.mainContent as string) || '';
+		if (!mainContent) return [];
+
+		const items: NewsItem[] = [];
+		// Extract events from <strong>DATE</strong> EVENT_NAME patterns
+		const eventPattern =
+			/<strong>\s*((?:Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday),?\s+)?(\w+\s+\d{1,2}(?:\s*[-–]\s*\d{1,2})?(?:,?\s*\d{4})?)\s*<\/strong>\s*([^<]+)/gi;
+		let match;
+		while ((match = eventPattern.exec(mainContent)) !== null) {
+			const rawDate = match[2].trim();
+			const eventName = stripHtml(match[3]).trim();
+			if (!eventName || eventName.length < 3) continue;
+
+			// Parse the date — add current year if not present
+			let dateStr = rawDate;
+			if (!/\d{4}/.test(dateStr)) {
+				dateStr += ', 2026';
+			}
+			// Handle date ranges like "March 26-29" — use the first date
+			dateStr = dateStr.replace(/\s*[-–]\s*\d{1,2}/, '');
+			const eventDate = new Date(`${dateStr} 08:00:00 PST`);
+			if (!Number.isFinite(eventDate.getTime())) continue;
+
+			const item = buildItem(
+				{
+					category: 'outdoors',
+					source: 'Marin Rowing Association',
+					title: eventName,
+					link: 'https://www.marinrowing.org/calendar',
+					pubDate: eventDate.toISOString(),
+					description: `Marin Rowing Association event: ${eventName}.`,
+					verification: 'community',
+					town: 'Greenbrae',
+					townSlug: 'greenbrae',
+					lat: 37.9398,
+					lon: -122.5283,
+					topics: ['rowing', 'regatta']
+				},
+				now
+			);
+			if (item) items.push(item);
+		}
+
+		return items
+			.sort((a, b) => a.timestamp - b.timestamp)
+			.slice(0, 15);
+	} catch {
+		return [];
+	}
+}
+
+async function parseB17Racing(now: number): Promise<NewsItem[]> {
+	try {
+		const html = await safeFetch('https://b17racing.com');
+		const items: NewsItem[] = [];
+		const text = stripHtml(html);
+
+		// Summit Shorty Series — Wednesday evenings at Camp Tamarancho, Fairfax
+		const shortyDates = text.match(
+			/Summit\s+Shorty[^.]*?(?:March|April|May|June|July|August)[\s\S]*?(?=Crusher|$)/i
+		);
+		if (shortyDates) {
+			const datePattern =
+				/((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2})/gi;
+			let dateMatch;
+			while ((dateMatch = datePattern.exec(shortyDates[0])) !== null) {
+				const dateStr = `${dateMatch[1]}, 2026 18:00:00 PST`;
+				const raceDate = new Date(dateStr);
+				if (!Number.isFinite(raceDate.getTime())) continue;
+
+				const dayStr = raceDate.toLocaleDateString('en-US', {
+					weekday: 'short',
+					month: 'short',
+					day: 'numeric'
+				});
+
+				const item = buildItem(
+					{
+						category: 'cycling',
+						source: 'B-17 Racing',
+						title: `Summit Shorty Series · ${dayStr}`,
+						link: 'https://b17racing.com',
+						pubDate: raceDate.toISOString(),
+						description:
+							'Wednesday evening XC race at Camp Tamarancho, Fairfax.',
+						verification: 'community',
+						town: 'Fairfax',
+						townSlug: 'fairfax',
+						lat: 37.9895,
+						lon: -122.5918,
+						topics: ['cycling', 'mtb', 'racing']
+					},
+					now
+				);
+				if (item) items.push(item);
+			}
+		}
+
+		// Crusher Cup XCO series
+		const crusherDates = text.match(
+			/Crusher\s+Cup[^.]*?(?:March|April|May|June|July|August)[\s\S]*?(?=Summit|$)/i
+		);
+		if (crusherDates) {
+			const datePattern =
+				/((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2})/gi;
+			let dateMatch;
+			while ((dateMatch = datePattern.exec(crusherDates[0])) !== null) {
+				const dateStr = `${dateMatch[1]}, 2026 09:00:00 PST`;
+				const raceDate = new Date(dateStr);
+				if (!Number.isFinite(raceDate.getTime())) continue;
+
+				const dayStr = raceDate.toLocaleDateString('en-US', {
+					weekday: 'short',
+					month: 'short',
+					day: 'numeric'
+				});
+
+				const item = buildItem(
+					{
+						category: 'cycling',
+						source: 'B-17 Racing',
+						title: `Crusher Cup XCO · ${dayStr}`,
+						link: 'https://b17racing.com',
+						pubDate: raceDate.toISOString(),
+						description: 'Crusher Cup XCO race series in Marin County.',
+						verification: 'community',
+						town: 'Fairfax',
+						townSlug: 'fairfax',
+						lat: 37.9895,
+						lon: -122.5918,
+						topics: ['cycling', 'mtb', 'racing']
+					},
+					now
+				);
+				if (item) items.push(item);
+			}
+		}
+
+		return items
+			.sort((a, b) => a.timestamp - b.timestamp)
+			.slice(0, 15);
+	} catch {
+		return [];
+	}
+}
+
+function getDipseaRaceDate(year: number): Date {
+	// Dipsea is always the second Sunday in June
+	const june1 = new Date(year, 5, 1); // June 1
+	const dayOfWeek = june1.getDay(); // 0 = Sunday
+	const daysToSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+	const secondSunday = 1 + daysToSunday + 7;
+	return new Date(year, 5, secondSunday, 7, 30, 0); // 7:30 AM start
+}
+
+async function parseDipseaRaceDate(now: number): Promise<NewsItem[]> {
+	const currentYear = new Date(now).getFullYear();
+	const items: NewsItem[] = [];
+
+	// Check current year and next year
+	for (const year of [currentYear, currentYear + 1]) {
+		const raceDate = getDipseaRaceDate(year);
+		const dayStr = raceDate.toLocaleDateString('en-US', {
+			weekday: 'long',
+			month: 'long',
+			day: 'numeric',
+			year: 'numeric'
+		});
+		const item = buildItem(
+			{
+				category: 'endurance',
+				source: 'Dipsea Race',
+				title: `Dipsea Race ${year} · ${dayStr}`,
+				link: 'https://www.dipsea.org/',
+				pubDate: raceDate.toISOString(),
+				description:
+					'The Dipsea Race: oldest trail race in America. Mill Valley to Stinson Beach, 7.4 miles over Mt. Tamalpais.',
+				verification: 'official',
+				town: 'Mill Valley',
+				townSlug: 'mill-valley',
+				lat: 37.906,
+				lon: -122.5491,
+				topics: ['running', 'dipsea', 'trail']
+			},
+			now
+		);
+		if (item) items.push(item);
+	}
+
+	return items;
 }
 
 async function parseShowsHubs(now: number): Promise<NewsItem[]> {
@@ -1401,6 +1670,9 @@ export async function scrapeActivity(): Promise<NewsItem[]> {
 	}
 
 	collected.push(...(await safeParse('Dipsea', () => parseDipseaHome(now))));
+	collected.push(...(await safeParse('Dipsea race date', () => parseDipseaRaceDate(now))));
+	collected.push(...(await safeParse('Marin Rowing', () => parseMarinRowingCalendar(now))));
+	collected.push(...(await safeParse('B-17 Racing', () => parseB17Racing(now))));
 	collected.push(...(await safeParse('Redwood Bark', () => parseRedwoodBarkSports(now))));
 	collected.push(...(await safeParse('NorCal MTB', () => parseNorcalRaces(now))));
 	collected.push(...(await safeParse('Prep hubs', () => parsePrepHubs(now))));
