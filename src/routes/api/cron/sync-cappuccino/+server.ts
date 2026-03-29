@@ -6,7 +6,7 @@ import { CAPPUCCINO_BLOB_KEY, MAX_CAPPUCCINO_HISTORY } from '$lib/config/coffee'
 import type { RequestHandler } from './$types';
 import type { CoffeeData, CoffeeSnapshot } from '$lib/types/coffee';
 
-export const config = { maxDuration: 120 };
+export const config = { maxDuration: 300 };
 
 /** Strip shops[] from a snapshot to keep history entries small */
 function toHistoryEntry(

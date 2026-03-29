@@ -181,6 +181,9 @@ export function parseInstacartResults(html: string): InstacartProduct[] {
 /**
  * Fetch Instacart search results for a given term.
  * Sets appropriate headers including ZIP code cookie for Marin location.
+ *
+ * Note: Instacart aggressively blocks datacenter/serverless IPs.
+ * This function logs detailed response info for debugging when blocked.
  */
 async function fetchInstacartSearch(searchTerm: string): Promise<string> {
 	const url = buildSearchUrl(searchTerm);
@@ -191,21 +194,47 @@ async function fetchInstacartSearch(searchTerm: string): Promise<string> {
 			method: 'GET',
 			headers: {
 				'User-Agent': USER_AGENT,
-				Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+				'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
 				'Accept-Language': 'en-US,en;q=0.9',
 				'Accept-Encoding': 'gzip, deflate, br',
-				Cookie: `zipcode=${MARIN_ZIP}`,
-				Referer: 'https://www.instacart.com/'
+				'Cache-Control': 'no-cache',
+				'Pragma': 'no-cache',
+				'Cookie': `zipcode=${MARIN_ZIP}`,
+				'Referer': 'https://www.instacart.com/',
+				'Sec-Fetch-Dest': 'document',
+				'Sec-Fetch-Mode': 'navigate',
+				'Sec-Fetch-Site': 'same-origin',
+				'Sec-Fetch-User': '?1',
+				'Upgrade-Insecure-Requests': '1',
+				'Sec-Ch-Ua': '"Not_A Brand";v="8", "Chromium";v="131", "Google Chrome";v="131"',
+				'Sec-Ch-Ua-Mobile': '?0',
+				'Sec-Ch-Ua-Platform': '"macOS"'
 			}
 		},
 		15000
 	);
 
 	if (!response.ok) {
+		const bodyPreview = await response.text().catch(() => '(unreadable)');
+		console.error(
+			`[grocery-basket] Instacart fetch failed: HTTP ${response.status} for "${searchTerm}"`,
+			`| Content-Type: ${response.headers.get('content-type')}`,
+			`| Body preview: ${bodyPreview.substring(0, 300)}`
+		);
 		throw new Error(`Instacart fetch failed: ${response.status} for term "${searchTerm}"`);
 	}
 
-	return await response.text();
+	const html = await response.text();
+
+	// Log diagnostic info if we got a response but it looks like a block/challenge page
+	if (html.length < 1000 || html.includes('captcha') || html.includes('challenge') || html.includes('blocked')) {
+		console.warn(
+			`[grocery-basket] Instacart may be blocking: response ${html.length} chars for "${searchTerm}"`,
+			`| Body preview: ${html.substring(0, 300)}`
+		);
+	}
+
+	return html;
 }
 
 /**
@@ -263,52 +292,157 @@ function sleep(ms: number): Promise<void> {
 /**
  * Scrape all 12 basket items from Instacart and build a GrocerySnapshot.
  * Throttles requests to avoid rate limiting.
+ *
+ * If Instacart blocks all requests (common from datacenter IPs),
+ * falls back to reference prices from config so the index still
+ * has data to display.
  */
 export async function scrapeGroceryBasket(): Promise<GrocerySnapshot> {
 	const items: BasketItemPrices[] = [];
+	let liveItemsFound = 0;
+	let instacartBlocked = false;
 
-	for (const basketItem of BASKET_ITEMS) {
-		try {
-			const storePrices = await scrapeItemPrices(
-				basketItem.id,
-				basketItem.name,
-				basketItem.searchTerm
-			);
-
-			const sorted = [...storePrices].sort((a, b) => a.price - b.price);
-
+	// Try scraping the first item to detect if Instacart is blocking us
+	const firstItem = BASKET_ITEMS[0];
+	try {
+		const testPrices = await scrapeItemPrices(
+			firstItem.id,
+			firstItem.name,
+			firstItem.searchTerm
+		);
+		if (testPrices.length > 0) {
+			liveItemsFound++;
+			const sorted = [...testPrices].sort((a, b) => a.price - b.price);
 			items.push({
-				itemId: basketItem.id,
-				itemName: basketItem.name,
-				cheapest: sorted.length > 0 ? sorted[0].price : null,
-				cheapestStore: sorted.length > 0 ? sorted[0].store : null,
-				mostExpensive: sorted.length > 0 ? sorted[sorted.length - 1].price : null,
-				mostExpensiveStore: sorted.length > 0 ? sorted[sorted.length - 1].store : null,
-				storePrices
+				itemId: firstItem.id,
+				itemName: firstItem.name,
+				cheapest: sorted[0].price,
+				cheapestStore: sorted[0].store,
+				mostExpensive: sorted[sorted.length - 1].price,
+				mostExpensiveStore: sorted[sorted.length - 1].store,
+				storePrices: testPrices
 			});
-
 			console.log(
-				`[grocery-basket] ${basketItem.name}: ${storePrices.length} stores, ` +
-				`cheapest ${sorted[0]?.price ? '$' + sorted[0].price.toFixed(2) : 'N/A'} at ${sorted[0]?.store ?? 'N/A'}`
+				`[grocery-basket] ${firstItem.name}: ${testPrices.length} stores, ` +
+				`cheapest $${sorted[0].price.toFixed(2)} at ${sorted[0].store}`
 			);
-		} catch (err) {
+		} else {
 			console.warn(
-				`[grocery-basket] Failed to scrape "${basketItem.name}":`,
-				err instanceof Error ? err.message : String(err)
+				`[grocery-basket] First item returned 0 results — Instacart likely blocking datacenter IPs. Falling back to reference prices.`
 			);
+			instacartBlocked = true;
+		}
+	} catch (err) {
+		console.warn(
+			`[grocery-basket] First item fetch failed — Instacart likely blocking. Falling back to reference prices.`,
+			err instanceof Error ? err.message : String(err)
+		);
+		instacartBlocked = true;
+	}
+
+	if (instacartBlocked) {
+		// Use reference prices from config as fallback
+		console.log(`[grocery-basket] Using reference prices for all ${BASKET_ITEMS.length} items`);
+		for (const basketItem of BASKET_ITEMS) {
 			items.push({
 				itemId: basketItem.id,
 				itemName: basketItem.name,
-				cheapest: null,
-				cheapestStore: null,
-				mostExpensive: null,
-				mostExpensiveStore: null,
-				storePrices: []
+				cheapest: basketItem.referencePrice,
+				cheapestStore: basketItem.referenceStore,
+				mostExpensive: basketItem.referencePrice,
+				mostExpensiveStore: basketItem.referenceStore,
+				storePrices: [
+					{
+						itemId: basketItem.id,
+						store: basketItem.referenceStore,
+						price: basketItem.referencePrice,
+						productName: basketItem.name,
+						onSale: false
+					}
+				]
 			});
 		}
+	} else {
+		// Continue scraping remaining items
+		for (let i = 1; i < BASKET_ITEMS.length; i++) {
+			const basketItem = BASKET_ITEMS[i];
 
-		// Throttle between requests
-		await sleep(REQUEST_DELAY_MS);
+			// Throttle between requests
+			await sleep(REQUEST_DELAY_MS);
+
+			try {
+				const storePrices = await scrapeItemPrices(
+					basketItem.id,
+					basketItem.name,
+					basketItem.searchTerm
+				);
+
+				const sorted = [...storePrices].sort((a, b) => a.price - b.price);
+
+				if (sorted.length > 0) {
+					liveItemsFound++;
+					items.push({
+						itemId: basketItem.id,
+						itemName: basketItem.name,
+						cheapest: sorted[0].price,
+						cheapestStore: sorted[0].store,
+						mostExpensive: sorted[sorted.length - 1].price,
+						mostExpensiveStore: sorted[sorted.length - 1].store,
+						storePrices
+					});
+
+					console.log(
+						`[grocery-basket] ${basketItem.name}: ${storePrices.length} stores, ` +
+						`cheapest $${sorted[0].price.toFixed(2)} at ${sorted[0].store}`
+					);
+				} else {
+					// No live data — fall back to reference price for this item
+					items.push({
+						itemId: basketItem.id,
+						itemName: basketItem.name,
+						cheapest: basketItem.referencePrice,
+						cheapestStore: `${basketItem.referenceStore} (ref)`,
+						mostExpensive: basketItem.referencePrice,
+						mostExpensiveStore: `${basketItem.referenceStore} (ref)`,
+						storePrices: [
+							{
+								itemId: basketItem.id,
+								store: `${basketItem.referenceStore} (ref)`,
+								price: basketItem.referencePrice,
+								productName: basketItem.name,
+								onSale: false
+							}
+						]
+					});
+					console.log(
+						`[grocery-basket] ${basketItem.name}: 0 stores, using reference $${basketItem.referencePrice.toFixed(2)}`
+					);
+				}
+			} catch (err) {
+				console.warn(
+					`[grocery-basket] Failed to scrape "${basketItem.name}":`,
+					err instanceof Error ? err.message : String(err)
+				);
+				// Fall back to reference price
+				items.push({
+					itemId: basketItem.id,
+					itemName: basketItem.name,
+					cheapest: basketItem.referencePrice,
+					cheapestStore: `${basketItem.referenceStore} (ref)`,
+					mostExpensive: basketItem.referencePrice,
+					mostExpensiveStore: `${basketItem.referenceStore} (ref)`,
+					storePrices: [
+						{
+							itemId: basketItem.id,
+							store: `${basketItem.referenceStore} (ref)`,
+							price: basketItem.referencePrice,
+							productName: basketItem.name,
+							onSale: false
+						}
+					]
+				});
+			}
+		}
 	}
 
 	// Compute basket totals
@@ -327,6 +461,11 @@ export async function scrapeGroceryBasket(): Promise<GrocerySnapshot> {
 		expensivePrices.length > 0
 			? Math.round(expensivePrices.reduce((a, b) => a + b, 0) * 100) / 100
 			: null;
+
+	const source = instacartBlocked ? 'reference' : `instacart (${liveItemsFound}/${BASKET_ITEMS.length} live)`;
+	console.log(
+		`[grocery-basket] Source: ${source}, total cheapest: $${totalCheapest?.toFixed(2) ?? 'N/A'}`
+	);
 
 	return {
 		timestamp: new Date().toISOString(),

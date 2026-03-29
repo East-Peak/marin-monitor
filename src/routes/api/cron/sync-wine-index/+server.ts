@@ -6,7 +6,7 @@ import { WINE_INDEX_BLOB_KEY, MAX_WINE_HISTORY } from '$lib/config/wine';
 import type { RequestHandler } from './$types';
 import type { WineIndexData, WineSnapshot } from '$lib/types/wine';
 
-export const config = { maxDuration: 120 };
+export const config = { maxDuration: 300 };
 
 /** Strip bottle listings from a snapshot to keep history entries small */
 function toHistoryEntry(

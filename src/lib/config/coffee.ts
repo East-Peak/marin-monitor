@@ -6,8 +6,8 @@ export const CAPPUCCINO_BLOB_KEY = 'marin-cappuccino.json';
 /** Max history entries (52 weeks = 1 year at weekly cadence) */
 export const MAX_CAPPUCCINO_HISTORY = 52;
 
-/** Scraping timeout per page (ms) */
-export const TOAST_PAGE_TIMEOUT = 30000;
+/** Scraping timeout per page (ms) — reduced from 30s for Vercel compatibility */
+export const TOAST_PAGE_TIMEOUT = 15000;
 
 /** Search term to find cappuccino on Toast menus */
 export const CAPPUCCINO_SEARCH_TERM = 'cappuccino';

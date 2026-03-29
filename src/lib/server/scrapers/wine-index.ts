@@ -150,14 +150,25 @@ async function fetchCollectionProducts(collectionHandle: string): Promise<WinePr
 			const response = await fetch(url, {
 				signal: controller.signal,
 				headers: {
-					'Accept': 'application/json',
-					'User-Agent': 'MarinMonitor/1.0'
+					'Accept': 'application/json, text/plain, */*',
+					'Accept-Language': 'en-US,en;q=0.9',
+					'Accept-Encoding': 'gzip, deflate, br',
+					'User-Agent':
+						'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+					'Referer': 'https://plumpjackwines.com/',
+					'Sec-Fetch-Dest': 'empty',
+					'Sec-Fetch-Mode': 'cors',
+					'Sec-Fetch-Site': 'same-origin'
 				}
 			});
 
 			if (!response.ok) {
+				// Log response body (first 500 chars) for debugging Shopify blocks
+				const bodyPreview = await response.text().catch(() => '(unreadable)');
 				console.error(
-					`[wine-index] Failed to fetch ${collectionHandle} page ${page}: HTTP ${response.status}`
+					`[wine-index] Failed to fetch ${collectionHandle} page ${page}: HTTP ${response.status}`,
+					`| Content-Type: ${response.headers.get('content-type')}`,
+					`| Body preview: ${bodyPreview.substring(0, 500)}`
 				);
 				break;
 			}

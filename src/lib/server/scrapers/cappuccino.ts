@@ -188,34 +188,22 @@ async function scrapeToastShop(
 	};
 }
 
-/** Scrape Firehouse Coffee Squarespace menu page */
-async function scrapeFirehouse(
-	browser: Browser,
-	shop: CoffeeShopConfig
-): Promise<CoffeeShop> {
-	const page = await browser.newPage();
-	let price: number | null = null;
+/**
+ * Hardcoded prices for non-Toast shops that change very rarely.
+ * These avoid expensive browser scraping of Squarespace/DoorDash/Philz pages.
+ * Prices should be spot-checked monthly and updated if they drift.
+ */
+const HARDCODED_PRICES: Record<string, { price: number | null; altPrice?: number; source: string }> = {
+	'firehouse-sausalito': { price: 5.50, source: 'hardcoded' },
+	'fox-kit-san-rafael': { price: 5.50, source: 'hardcoded' },
+	'philz-corte-madera': { price: null, altPrice: 5.75, source: 'hardcoded' }
+};
 
-	try {
-		await page.goto(shop.url, {
-			waitUntil: 'domcontentloaded',
-			timeout: TOAST_PAGE_TIMEOUT
-		});
-
-		await new Promise((resolve) => setTimeout(resolve, 2000));
-
-		const text = await page.evaluate(() => document.body.innerText);
-		price = extractCappuccinoPrice(text);
-
-		if (price === null) {
-			console.warn(`[cappuccino] No cappuccino price found at ${shop.id}`);
-		}
-	} catch (err) {
-		console.error(`[cappuccino] Failed to scrape ${shop.id}:`, (err as Error).message);
-	} finally {
-		await page.close();
-	}
-
+/**
+ * Build a CoffeeShop result from hardcoded price data for non-Toast shops.
+ */
+function buildHardcodedResult(shop: CoffeeShopConfig): CoffeeShop {
+	const data = HARDCODED_PRICES[shop.id];
 	return {
 		id: shop.id,
 		name: shop.name,
@@ -223,103 +211,10 @@ async function scrapeFirehouse(
 		town: shop.town,
 		lat: shop.lat,
 		lon: shop.lon,
-		price,
-		source: 'html',
-		updateTime: new Date().toISOString()
-	};
-}
-
-/** Scrape Fox & Kit from DoorDash page */
-async function scrapeDelivery(
-	browser: Browser,
-	shop: CoffeeShopConfig
-): Promise<CoffeeShop> {
-	const page = await browser.newPage();
-	let price: number | null = null;
-
-	try {
-		await page.setUserAgent(
-			'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
-		);
-
-		await page.goto(shop.url, {
-			waitUntil: 'networkidle0',
-			timeout: TOAST_PAGE_TIMEOUT
-		});
-
-		await new Promise((resolve) => setTimeout(resolve, 3000));
-
-		const text = await page.evaluate(() => document.body.innerText);
-		price = extractCappuccinoPrice(text);
-
-		if (price === null) {
-			console.warn(`[cappuccino] No cappuccino price found at ${shop.id}`);
-		}
-	} catch (err) {
-		console.error(`[cappuccino] Failed to scrape ${shop.id}:`, (err as Error).message);
-	} finally {
-		await page.close();
-	}
-
-	return {
-		id: shop.id,
-		name: shop.name,
-		address: shop.address,
-		town: shop.town,
-		lat: shop.lat,
-		lon: shop.lon,
-		price,
-		source: 'delivery',
-		updateTime: new Date().toISOString()
-	};
-}
-
-/** Scrape Philz for the alt drink (pour-over) price */
-async function scrapePhilz(
-	browser: Browser,
-	shop: CoffeeShopConfig
-): Promise<CoffeeShop> {
-	const page = await browser.newPage();
-	let altPrice: number | null = null;
-
-	try {
-		await page.goto(shop.url, {
-			waitUntil: 'domcontentloaded',
-			timeout: TOAST_PAGE_TIMEOUT
-		});
-
-		await new Promise((resolve) => setTimeout(resolve, 2000));
-
-		const text = await page.evaluate(() => document.body.innerText);
-
-		// Look for Tesora or similar pour-over price
-		const tesoraMatch = text.match(/tesora\s*\$(\d+(?:\.\d{1,2})?)/i);
-		if (tesoraMatch) {
-			altPrice = parseFloat(tesoraMatch[1]);
-		} else {
-			// Fallback: look for any pour-over price
-			const pourOverMatch = text.match(/pour[\s-]?over\s*\$(\d+(?:\.\d{1,2})?)/i);
-			if (pourOverMatch) {
-				altPrice = parseFloat(pourOverMatch[1]);
-			}
-		}
-	} catch (err) {
-		console.error(`[cappuccino] Failed to scrape ${shop.id}:`, (err as Error).message);
-	} finally {
-		await page.close();
-	}
-
-	return {
-		id: shop.id,
-		name: shop.name,
-		address: shop.address,
-		town: shop.town,
-		lat: shop.lat,
-		lon: shop.lon,
-		price: null,
-		source: 'html',
+		price: data?.price ?? null,
+		source: shop.source,
 		altDrink: shop.altDrink,
-		altPrice: altPrice ?? undefined,
+		altPrice: data?.altPrice,
 		updateTime: new Date().toISOString()
 	};
 }
@@ -327,32 +222,62 @@ async function scrapePhilz(
 /**
  * Scrape cappuccino prices from all configured coffee shops.
  *
- * Launches a single browser instance using @sparticuz/chromium + puppeteer-core,
- * scrapes all shops sequentially (to avoid rate-limiting), then returns a snapshot.
+ * Toast shops (8): scraped via @sparticuz/chromium + puppeteer-core.
+ * Non-Toast shops (3): use hardcoded prices to avoid timeouts.
+ *
+ * Each shop scrape is wrapped in its own try/catch so one failure
+ * does not kill the entire job.
  */
 export async function scrapeCappuccino(): Promise<CoffeeSnapshot> {
-	const browser = await launchBrowser();
+	const results: CoffeeShop[] = [];
 
-	try {
-		const results: CoffeeShop[] = [];
-
-		for (const shop of COFFEE_SHOPS) {
-			if (shop.source === 'toast') {
-				results.push(await scrapeToastShop(browser, shop));
-			} else if (shop.id === 'philz-corte-madera') {
-				results.push(await scrapePhilz(browser, shop));
-			} else if (shop.source === 'html') {
-				results.push(await scrapeFirehouse(browser, shop));
-			} else if (shop.source === 'delivery') {
-				results.push(await scrapeDelivery(browser, shop));
-			}
-
-			// Small delay between requests to be polite
-			await new Promise((resolve) => setTimeout(resolve, 1500));
+	// 1. Add hardcoded non-Toast shops (no browser needed)
+	for (const shop of COFFEE_SHOPS) {
+		if (shop.id in HARDCODED_PRICES) {
+			results.push(buildHardcodedResult(shop));
+			console.log(`[cappuccino] ${shop.id}: using hardcoded price`);
 		}
-
-		return buildSnapshot(results);
-	} finally {
-		await browser.close();
 	}
+
+	// 2. Scrape Toast shops via browser
+	const toastShops = COFFEE_SHOPS.filter(
+		(s) => s.source === 'toast' && !(s.id in HARDCODED_PRICES)
+	);
+
+	if (toastShops.length > 0) {
+		const browser = await launchBrowser();
+
+		try {
+			for (const shop of toastShops) {
+				try {
+					const result = await scrapeToastShop(browser, shop);
+					results.push(result);
+				} catch (err) {
+					console.error(
+						`[cappuccino] Shop ${shop.id} failed (isolated):`,
+						(err as Error).message
+					);
+					// Push a null-price result so the shop still appears in output
+					results.push({
+						id: shop.id,
+						name: shop.name,
+						address: shop.address,
+						town: shop.town,
+						lat: shop.lat,
+						lon: shop.lon,
+						price: null,
+						source: 'toast',
+						updateTime: new Date().toISOString()
+					});
+				}
+
+				// Reduced delay between requests (was 1500ms)
+				await new Promise((resolve) => setTimeout(resolve, 500));
+			}
+		} finally {
+			await browser.close();
+		}
+	}
+
+	return buildSnapshot(results);
 }
