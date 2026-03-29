@@ -257,12 +257,20 @@ async function scrapeToastShop(browser, shop) {
 
 	try {
 		await page.goto(shop.url, {
-			waitUntil: 'networkidle',
+			waitUntil: 'domcontentloaded',
 			timeout: TOAST_PAGE_TIMEOUT
 		});
 
-		// Wait for Toast React SPA to hydrate
-		await page.waitForTimeout(3000);
+		// Wait for Toast React SPA to hydrate and populate __OO_STATE__
+		await page.waitForFunction(
+			() => {
+				const state = window.__OO_STATE__;
+				return state && Object.keys(state).length > 1;
+			},
+			{ timeout: TOAST_PAGE_TIMEOUT }
+		).catch(() => {
+			// If state never populates, continue with what we have
+		});
 
 		// Extract __OO_STATE__ from the window
 		const ooState = await page.evaluate(() => {
