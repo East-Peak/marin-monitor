@@ -12,7 +12,8 @@
 		ConditionsPanel,
 		WastewaterPanel,
 		AirportStatusPanel,
-		CappuccinoPanel
+		CappuccinoPanel,
+		GroceryBasketPanel
 	} from '$lib/components/panels';
 	import { settings, allNewsItems } from '$lib/stores';
 	import type { WeatherData, FireWeatherAlert, EarthquakeData } from '$lib/types';
@@ -130,6 +131,12 @@
 		{#if isPanelVisible('gas-prices')}
 			<div class="signal-card signal-gas-prices animate-enter-up stagger-3 hover-lift">
 				<GasPricesPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('grocery-basket')}
+			<div class="signal-card signal-grocery-basket animate-enter-up stagger-4 hover-lift">
+				<GroceryBasketPanel />
 			</div>
 		{/if}
 
