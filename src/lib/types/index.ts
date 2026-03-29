@@ -24,7 +24,7 @@ export type VerificationLevel = 'official' | 'local_media' | 'community' | 'sati
 /**
  * Map layer toggles
  */
-export type MapLayer = 'civic' | 'news' | 'safety' | 'housing' | 'activity' | 'satire' | 'gas' | 'ev-charging';
+export type MapLayer = 'civic' | 'news' | 'safety' | 'housing' | 'activity' | 'satire' | 'gas' | 'ev-charging' | 'coffee';
 
 /**
  * A news item from any local source
@@ -234,3 +234,9 @@ export type {
 	StravaSeedSegment
 } from './strava';
 
+export type {
+	CoffeeSource,
+	CoffeeShop,
+	CoffeeSnapshot,
+	CoffeeData
+} from './coffee';
