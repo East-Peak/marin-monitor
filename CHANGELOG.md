@@ -4,6 +4,20 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-03-29
+
+### Added
+- **Cappuccino Index** — Gas-prices-style map showing cappuccino prices at 11 Marin coffee shops (Equator, Marin Coffee Roasters, Firehouse, Fox & Kit, Philz). Map pins with toggle. Weekly cron.
+- **The Bare Essentials** — 12-item Marin grocery basket tracked via Instacart (Vital Farms eggs, Marin Kombucha, Silver Oak cab, collagen, manuka honey, etc.). Weekly cron with sparkline trend.
+- **Wine Index** — Premium wine market tracker powered by PlumpJack Shopify API. Category medians for Napa/Sonoma Cab, Burgundy, and Champagne. Staff picks and allocated wines listings. Weekly cron.
+- **Marin Private School Tuition Index** — 7 schools across 4 tiers (preschool through high school), shown as percentage of median household income. Cumulative K-12 cost: $698,998. Monthly cron.
+- **Fitness Drop-in Index** — Drop-in class prices at 16 studios across yoga ($27-39), pilates ($45-55), cycling ($39), CrossFit ($25), and HIIT ($29). Map pins color-coded by type. Monthly cron.
+- **The Marin Driveway** — Vehicle registration data from California DMV. Top makes (Toyota #1, Tesla #3), fuel type breakdown (8.3% EV), fun stats (68 hydrogen fuel cells, 12 Lucids). Monthly cron.
+- **Cost of Being Marin** — Composite index with tiered sub-scores (Daily Life, Lifestyle, Housing, Structural). The Marin Number: $21,110/mo ($253,320/yr). Weekly cron.
+- **Coffee and Fitness map layers** with toggle controls.
+
+---
+
 ## 2026-03-28
 
 ### Added

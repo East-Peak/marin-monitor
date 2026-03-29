@@ -14,6 +14,48 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-03-29',
+		title: 'Cost of Being Marin',
+		description:
+			'Composite index with tiered sub-scores (Daily Life, Lifestyle, Housing, Structural). The Marin Number: $21,110/mo ($253,320/yr).'
+	},
+	{
+		date: '2026-03-29',
+		title: 'The Marin Driveway',
+		description:
+			'Vehicle registration data from California DMV. Top makes, fuel type breakdown (8.3% EV), and fun stats like 68 hydrogen fuel cells and 12 Lucids.'
+	},
+	{
+		date: '2026-03-29',
+		title: 'Fitness Drop-in Index',
+		description:
+			'Drop-in class prices at 16 studios across yoga, pilates, cycling, CrossFit, and HIIT. Map pins color-coded by type.'
+	},
+	{
+		date: '2026-03-29',
+		title: 'Marin Private School Tuition Index',
+		description:
+			'7 schools across 4 tiers (preschool through high school), shown as percentage of median household income. Cumulative K-12 cost: $698,998.'
+	},
+	{
+		date: '2026-03-29',
+		title: 'Wine Index',
+		description:
+			'Premium wine market tracker powered by PlumpJack Shopify API. Category medians for Napa/Sonoma Cab, Burgundy, and Champagne. Staff picks and allocated wines.'
+	},
+	{
+		date: '2026-03-29',
+		title: 'The Bare Essentials',
+		description:
+			'12-item Marin grocery basket tracked via Instacart. Vital Farms eggs, Marin Kombucha, Silver Oak cab, and more with sparkline trends.'
+	},
+	{
+		date: '2026-03-29',
+		title: 'Cappuccino Index',
+		description:
+			'Gas-prices-style map showing cappuccino prices at 11 Marin coffee shops. Map pins with toggle.'
+	},
+	{
 		date: '2026-03-28',
 		title: 'Strava KOM Tracker',
 		description:
