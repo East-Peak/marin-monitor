@@ -248,3 +248,12 @@ export type {
 	GrocerySnapshot,
 	GroceryBasketData
 } from './grocery';
+
+export type {
+	WineProduct,
+	WineCategory,
+	WineCategorySnapshot,
+	WineStaffPick,
+	WineSnapshot,
+	WineIndexData
+} from './wine';
