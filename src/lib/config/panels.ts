@@ -33,7 +33,8 @@ export type PanelId =
 	| 'wastewater'
 	| 'airport-status'
 	| 'cappuccino'
-	| 'grocery-basket';
+	| 'grocery-basket'
+	| 'wine-index';
 
 export const PANELS: Record<PanelId, PanelConfig> = {
 	map: { name: 'Marin Map', priority: 1, description: 'County map with layered data' },
@@ -136,6 +137,11 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 		name: 'The Bare Essentials',
 		priority: 3,
 		description: '12-item grocery basket tracked weekly via Instacart'
+	},
+	'wine-index': {
+		name: 'Wine Index',
+		priority: 3,
+		description: 'Premium wine category medians and curated picks via PlumpJack'
 	}
 };
 
@@ -161,6 +167,7 @@ export const DEFAULT_PANEL_ORDER: PanelId[] = [
 	'grocery-basket',
 	'ev-charging',
 	'cappuccino',
+	'wine-index',
 	'cycling',
 	'leaderboards',
 	'shows',

@@ -19,3 +19,4 @@ export { default as AirportStatusPanel } from './AirportStatusPanel.svelte';
 export { default as LeaderboardsPanel } from './LeaderboardsPanel.svelte';
 export { default as CappuccinoPanel } from './CappuccinoPanel.svelte';
 export { default as GroceryBasketPanel } from './GroceryBasketPanel.svelte';
+export { default as WineIndexPanel } from './WineIndexPanel.svelte';
