@@ -22,3 +22,4 @@ export { default as GroceryBasketPanel } from './GroceryBasketPanel.svelte';
 export { default as WineIndexPanel } from './WineIndexPanel.svelte';
 export { default as SchoolTuitionPanel } from './SchoolTuitionPanel.svelte';
 export { default as FitnessPanel } from './FitnessPanel.svelte';
+export { default as DrivewayPanel } from './DrivewayPanel.svelte';

@@ -16,7 +16,8 @@
 		GroceryBasketPanel,
 		WineIndexPanel,
 		SchoolTuitionPanel,
-		FitnessPanel
+		FitnessPanel,
+		DrivewayPanel
 	} from '$lib/components/panels';
 	import { settings, allNewsItems } from '$lib/stores';
 	import type { WeatherData, FireWeatherAlert, EarthquakeData } from '$lib/types';
@@ -170,6 +171,12 @@
 		{#if isPanelVisible('fitness')}
 			<div class="signal-card signal-fitness animate-enter-up stagger-4 hover-lift">
 				<FitnessPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('driveway')}
+			<div class="signal-card signal-driveway animate-enter-up stagger-4 hover-lift">
+				<DrivewayPanel />
 			</div>
 		{/if}
 	</div>

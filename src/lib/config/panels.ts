@@ -36,7 +36,8 @@ export type PanelId =
 	| 'grocery-basket'
 	| 'wine-index'
 	| 'school-tuition'
-	| 'fitness';
+	| 'fitness'
+	| 'driveway';
 
 export const PANELS: Record<PanelId, PanelConfig> = {
 	map: { name: 'Marin Map', priority: 1, description: 'County map with layered data' },
@@ -154,6 +155,11 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 		name: 'Fitness Drop-in Index',
 		priority: 3,
 		description: 'Drop-in class prices at fitness studios across Marin, color-coded by type'
+	},
+	driveway: {
+		name: 'The Marin Driveway Index',
+		priority: 3,
+		description: 'Vehicle registrations by make and fuel type from California DMV data'
 	}
 };
 
@@ -182,6 +188,7 @@ export const DEFAULT_PANEL_ORDER: PanelId[] = [
 	'wine-index',
 	'school-tuition',
 	'fitness',
+	'driveway',
 	'cycling',
 	'leaderboards',
 	'shows',
