@@ -240,3 +240,11 @@ export type {
 	CoffeeSnapshot,
 	CoffeeData
 } from './coffee';
+
+export type {
+	BasketItem,
+	ItemPriceResult,
+	BasketItemPrices,
+	GrocerySnapshot,
+	GroceryBasketData
+} from './grocery';
