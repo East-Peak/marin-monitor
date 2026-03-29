@@ -35,7 +35,8 @@ export type PanelId =
 	| 'cappuccino'
 	| 'grocery-basket'
 	| 'wine-index'
-	| 'school-tuition';
+	| 'school-tuition'
+	| 'fitness';
 
 export const PANELS: Record<PanelId, PanelConfig> = {
 	map: { name: 'Marin Map', priority: 1, description: 'County map with layered data' },
@@ -148,6 +149,11 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 		name: 'Private School Tuition Index',
 		priority: 3,
 		description: 'Marin private school tuition by level as a percentage of median household income'
+	},
+	fitness: {
+		name: 'Fitness Drop-in Index',
+		priority: 3,
+		description: 'Drop-in class prices at fitness studios across Marin, color-coded by type'
 	}
 };
 
@@ -175,6 +181,7 @@ export const DEFAULT_PANEL_ORDER: PanelId[] = [
 	'cappuccino',
 	'wine-index',
 	'school-tuition',
+	'fitness',
 	'cycling',
 	'leaderboards',
 	'shows',

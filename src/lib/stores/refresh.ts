@@ -28,7 +28,7 @@ export const REFRESH_STAGES: StageConfig[] = [
 	},
 	{
 		name: 'tertiary',
-		categories: ['housing', 'gas-prices', 'ev-charging', 'cappuccino', 'grocery-basket', 'wine-index', 'school-tuition', 'satire', 'earthquakes', 'strava'],
+		categories: ['housing', 'gas-prices', 'ev-charging', 'cappuccino', 'grocery-basket', 'wine-index', 'school-tuition', 'fitness', 'satire', 'earthquakes', 'strava'],
 		delayMs: 4000
 	}
 ];

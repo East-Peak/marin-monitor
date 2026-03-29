@@ -38,10 +38,11 @@
 		satire: 'Marin Lately',
 		gas: 'Gas',
 		'ev-charging': 'EV',
-		coffee: 'Coffee'
+		coffee: 'Coffee',
+		fitness: 'Fitness'
 	};
 
-	const LAYER_ORDER: MapLayer[] = ['news', 'safety', 'civic', 'activity', 'housing', 'gas', 'ev-charging', 'coffee', 'satire'];
+	const LAYER_ORDER: MapLayer[] = ['news', 'safety', 'civic', 'activity', 'housing', 'gas', 'ev-charging', 'coffee', 'fitness', 'satire'];
 
 	function toggleLayer(layer: MapLayer) {
 		mapStore.toggleLayer(layer);

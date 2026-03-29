@@ -24,7 +24,7 @@ export type VerificationLevel = 'official' | 'local_media' | 'community' | 'sati
 /**
  * Map layer toggles
  */
-export type MapLayer = 'civic' | 'news' | 'safety' | 'housing' | 'activity' | 'satire' | 'gas' | 'ev-charging' | 'coffee';
+export type MapLayer = 'civic' | 'news' | 'safety' | 'housing' | 'activity' | 'satire' | 'gas' | 'ev-charging' | 'coffee' | 'fitness';
 
 /**
  * A news item from any local source
@@ -265,3 +265,10 @@ export type {
 	SchoolSnapshot,
 	SchoolIndexData
 } from './school';
+
+export type {
+	FitnessType,
+	FitnessStudio,
+	FitnessSnapshot,
+	FitnessData
+} from './fitness';

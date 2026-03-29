@@ -8,8 +8,10 @@
 	import { TOWN_BY_SLUG } from '$lib/config/towns';
 	import { currentGasStations } from '$lib/stores/gas-prices';
 	import { currentCoffeeShops } from '$lib/stores/cappuccino';
+	import { currentFitnessStudios } from '$lib/stores/fitness';
 	import { currentChargingStations } from '$lib/stores/ev-charging';
 	import { MARIN_TOWNS, LAYER_COLORS, MARIN_BOUNDS } from '$lib/config';
+	import { TYPE_COLORS as FITNESS_TYPE_COLORS, TYPE_LABELS as FITNESS_TYPE_LABELS } from '$lib/config/fitness';
 	import { FIRE_ZONES, LANDMARKS, AIRPORT_PINS, AIRPORT_STATUS_COLORS } from '$lib/config/map';
 	import { fetchAirportStatus } from '$lib/api/marin/airport-status';
 	import type { AirportStatus } from '$lib/types/airport';
@@ -37,7 +39,7 @@
 		onTownHover?: (townSlug: string | null) => void;
 		onPinClick?: (itemId: string) => void;
 		onFeatureClick?: (feature: {
-			kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station' | 'ev-charging-station' | 'coffee-shop' | 'airport';
+			kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station' | 'ev-charging-station' | 'coffee-shop' | 'fitness-studio' | 'airport';
 			title: string;
 			subtitle?: string;
 			description?: string;
@@ -446,6 +448,12 @@
 			data: { type: 'FeatureCollection', features: [] }
 		});
 
+		// Fitness studios source
+		map.addSource('fitness-studios', {
+			type: 'geojson',
+			data: { type: 'FeatureCollection', features: [] }
+		});
+
 		// --- Layers ---
 
 		// Town boundary highlight (renders beneath everything)
@@ -798,6 +806,40 @@
 			}
 		});
 
+		// Fitness studio dots (type-colored)
+		map.addLayer({
+			id: 'fitness-studios-layer',
+			type: 'circle',
+			source: 'fitness-studios',
+			paint: {
+				'circle-radius': 5,
+				'circle-color': ['get', 'color'],
+				'circle-opacity': 0.8,
+				'circle-stroke-width': 1,
+				'circle-stroke-color': 'rgba(10, 10, 10, 0.8)'
+			}
+		});
+
+		// Fitness studio labels (visible at higher zoom)
+		map.addLayer({
+			id: 'fitness-studios-label',
+			type: 'symbol',
+			source: 'fitness-studios',
+			minzoom: 12,
+			layout: {
+				'text-field': ['concat', ['get', 'name'], '\n', ['get', 'price']],
+				'text-size': 9,
+				'text-offset': [0, 1.4],
+				'text-anchor': 'top',
+				'text-optional': true
+			},
+			paint: {
+				'text-color': '#ec4899',
+				'text-halo-color': 'rgba(10, 10, 10, 0.9)',
+				'text-halo-width': 1.5
+			}
+		});
+
 		// News pins (small dots per item)
 		map.addLayer({
 			id: 'news-pins-layer',
@@ -992,6 +1034,22 @@
 				});
 			});
 
+			map.on('click', 'fitness-studios-layer', (e: MapLayerMouseEvent) => {
+				if (clickHitsVisibleStravaFeature(map, e)) return;
+				const feature = e.features?.[0];
+				const name = String(feature?.properties?.name ?? 'Fitness Studio');
+				const price = String(feature?.properties?.price ?? '');
+				const typeName = String(feature?.properties?.typeName ?? '');
+				const town = String(feature?.properties?.town ?? '');
+				onFeatureClick?.({
+					kind: 'fitness-studio',
+					title: name,
+					subtitle: price ? `Drop-in: ${price}` : 'Price unavailable',
+					description: [typeName, town].filter(Boolean).join(' \u00b7 '),
+					source: 'Marin Monitor'
+				});
+			});
+
 			map.on('click', 'fire-incidents-layer', (e: MapLayerMouseEvent) => {
 				if (clickHitsVisibleStravaFeature(map, e)) return;
 				const feature = e.features?.[0];
@@ -1053,6 +1111,14 @@
 			});
 
 			map.on('mouseleave', 'coffee-shops-layer', () => {
+				map.getCanvas().style.cursor = '';
+			});
+
+			map.on('mouseenter', 'fitness-studios-layer', () => {
+				map.getCanvas().style.cursor = 'pointer';
+			});
+
+			map.on('mouseleave', 'fitness-studios-layer', () => {
 				map.getCanvas().style.cursor = '';
 			});
 
@@ -1405,6 +1471,51 @@
 			);
 		}
 
+		// Fitness studios
+		const fitnessStudios = get(currentFitnessStudios);
+		const mapFitnessVisible = mapState.activeLayers['fitness'];
+		const fitnessFeatures: GeoJSON.Feature[] = mapFitnessVisible
+			? fitnessStudios
+					.filter(
+						(s) =>
+							!currentTownFilter || findNearestTown(s.lat, s.lon) === currentTownFilter
+					)
+					.map((s) => ({
+						type: 'Feature' as const,
+						geometry: {
+							type: 'Point' as const,
+							coordinates: [s.lon, s.lat]
+						},
+						properties: {
+							name: s.name,
+							price: `$${s.dropInPrice}`,
+							town: s.town,
+							typeName: FITNESS_TYPE_LABELS[s.type],
+							color: FITNESS_TYPE_COLORS[s.type]
+						}
+					}))
+			: [];
+
+		const fitnessSource = map.getSource('fitness-studios') as GeoJSONSource;
+		if (fitnessSource) {
+			fitnessSource.setData({ type: 'FeatureCollection', features: fitnessFeatures });
+		}
+
+		if (map.getLayer('fitness-studios-layer')) {
+			map.setLayoutProperty(
+				'fitness-studios-layer',
+				'visibility',
+				mapFitnessVisible ? 'visible' : 'none'
+			);
+		}
+		if (map.getLayer('fitness-studios-label')) {
+			map.setLayoutProperty(
+				'fitness-studios-label',
+				'visibility',
+				mapFitnessVisible ? 'visible' : 'none'
+			);
+		}
+
 		applyTrafficVisibility(map);
 	}
 
@@ -1467,6 +1578,7 @@
 	let unsubscribeGas: (() => void) | null = null;
 	let unsubscribeEv: (() => void) | null = null;
 	let unsubscribeCoffee: (() => void) | null = null;
+	let unsubscribeFitness: (() => void) | null = null;
 	let updateDataTimer: ReturnType<typeof setTimeout> | null = null;
 
 	onMount(() => {
@@ -1549,6 +1661,17 @@
 					updateDataTimer = setTimeout(() => {
 						const m = getMap();
 						if (!m || !m.getSource('coffee-shops')) return;
+						updateData(m);
+					}, 100);
+				});
+			}
+
+			if (!unsubscribeFitness) {
+				unsubscribeFitness = currentFitnessStudios.subscribe(() => {
+					if (updateDataTimer) clearTimeout(updateDataTimer);
+					updateDataTimer = setTimeout(() => {
+						const m = getMap();
+						if (!m || !m.getSource('fitness-studios')) return;
 						updateData(m);
 					}, 100);
 				});
@@ -1642,6 +1765,7 @@
 		unsubscribeGas?.();
 		unsubscribeEv?.();
 		unsubscribeCoffee?.();
+		unsubscribeFitness?.();
 		unsubscribeTownFilter?.();
 		if (trafficRefreshTimer) {
 			clearInterval(trafficRefreshTimer);

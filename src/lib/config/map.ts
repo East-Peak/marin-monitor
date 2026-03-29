@@ -28,7 +28,8 @@ export const LAYER_COLORS = {
 	satire: '#ec4899', // pink — dashed outline
 	gas: '#22d3ee', // cyan
 	'ev-charging': '#a855f7', // purple
-	coffee: '#a16207' // warm brown
+	coffee: '#a16207', // warm brown
+	fitness: '#ec4899' // pink
 } as const;
 
 /**
