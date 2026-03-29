@@ -73,9 +73,11 @@ function extractProducts(shopifyResponse) {
 			price,
 			compareAtPrice,
 			available: variant.available,
-			tags: product.tags
-				? product.tags.split(',').map((t) => t.trim()).filter(Boolean)
-				: []
+			tags: Array.isArray(product.tags)
+				? product.tags
+				: typeof product.tags === 'string'
+					? product.tags.split(',').map((t) => t.trim()).filter(Boolean)
+					: []
 		});
 	}
 	return results;
