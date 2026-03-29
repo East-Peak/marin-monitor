@@ -34,7 +34,8 @@ export type PanelId =
 	| 'airport-status'
 	| 'cappuccino'
 	| 'grocery-basket'
-	| 'wine-index';
+	| 'wine-index'
+	| 'school-tuition';
 
 export const PANELS: Record<PanelId, PanelConfig> = {
 	map: { name: 'Marin Map', priority: 1, description: 'County map with layered data' },
@@ -142,6 +143,11 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 		name: 'Wine Index',
 		priority: 3,
 		description: 'Premium wine category medians and curated picks via PlumpJack'
+	},
+	'school-tuition': {
+		name: 'Private School Tuition Index',
+		priority: 3,
+		description: 'Marin private school tuition by level as a percentage of median household income'
 	}
 };
 
@@ -168,6 +174,7 @@ export const DEFAULT_PANEL_ORDER: PanelId[] = [
 	'ev-charging',
 	'cappuccino',
 	'wine-index',
+	'school-tuition',
 	'cycling',
 	'leaderboards',
 	'shows',

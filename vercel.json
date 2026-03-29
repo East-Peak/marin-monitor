@@ -9,6 +9,7 @@
 		{ "path": "/api/cron/sync-strava-leaderboards", "schedule": "0 12 * * *" },
 		{ "path": "/api/cron/sync-cappuccino", "schedule": "0 8 * * 1" },
 		{ "path": "/api/cron/sync-grocery-basket", "schedule": "0 9 * * 0" },
-		{ "path": "/api/cron/sync-wine-index", "schedule": "0 10 * * 0" }
+		{ "path": "/api/cron/sync-wine-index", "schedule": "0 10 * * 0" },
+		{ "path": "/api/cron/sync-school-tuition", "schedule": "0 12 1 * *" }
 	]
 }

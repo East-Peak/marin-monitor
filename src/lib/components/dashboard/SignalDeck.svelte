@@ -14,7 +14,8 @@
 		AirportStatusPanel,
 		CappuccinoPanel,
 		GroceryBasketPanel,
-		WineIndexPanel
+		WineIndexPanel,
+		SchoolTuitionPanel
 	} from '$lib/components/panels';
 	import { settings, allNewsItems } from '$lib/stores';
 	import type { WeatherData, FireWeatherAlert, EarthquakeData } from '$lib/types';
@@ -156,6 +157,12 @@
 		{#if isPanelVisible('wine-index')}
 			<div class="signal-card signal-wine-index animate-enter-up stagger-4 hover-lift">
 				<WineIndexPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('school-tuition')}
+			<div class="signal-card signal-school-tuition animate-enter-up stagger-4 hover-lift">
+				<SchoolTuitionPanel />
 			</div>
 		{/if}
 	</div>

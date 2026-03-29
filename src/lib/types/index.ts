@@ -257,3 +257,11 @@ export type {
 	WineSnapshot,
 	WineIndexData
 } from './wine';
+
+export type {
+	SchoolLevel,
+	School,
+	TuitionTier,
+	SchoolSnapshot,
+	SchoolIndexData
+} from './school';
