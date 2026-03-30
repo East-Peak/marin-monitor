@@ -29,7 +29,7 @@
 
 	{#if alerts.length > 0}
 		<div class="p-3 border-b border-gray-800/50 space-y-1.5">
-			{#each alerts.slice(0, 3) as alert (alert.id)}
+			{#each alerts.slice(0, 3) as alert, i (alert.id + '-' + i)}
 				<div class="bg-red-900/30 border border-red-700/50 rounded px-2 py-1.5">
 					<span class="text-[10px] font-bold text-red-400 uppercase">Alert</span>
 					<p class="text-xs text-gray-200 mt-0.5 line-clamp-1">{alert.title}</p>
@@ -41,7 +41,7 @@
 	{#if stories.length > 0}
 		<div class="p-3 space-y-1.5">
 			<h4 class="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1">Nearby</h4>
-			{#each stories.slice(0, 6) as item (item.id)}
+			{#each stories.slice(0, 6) as item, i (item.id + '-' + i)}
 				<div class="bg-gray-800/40 rounded px-2 py-1.5 border border-gray-700/30">
 					<p class="text-xs text-gray-200 line-clamp-2">{item.title}</p>
 					<div class="flex items-center gap-1 mt-0.5">

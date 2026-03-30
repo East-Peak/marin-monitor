@@ -12,7 +12,7 @@
 
 	{#if activeAlerts.length > 0}
 		<div class="flex gap-2 shrink-0 overflow-x-auto">
-			{#each activeAlerts as alert (alert.id)}
+			{#each activeAlerts as alert, i (alert.id + '-' + i)}
 				<div class="bg-red-900/30 border border-red-700/50 rounded px-3 py-2 shrink-0 max-w-sm">
 					<span class="text-[10px] font-bold text-red-400 uppercase">Alert</span>
 					<p class="text-xs text-gray-200 mt-0.5 line-clamp-1">{alert.title}</p>
