@@ -1,17 +1,21 @@
 <script lang="ts">
+	import { settings } from '$lib/stores';
+	import { allNewsItems } from '$lib/stores';
+	import type { PanelId } from '$lib/config/panels';
+	import type { WeatherData, FireWeatherAlert, EarthquakeData } from '$lib/types';
 	import {
-		WeatherPanel,
-		TidesPanel,
 		PulsePanel,
+		WeatherPanel,
 		OutlooksPanel,
-		SignalsPanel,
+		TidesPanel,
+		EnvironmentPanel,
+		ConditionsPanel,
+		AirportStatusPanel,
+		WastewaterPanel,
 		HousingPanel,
 		GasPricesPanel,
 		EvChargingPanel,
-		EnvironmentPanel,
-		ConditionsPanel,
-		WastewaterPanel,
-		AirportStatusPanel,
+		SignalsPanel,
 		CappuccinoPanel,
 		GroceryBasketPanel,
 		WineIndexPanel,
@@ -20,9 +24,6 @@
 		DrivewayPanel,
 		CompositePanel
 	} from '$lib/components/panels';
-	import { settings, allNewsItems } from '$lib/stores';
-	import type { WeatherData, FireWeatherAlert, EarthquakeData } from '$lib/types';
-	import type { PanelId } from '$lib/config';
 
 	interface Props {
 		weatherForecast: (WeatherData & { name: string })[];
@@ -35,175 +36,6 @@
 	}
 
 	let { weatherForecast, weatherAlerts, weatherLoading, weatherError, userLocation, earthquakesRaw, isPanelVisible }: Props = $props();
-
-	type PanelEntry = {
-		key: string;
-		visible: boolean;
-		className: string;
-		component: any;
-		props: any;
-	};
-
-	const leftColumnPanels = $derived.by<PanelEntry[]>(() => [
-		{
-			key: 'composite',
-			visible: isPanelVisible('composite'),
-			className: 'signal-composite animate-enter-up stagger-1 hover-lift',
-			component: CompositePanel,
-			props: {}
-		},
-		{
-			key: 'pulse',
-			visible: isPanelVisible('pulse'),
-			className: 'signal-pulse animate-enter-up stagger-1 hover-lift',
-			component: PulsePanel,
-			props: { forecast: weatherForecast, weatherAlerts, earthquakes: earthquakesRaw }
-		},
-		{
-			key: 'wine-index',
-			visible: isPanelVisible('wine-index'),
-			className: 'signal-wine-index animate-enter-up stagger-2 hover-lift',
-			component: WineIndexPanel,
-			props: {}
-		},
-		{
-			key: 'conditions',
-			visible: isPanelVisible('conditions'),
-			className: 'signal-conditions animate-enter-up stagger-3 hover-lift',
-			component: ConditionsPanel,
-			props: {}
-		},
-		{
-			key: 'airport-status',
-			visible: isPanelVisible('airport-status'),
-			className: 'signal-airport-status animate-enter-up stagger-3 hover-lift',
-			component: AirportStatusPanel,
-			props: {}
-		},
-		{
-			key: 'wastewater',
-			visible: isPanelVisible('wastewater'),
-			className: 'signal-wastewater animate-enter-up stagger-3 hover-lift',
-			component: WastewaterPanel,
-			props: {}
-		},
-		{
-			key: 'signals',
-			visible: isPanelVisible('narrative') || isPanelVisible('correlation'),
-			className: 'signal-signals animate-enter-up stagger-4 hover-lift',
-			component: SignalsPanel,
-			props: { news: $allNewsItems }
-		}
-	]);
-
-	const middleColumnPanels = $derived.by<PanelEntry[]>(() => [
-		{
-			key: 'weather',
-			visible: isPanelVisible('weather'),
-			className: 'signal-weather animate-enter-up stagger-1 hover-lift',
-			component: WeatherPanel,
-			props: {
-				forecast: weatherForecast,
-				alerts: weatherAlerts,
-				loading: weatherLoading,
-				error: weatherError,
-				locationLat: userLocation.lat,
-				locationLon: userLocation.lon,
-				locationName: userLocation.name
-			}
-		},
-		{
-			key: 'outlooks',
-			visible: isPanelVisible('weather'),
-			className: 'signal-outlooks animate-enter-up stagger-2 hover-lift',
-			component: OutlooksPanel,
-			props: {
-				forecast: weatherForecast,
-				loading: weatherLoading,
-				error: weatherError,
-				locationLat: userLocation.lat,
-				locationLon: userLocation.lon
-			}
-		},
-		{
-			key: 'tides',
-			visible: isPanelVisible('weather'),
-			className: 'signal-tides animate-enter-up stagger-3 hover-lift',
-			component: TidesPanel,
-			props: {
-				tideStation: userLocation.tideStation,
-				tideStationName: userLocation.tideStationName,
-				locationLat: userLocation.lat,
-				locationLon: userLocation.lon
-			}
-		},
-		{
-			key: 'environment',
-			visible: isPanelVisible('weather'),
-			className: 'signal-environment animate-enter-up stagger-4 hover-lift',
-			component: EnvironmentPanel,
-			props: {}
-		},
-		{
-			key: 'housing',
-			visible: isPanelVisible('housing'),
-			className: 'signal-housing animate-enter-up stagger-4 hover-lift',
-			component: HousingPanel,
-			props: {}
-		},
-		{
-			key: 'cappuccino',
-			visible: isPanelVisible('cappuccino'),
-			className: 'signal-cappuccino animate-enter-up stagger-4 hover-lift',
-			component: CappuccinoPanel,
-			props: {}
-		},
-		{
-			key: 'school-tuition',
-			visible: isPanelVisible('school-tuition'),
-			className: 'signal-school-tuition animate-enter-up stagger-4 hover-lift',
-			component: SchoolTuitionPanel,
-			props: {}
-		}
-	]);
-
-	const rightColumnPanels = $derived.by<PanelEntry[]>(() => [
-		{
-			key: 'gas-prices',
-			visible: isPanelVisible('gas-prices'),
-			className: 'signal-gas-prices animate-enter-up stagger-2 hover-lift',
-			component: GasPricesPanel,
-			props: {}
-		},
-		{
-			key: 'grocery-basket',
-			visible: isPanelVisible('grocery-basket'),
-			className: 'signal-grocery-basket animate-enter-up stagger-3 hover-lift',
-			component: GroceryBasketPanel,
-			props: {}
-		},
-		{
-			key: 'ev-charging',
-			visible: isPanelVisible('ev-charging'),
-			className: 'signal-ev-charging animate-enter-up stagger-3 hover-lift',
-			component: EvChargingPanel,
-			props: {}
-		},
-		{
-			key: 'fitness',
-			visible: isPanelVisible('fitness'),
-			className: 'signal-fitness animate-enter-up stagger-4 hover-lift',
-			component: FitnessPanel,
-			props: {}
-		},
-		{
-			key: 'driveway',
-			visible: isPanelVisible('driveway'),
-			className: 'signal-driveway animate-enter-up stagger-4 hover-lift',
-			component: DrivewayPanel,
-			props: {}
-		}
-	]);
 </script>
 
 <!-- Dashboard collapse toggle -->
@@ -219,33 +51,142 @@
 <!-- Signal deck -->
 <div class="signal-layout" class:collapsed={!$settings.dashboardExpanded}>
 	<div class="signal-column signal-column-left">
-		{#each leftColumnPanels as panel (panel.key)}
-			{#if panel.visible}
-				<div class={`signal-card ${panel.className}`}>
-					<panel.component {...panel.props} />
-				</div>
-			{/if}
-		{/each}
+		{#if isPanelVisible('composite')}
+			<div class="signal-card signal-composite animate-enter-up stagger-1 hover-lift">
+				<CompositePanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('pulse')}
+			<div class="signal-card signal-pulse animate-enter-up stagger-1 hover-lift">
+				<PulsePanel forecast={weatherForecast} {weatherAlerts} earthquakes={earthquakesRaw} />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('wine-index')}
+			<div class="signal-card signal-wine-index animate-enter-up stagger-2 hover-lift">
+				<WineIndexPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('conditions')}
+			<div class="signal-card signal-conditions animate-enter-up stagger-3 hover-lift">
+				<ConditionsPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('airport-status')}
+			<div class="signal-card signal-airport-status animate-enter-up stagger-3 hover-lift">
+				<AirportStatusPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('wastewater')}
+			<div class="signal-card signal-wastewater animate-enter-up stagger-3 hover-lift">
+				<WastewaterPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('narrative') || isPanelVisible('correlation')}
+			<div class="signal-card signal-signals animate-enter-up stagger-4 hover-lift">
+				<SignalsPanel news={$allNewsItems} />
+			</div>
+		{/if}
 	</div>
 
 	<div class="signal-column signal-column-middle">
-		{#each middleColumnPanels as panel (panel.key)}
-			{#if panel.visible}
-				<div class={`signal-card ${panel.className}`}>
-					<panel.component {...panel.props} />
-				</div>
-			{/if}
-		{/each}
+		{#if isPanelVisible('weather')}
+			<div class="signal-card signal-weather animate-enter-up stagger-1 hover-lift">
+				<WeatherPanel
+					forecast={weatherForecast}
+					alerts={weatherAlerts}
+					loading={weatherLoading}
+					error={weatherError}
+					locationLat={userLocation.lat}
+					locationLon={userLocation.lon}
+					locationName={userLocation.name}
+				/>
+			</div>
+		{/if}
+
+		{#if isPanelVisible('weather')}
+			<div class="signal-card signal-outlooks animate-enter-up stagger-2 hover-lift">
+				<OutlooksPanel
+					forecast={weatherForecast}
+					loading={weatherLoading}
+					error={weatherError}
+					locationLat={userLocation.lat}
+					locationLon={userLocation.lon}
+				/>
+			</div>
+		{/if}
+
+		{#if isPanelVisible('weather')}
+			<div class="signal-card signal-tides animate-enter-up stagger-3 hover-lift">
+				<TidesPanel
+					tideStation={userLocation.tideStation}
+					tideStationName={userLocation.tideStationName}
+					locationLat={userLocation.lat}
+					locationLon={userLocation.lon}
+				/>
+			</div>
+		{/if}
+
+		{#if isPanelVisible('weather')}
+			<div class="signal-card signal-environment animate-enter-up stagger-4 hover-lift">
+				<EnvironmentPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('housing')}
+			<div class="signal-card signal-housing animate-enter-up stagger-4 hover-lift">
+				<HousingPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('cappuccino')}
+			<div class="signal-card signal-cappuccino animate-enter-up stagger-4 hover-lift">
+				<CappuccinoPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('school-tuition')}
+			<div class="signal-card signal-school-tuition animate-enter-up stagger-4 hover-lift">
+				<SchoolTuitionPanel />
+			</div>
+		{/if}
 	</div>
 
 	<div class="signal-column signal-column-right">
-		{#each rightColumnPanels as panel (panel.key)}
-			{#if panel.visible}
-				<div class={`signal-card ${panel.className}`}>
-					<panel.component {...panel.props} />
-				</div>
-			{/if}
-		{/each}
+		{#if isPanelVisible('gas-prices')}
+			<div class="signal-card signal-gas-prices animate-enter-up stagger-2 hover-lift">
+				<GasPricesPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('grocery-basket')}
+			<div class="signal-card signal-grocery-basket animate-enter-up stagger-3 hover-lift">
+				<GroceryBasketPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('ev-charging')}
+			<div class="signal-card signal-ev-charging animate-enter-up stagger-3 hover-lift">
+				<EvChargingPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('fitness')}
+			<div class="signal-card signal-fitness animate-enter-up stagger-4 hover-lift">
+				<FitnessPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('driveway')}
+			<div class="signal-card signal-driveway animate-enter-up stagger-4 hover-lift">
+				<DrivewayPanel />
+			</div>
+		{/if}
 	</div>
 </div>
 
@@ -259,64 +200,79 @@
 		border: none;
 		background: none;
 		cursor: pointer;
-		color: var(--text-dim);
-		font-size: 0.55rem;
-		font-weight: 600;
+		color: var(--text-secondary);
+		font-size: 0.7rem;
 		text-transform: uppercase;
 		letter-spacing: 0.1em;
 		transition: color 0.2s;
 	}
-
 	.dash-toggle:hover {
-		color: var(--text-secondary);
+		color: var(--text-primary);
 	}
-
 	.dash-toggle-line {
 		flex: 1;
 		height: 1px;
-		background: rgba(255, 255, 255, 0.06);
+		background: var(--border-subtle);
 	}
-
 	.dash-toggle-label {
 		display: flex;
 		align-items: center;
 		gap: 0.3rem;
 		white-space: nowrap;
 	}
-
 	.dash-toggle-chevron {
-		font-size: 0.5rem;
+		font-size: 0.6rem;
 	}
-
 	.signal-layout {
 		display: grid;
-		grid-template-columns: 1fr 1.2fr 1fr;
+		grid-template-columns: repeat(3, 1fr);
 		gap: 1rem;
-		margin-top: 0.5rem;
+		padding: 0.5rem 0;
 		transition: all 0.3s ease;
 	}
-
 	.signal-layout.collapsed {
 		display: none;
 	}
-
 	.signal-column {
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
 	}
-
 	.signal-card {
-		min-width: 0;
+		background: var(--card-bg);
+		border: 1px solid var(--border-subtle);
+		border-radius: 0.5rem;
+		padding: 0.75rem;
+		transition: border-color 0.2s;
 	}
-
-	@media (max-width: 1320px) {
+	.hover-lift:hover {
+		border-color: var(--border-hover);
+	}
+	.animate-enter-up {
+		animation: enter-up 0.3s ease-out both;
+	}
+	.stagger-1 { animation-delay: 0ms; }
+	.stagger-2 { animation-delay: 50ms; }
+	.stagger-3 { animation-delay: 100ms; }
+	.stagger-4 { animation-delay: 150ms; }
+	@keyframes enter-up {
+		from {
+			opacity: 0;
+			transform: translateY(8px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+	@media (max-width: 1024px) {
+		.signal-layout {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+	@media (max-width: 640px) {
 		.signal-layout {
 			grid-template-columns: 1fr;
-		}
-
-		.signal-column {
-			display: contents;
 		}
 	}
 </style>
