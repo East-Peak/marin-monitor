@@ -35,6 +35,7 @@ export interface IkonPassData {
 		familyOf4: number;
 		monthlyAmortized: number;
 		scraped: boolean;
+		lastSuccessfulScrapeAt?: string | null;
 		lastLiveScrapeAt?: string | null;
 	} | null;
 }
@@ -45,6 +46,7 @@ export interface DogWalkerData {
 		monthlyAt3xWeek: number;
 		walkerCount: number;
 		scraped: boolean;
+		lastSuccessfulScrapeAt?: string | null;
 		lastLiveScrapeAt?: string | null;
 	} | null;
 }
@@ -54,6 +56,7 @@ export interface RivianLeaseData {
 		leaseMonthly: number;
 		msrp: number;
 		scraped: boolean;
+		lastSuccessfulScrapeAt?: string | null;
 		lastLiveScrapeAt?: string | null;
 	} | null;
 }

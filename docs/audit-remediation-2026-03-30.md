@@ -120,18 +120,19 @@ This document captures the findings from the full Marin Monitor audit and tracks
 ## Verification Results
 
 - `npm run check`: passed with `0` errors and `55` warnings. Remaining warnings are pre-existing accessibility and Svelte state/style cleanup in dashboard and chart components.
+- `npm run check`: passed with `0` errors and `0` warnings.
 - `npm run test:unit`: passed with `33` files and `383` tests.
-- `npm run build`: passed. Build still emits the same warning class as `npm run check`, plus existing bundle-size and optional dependency notices.
+- `npm run build`: passed. Build still emits non-blocking chunk-size, `agentation` bundling, and optional dependency notices.
 
 ## Residual Follow-up
 
-- Accessibility warnings remain in interactive SVG charts, `TownPicker.svelte`, and `LayoutEditMode.svelte`.
-- `src/routes/+page.svelte` still has `state_referenced_locally` warnings and unused CSS selectors that should be cleaned up separately.
-- The fallback freshness fix now preserves `lastLiveScrapeAt`, but the broader freshness model would still benefit from a standardized `lastSuccessfulScrapeAt` shape across all scrapers.
+- `npm run build` still emits non-blocking chunk-size and optional-dependency notices that are separate from `svelte-check`.
+- The fallback-backed composite input scrapers now preserve `lastSuccessfulScrapeAt`, but the broader freshness model is still not standardized across the full scraper fleet.
 
 ## Progress Log
 
 - 2026-03-30: tracker created from the audit findings; implementation work started.
 - 2026-03-30: health endpoint, map typing, layer initialization, config drift, grocery matching, composite source accounting, activity date handling, and proxy hardening fixes implemented.
 - 2026-03-30: panel cleanup, docs refresh, shared script helper extraction, and `SignalDeck.svelte` simplification completed.
-- 2026-03-30: verification completed with passing `check`, `test:unit`, and `build`; remaining warnings documented for follow-up.
+- 2026-03-30: `+page.svelte`, `TownPicker`, `LayoutEditMode`, and chart accessibility cleanup completed; `svelte-check` now passes with zero warnings.
+- 2026-03-30: fallback-backed composite input scrapers now emit `lastSuccessfulScrapeAt` in addition to the legacy `lastLiveScrapeAt` field.

@@ -169,7 +169,10 @@ async function main() {
 	const monthlyAmortized = Math.round(familyOf4 / 12);
 	const nowIso = new Date().toISOString();
 	const scrapedLive = !!(prices.adult || prices.child);
-	const lastLiveScrapeAt = scrapedLive ? nowIso : (existing.current?.lastLiveScrapeAt ?? null);
+	const lastSuccessfulScrapeAt = scrapedLive
+		? nowIso
+		: (existing.current?.lastSuccessfulScrapeAt ?? existing.current?.lastLiveScrapeAt ?? null);
+	const lastLiveScrapeAt = lastSuccessfulScrapeAt;
 
 	const snapshot = {
 		timestamp: nowIso,
@@ -180,6 +183,7 @@ async function main() {
 		monthlyAmortized,
 		scraped: scrapedLive,
 		source: scrapedLive ? 'ikonpass.com' : 'fallback',
+		lastSuccessfulScrapeAt,
 		lastLiveScrapeAt
 	};
 

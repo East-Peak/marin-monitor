@@ -153,7 +153,10 @@ async function main() {
 	const leaseMonthly = scraped.leaseMonthly || 899;
 	const msrp = scraped.msrp || 79900;
 	const nowIso = new Date().toISOString();
-	const lastLiveScrapeAt = hasLiveData ? nowIso : (existing.current?.lastLiveScrapeAt ?? null);
+	const lastSuccessfulScrapeAt = hasLiveData
+		? nowIso
+		: (existing.current?.lastSuccessfulScrapeAt ?? existing.current?.lastLiveScrapeAt ?? null);
+	const lastLiveScrapeAt = lastSuccessfulScrapeAt;
 
 	const snapshot = {
 		timestamp: nowIso,
@@ -161,6 +164,7 @@ async function main() {
 		msrp,
 		scraped: hasLiveData,
 		source: hasLiveData ? 'rivian.com' : 'fallback',
+		lastSuccessfulScrapeAt,
 		lastLiveScrapeAt
 	};
 

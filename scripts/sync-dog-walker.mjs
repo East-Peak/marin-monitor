@@ -218,7 +218,10 @@ async function main() {
 	// Dog walker component only — the static item covers the full dog cost
 	const monthlyWalkerOnly = monthlyAt3xWeek;
 	const nowIso = new Date().toISOString();
-	const lastLiveScrapeAt = scraped ? nowIso : (existing.current?.lastLiveScrapeAt ?? null);
+	const lastSuccessfulScrapeAt = scraped
+		? nowIso
+		: (existing.current?.lastSuccessfulScrapeAt ?? existing.current?.lastLiveScrapeAt ?? null);
+	const lastLiveScrapeAt = lastSuccessfulScrapeAt;
 
 	const snapshot = {
 		timestamp: nowIso,
@@ -231,6 +234,7 @@ async function main() {
 		monthlyWalkerOnly,
 		scraped,
 		source: scraped ? 'thumbtack.com' : 'fallback',
+		lastSuccessfulScrapeAt,
 		lastLiveScrapeAt
 	};
 
