@@ -33,7 +33,7 @@ export interface DataSourceStatus {
 }
 
 /** All monitored data sources and their freshness expectations */
-export const DATA_SOURCES: DataSourceConfig[] = [
+export const _DATA_SOURCES: DataSourceConfig[] = [
 	{ name: 'Gas Prices', blobKey: 'marin-gas-prices.json', expectedCadence: 'daily', maxAgeDays: 2 },
 	{ name: 'Housing', blobKey: 'marin-housing.json', expectedCadence: 'monthly', maxAgeDays: 45 },
 	{ name: 'Cappuccino Index', blobKey: 'marin-cappuccino.json', expectedCadence: 'weekly', maxAgeDays: 10 },

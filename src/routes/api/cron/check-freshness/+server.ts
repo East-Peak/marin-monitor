@@ -10,7 +10,7 @@
 import { head } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
 import { verifyCronAuth } from '$lib/server/cron-auth';
-import { DATA_SOURCES } from '../../health/+server';
+import { _DATA_SOURCES } from '../../health/+server';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ request }) => {
@@ -22,7 +22,7 @@ export const GET: RequestHandler = async ({ request }) => {
 	const staleEntries: { name: string; blobKey: string; ageDays: number | null; maxAgeDays: number }[] = [];
 	const errors: { name: string; blobKey: string; error: string }[] = [];
 
-	for (const config of DATA_SOURCES) {
+	for (const config of _DATA_SOURCES) {
 		try {
 			const blob = await head(config.blobKey, { token });
 			const uploadedAt = blob.uploadedAt?.toISOString() ?? null;
@@ -70,10 +70,10 @@ export const GET: RequestHandler = async ({ request }) => {
 
 	const totalProblems = staleEntries.length + errors.length;
 	if (totalProblems === 0) {
-		console.log(`[check-freshness] All ${DATA_SOURCES.length} data sources are fresh.`);
+		console.log(`[check-freshness] All ${_DATA_SOURCES.length} data sources are fresh.`);
 	} else {
 		console.error(
-			`[check-freshness] ${totalProblems} problem(s): ${staleEntries.length} stale, ${errors.length} errors out of ${DATA_SOURCES.length} sources.`
+			`[check-freshness] ${totalProblems} problem(s): ${staleEntries.length} stale, ${errors.length} errors out of ${_DATA_SOURCES.length} sources.`
 		);
 	}
 
@@ -82,7 +82,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			{
 				ok: totalProblems === 0,
 				timestamp: new Date().toISOString(),
-				totalSources: DATA_SOURCES.length,
+				totalSources: _DATA_SOURCES.length,
 				stale: staleEntries,
 				errors
 			},
