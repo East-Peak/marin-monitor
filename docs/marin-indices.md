@@ -762,6 +762,14 @@ Candidates for improvement:
 - Rowing/regatta calendar
 - Other seasonal event sources that are currently scraped poorly
 
+### FixItMarin (backlog)
+
+Research in progress. https://www.marincounty.gov/how-do-i/fixitmarin — county issue/report tracker (potholes, graffiti, infrastructure issues, etc.). Could be an interesting civic data layer on the map — pins showing reported issues by type, status, and location. Need to determine: what platform powers it (SeeClickFix?), whether there's a public API, and what data is available.
+
+### Nextdoor Integration (backlog)
+
+Nextdoor is a walled garden — no public API, requires login. But the same Chrome+MCP browser automation approach used for Strava and LinkedIn scraping could work here with a logged-in session. Could pull local posts, alerts, community discussions, neighborhood-level sentiment. Requires setting up a Nextdoor account/login and using browser automation to scrape while logged in.
+
 ### Bullish / Bearish on Marin (backlog)
 
 Status: BACKLOG (for future consideration)
