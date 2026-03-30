@@ -17,7 +17,7 @@
 	import { TOWN_BY_SLUG } from '$lib/config';
 	import { fetchFireIncidents } from '$lib/api/marin';
 	import type { FireIncident } from '$lib/api/marin/calfire';
-	import type { NewsItem } from '$lib/types';
+	import type { MapFeatureInspectorData, NewsItem } from '$lib/types';
 
 	interface Props {
 		earthquakes?: NewsItem[];
@@ -47,22 +47,7 @@
 		  };
 
 	let inspectorState = $state<InspectorState | null>(null);
-	let featureInspector = $state<{
-		kind:
-			| 'landmark'
-			| 'fire-zone'
-			| 'traffic-event'
-			| 'earthquake'
-			| 'fire-incident'
-			| 'gas-station'
-			| 'ev-charging-station'
-			| 'airport';
-		title: string;
-		subtitle?: string;
-		description?: string;
-		severity?: string;
-		source?: string;
-	} | null>(null);
+	let featureInspector = $state<MapFeatureInspectorData | null>(null);
 
 	// Count items without location
 	const noLocationCount = $derived($allNewsItems.filter((i) => !i.townSlug).length);
@@ -147,22 +132,7 @@
 		featureInspector = null;
 	}
 
-	function handleFeatureClick(feature: {
-		kind:
-			| 'landmark'
-			| 'fire-zone'
-			| 'traffic-event'
-			| 'earthquake'
-			| 'fire-incident'
-			| 'gas-station'
-			| 'ev-charging-station'
-			| 'airport';
-		title: string;
-		subtitle?: string;
-		description?: string;
-		severity?: string;
-		source?: string;
-	}) {
+	function handleFeatureClick(feature: MapFeatureInspectorData) {
 		featureInspector = feature;
 		inspectorState = null;
 	}

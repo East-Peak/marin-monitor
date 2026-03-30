@@ -9,30 +9,7 @@
  */
 
 import { put, head } from '@vercel/blob';
-
-// ---- Proxy support ----
-const PROXY_URL = process.env.SCRAPE_PROXY_URL;
-const PROXY_SECRET = process.env.SCRAPE_PROXY_SECRET;
-
-async function proxyFetch(url, options = {}) {
-	if (PROXY_URL && PROXY_SECRET) {
-		try {
-			const res = await fetch(`${PROXY_URL}/proxy`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${PROXY_SECRET}` },
-				body: JSON.stringify({ url, headers: options.headers || {}, method: options.method || 'GET', timeout: 30000 })
-			});
-			if (res.ok) {
-				const result = await res.json();
-				return { ok: result.status >= 200 && result.status < 300, status: result.status, text: async () => result.data, json: async () => JSON.parse(result.data) };
-			}
-			console.warn(`[proxy] Proxy returned ${res.status}, falling back to direct fetch`);
-		} catch (err) {
-			console.warn(`[proxy] Proxy failed: ${err.message}, falling back to direct fetch`);
-		}
-	}
-	return fetch(url, options);
-}
+import { proxyFetch } from './shared/proxy-fetch.mjs';
 
 const BLOB_KEY = 'marin-dog-walker.json';
 const MAX_HISTORY = 24; // 2 years at monthly
@@ -223,23 +200,6 @@ async function main() {
 	const weeksPerMonth = 4.3;
 	const monthlyAt3xWeek = Math.round(medianWalkPrice * walksPerWeek * weeksPerMonth);
 
-	// "The Dog" monthly (walks + grooming + food + vet amortized)
-	// Dog walker component only — the static item covers the full dog cost
-	const monthlyWalkerOnly = monthlyAt3xWeek;
-
-	const snapshot = {
-		timestamp: new Date().toISOString(),
-		walkerCount: walkerPrices.length,
-		medianWalkPrice,
-		avgWalkPrice,
-		minWalkPrice,
-		maxWalkPrice,
-		monthlyAt3xWeek,
-		monthlyWalkerOnly,
-		scraped,
-		source: scraped ? 'thumbtack.com' : 'fallback'
-	};
-
 	// Read existing blob
 	let existing = { current: null, history: [] };
 	try {
@@ -253,6 +213,26 @@ async function main() {
 	} catch {
 		console.log('[sync-dog-walker] No existing blob, starting fresh');
 	}
+
+	// "The Dog" monthly (walks + grooming + food + vet amortized)
+	// Dog walker component only — the static item covers the full dog cost
+	const monthlyWalkerOnly = monthlyAt3xWeek;
+	const nowIso = new Date().toISOString();
+	const lastLiveScrapeAt = scraped ? nowIso : (existing.current?.lastLiveScrapeAt ?? null);
+
+	const snapshot = {
+		timestamp: nowIso,
+		walkerCount: walkerPrices.length,
+		medianWalkPrice,
+		avgWalkPrice,
+		minWalkPrice,
+		maxWalkPrice,
+		monthlyAt3xWeek,
+		monthlyWalkerOnly,
+		scraped,
+		source: scraped ? 'thumbtack.com' : 'fallback',
+		lastLiveScrapeAt
+	};
 
 	// Append history
 	const history = [snapshot, ...existing.history].slice(0, MAX_HISTORY);

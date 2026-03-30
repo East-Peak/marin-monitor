@@ -9,7 +9,7 @@
 		FUEL_TYPE_COLORS,
 		FUEL_TYPE_ORDER
 	} from '$lib/config/driveway';
-	import type { DrivewayData, FuelBreakdown } from '$lib/types/driveway';
+	import type { DrivewayData } from '$lib/types/driveway';
 
 	let data = $state<DrivewayData>({ current: null, history: [] });
 	let dataLoading = $state(false);
@@ -25,12 +25,6 @@
 
 	// Max count for bar scaling
 	const maxMakeCount = $derived(current?.topMakes[0]?.count ?? 1);
-
-	// Non-gasoline fuel types for the breakdown (gasoline gets its own stat)
-	const altFuelTypes = $derived.by<FuelBreakdown[]>(() => {
-		if (!current?.fuelBreakdown) return [];
-		return current.fuelBreakdown.filter((f) => f.fuelType !== 'gasoline');
-	});
 
 	// Gasoline percentage for headline stat
 	const gasPct = $derived(

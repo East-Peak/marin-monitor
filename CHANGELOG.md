@@ -7,7 +7,7 @@ All notable changes to Marin Monitor are documented here.
 ## 2026-03-29
 
 ### Added
-- **Cappuccino Index** — Gas-prices-style map showing cappuccino prices at 11 Marin coffee shops (Equator, Marin Coffee Roasters, Firehouse, Fox & Kit, Philz). Map pins with toggle. Weekly cron.
+- **Cappuccino Index** — Gas-prices-style map showing cappuccino prices at 12 Marin coffee shops (Equator, Marin Coffee Roasters, Firehouse, Fox & Kit, Philz, Red Whale). Map pins with toggle. Weekly cron.
 - **The Bare Essentials** — 12-item Marin grocery basket tracked via Instacart (Vital Farms eggs, Marin Kombucha, Silver Oak cab, collagen, manuka honey, etc.). Weekly cron with sparkline trend.
 - **Wine Index** — Premium wine market tracker powered by PlumpJack Shopify API. Category medians for Napa/Sonoma Cab, Burgundy, and Champagne. Staff picks and allocated wines listings. Weekly cron.
 - **Marin Private School Tuition Index** — 7 schools across 4 tiers (preschool through high school), shown as percentage of median household income. Cumulative K-12 cost: $698,998. Monthly cron.

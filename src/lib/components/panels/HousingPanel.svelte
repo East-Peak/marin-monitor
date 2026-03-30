@@ -425,6 +425,8 @@
 				<svg
 					class="chart-svg price-chart-svg"
 					bind:this={priceSvg}
+					role="img"
+					aria-label="12 month median sale price chart"
 					onpointermove={(event) => updateHover(event, 'price')}
 					onpointerleave={clearHover}
 				></svg>
@@ -460,6 +462,8 @@
 				<svg
 					class="chart-svg inventory-chart-svg"
 					bind:this={inventorySvg}
+					role="img"
+					aria-label="12 month housing inventory chart"
 					onpointermove={(event) => updateHover(event, 'inventory')}
 					onpointerleave={clearHover}
 				></svg>

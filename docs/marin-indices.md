@@ -706,13 +706,13 @@ Cadence:
 
 ## Map Layer Architecture
 
-The Cappuccino Index and Fitness Drop-in Index both use gas-prices-style map pins. These should be implemented as toggleable map layers on the existing Marin map, alongside existing layers (Civic, News, Safety, Housing, Activity, Satire, Traffic).
+The Cappuccino Index and Fitness Drop-in Index both use gas-prices-style map pins. These should be implemented as toggleable map layers on the existing Marin map, alongside existing layers (Civic, News, Safety, Housing, Activity, Gas, EV, Coffee, Fitness, Satire, Traffic).
 
 New map layers needed:
 
-- Coffee: pins for each coffee shop with cappuccino price (11 locations)
-- Fitness: pins for each studio with drop-in price, color-coded by type (18+ locations)
-- Both default ON or OFF depending on UX decision
+- Coffee: pins for each coffee shop with cappuccino price (12 locations)
+- Fitness: pins for each studio with drop-in price, color-coded by type (16 locations)
+- Both default ON in the current map UI
 
 Toggle/filter design:
 

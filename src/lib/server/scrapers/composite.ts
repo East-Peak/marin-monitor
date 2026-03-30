@@ -35,6 +35,7 @@ export interface IkonPassData {
 		familyOf4: number;
 		monthlyAmortized: number;
 		scraped: boolean;
+		lastLiveScrapeAt?: string | null;
 	} | null;
 }
 
@@ -44,6 +45,7 @@ export interface DogWalkerData {
 		monthlyAt3xWeek: number;
 		walkerCount: number;
 		scraped: boolean;
+		lastLiveScrapeAt?: string | null;
 	} | null;
 }
 
@@ -52,6 +54,7 @@ export interface RivianLeaseData {
 		leaseMonthly: number;
 		msrp: number;
 		scraped: boolean;
+		lastLiveScrapeAt?: string | null;
 	} | null;
 }
 
@@ -215,6 +218,22 @@ export function getRivianMonthly(data: RivianLeaseData | null): number | null {
 	return data?.current?.leaseMonthly ?? null;
 }
 
+function hasLiveHousingData(housing: HousingMetric[] | null): boolean {
+	return getHousingPITI(housing) !== null;
+}
+
+function hasLiveIkonData(data: IkonPassData | null): boolean {
+	return data?.current?.scraped === true;
+}
+
+function hasLiveDogWalkerData(data: DogWalkerData | null): boolean {
+	return data?.current?.scraped === true;
+}
+
+function hasLiveRivianData(data: RivianLeaseData | null): boolean {
+	return data?.current?.scraped === true;
+}
+
 /**
  * Build a complete composite snapshot from all available index data.
  */
@@ -265,7 +284,7 @@ export function buildCompositeSnapshot(inputs: CompositeInputs): CompositeSnapsh
 		{
 			label: 'Housing (PITI on median home)',
 			monthly: housingPITI,
-			source: 'live',
+			source: hasLiveHousingData(inputs.housing) ? 'live' : 'static',
 			sourceIndex: 'housing'
 		},
 		{
@@ -309,24 +328,24 @@ export function buildCompositeSnapshot(inputs: CompositeInputs): CompositeSnapsh
 	// Build upgraded static items — replace values with live data when available
 	const upgradedStaticItems: MarinNumberItem[] = STATIC_MARIN_NUMBER_ITEMS.map((item) => {
 		switch (item.sourceIndex) {
-			case 'rivian-lease':
-				return {
-					...item,
-					monthly: rivianLease,
-					source: getRivianMonthly(inputs.rivianLease) !== null ? 'live' : 'static'
-				};
-			case 'dog-walker':
-				return {
-					...item,
-					monthly: dogMonthly,
-					source: getDogMonthly(inputs.dogWalker) !== null ? 'live' : 'static'
-				};
-			case 'ikon-pass':
-				return {
-					...item,
-					monthly: skiSeason,
-					source: getSkiMonthly(inputs.ikonPass) !== null ? 'live' : 'static'
-				};
+				case 'rivian-lease':
+					return {
+						...item,
+						monthly: rivianLease,
+						source: hasLiveRivianData(inputs.rivianLease) ? 'live' : 'static'
+					};
+				case 'dog-walker':
+					return {
+						...item,
+						monthly: dogMonthly,
+						source: hasLiveDogWalkerData(inputs.dogWalker) ? 'live' : 'static'
+					};
+				case 'ikon-pass':
+					return {
+						...item,
+						monthly: skiSeason,
+						source: hasLiveIkonData(inputs.ikonPass) ? 'live' : 'static'
+					};
 			case 'camp-prices':
 				return {
 					...item,

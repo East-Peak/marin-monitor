@@ -231,6 +231,8 @@
 	loadSavedEditLayout();
 </script>
 
+<svelte:window onpointermove={handleDragMove} onpointerup={endDrag} onpointercancel={endDrag} />
+
 <div class="layout-edit-toolbar">
 	<div class="layout-edit-copy">
 		<span class="layout-edit-title">Layout Edit Mode</span>
@@ -244,23 +246,21 @@
 <div
 	class="layout-edit-grid"
 	bind:this={editGridEl}
-	onpointermove={handleDragMove}
-	onpointerup={endDrag}
-	onpointercancel={endDrag}
-	onpointerleave={endDrag}
 >
 	{#each editableTiles as tile (tile.id)}
 		{#if tile.visible}
 			<div class="layout-edit-tile" style={tileStyle(tile.id)}>
-				<div
+				<button
 					class="layout-edit-handle"
+					type="button"
+					aria-label={`Move ${tile.title}`}
 					onpointerdown={(event) => beginDrag(event, tile.id, 'move')}
 				>
 					<span>{tile.title}</span>
 					<span class="layout-edit-size">
 						{editLayout[tile.id].w}x{editLayout[tile.id].h}
 					</span>
-				</div>
+				</button>
 				<div class="layout-edit-panel">
 					{#if tile.id === 'map'}
 						<MapPanel earthquakes={earthquakeItems} />
@@ -405,11 +405,15 @@
 		top: 0;
 		left: 0;
 		right: 0;
+		width: 100%;
 		z-index: 2;
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
 		padding: 0.35rem 0.5rem;
+		border: 0;
+		text-align: left;
+		font: inherit;
 		font-size: 0.65rem;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;

@@ -8,6 +8,7 @@
 import { head } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
+import { hasValidCronAuth } from '$lib/server/cron-auth';
 import type { RequestHandler } from './$types';
 
 type Cadence = 'daily' | 'weekly' | 'monthly';
@@ -33,7 +34,7 @@ export interface DataSourceStatus {
 }
 
 /** All monitored data sources and their freshness expectations */
-export const _DATA_SOURCES: DataSourceConfig[] = [
+const DATA_SOURCES: DataSourceConfig[] = [
 	{ name: 'Gas Prices', blobKey: 'marin-gas-prices.json', expectedCadence: 'daily', maxAgeDays: 2 },
 	{ name: 'Housing', blobKey: 'marin-housing.json', expectedCadence: 'monthly', maxAgeDays: 45 },
 	{ name: 'Cappuccino Index', blobKey: 'marin-cappuccino.json', expectedCadence: 'weekly', maxAgeDays: 10 },
@@ -49,6 +50,7 @@ export const _DATA_SOURCES: DataSourceConfig[] = [
 	{ name: 'Strava Segments', blobKey: 'strava-segments.json', expectedCadence: 'weekly', maxAgeDays: 10 },
 	{ name: 'Strava Events', blobKey: 'strava-events.json', expectedCadence: 'daily', maxAgeDays: 2 }
 ];
+export const _DATA_SOURCES = DATA_SOURCES;
 
 /** Check a single blob's freshness */
 async function checkSource(
@@ -97,9 +99,18 @@ async function checkSource(
 }
 
 /** Optionally check the local proxy health */
-async function checkProxyHealth(): Promise<Record<string, unknown> | null> {
+async function checkProxyHealth(proxyUrl: string, proxySecret: string): Promise<Record<string, unknown> | null> {
 	try {
-		const res = await fetchWithTimeout('http://100.67.183.14:8889/health', {}, 3000);
+		const healthUrl = new URL('/health', proxyUrl).toString();
+		const res = await fetchWithTimeout(
+			healthUrl,
+			{
+				headers: {
+					Authorization: `Bearer ${proxySecret}`
+				}
+			},
+			3000
+		);
 		if (res.ok) {
 			return (await res.json()) as Record<string, unknown>;
 		}
@@ -109,27 +120,37 @@ async function checkProxyHealth(): Promise<Record<string, unknown> | null> {
 	}
 }
 
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ request }) => {
 	const now = Date.now();
 	const token = env.BLOB_READ_WRITE_TOKEN ?? '';
+	const includeInternal = hasValidCronAuth(request);
 
 	// Check all data sources in parallel
 	const sources = await Promise.all(
 		DATA_SOURCES.map((config) => checkSource(config, now, token))
 	);
 
-	// Check API key availability
-	const apiKeys = [
-		{ name: 'GOOGLE_PLACES_API_KEY', set: !!env.GOOGLE_PLACES_API_KEY },
-		{ name: 'NREL_API_KEY', set: !!env.NREL_API_KEY },
-		{ name: 'OPEN_CHARGE_MAP_API_KEY', set: !!env.OPEN_CHARGE_MAP_API_KEY },
-		{ name: 'BLOB_READ_WRITE_TOKEN', set: !!env.BLOB_READ_WRITE_TOKEN },
-		{ name: 'CRON_SECRET', set: !!env.CRON_SECRET },
-		{ name: 'API_511_KEY', set: !!env.API_511_KEY }
-	];
-
-	// Check proxy health (non-blocking, omitted if unreachable)
-	const proxyHealth = await checkProxyHealth();
+	let internal: Record<string, unknown> | undefined;
+	if (includeInternal) {
+		const apiKeys = [
+			{ name: 'GOOGLE_PLACES_API_KEY', set: !!env.GOOGLE_PLACES_API_KEY },
+			{ name: 'NREL_API_KEY', set: !!env.NREL_API_KEY },
+			{ name: 'OPEN_CHARGE_MAP_API_KEY', set: !!env.OPEN_CHARGE_MAP_API_KEY },
+			{ name: 'BLOB_READ_WRITE_TOKEN', set: !!env.BLOB_READ_WRITE_TOKEN },
+			{ name: 'CRON_SECRET', set: !!env.CRON_SECRET },
+			{ name: 'API_511_KEY', set: !!env.API_511_KEY },
+			{ name: 'SCRAPE_PROXY_URL', set: !!env.SCRAPE_PROXY_URL },
+			{ name: 'SCRAPE_PROXY_SECRET', set: !!env.SCRAPE_PROXY_SECRET }
+		];
+		const proxyHealth =
+			env.SCRAPE_PROXY_URL && env.SCRAPE_PROXY_SECRET
+				? await checkProxyHealth(env.SCRAPE_PROXY_URL, env.SCRAPE_PROXY_SECRET)
+				: null;
+		internal = {
+			apiKeys,
+			...(proxyHealth ? { proxy: proxyHealth } : {})
+		};
+	}
 
 	const staleCount = sources.filter((s) => s.isStale).length;
 	const errorCount = sources.filter((s) => s.status === 'error').length;
@@ -145,13 +166,12 @@ export const GET: RequestHandler = async () => {
 					ok: sources.filter((s) => s.status === 'ok').length,
 					stale: staleCount,
 					error: errorCount
+					},
+					sources,
+					...(internal ? { internal } : {})
 				},
-				sources,
-				apiKeys,
-				...(proxyHealth && { proxy: proxyHealth })
-			},
-			null,
-			2
+				null,
+				2
 		),
 		{
 			headers: {

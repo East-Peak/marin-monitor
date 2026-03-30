@@ -14,3 +14,8 @@ export function verifyCronAuth(request: Request): Response | null {
 	}
 	return null;
 }
+
+export function hasValidCronAuth(request: Request): boolean {
+	const secret = env.CRON_SECRET;
+	return Boolean(secret && request.headers.get('authorization') === `Bearer ${secret}`);
+}

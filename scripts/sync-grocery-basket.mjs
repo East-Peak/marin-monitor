@@ -12,49 +12,8 @@
  */
 
 import { put, head } from '@vercel/blob';
-
-// ---- Proxy support ----
-
-const PROXY_URL = process.env.SCRAPE_PROXY_URL;
-const PROXY_SECRET = process.env.SCRAPE_PROXY_SECRET;
-
-/**
- * Fetch a URL, optionally routing through the residential proxy.
- * Falls back to direct fetch if proxy is not configured or fails.
- */
-async function proxyFetch(url, options = {}) {
-	if (PROXY_URL && PROXY_SECRET) {
-		try {
-			const res = await fetch(`${PROXY_URL}/proxy`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${PROXY_SECRET}`
-				},
-				body: JSON.stringify({
-					url,
-					headers: options.headers || {},
-					method: options.method || 'GET',
-					timeout: 30000
-				})
-			});
-			if (res.ok) {
-				const result = await res.json();
-				return {
-					ok: result.status >= 200 && result.status < 300,
-					status: result.status,
-					text: async () => result.data,
-					json: async () => JSON.parse(result.data),
-					headers: new Map(Object.entries(result.headers || {}))
-				};
-			}
-			console.warn(`[proxy] Proxy returned ${res.status}, falling back to direct fetch`);
-		} catch (err) {
-			console.warn(`[proxy] Proxy failed: ${err.message}, falling back to direct fetch`);
-		}
-	}
-	return fetch(url, options);
-}
+import { proxyFetch } from './shared/proxy-fetch.mjs';
+import { scoreGroceryPriceMatch } from '../src/lib/shared/grocery-basket-matching.js';
 
 // ---- Config (from src/lib/config/grocery-basket.ts) ----
 
@@ -193,51 +152,8 @@ function buildSearchUrl(searchTerm) {
 	return `${INSTACART_BASE}?k=${encodeURIComponent(searchTerm)}`;
 }
 
-/**
- * Brand-specific key terms that MUST ALL appear in the candidate name for a match.
- * This prevents e.g. any random cab sauv from matching "Silver Oak".
- */
-const BRAND_KEY_TERMS = {
-	'vital-farms-eggs': ['vital', 'farms'],
-	'marin-kombucha': ['marin', 'kombucha'],
-	'oatly-oatmilk': ['oatly'],
-	'san-luis-sourdough': ['san', 'luis'],
-	'marys-chicken': ['marys'],
-	'earthbound-kale': ['earthbound'],
-	'manuka-honey': ['manuka'],
-	'justins-almond-butter': ['justins'],
-	'open-nature-salmon': ['open', 'nature', 'salmon'],
-	'silver-oak-cabernet': ['silver', 'oak'],
-	'vital-proteins-collagen': ['vital', 'proteins']
-};
-
 function scorePriceMatch(candidateName, targetName, itemId = null) {
-	const normalize = (s) =>
-		s
-			.toLowerCase()
-			.replace(/[^a-z0-9\s]/g, '')
-			.split(/\s+/)
-			.filter((w) => w.length > 0);
-
-	const targetWords = normalize(targetName);
-	const candidateWords = new Set(normalize(candidateName));
-
-	if (targetWords.length === 0) return 0;
-
-	// Brand key-term gate: if the item has required brand terms, ALL must be present
-	if (itemId && BRAND_KEY_TERMS[itemId]) {
-		const required = BRAND_KEY_TERMS[itemId];
-		for (const term of required) {
-			if (!candidateWords.has(term)) return 0;
-		}
-	}
-
-	let matches = 0;
-	for (const word of targetWords) {
-		if (candidateWords.has(word)) matches++;
-	}
-
-	return Math.round((matches / targetWords.length) * 100) / 100;
+	return scoreGroceryPriceMatch(candidateName, targetName, itemId);
 }
 
 function parseInstacartResults(html) {

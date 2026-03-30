@@ -117,6 +117,10 @@ Toggleable layers on the Marin map:
 - **Safety** — Fire alerts, emergency announcements, road closures
 - **Housing** — Recent transactions, market activity
 - **Activity** — Local events, races, community
+- **Gas** — Station price pins and county pricing context
+- **EV** — Charging station pins and availability context
+- **Coffee** — Cappuccino shop price pins
+- **Fitness** — Studio price pins by class type
 - **Satire** — Marin Lately "unconfirmed reports" (clearly labeled)
 - **Traffic** — Mapbox congestion lines + 511 incident points
 

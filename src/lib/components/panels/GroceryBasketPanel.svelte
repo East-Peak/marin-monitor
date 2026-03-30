@@ -261,6 +261,8 @@
 				<svg
 					class="chart-svg"
 					bind:this={chartSvg}
+					role="img"
+					aria-label="Grocery basket cost trend"
 					onpointermove={updateHover}
 					onpointerleave={clearHover}
 				></svg>

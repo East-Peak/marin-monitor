@@ -135,18 +135,6 @@ async function main() {
 
 	const hasLiveData = !!(scraped.leaseMonthly || scraped.msrp);
 
-	// Use scraped or fallback values
-	const leaseMonthly = scraped.leaseMonthly || 899;
-	const msrp = scraped.msrp || 79900;
-
-	const snapshot = {
-		timestamp: new Date().toISOString(),
-		leaseMonthly,
-		msrp,
-		scraped: hasLiveData,
-		source: hasLiveData ? 'rivian.com' : 'fallback'
-	};
-
 	// Read existing blob
 	let existing = { current: null, history: [] };
 	try {
@@ -160,6 +148,21 @@ async function main() {
 	} catch {
 		console.log('[sync-rivian-lease] No existing blob, starting fresh');
 	}
+
+	// Use scraped or fallback values
+	const leaseMonthly = scraped.leaseMonthly || 899;
+	const msrp = scraped.msrp || 79900;
+	const nowIso = new Date().toISOString();
+	const lastLiveScrapeAt = hasLiveData ? nowIso : (existing.current?.lastLiveScrapeAt ?? null);
+
+	const snapshot = {
+		timestamp: nowIso,
+		leaseMonthly,
+		msrp,
+		scraped: hasLiveData,
+		source: hasLiveData ? 'rivian.com' : 'fallback',
+		lastLiveScrapeAt
+	};
 
 	// Append history
 	const history = [snapshot, ...existing.history].slice(0, MAX_HISTORY);

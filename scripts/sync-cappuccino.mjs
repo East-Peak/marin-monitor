@@ -12,8 +12,12 @@
 
 import { put, head } from '@vercel/blob';
 import { chromium } from 'playwright';
+import {
+	COFFEE_SHOPS_DATA as COFFEE_SHOPS,
+	CAPPUCCINO_HARDCODED_PRICES as HARDCODED_PRICES
+} from '../src/lib/config/coffee.shared.js';
 
-// ---- Config (from src/lib/config/coffee.ts) ----
+// ---- Config (shared with src/lib/config/coffee.ts) ----
 
 const BLOB_KEY = 'marin-cappuccino.json';
 const MAX_HISTORY = 52;
@@ -21,141 +25,6 @@ const TOAST_PAGE_TIMEOUT = 15000;
 
 const USER_AGENT =
 	'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
-
-const COFFEE_SHOPS = [
-	{
-		id: 'equator-mill-valley',
-		name: 'Equator Coffees',
-		address: '2 Miller Ave, Mill Valley',
-		town: 'Mill Valley',
-		lat: 37.906,
-		lon: -122.548,
-		source: 'toast',
-		url: 'https://order.toasttab.com/online/equator-coffees-miller-ave',
-		hasCappuccino: true
-	},
-	{
-		id: 'equator-proof-lab',
-		name: 'Equator Coffees (Proof Lab)',
-		address: '244 Shoreline Hwy, Mill Valley',
-		town: 'Mill Valley',
-		lat: 37.872,
-		lon: -122.527,
-		source: 'toast',
-		url: 'https://order.toasttab.com/online/equator-coffees-proof-lab',
-		hasCappuccino: true
-	},
-	{
-		id: 'equator-larkspur',
-		name: 'Equator Coffees',
-		address: 'Marin Country Mart, Larkspur',
-		town: 'Larkspur',
-		lat: 37.941,
-		lon: -122.535,
-		source: 'toast',
-		url: 'https://order.toasttab.com/online/equator-coffees-larkspur',
-		hasCappuccino: true
-	},
-	{
-		id: 'equator-sausalito',
-		name: 'Equator Coffees',
-		address: '1201 Bridgeway, Sausalito',
-		town: 'Sausalito',
-		lat: 37.859,
-		lon: -122.485,
-		source: 'toast',
-		url: 'https://order.toasttab.com/online/sausalito-equator',
-		hasCappuccino: true
-	},
-	{
-		id: 'equator-roundhouse',
-		name: 'Equator Coffees (Roundhouse)',
-		address: 'Golden Gate Bridge Plaza',
-		town: 'Sausalito',
-		lat: 37.8079,
-		lon: -122.4745,
-		source: 'toast',
-		url: 'https://order.toasttab.com/online/equator-coffees-roundhouse-golden-gate-bridge-plaza',
-		hasCappuccino: true
-	},
-	{
-		id: 'mcr-san-anselmo',
-		name: 'Marin Coffee Roasters',
-		address: '546 San Anselmo Ave, San Anselmo',
-		town: 'San Anselmo',
-		lat: 37.9748,
-		lon: -122.5617,
-		source: 'toast',
-		url: 'https://order.toasttab.com/online/marin-coffee-roasters-san-anselmo-546-san-anselmo-ave',
-		hasCappuccino: true
-	},
-	{
-		id: 'mcr-ignacio',
-		name: 'Marin Coffee Roasters',
-		address: '466 Ignacio Blvd, Novato',
-		town: 'Novato',
-		lat: 38.066,
-		lon: -122.533,
-		source: 'toast',
-		url: 'https://order.toasttab.com/online/marin-coffee-roasters-ignacio-466-ignacio-blvd',
-		hasCappuccino: true
-	},
-	{
-		id: 'mcr-novato',
-		name: 'Marin Coffee Roasters (Drive-Thru)',
-		address: '1551 S Novato Blvd, Novato',
-		town: 'Novato',
-		lat: 38.086,
-		lon: -122.57,
-		source: 'toast',
-		url: 'https://order.toasttab.com/online/marin-coffee-roasters-drive-through-1551-s-novato-blvd',
-		hasCappuccino: true
-	},
-	{
-		id: 'firehouse-sausalito',
-		name: 'Firehouse Coffee & Tea',
-		address: '44 Caledonia St, Sausalito',
-		town: 'Sausalito',
-		lat: 37.859,
-		lon: -122.487,
-		source: 'html',
-		url: 'https://www.firehousecoffeeandtea.com/menu',
-		hasCappuccino: true
-	},
-	{
-		id: 'fox-kit-san-rafael',
-		name: 'Fox & Kit',
-		address: '917 4th St, San Rafael',
-		town: 'San Rafael',
-		lat: 37.9735,
-		lon: -122.515,
-		source: 'delivery',
-		url: 'https://www.doordash.com/store/fox-kit-san-rafael-27819798/',
-		hasCappuccino: true
-	},
-	{
-		id: 'philz-corte-madera',
-		name: 'Philz Coffee',
-		address: 'Town Center, Corte Madera',
-		town: 'Corte Madera',
-		lat: 37.925,
-		lon: -122.524,
-		source: 'html',
-		url: 'https://philzcoffee.order.online/',
-		hasCappuccino: false,
-		altDrink: 'Pour-Over (Tesora)'
-	}
-];
-
-/**
- * Hardcoded prices for non-Toast shops that change very rarely.
- * Matches src/lib/server/scrapers/cappuccino.ts.
- */
-const HARDCODED_PRICES = {
-	'firehouse-sausalito': { price: 5.5, source: 'hardcoded' },
-	'fox-kit-san-rafael': { price: 5.5, source: 'hardcoded' },
-	'philz-corte-madera': { price: null, altPrice: 5.75, source: 'hardcoded' }
-};
 
 const token = process.env.BLOB_READ_WRITE_TOKEN;
 if (!token) {

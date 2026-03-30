@@ -12,6 +12,7 @@
 import type { CoffeeShop, CoffeeSnapshot } from '$lib/types/coffee';
 import {
 	COFFEE_SHOPS,
+	CAPPUCCINO_HARDCODED_PRICE_MAP,
 	TOAST_PAGE_TIMEOUT,
 	type CoffeeShopConfig
 } from '$lib/config/coffee';
@@ -193,17 +194,8 @@ async function scrapeToastShop(
  * These avoid expensive browser scraping of Squarespace/DoorDash/Philz pages.
  * Prices should be spot-checked monthly and updated if they drift.
  */
-const HARDCODED_PRICES: Record<string, { price: number | null; altPrice?: number; source: string }> = {
-	'firehouse-sausalito': { price: 5.50, source: 'hardcoded' },
-	'fox-kit-san-rafael': { price: 5.50, source: 'hardcoded' },
-	'philz-corte-madera': { price: null, altPrice: 5.75, source: 'hardcoded' }
-};
-
-/**
- * Build a CoffeeShop result from hardcoded price data for non-Toast shops.
- */
 function buildHardcodedResult(shop: CoffeeShopConfig): CoffeeShop {
-	const data = HARDCODED_PRICES[shop.id];
+	const data = CAPPUCCINO_HARDCODED_PRICE_MAP[shop.id];
 	return {
 		id: shop.id,
 		name: shop.name,
@@ -233,7 +225,7 @@ export async function scrapeCappuccino(): Promise<CoffeeSnapshot> {
 
 	// 1. Add hardcoded non-Toast shops (no browser needed)
 	for (const shop of COFFEE_SHOPS) {
-		if (shop.id in HARDCODED_PRICES) {
+		if (shop.id in CAPPUCCINO_HARDCODED_PRICE_MAP) {
 			results.push(buildHardcodedResult(shop));
 			console.log(`[cappuccino] ${shop.id}: using hardcoded price`);
 		}
@@ -241,7 +233,7 @@ export async function scrapeCappuccino(): Promise<CoffeeSnapshot> {
 
 	// 2. Scrape Toast shops via browser
 	const toastShops = COFFEE_SHOPS.filter(
-		(s) => s.source === 'toast' && !(s.id in HARDCODED_PRICES)
+		(s) => s.source === 'toast' && !(s.id in CAPPUCCINO_HARDCODED_PRICE_MAP)
 	);
 
 	if (toastShops.length > 0) {

@@ -69,7 +69,7 @@ export const GET: RequestHandler = async ({ request }) => {
 	}
 
 	const totalProblems = staleEntries.length + errors.length;
-	if (totalProblems === 0) {
+		if (totalProblems === 0) {
 		console.log(`[check-freshness] All ${_DATA_SOURCES.length} data sources are fresh.`);
 	} else {
 		console.error(
@@ -80,9 +80,9 @@ export const GET: RequestHandler = async ({ request }) => {
 	return new Response(
 		JSON.stringify(
 			{
-				ok: totalProblems === 0,
-				timestamp: new Date().toISOString(),
-				totalSources: _DATA_SOURCES.length,
+					ok: totalProblems === 0,
+					timestamp: new Date().toISOString(),
+					totalSources: _DATA_SOURCES.length,
 				stale: staleEntries,
 				errors
 			},

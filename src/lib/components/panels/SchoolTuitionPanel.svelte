@@ -3,7 +3,7 @@
 	import { Panel } from '$lib/components/common';
 	import { fetchSchoolTuitionData } from '$lib/api/marin/school-tuition';
 	import { schoolTuitionStore } from '$lib/stores/school-tuition';
-	import { SCHOOL_ACCENT, LEVEL_ORDER, LEVEL_LABELS } from '$lib/config/schools';
+	import { LEVEL_ORDER, LEVEL_LABELS } from '$lib/config/schools';
 	import type { SchoolIndexData, School, SchoolLevel } from '$lib/types/school';
 
 	let data = $state<SchoolIndexData>({ current: null, history: [] });

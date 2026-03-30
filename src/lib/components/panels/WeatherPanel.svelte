@@ -385,6 +385,8 @@
 					<svg
 						class="chart-svg temp-svg"
 						bind:this={hourlySvg}
+						role="img"
+						aria-label="24 hour temperature chart"
 						onpointermove={(event) => handleHover(event, 'temp')}
 						onpointerleave={clearHover}
 					></svg>
@@ -414,6 +416,8 @@
 					<svg
 						class="chart-svg precip-svg"
 						bind:this={precipSvg}
+						role="img"
+						aria-label="24 hour precipitation chance chart"
 						onpointermove={(event) => handleHover(event, 'precip')}
 						onpointerleave={clearHover}
 					></svg>

@@ -6,7 +6,7 @@
 	import { select } from 'd3-selection';
 	import { scaleLinear } from 'd3-scale';
 	import { area, line, curveMonotoneX } from 'd3-shape';
-	import type { CompositeData, CompositeSnapshot, MarinNumberItem } from '$lib/types/composite';
+	import type { CompositeData, CompositeSnapshot } from '$lib/types/composite';
 
 	const ACCENT = '#dc2626';
 	const CHART_LEFT = 44;
@@ -289,6 +289,8 @@
 					<svg
 						class="chart-svg"
 						bind:this={chartSvg}
+						role="img"
+						aria-label="Composite trend chart"
 						onpointermove={updateHover}
 						onpointerleave={clearHover}
 					></svg>

@@ -14,6 +14,7 @@
 
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import { BASKET_ITEMS } from '$lib/config/grocery-basket';
+import { scoreGroceryPriceMatch } from '$lib/shared/grocery-basket-matching.js';
 import type {
 	BasketItemPrices,
 	GrocerySnapshot,
@@ -59,24 +60,7 @@ export function buildSearchUrl(searchTerm: string): string {
  * appear in the candidate, normalized by total target words.
  */
 export function scorePriceMatch(candidateName: string, targetName: string): number {
-	const normalize = (s: string) =>
-		s
-			.toLowerCase()
-			.replace(/[^a-z0-9\s]/g, '')
-			.split(/\s+/)
-			.filter((w) => w.length > 0);
-
-	const targetWords = normalize(targetName);
-	const candidateWords = new Set(normalize(candidateName));
-
-	if (targetWords.length === 0) return 0;
-
-	let matches = 0;
-	for (const word of targetWords) {
-		if (candidateWords.has(word)) matches++;
-	}
-
-	return Math.round((matches / targetWords.length) * 100) / 100;
+	return scoreGroceryPriceMatch(candidateName, targetName);
 }
 
 /**
@@ -256,10 +240,10 @@ async function scrapeItemPrices(
 
 	// Score and filter to matching products
 	const scored = allProducts
-		.map((product) => ({
-			product,
-			score: scorePriceMatch(product.name, itemName)
-		}))
+			.map((product) => ({
+				product,
+				score: scoreGroceryPriceMatch(product.name, itemName, itemId)
+			}))
 		.filter((s) => s.score >= MIN_MATCH_SCORE)
 		.sort((a, b) => b.score - a.score);
 

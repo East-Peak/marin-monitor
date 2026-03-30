@@ -1,21 +1,14 @@
 <script lang="ts">
-	interface FeatureInspectorData {
-		kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station' | 'ev-charging-station' | 'airport';
-		title: string;
-		subtitle?: string;
-		description?: string;
-		severity?: string;
-		source?: string;
-	}
+	import type { MapFeatureInspectorData } from '$lib/types';
 
 	interface Props {
-		feature: FeatureInspectorData;
+		feature: MapFeatureInspectorData;
 		onClose?: () => void;
 	}
 
 	let { feature, onClose }: Props = $props();
 
-	function kindLabel(kind: FeatureInspectorData['kind']): string {
+	function kindLabel(kind: MapFeatureInspectorData['kind']): string {
 		switch (kind) {
 			case 'landmark':
 				return 'Map Landmark';
@@ -31,6 +24,10 @@
 				return 'Gas Station';
 			case 'ev-charging-station':
 				return 'EV Charging Station';
+			case 'coffee-shop':
+				return 'Coffee Shop';
+			case 'fitness-studio':
+				return 'Fitness Studio';
 			case 'airport':
 				return 'Airport Status';
 			default:

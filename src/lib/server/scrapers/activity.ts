@@ -17,6 +17,46 @@ import {
 
 const MAX_PAST_DAYS = 300;
 const MAX_FUTURE_DAYS = 400;
+const ANNUAL_EVENT_STALENESS_DAYS = 180;
+
+function getPacificsSeasonYear(now: number): number {
+	const current = new Date(now);
+	const year = current.getFullYear();
+	return current.getMonth() >= 9 ? year + 1 : year;
+}
+
+function buildPacificsScheduleUrl(now: number): string {
+	return `https://www.pacificsbaseball.com/pacifics.asp?page=11&team=801&year=${getPacificsSeasonYear(now)}`;
+}
+
+function inferSeasonSpanningYear(month: number, now: number): number {
+	const current = new Date(now);
+	const currentYear = current.getFullYear();
+	const currentMonth = current.getMonth();
+	if (month >= 8) {
+		return currentMonth < 6 ? currentYear - 1 : currentYear;
+	}
+	return currentMonth >= 8 ? currentYear + 1 : currentYear;
+}
+
+function inferLikelyCalendarYear(dateText: string, now: number): number {
+	const currentYear = new Date(now).getFullYear();
+	const probe = new Date(`${dateText}, ${currentYear} 12:00:00 PST`);
+	if (!Number.isFinite(probe.getTime())) return currentYear;
+	return probe.getTime() < now - ANNUAL_EVENT_STALENESS_DAYS * 24 * 60 * 60 * 1000
+		? currentYear + 1
+		: currentYear;
+}
+
+function resolveAnnualMonthDay(
+	dateText: string,
+	now: number,
+	timeSuffix: string
+): Date | null {
+	const year = inferLikelyCalendarYear(dateText, now);
+	const resolved = new Date(`${dateText}, ${year} ${timeSuffix}`);
+	return Number.isFinite(resolved.getTime()) ? resolved : null;
+}
 
 interface SourceConfig {
 	source: string;
@@ -310,7 +350,7 @@ const SPORTS_HUBS: SourceConfig[] = [
 	{
 		source: 'San Rafael Pacifics',
 		title: 'San Rafael Pacifics schedule and tickets',
-		url: 'https://www.pacificsbaseball.com/pacifics.asp?page=11&team=801&year=2026',
+		url: buildPacificsScheduleUrl(Date.now()),
 		town: 'San Rafael',
 		townSlug: 'san-rafael',
 		lat: 37.9691,
@@ -362,7 +402,7 @@ const EVENT_PAGES: EventPageConfig[] = [
 		lat: 37.8305,
 		lon: -122.5365,
 		topics: ['running', 'ultra'],
-		fallbackDate: 'Mar 14, 2026 08:00:00 PST',
+		fallbackDate: resolveAnnualMonthDay('Mar 14', Date.now(), '08:00:00 PST')?.toISOString(),
 		description: 'Official event page for the Marin Ultra Challenge at Rodeo Beach.'
 	},
 	{
@@ -1017,13 +1057,13 @@ async function parseNorcalRaces(now: number): Promise<NewsItem[]> {
 		const dateMatches = [...rowText.matchAll(/(\d{1,2})\/(\d{1,2})/g)];
 		if (dateMatches.length === 0) continue;
 
-		// Use the last date found (Redwood/Repack league column)
-		const lastDate = dateMatches[dateMatches.length - 1];
-		const month = parseInt(lastDate[1], 10);
-		const day = parseInt(lastDate[2], 10);
-		const year = month >= 8 ? 2025 : 2026; // season spans fall-spring
-		const raceDate = new Date(year, month - 1, day, 9, 0, 0);
-		if (!Number.isFinite(raceDate.getTime())) continue;
+			// Use the last date found (Redwood/Repack league column)
+			const lastDate = dateMatches[dateMatches.length - 1];
+			const month = parseInt(lastDate[1], 10);
+			const day = parseInt(lastDate[2], 10);
+			const year = inferSeasonSpanningYear(month, now);
+			const raceDate = new Date(year, month - 1, day, 9, 0, 0);
+			if (!Number.isFinite(raceDate.getTime())) continue;
 
 		const townData = inferTownFromText(venueName);
 		const isMarin = /stafford|novato|tam|fairfax|marin/i.test(venueName);
@@ -1055,11 +1095,11 @@ async function parseNorcalRaces(now: number): Promise<NewsItem[]> {
 		if (match) {
 			const item = buildItem(
 				{
-					category: 'cycling',
-					source: 'NorCal MTB League',
-					title: 'NorCal MTB Race 4: Stafford, Novato',
-					link: 'https://www.norcalmtb.org/races/',
-					pubDate: 'Apr 25, 2026 09:00:00 PST',
+						category: 'cycling',
+						source: 'NorCal MTB League',
+						title: 'NorCal MTB Race 4: Stafford, Novato',
+						link: 'https://www.norcalmtb.org/races/',
+						pubDate: resolveAnnualMonthDay('Apr 25', now, '09:00:00 PST')?.toISOString(),
 					description:
 						'NorCal MTB race weekend at Stafford Lake with Novato on the league calendar.',
 					verification: 'official',
@@ -1079,8 +1119,7 @@ async function parseNorcalRaces(now: number): Promise<NewsItem[]> {
 }
 
 async function parsePacificsSchedule(now: number): Promise<NewsItem[]> {
-	const scheduleUrl =
-		'https://www.pacificsbaseball.com/pacifics.asp?page=11&team=801&year=2026';
+	const scheduleUrl = buildPacificsScheduleUrl(now);
 	try {
 		const html = await safeFetch(scheduleUrl);
 		const items: NewsItem[] = [];
@@ -1197,7 +1236,7 @@ async function parseMarinRowingCalendar(now: number): Promise<NewsItem[]> {
 			// Parse the date — add current year if not present
 			let dateStr = rawDate;
 			if (!/\d{4}/.test(dateStr)) {
-				dateStr += ', 2026';
+				dateStr += `, ${inferLikelyCalendarYear(dateStr, now)}`;
 			}
 			// Handle date ranges like "March 26-29" — use the first date
 			dateStr = dateStr.replace(/\s*[-–]\s*\d{1,2}/, '');
@@ -1239,20 +1278,19 @@ async function parseB17Racing(now: number): Promise<NewsItem[]> {
 		const text = stripHtml(html);
 
 		// Summit Shorty Series — Wednesday evenings at Camp Tamarancho, Fairfax
-		const shortyDates = text.match(
-			/Summit\s+Shorty[^.]*?(?:March|April|May|June|July|August)[\s\S]*?(?=Crusher|$)/i
-		);
-		if (shortyDates) {
-			const datePattern =
-				/((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2})/gi;
-			let dateMatch;
-			while ((dateMatch = datePattern.exec(shortyDates[0])) !== null) {
-				const dateStr = `${dateMatch[1]}, 2026 18:00:00 PST`;
-				const raceDate = new Date(dateStr);
-				if (!Number.isFinite(raceDate.getTime())) continue;
+			const shortyDates = text.match(
+				/Summit\s+Shorty[^.]*?(?:March|April|May|June|July|August)[\s\S]*?(?=Crusher|$)/i
+			);
+			if (shortyDates) {
+				const datePattern =
+					/((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2})/gi;
+				let dateMatch;
+				while ((dateMatch = datePattern.exec(shortyDates[0])) !== null) {
+					const raceDate = resolveAnnualMonthDay(dateMatch[1], now, '18:00:00 PST');
+					if (!raceDate || !Number.isFinite(raceDate.getTime())) continue;
 
-				const dayStr = raceDate.toLocaleDateString('en-US', {
-					weekday: 'short',
+					const dayStr = raceDate.toLocaleDateString('en-US', {
+						weekday: 'short',
 					month: 'short',
 					day: 'numeric'
 				});
@@ -1274,26 +1312,25 @@ async function parseB17Racing(now: number): Promise<NewsItem[]> {
 						topics: ['cycling', 'mtb', 'racing']
 					},
 					now
-				);
-				if (item) items.push(item);
+					);
+					if (item) items.push(item);
+				}
 			}
-		}
 
 		// Crusher Cup XCO series
-		const crusherDates = text.match(
-			/Crusher\s+Cup[^.]*?(?:March|April|May|June|July|August)[\s\S]*?(?=Summit|$)/i
-		);
-		if (crusherDates) {
-			const datePattern =
-				/((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2})/gi;
-			let dateMatch;
-			while ((dateMatch = datePattern.exec(crusherDates[0])) !== null) {
-				const dateStr = `${dateMatch[1]}, 2026 09:00:00 PST`;
-				const raceDate = new Date(dateStr);
-				if (!Number.isFinite(raceDate.getTime())) continue;
+			const crusherDates = text.match(
+				/Crusher\s+Cup[^.]*?(?:March|April|May|June|July|August)[\s\S]*?(?=Summit|$)/i
+			);
+			if (crusherDates) {
+				const datePattern =
+					/((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2})/gi;
+				let dateMatch;
+				while ((dateMatch = datePattern.exec(crusherDates[0])) !== null) {
+					const raceDate = resolveAnnualMonthDay(dateMatch[1], now, '09:00:00 PST');
+					if (!raceDate || !Number.isFinite(raceDate.getTime())) continue;
 
-				const dayStr = raceDate.toLocaleDateString('en-US', {
-					weekday: 'short',
+					const dayStr = raceDate.toLocaleDateString('en-US', {
+						weekday: 'short',
 					month: 'short',
 					day: 'numeric'
 				});

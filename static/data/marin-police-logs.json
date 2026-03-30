@@ -1,5 +1,28 @@
 [
   {
+    "id": "nixle-novato-pd-h73hb",
+    "title": "TRAFFIC ADVISORY: Planned Public Assembly: Expect Traffic Congestion.",
+    "link": "https://nixle.us/H73HB",
+    "pubDate": "2026-03-28T15:45:00.000Z",
+    "timestamp": 1774712700000,
+    "description": "We have been informed of multiple planned public assemblies today (3/28) between 9AM - 12PM at multiple locations around Novato. Assemblies are expected at the following locations:",
+    "content": "We have been informed of multiple planned public assemblies today (3/28) between 9AM - 12PM at multiple locations around Novato. Assemblies are expected at the following locations:",
+    "source": "Novato PD",
+    "category": "safety",
+    "verification": "official",
+    "topics": [
+      "public-safety",
+      "police-alert",
+      "advisory",
+      "official-update"
+    ],
+    "isAlert": true,
+    "town": "Novato",
+    "townSlug": "novato",
+    "locationConfidence": "town",
+    "locationEvidence": "Novato"
+  },
+  {
     "id": "nixle-novato-pd-h6zsd",
     "title": "***UPDATE*** Ignacio Blvd reopened between Country Club Dr & Fairway Dr",
     "link": "https://nixle.us/H6ZSD",
@@ -1001,49 +1024,5 @@
     "townSlug": "belvedere",
     "locationConfidence": "town",
     "locationEvidence": "Belvedere"
-  },
-  {
-    "id": "mill-valley-police-log-11380",
-    "title": "Weekly calls for service · January 1, 2026 to January 8, 2026",
-    "link": "https://www.cityofmillvalley.gov/DocumentCenter/View/11380/Calls-for-Service-January-1-2026-to-January-8-2026",
-    "pubDate": "2026-01-12T20:00:00.000Z",
-    "timestamp": 1768248000000,
-    "description": "Official Mill Valley police calls-for-service PDF. Weekly report; incident-level extraction is not yet available in the dashboard.",
-    "content": "Official Mill Valley police calls-for-service PDF. Weekly report; incident-level extraction is not yet available in the dashboard.",
-    "source": "Mill Valley Police Log",
-    "category": "safety",
-    "verification": "official",
-    "topics": [
-      "crime",
-      "calls-for-service",
-      "weekly-report"
-    ],
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "locationConfidence": "town",
-    "locationEvidence": "Mill Valley"
-  },
-  {
-    "id": "nixle-novato-pd-gyxst",
-    "title": "CANCEL ***Missing Adult at risk LOCATED*** Marilyn McKenna 92 with dementia, last seen in the area of 135 Panorama Dr",
-    "link": "https://nixle.us/GYXST",
-    "pubDate": "2026-01-12T16:22:00.000Z",
-    "timestamp": 1768234920000,
-    "description": "CANCEL MISSING LOCATED MIssing Adult at risk due to dementia walked away from home. Marilyn McKenna 92 year old white female, 505 height 110 weight, white hair, blue eyes, wearing a red shirt. Missing Person last seen in Novato at 8 pm in…",
-    "content": "CANCEL MISSING LOCATED MIssing Adult at risk due to dementia walked away from home. Marilyn McKenna 92 year old white female, 505 height 110 weight, white hair, blue eyes, wearing a red shirt. Missing Person last seen in Novato at 8 pm in the area of 135 Panorama Dr. Missing female walks the area with dogs and is familiar with walking paths in neighborhood. If seen call Novato PD, 415-897-1122. Case 26-0072",
-    "source": "Novato PD",
-    "category": "safety",
-    "verification": "official",
-    "topics": [
-      "public-safety",
-      "police-alert",
-      "advisory",
-      "official-update"
-    ],
-    "isAlert": true,
-    "town": "Novato",
-    "townSlug": "novato",
-    "locationConfidence": "town",
-    "locationEvidence": "Novato"
   }
 ]

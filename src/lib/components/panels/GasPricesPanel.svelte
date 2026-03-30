@@ -330,6 +330,8 @@
 				<svg
 					class="chart-svg"
 					bind:this={chartSvg}
+					role="img"
+					aria-label="Average regular gas price trend"
 					onpointermove={updateHover}
 					onpointerleave={clearHover}
 				></svg>

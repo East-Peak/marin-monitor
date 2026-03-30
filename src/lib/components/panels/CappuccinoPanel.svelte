@@ -72,12 +72,12 @@
 
 		const displayMedian = $townFilter ? filteredMedian : current.medianPrice;
 
-		// Week-over-week change (history is weekly)
-		const lastWeek = history.length >= 2 ? history[history.length - 2] : null;
-		const priceDelta =
-			current.medianPrice !== null && lastWeek?.medianPrice !== null
-				? Math.round((current.medianPrice - lastWeek.medianPrice) * 100) / 100
-				: null;
+			// Week-over-week change (history is weekly)
+			const lastWeek = history.length >= 2 ? history[history.length - 2] : null;
+			const priceDelta =
+				current.medianPrice !== null && lastWeek && lastWeek.medianPrice !== null
+					? Math.round((current.medianPrice - lastWeek.medianPrice) * 100) / 100
+					: null;
 
 		const cheapest = pricedShops[0];
 		const priciest = pricedShops[pricedShops.length - 1];
@@ -326,6 +326,8 @@
 				<svg
 					class="chart-svg"
 					bind:this={chartSvg}
+					role="img"
+					aria-label="Median cappuccino price trend"
 					onpointermove={updateHover}
 					onpointerleave={clearHover}
 				></svg>

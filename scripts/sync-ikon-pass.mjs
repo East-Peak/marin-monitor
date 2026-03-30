@@ -9,30 +9,7 @@
  */
 
 import { put, head } from '@vercel/blob';
-
-// ---- Proxy support ----
-const PROXY_URL = process.env.SCRAPE_PROXY_URL;
-const PROXY_SECRET = process.env.SCRAPE_PROXY_SECRET;
-
-async function proxyFetch(url, options = {}) {
-	if (PROXY_URL && PROXY_SECRET) {
-		try {
-			const res = await fetch(`${PROXY_URL}/proxy`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${PROXY_SECRET}` },
-				body: JSON.stringify({ url, headers: options.headers || {}, method: options.method || 'GET', timeout: 30000 })
-			});
-			if (res.ok) {
-				const result = await res.json();
-				return { ok: result.status >= 200 && result.status < 300, status: result.status, text: async () => result.data, json: async () => JSON.parse(result.data) };
-			}
-			console.warn(`[proxy] Proxy returned ${res.status}, falling back to direct fetch`);
-		} catch (err) {
-			console.warn(`[proxy] Proxy failed: ${err.message}, falling back to direct fetch`);
-		}
-	}
-	return fetch(url, options);
-}
+import { proxyFetch } from './shared/proxy-fetch.mjs';
 
 const BLOB_KEY = 'marin-ikon-pass.json';
 const MAX_HISTORY = 24; // 2 years at monthly
@@ -174,20 +151,6 @@ async function main() {
 	// Family of 4 season cost: 2 adults + 2 kids
 	const familyOf4 = adultPrice * 2 + childPrice * 2;
 
-	// Monthly amortized (12 months)
-	const monthlyAmortized = Math.round(familyOf4 / 12);
-
-	const snapshot = {
-		timestamp: new Date().toISOString(),
-		adultPrice,
-		childPrice,
-		basePrice,
-		familyOf4,
-		monthlyAmortized,
-		scraped: !!(prices.adult || prices.child),
-		source: prices.adult ? 'ikonpass.com' : 'fallback'
-	};
-
 	// Read existing blob
 	let existing = { current: null, history: [] };
 	try {
@@ -201,6 +164,24 @@ async function main() {
 	} catch {
 		console.log('[sync-ikon-pass] No existing blob, starting fresh');
 	}
+
+	// Monthly amortized (12 months)
+	const monthlyAmortized = Math.round(familyOf4 / 12);
+	const nowIso = new Date().toISOString();
+	const scrapedLive = !!(prices.adult || prices.child);
+	const lastLiveScrapeAt = scrapedLive ? nowIso : (existing.current?.lastLiveScrapeAt ?? null);
+
+	const snapshot = {
+		timestamp: nowIso,
+		adultPrice,
+		childPrice,
+		basePrice,
+		familyOf4,
+		monthlyAmortized,
+		scraped: scrapedLive,
+		source: scrapedLive ? 'ikonpass.com' : 'fallback',
+		lastLiveScrapeAt
+	};
 
 	// Append history
 	const history = [snapshot, ...existing.history].slice(0, MAX_HISTORY);

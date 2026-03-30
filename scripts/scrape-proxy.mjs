@@ -36,6 +36,19 @@ const stats = {
 	lastError: null
 };
 
+const ALLOWED_PROXY_HOSTS = new Set([
+	'www.instacart.com',
+	'instacart.com',
+	'plumpjackwines.com',
+	'www.plumpjackwines.com',
+	'www.ikonpass.com',
+	'ikonpass.com',
+	'www.thumbtack.com',
+	'thumbtack.com',
+	'marinfamilies.com',
+	'www.marinfamilies.com'
+]);
+
 const server = createServer(async (req, res) => {
 	// CORS preflight
 	if (req.method === 'OPTIONS') {
@@ -50,8 +63,22 @@ const server = createServer(async (req, res) => {
 
 	// Health check
 	if (req.method === 'GET' && req.url === '/health') {
+		const auth = req.headers['authorization'];
+		if (auth !== `Bearer ${SECRET}`) {
+			res.writeHead(401, { 'Content-Type': 'application/json' });
+			res.end(JSON.stringify({ error: 'Unauthorized' }));
+			return;
+		}
 		res.writeHead(200, { 'Content-Type': 'application/json' });
-		res.end(JSON.stringify({ ok: true, ...stats }));
+		res.end(
+			JSON.stringify({
+				ok: true,
+				started: stats.started,
+				totalRequests: stats.totalRequests,
+				successCount: stats.successCount,
+				errorCount: stats.errorCount
+			})
+		);
 		return;
 	}
 
@@ -90,14 +117,29 @@ const server = createServer(async (req, res) => {
 		return;
 	}
 
+	let targetUrl;
+	try {
+		targetUrl = new URL(url);
+	} catch {
+		res.writeHead(400, { 'Content-Type': 'application/json' });
+		res.end(JSON.stringify({ error: 'Invalid url field' }));
+		return;
+	}
+
+	if (!['http:', 'https:'].includes(targetUrl.protocol) || !ALLOWED_PROXY_HOSTS.has(targetUrl.hostname)) {
+		res.writeHead(403, { 'Content-Type': 'application/json' });
+		res.end(JSON.stringify({ error: 'Target URL not allowed' }));
+		return;
+	}
+
 	stats.totalRequests++;
-	stats.lastRequest = { url, time: new Date().toISOString() };
+	stats.lastRequest = { hostname: targetUrl.hostname, time: new Date().toISOString() };
 
 	try {
 		const controller = new AbortController();
 		const timer = setTimeout(() => controller.abort(), timeout);
 
-		const response = await fetch(url, {
+			const response = await fetch(targetUrl, {
 			method,
 			headers: {
 				'User-Agent':
@@ -123,9 +165,13 @@ const server = createServer(async (req, res) => {
 				bytes: data.length
 			})
 		);
-	} catch (err) {
-		stats.errorCount++;
-		stats.lastError = { url, error: err.message, time: new Date().toISOString() };
+		} catch (err) {
+			stats.errorCount++;
+			stats.lastError = {
+				hostname: targetUrl.hostname,
+				error: err.message,
+				time: new Date().toISOString()
+			};
 
 		res.writeHead(502, { 'Content-Type': 'application/json' });
 		res.end(JSON.stringify({ error: 'Proxy fetch failed', message: err.message }));

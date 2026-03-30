@@ -483,6 +483,8 @@
 				<svg
 					class="chart-svg wave-svg"
 					bind:this={waveSvg}
+					role="img"
+					aria-label="24 hour wave height chart"
 					onpointermove={(event) => handleHover(event, 'wave')}
 					onpointerleave={clearHover}
 				></svg>
@@ -513,6 +515,8 @@
 				<svg
 					class="chart-svg wind-svg"
 					bind:this={windSvg}
+					role="img"
+					aria-label="24 hour coastal wind chart"
 					onpointermove={(event) => handleHover(event, 'wind')}
 					onpointerleave={clearHover}
 				></svg>
@@ -543,6 +547,8 @@
 				<svg
 					class="chart-svg tide-svg"
 					bind:this={tideSvg}
+					role="img"
+					aria-label="24 hour tide chart"
 					onpointermove={(event) => handleHover(event, 'tide')}
 					onpointerleave={clearHover}
 				></svg>

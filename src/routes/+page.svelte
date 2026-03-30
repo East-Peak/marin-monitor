@@ -24,12 +24,15 @@
 	import MapStage from '$lib/components/dashboard/MapStage.svelte';
 	import SignalDeck from '$lib/components/dashboard/SignalDeck.svelte';
 	import LayoutEditMode from '$lib/components/dashboard/LayoutEditMode.svelte';
+	import type { PageData } from './$types';
 
 	// Server bootstrap data (weather + earthquakes pre-fetched server-side)
-	let { data } = $props();
+	let { data }: { data: PageData } = $props();
 
 	// Location (derived from town filter, falls back to settings.locationId)
 	const userLocation = $derived($townLocation);
+	const bootstrapWeather = $derived(data?.bootstrap?.weather ?? null);
+	const bootstrapEarthquakes = $derived(data?.bootstrap?.earthquakes ?? []);
 
 	// Banner ad between signal deck and news area
 	const bannerAd = $derived(pickAds('banner', undefined, 1)[0]);
@@ -49,41 +52,48 @@
 		feedbackOpen = true;
 	}
 
-	// Weather state — hydrate from server bootstrap if available
-	let weatherForecast = $state<(WeatherData & { name: string })[]>(data?.bootstrap?.weather?.forecast ?? []);
-	let weatherAlerts = $state<FireWeatherAlert[]>(data?.bootstrap?.weather?.alerts ?? []);
-	let weatherLoading = $state(!data?.bootstrap?.weather);
+	// Weather state — live fetches override bootstrapped data when available
+	let liveWeatherForecast = $state<(WeatherData & { name: string })[] | null>(null);
+	let liveWeatherAlerts = $state<FireWeatherAlert[] | null>(null);
+	let weatherLoadingState = $state(false);
+	let weatherReady = $state(false);
 	let weatherError = $state<string | null>(null);
+	const weatherForecast = $derived(liveWeatherForecast ?? bootstrapWeather?.forecast ?? []);
+	const weatherAlerts = $derived(liveWeatherAlerts ?? bootstrapWeather?.alerts ?? []);
+	const weatherLoading = $derived(weatherLoadingState || (!bootstrapWeather && !weatherReady));
 
-	// Earthquake items — hydrate from server bootstrap if available
-	let earthquakeItems = $state<NewsItem[]>(
-		data?.bootstrap?.earthquakes?.length ? earthquakesToNewsItems(data.bootstrap.earthquakes) : []
+	// Earthquake items — live fetches override bootstrapped data when available
+	let liveEarthquakeItems = $state<NewsItem[] | null>(null);
+	let liveEarthquakesRaw = $state<EarthquakeData[] | null>(null);
+	const earthquakeItems = $derived(
+		liveEarthquakeItems ??
+			(bootstrapEarthquakes.length ? earthquakesToNewsItems(bootstrapEarthquakes) : [])
 	);
-	let earthquakesRaw = $state<EarthquakeData[]>(data?.bootstrap?.earthquakes ?? []);
-
+	const earthquakesRaw = $derived(liveEarthquakesRaw ?? bootstrapEarthquakes);
 
 	let editMode = $state(false);
 
 	// Fetch all RSS feeds and API data, populate stores
 	async function loadNews() {
 		const result = await loadAllNews(true);
-		earthquakeItems = result.earthquakeNews;
-		earthquakesRaw = result.earthquakesRaw;
+		liveEarthquakeItems = result.earthquakeNews;
+		liveEarthquakesRaw = result.earthquakesRaw;
 	}
 
 	// Fetch weather data from NWS using the active location (town filter or settings default)
 	async function loadWeather() {
-		weatherLoading = true;
+		weatherLoadingState = true;
 		weatherError = null;
 		try {
 			const loc = userLocation;
-			const data = await fetchWeather(loc.lat, loc.lon);
-			weatherForecast = data.forecast;
-			weatherAlerts = data.alerts;
+			const result = await fetchWeather(loc.lat, loc.lon);
+			liveWeatherForecast = result.forecast;
+			liveWeatherAlerts = result.alerts;
 		} catch (error) {
 			weatherError = (error as Error).message;
 		} finally {
-			weatherLoading = false;
+			weatherReady = true;
+			weatherLoadingState = false;
 		}
 	}
 
@@ -152,7 +162,7 @@
 				// News always loads client-side (uses DOMParser for RSS)
 				// Weather: skip if already hydrated from server bootstrap
 				const fetches: Promise<void>[] = [loadNews(), loadStravaData()];
-				if (!data?.bootstrap?.weather) {
+				if (!bootstrapWeather) {
 					fetches.push(loadWeather());
 				}
 				await Promise.all(fetches);
@@ -386,142 +396,10 @@
 		}
 	}
 
-	.dash-toggle {
-		display: flex;
-		align-items: center;
-		gap: 0.6rem;
-		width: 100%;
-		padding: 0.25rem 0;
-		margin-bottom: 0.4rem;
-		background: none;
-		border: none;
-		cursor: pointer;
-		color: var(--text-muted);
-		transition: color 0.15s;
-	}
-
-	.dash-toggle:hover {
-		color: var(--text-secondary);
-	}
-
-	.dash-toggle-line {
-		flex: 1;
-		height: 1px;
-		background: var(--border);
-	}
-
-	.dash-toggle-label {
-		font-size: 0.58rem;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		white-space: nowrap;
-		display: flex;
-		align-items: center;
-		gap: 0.3rem;
-	}
-
-	.dash-toggle-chevron {
-		font-size: 0.5rem;
-	}
-
-	.signal-layout {
-		display: grid;
-		grid-template-columns: minmax(240px, 2.4fr) minmax(0, 5.1fr) minmax(0, 4.9fr);
-		gap: 1rem;
-		margin-bottom: 1rem;
-		align-items: stretch;
-		transition:
-			grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-			opacity 0.3s ease;
-	}
-
-	.signal-layout.collapsed {
-		display: none;
-	}
-
-	.signal-column {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-		min-width: 0;
-	}
-
-	.signal-card {
-		min-width: 0;
-		width: 100%;
-	}
-
-	.signal-column > .signal-card:last-child {
-		flex: 1;
-	}
-
-	.signal-weather :global(.panel-content),
-	.signal-housing :global(.panel-content),
-	.signal-gas-prices :global(.panel-content),
-	.signal-ev-charging :global(.panel-content),
-	.signal-tides :global(.panel-content),
-	.signal-pulse :global(.panel-content),
-	.signal-signals :global(.panel-content),
-	.signal-outlooks :global(.panel-content),
-	.signal-environment :global(.panel-content),
-	.signal-conditions :global(.panel-content),
-	.signal-wastewater :global(.panel-content),
-	.signal-airport-status :global(.panel-content) {
-		max-height: none;
-		overflow-y: visible;
-	}
-
-	.signal-column > .signal-card:last-child :global(.panel) {
-		height: 100%;
-		display: flex;
-		flex-direction: column;
-	}
-
-	.signal-column > .signal-card:last-child :global(.panel-content) {
-		flex: 1;
-	}
-
-	.signal-pulse :global(.panel) {
-		min-height: 195px;
-	}
-
-	.signal-signals :global(.panel) {
-		min-height: 620px;
-	}
-
-	.signal-weather :global(.panel),
-	.signal-housing :global(.panel) {
-		min-height: 520px;
-	}
-
-	.signal-tides :global(.panel) {
-		min-height: 600px;
-	}
-
-	.signal-outlooks :global(.panel) {
-		min-height: 310px;
-	}
-
 	.banner-slot {
 		margin-top: 1rem;
 		padding: 0 0.5rem;
 	}
-
-
-	@media (max-width: 1320px) {
-		.signal-layout {
-			grid-template-columns: 1fr;
-		}
-
-		.signal-column {
-			display: contents;
-		}
-
-		.top-stage {
-			grid-template-columns: 1fr;
-		}
-	}
-
 
 	@media (max-width: 768px) {
 		.main-content {

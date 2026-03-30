@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { townFilter, selectedTownObj } from '$lib/stores/town-filter';
 	import { MARIN_TOWNS, MARIN_REGIONS } from '$lib/config/towns';
 	import type { MarinRegion } from '$lib/types';
@@ -8,6 +9,8 @@
 	let search = $state('');
 	let triggerEl = $state<HTMLButtonElement>(undefined!);
 	let dropdownEl = $state<HTMLDivElement>(undefined!);
+	let searchInputEl = $state<HTMLInputElement | null>(null);
+	const pickerListId = 'town-picker-list';
 
 	// Pre-group towns by region, sorted alphabetically within each region
 	const townsByRegion: { region: MarinRegion; towns: Town[] }[] = MARIN_REGIONS.map((region) => ({
@@ -34,9 +37,10 @@
 		townFilter.select(slug);
 		open = false;
 		search = '';
+		triggerEl?.focus();
 	}
 
-	function handleKeydown(e: KeyboardEvent) {
+	function handleWindowKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
 			open = false;
 			search = '';
@@ -64,17 +68,26 @@
 
 	$effect(() => {
 		if (open) {
+			void tick().then(() => searchInputEl?.focus());
 			document.addEventListener('click', handleClickOutside, true);
-			return () => document.removeEventListener('click', handleClickOutside, true);
+			window.addEventListener('keydown', handleWindowKeydown);
+			return () => {
+				document.removeEventListener('click', handleClickOutside, true);
+				window.removeEventListener('keydown', handleWindowKeydown);
+			};
 		}
 	});
 </script>
 
-<div class="town-picker" onkeydown={handleKeydown}>
+<div class="town-picker">
 	<button
+		type="button"
 		class="picker-trigger"
 		class:active={$selectedTownObj !== null}
 		bind:this={triggerEl}
+		aria-haspopup="listbox"
+		aria-expanded={open}
+		aria-controls={open ? pickerListId : undefined}
 		onclick={() => (open = !open)}
 		title="Filter by town"
 	>
@@ -100,13 +113,22 @@
 	{#if open}
 		<div class="picker-dropdown" bind:this={dropdownEl}>
 			<div class="picker-search">
-				<input type="text" placeholder="Search towns..." bind:value={search} autofocus />
+				<input
+					bind:this={searchInputEl}
+					type="text"
+					placeholder="Search towns..."
+					aria-label="Search towns"
+					bind:value={search}
+				/>
 			</div>
 
-			<div class="picker-list">
+			<div class="picker-list" id={pickerListId} role="listbox" aria-label="Marin towns">
 				<button
+					type="button"
 					class="picker-option all-option"
 					class:selected={$selectedTownObj === null}
+					role="option"
+					aria-selected={$selectedTownObj === null}
 					onclick={() => selectTown(null)}
 				>
 					<span class="option-name">All of Marin</span>
@@ -117,8 +139,11 @@
 					<div class="picker-group-header">{group.region}</div>
 					{#each group.towns as town (town.slug)}
 						<button
+							type="button"
 							class="picker-option"
 							class:selected={$townFilter === town.slug}
+							role="option"
+							aria-selected={$townFilter === town.slug}
 							onclick={() => selectTown(town.slug)}
 						>
 							<span class="option-name">{town.name}</span>

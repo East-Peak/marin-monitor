@@ -265,6 +265,9 @@ describe('buildCompositeSnapshot', () => {
 
 		const gasItem = snapshot.marinNumber.items.find((i) => i.label.includes('Gas'));
 		expect(gasItem?.source).toBe('live');
+
+		const housingItem = snapshot.marinNumber.items.find((i) => i.label.includes('Housing'));
+		expect(housingItem?.source).toBe('static');
 	});
 
 	it('includes all static items', () => {
@@ -315,6 +318,42 @@ describe('buildCompositeSnapshot', () => {
 		);
 		expect(skiItem?.source).toBe('live');
 		expect(skiItem?.monthly).toBe(300);
+	});
+
+	it('keeps fallback standalone snapshots marked static', () => {
+		const inputs: CompositeInputs = {
+			...ALL_NULL_INPUTS,
+			rivianLease: {
+				current: { leaseMonthly: 899, msrp: 79900, scraped: false }
+			},
+			ikonPass: {
+				current: {
+					adultPrice: 1399,
+					childPrice: 399,
+					familyOf4: 3596,
+					monthlyAmortized: 300,
+					scraped: false
+				}
+			},
+			dogWalker: {
+				current: {
+					medianWalkPrice: 30,
+					monthlyAt3xWeek: 387,
+					walkerCount: 0,
+					scraped: false
+				}
+			}
+		};
+		const snapshot = buildCompositeSnapshot(inputs);
+
+		const rivianItem = snapshot.marinNumber.items.find((i) => i.label.includes('Rivian'));
+		expect(rivianItem?.source).toBe('static');
+
+		const skiItem = snapshot.marinNumber.items.find((i) => i.label.includes('Ski season'));
+		expect(skiItem?.source).toBe('static');
+
+		const dogItem = snapshot.marinNumber.items.find((i) => i.label.includes('The Dog'));
+		expect(dogItem?.source).toBe('static');
 	});
 });
 

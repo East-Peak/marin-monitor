@@ -35,6 +35,175 @@
 	}
 
 	let { weatherForecast, weatherAlerts, weatherLoading, weatherError, userLocation, earthquakesRaw, isPanelVisible }: Props = $props();
+
+	type PanelEntry = {
+		key: string;
+		visible: boolean;
+		className: string;
+		component: any;
+		props: any;
+	};
+
+	const leftColumnPanels = $derived.by<PanelEntry[]>(() => [
+		{
+			key: 'composite',
+			visible: isPanelVisible('composite'),
+			className: 'signal-composite animate-enter-up stagger-1 hover-lift',
+			component: CompositePanel,
+			props: {}
+		},
+		{
+			key: 'pulse',
+			visible: isPanelVisible('pulse'),
+			className: 'signal-pulse animate-enter-up stagger-1 hover-lift',
+			component: PulsePanel,
+			props: { forecast: weatherForecast, weatherAlerts, earthquakes: earthquakesRaw }
+		},
+		{
+			key: 'wine-index',
+			visible: isPanelVisible('wine-index'),
+			className: 'signal-wine-index animate-enter-up stagger-2 hover-lift',
+			component: WineIndexPanel,
+			props: {}
+		},
+		{
+			key: 'conditions',
+			visible: isPanelVisible('conditions'),
+			className: 'signal-conditions animate-enter-up stagger-3 hover-lift',
+			component: ConditionsPanel,
+			props: {}
+		},
+		{
+			key: 'airport-status',
+			visible: isPanelVisible('airport-status'),
+			className: 'signal-airport-status animate-enter-up stagger-3 hover-lift',
+			component: AirportStatusPanel,
+			props: {}
+		},
+		{
+			key: 'wastewater',
+			visible: isPanelVisible('wastewater'),
+			className: 'signal-wastewater animate-enter-up stagger-3 hover-lift',
+			component: WastewaterPanel,
+			props: {}
+		},
+		{
+			key: 'signals',
+			visible: isPanelVisible('narrative') || isPanelVisible('correlation'),
+			className: 'signal-signals animate-enter-up stagger-4 hover-lift',
+			component: SignalsPanel,
+			props: { news: $allNewsItems }
+		}
+	]);
+
+	const middleColumnPanels = $derived.by<PanelEntry[]>(() => [
+		{
+			key: 'weather',
+			visible: isPanelVisible('weather'),
+			className: 'signal-weather animate-enter-up stagger-1 hover-lift',
+			component: WeatherPanel,
+			props: {
+				forecast: weatherForecast,
+				alerts: weatherAlerts,
+				loading: weatherLoading,
+				error: weatherError,
+				locationLat: userLocation.lat,
+				locationLon: userLocation.lon,
+				locationName: userLocation.name
+			}
+		},
+		{
+			key: 'outlooks',
+			visible: isPanelVisible('weather'),
+			className: 'signal-outlooks animate-enter-up stagger-2 hover-lift',
+			component: OutlooksPanel,
+			props: {
+				forecast: weatherForecast,
+				loading: weatherLoading,
+				error: weatherError,
+				locationLat: userLocation.lat,
+				locationLon: userLocation.lon
+			}
+		},
+		{
+			key: 'tides',
+			visible: isPanelVisible('weather'),
+			className: 'signal-tides animate-enter-up stagger-3 hover-lift',
+			component: TidesPanel,
+			props: {
+				tideStation: userLocation.tideStation,
+				tideStationName: userLocation.tideStationName,
+				locationLat: userLocation.lat,
+				locationLon: userLocation.lon
+			}
+		},
+		{
+			key: 'environment',
+			visible: isPanelVisible('weather'),
+			className: 'signal-environment animate-enter-up stagger-4 hover-lift',
+			component: EnvironmentPanel,
+			props: {}
+		},
+		{
+			key: 'housing',
+			visible: isPanelVisible('housing'),
+			className: 'signal-housing animate-enter-up stagger-4 hover-lift',
+			component: HousingPanel,
+			props: {}
+		},
+		{
+			key: 'cappuccino',
+			visible: isPanelVisible('cappuccino'),
+			className: 'signal-cappuccino animate-enter-up stagger-4 hover-lift',
+			component: CappuccinoPanel,
+			props: {}
+		},
+		{
+			key: 'school-tuition',
+			visible: isPanelVisible('school-tuition'),
+			className: 'signal-school-tuition animate-enter-up stagger-4 hover-lift',
+			component: SchoolTuitionPanel,
+			props: {}
+		}
+	]);
+
+	const rightColumnPanels = $derived.by<PanelEntry[]>(() => [
+		{
+			key: 'gas-prices',
+			visible: isPanelVisible('gas-prices'),
+			className: 'signal-gas-prices animate-enter-up stagger-2 hover-lift',
+			component: GasPricesPanel,
+			props: {}
+		},
+		{
+			key: 'grocery-basket',
+			visible: isPanelVisible('grocery-basket'),
+			className: 'signal-grocery-basket animate-enter-up stagger-3 hover-lift',
+			component: GroceryBasketPanel,
+			props: {}
+		},
+		{
+			key: 'ev-charging',
+			visible: isPanelVisible('ev-charging'),
+			className: 'signal-ev-charging animate-enter-up stagger-3 hover-lift',
+			component: EvChargingPanel,
+			props: {}
+		},
+		{
+			key: 'fitness',
+			visible: isPanelVisible('fitness'),
+			className: 'signal-fitness animate-enter-up stagger-4 hover-lift',
+			component: FitnessPanel,
+			props: {}
+		},
+		{
+			key: 'driveway',
+			visible: isPanelVisible('driveway'),
+			className: 'signal-driveway animate-enter-up stagger-4 hover-lift',
+			component: DrivewayPanel,
+			props: {}
+		}
+	]);
 </script>
 
 <!-- Dashboard collapse toggle -->
@@ -50,142 +219,33 @@
 <!-- Signal deck -->
 <div class="signal-layout" class:collapsed={!$settings.dashboardExpanded}>
 	<div class="signal-column signal-column-left">
-		{#if isPanelVisible('composite')}
-			<div class="signal-card signal-composite animate-enter-up stagger-1 hover-lift">
-				<CompositePanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('pulse')}
-			<div class="signal-card signal-pulse animate-enter-up stagger-1 hover-lift">
-				<PulsePanel forecast={weatherForecast} {weatherAlerts} earthquakes={earthquakesRaw} />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('wine-index')}
-			<div class="signal-card signal-wine-index animate-enter-up stagger-2 hover-lift">
-				<WineIndexPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('conditions')}
-			<div class="signal-card signal-conditions animate-enter-up stagger-3 hover-lift">
-				<ConditionsPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('airport-status')}
-			<div class="signal-card signal-airport-status animate-enter-up stagger-3 hover-lift">
-				<AirportStatusPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('wastewater')}
-			<div class="signal-card signal-wastewater animate-enter-up stagger-3 hover-lift">
-				<WastewaterPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('narrative') || isPanelVisible('correlation')}
-			<div class="signal-card signal-signals animate-enter-up stagger-4 hover-lift">
-				<SignalsPanel news={$allNewsItems} />
-			</div>
-		{/if}
+		{#each leftColumnPanels as panel (panel.key)}
+			{#if panel.visible}
+				<div class={`signal-card ${panel.className}`}>
+					<panel.component {...panel.props} />
+				</div>
+			{/if}
+		{/each}
 	</div>
 
 	<div class="signal-column signal-column-middle">
-		{#if isPanelVisible('weather')}
-			<div class="signal-card signal-weather animate-enter-up stagger-1 hover-lift">
-				<WeatherPanel
-					forecast={weatherForecast}
-					alerts={weatherAlerts}
-					loading={weatherLoading}
-					error={weatherError}
-					locationLat={userLocation.lat}
-					locationLon={userLocation.lon}
-					locationName={userLocation.name}
-				/>
-			</div>
-		{/if}
-
-		{#if isPanelVisible('weather')}
-			<div class="signal-card signal-outlooks animate-enter-up stagger-2 hover-lift">
-				<OutlooksPanel
-					forecast={weatherForecast}
-					loading={weatherLoading}
-					error={weatherError}
-					locationLat={userLocation.lat}
-					locationLon={userLocation.lon}
-				/>
-			</div>
-		{/if}
-
-		{#if isPanelVisible('weather')}
-			<div class="signal-card signal-tides animate-enter-up stagger-3 hover-lift">
-				<TidesPanel
-					tideStation={userLocation.tideStation}
-					tideStationName={userLocation.tideStationName}
-					locationLat={userLocation.lat}
-					locationLon={userLocation.lon}
-				/>
-			</div>
-		{/if}
-
-		{#if isPanelVisible('weather')}
-			<div class="signal-card signal-environment animate-enter-up stagger-4 hover-lift">
-				<EnvironmentPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('housing')}
-			<div class="signal-card signal-housing animate-enter-up stagger-4 hover-lift">
-				<HousingPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('cappuccino')}
-			<div class="signal-card signal-cappuccino animate-enter-up stagger-4 hover-lift">
-				<CappuccinoPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('school-tuition')}
-			<div class="signal-card signal-school-tuition animate-enter-up stagger-4 hover-lift">
-				<SchoolTuitionPanel />
-			</div>
-		{/if}
+		{#each middleColumnPanels as panel (panel.key)}
+			{#if panel.visible}
+				<div class={`signal-card ${panel.className}`}>
+					<panel.component {...panel.props} />
+				</div>
+			{/if}
+		{/each}
 	</div>
 
 	<div class="signal-column signal-column-right">
-		{#if isPanelVisible('gas-prices')}
-			<div class="signal-card signal-gas-prices animate-enter-up stagger-2 hover-lift">
-				<GasPricesPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('grocery-basket')}
-			<div class="signal-card signal-grocery-basket animate-enter-up stagger-3 hover-lift">
-				<GroceryBasketPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('ev-charging')}
-			<div class="signal-card signal-ev-charging animate-enter-up stagger-3 hover-lift">
-				<EvChargingPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('fitness')}
-			<div class="signal-card signal-fitness animate-enter-up stagger-4 hover-lift">
-				<FitnessPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('driveway')}
-			<div class="signal-card signal-driveway animate-enter-up stagger-4 hover-lift">
-				<DrivewayPanel />
-			</div>
-		{/if}
+		{#each rightColumnPanels as panel (panel.key)}
+			{#if panel.visible}
+				<div class={`signal-card ${panel.className}`}>
+					<panel.component {...panel.props} />
+				</div>
+			{/if}
+		{/each}
 	</div>
 </div>
 

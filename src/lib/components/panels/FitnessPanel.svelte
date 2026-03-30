@@ -3,7 +3,7 @@
 	import { Panel } from '$lib/components/common';
 	import { fetchFitnessData } from '$lib/api/marin/fitness';
 	import { fitnessStore } from '$lib/stores/fitness';
-	import { townFilter, selectedTownObj } from '$lib/stores/town-filter';
+	import { townFilter } from '$lib/stores/town-filter';
 	import { findNearestTown } from '$lib/geo';
 	import { select } from 'd3-selection';
 	import { scaleLinear } from 'd3-scale';
@@ -300,6 +300,8 @@
 				<svg
 					class="chart-svg"
 					bind:this={chartSvg}
+					role="img"
+					aria-label="Median fitness drop-in price trend"
 					onpointermove={updateHover}
 					onpointerleave={clearHover}
 				></svg>

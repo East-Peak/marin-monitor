@@ -26,6 +26,8 @@ export type VerificationLevel = 'official' | 'local_media' | 'community' | 'sati
  */
 export type MapLayer = 'civic' | 'news' | 'safety' | 'housing' | 'activity' | 'satire' | 'gas' | 'ev-charging' | 'coffee' | 'fitness';
 
+export type { MapFeatureKind, MapFeatureInspectorData } from './map';
+
 /**
  * A news item from any local source
  */

@@ -17,7 +17,7 @@
 	import type { AirportStatus } from '$lib/types/airport';
 	import { MAPBOX_TOKEN } from '$lib/config/api';
 	import { findNearestTown } from '$lib/geo/proximity';
-	import type { NewsItem, MapLayer } from '$lib/types';
+	import type { NewsItem, MapFeatureInspectorData, MapLayer } from '$lib/types';
 
 	let boundaryData: GeoJSON.FeatureCollection | null = null;
 
@@ -38,14 +38,7 @@
 		onTownClick?: (townSlug: string) => void;
 		onTownHover?: (townSlug: string | null) => void;
 		onPinClick?: (itemId: string) => void;
-		onFeatureClick?: (feature: {
-			kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station' | 'ev-charging-station' | 'coffee-shop' | 'fitness-studio' | 'airport';
-			title: string;
-			subtitle?: string;
-			description?: string;
-			severity?: string;
-			source?: string;
-		}) => void;
+		onFeatureClick?: (feature: MapFeatureInspectorData) => void;
 	}
 
 	let {
