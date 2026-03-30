@@ -13,11 +13,28 @@ import type { CoffeeShop, CoffeeSnapshot } from '$lib/types/coffee';
 import {
 	COFFEE_SHOPS,
 	CAPPUCCINO_HARDCODED_PRICE_MAP,
+	CAPPUCCINO_MIN_FRESH_LIVE_RATIO,
+	CAPPUCCINO_USER_AGENT,
+	TOAST_SHOPS,
 	TOAST_PAGE_TIMEOUT,
 	type CoffeeShopConfig
 } from '$lib/config/coffee';
 import { withSuccessfulScrapeMetadata } from '$lib/server/scrape-metadata';
 import type { Browser } from 'puppeteer-core';
+import {
+	computeMedian,
+	extractCappuccinoPrice,
+	extractPriceFromState,
+	hasFreshCoffeeCoverage,
+	summarizeCoffeeShops
+} from './cappuccino.shared.js';
+
+export {
+	computeMedian,
+	extractCappuccinoPrice,
+	extractPriceFromState,
+	mergeCoffeeShopWithFallback
+} from './cappuccino.shared.js';
 
 /**
  * Extract cappuccino price from Toast's window.__OO_STATE__ structured data.
@@ -25,89 +42,26 @@ import type { Browser } from 'puppeteer-core';
  * The OO_STATE object contains menu data keyed by "Menu:<id>".
  * Each menu has groups, and each group has items with names and prices.
  * Prices are in dollars (not cents).
- */
-export function extractPriceFromState(state: Record<string, any>, itemName: string): number | null {
-	if (!state) return null;
-
-	// Find menu keys
-	const menuKeys = Object.keys(state).filter(k => k.startsWith('Menu:'));
-
-	for (const menuKey of menuKeys) {
-		const menu = state[menuKey];
-		if (!menu?.groups) continue;
-
-		for (const group of menu.groups) {
-			if (!group?.items) continue;
-			for (const item of group.items) {
-				if (item?.name?.toLowerCase().includes(itemName.toLowerCase())) {
-					if (Array.isArray(item.prices) && item.prices.length > 0) {
-						return item.prices[0];
-					}
-				}
-			}
-		}
-	}
-
-	return null;
-}
-
-/**
- * Extract cappuccino price from page text content (for non-Toast shops).
- *
- * Handles multiple text formats:
- *   - "Cappuccino$5.25" (no space)
- *   - "Cappuccino $5.25" (space before $)
- *   - "Cappuccino\n$5.25" (price on next line)
- *
- * Returns null if no cappuccino line found.
- */
-export function extractCappuccinoPrice(text: string): number | null {
-	if (!text) return null;
-
-	const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
-
-	for (let i = 0; i < lines.length; i++) {
-		const line = lines[i];
-
-		// Pattern 1: "Cappuccino$5.25" or "Cappuccino $5.25" on same line
-		const sameLineMatch = line.match(/cappuccino\s*\$(\d+(?:\.\d{1,2})?)/i);
-		if (sameLineMatch) {
-			return parseFloat(sameLineMatch[1]);
-		}
-
-		// Pattern 2: "Cappuccino" on one line, "$5.25" on next line
-		if (/^cappuccino$/i.test(line) && i + 1 < lines.length) {
-			const nextLine = lines[i + 1];
-			const priceMatch = nextLine.match(/^\$(\d+(?:\.\d{1,2})?)$/);
-			if (priceMatch) {
-				return parseFloat(priceMatch[1]);
-			}
-		}
-	}
-
-	return null;
-}
-
-/** Compute median of a number array. Returns null for empty array. */
-export function computeMedian(values: number[]): number | null {
-	if (values.length === 0) return null;
-	const sorted = [...values].sort((a, b) => a - b);
-	const mid = Math.floor(sorted.length / 2);
-	if (sorted.length % 2 === 0) {
-		return Math.round(((sorted[mid - 1] + sorted[mid]) / 2) * 100) / 100;
-	}
-	return sorted[mid];
-}
-
 /** Build a CoffeeSnapshot from a list of scraped shops */
 export function buildSnapshot(shops: CoffeeShop[]): CoffeeSnapshot {
 	const prices = shops
 		.filter((s) => s.price !== null)
 		.map((s) => s.price!);
+	const metrics = summarizeCoffeeShops(shops);
+	const timestamp = new Date().toISOString();
+	const hasFreshCoverage = hasFreshCoffeeCoverage(
+		metrics.liveShopCount,
+		TOAST_SHOPS.length,
+		CAPPUCCINO_MIN_FRESH_LIVE_RATIO
+	);
 
 	return withSuccessfulScrapeMetadata({
-		timestamp: new Date().toISOString(),
+		timestamp,
 		shopCount: shops.length,
+		pricedShopCount: metrics.pricedShopCount,
+		liveShopCount: metrics.liveShopCount,
+		fallbackShopCount: metrics.fallbackShopCount,
+		hardcodedShopCount: metrics.hardcodedShopCount,
 		medianPrice: computeMedian(prices),
 		avgPrice:
 			prices.length > 0
@@ -116,7 +70,23 @@ export function buildSnapshot(shops: CoffeeShop[]): CoffeeSnapshot {
 		minPrice: prices.length > 0 ? Math.min(...prices) : null,
 		maxPrice: prices.length > 0 ? Math.max(...prices) : null,
 		shops
-	});
+	}, hasFreshCoverage ? timestamp : null);
+}
+
+function buildUnavailableResult(shop: CoffeeShopConfig): CoffeeShop {
+	return {
+		id: shop.id,
+		name: shop.name,
+		address: shop.address,
+		town: shop.town,
+		lat: shop.lat,
+		lon: shop.lon,
+		price: null,
+		source: 'toast',
+		priceSource: 'unavailable',
+		isStale: true,
+		updateTime: new Date().toISOString()
+	};
 }
 
 /** Launch a puppeteer-core browser using @sparticuz/chromium */
@@ -141,17 +111,21 @@ async function scrapeToastShop(
 	let price: number | null = null;
 
 	try {
-		await page.setUserAgent(
-			'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
-		);
+		await page.setUserAgent(CAPPUCCINO_USER_AGENT);
 
 		await page.goto(shop.url, {
-			waitUntil: 'networkidle0',
+			waitUntil: 'domcontentloaded',
 			timeout: TOAST_PAGE_TIMEOUT
 		});
 
-		// Wait for Toast React SPA to hydrate and populate __OO_STATE__
-		await new Promise((resolve) => setTimeout(resolve, 3000));
+		await page
+			.waitForFunction(() => {
+				const state = (window as any).__OO_STATE__;
+				return state && Object.keys(state).length > 1;
+			}, { timeout: TOAST_PAGE_TIMEOUT })
+			.catch(() => {
+				// Continue with text fallback if the structured state never hydrates.
+			});
 
 		// Extract the __OO_STATE__ object from the window
 		const ooState = await page.evaluate(() => {
@@ -186,6 +160,8 @@ async function scrapeToastShop(
 		lon: shop.lon,
 		price,
 		source: 'toast',
+		priceSource: price !== null ? 'live' : 'unavailable',
+		isStale: price === null,
 		updateTime: new Date().toISOString()
 	};
 }
@@ -208,6 +184,7 @@ function buildHardcodedResult(shop: CoffeeShopConfig): CoffeeShop {
 		source: shop.source,
 		altDrink: shop.altDrink,
 		altPrice: data?.altPrice,
+		priceSource: 'hardcoded',
 		updateTime: new Date().toISOString()
 	};
 }
@@ -223,6 +200,7 @@ function buildHardcodedResult(shop: CoffeeShopConfig): CoffeeShop {
  */
 export async function scrapeCappuccino(): Promise<CoffeeSnapshot> {
 	const results: CoffeeShop[] = [];
+	const shopOrder = new Map(COFFEE_SHOPS.map((shop, index) => [shop.id, index]));
 
 	// 1. Add hardcoded non-Toast shops (no browser needed)
 	for (const shop of COFFEE_SHOPS) {
@@ -251,17 +229,7 @@ export async function scrapeCappuccino(): Promise<CoffeeSnapshot> {
 						(err as Error).message
 					);
 					// Push a null-price result so the shop still appears in output
-					results.push({
-						id: shop.id,
-						name: shop.name,
-						address: shop.address,
-						town: shop.town,
-						lat: shop.lat,
-						lon: shop.lon,
-						price: null,
-						source: 'toast',
-						updateTime: new Date().toISOString()
-					});
+					results.push(buildUnavailableResult(shop));
 				}
 
 				// Reduced delay between requests (was 1500ms)
@@ -272,5 +240,6 @@ export async function scrapeCappuccino(): Promise<CoffeeSnapshot> {
 		}
 	}
 
+	results.sort((a, b) => (shopOrder.get(a.id) ?? 0) - (shopOrder.get(b.id) ?? 0));
 	return buildSnapshot(results);
 }

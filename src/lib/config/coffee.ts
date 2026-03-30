@@ -1,5 +1,10 @@
 import type { CoffeeSource } from '$lib/types/coffee';
-import { COFFEE_SHOPS_DATA, CAPPUCCINO_HARDCODED_PRICES } from './coffee.shared.js';
+import {
+	COFFEE_SHOPS_DATA,
+	CAPPUCCINO_HARDCODED_PRICES,
+	CAPPUCCINO_MIN_FRESH_LIVE_RATIO,
+	CAPPUCCINO_USER_AGENT
+} from './coffee.shared.js';
 
 /** Blob storage key */
 export const CAPPUCCINO_BLOB_KEY = 'marin-cappuccino.json';
@@ -12,6 +17,12 @@ export const TOAST_PAGE_TIMEOUT = 15000;
 
 /** Search term to find cappuccino on Toast menus */
 export const CAPPUCCINO_SEARCH_TERM = 'cappuccino';
+
+/** Shared browser UA for Toast scraping */
+export { CAPPUCCINO_USER_AGENT };
+
+/** Minimum live coverage required to mark a snapshot fresh */
+export { CAPPUCCINO_MIN_FRESH_LIVE_RATIO };
 
 export interface CoffeeShopConfig {
 	id: string;

@@ -1,5 +1,6 @@
 /** Source platform for scraping */
 export type CoffeeSource = 'toast' | 'html' | 'delivery';
+export type CoffeePriceSource = 'live' | 'hardcoded' | 'fallback' | 'unavailable';
 
 /** A single coffee shop with its current cappuccino price */
 export interface CoffeeShop {
@@ -14,6 +15,8 @@ export interface CoffeeShop {
 	/** For shops without cappuccino (e.g., Philz pour-over only) */
 	altDrink?: string;
 	altPrice?: number;
+	priceSource?: CoffeePriceSource;
+	isStale?: boolean;
 	updateTime: string;
 }
 
@@ -22,6 +25,10 @@ export interface CoffeeSnapshot {
 	timestamp: string;
 	lastSuccessfulScrapeAt?: string | null;
 	shopCount: number;
+	pricedShopCount?: number | null;
+	liveShopCount?: number | null;
+	fallbackShopCount?: number | null;
+	hardcodedShopCount?: number | null;
 	medianPrice: number | null;
 	avgPrice: number | null;
 	minPrice: number | null;

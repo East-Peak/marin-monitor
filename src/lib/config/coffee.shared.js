@@ -134,6 +134,15 @@ export const COFFEE_SHOPS_DATA = [
 	}
 ];
 
+export const CAPPUCCINO_USER_AGENT =
+	'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+
+/**
+ * Minimum share of live Toast shops that must return a fresh price before the
+ * weekly snapshot should advance its "last successful scrape" timestamp.
+ */
+export const CAPPUCCINO_MIN_FRESH_LIVE_RATIO = 0.5;
+
 export const CAPPUCCINO_HARDCODED_PRICES = {
 	'firehouse-sausalito': { price: 5.5, source: 'hardcoded' },
 	'fox-kit-san-rafael': { price: 5.5, source: 'hardcoded' },

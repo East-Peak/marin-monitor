@@ -48,20 +48,21 @@
 	const alerts = $derived(nearby.filter((i) => i.isAlert).slice(0, 4));
 </script>
 
-<div class="flex h-full gap-0" style="min-height: 0;">
-	<div class="flex-1 min-w-0 min-h-0 relative" style="height: 100%;">
+<div class="flex h-full min-h-0 overflow-hidden bg-slate-950">
+	<div class="relative flex-1 min-h-0 min-w-0">
 		<MapContainer>
 			<MapDataLayer earthquakes={earthquakeItems} {fireIncidents} />
 			{#if STRAVA_ENABLED}
 				<SegmentLayer />
 			{/if}
-			<TvMapPosition center={view.center} zoom={view.zoom} />
+			<TvMapPosition center={view.center} zoom={view.zoom} duration={view.duration} />
 		</MapContainer>
-		<div class="absolute top-16 left-3 z-10 px-3 py-1.5 rounded bg-gray-900/80 backdrop-blur-sm border border-gray-700/50">
-			<span class="text-sm font-medium text-gray-200">{view.label}</span>
+		<div class="absolute left-4 top-4 z-10 rounded-2xl border border-slate-700/60 bg-slate-950/78 px-4 py-2 backdrop-blur-md shadow-[0_12px_30px_rgba(2,6,23,0.35)]">
+			<div class="text-[10px] font-semibold uppercase tracking-[0.28em] text-sky-300/75">Map Focus</div>
+			<span class="mt-1 block text-sm font-semibold text-slate-100">{view.label}</span>
 		</div>
 	</div>
-	<div class="w-72 shrink-0">
+	<div class="h-full shrink-0 border-l border-slate-800/70" style="width: clamp(19rem, 26vw, 24rem);">
 		<TvMapSidebar
 			regionLabel={view.label}
 			{weather}

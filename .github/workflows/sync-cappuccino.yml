@@ -30,5 +30,3 @@ jobs:
       - run: node scripts/sync-cappuccino.mjs
         env:
           BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
-          SCRAPE_PROXY_URL: ${{ secrets.SCRAPE_PROXY_URL }}
-          SCRAPE_PROXY_SECRET: ${{ secrets.SCRAPE_PROXY_SECRET }}

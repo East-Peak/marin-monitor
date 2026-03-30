@@ -1,7 +1,13 @@
 // src/lib/server/scrapers/cappuccino.test.ts
 
 import { describe, it, expect } from 'vitest';
-import { extractCappuccinoPrice, extractPriceFromState, computeMedian, buildSnapshot } from './cappuccino';
+import {
+	extractCappuccinoPrice,
+	extractPriceFromState,
+	computeMedian,
+	buildSnapshot,
+	mergeCoffeeShopWithFallback
+} from './cappuccino';
 import type { CoffeeShop } from '$lib/types/coffee';
 
 describe('extractCappuccinoPrice', () => {
@@ -160,6 +166,7 @@ describe('buildSnapshot', () => {
 				lon: -122.5,
 				price: 5.00,
 				source: 'toast',
+				priceSource: 'live',
 				updateTime: '2026-03-29T10:00:00Z'
 			},
 			{
@@ -171,6 +178,7 @@ describe('buildSnapshot', () => {
 				lon: -122.52,
 				price: 5.50,
 				source: 'toast',
+				priceSource: 'fallback',
 				updateTime: '2026-03-29T10:00:00Z'
 			},
 			{
@@ -182,6 +190,7 @@ describe('buildSnapshot', () => {
 				lon: -122.49,
 				price: null,
 				source: 'html',
+				priceSource: 'hardcoded',
 				updateTime: '2026-03-29T10:00:00Z'
 			}
 		];
@@ -192,6 +201,10 @@ describe('buildSnapshot', () => {
 		expect(snapshot.avgPrice).toBe(5.25);
 		expect(snapshot.minPrice).toBe(5.00);
 		expect(snapshot.maxPrice).toBe(5.50);
+		expect(snapshot.pricedShopCount).toBe(2);
+		expect(snapshot.liveShopCount).toBe(1);
+		expect(snapshot.fallbackShopCount).toBe(1);
+		expect(snapshot.hardcodedShopCount).toBe(1);
 		expect(snapshot.shops).toHaveLength(3);
 		expect(snapshot.timestamp).toBeDefined();
 	});
@@ -216,5 +229,54 @@ describe('buildSnapshot', () => {
 		expect(snapshot.avgPrice).toBeNull();
 		expect(snapshot.minPrice).toBeNull();
 		expect(snapshot.maxPrice).toBeNull();
+	});
+});
+
+describe('mergeCoffeeShopWithFallback', () => {
+	it('reuses the previous known price when a live toast scrape comes back empty', () => {
+		const scraped: CoffeeShop = {
+			id: 'equator-mill-valley',
+			name: 'Equator Coffees',
+			address: '2 Miller Ave, Mill Valley',
+			town: 'Mill Valley',
+			lat: 37.9061,
+			lon: -122.5484,
+			price: null,
+			source: 'toast',
+			priceSource: 'unavailable',
+			updateTime: '2026-03-30T10:00:00Z'
+		};
+		const previous: CoffeeShop = {
+			...scraped,
+			price: 5.75,
+			priceSource: 'live',
+			updateTime: '2026-03-23T10:00:00Z'
+		};
+
+		const merged = mergeCoffeeShopWithFallback(scraped, previous);
+		expect(merged.price).toBe(5.75);
+		expect(merged.priceSource).toBe('fallback');
+		expect(merged.isStale).toBe(true);
+		expect(merged.updateTime).toBe('2026-03-23T10:00:00Z');
+	});
+
+	it('keeps a live price untouched when the fresh scrape succeeds', () => {
+		const scraped: CoffeeShop = {
+			id: 'equator-mill-valley',
+			name: 'Equator Coffees',
+			address: '2 Miller Ave, Mill Valley',
+			town: 'Mill Valley',
+			lat: 37.9061,
+			lon: -122.5484,
+			price: 6.0,
+			source: 'toast',
+			priceSource: 'live',
+			updateTime: '2026-03-30T10:00:00Z'
+		};
+
+		const merged = mergeCoffeeShopWithFallback(scraped, null);
+		expect(merged.price).toBe(6.0);
+		expect(merged.priceSource).toBe('live');
+		expect(merged.isStale).toBe(false);
 	});
 });

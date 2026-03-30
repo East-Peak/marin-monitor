@@ -3,7 +3,18 @@
 	import { browser } from '$app/environment';
 	import { TvWallboard } from '$lib/components/tv';
 
+	let originalBodyStyles = {
+		overflow: '',
+		margin: '',
+		padding: ''
+	};
+
 	onMount(() => {
+		originalBodyStyles = {
+			overflow: document.body.style.overflow,
+			margin: document.body.style.margin,
+			padding: document.body.style.padding
+		};
 		document.body.style.overflow = 'hidden';
 		document.body.style.margin = '0';
 		document.body.style.padding = '0';
@@ -11,9 +22,9 @@
 
 	onDestroy(() => {
 		if (browser) {
-			document.body.style.overflow = '';
-			document.body.style.margin = '';
-			document.body.style.padding = '';
+			document.body.style.overflow = originalBodyStyles.overflow;
+			document.body.style.margin = originalBodyStyles.margin;
+			document.body.style.padding = originalBodyStyles.padding;
 		}
 	});
 </script>

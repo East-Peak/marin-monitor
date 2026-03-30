@@ -10,14 +10,23 @@
   }
 
   const items = $derived($tvTickerItems);
+  const repeatedItems = $derived(
+    items.length > 1 ? [...items, ...items] : [...items, ...items, ...items]
+  );
   // Scale animation duration with item count: ~3s per item, minimum 20s
   const scrollDuration = $derived(Math.max(20, items.length * 3));
 </script>
 
-<div class="fixed bottom-0 left-0 right-0 z-50 bg-gray-900/95 border-t border-gray-700/50">
+<div class="relative z-20 border-t border-slate-800/70 bg-slate-950/94">
+  <div class="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-slate-950 via-slate-950/92 to-transparent"></div>
+  <div class="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-slate-950 via-slate-950/92 to-transparent"></div>
+
   <div class="overflow-hidden" style="height: 44px;">
-    <div class="chyron-track flex items-center gap-12 whitespace-nowrap px-4 h-full" style="animation-duration: {scrollDuration}s;">
-      {#each [...items, ...items] as item, i (item.id + '-' + i)}
+    <div
+      class="chyron-track flex h-full min-w-max items-center gap-12 whitespace-nowrap px-4"
+      style="animation-duration: {scrollDuration}s;"
+    >
+      {#each repeatedItems as item, i (item.id + '-' + i)}
         <div class="flex items-center gap-2 shrink-0">
           <span
             class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold tracking-wide"
@@ -36,6 +45,7 @@
 <style>
   .chyron-track {
     animation: chyron-scroll linear infinite;
+    will-change: transform;
   }
   .chyron-track:hover {
     animation-play-state: paused;
