@@ -473,6 +473,16 @@ Collections to use for index computation:
 - unique-reds-2025 / unique-reds -- interesting picks listing
 - natural-wine (177 products) -- possible future category line
 
+Future: Wine-Searcher integration (backlog):
+
+- wine-searcher.com is the industry standard for wine pricing across thousands of retailers
+- API exists but $250/mo for useful tier (500 calls/day). Free trial at 100 calls/day — apply first
+- No category browsing — must query each wine by name individually
+- Not self-serve — requires contacting their team for API key
+- Alternative approach: Chrome + Claude MCP scrape (browser automation with reasoning)
+- Colin (Stuart's wine friend) recommends it as the go-to source
+- Decision: backlog for now. PlumpJack is working well as primary source. Revisit when we want to get "really dorky on wine" — either via their API trial or a Chrome+MCP approach
+
 Collections to AVOID (mass-market grocery wines):
 
 - classics-under-50 (has Prisoner, Cakebread, Rombauer, Meiomi)
