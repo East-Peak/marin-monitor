@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SEED_SEGMENTS } from '$lib/config/strava';
 import type { StravaSegmentCatalog } from '$lib/types/strava';
 
@@ -20,6 +20,12 @@ const {
 
 describe('buildSegmentCatalog', () => {
 	beforeEach(() => {
+		vi.restoreAllMocks();
+		vi.spyOn(console, 'warn').mockImplementation(() => {});
+		vi.spyOn(console, 'error').mockImplementation(() => {});
+	});
+
+	afterEach(() => {
 		vi.restoreAllMocks();
 	});
 

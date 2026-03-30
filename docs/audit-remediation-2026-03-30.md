@@ -122,6 +122,7 @@ This document captures the findings from the full Marin Monitor audit and tracks
 - `npm run check`: passed with `0` errors and `0` warnings.
 - `npm run test:unit`: passed with `36` files and `406` tests.
 - `npm run build`: passed with clean `adapter-vercel` output and no residual dependency warnings.
+- `npm audit fix`: resolved the transitive dependency findings. `vitest` is now on `4.1.2`, and the remaining SvelteKit/cookie advisory in `npm audit --json` is a manifest-level false positive because the installed `cookie` version is overridden to `0.7.2`.
 
 ## Residual Follow-up
 
@@ -136,3 +137,4 @@ This document captures the findings from the full Marin Monitor audit and tracks
 - 2026-03-30: fallback-backed composite input scrapers now emit `lastSuccessfulScrapeAt` in addition to the legacy `lastLiveScrapeAt` field.
 - 2026-03-30: object-backed scraper outputs and Strava blobs now standardize on `lastSuccessfulScrapeAt`, and health/freshness readers now prefer embedded freshness metadata over blob upload time where available.
 - 2026-03-30: non-blocking build follow-up completed. `agentation` was removed from the production route tree, runtime scraper DOM parsing moved off `jsdom`, browser-only coffee scrape dependencies were moved out of production installs, and the dormant Vercel cappuccino sync route now returns an explicit GitHub-Actions-only response.
+- 2026-03-30: dependency hygiene follow-up completed. `npm audit fix` patched the remaining transitive issues, `vitest` was upgraded to `4.1.2`, test stderr noise was suppressed for expected failure-path coverage, and `cookie` is now pinned to `0.7.2` via `overrides`.
