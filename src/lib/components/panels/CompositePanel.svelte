@@ -15,7 +15,7 @@
 	let data = $state<CompositeData>({ current: null, history: [] });
 	let chartSvg = $state<SVGSVGElement>(undefined!);
 	let dataLoading = $state(false);
-	let breakdownExpanded = $state(false);
+	let breakdownExpanded = $state(true);
 
 	type HoverState = { index: number; x: number } | null;
 	let hoverState = $state<HoverState>(null);

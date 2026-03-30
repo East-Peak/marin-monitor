@@ -52,15 +52,16 @@ export const TIER_CONFIGS: TierConfig[] = [
  * Updated manually once a year.
  */
 export const STATIC_MARIN_NUMBER_ITEMS: MarinNumberItem[] = [
-	{ label: 'The Dog', monthly: 1000, source: 'static' },
-	{ label: 'Therapist (weekly)', monthly: 1000, source: 'static' },
+	{ label: 'Rivian R1S payment', monthly: 1100, source: 'static' },
+	{ label: 'The Dog', monthly: 1500, source: 'static' },
+	{ label: 'Therapist (weekly)', monthly: 1400, source: 'static' },
 	{ label: 'Ski season (amortized)', monthly: 600, source: 'static' },
-	{ label: 'Summer camp (2 kids, amortized)', monthly: 933, source: 'static' },
+	{ label: 'Summer camp (2 kids, amortized)', monthly: 1200, source: 'static' },
 	{ label: 'Country club (amortized)', monthly: 1250, source: 'static' },
-	{ label: 'Wine country trips (amortized)', monthly: 667, source: 'static' },
-	{ label: 'Farmers market', monthly: 433, source: 'static' },
+	{ label: 'Wine country trips (amortized)', monthly: 750, source: 'static' },
+	{ label: 'Farmers market', monthly: 500, source: 'static' },
 	{ label: 'Marin Country Mart (2x/mo)', monthly: 1000, source: 'static' },
-	{ label: 'Acupuncture (biweekly)', monthly: 260, source: 'static' }
+	{ label: 'Acupuncture (biweekly)', monthly: 300, source: 'static' }
 ];
 
 /**
