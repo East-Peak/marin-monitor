@@ -726,6 +726,17 @@ Approach:
 - Sanity bounds on scraped values (cappuccino shouldn't cost $0 or $500)
 - No need for Datadog/PagerDuty — keep it simple
 
+### Scrape Proxy on Mac Mini
+
+The Mac mini runs a residential IP proxy at 127.0.0.1:8889 (LaunchAgent: com.marinmonitor.scrape-proxy). GitHub Actions workflows route scraping requests through it via Tailscale (100.67.183.14:8889) to avoid datacenter IP blocking.
+
+- LaunchAgent: /Users/tammypais/Library/LaunchAgents/com.marinmonitor.scrape-proxy.plist
+- Script: scripts/scrape-proxy.mjs
+- Health endpoint: http://127.0.0.1:8889/health (returns request counts, success/error rates, last request/error)
+- Auth: Bearer token stored in GH Actions secret SCRAPE_PROXY_SECRET
+- Tailscale auth key for GH runners: stored in GH Actions secret TAILSCALE_AUTHKEY (ephemeral, reusable, 90-day expiry — renew before expiration)
+- Monitor: proxy health should be checked alongside index freshness in the observability system
+
 ### Better Event Scraping / Calendar Ingestion
 
 Backlog item. Not part of the indices feature but uses the same scraping techniques.
