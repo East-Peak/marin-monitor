@@ -193,7 +193,25 @@ function buildSearchUrl(searchTerm) {
 	return `${INSTACART_BASE}?k=${encodeURIComponent(searchTerm)}`;
 }
 
-function scorePriceMatch(candidateName, targetName) {
+/**
+ * Brand-specific key terms that MUST ALL appear in the candidate name for a match.
+ * This prevents e.g. any random cab sauv from matching "Silver Oak".
+ */
+const BRAND_KEY_TERMS = {
+	'vital-farms-eggs': ['vital', 'farms'],
+	'marin-kombucha': ['marin', 'kombucha'],
+	'oatly-oatmilk': ['oatly'],
+	'san-luis-sourdough': ['san', 'luis'],
+	'marys-chicken': ['marys'],
+	'earthbound-kale': ['earthbound'],
+	'manuka-honey': ['manuka'],
+	'justins-almond-butter': ['justins'],
+	'open-nature-salmon': ['open', 'nature', 'salmon'],
+	'silver-oak-cabernet': ['silver', 'oak'],
+	'vital-proteins-collagen': ['vital', 'proteins']
+};
+
+function scorePriceMatch(candidateName, targetName, itemId = null) {
 	const normalize = (s) =>
 		s
 			.toLowerCase()
@@ -205,6 +223,14 @@ function scorePriceMatch(candidateName, targetName) {
 	const candidateWords = new Set(normalize(candidateName));
 
 	if (targetWords.length === 0) return 0;
+
+	// Brand key-term gate: if the item has required brand terms, ALL must be present
+	if (itemId && BRAND_KEY_TERMS[itemId]) {
+		const required = BRAND_KEY_TERMS[itemId];
+		for (const term of required) {
+			if (!candidateWords.has(term)) return 0;
+		}
+	}
 
 	let matches = 0;
 	for (const word of targetWords) {
@@ -219,7 +245,74 @@ function parseInstacartResults(html) {
 
 	if (!html || html.length === 0) return products;
 
-	// Strategy 1: JSON-LD structured data
+	// ---- Strategy 1: Playwright-rendered cross-retailer DOM ----
+	// Instacart SPA renders store sections (CrossRetailerResultRowWrapper)
+	// each containing a store header and product cards (item_list_item_items_{storeId}-{productId}).
+
+	// Step 1a: Build a storeId -> storeName map from CrossRetailerResultRowWrapper sections
+	const storeMap = new Map();
+	const sectionPattern =
+		/data-testid="CrossRetailerResultRowWrapper"([\s\S]*?)(?=data-testid="CrossRetailerResultRowWrapper"|data-testid="CrossRetailerSearchRetailerSignPosts"|$)/g;
+	let sectionMatch;
+	while ((sectionMatch = sectionPattern.exec(html)) !== null) {
+		const section = sectionMatch[1];
+		// Store name is in <span ... role="heading" aria-level="3">StoreName</span>
+		const nameMatch = section.match(/aria-level="3">([^<]+)</);
+		if (!nameMatch) continue;
+		const storeName = nameMatch[1].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
+		// Extract the numeric store ID from item cards within this section
+		const idPattern = /item_list_item_items_(\d+)-/g;
+		let idMatch;
+		while ((idMatch = idPattern.exec(section)) !== null) {
+			if (!storeMap.has(idMatch[1])) {
+				storeMap.set(idMatch[1], storeName);
+			}
+		}
+	}
+
+	// Step 1b: Parse individual product cards
+	const itemPattern =
+		/data-testid="item_list_item_items_(\d+)-(\d+)"([\s\S]{0,5000}?)(?=data-testid="item_list_item|data-testid="CrossRetailer|data-testid="loading-lockup|$)/g;
+	let itemMatch;
+	while ((itemMatch = itemPattern.exec(html)) !== null) {
+		const storeId = itemMatch[1];
+		const chunk = itemMatch[3];
+
+		// Extract current price from "Current price: $X.XX" text
+		const currentPriceMatch = chunk.match(/Current price: \$(\d+\.?\d*)/);
+		if (!currentPriceMatch) continue;
+		const price = parseFloat(currentPriceMatch[1]);
+		if (isNaN(price) || price <= 0) continue;
+
+		// Detect sale: "Original Price: $X.XX" present means item is on sale
+		const originalPriceMatch = chunk.match(/Original Price: \$(\d+\.?\d*)/);
+		const onSale = !!originalPriceMatch;
+
+		// Extract product name: find substantial text spans that aren't prices/ratings/labels
+		const skipPatterns = /^(Current price|Original Price|Great price|Out of stock|Request|\d+% off|About |\$|★|per package|\d+ sizes?|\(\d)/i;
+		const spanPattern = />([^<]{5,200})</g;
+		let s;
+		let productName = '';
+		while ((s = spanPattern.exec(chunk)) !== null) {
+			const text = s[1].trim();
+			if (text && !skipPatterns.test(text) && text.length > productName.length) {
+				productName = text;
+			}
+		}
+
+		if (!productName) continue;
+
+		const store = storeMap.get(storeId) || 'Unknown';
+
+		products.push({ name: productName, price, store, onSale });
+	}
+
+	if (products.length > 0) {
+		console.log(`[grocery-basket] Parsed ${products.length} products from ${storeMap.size} stores (Playwright DOM)`);
+		return products;
+	}
+
+	// ---- Strategy 2: JSON-LD structured data (plain fetch fallback) ----
 	const jsonLdPattern = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
 	let jsonLdMatch;
 	while ((jsonLdMatch = jsonLdPattern.exec(html)) !== null) {
@@ -252,35 +345,20 @@ function parseInstacartResults(html) {
 
 	if (products.length > 0) return products;
 
-	// Strategy 2: data-testid product cards
-	const cardPattern =
-		/data-testid="product-card"[\s\S]*?data-testid="product-card-name"[^>]*>([^<]+)<[\s\S]*?data-testid="product-card-price"[^>]*>\$?([\d.]+)<[\s\S]*?data-testid="product-card-store"[^>]*>([^<]+)</gi;
-
+	// ---- Strategy 3: aria-label + price fallback ----
 	let match;
-	while ((match = cardPattern.exec(html)) !== null) {
-		const name = match[1].trim();
-		const price = parseFloat(match[2]);
-		const store = match[3].trim();
-		if (name && !isNaN(price) && price > 0 && store) {
-			products.push({ name, price, store, onSale: false });
-		}
-	}
-
-	if (products.length > 0) return products;
-
-	// Strategy 3: aria-label extraction
 	const genericPattern = /aria-label="([^"]+)"[\s\S]*?\$(\d+\.?\d*)/gi;
 	while ((match = genericPattern.exec(html)) !== null) {
 		const name = match[1].trim();
 		const price = parseFloat(match[2]);
-		if (name && !isNaN(price) && price > 0) {
+		if (name && name !== 'product card' && !isNaN(price) && price > 0) {
 			products.push({ name, price, store: 'Unknown', onSale: false });
 		}
 	}
 
 	if (products.length > 0) return products;
 
-	// Strategy 4: bare price detection (for diagnostics)
+	// ---- Strategy 4: bare price detection (diagnostics) ----
 	const pricePattern = /\$(\d{1,3}\.\d{2})/g;
 	const pricesFound = [];
 	while ((match = pricePattern.exec(html)) !== null) {
@@ -395,8 +473,9 @@ async function fetchInstacartPlaywright(searchTerm) {
 		await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
 		// Wait for product cards to render (Instacart is a React SPA)
+		// Cross-retailer results use item_list_item_items_{storeId}-{productId} testids
 		await page.waitForFunction(
-			() => document.querySelectorAll('[data-testid="product_card"], [aria-label*="$"]').length > 0,
+			() => document.querySelectorAll('[data-testid^="item_list_item_items_"], [data-testid="CrossRetailerResultRowWrapper"]').length > 0,
 			{ timeout: 15000 }
 		).catch(() => {
 			// If product cards never appear, continue with whatever rendered
@@ -415,7 +494,7 @@ async function fetchInstacartPlaywright(searchTerm) {
 	}
 }
 
-async function scrapeItemPrices(itemId, itemName, searchTerm, usePlaywright) {
+async function scrapeItemPrices(itemId, itemName, searchTerm, usePlaywright, referencePrice = null) {
 	let html;
 
 	if (usePlaywright) {
@@ -432,19 +511,42 @@ async function scrapeItemPrices(itemId, itemName, searchTerm, usePlaywright) {
 		return [];
 	}
 
-	// Score and filter
+	// Price sanity bounds: reject matches where price is wildly off from reference
+	// Allow wider range for cheap items, tighter for expensive ones
+	const PRICE_FLOOR_RATIO = 0.25; // reject if < 25% of reference
+	const PRICE_CEIL_RATIO = 3.5;   // reject if > 350% of reference
+
+	// For expensive items ($50+), use tighter bounds and require higher match score
+	const isExpensive = referencePrice && referencePrice >= 50;
+	const minScore = isExpensive ? 0.55 : MIN_MATCH_SCORE;
+
+	// Score, filter by name match, then filter by price sanity
 	const scored = allProducts
 		.map((product) => ({
 			product,
-			score: scorePriceMatch(product.name, itemName)
+			score: scorePriceMatch(product.name, itemName, itemId)
 		}))
-		.filter((s) => s.score >= MIN_MATCH_SCORE)
+		.filter((s) => s.score >= minScore)
+		.filter((s) => {
+			// Price sanity check against reference price
+			if (!referencePrice) return true;
+			const ratio = s.product.price / referencePrice;
+			if (ratio < PRICE_FLOOR_RATIO || ratio > PRICE_CEIL_RATIO) {
+				console.log(
+					`[grocery-basket] Rejected "${s.product.name}" at $${s.product.price.toFixed(2)} ` +
+					`(${Math.round(ratio * 100)}% of reference $${referencePrice.toFixed(2)}) — out of bounds`
+				);
+				return false;
+			}
+			return true;
+		})
 		.sort((a, b) => b.score - a.score);
 
 	// Deduplicate by store (keep cheapest per store)
 	const byStore = new Map();
-	for (const { product } of scored) {
+	for (const { product, score } of scored) {
 		const storeKey = product.store.toLowerCase();
+		if (storeKey === 'unknown') continue; // skip products without a store
 		const existing = byStore.get(storeKey);
 		if (!existing || product.price < existing.price) {
 			byStore.set(storeKey, {
@@ -504,7 +606,8 @@ async function main() {
 			firstItem.id,
 			firstItem.name,
 			firstItem.searchTerm,
-			false
+			false,
+			firstItem.referencePrice
 		);
 		if (testPrices.length > 0) {
 			liveItemsFound++;
@@ -529,7 +632,8 @@ async function main() {
 				firstItem.id,
 				firstItem.name,
 				firstItem.searchTerm,
-				true
+				true,
+				firstItem.referencePrice
 			);
 			if (pwPrices.length > 0) {
 				usePlaywright = true;
@@ -565,7 +669,8 @@ async function main() {
 				firstItem.id,
 				firstItem.name,
 				firstItem.searchTerm,
-				true
+				true,
+				firstItem.referencePrice
 			);
 			if (pwPrices.length > 0) {
 				usePlaywright = true;
@@ -622,7 +727,8 @@ async function main() {
 					basketItem.id,
 					basketItem.name,
 					basketItem.searchTerm,
-					usePlaywright
+					usePlaywright,
+					basketItem.referencePrice
 				);
 
 				const sorted = [...storePrices].sort((a, b) => a.price - b.price);
