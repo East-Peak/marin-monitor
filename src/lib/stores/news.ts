@@ -332,20 +332,32 @@ export const prepNews = derived(news, ($news) => $news.categories.prep);
 export const farmNews = derived(news, ($news) => $news.categories.farm);
 export const satireNews = derived(news, ($news) => $news.categories.satire);
 
-// Derived store for all news items (reactive)
+// Derived store for all news items (reactive, deduplicated by id)
 export const allNewsItems = derived(news, ($news) => {
+	const seen = new Set<string>();
 	const allItems: NewsItem[] = [];
 	for (const category of NEWS_CATEGORIES) {
-		allItems.push(...$news.categories[category].items);
+		for (const item of $news.categories[category].items) {
+			if (!seen.has(item.id)) {
+				seen.add(item.id);
+				allItems.push(item);
+			}
+		}
 	}
 	return allItems;
 });
 
-// Derived store for alerts
+// Derived store for alerts (deduplicated by id)
 export const alerts = derived(news, ($news) => {
+	const seen = new Set<string>();
 	const allAlerts: NewsItem[] = [];
 	for (const category of NEWS_CATEGORIES) {
-		allAlerts.push(...$news.categories[category].items.filter((i) => i.isAlert));
+		for (const item of $news.categories[category].items) {
+			if (item.isAlert && !seen.has(item.id)) {
+				seen.add(item.id);
+				allAlerts.push(item);
+			}
+		}
 	}
 	return allAlerts.sort((a, b) => b.timestamp - a.timestamp);
 });
