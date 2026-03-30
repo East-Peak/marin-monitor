@@ -2,12 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { COFFEE_SHOPS, CAPPUCCINO_SHOPS, TOAST_SHOPS } from './coffee';
 
 describe('coffee shop config', () => {
-	it('has 11 total shops', () => {
-		expect(COFFEE_SHOPS).toHaveLength(11);
+	it('has 12 total shops', () => {
+		expect(COFFEE_SHOPS).toHaveLength(12);
 	});
 
-	it('has 10 cappuccino shops (excludes Philz)', () => {
-		expect(CAPPUCCINO_SHOPS).toHaveLength(10);
+	it('has 11 cappuccino shops (excludes Philz)', () => {
+		expect(CAPPUCCINO_SHOPS).toHaveLength(11);
 	});
 
 	it('has 8 Toast shops', () => {

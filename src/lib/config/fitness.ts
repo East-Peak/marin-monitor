@@ -59,8 +59,8 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		town: 'Larkspur',
 		type: 'yoga',
 		dropInPrice: 27,
-		lat: 37.9410,
-		lon: -122.5350
+		lat: 37.9471,
+		lon: -122.5087
 	},
 	{
 		id: 'marin-iyengar-yoga',
@@ -68,8 +68,8 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		town: 'Corte Madera',
 		type: 'yoga',
 		dropInPrice: 29,
-		lat: 37.9250,
-		lon: -122.5270
+		lat: 37.9245,
+		lon: -122.5199
 	},
 	{
 		id: 'now-power-yoga',
@@ -77,8 +77,8 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		town: 'Corte Madera',
 		type: 'yoga',
 		dropInPrice: 30,
-		lat: 37.9250,
-		lon: -122.5240
+		lat: 37.9325,
+		lon: -122.5179
 	},
 	{
 		id: 'embrace-yoga',
@@ -86,8 +86,8 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		town: 'San Rafael',
 		type: 'yoga',
 		dropInPrice: 32,
-		lat: 37.9735,
-		lon: -122.5150
+		lat: 37.9733,
+		lon: -122.5288
 	},
 	{
 		id: 'sukha-yoga',
@@ -95,8 +95,8 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		town: 'Novato',
 		type: 'yoga',
 		dropInPrice: 34,
-		lat: 38.1077,
-		lon: -122.5697
+		lat: 38.1073,
+		lon: -122.5651
 	},
 	{
 		id: 'pilates-tiburon-yoga',
@@ -104,8 +104,8 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		town: 'Tiburon',
 		type: 'yoga',
 		dropInPrice: 34,
-		lat: 37.8735,
-		lon: -122.4567
+		lat: 37.8734,
+		lon: -122.4575
 	},
 	{
 		id: 'studio-mv-yoga',
@@ -113,8 +113,8 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		town: 'Mill Valley',
 		type: 'yoga',
 		dropInPrice: 38,
-		lat: 37.9060,
-		lon: -122.5480
+		lat: 37.9002,
+		lon: -122.5278
 	},
 	{
 		id: 'hot-yoga-republic',
@@ -122,8 +122,8 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		town: 'Mill Valley',
 		type: 'yoga',
 		dropInPrice: 39,
-		lat: 37.9060,
-		lon: -122.5450
+		lat: 37.8986,
+		lon: -122.5138
 	},
 
 	// --- Pilates (Reformer) ---
@@ -133,8 +133,8 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		town: 'Tiburon',
 		type: 'pilates',
 		dropInPrice: 45,
-		lat: 37.8735,
-		lon: -122.4567
+		lat: 37.8734,
+		lon: -122.4575
 	},
 	{
 		id: 'studio-mv-reformer',
@@ -142,8 +142,8 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		town: 'Mill Valley',
 		type: 'pilates',
 		dropInPrice: 45,
-		lat: 37.9060,
-		lon: -122.5480
+		lat: 37.9002,
+		lon: -122.5278
 	},
 	{
 		id: 'mighty-pilates',
@@ -151,8 +151,8 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		town: 'Larkspur',
 		type: 'pilates',
 		dropInPrice: 50,
-		lat: 37.9410,
-		lon: -122.5360
+		lat: 37.9475,
+		lon: -122.5090
 	},
 	{
 		id: 'studio-pilates-marin',
@@ -160,8 +160,8 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		town: 'San Rafael',
 		type: 'pilates',
 		dropInPrice: 50,
-		lat: 37.9735,
-		lon: -122.5120
+		lat: 37.9719,
+		lon: -122.5180
 	},
 	{
 		id: 'internal-fire-pilates',
@@ -169,8 +169,8 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		town: 'Mill Valley',
 		type: 'pilates',
 		dropInPrice: 55,
-		lat: 37.9060,
-		lon: -122.5490
+		lat: 37.8955,
+		lon: -122.5346
 	},
 
 	// --- Cycling ---
@@ -180,8 +180,8 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		town: 'Larkspur',
 		type: 'cycling',
 		dropInPrice: 39,
-		lat: 37.9410,
-		lon: -122.5340
+		lat: 37.9480,
+		lon: -122.5090
 	},
 
 	// --- HIIT ---
@@ -191,8 +191,8 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		town: 'Greenbrae',
 		type: 'hiit',
 		dropInPrice: 29,
-		lat: 37.9460,
-		lon: -122.5290
+		lat: 37.9461,
+		lon: -122.5240
 	},
 
 	// --- CrossFit ---
@@ -202,8 +202,8 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		town: 'San Rafael',
 		type: 'crossfit',
 		dropInPrice: 25,
-		lat: 37.9700,
-		lon: -122.5100
+		lat: 37.9694,
+		lon: -122.5141
 	}
 ];
 
