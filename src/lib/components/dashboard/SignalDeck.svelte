@@ -62,8 +62,14 @@
 			</div>
 		{/if}
 
+		{#if isPanelVisible('wine-index')}
+			<div class="signal-card signal-wine-index animate-enter-up stagger-2 hover-lift">
+				<WineIndexPanel />
+			</div>
+		{/if}
+
 		{#if isPanelVisible('conditions')}
-			<div class="signal-card signal-conditions animate-enter-up stagger-2 hover-lift">
+			<div class="signal-card signal-conditions animate-enter-up stagger-3 hover-lift">
 				<ConditionsPanel />
 			</div>
 		{/if}
@@ -77,18 +83,6 @@
 		{#if isPanelVisible('wastewater')}
 			<div class="signal-card signal-wastewater animate-enter-up stagger-3 hover-lift">
 				<WastewaterPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('school-tuition')}
-			<div class="signal-card signal-school-tuition animate-enter-up stagger-4 hover-lift">
-				<SchoolTuitionPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('driveway')}
-			<div class="signal-card signal-driveway animate-enter-up stagger-4 hover-lift">
-				<DrivewayPanel />
 			</div>
 		{/if}
 
@@ -143,9 +137,41 @@
 			</div>
 		{/if}
 
+		{#if isPanelVisible('housing')}
+			<div class="signal-card signal-housing animate-enter-up stagger-4 hover-lift">
+				<HousingPanel />
+			</div>
+		{/if}
+
 		{#if isPanelVisible('cappuccino')}
 			<div class="signal-card signal-cappuccino animate-enter-up stagger-4 hover-lift">
 				<CappuccinoPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('school-tuition')}
+			<div class="signal-card signal-school-tuition animate-enter-up stagger-4 hover-lift">
+				<SchoolTuitionPanel />
+			</div>
+		{/if}
+	</div>
+
+	<div class="signal-column signal-column-right">
+		{#if isPanelVisible('gas-prices')}
+			<div class="signal-card signal-gas-prices animate-enter-up stagger-2 hover-lift">
+				<GasPricesPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('grocery-basket')}
+			<div class="signal-card signal-grocery-basket animate-enter-up stagger-3 hover-lift">
+				<GroceryBasketPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('ev-charging')}
+			<div class="signal-card signal-ev-charging animate-enter-up stagger-3 hover-lift">
+				<EvChargingPanel />
 			</div>
 		{/if}
 
@@ -154,36 +180,10 @@
 				<FitnessPanel />
 			</div>
 		{/if}
-	</div>
 
-	<div class="signal-column signal-column-right">
-		{#if isPanelVisible('housing')}
-			<div class="signal-card signal-housing animate-enter-up stagger-2 hover-lift">
-				<HousingPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('gas-prices')}
-			<div class="signal-card signal-gas-prices animate-enter-up stagger-3 hover-lift">
-				<GasPricesPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('grocery-basket')}
-			<div class="signal-card signal-grocery-basket animate-enter-up stagger-4 hover-lift">
-				<GroceryBasketPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('ev-charging')}
-			<div class="signal-card signal-ev-charging animate-enter-up stagger-4 hover-lift">
-				<EvChargingPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('wine-index')}
-			<div class="signal-card signal-wine-index animate-enter-up stagger-4 hover-lift">
-				<WineIndexPanel />
+		{#if isPanelVisible('driveway')}
+			<div class="signal-card signal-driveway animate-enter-up stagger-4 hover-lift">
+				<DrivewayPanel />
 			</div>
 		{/if}
 	</div>
