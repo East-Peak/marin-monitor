@@ -24,7 +24,7 @@
 	<div class="flex-1 min-h-0">
 		<TvAutoScroll>
 			<div class="grid grid-cols-2 gap-2">
-				{#each safetyItems as item (item.id)}
+				{#each safetyItems as item, i (item.id + '-' + i)}
 					<div class="bg-gray-800/60 rounded-lg p-2.5 border border-gray-700/50">
 						<div class="flex justify-between items-start">
 							<h3 class="text-sm font-medium text-gray-100 line-clamp-2">{item.title}</h3>

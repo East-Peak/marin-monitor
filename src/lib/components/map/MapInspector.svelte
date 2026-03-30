@@ -169,7 +169,7 @@
 				{#if selectedItem}
 					<div class="list-label">Also in {townName ?? 'this area'}</div>
 				{/if}
-				{#each relatedItems.slice(0, 14) as item (item.id)}
+				{#each relatedItems.slice(0, 14) as item, i (item.id + '-' + i)}
 					<div class="story-row">
 						<div class="story-meta">
 							<span class="meta-source">{item.source}</span>

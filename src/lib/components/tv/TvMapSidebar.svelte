@@ -66,7 +66,7 @@
 				<span class="text-[10px] uppercase tracking-[0.22em] text-slate-600">{stories.length} items</span>
 			</div>
 			<div class="space-y-2.5">
-			{#each stories.slice(0, 6) as item (item.id)}
+			{#each stories.slice(0, 6) as item, i (item.id + '-' + i)}
 				<div class="rounded-2xl border border-slate-800/80 bg-slate-900/70 px-3 py-3 shadow-[0_8px_20px_rgba(2,6,23,0.18)]">
 					<p class="text-sm leading-snug text-slate-100 line-clamp-3">{item.title}</p>
 					<div class="mt-2 flex items-center justify-between gap-2 text-[10px] uppercase tracking-[0.18em]">

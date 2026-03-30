@@ -11,7 +11,7 @@
   <div class="flex-1 min-h-0">
     <TvAutoScroll>
       <div class="grid grid-cols-2 gap-4">
-        {#each items as item (item.id)}
+        {#each items as item, i (item.id + '-' + i)}
           <div class="bg-gray-800/60 rounded-lg p-4 border border-gray-700/50">
             <div class="flex items-center gap-2 mb-2">
               <span class="text-xs font-medium px-2 py-0.5 rounded bg-gray-700 text-gray-300">

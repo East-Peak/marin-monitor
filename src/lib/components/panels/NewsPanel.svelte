@@ -66,7 +66,7 @@
 		<div class="empty-state">No news available</div>
 	{:else}
 		<div class="news-list">
-			{#each items.slice(0, 15) as item, i (item.id)}
+			{#each items.slice(0, 15) as item, i (item.id + '-' + i)}
 				{#if wireAd && i === adPosition}
 					<AdCard ad={wireAd} />
 				{/if}
