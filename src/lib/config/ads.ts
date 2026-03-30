@@ -12,7 +12,7 @@ export interface AdConfig {
 	type: 'listing' | 'event' | 'business' | 'community';
 	placement: 'wire' | 'banner';
 	headline: string;
-	body: string;
+	body: string; // plain text only
 	sponsor: string;
 	url: string;
 	startDate?: string; // ISO date, inclusive
@@ -34,7 +34,7 @@ export const ADS: AdConfig[] = [
 		type: 'community',
 		placement: 'wire',
 		headline: 'Marin Families',
-		body: 'Optimize where to <s>warehouse</s> enrich your children this summer. Find camps, daycare, preschools, and activities across 32 Marin towns — no group-chat panic or twenty open browser tabs required.',
+		body: 'Optimize where to enrich your children this summer. Find camps, daycare, preschools, and activities across 32 Marin towns without the group-chat panic or twenty open browser tabs.',
 		image: '/images/marin-families.png',
 		sponsor: 'East Peak Advisors',
 		url: 'https://marinfamilies.com',

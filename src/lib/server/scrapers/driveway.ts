@@ -2,6 +2,10 @@
 
 import type { DrivewaySnapshot, MakeCount, FuelBreakdown, DrivewayFunStats, FuelType } from '$lib/types/driveway';
 import {
+	withPreservedSuccessfulScrapeMetadata,
+	withSuccessfulScrapeMetadata
+} from '$lib/server/scrape-metadata';
+import {
 	DMV_API_BASE,
 	DMV_FUEL_TYPE_MAP,
 	MARIN_ZIPS,
@@ -199,14 +203,14 @@ async function fetchLiveDmvData(): Promise<DrivewaySnapshot | null> {
 		const totalVehicles = fuelCounts.reduce((sum, f) => sum + f.count, 0);
 		const funStats = extractFunStats(makeCounts, fuelCounts);
 
-		return {
+		return withSuccessfulScrapeMetadata({
 			timestamp: new Date().toISOString(),
 			dataYear: year,
 			totalVehicles,
 			topMakes: makeCounts.slice(0, 20), // Keep top 20
 			fuelBreakdown: fuelCounts,
 			funStats
-		};
+		});
 	} catch (err) {
 		console.warn('[driveway] Live DMV fetch failed:', err instanceof Error ? err.message : err);
 		return null;
@@ -217,7 +221,9 @@ async function fetchLiveDmvData(): Promise<DrivewaySnapshot | null> {
  * Compute a DrivewaySnapshot. Attempts live DMV API first, falls back to
  * hardcoded 2024 data if the API is unavailable or returns bad results.
  */
-export async function computeDrivewaySnapshot(): Promise<DrivewaySnapshot> {
+export async function computeDrivewaySnapshot(
+	previous: DrivewaySnapshot | null = null
+): Promise<DrivewaySnapshot> {
 	// Try live API first
 	const live = await fetchLiveDmvData();
 	if (live) {
@@ -227,12 +233,15 @@ export async function computeDrivewaySnapshot(): Promise<DrivewaySnapshot> {
 
 	// Fall back to hardcoded 2024 data
 	console.log('[driveway] Using hardcoded 2024 fallback data');
-	return {
+	return withPreservedSuccessfulScrapeMetadata({
 		timestamp: new Date().toISOString(),
 		dataYear: FALLBACK_DATA_YEAR,
 		totalVehicles: FALLBACK_TOTAL_VEHICLES,
 		topMakes: FALLBACK_TOP_MAKES,
 		fuelBreakdown: FALLBACK_FUEL_BREAKDOWN,
 		funStats: FALLBACK_FUN_STATS
-	};
+	}, {
+		wasLive: false,
+		previous
+	});
 }

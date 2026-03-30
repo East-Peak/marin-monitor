@@ -14,6 +14,7 @@
 
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import { BASKET_ITEMS } from '$lib/config/grocery-basket';
+import { withSuccessfulScrapeMetadata } from '$lib/server/scrape-metadata';
 import { scoreGroceryPriceMatch } from '$lib/shared/grocery-basket-matching.js';
 import type {
 	BasketItemPrices,
@@ -451,11 +452,13 @@ export async function scrapeGroceryBasket(): Promise<GrocerySnapshot> {
 		`[grocery-basket] Source: ${source}, total cheapest: $${totalCheapest?.toFixed(2) ?? 'N/A'}`
 	);
 
-	return {
-		timestamp: new Date().toISOString(),
+	const timestamp = new Date().toISOString();
+
+	return withSuccessfulScrapeMetadata({
+		timestamp,
 		totalCheapest,
 		totalExpensive,
 		itemsFound: cheapestPrices.length,
 		items
-	};
+	}, instacartBlocked ? null : timestamp);
 }

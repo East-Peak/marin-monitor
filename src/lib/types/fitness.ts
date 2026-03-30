@@ -18,6 +18,7 @@ export interface FitnessStudio {
 /** A point-in-time snapshot of all fitness studios */
 export interface FitnessSnapshot {
 	timestamp: string;
+	lastSuccessfulScrapeAt?: string | null;
 	studioCount: number;
 	medianPrice: number | null;
 	avgPrice: number | null;

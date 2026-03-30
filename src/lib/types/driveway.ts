@@ -36,6 +36,7 @@ export interface DrivewayFunStats {
 /** A point-in-time snapshot of Marin vehicle registration data */
 export interface DrivewaySnapshot {
 	timestamp: string;
+	lastSuccessfulScrapeAt?: string | null;
 	/** The calendar year of the DMV data */
 	dataYear: number;
 	totalVehicles: number;

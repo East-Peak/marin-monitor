@@ -16,6 +16,7 @@ import {
 	COFFEE_SHOPS_DATA as COFFEE_SHOPS,
 	CAPPUCCINO_HARDCODED_PRICES as HARDCODED_PRICES
 } from '../src/lib/config/coffee.shared.js';
+import { withSuccessfulScrapeMetadata } from './shared/scrape-metadata.mjs';
 
 // ---- Config (shared with src/lib/config/coffee.ts) ----
 
@@ -101,7 +102,7 @@ function computeMedian(values) {
 function buildSnapshot(shops) {
 	const prices = shops.filter((s) => s.price !== null).map((s) => s.price);
 
-	return {
+	return withSuccessfulScrapeMetadata({
 		timestamp: new Date().toISOString(),
 		shopCount: shops.length,
 		medianPrice: computeMedian(prices),
@@ -112,7 +113,7 @@ function buildSnapshot(shops) {
 		minPrice: prices.length > 0 ? Math.min(...prices) : null,
 		maxPrice: prices.length > 0 ? Math.max(...prices) : null,
 		shops
-	};
+	});
 }
 
 // ---- Toast scraping with Playwright ----

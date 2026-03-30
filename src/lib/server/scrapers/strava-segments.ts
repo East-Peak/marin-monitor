@@ -12,6 +12,7 @@
 
 import type { StravaSegment, StravaSegmentCatalog } from '$lib/types/strava';
 import { SEED_SEGMENTS } from '$lib/config/strava';
+import { readSuccessfulScrapeAt } from '$lib/server/scrape-metadata';
 import { getStravaAccessToken } from './strava-auth';
 
 // ---------------------------------------------------------------------------
@@ -59,7 +60,8 @@ export function normalizeCatalogToSeedSegments(
 				existingById.get(seed.id)
 			)
 		),
-		lastUpdated: existingCatalog?.lastUpdated ?? new Date().toISOString()
+		lastUpdated: existingCatalog?.lastUpdated ?? new Date().toISOString(),
+		lastSuccessfulScrapeAt: readSuccessfulScrapeAt(existingCatalog)
 	};
 }
 
@@ -137,6 +139,7 @@ export async function buildSegmentCatalog(
 	const catalog = new Map<number, StravaSegment>(
 		baseCatalog.segments.map((segment) => [segment.id, segment])
 	);
+	let enriched = 0;
 
 	// Try to enrich each seed segment with detail API data (polylines + stats)
 	let token: string | null = null;
@@ -147,8 +150,6 @@ export async function buildSegmentCatalog(
 	}
 
 	if (token) {
-		let enriched = 0;
-
 		for (const seed of SEED_SEGMENTS) {
 			// Small delay between requests to avoid rate limiting
 			if (enriched > 0) await new Promise((r) => setTimeout(r, 500));
@@ -178,8 +179,12 @@ export async function buildSegmentCatalog(
 		console.warn('[strava-segments] No OAuth token — all segments will have polyline: null');
 	}
 
+	const nowIso = new Date().toISOString();
+	const lastSuccessfulScrapeAt = enriched > 0 ? nowIso : readSuccessfulScrapeAt(baseCatalog);
+
 	return {
 		segments: Array.from(catalog.values()),
-		lastUpdated: new Date().toISOString()
+		lastUpdated: nowIso,
+		lastSuccessfulScrapeAt
 	};
 }

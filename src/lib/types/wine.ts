@@ -51,6 +51,7 @@ export interface WineStaffPick {
 /** Full snapshot of all wine index data at a point in time */
 export interface WineSnapshot {
 	timestamp: string;
+	lastSuccessfulScrapeAt?: string | null;
 	/** Category median snapshots */
 	categories: WineCategorySnapshot[];
 	/** Staff picks bottle listing */

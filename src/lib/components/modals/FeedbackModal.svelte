@@ -12,6 +12,7 @@
 	let feedbackType = $state<'feed-request' | 'bug-report' | 'general'>('general');
 	let message = $state('');
 	let email = $state('');
+	let website = $state('');
 	let submitting = $state(false);
 	let submitted = $state(false);
 	let error = $state('');
@@ -22,6 +23,7 @@
 			feedbackType = initialType;
 			message = '';
 			email = '';
+			website = '';
 			submitted = false;
 			error = '';
 		}
@@ -56,7 +58,8 @@
 				body: JSON.stringify({
 					type: feedbackType,
 					message: message.trim(),
-					email: email.trim() || undefined
+					email: email.trim() || undefined,
+					website: website.trim() || undefined
 				})
 			});
 			if (!res.ok) throw new Error('Failed to send');
@@ -110,6 +113,11 @@
 				/>
 			</div>
 
+			<div class="honeypot" aria-hidden="true">
+				<label for="feedback-website">Website</label>
+				<input id="feedback-website" type="text" bind:value={website} tabindex="-1" autocomplete="off" />
+			</div>
+
 			{#if error}
 				<p class="error">{error}</p>
 			{/if}
@@ -124,6 +132,14 @@
 <style>
 	.field {
 		margin-bottom: 0.75rem;
+	}
+
+	.honeypot {
+		position: absolute;
+		left: -10000px;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
 	}
 
 	.label {

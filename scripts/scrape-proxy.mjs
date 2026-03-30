@@ -17,6 +17,7 @@
  */
 
 import { createServer } from 'node:http';
+import { timingSafeEqual } from 'node:crypto';
 
 const PORT = parseInt(process.env.PROXY_PORT || '8889', 10);
 const SECRET = process.env.PROXY_SECRET;
@@ -49,27 +50,38 @@ const ALLOWED_PROXY_HOSTS = new Set([
 	'www.marinfamilies.com'
 ]);
 
-const server = createServer(async (req, res) => {
-	// CORS preflight
-	if (req.method === 'OPTIONS') {
-		res.writeHead(204, {
-			'Access-Control-Allow-Origin': '*',
-			'Access-Control-Allow-Methods': 'POST, GET',
-			'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-		});
-		res.end();
-		return;
-	}
+const ALLOWED_PROXY_METHODS = new Set(['GET', 'HEAD']);
+const BLOCKED_REQUEST_HEADERS = new Set(['authorization', 'host', 'connection', 'content-length']);
 
+function safeEquals(expected, actual) {
+	if (!expected || !actual) return false;
+	const expectedBuf = Buffer.from(expected, 'utf8');
+	const actualBuf = Buffer.from(actual, 'utf8');
+	if (expectedBuf.length !== actualBuf.length) return false;
+	return timingSafeEqual(expectedBuf, actualBuf);
+}
+
+function sanitizeForwardHeaders(headers) {
+	const sanitized = {};
+	for (const [key, value] of Object.entries(headers || {})) {
+		if (typeof value !== 'string') continue;
+		const normalized = key.toLowerCase();
+		if (BLOCKED_REQUEST_HEADERS.has(normalized)) continue;
+		sanitized[key] = value;
+	}
+	return sanitized;
+}
+
+const server = createServer(async (req, res) => {
 	// Health check
 	if (req.method === 'GET' && req.url === '/health') {
 		const auth = req.headers['authorization'];
-		if (auth !== `Bearer ${SECRET}`) {
-			res.writeHead(401, { 'Content-Type': 'application/json' });
+		if (!safeEquals(`Bearer ${SECRET}`, auth)) {
+			res.writeHead(401, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
 			res.end(JSON.stringify({ error: 'Unauthorized' }));
 			return;
 		}
-		res.writeHead(200, { 'Content-Type': 'application/json' });
+		res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
 		res.end(
 			JSON.stringify({
 				ok: true,
@@ -84,15 +96,15 @@ const server = createServer(async (req, res) => {
 
 	// Auth check
 	const auth = req.headers['authorization'];
-	if (auth !== `Bearer ${SECRET}`) {
-		res.writeHead(401, { 'Content-Type': 'application/json' });
+	if (!safeEquals(`Bearer ${SECRET}`, auth)) {
+		res.writeHead(401, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
 		res.end(JSON.stringify({ error: 'Unauthorized' }));
 		return;
 	}
 
 	// Only accept POST /proxy
 	if (req.method !== 'POST' || !req.url?.startsWith('/proxy')) {
-		res.writeHead(404, { 'Content-Type': 'application/json' });
+		res.writeHead(404, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
 		res.end(JSON.stringify({ error: 'Not found. Use POST /proxy' }));
 		return;
 	}
@@ -105,14 +117,14 @@ const server = createServer(async (req, res) => {
 	try {
 		parsed = JSON.parse(body);
 	} catch {
-		res.writeHead(400, { 'Content-Type': 'application/json' });
+		res.writeHead(400, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
 		res.end(JSON.stringify({ error: 'Invalid JSON body' }));
 		return;
 	}
 
 	const { url, headers = {}, method = 'GET', timeout = 30000 } = parsed;
 	if (!url) {
-		res.writeHead(400, { 'Content-Type': 'application/json' });
+		res.writeHead(400, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
 		res.end(JSON.stringify({ error: 'Missing url field' }));
 		return;
 	}
@@ -121,32 +133,41 @@ const server = createServer(async (req, res) => {
 	try {
 		targetUrl = new URL(url);
 	} catch {
-		res.writeHead(400, { 'Content-Type': 'application/json' });
+		res.writeHead(400, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
 		res.end(JSON.stringify({ error: 'Invalid url field' }));
 		return;
 	}
 
 	if (!['http:', 'https:'].includes(targetUrl.protocol) || !ALLOWED_PROXY_HOSTS.has(targetUrl.hostname)) {
-		res.writeHead(403, { 'Content-Type': 'application/json' });
+		res.writeHead(403, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
 		res.end(JSON.stringify({ error: 'Target URL not allowed' }));
 		return;
 	}
+
+	const normalizedMethod = typeof method === 'string' ? method.toUpperCase() : 'GET';
+	if (!ALLOWED_PROXY_METHODS.has(normalizedMethod)) {
+		res.writeHead(405, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+		res.end(JSON.stringify({ error: 'Method not allowed' }));
+		return;
+	}
+
+	const timeoutMs = Math.min(Math.max(Number(timeout) || 30000, 1000), 30000);
 
 	stats.totalRequests++;
 	stats.lastRequest = { hostname: targetUrl.hostname, time: new Date().toISOString() };
 
 	try {
 		const controller = new AbortController();
-		const timer = setTimeout(() => controller.abort(), timeout);
+		const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-			const response = await fetch(targetUrl, {
-			method,
+		const response = await fetch(targetUrl, {
+			method: normalizedMethod,
 			headers: {
 				'User-Agent':
 					'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
 				'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
 				'Accept-Language': 'en-US,en;q=0.9',
-				...headers
+				...sanitizeForwardHeaders(headers)
 			},
 			signal: controller.signal
 		});
@@ -156,7 +177,7 @@ const server = createServer(async (req, res) => {
 		const data = await response.text();
 		stats.successCount++;
 
-		res.writeHead(200, { 'Content-Type': 'application/json' });
+		res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
 		res.end(
 			JSON.stringify({
 				status: response.status,
@@ -165,15 +186,15 @@ const server = createServer(async (req, res) => {
 				bytes: data.length
 			})
 		);
-		} catch (err) {
-			stats.errorCount++;
-			stats.lastError = {
-				hostname: targetUrl.hostname,
-				error: err.message,
-				time: new Date().toISOString()
-			};
+	} catch (err) {
+		stats.errorCount++;
+		stats.lastError = {
+			hostname: targetUrl.hostname,
+			error: err.message,
+			time: new Date().toISOString()
+		};
 
-		res.writeHead(502, { 'Content-Type': 'application/json' });
+		res.writeHead(502, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
 		res.end(JSON.stringify({ error: 'Proxy fetch failed', message: err.message }));
 	}
 });

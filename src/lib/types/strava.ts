@@ -77,11 +77,13 @@ export interface StravaEvent {
 export interface StravaSegmentCatalog {
 	segments: StravaSegment[];
 	lastUpdated: string;
+	lastSuccessfulScrapeAt?: string | null;
 }
 
 export interface StravaEventLog {
 	events: StravaEvent[];
 	lastUpdated: string;
+	lastSuccessfulScrapeAt?: string | null;
 }
 
 /** Seed segment config entry (hand-curated) */

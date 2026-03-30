@@ -18,6 +18,7 @@
 import { put, head } from '@vercel/blob';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { withSuccessfulScrapeMetadata } from './shared/scrape-metadata.mjs';
 
 const BLOB_KEY = 'marin-camp-prices.json';
 const MAX_HISTORY = 24; // 2 years at monthly
@@ -233,7 +234,7 @@ async function main() {
 	// monthly = (median_weekly * 2 kids * 8 weeks) / 12 months
 	const monthlyAmortized2Kids = Math.round((medianWeekly * 2 * 8) / 12);
 
-	const snapshot = {
+	const snapshot = withSuccessfulScrapeMetadata({
 		timestamp: new Date().toISOString(),
 		source,
 		sessionCount: allPrices.length,
@@ -243,7 +244,7 @@ async function main() {
 		minWeekly,
 		maxWeekly,
 		monthlyAmortized2Kids
-	};
+	});
 
 	// Read existing blob for history
 	let existing = { current: null, history: [] };

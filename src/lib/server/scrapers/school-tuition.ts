@@ -8,6 +8,7 @@ import {
 	computeTiers,
 	computeCumulativeK12
 } from '$lib/config/schools';
+import { withSuccessfulScrapeMetadata } from '$lib/server/scrape-metadata';
 import type { School, SchoolSnapshot } from '$lib/types/school';
 
 /**
@@ -40,7 +41,7 @@ export function computeSchoolSnapshot(): SchoolSnapshot {
 	const cumulativeK12 = computeCumulativeK12(tiers);
 	const schools = SCHOOLS.map(toSchool);
 
-	return {
+	return withSuccessfulScrapeMetadata({
 		timestamp: new Date().toISOString(),
 		medianHouseholdIncome: MEDIAN_HOUSEHOLD_INCOME,
 		incomeSource: INCOME_SOURCE,
@@ -48,5 +49,5 @@ export function computeSchoolSnapshot(): SchoolSnapshot {
 		tiers,
 		schools,
 		cumulativeK12
-	};
+	});
 }

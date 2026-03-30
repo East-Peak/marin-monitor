@@ -7,8 +7,8 @@
  *
  * TODO: Add email alerting via Resend or webhook integration.
  */
-import { head } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
+import { readBlobFreshnessTimestamp } from '$lib/server/blob-freshness';
 import { verifyCronAuth } from '$lib/server/cron-auth';
 import { _DATA_SOURCES } from '../../health/+server';
 import type { RequestHandler } from './$types';
@@ -24,11 +24,13 @@ export const GET: RequestHandler = async ({ request }) => {
 
 	for (const config of _DATA_SOURCES) {
 		try {
-			const blob = await head(config.blobKey, { token });
-			const uploadedAt = blob.uploadedAt?.toISOString() ?? null;
+			const freshness = await readBlobFreshnessTimestamp(config.blobKey, token, {
+				preferContent: config.freshnessMode === 'content'
+			});
+			const lastUpdated = freshness.lastUpdated;
 
-			if (uploadedAt) {
-				const ageMs = now - new Date(uploadedAt).getTime();
+			if (lastUpdated) {
+				const ageMs = now - new Date(lastUpdated).getTime();
 				const ageDays = Math.round((ageMs / (24 * 60 * 60 * 1000)) * 10) / 10;
 				if (ageDays > config.maxAgeDays) {
 					staleEntries.push({
@@ -69,7 +71,7 @@ export const GET: RequestHandler = async ({ request }) => {
 	}
 
 	const totalProblems = staleEntries.length + errors.length;
-		if (totalProblems === 0) {
+	if (totalProblems === 0) {
 		console.log(`[check-freshness] All ${_DATA_SOURCES.length} data sources are fresh.`);
 	} else {
 		console.error(
@@ -80,9 +82,9 @@ export const GET: RequestHandler = async ({ request }) => {
 	return new Response(
 		JSON.stringify(
 			{
-					ok: totalProblems === 0,
-					timestamp: new Date().toISOString(),
-					totalSources: _DATA_SOURCES.length,
+				ok: totalProblems === 0,
+				timestamp: new Date().toISOString(),
+				totalSources: _DATA_SOURCES.length,
 				stale: staleEntries,
 				errors
 			},

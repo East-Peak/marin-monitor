@@ -31,6 +31,7 @@ export interface MarinNumberItem {
 /** A complete snapshot of the composite index at a point in time */
 export interface CompositeSnapshot {
 	timestamp: string;
+	lastSuccessfulScrapeAt?: string | null;
 	/** Individual tier scores */
 	tiers: TierScore[];
 	/** Weighted composite score (base 100) */

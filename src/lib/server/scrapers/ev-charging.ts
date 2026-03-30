@@ -7,6 +7,7 @@
 
 import { getNrelApiKey, getOpenChargeMapApiKey } from '$lib/server/api-keys';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
+import { withSuccessfulScrapeMetadata } from '$lib/server/scrape-metadata';
 import { MARIN_BOUNDS } from '$lib/config/towns';
 import type {
 	ConnectorType,
@@ -265,7 +266,7 @@ export async function scrapeEvCharging(): Promise<EvChargingSnapshot> {
 		}
 	}
 
-	return {
+	return withSuccessfulScrapeMetadata({
 		timestamp: new Date().toISOString(),
 		stationCount: stations.length,
 		dcFastStationCount,
@@ -274,5 +275,5 @@ export async function scrapeEvCharging(): Promise<EvChargingSnapshot> {
 		networkBreakdown,
 		connectorBreakdown,
 		stations
-	};
+	});
 }

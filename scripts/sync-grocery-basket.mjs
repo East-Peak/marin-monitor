@@ -13,6 +13,7 @@
 
 import { put, head } from '@vercel/blob';
 import { proxyFetch } from './shared/proxy-fetch.mjs';
+import { withPreservedSuccessfulScrapeMetadata } from './shared/scrape-metadata.mjs';
 import { scoreGroceryPriceMatch } from '../src/lib/shared/grocery-basket-matching.js';
 
 // ---- Config (from src/lib/config/grocery-basket.ts) ----
@@ -728,7 +729,7 @@ async function main() {
 			? Math.round(expensivePrices.reduce((a, b) => a + b, 0) * 100) / 100
 			: null;
 
-	const snapshot = {
+	const rawSnapshot = {
 		timestamp: new Date().toISOString(),
 		totalCheapest,
 		totalExpensive,
@@ -756,6 +757,11 @@ async function main() {
 	} catch {
 		console.log('[sync-grocery-basket] No existing blob, starting fresh');
 	}
+
+	const snapshot = withPreservedSuccessfulScrapeMetadata(rawSnapshot, {
+		wasLive: !instacartBlocked,
+		previous: existing.current
+	});
 
 	// Write updated blob
 	const history = [toHistoryEntry(snapshot), ...existing.history].slice(0, MAX_HISTORY);

@@ -6,6 +6,7 @@ import {
 	catalogHasAllSeedSegments
 } from '$lib/server/scrapers/strava-segments';
 import { verifyCronAuth } from '$lib/server/cron-auth';
+import { readSuccessfulScrapeAt } from '$lib/server/scrape-metadata';
 import {
 	STRAVA_ENABLED,
 	STRAVA_SEGMENTS_BLOB,
@@ -252,6 +253,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			// Write updated catalog back to blob if any stats changed
 			if (catalogUpdated) {
 				catalog.lastUpdated = new Date().toISOString();
+				catalog.lastSuccessfulScrapeAt = catalog.lastUpdated;
 				await put(STRAVA_SEGMENTS_BLOB, JSON.stringify(catalog), {
 					access: 'private',
 					contentType: 'application/json',
@@ -268,10 +270,13 @@ export const GET: RequestHandler = async ({ request }) => {
 		const allEvents = [...newEvents, ...existingEvents].filter(
 			(e) => now - new Date(e.detectedAt).getTime() < STRAVA_EVENT_MAX_AGE_MS
 		);
+		const nowIso = new Date().toISOString();
 
 		const eventLog: StravaEventLog = {
 			events: allEvents,
-			lastUpdated: new Date().toISOString()
+			lastUpdated: nowIso,
+			lastSuccessfulScrapeAt:
+				scraped > 0 ? nowIso : readSuccessfulScrapeAt(existingEventLog)
 		};
 
 		await put(STRAVA_EVENTS_BLOB, JSON.stringify(eventLog), {

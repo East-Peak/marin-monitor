@@ -20,6 +20,7 @@ export interface CoffeeShop {
 /** A point-in-time snapshot of all coffee shops */
 export interface CoffeeSnapshot {
 	timestamp: string;
+	lastSuccessfulScrapeAt?: string | null;
 	shopCount: number;
 	medianPrice: number | null;
 	avgPrice: number | null;

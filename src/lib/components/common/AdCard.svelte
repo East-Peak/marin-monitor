@@ -58,7 +58,7 @@
 			{/each}
 		</ul>
 	{:else if ad.body}
-		<p class="ad-body">{@html ad.body}</p>
+		<p class="ad-body">{ad.body}</p>
 	{/if}
 </div>
 

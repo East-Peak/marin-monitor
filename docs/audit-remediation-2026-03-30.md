@@ -2,7 +2,7 @@
 
 Date: 2026-03-30
 Source: `docs/codex-review-prompt.md`
-Status: implemented, verified with residual warnings
+Status: implemented, verified with residual build notices only
 
 ## Scope
 
@@ -119,15 +119,14 @@ This document captures the findings from the full Marin Monitor audit and tracks
 
 ## Verification Results
 
-- `npm run check`: passed with `0` errors and `55` warnings. Remaining warnings are pre-existing accessibility and Svelte state/style cleanup in dashboard and chart components.
 - `npm run check`: passed with `0` errors and `0` warnings.
-- `npm run test:unit`: passed with `33` files and `383` tests.
+- `npm run test:unit`: passed with `36` files and `406` tests.
 - `npm run build`: passed. Build still emits non-blocking chunk-size, `agentation` bundling, and optional dependency notices.
 
 ## Residual Follow-up
 
 - `npm run build` still emits non-blocking chunk-size and optional-dependency notices that are separate from `svelte-check`.
-- The fallback-backed composite input scrapers now preserve `lastSuccessfulScrapeAt`, but the broader freshness model is still not standardized across the full scraper fleet.
+- Array-backed feeds such as housing, activity, and police logs still use blob upload time for freshness by design; if those need source-level freshness semantics later, they will need embedded metadata instead of upload-time monitoring.
 
 ## Progress Log
 
@@ -136,3 +135,4 @@ This document captures the findings from the full Marin Monitor audit and tracks
 - 2026-03-30: panel cleanup, docs refresh, shared script helper extraction, and `SignalDeck.svelte` simplification completed.
 - 2026-03-30: `+page.svelte`, `TownPicker`, `LayoutEditMode`, and chart accessibility cleanup completed; `svelte-check` now passes with zero warnings.
 - 2026-03-30: fallback-backed composite input scrapers now emit `lastSuccessfulScrapeAt` in addition to the legacy `lastLiveScrapeAt` field.
+- 2026-03-30: object-backed scraper outputs and Strava blobs now standardize on `lastSuccessfulScrapeAt`, and health/freshness readers now prefer embedded freshness metadata over blob upload time where available.

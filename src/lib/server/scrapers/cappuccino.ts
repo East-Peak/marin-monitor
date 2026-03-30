@@ -16,6 +16,7 @@ import {
 	TOAST_PAGE_TIMEOUT,
 	type CoffeeShopConfig
 } from '$lib/config/coffee';
+import { withSuccessfulScrapeMetadata } from '$lib/server/scrape-metadata';
 import type { Browser } from 'puppeteer-core';
 
 /**
@@ -104,7 +105,7 @@ export function buildSnapshot(shops: CoffeeShop[]): CoffeeSnapshot {
 		.filter((s) => s.price !== null)
 		.map((s) => s.price!);
 
-	return {
+	return withSuccessfulScrapeMetadata({
 		timestamp: new Date().toISOString(),
 		shopCount: shops.length,
 		medianPrice: computeMedian(prices),
@@ -115,7 +116,7 @@ export function buildSnapshot(shops: CoffeeShop[]): CoffeeSnapshot {
 		minPrice: prices.length > 0 ? Math.min(...prices) : null,
 		maxPrice: prices.length > 0 ? Math.max(...prices) : null,
 		shops
-	};
+	});
 }
 
 /** Launch a puppeteer-core browser using @sparticuz/chromium */

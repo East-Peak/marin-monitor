@@ -2,6 +2,7 @@ import { put, head } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
 import { scrapeGroceryBasket } from '$lib/server/scrapers/grocery-basket';
 import { verifyCronAuth } from '$lib/server/cron-auth';
+import { withPreservedSuccessfulScrapeMetadata } from '$lib/server/scrape-metadata';
 import type { RequestHandler } from './$types';
 import type { GroceryBasketData, GrocerySnapshot } from '$lib/types/grocery';
 
@@ -37,7 +38,7 @@ export const GET: RequestHandler = async ({ request }) => {
 
 	const start = Date.now();
 	try {
-		const snapshot = await scrapeGroceryBasket();
+		const rawSnapshot = await scrapeGroceryBasket();
 
 		// Read existing blob to append history
 		let existing: GroceryBasketData = { current: null, history: [] };
@@ -52,6 +53,11 @@ export const GET: RequestHandler = async ({ request }) => {
 		} catch {
 			// No existing blob -- start fresh
 		}
+
+		const snapshot = withPreservedSuccessfulScrapeMetadata(rawSnapshot, {
+			wasLive: rawSnapshot.lastSuccessfulScrapeAt !== null,
+			previous: existing.current
+		});
 
 		// Append to history (capped), with stripped-down entries
 		const history = [toHistoryEntry(snapshot), ...existing.history].slice(

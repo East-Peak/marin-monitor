@@ -35,6 +35,7 @@ export interface TuitionTier {
 /** A point-in-time snapshot of the school tuition index */
 export interface SchoolSnapshot {
 	timestamp: string;
+	lastSuccessfulScrapeAt?: string | null;
 	/** Median Marin County household income used for calculations */
 	medianHouseholdIncome: number;
 	/** Source citation for income data */

@@ -10,6 +10,7 @@
 
 import { put, head } from '@vercel/blob';
 import { proxyFetch } from './shared/proxy-fetch.mjs';
+import { withPreservedSuccessfulScrapeMetadata } from './shared/scrape-metadata.mjs';
 
 const BLOB_KEY = 'marin-dog-walker.json';
 const MAX_HISTORY = 24; // 2 years at monthly
@@ -218,12 +219,7 @@ async function main() {
 	// Dog walker component only — the static item covers the full dog cost
 	const monthlyWalkerOnly = monthlyAt3xWeek;
 	const nowIso = new Date().toISOString();
-	const lastSuccessfulScrapeAt = scraped
-		? nowIso
-		: (existing.current?.lastSuccessfulScrapeAt ?? existing.current?.lastLiveScrapeAt ?? null);
-	const lastLiveScrapeAt = lastSuccessfulScrapeAt;
-
-	const snapshot = {
+	const snapshot = withPreservedSuccessfulScrapeMetadata({
 		timestamp: nowIso,
 		walkerCount: walkerPrices.length,
 		medianWalkPrice,
@@ -233,10 +229,12 @@ async function main() {
 		monthlyAt3xWeek,
 		monthlyWalkerOnly,
 		scraped,
-		source: scraped ? 'thumbtack.com' : 'fallback',
-		lastSuccessfulScrapeAt,
-		lastLiveScrapeAt
-	};
+		source: scraped ? 'thumbtack.com' : 'fallback'
+	}, {
+		wasLive: scraped,
+		previous: existing.current,
+		includeLegacyLastLive: true
+	});
 
 	// Append history
 	const history = [snapshot, ...existing.history].slice(0, MAX_HISTORY);

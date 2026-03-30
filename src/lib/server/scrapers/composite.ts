@@ -9,6 +9,7 @@
  */
 
 import { TIER_CONFIGS, STATIC_MARIN_NUMBER_ITEMS, DYNAMIC_DEFAULTS } from '$lib/config/composite';
+import { withSuccessfulScrapeMetadata } from '$lib/server/scrape-metadata';
 import type { CoffeeData } from '$lib/types/coffee';
 import type { GroceryBasketData } from '$lib/types/grocery';
 import type { WineIndexData, WineCategory } from '$lib/types/wine';
@@ -25,6 +26,7 @@ export interface CampPriceData {
 		monthlyAmortized2Kids: number;
 		sessionCount: number;
 		providerCount: number;
+		lastSuccessfulScrapeAt?: string | null;
 	} | null;
 }
 
@@ -363,7 +365,7 @@ export function buildCompositeSnapshot(inputs: CompositeInputs): CompositeSnapsh
 	const allItems = [...dynamicItems, ...upgradedStaticItems];
 	const total = allItems.reduce((sum, item) => sum + item.monthly, 0);
 
-	return {
+	return withSuccessfulScrapeMetadata({
 		timestamp: new Date().toISOString(),
 		tiers,
 		compositeScore,
@@ -372,5 +374,5 @@ export function buildCompositeSnapshot(inputs: CompositeInputs): CompositeSnapsh
 			items: allItems,
 			annualized: total * 12
 		}
-	};
+	});
 }

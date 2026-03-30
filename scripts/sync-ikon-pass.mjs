@@ -10,6 +10,7 @@
 
 import { put, head } from '@vercel/blob';
 import { proxyFetch } from './shared/proxy-fetch.mjs';
+import { withPreservedSuccessfulScrapeMetadata } from './shared/scrape-metadata.mjs';
 
 const BLOB_KEY = 'marin-ikon-pass.json';
 const MAX_HISTORY = 24; // 2 years at monthly
@@ -169,12 +170,7 @@ async function main() {
 	const monthlyAmortized = Math.round(familyOf4 / 12);
 	const nowIso = new Date().toISOString();
 	const scrapedLive = !!(prices.adult || prices.child);
-	const lastSuccessfulScrapeAt = scrapedLive
-		? nowIso
-		: (existing.current?.lastSuccessfulScrapeAt ?? existing.current?.lastLiveScrapeAt ?? null);
-	const lastLiveScrapeAt = lastSuccessfulScrapeAt;
-
-	const snapshot = {
+	const snapshot = withPreservedSuccessfulScrapeMetadata({
 		timestamp: nowIso,
 		adultPrice,
 		childPrice,
@@ -182,10 +178,12 @@ async function main() {
 		familyOf4,
 		monthlyAmortized,
 		scraped: scrapedLive,
-		source: scrapedLive ? 'ikonpass.com' : 'fallback',
-		lastSuccessfulScrapeAt,
-		lastLiveScrapeAt
-	};
+		source: scrapedLive ? 'ikonpass.com' : 'fallback'
+	}, {
+		wasLive: scrapedLive,
+		previous: existing.current,
+		includeLegacyLastLive: true
+	});
 
 	// Append history
 	const history = [snapshot, ...existing.history].slice(0, MAX_HISTORY);

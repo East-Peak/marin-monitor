@@ -5,18 +5,24 @@ on:
     - cron: '0 9 * * 0'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   sync:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
       - name: Connect to Tailscale
-        uses: tailscale/github-action@v3
+        uses: tailscale/github-action@6cae46e2d796f265265cfcf628b72a32b4d7cade # v3
         with:
           authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
       - run: npm ci
@@ -24,5 +30,5 @@ jobs:
       - run: node scripts/sync-grocery-basket.mjs
         env:
           BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
-          SCRAPE_PROXY_URL: http://100.67.183.14:8889
+          SCRAPE_PROXY_URL: ${{ secrets.SCRAPE_PROXY_URL }}
           SCRAPE_PROXY_SECRET: ${{ secrets.SCRAPE_PROXY_SECRET }}

@@ -45,6 +45,7 @@ export interface BasketItemPrices {
 /** A single weekly snapshot of the full basket */
 export interface GrocerySnapshot {
 	timestamp: string;
+	lastSuccessfulScrapeAt?: string | null;
 	/** Total basket cost using cheapest store for each item */
 	totalCheapest: number | null;
 	/** Total basket cost at most expensive stores */

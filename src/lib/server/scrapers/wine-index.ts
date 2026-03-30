@@ -22,6 +22,7 @@ import {
 	WINE_INDEX_COLLECTIONS,
 	WINE_LISTING_COLLECTIONS
 } from '$lib/config/wine';
+import { withSuccessfulScrapeMetadata } from '$lib/server/scrape-metadata';
 
 // ---- Exported helpers (tested directly) ----
 
@@ -259,10 +260,10 @@ export async function scrapeWineIndex(): Promise<WineSnapshot> {
 	const allocatedWines = allocatedProducts.map((p) => buildStaffPick(p, 'allocated'));
 	console.log(`[wine-index] Allocated wines: ${allocatedWines.length} wines`);
 
-	return {
+	return withSuccessfulScrapeMetadata({
 		timestamp: new Date().toISOString(),
 		categories: categorySnapshots,
 		staffPicks,
 		allocatedWines
-	};
+	});
 }

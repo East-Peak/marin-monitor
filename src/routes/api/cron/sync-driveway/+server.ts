@@ -26,9 +26,6 @@ export const GET: RequestHandler = async ({ request }) => {
 
 	const start = Date.now();
 	try {
-		const snapshot = await computeDrivewaySnapshot();
-
-		// Read existing blob to append history
 		let existing: DrivewayData = { current: null, history: [] };
 		try {
 			const blob = await head(DRIVEWAY_BLOB_KEY, { token: env.BLOB_READ_WRITE_TOKEN });
@@ -41,6 +38,8 @@ export const GET: RequestHandler = async ({ request }) => {
 		} catch {
 			// No existing blob -- start fresh
 		}
+
+		const snapshot = await computeDrivewaySnapshot(existing.current);
 
 		// Deduplicate by dataYear -- only keep the latest snapshot for each year
 		const historyMap = new Map<number, DrivewayData['history'][number]>();

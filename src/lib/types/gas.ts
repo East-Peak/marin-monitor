@@ -16,6 +16,7 @@ export interface GasStation {
 
 export interface GasPriceSnapshot {
 	timestamp: string;
+	lastSuccessfulScrapeAt?: string | null;
 	stationCount: number;
 	avgRegular: number | null;
 	avgMidgrade: number | null;

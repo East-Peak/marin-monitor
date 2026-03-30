@@ -27,6 +27,7 @@ export interface ChargingStation {
 
 export interface EvChargingSnapshot {
 	timestamp: string;
+	lastSuccessfulScrapeAt?: string | null;
 	stationCount: number;
 	dcFastStationCount: number;
 	level2StationCount: number;

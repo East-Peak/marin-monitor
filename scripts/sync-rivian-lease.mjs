@@ -10,6 +10,7 @@
  */
 
 import { put, head } from '@vercel/blob';
+import { withPreservedSuccessfulScrapeMetadata } from './shared/scrape-metadata.mjs';
 
 const BLOB_KEY = 'marin-rivian-lease.json';
 const MAX_HISTORY = 24; // 2 years at monthly
@@ -153,20 +154,17 @@ async function main() {
 	const leaseMonthly = scraped.leaseMonthly || 899;
 	const msrp = scraped.msrp || 79900;
 	const nowIso = new Date().toISOString();
-	const lastSuccessfulScrapeAt = hasLiveData
-		? nowIso
-		: (existing.current?.lastSuccessfulScrapeAt ?? existing.current?.lastLiveScrapeAt ?? null);
-	const lastLiveScrapeAt = lastSuccessfulScrapeAt;
-
-	const snapshot = {
+	const snapshot = withPreservedSuccessfulScrapeMetadata({
 		timestamp: nowIso,
 		leaseMonthly,
 		msrp,
 		scraped: hasLiveData,
-		source: hasLiveData ? 'rivian.com' : 'fallback',
-		lastSuccessfulScrapeAt,
-		lastLiveScrapeAt
-	};
+		source: hasLiveData ? 'rivian.com' : 'fallback'
+	}, {
+		wasLive: hasLiveData,
+		previous: existing.current,
+		includeLegacyLastLive: true
+	});
 
 	// Append history
 	const history = [snapshot, ...existing.history].slice(0, MAX_HISTORY);

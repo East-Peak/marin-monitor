@@ -7,6 +7,7 @@
 
 import { getGooglePlacesApiKey } from '$lib/server/api-keys';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
+import { withSuccessfulScrapeMetadata } from '$lib/server/scrape-metadata';
 import type { FuelPrice, GasStation, GasPriceSnapshot } from '$lib/types/gas';
 
 const PLACES_URL = 'https://places.googleapis.com/v1/places:searchNearby';
@@ -174,7 +175,7 @@ export async function scrapeGasPrices(): Promise<GasPriceSnapshot> {
 	const premiumPrices = pricesForType(stations, 'PREMIUM');
 	const dieselPrices = pricesForType(stations, 'DIESEL');
 
-	return {
+	return withSuccessfulScrapeMetadata({
 		timestamp: new Date().toISOString(),
 		stationCount: stations.length,
 		avgRegular: avg(regularPrices),
@@ -184,5 +185,5 @@ export async function scrapeGasPrices(): Promise<GasPriceSnapshot> {
 		minRegular: regularPrices.length > 0 ? Math.min(...regularPrices) : null,
 		maxRegular: regularPrices.length > 0 ? Math.max(...regularPrices) : null,
 		stations
-	};
+	});
 }

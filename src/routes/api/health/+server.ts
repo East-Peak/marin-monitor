@@ -5,13 +5,14 @@
  * Public (no auth required). Returns JSON with per-source freshness,
  * API key availability, and optional proxy health.
  */
-import { head } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
+import { readBlobFreshnessTimestamp } from '$lib/server/blob-freshness';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import { hasValidCronAuth } from '$lib/server/cron-auth';
 import type { RequestHandler } from './$types';
 
 type Cadence = 'daily' | 'weekly' | 'monthly';
+type FreshnessMode = 'blob' | 'content';
 
 interface DataSourceConfig {
 	name: string;
@@ -19,6 +20,7 @@ interface DataSourceConfig {
 	expectedCadence: Cadence;
 	/** Maximum acceptable age in days before the source is considered stale */
 	maxAgeDays: number;
+	freshnessMode?: FreshnessMode;
 }
 
 export interface DataSourceStatus {
@@ -35,20 +37,86 @@ export interface DataSourceStatus {
 
 /** All monitored data sources and their freshness expectations */
 const DATA_SOURCES: DataSourceConfig[] = [
-	{ name: 'Gas Prices', blobKey: 'marin-gas-prices.json', expectedCadence: 'daily', maxAgeDays: 2 },
+	{
+		name: 'Gas Prices',
+		blobKey: 'marin-gas-prices.json',
+		expectedCadence: 'daily',
+		maxAgeDays: 2,
+		freshnessMode: 'content'
+	},
 	{ name: 'Housing', blobKey: 'marin-housing.json', expectedCadence: 'monthly', maxAgeDays: 45 },
-	{ name: 'Cappuccino Index', blobKey: 'marin-cappuccino.json', expectedCadence: 'weekly', maxAgeDays: 10 },
-	{ name: 'Grocery Basket', blobKey: 'marin-grocery-basket.json', expectedCadence: 'weekly', maxAgeDays: 10 },
-	{ name: 'Wine Index', blobKey: 'marin-wine-index.json', expectedCadence: 'weekly', maxAgeDays: 10 },
-	{ name: 'School Tuition', blobKey: 'marin-school-tuition.json', expectedCadence: 'monthly', maxAgeDays: 45 },
-	{ name: 'Fitness', blobKey: 'marin-fitness.json', expectedCadence: 'monthly', maxAgeDays: 45 },
-	{ name: 'Driveway', blobKey: 'marin-driveway.json', expectedCadence: 'monthly', maxAgeDays: 45 },
-	{ name: 'Composite Index', blobKey: 'marin-composite.json', expectedCadence: 'weekly', maxAgeDays: 10 },
+	{
+		name: 'Cappuccino Index',
+		blobKey: 'marin-cappuccino.json',
+		expectedCadence: 'weekly',
+		maxAgeDays: 10,
+		freshnessMode: 'content'
+	},
+	{
+		name: 'Grocery Basket',
+		blobKey: 'marin-grocery-basket.json',
+		expectedCadence: 'weekly',
+		maxAgeDays: 10,
+		freshnessMode: 'content'
+	},
+	{
+		name: 'Wine Index',
+		blobKey: 'marin-wine-index.json',
+		expectedCadence: 'weekly',
+		maxAgeDays: 10,
+		freshnessMode: 'content'
+	},
+	{
+		name: 'School Tuition',
+		blobKey: 'marin-school-tuition.json',
+		expectedCadence: 'monthly',
+		maxAgeDays: 45,
+		freshnessMode: 'content'
+	},
+	{
+		name: 'Fitness',
+		blobKey: 'marin-fitness.json',
+		expectedCadence: 'monthly',
+		maxAgeDays: 45,
+		freshnessMode: 'content'
+	},
+	{
+		name: 'Driveway',
+		blobKey: 'marin-driveway.json',
+		expectedCadence: 'monthly',
+		maxAgeDays: 45,
+		freshnessMode: 'content'
+	},
+	{
+		name: 'Composite Index',
+		blobKey: 'marin-composite.json',
+		expectedCadence: 'weekly',
+		maxAgeDays: 10,
+		freshnessMode: 'content'
+	},
 	{ name: 'Police Logs', blobKey: 'marin-police-logs.json', expectedCadence: 'daily', maxAgeDays: 2 },
 	{ name: 'Activity', blobKey: 'marin-activity.json', expectedCadence: 'daily', maxAgeDays: 2 },
-	{ name: 'EV Charging', blobKey: 'marin-ev-charging.json', expectedCadence: 'daily', maxAgeDays: 2 },
-	{ name: 'Strava Segments', blobKey: 'strava-segments.json', expectedCadence: 'weekly', maxAgeDays: 10 },
-	{ name: 'Strava Events', blobKey: 'strava-events.json', expectedCadence: 'daily', maxAgeDays: 2 }
+	{
+		name: 'EV Charging',
+		blobKey: 'marin-ev-charging.json',
+		expectedCadence: 'daily',
+		maxAgeDays: 2,
+		freshnessMode: 'content'
+	},
+	{
+		name: 'Strava Segments',
+		blobKey: 'strava-segments.json',
+		expectedCadence: 'weekly',
+		maxAgeDays: 10,
+		freshnessMode: 'content'
+	},
+	{
+		name: 'Strava Events',
+		blobKey: 'strava-events.json',
+		expectedCadence: 'daily',
+		maxAgeDays: 2,
+		freshnessMode: 'content'
+	}
 ];
 export const _DATA_SOURCES = DATA_SOURCES;
 
@@ -59,24 +127,26 @@ async function checkSource(
 	token: string
 ): Promise<DataSourceStatus> {
 	try {
-		const blob = await head(config.blobKey, { token });
-		const uploadedAt = blob.uploadedAt?.toISOString() ?? null;
+		const freshness = await readBlobFreshnessTimestamp(config.blobKey, token, {
+			preferContent: config.freshnessMode === 'content'
+		});
+		const lastUpdated = freshness.lastUpdated;
 		let ageDays: number | null = null;
 		let isStale = false;
 
-		if (uploadedAt) {
-			const ageMs = now - new Date(uploadedAt).getTime();
+		if (lastUpdated) {
+			const ageMs = now - new Date(lastUpdated).getTime();
 			ageDays = Math.round((ageMs / (24 * 60 * 60 * 1000)) * 10) / 10;
 			isStale = ageDays > config.maxAgeDays;
 		} else {
-			// Blob exists but no uploadedAt — treat as stale
+			// Blob exists but has no readable freshness timestamp — treat as stale
 			isStale = true;
 		}
 
 		return {
 			name: config.name,
 			blobKey: config.blobKey,
-			lastUpdated: uploadedAt,
+			lastUpdated,
 			expectedCadence: config.expectedCadence,
 			maxAgeDays: config.maxAgeDays,
 			isStale,
@@ -166,12 +236,12 @@ export const GET: RequestHandler = async ({ request }) => {
 					ok: sources.filter((s) => s.status === 'ok').length,
 					stale: staleCount,
 					error: errorCount
-					},
-					sources,
-					...(internal ? { internal } : {})
 				},
-				null,
-				2
+				sources,
+				...(internal ? { internal } : {})
+			},
+			null,
+			2
 		),
 		{
 			headers: {

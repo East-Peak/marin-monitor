@@ -10,6 +10,7 @@
 
 import { put, head } from '@vercel/blob';
 import { proxyFetch } from './shared/proxy-fetch.mjs';
+import { withSuccessfulScrapeMetadata } from './shared/scrape-metadata.mjs';
 
 // ---- Config (from src/lib/config/wine.ts) ----
 
@@ -216,12 +217,12 @@ async function main() {
 	const allocatedWines = allocatedProducts.map((p) => buildStaffPick(p, 'allocated'));
 	console.log(`[wine-index] Allocated wines: ${allocatedWines.length} wines`);
 
-	const snapshot = {
+	const snapshot = withSuccessfulScrapeMetadata({
 		timestamp: new Date().toISOString(),
 		categories: categorySnapshots,
 		staffPicks,
 		allocatedWines
-	};
+	});
 
 	// 4. Read existing blob
 	let existing = { current: null, history: [] };

@@ -5,6 +5,7 @@ import {
 	computeMedian,
 	computeMedianByType
 } from '$lib/config/fitness';
+import { withSuccessfulScrapeMetadata } from '$lib/server/scrape-metadata';
 import type { FitnessStudio, FitnessSnapshot } from '$lib/types/fitness';
 
 /**
@@ -39,7 +40,7 @@ export function computeFitnessSnapshot(): FitnessSnapshot {
 		? Math.round((prices.reduce((sum, p) => sum + p, 0) / prices.length) * 100) / 100
 		: null;
 
-	return {
+	return withSuccessfulScrapeMetadata({
 		timestamp: new Date().toISOString(),
 		studioCount: studios.length,
 		medianPrice: computeMedian(prices),
@@ -48,5 +49,5 @@ export function computeFitnessSnapshot(): FitnessSnapshot {
 		maxPrice: sorted.length > 0 ? sorted[sorted.length - 1] : null,
 		medianByType,
 		studios
-	};
+	});
 }
