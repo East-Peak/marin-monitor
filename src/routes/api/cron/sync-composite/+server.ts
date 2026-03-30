@@ -2,7 +2,14 @@ import { put, head } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
 import { verifyCronAuth } from '$lib/server/cron-auth';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
-import { buildCompositeSnapshot, type CompositeInputs } from '$lib/server/scrapers/composite';
+import {
+	buildCompositeSnapshot,
+	type CompositeInputs,
+	type CampPriceData,
+	type IkonPassData,
+	type DogWalkerData,
+	type RivianLeaseData
+} from '$lib/server/scrapers/composite';
 import { COMPOSITE_BLOB_KEY, MAX_COMPOSITE_HISTORY } from '$lib/config/composite';
 import { CAPPUCCINO_BLOB_KEY } from '$lib/config/coffee';
 import { WINE_INDEX_BLOB_KEY } from '$lib/config/wine';
@@ -23,6 +30,10 @@ export const config = { maxDuration: 60 };
 const GROCERY_BLOB_KEY = 'marin-grocery-basket.json';
 const GAS_BLOB_KEY = 'marin-gas-prices.json';
 const HOUSING_BLOB_KEY = 'marin-housing.json';
+const CAMP_PRICES_BLOB_KEY = 'marin-camp-prices.json';
+const IKON_PASS_BLOB_KEY = 'marin-ikon-pass.json';
+const DOG_WALKER_BLOB_KEY = 'marin-dog-walker.json';
+const RIVIAN_LEASE_BLOB_KEY = 'marin-rivian-lease.json';
 
 /** Read a blob by key, returning null if it doesn't exist */
 async function readBlob<T>(blobKey: string): Promise<T | null> {
@@ -65,14 +76,30 @@ export const GET: RequestHandler = async ({ request }) => {
 	const start = Date.now();
 	try {
 		// Read all index blobs in parallel
-		const [grocery, cappuccino, wine, fitness, school, housing, gas] = await Promise.all([
+		const [
+			grocery,
+			cappuccino,
+			wine,
+			fitness,
+			school,
+			housing,
+			gas,
+			campPrices,
+			ikonPass,
+			dogWalker,
+			rivianLease
+		] = await Promise.all([
 			readBlob<GroceryBasketData>(GROCERY_BLOB_KEY),
 			readBlob<CoffeeData>(CAPPUCCINO_BLOB_KEY),
 			readBlob<WineIndexData>(WINE_INDEX_BLOB_KEY),
 			readBlob<FitnessData>(FITNESS_BLOB_KEY),
 			readBlob<SchoolIndexData>(SCHOOL_TUITION_BLOB_KEY),
 			readBlob<HousingMetric[]>(HOUSING_BLOB_KEY),
-			readBlob<GasPriceData>(GAS_BLOB_KEY)
+			readBlob<GasPriceData>(GAS_BLOB_KEY),
+			readBlob<CampPriceData>(CAMP_PRICES_BLOB_KEY),
+			readBlob<IkonPassData>(IKON_PASS_BLOB_KEY),
+			readBlob<DogWalkerData>(DOG_WALKER_BLOB_KEY),
+			readBlob<RivianLeaseData>(RIVIAN_LEASE_BLOB_KEY)
 		]);
 
 		const inputs: CompositeInputs = {
@@ -82,7 +109,11 @@ export const GET: RequestHandler = async ({ request }) => {
 			fitness,
 			school,
 			housing,
-			gas
+			gas,
+			campPrices,
+			ikonPass,
+			dogWalker,
+			rivianLease
 		};
 
 		const snapshot = buildCompositeSnapshot(inputs);

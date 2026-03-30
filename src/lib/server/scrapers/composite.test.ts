@@ -10,7 +10,15 @@ import {
 	getGasMonthly,
 	getHousingPITI,
 	getSchoolMonthly,
-	type CompositeInputs
+	getCampMonthly,
+	getSkiMonthly,
+	getDogMonthly,
+	getRivianMonthly,
+	type CompositeInputs,
+	type CampPriceData,
+	type IkonPassData,
+	type DogWalkerData,
+	type RivianLeaseData
 } from './composite';
 import { TIER_CONFIGS } from '$lib/config/composite';
 import type { CoffeeData } from '$lib/types/coffee';
@@ -97,7 +105,11 @@ const ALL_NULL_INPUTS: CompositeInputs = {
 	fitness: null,
 	school: null,
 	housing: null,
-	gas: null
+	gas: null,
+	campPrices: null,
+	ikonPass: null,
+	dogWalker: null,
+	rivianLease: null
 };
 
 // --- Extraction function tests ---
@@ -219,7 +231,11 @@ describe('buildCompositeSnapshot', () => {
 			fitness: makeFitnessData(40), // higher than $32
 			school: makeSchoolData(55000, 65000), // higher than ~$47k
 			housing: makeHousingData(2000000), // higher than $1.357M
-			gas: makeGasData(8.0) // higher than $6.02
+			gas: makeGasData(8.0), // higher than $6.02
+			campPrices: null,
+			ikonPass: null,
+			dogWalker: null,
+			rivianLease: null
 		};
 		const snapshot = buildCompositeSnapshot(highInputs);
 		expect(snapshot.compositeScore).toBeGreaterThan(100);
@@ -233,7 +249,11 @@ describe('buildCompositeSnapshot', () => {
 			fitness: null,
 			school: null,
 			housing: null,
-			gas: makeGasData(6.02)
+			gas: makeGasData(6.02),
+			campPrices: null,
+			ikonPass: null,
+			dogWalker: null,
+			rivianLease: null
 		};
 		const snapshot = buildCompositeSnapshot(inputs);
 
@@ -259,10 +279,116 @@ describe('buildCompositeSnapshot', () => {
 		expect(labels).toContain('Ski season (amortized)');
 	});
 
-	it('The Marin Number is roughly $21k/mo with baseline values', () => {
+	it('The Marin Number is roughly $23.5k/mo with baseline values', () => {
 		const snapshot = buildCompositeSnapshot(ALL_NULL_INPUTS);
-		// Should be approximately $21,110 with all defaults
-		expect(snapshot.marinNumber.total).toBeGreaterThan(19000);
-		expect(snapshot.marinNumber.total).toBeLessThan(23000);
+		// Dynamic defaults: $13,967 + static items: $9,600 = $23,567
+		expect(snapshot.marinNumber.total).toBeGreaterThan(22000);
+		expect(snapshot.marinNumber.total).toBeLessThan(25000);
+	});
+
+	it('upgrades static items to live when blob data exists', () => {
+		const inputs: CompositeInputs = {
+			...ALL_NULL_INPUTS,
+			rivianLease: {
+				current: { leaseMonthly: 950, msrp: 82000, scraped: true }
+			},
+			ikonPass: {
+				current: {
+					adultPrice: 1399,
+					childPrice: 399,
+					familyOf4: 3596,
+					monthlyAmortized: 300,
+					scraped: true
+				}
+			}
+		};
+		const snapshot = buildCompositeSnapshot(inputs);
+
+		const rivianItem = snapshot.marinNumber.items.find((i) =>
+			i.label.includes('Rivian')
+		);
+		expect(rivianItem?.source).toBe('live');
+		expect(rivianItem?.monthly).toBe(950);
+
+		const skiItem = snapshot.marinNumber.items.find((i) =>
+			i.label.includes('Ski season')
+		);
+		expect(skiItem?.source).toBe('live');
+		expect(skiItem?.monthly).toBe(300);
+	});
+});
+
+// --- New extraction function tests ---
+
+describe('getCampMonthly', () => {
+	it('returns monthlyAmortized2Kids from blob data', () => {
+		const data: CampPriceData = {
+			current: {
+				medianWeekly: 695,
+				monthlyAmortized2Kids: 927,
+				sessionCount: 100,
+				providerCount: 30
+			}
+		};
+		expect(getCampMonthly(data)).toBe(927);
+	});
+
+	it('returns null for null data', () => {
+		expect(getCampMonthly(null)).toBeNull();
+	});
+
+	it('returns null for missing current', () => {
+		expect(getCampMonthly({ current: null })).toBeNull();
+	});
+});
+
+describe('getSkiMonthly', () => {
+	it('returns monthlyAmortized from Ikon Pass data', () => {
+		const data: IkonPassData = {
+			current: {
+				adultPrice: 1399,
+				childPrice: 399,
+				familyOf4: 3596,
+				monthlyAmortized: 300,
+				scraped: true
+			}
+		};
+		expect(getSkiMonthly(data)).toBe(300);
+	});
+
+	it('returns null for null data', () => {
+		expect(getSkiMonthly(null)).toBeNull();
+	});
+});
+
+describe('getDogMonthly', () => {
+	it('adds walker cost plus fixed expenses', () => {
+		const data: DogWalkerData = {
+			current: {
+				medianWalkPrice: 30,
+				monthlyAt3xWeek: 387,
+				walkerCount: 15,
+				scraped: true
+			}
+		};
+		// 387 (walker) + 600 (food/grooming/vet/misc)
+		expect(getDogMonthly(data)).toBe(987);
+	});
+
+	it('returns null for null data', () => {
+		expect(getDogMonthly(null)).toBeNull();
+	});
+});
+
+describe('getRivianMonthly', () => {
+	it('returns leaseMonthly from blob data', () => {
+		const data: RivianLeaseData = {
+			current: { leaseMonthly: 899, msrp: 79900, scraped: true }
+		};
+		expect(getRivianMonthly(data)).toBe(899);
+	});
+
+	it('returns null for null data', () => {
+		expect(getRivianMonthly(null)).toBeNull();
 	});
 });

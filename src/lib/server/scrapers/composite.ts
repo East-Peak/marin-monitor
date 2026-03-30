@@ -18,6 +18,43 @@ import type { GasPriceData } from '$lib/types/gas';
 import type { HousingMetric } from '$lib/api/marin/housing';
 import type { CompositeSnapshot, TierScore, MarinNumberItem } from '$lib/types/composite';
 
+/** Blob data shapes for new scrapers */
+export interface CampPriceData {
+	current: {
+		medianWeekly: number;
+		monthlyAmortized2Kids: number;
+		sessionCount: number;
+		providerCount: number;
+	} | null;
+}
+
+export interface IkonPassData {
+	current: {
+		adultPrice: number;
+		childPrice: number;
+		familyOf4: number;
+		monthlyAmortized: number;
+		scraped: boolean;
+	} | null;
+}
+
+export interface DogWalkerData {
+	current: {
+		medianWalkPrice: number;
+		monthlyAt3xWeek: number;
+		walkerCount: number;
+		scraped: boolean;
+	} | null;
+}
+
+export interface RivianLeaseData {
+	current: {
+		leaseMonthly: number;
+		msrp: number;
+		scraped: boolean;
+	} | null;
+}
+
 /** Input data from all index blobs */
 export interface CompositeInputs {
 	grocery: GroceryBasketData | null;
@@ -27,6 +64,10 @@ export interface CompositeInputs {
 	school: SchoolIndexData | null;
 	housing: HousingMetric[] | null;
 	gas: GasPriceData | null;
+	campPrices: CampPriceData | null;
+	ikonPass: IkonPassData | null;
+	dogWalker: DogWalkerData | null;
+	rivianLease: RivianLeaseData | null;
 }
 
 /**
@@ -139,6 +180,42 @@ export function getSchoolMonthly(data: SchoolIndexData | null): number | null {
 }
 
 /**
+ * Extract monthly camp cost from camp price data.
+ * Uses the amortized 2-kid monthly cost from the blob.
+ */
+export function getCampMonthly(data: CampPriceData | null): number | null {
+	return data?.current?.monthlyAmortized2Kids ?? null;
+}
+
+/**
+ * Extract monthly ski season cost from Ikon Pass data.
+ * Family-of-4 pass amortized over 12 months.
+ */
+export function getSkiMonthly(data: IkonPassData | null): number | null {
+	return data?.current?.monthlyAmortized ?? null;
+}
+
+/**
+ * Extract monthly dog cost from dog walker data.
+ * Uses dog walker monthly cost as the walker component of total dog costs.
+ * The full "The Dog" line item includes walker + grooming + food + vet.
+ * Walker is roughly 25-30% of total dog cost, so we scale up.
+ */
+export function getDogMonthly(data: DogWalkerData | null): number | null {
+	const walkerMonthly = data?.current?.monthlyAt3xWeek ?? null;
+	if (walkerMonthly === null) return null;
+	// Total dog cost: walker + food (~$150) + grooming (~$150) + vet amortized (~$200) + misc (~$100)
+	return walkerMonthly + 600;
+}
+
+/**
+ * Extract monthly Rivian lease payment from scraper data.
+ */
+export function getRivianMonthly(data: RivianLeaseData | null): number | null {
+	return data?.current?.leaseMonthly ?? null;
+}
+
+/**
  * Build a complete composite snapshot from all available index data.
  */
 export function buildCompositeSnapshot(inputs: CompositeInputs): CompositeSnapshot {
@@ -150,6 +227,12 @@ export function buildCompositeSnapshot(inputs: CompositeInputs): CompositeSnapsh
 	const fitnessMonthly = getFitnessMonthly(inputs.fitness) ?? DYNAMIC_DEFAULTS.fitnessMonthly;
 	const housingPITI = getHousingPITI(inputs.housing) ?? DYNAMIC_DEFAULTS.housingPITI;
 	const schoolMonthly = getSchoolMonthly(inputs.school) ?? DYNAMIC_DEFAULTS.schoolMonthly;
+
+	// New live-capable items
+	const rivianLease = getRivianMonthly(inputs.rivianLease) ?? DYNAMIC_DEFAULTS.rivianLease;
+	const dogMonthly = getDogMonthly(inputs.dogWalker) ?? DYNAMIC_DEFAULTS.dogMonthly;
+	const skiSeason = getSkiMonthly(inputs.ikonPass) ?? DYNAMIC_DEFAULTS.skiSeason;
+	const campMonthly = getCampMonthly(inputs.campPrices) ?? DYNAMIC_DEFAULTS.campMonthly;
 
 	// Tier monthly totals
 	const tierTotals: Record<string, number> = {
@@ -177,7 +260,7 @@ export function buildCompositeSnapshot(inputs: CompositeInputs): CompositeSnapsh
 	const compositeScore =
 		Math.round(tiers.reduce((sum, t) => sum + t.score * t.weight, 0) * 10) / 10;
 
-	// Build The Marin Number items
+	// Build The Marin Number items — core indices (always dynamic)
 	const dynamicItems: MarinNumberItem[] = [
 		{
 			label: 'Housing (PITI on median home)',
@@ -223,7 +306,39 @@ export function buildCompositeSnapshot(inputs: CompositeInputs): CompositeSnapsh
 		}
 	];
 
-	const allItems = [...dynamicItems, ...STATIC_MARIN_NUMBER_ITEMS];
+	// Build upgraded static items — replace values with live data when available
+	const upgradedStaticItems: MarinNumberItem[] = STATIC_MARIN_NUMBER_ITEMS.map((item) => {
+		switch (item.sourceIndex) {
+			case 'rivian-lease':
+				return {
+					...item,
+					monthly: rivianLease,
+					source: getRivianMonthly(inputs.rivianLease) !== null ? 'live' : 'static'
+				};
+			case 'dog-walker':
+				return {
+					...item,
+					monthly: dogMonthly,
+					source: getDogMonthly(inputs.dogWalker) !== null ? 'live' : 'static'
+				};
+			case 'ikon-pass':
+				return {
+					...item,
+					monthly: skiSeason,
+					source: getSkiMonthly(inputs.ikonPass) !== null ? 'live' : 'static'
+				};
+			case 'camp-prices':
+				return {
+					...item,
+					monthly: campMonthly,
+					source: getCampMonthly(inputs.campPrices) !== null ? 'live' : 'static'
+				};
+			default:
+				return item;
+		}
+	});
+
+	const allItems = [...dynamicItems, ...upgradedStaticItems];
 	const total = allItems.reduce((sum, item) => sum + item.monthly, 0);
 
 	return {

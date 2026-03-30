@@ -49,14 +49,25 @@ export const TIER_CONFIGS: TierConfig[] = [
 
 /**
  * Static/annual Marin Number line items.
- * Updated manually once a year.
+ * Items with sourceIndex can be upgraded to 'live' when blob data exists.
+ * Items without sourceIndex are always static.
  */
 export const STATIC_MARIN_NUMBER_ITEMS: MarinNumberItem[] = [
-	{ label: 'Rivian R1S payment', monthly: 1100, source: 'static' },
-	{ label: 'The Dog', monthly: 1500, source: 'static' },
+	{ label: 'Rivian R1S payment', monthly: 1100, source: 'static', sourceIndex: 'rivian-lease' },
+	{ label: 'The Dog', monthly: 1500, source: 'static', sourceIndex: 'dog-walker' },
 	{ label: 'Therapist (weekly)', monthly: 1400, source: 'static' },
-	{ label: 'Ski season (amortized)', monthly: 600, source: 'static' },
-	{ label: 'Summer camp (2 kids, amortized)', monthly: 1200, source: 'static' },
+	{
+		label: 'Ski season (amortized)',
+		monthly: 600,
+		source: 'static',
+		sourceIndex: 'ikon-pass'
+	},
+	{
+		label: 'Summer camp (2 kids, amortized)',
+		monthly: 1200,
+		source: 'static',
+		sourceIndex: 'camp-prices'
+	},
 	{ label: 'Country club (amortized)', monthly: 1250, source: 'static' },
 	{ label: 'Wine country trips (amortized)', monthly: 750, source: 'static' },
 	{ label: 'Farmers market', monthly: 500, source: 'static' },
@@ -75,5 +86,10 @@ export const DYNAMIC_DEFAULTS = {
 	wineMonthly: 156,
 	fitnessMonthly: 175,
 	gasMonthly: 241,
-	schoolMonthly: 3917
+	schoolMonthly: 3917,
+	// New live-capable items (blob scrapers)
+	rivianLease: 1100,
+	dogMonthly: 1500,
+	skiSeason: 600,
+	campMonthly: 1200
 } as const;
