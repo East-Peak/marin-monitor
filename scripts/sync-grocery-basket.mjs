@@ -387,15 +387,23 @@ async function fetchInstacartPlaywright(searchTerm) {
 	const page = await context.newPage();
 
 	try {
-		await page.addCookies([
+		await context.addCookies([
 			{ name: 'zipcode', value: MARIN_ZIP, domain: '.instacart.com', path: '/' }
 		]);
 
 		const url = buildSearchUrl(searchTerm);
-		await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+		await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-		// Wait for product cards to appear
-		await page.waitForTimeout(3000);
+		// Wait for product cards to render (Instacart is a React SPA)
+		await page.waitForFunction(
+			() => document.querySelectorAll('[data-testid="product_card"], [aria-label*="$"]').length > 0,
+			{ timeout: 15000 }
+		).catch(() => {
+			// If product cards never appear, continue with whatever rendered
+		});
+
+		// Extra settle time for prices to populate
+		await page.waitForTimeout(2000);
 
 		const html = await page.content();
 		return html;
