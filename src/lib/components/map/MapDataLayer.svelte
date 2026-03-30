@@ -71,6 +71,85 @@
 		'strava-pins',
 		'strava-pins-labels'
 	] as const;
+	const HOVER_STATE = ['boolean', ['feature-state', 'hover'], false] as const;
+	const INVITING_HOVER_STROKE = 'rgba(255, 247, 220, 0.98)';
+	const hoveredFeatureIds = new Map<string, string | number | null>();
+
+	type HoveredMapFeature = NonNullable<MapLayerMouseEvent['features']>[number];
+
+	interface HoverBindingOptions {
+		layerId: string;
+		sourceId: string;
+		onFeatureChange?: (feature: HoveredMapFeature | null) => void;
+	}
+
+	function hoverCase(hoverValue: unknown, baseValue: unknown): any {
+		return ['case', HOVER_STATE, hoverValue, baseValue];
+	}
+
+	function hoverAdd(baseValue: unknown, amount: number): any {
+		return hoverCase(['+', baseValue, amount], baseValue);
+	}
+
+	function getFeatureId(feature: { id?: unknown } | null | undefined): string | number | null {
+		if (typeof feature?.id === 'string' || typeof feature?.id === 'number') {
+			return feature.id;
+		}
+		return null;
+	}
+
+	function setHoveredFeatureState(
+		map: MapLibreMap,
+		layerId: string,
+		sourceId: string,
+		nextFeatureId: string | number | null
+	) {
+		const previousFeatureId = hoveredFeatureIds.get(layerId) ?? null;
+		if (previousFeatureId === nextFeatureId) return;
+
+		if (previousFeatureId !== null && map.getSource(sourceId)) {
+			map.setFeatureState({ source: sourceId, id: previousFeatureId }, { hover: false });
+		}
+
+		hoveredFeatureIds.set(layerId, nextFeatureId);
+
+		if (nextFeatureId !== null && map.getSource(sourceId)) {
+			map.setFeatureState({ source: sourceId, id: nextFeatureId }, { hover: true });
+		}
+	}
+
+	function clearHoveredFeatureState(map: MapLibreMap, layerId: string, sourceId: string) {
+		setHoveredFeatureState(map, layerId, sourceId, null);
+	}
+
+	function bindInteractiveHover(map: MapLibreMap, options: HoverBindingOptions) {
+		let lastFeatureId: string | number | null = null;
+
+		const handleHover = (e: MapLayerMouseEvent) => {
+			map.getCanvas().style.cursor = 'pointer';
+			const feature = e.features?.[0] ?? null;
+			const nextFeatureId = getFeatureId(feature);
+			setHoveredFeatureState(map, options.layerId, options.sourceId, nextFeatureId);
+			if (nextFeatureId === lastFeatureId) return;
+			lastFeatureId = nextFeatureId;
+			options.onFeatureChange?.(feature);
+		};
+
+		const handleLeave = () => {
+			map.getCanvas().style.cursor = '';
+			lastFeatureId = null;
+			clearHoveredFeatureState(map, options.layerId, options.sourceId);
+			options.onFeatureChange?.(null);
+		};
+
+		map.on('mouseenter', options.layerId, handleHover);
+		map.on('mousemove', options.layerId, handleHover);
+		map.on('mouseleave', options.layerId, handleLeave);
+	}
+
+	function buildFallbackFeatureId(prefix: string, coordinates: [number, number], label: string): string {
+		return `${prefix}:${label}:${coordinates[0].toFixed(5)},${coordinates[1].toFixed(5)}`;
+	}
 
 	function toNumber(value: unknown): number | null {
 		if (typeof value === 'number' && Number.isFinite(value)) return value;
@@ -193,11 +272,14 @@
 					event.headline ?? event.Headline ?? event.description ?? event.Description ?? ''
 				).trim() || 'Traffic event';
 			const type = String(event.event_type ?? event.eventType ?? event.type ?? 'incident');
+			const id =
+				String(event.id ?? event.Id ?? '').trim() || buildFallbackFeatureId('traffic', coords, title);
 
 			features.push({
 				type: 'Feature',
+				id,
 				properties: {
-					id: String(event.id ?? event.Id ?? ''),
+					id,
 					title,
 					type,
 					severity,
@@ -312,6 +394,8 @@
 	function setupSources(map: MapLibreMap) {
 		// Style swaps remove custom sources/layers. Re-add when missing.
 		if (map.getSource('towns')) return;
+		hoveredFeatureIds.clear();
+		map.getCanvas().style.cursor = '';
 
 		// Town boundary highlight source (Census polygons)
 		map.addSource('town-boundary', {
@@ -376,6 +460,7 @@
 				type: 'FeatureCollection',
 				features: FIRE_ZONES.map((zone) => ({
 					type: 'Feature' as const,
+					id: zone.name,
 					properties: { name: zone.name, desc: zone.desc },
 					geometry: {
 						type: 'Point' as const,
@@ -392,6 +477,7 @@
 				type: 'FeatureCollection',
 				features: LANDMARKS.map((lm) => ({
 					type: 'Feature' as const,
+					id: `${lm.type}:${lm.name}`,
 					properties: { name: lm.name, type: lm.type },
 					geometry: {
 						type: 'Point' as const,
@@ -408,6 +494,7 @@
 				type: 'FeatureCollection',
 				features: AIRPORT_PINS.map((ap) => ({
 					type: 'Feature' as const,
+					id: ap.code,
 					properties: {
 						code: ap.code,
 						name: ap.name,
@@ -448,6 +535,70 @@
 		});
 
 		// --- Layers ---
+		const trafficEventRadius = [
+			'case',
+			['==', ['get', 'severity'], 'SEVERE'],
+			8,
+			['==', ['get', 'severity'], 'MAJOR'],
+			6,
+			5
+		];
+		const earthquakeRadius = [
+			'interpolate',
+			['linear'],
+			['get', 'magnitude'],
+			1,
+			4,
+			2,
+			6,
+			3,
+			10,
+			4,
+			14,
+			5,
+			20,
+			6,
+			28
+		];
+		const earthquakeRingRadius = [
+			'interpolate',
+			['linear'],
+			['get', 'magnitude'],
+			1,
+			8,
+			2,
+			12,
+			3,
+			18,
+			4,
+			24,
+			5,
+			32,
+			6,
+			44
+		];
+		const fireIncidentRadius = [
+			'interpolate',
+			['linear'],
+			['get', 'acres'],
+			0,
+			6,
+			100,
+			10,
+			1000,
+			16,
+			10000,
+			24
+		];
+		const townRadius = ['coalesce', ['get', 'radius'], 3];
+		const townOpacity = ['coalesce', ['get', 'opacity'], 0.18];
+		const townLabelOpacity = ['coalesce', ['get', 'labelOpacity'], 0.25];
+		const townStrokeOpacity = [
+			'case',
+			['>', ['coalesce', ['get', 'total'], 0], 0],
+			0.5,
+			0.2
+		];
 
 		// Town boundary highlight (renders beneath everything)
 		map.addLayer({
@@ -477,10 +628,10 @@
 			type: 'circle',
 			source: 'fire-zones',
 			paint: {
-				'circle-radius': 20,
-				'circle-color': 'rgba(239, 68, 68, 0.12)',
-				'circle-stroke-width': 1,
-				'circle-stroke-color': 'rgba(239, 68, 68, 0.3)'
+				'circle-radius': hoverCase(24, 20),
+				'circle-color': hoverCase('rgba(248, 113, 113, 0.18)', 'rgba(239, 68, 68, 0.12)'),
+				'circle-stroke-width': hoverCase(1.8, 1),
+				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(239, 68, 68, 0.3)')
 			}
 		});
 
@@ -520,14 +671,7 @@
 			type: 'circle',
 			source: 'traffic-events',
 			paint: {
-				'circle-radius': [
-					'case',
-					['==', ['get', 'severity'], 'SEVERE'],
-					8,
-					['==', ['get', 'severity'], 'MAJOR'],
-					6,
-					5
-				],
+				'circle-radius': hoverAdd(trafficEventRadius, 2),
 				'circle-color': [
 					'case',
 					['==', ['get', 'severity'], 'SEVERE'],
@@ -536,9 +680,9 @@
 					'#f97316',
 					'#f59e0b'
 				],
-				'circle-opacity': 0.7,
-				'circle-stroke-width': 1,
-				'circle-stroke-color': 'rgba(10, 10, 10, 0.8)'
+				'circle-opacity': hoverCase(0.96, 0.7),
+				'circle-stroke-width': hoverCase(2, 1),
+				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(10, 10, 10, 0.8)')
 			}
 		});
 
@@ -548,10 +692,10 @@
 			type: 'circle',
 			source: 'landmarks',
 			paint: {
-				'circle-radius': 3,
-				'circle-color': 'rgba(255, 255, 255, 0.2)',
-				'circle-stroke-width': 0.5,
-				'circle-stroke-color': 'rgba(255, 255, 255, 0.3)'
+				'circle-radius': hoverCase(4.5, 3),
+				'circle-color': hoverCase('rgba(255, 244, 214, 0.38)', 'rgba(255, 255, 255, 0.2)'),
+				'circle-stroke-width': hoverCase(1.1, 0.5),
+				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(255, 255, 255, 0.3)')
 			}
 		});
 
@@ -580,11 +724,11 @@
 			type: 'circle',
 			source: 'airports',
 			paint: {
-				'circle-radius': 7,
+				'circle-radius': hoverCase(9.25, 7),
 				'circle-color': ['get', 'color'],
-				'circle-opacity': 0.9,
-				'circle-stroke-width': 1.5,
-				'circle-stroke-color': 'rgba(255, 255, 255, 0.8)'
+				'circle-opacity': hoverCase(1, 0.9),
+				'circle-stroke-width': hoverCase(2.5, 1.5),
+				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(255, 255, 255, 0.8)')
 			}
 		});
 
@@ -615,19 +759,11 @@
 			type: 'circle',
 			source: 'earthquakes',
 			paint: {
-				'circle-radius': [
-					'interpolate', ['linear'], ['get', 'magnitude'],
-					1, 4,
-					2, 6,
-					3, 10,
-					4, 14,
-					5, 20,
-					6, 28
-				],
-				'circle-color': 'rgba(251, 191, 36, 0.5)',
-				'circle-stroke-width': 2,
-				'circle-stroke-color': '#f59e0b',
-				'circle-opacity': 0.7
+				'circle-radius': hoverAdd(earthquakeRadius, 2.5),
+				'circle-color': hoverCase('rgba(252, 211, 77, 0.72)', 'rgba(251, 191, 36, 0.5)'),
+				'circle-stroke-width': hoverCase(2.8, 2),
+				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, '#f59e0b'),
+				'circle-opacity': hoverCase(0.96, 0.7)
 			}
 		});
 
@@ -637,19 +773,11 @@
 			type: 'circle',
 			source: 'earthquakes',
 			paint: {
-				'circle-radius': [
-					'interpolate', ['linear'], ['get', 'magnitude'],
-					1, 8,
-					2, 12,
-					3, 18,
-					4, 24,
-					5, 32,
-					6, 44
-				],
+				'circle-radius': hoverAdd(earthquakeRingRadius, 3),
 				'circle-color': 'transparent',
-				'circle-stroke-width': 1.5,
-				'circle-stroke-color': 'rgba(251, 191, 36, 0.3)',
-				'circle-stroke-opacity': 0.6
+				'circle-stroke-width': hoverCase(2.2, 1.5),
+				'circle-stroke-color': hoverCase('rgba(255, 247, 220, 0.72)', 'rgba(251, 191, 36, 0.3)'),
+				'circle-stroke-opacity': hoverCase(0.92, 0.6)
 			}
 		});
 
@@ -659,22 +787,10 @@
 			type: 'circle',
 			source: 'fire-incidents',
 			paint: {
-				'circle-radius': [
-					'interpolate',
-					['linear'],
-					['get', 'acres'],
-					0,
-					6,
-					100,
-					10,
-					1000,
-					16,
-					10000,
-					24
-				],
-				'circle-color': 'rgba(255, 120, 0, 0.7)',
-				'circle-stroke-width': 2,
-				'circle-stroke-color': '#ef4444'
+				'circle-radius': hoverAdd(fireIncidentRadius, 3),
+				'circle-color': hoverCase('rgba(255, 153, 62, 0.88)', 'rgba(255, 120, 0, 0.7)'),
+				'circle-stroke-width': hoverCase(3, 2),
+				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, '#ef4444')
 			}
 		});
 
@@ -703,11 +819,11 @@
 			type: 'circle',
 			source: 'gas-stations',
 			paint: {
-				'circle-radius': 5,
+				'circle-radius': hoverCase(6.75, 5),
 				'circle-color': '#22d3ee',
-				'circle-opacity': 0.8,
-				'circle-stroke-width': 1,
-				'circle-stroke-color': 'rgba(10, 10, 10, 0.8)'
+				'circle-opacity': hoverCase(0.98, 0.8),
+				'circle-stroke-width': hoverCase(2, 1),
+				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(10, 10, 10, 0.8)')
 			}
 		});
 
@@ -737,11 +853,11 @@
 			type: 'circle',
 			source: 'ev-charging-stations',
 			paint: {
-				'circle-radius': 5,
+				'circle-radius': hoverCase(6.75, 5),
 				'circle-color': '#a855f7',
-				'circle-opacity': 0.8,
-				'circle-stroke-width': 1,
-				'circle-stroke-color': 'rgba(10, 10, 10, 0.8)'
+				'circle-opacity': hoverCase(0.98, 0.8),
+				'circle-stroke-width': hoverCase(2, 1),
+				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(10, 10, 10, 0.8)')
 			}
 		});
 
@@ -771,11 +887,11 @@
 			type: 'circle',
 			source: 'coffee-shops',
 			paint: {
-				'circle-radius': 5,
+				'circle-radius': hoverCase(6.75, 5),
 				'circle-color': '#a16207',
-				'circle-opacity': 0.8,
-				'circle-stroke-width': 1,
-				'circle-stroke-color': 'rgba(10, 10, 10, 0.8)'
+				'circle-opacity': hoverCase(0.98, 0.8),
+				'circle-stroke-width': hoverCase(2, 1),
+				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(10, 10, 10, 0.8)')
 			}
 		});
 
@@ -805,11 +921,11 @@
 			type: 'circle',
 			source: 'fitness-studios',
 			paint: {
-				'circle-radius': 5,
+				'circle-radius': hoverCase(6.75, 5),
 				'circle-color': ['get', 'color'],
-				'circle-opacity': 0.8,
-				'circle-stroke-width': 1,
-				'circle-stroke-color': 'rgba(10, 10, 10, 0.8)'
+				'circle-opacity': hoverCase(0.98, 0.8),
+				'circle-stroke-width': hoverCase(2, 1),
+				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(10, 10, 10, 0.8)')
 			}
 		});
 
@@ -839,11 +955,11 @@
 			type: 'circle',
 			source: 'news-pins',
 			paint: {
-				'circle-radius': 3,
+				'circle-radius': hoverCase(4.4, 3),
 				'circle-color': ['get', 'color'],
-				'circle-opacity': 0.7,
-				'circle-stroke-width': 0.5,
-				'circle-stroke-color': 'rgba(255, 255, 255, 0.3)'
+				'circle-opacity': hoverCase(0.96, 0.7),
+				'circle-stroke-width': hoverCase(1.4, 0.5),
+				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(255, 255, 255, 0.3)')
 			}
 		});
 
@@ -878,12 +994,12 @@
 			type: 'circle',
 			source: 'towns',
 			paint: {
-				'circle-radius': ['coalesce', ['get', 'radius'], 3],
+				'circle-radius': hoverAdd(townRadius, 2.5),
 				'circle-color': ['coalesce', ['get', 'color'], '#8b5cf6'],
-				'circle-opacity': ['coalesce', ['get', 'opacity'], 0.18],
-				'circle-stroke-width': 1.5,
-				'circle-stroke-color': 'rgba(255, 255, 255, 0.5)',
-				'circle-stroke-opacity': ['case', ['>', ['coalesce', ['get', 'total'], 0], 0], 0.5, 0.2]
+				'circle-opacity': hoverCase(0.98, townOpacity),
+				'circle-stroke-width': hoverCase(2.4, 1.5),
+				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(255, 255, 255, 0.5)'),
+				'circle-stroke-opacity': hoverCase(0.96, townStrokeOpacity)
 			}
 		});
 
@@ -900,10 +1016,10 @@
 				'text-optional': true
 			},
 			paint: {
-				'text-color': 'rgba(232, 232, 232, 0.7)',
+				'text-color': hoverCase('rgba(255, 255, 255, 0.96)', 'rgba(232, 232, 232, 0.7)'),
 				'text-halo-color': 'rgba(10, 10, 10, 0.9)',
 				'text-halo-width': 1,
-				'text-opacity': ['coalesce', ['get', 'labelOpacity'], 0.25]
+				'text-opacity': hoverCase(0.96, townLabelOpacity)
 			}
 		});
 
@@ -913,11 +1029,11 @@
 		if (!interactionsBound) {
 			interactionsBound = true;
 
-				map.on('click', 'towns-layer', (e: MapLayerMouseEvent) => {
-					if (clickHitsVisibleStravaFeature(map, e)) return;
-					const slug = e.features?.[0]?.properties?.slug;
-					if (slug && onTownClick) onTownClick(slug);
-				});
+			map.on('click', 'towns-layer', (e: MapLayerMouseEvent) => {
+				if (clickHitsVisibleStravaFeature(map, e)) return;
+				const slug = e.features?.[0]?.properties?.slug;
+				if (slug && onTownClick) onTownClick(slug);
+			});
 
 			map.on('click', 'news-pins-hit-layer', (e: MapLayerMouseEvent) => {
 				if (clickHitsVisibleStravaFeature(map, e)) return;
@@ -1075,104 +1191,41 @@
 				});
 			});
 
-			map.on('mouseenter', 'airports-layer', () => {
-				map.getCanvas().style.cursor = 'pointer';
+			bindInteractiveHover(map, { layerId: 'airports-layer', sourceId: 'airports' });
+			bindInteractiveHover(map, { layerId: 'gas-stations-layer', sourceId: 'gas-stations' });
+			bindInteractiveHover(map, {
+				layerId: 'ev-charging-stations-layer',
+				sourceId: 'ev-charging-stations'
 			});
-
-			map.on('mouseleave', 'airports-layer', () => {
-				map.getCanvas().style.cursor = '';
+			bindInteractiveHover(map, { layerId: 'coffee-shops-layer', sourceId: 'coffee-shops' });
+			bindInteractiveHover(map, {
+				layerId: 'fitness-studios-layer',
+				sourceId: 'fitness-studios'
 			});
-
-			map.on('mouseenter', 'gas-stations-layer', () => {
-				map.getCanvas().style.cursor = 'pointer';
+			bindInteractiveHover(map, {
+				layerId: 'fire-incidents-layer',
+				sourceId: 'fire-incidents'
 			});
-
-			map.on('mouseleave', 'gas-stations-layer', () => {
-				map.getCanvas().style.cursor = '';
+			bindInteractiveHover(map, {
+				layerId: 'towns-layer',
+				sourceId: 'towns',
+				onFeatureChange: (feature) => {
+					const slug = feature?.properties?.slug;
+					if (slug && onTownHover) {
+						onTownHover(String(slug));
+						return;
+					}
+					if (onTownHover) onTownHover(null);
+				}
 			});
-
-			map.on('mouseenter', 'ev-charging-stations-layer', () => {
-				map.getCanvas().style.cursor = 'pointer';
+			bindInteractiveHover(map, { layerId: 'news-pins-hit-layer', sourceId: 'news-pins' });
+			bindInteractiveHover(map, { layerId: 'landmarks-layer', sourceId: 'landmarks' });
+			bindInteractiveHover(map, { layerId: 'fire-zones-layer', sourceId: 'fire-zones' });
+			bindInteractiveHover(map, {
+				layerId: 'traffic-events-layer',
+				sourceId: 'traffic-events'
 			});
-
-			map.on('mouseleave', 'ev-charging-stations-layer', () => {
-				map.getCanvas().style.cursor = '';
-			});
-
-			map.on('mouseenter', 'coffee-shops-layer', () => {
-				map.getCanvas().style.cursor = 'pointer';
-			});
-
-			map.on('mouseleave', 'coffee-shops-layer', () => {
-				map.getCanvas().style.cursor = '';
-			});
-
-			map.on('mouseenter', 'fitness-studios-layer', () => {
-				map.getCanvas().style.cursor = 'pointer';
-			});
-
-			map.on('mouseleave', 'fitness-studios-layer', () => {
-				map.getCanvas().style.cursor = '';
-			});
-
-			map.on('mouseenter', 'fire-incidents-layer', () => {
-				map.getCanvas().style.cursor = 'pointer';
-			});
-
-			map.on('mouseleave', 'fire-incidents-layer', () => {
-				map.getCanvas().style.cursor = '';
-			});
-
-			map.on('mouseenter', 'towns-layer', (e: MapLayerMouseEvent) => {
-				map.getCanvas().style.cursor = 'pointer';
-				const slug = e.features?.[0]?.properties?.slug;
-				if (slug && onTownHover) onTownHover(slug);
-			});
-
-			map.on('mouseleave', 'towns-layer', () => {
-				map.getCanvas().style.cursor = '';
-				if (onTownHover) onTownHover(null);
-			});
-
-			map.on('mouseenter', 'news-pins-hit-layer', () => {
-				map.getCanvas().style.cursor = 'pointer';
-			});
-
-			map.on('mouseleave', 'news-pins-hit-layer', () => {
-				map.getCanvas().style.cursor = '';
-			});
-
-			map.on('mouseenter', 'landmarks-layer', () => {
-				map.getCanvas().style.cursor = 'pointer';
-			});
-
-			map.on('mouseleave', 'landmarks-layer', () => {
-				map.getCanvas().style.cursor = '';
-			});
-
-			map.on('mouseenter', 'fire-zones-layer', () => {
-				map.getCanvas().style.cursor = 'pointer';
-			});
-
-			map.on('mouseleave', 'fire-zones-layer', () => {
-				map.getCanvas().style.cursor = '';
-			});
-
-			map.on('mouseenter', 'traffic-events-layer', () => {
-				map.getCanvas().style.cursor = 'pointer';
-			});
-
-			map.on('mouseleave', 'traffic-events-layer', () => {
-				map.getCanvas().style.cursor = '';
-			});
-
-			map.on('mouseenter', 'earthquakes-layer', () => {
-				map.getCanvas().style.cursor = 'pointer';
-			});
-
-			map.on('mouseleave', 'earthquakes-layer', () => {
-				map.getCanvas().style.cursor = '';
-			});
+			bindInteractiveHover(map, { layerId: 'earthquakes-layer', sourceId: 'earthquakes' });
 		}
 	}
 
@@ -1204,6 +1257,7 @@
 
 			return {
 				type: 'Feature' as const,
+				id: town.slug,
 				properties: {
 					name: town.name,
 					slug: town.slug,
@@ -1237,6 +1291,7 @@
 
 			pinFeatures.push({
 				type: 'Feature',
+				id: item.id,
 				properties: {
 					id: item.id,
 					title: item.title,
@@ -1286,6 +1341,7 @@
 			.filter((eq) => eq.lat && eq.lon)
 			.map((eq) => ({
 				type: 'Feature' as const,
+				id: eq.id,
 				properties: {
 					title: eq.title,
 					magnitude: parseFloat(eq.title?.match(/M ([\d.]+)/)?.[1] || '2')
@@ -1304,6 +1360,7 @@
 		// Fire incidents overlay
 		const fireFeatures: GeoJSON.Feature[] = fireIncidents.map((fire) => ({
 			type: 'Feature' as const,
+			id: fire.id,
 			properties: {
 				id: fire.id,
 				name: fire.name,
@@ -1338,6 +1395,7 @@
 					)?.price;
 					return {
 						type: 'Feature' as const,
+						id: station.placeId,
 						properties: {
 							placeId: station.placeId,
 							name: station.name,
@@ -1383,6 +1441,7 @@
 					const connectorTypes = station.connectors.map((c) => c.type).join(', ');
 					return {
 						type: 'Feature' as const,
+						id: station.stationId,
 						properties: {
 							stationId: station.stationId,
 							name: station.name,
@@ -1431,6 +1490,7 @@
 					.filter((s) => s.price !== null)
 					.map((s) => ({
 						type: 'Feature' as const,
+						id: s.id,
 						geometry: {
 							type: 'Point' as const,
 							coordinates: [s.lon, s.lat]
@@ -1475,6 +1535,7 @@
 					)
 					.map((s) => ({
 						type: 'Feature' as const,
+						id: s.id,
 						geometry: {
 							type: 'Point' as const,
 							coordinates: [s.lon, s.lat]
@@ -1551,6 +1612,7 @@
 
 				return {
 					type: 'Feature' as const,
+					id: pin.code,
 					properties: { code: pin.code, name: pin.name, color, statusLabel, weatherSummary },
 					geometry: {
 						type: 'Point' as const,
@@ -1752,6 +1814,11 @@
 	});
 
 	onDestroy(() => {
+		const map = getMap();
+		if (map) {
+			hoveredFeatureIds.clear();
+			map.getCanvas().style.cursor = '';
+		}
 		removeStyleLoadListener?.();
 		unsubscribeNews?.();
 		unsubscribeMap?.();

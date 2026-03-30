@@ -23,6 +23,9 @@
 	let interactionsBound = false;
 	let activePopup: { remove: () => void } | null = null;
 	let popupToken = 0;
+	let cursorOwnedBySegments = false;
+	let hoveredSegmentId: number | null = null;
+	const SEGMENT_HOVER_STROKE = 'rgba(255, 247, 220, 0.98)';
 
 	// Layer IDs used by this component
 	const SEGMENT_LAYERS = [
@@ -113,6 +116,7 @@
 				if (coords.length >= 2) {
 					features.push({
 						type: 'Feature',
+						id: seg.id,
 						properties: {
 							id: seg.id,
 							name: seg.name,
@@ -136,6 +140,7 @@
 			// Always add a point for the pin view (used at low zoom)
 			features.push({
 				type: 'Feature',
+				id: seg.id,
 				properties: {
 					id: seg.id,
 					name: seg.name,
@@ -162,6 +167,8 @@
 	function setupSources(map: MapLibreMap) {
 		// Avoid duplicates after style reload
 		if (map.getSource(SOURCE_ID)) return;
+		hoveredSegmentId = null;
+		cursorOwnedBySegments = false;
 
 		map.addSource(SOURCE_ID, {
 			type: 'geojson',
@@ -230,16 +237,36 @@
 				visibility: 'none'
 			},
 			paint: {
-				'circle-radius': 5,
 				'circle-color': [
 					'case',
 					['==', ['get', 'activityType'], 'ride'],
 					'#f59e0b',
 					'#22d3ee'
 				],
-				'circle-opacity': 0.8,
-				'circle-stroke-width': 1,
-				'circle-stroke-color': 'rgba(10, 10, 10, 0.8)'
+				'circle-opacity': [
+					'case',
+					['boolean', ['feature-state', 'hover'], false],
+					0.98,
+					0.8
+				],
+				'circle-radius': [
+					'case',
+					['boolean', ['feature-state', 'hover'], false],
+					6.75,
+					5
+				],
+				'circle-stroke-width': [
+					'case',
+					['boolean', ['feature-state', 'hover'], false],
+					2,
+					1
+				],
+				'circle-stroke-color': [
+					'case',
+					['boolean', ['feature-state', 'hover'], false],
+					SEGMENT_HOVER_STROKE,
+					'rgba(10, 10, 10, 0.8)'
+				]
 			}
 		});
 
@@ -259,11 +286,35 @@
 				'text-optional': true
 			},
 			paint: {
-				'text-color': '#fc4c02',
+				'text-color': [
+					'case',
+					['boolean', ['feature-state', 'hover'], false],
+					SEGMENT_HOVER_STROKE,
+					'#fc4c02'
+				],
 				'text-halo-color': 'rgba(10, 10, 10, 0.9)',
-				'text-halo-width': 1.5
+				'text-halo-width': [
+					'case',
+					['boolean', ['feature-state', 'hover'], false],
+					2,
+					1.5
+				]
 			}
 		});
+	}
+
+	function setHoveredSegment(map: MapLibreMap, nextId: number | null) {
+		if (hoveredSegmentId === nextId) return;
+
+		if (hoveredSegmentId !== null && map.getSource(SOURCE_ID)) {
+			map.setFeatureState({ source: SOURCE_ID, id: hoveredSegmentId }, { hover: false });
+		}
+
+		hoveredSegmentId = nextId;
+
+		if (nextId !== null && map.getSource(SOURCE_ID)) {
+			map.setFeatureState({ source: SOURCE_ID, id: nextId }, { hover: true });
+		}
 	}
 
 	function updateData(map: MapLibreMap) {
@@ -469,11 +520,31 @@
 		};
 
 		const handleMouseMove = (e: MapMouseEvent) => {
-			map.getCanvas().style.cursor = getPopupFeature(map, e) ? 'pointer' : '';
+			const hoveredFeature = getPopupFeature(map, e);
+			if (hoveredFeature) {
+				const nextId =
+					typeof hoveredFeature.id === 'number'
+						? hoveredFeature.id
+						: Number(hoveredFeature.properties?.id ?? 0);
+				setHoveredSegment(map, Number.isFinite(nextId) && nextId > 0 ? nextId : null);
+				map.getCanvas().style.cursor = 'pointer';
+				cursorOwnedBySegments = true;
+				return;
+			}
+
+			setHoveredSegment(map, null);
+			if (cursorOwnedBySegments) {
+				map.getCanvas().style.cursor = '';
+				cursorOwnedBySegments = false;
+			}
 		};
 
 		const handleMouseOut = () => {
-			map.getCanvas().style.cursor = '';
+			setHoveredSegment(map, null);
+			if (cursorOwnedBySegments) {
+				map.getCanvas().style.cursor = '';
+				cursorOwnedBySegments = false;
+			}
 		};
 
 		map.on('click', handleClick);
@@ -560,6 +631,8 @@
 		// Clean up map layers and source
 		const map = getMap();
 		if (map) {
+			setHoveredSegment(map, null);
+			map.getCanvas().style.cursor = '';
 			for (const layerId of SEGMENT_LAYERS) {
 				if (map.getLayer(layerId)) {
 					map.removeLayer(layerId);
