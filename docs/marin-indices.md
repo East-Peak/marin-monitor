@@ -764,7 +764,17 @@ Candidates for improvement:
 
 ### FixItMarin (backlog)
 
-Research in progress. https://www.marincounty.gov/how-do-i/fixitmarin — county issue/report tracker (potholes, graffiti, infrastructure issues, etc.). Could be an interesting civic data layer on the map — pins showing reported issues by type, status, and location. Need to determine: what platform powers it (SeeClickFix?), whether there's a public API, and what data is available.
+HIGHLY VIABLE. Powered by SeeClickFix (CivicPlus). Free public JSON API, no auth needed.
+
+API: GET https://seeclickfix.com/api/v2/issues?place_url=marin-county&per_page=100
+- Returns: id, status, summary, description, lat/lng, address, category, photos, timestamps, comments, assignee
+- ~9 new reports/day, 853 total issues, 38 service categories
+- Top categories: Illegal Dumping (16%), Potholes (12%), Sidewalks (10%), Drainage (8%)
+- Rate limit: 20 req/min (fine for cached dashboard)
+- Covers unincorporated Marin County + City of San Rafael
+- GeoJSON points ready for map display — maps perfectly to existing TOWN_BY_SLUG
+- Could build: live issue map pins, category breakdown, resolution time tracking, town-level filtering, recent reports feed with photos
+- This would be a civic data layer, not an index — more like a "what's broken in Marin" panel
 
 ### Nextdoor Integration (backlog)
 
