@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
-import { JSDOM } from 'jsdom';
+import { DOMParser } from 'linkedom/worker';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -506,8 +506,7 @@ async function fetchNixleDetail(url) {
 	if (!response.ok) return null;
 
 	const html = await response.text();
-	const dom = new JSDOM(html, { url });
-	const doc = dom.window.document;
+	const doc = new DOMParser().parseFromString(html, 'text/html');
 	const info = doc.querySelector('.full_message_info');
 	if (!info) return null;
 
@@ -557,14 +556,14 @@ async function fetchNixleAgencyAlerts({ source, listingUrl, town, townSlug, town
 		}
 
 		const html = await response.text();
-		const dom = new JSDOM(html, { url: pageUrl });
-		const doc = dom.window.document;
+		const doc = new DOMParser().parseFromString(html, 'text/html');
 		const cards = [...doc.querySelectorAll('li[id^="pub_"]')];
 		if (cards.length === 0) break;
 
 		const pageItems = await Promise.all(
 			cards.map(async (card) => {
-				const detailLink = card.querySelector('a[href*="nixle.us/"]')?.href;
+				const detailHref = card.querySelector('a[href*="nixle.us/"]')?.getAttribute('href');
+				const detailLink = detailHref ? new URL(detailHref, pageUrl).toString() : null;
 				if (!detailLink) return null;
 
 				const priority = normalizeWhitespace(

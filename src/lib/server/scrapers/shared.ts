@@ -2,7 +2,7 @@
  * Shared utilities for server-side scrapers.
  * Ported from scripts/extract-activity-feeds.mjs and scripts/extract-police-logs.mjs
  */
-import { JSDOM } from 'jsdom';
+import { DOMParser } from 'linkedom/worker';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
 
 export function stripHtml(raw = ''): string {
@@ -95,14 +95,14 @@ export async function fetchLastModified(url: string): Promise<string> {
 }
 
 export function parseXml(xml: string): Document {
-	return new JSDOM(xml, { contentType: 'text/xml' }).window.document;
+	return new DOMParser().parseFromString(xml, 'text/xml') as unknown as Document;
 }
 
 export function parseHtml(html: string): Document {
 	const sanitized = html
 		.replace(/<style[\s\S]*?<\/style>/gi, ' ')
 		.replace(/<script(?![^>]*application\/ld\+json)[\s\S]*?<\/script>/gi, ' ');
-	return new JSDOM(sanitized).window.document;
+	return new DOMParser().parseFromString(sanitized, 'text/html') as unknown as Document;
 }
 
 export function normalizeWhitespace(raw = ''): string {

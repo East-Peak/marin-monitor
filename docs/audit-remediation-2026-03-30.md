@@ -2,7 +2,7 @@
 
 Date: 2026-03-30
 Source: `docs/codex-review-prompt.md`
-Status: implemented, verified with residual build notices only
+Status: implemented and fully verified
 
 ## Scope
 
@@ -121,11 +121,10 @@ This document captures the findings from the full Marin Monitor audit and tracks
 
 - `npm run check`: passed with `0` errors and `0` warnings.
 - `npm run test:unit`: passed with `36` files and `406` tests.
-- `npm run build`: passed. Build still emits non-blocking chunk-size, `agentation` bundling, and optional dependency notices.
+- `npm run build`: passed with clean `adapter-vercel` output and no residual dependency warnings.
 
 ## Residual Follow-up
 
-- `npm run build` still emits non-blocking chunk-size and optional-dependency notices that are separate from `svelte-check`.
 - Array-backed feeds such as housing, activity, and police logs still use blob upload time for freshness by design; if those need source-level freshness semantics later, they will need embedded metadata instead of upload-time monitoring.
 
 ## Progress Log
@@ -136,3 +135,4 @@ This document captures the findings from the full Marin Monitor audit and tracks
 - 2026-03-30: `+page.svelte`, `TownPicker`, `LayoutEditMode`, and chart accessibility cleanup completed; `svelte-check` now passes with zero warnings.
 - 2026-03-30: fallback-backed composite input scrapers now emit `lastSuccessfulScrapeAt` in addition to the legacy `lastLiveScrapeAt` field.
 - 2026-03-30: object-backed scraper outputs and Strava blobs now standardize on `lastSuccessfulScrapeAt`, and health/freshness readers now prefer embedded freshness metadata over blob upload time where available.
+- 2026-03-30: non-blocking build follow-up completed. `agentation` was removed from the production route tree, runtime scraper DOM parsing moved off `jsdom`, browser-only coffee scrape dependencies were moved out of production installs, and the dormant Vercel cappuccino sync route now returns an explicit GitHub-Actions-only response.

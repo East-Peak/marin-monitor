@@ -19,7 +19,6 @@
 	import { fetchWeather } from '$lib/api/marin';
 	import { loadAllNews } from '$lib/api/marin/load-all';
 	import { earthquakesToNewsItems } from '$lib/api/marin';
-	import AgentationWidget from '$lib/components/dev/AgentationWidget.svelte';
 	import WireGrid from '$lib/components/dashboard/WireGrid.svelte';
 	import MapStage from '$lib/components/dashboard/MapStage.svelte';
 	import SignalDeck from '$lib/components/dashboard/SignalDeck.svelte';
@@ -305,7 +304,6 @@
 		onClose={() => (feedbackOpen = false)}
 		initialType={feedbackType}
 	/>
-	<AgentationWidget />
 </div>
 
 <style>

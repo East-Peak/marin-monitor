@@ -3,7 +3,6 @@
  * Ported from scripts/extract-police-logs.mjs — removes Playwright and fs writes.
  * Mill Valley now uses plain fetch() POST instead of Playwright page.evaluate().
  */
-import { JSDOM } from 'jsdom';
 import type { NewsItem } from '$lib/types';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import {
@@ -11,7 +10,8 @@ import {
 	excerpt,
 	slugify,
 	normalizeWhitespace,
-	decodeEntities
+	decodeEntities,
+	parseHtml
 } from './shared';
 
 const FAIRFAX_DOCS_URL =
@@ -470,8 +470,7 @@ async function fetchNixleDetail(
 	if (!response.ok) return null;
 
 	const html = await response.text();
-	const dom = new JSDOM(html, { url });
-	const doc = dom.window.document;
+	const doc = parseHtml(html);
 	const info = doc.querySelector('.full_message_info');
 	if (!info) return null;
 
@@ -527,15 +526,14 @@ async function fetchNixleAgencyAlerts(agency: {
 		}
 
 		const html = await response.text();
-		const dom = new JSDOM(html, { url: pageUrl });
-		const doc = dom.window.document;
+		const doc = parseHtml(html);
 		const cards = [...doc.querySelectorAll('li[id^="pub_"]')];
 		if (cards.length === 0) break;
 
 		const pageItems = await Promise.all(
 			cards.map(async (card) => {
-				const detailLink = (card.querySelector('a[href*="nixle.us/"]') as HTMLAnchorElement)
-					?.href;
+				const detailHref = card.querySelector('a[href*="nixle.us/"]')?.getAttribute('href');
+				const detailLink = detailHref ? new URL(detailHref, pageUrl).toString() : null;
 				if (!detailLink) return null;
 
 				const priority = normalizeWhitespace(

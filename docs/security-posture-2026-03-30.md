@@ -62,7 +62,7 @@ Status: active
 ### P0
 
 - Pin all GitHub Actions to immutable commit SHAs.
-- Move `SCRAPE_PROXY_URL` in workflows from a raw Tailscale IP to a named secret or internal DNS name.
+- Replace the raw IP currently stored inside `SCRAPE_PROXY_URL` with an internal DNS name or other less brittle endpoint identifier.
 - Evaluate whether the lightweight in-memory rate limiting is enough in practice.
   - If abuse appears, add durable edge or storage-backed rate limiting.
   - If abuse persists on feedback, add Turnstile/hCaptcha.
@@ -80,4 +80,4 @@ Status: active
 ## Notes
 
 - The `/api/article` route returns raw third-party HTML, but it is currently consumed for excerpt extraction rather than directly rendered into the DOM.
-- Build output still has non-security warnings around chunk size and optional dependencies; these are operational concerns, not immediate security issues.
+- Build output is now clean; any future adapter-vercel dependency warnings should be treated as a real operational regression rather than accepted noise.

@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { JSDOM } from 'jsdom';
+import { DOMParser } from 'linkedom/worker';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -444,14 +444,14 @@ async function fetchLastModified(url) {
 }
 
 function parseXml(xml) {
-	return new JSDOM(xml, { contentType: 'text/xml' }).window.document;
+	return new DOMParser().parseFromString(xml, 'text/xml');
 }
 
 function parseHtml(html) {
 	const sanitized = html
 		.replace(/<style[\s\S]*?<\/style>/gi, ' ')
 		.replace(/<script(?![^>]*application\/ld\+json)[\s\S]*?<\/script>/gi, ' ');
-	return new JSDOM(sanitized).window.document;
+	return new DOMParser().parseFromString(sanitized, 'text/html');
 }
 
 function buildEventTitle(eventName, dateInput, hasRegistration) {
