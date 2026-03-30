@@ -15,7 +15,13 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v3
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
       - run: npm ci
       - run: node scripts/sync-dog-walker.mjs
         env:
           BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+          SCRAPE_PROXY_URL: http://100.67.183.14:8889
+          SCRAPE_PROXY_SECRET: ${{ secrets.SCRAPE_PROXY_SECRET }}
