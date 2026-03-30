@@ -6,12 +6,9 @@
 	interface Props {
 		center: [number, number];
 		zoom: number;
-		duration?: number;
 	}
 
-	let { center, zoom, duration = 0 }: Props = $props();
-
-	let lastViewSignature = '';
+	let { center, zoom }: Props = $props();
 
 	const { getMap, mapReady } = getContext<{
 		getMap: () => MapLibreMap | null;
@@ -22,31 +19,12 @@
 	$effect(() => {
 		const c = center;
 		const z = zoom;
-		const animationDuration = duration;
-		const nextSignature = `${c[0].toFixed(4)},${c[1].toFixed(4)},${z.toFixed(2)}`;
 		let unsub: (() => void) | null = null;
-		let cancelled = false;
 
 		function setPosition() {
 			const map = getMap();
 			if (map) {
-				if (cancelled || nextSignature === lastViewSignature) return;
-
-				const isFirstPosition = lastViewSignature === '';
-				lastViewSignature = nextSignature;
-				map.stop();
-
-				if (isFirstPosition || animationDuration <= 0) {
-					map.jumpTo({ center: c, zoom: z });
-					return;
-				}
-
-				map.easeTo({
-					center: c,
-					zoom: z,
-					duration: animationDuration,
-					essential: true
-				});
+				map.jumpTo({ center: c, zoom: z });
 			}
 		}
 
@@ -64,7 +42,6 @@
 
 		// Cleanup: unsubscribe if effect re-runs before map was ready
 		return () => {
-			cancelled = true;
 			unsub?.();
 		};
 	});

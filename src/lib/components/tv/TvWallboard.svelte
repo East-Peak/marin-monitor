@@ -2,7 +2,6 @@
   import { onMount, onDestroy } from 'svelte';
   import { goto } from '$app/navigation';
   import { browser } from '$app/environment';
-  import { get } from 'svelte/store';
   import TvScreen from './TvScreen.svelte';
   import TvChyron from './TvChyron.svelte';
   import TvWallboardHeader from './TvWallboardHeader.svelte';
@@ -35,68 +34,37 @@
   let paused = $state(false);
   let carouselTimer: ReturnType<typeof setInterval> | null = null;
   let screenStartedAt = Date.now();
-  let screenElapsedMs = $state(0);
-
-  const activeScreen = $derived(TV_SCREENS[carouselIdx] ?? TV_SCREENS[0]);
-  const screenProgress = $derived(
-    activeScreen.durationMs > 0
-      ? Math.min(screenElapsedMs / activeScreen.durationMs, 1)
-      : 0
-  );
-  const screenTimeLeftSeconds = $derived(
-    Math.max(0, Math.ceil((activeScreen.durationMs - screenElapsedMs) / 1000))
-  );
-
-  function syncScreenElapsed() {
-    const duration = activeScreen.durationMs ?? 20_000;
-    screenElapsedMs = Math.min(Date.now() - screenStartedAt, duration);
-  }
-
-  function setScreen(index: number) {
-    carouselIdx = (index + TV_SCREENS.length) % TV_SCREENS.length;
-    screenStartedAt = Date.now();
-    screenElapsedMs = 0;
-  }
 
   function advanceCarousel() {
-    if (paused || document.hidden) return;
-
-    const duration = activeScreen.durationMs ?? 20_000;
-    const elapsed = Date.now() - screenStartedAt;
-    screenElapsedMs = Math.min(elapsed, duration);
-
-    if (elapsed >= duration) {
-      setScreen(carouselIdx + 1);
+    if (paused) return;
+    const duration = TV_SCREENS[carouselIdx]?.durationMs ?? 20_000;
+    if (Date.now() - screenStartedAt >= duration) {
+      carouselIdx = (carouselIdx + 1) % TV_SCREENS.length;
+      screenStartedAt = Date.now();
     }
   }
 
   function nextScreen() {
-    setScreen(carouselIdx + 1);
+    carouselIdx = (carouselIdx + 1) % TV_SCREENS.length;
+    screenStartedAt = Date.now();
   }
 
   function prevScreen() {
-    setScreen(carouselIdx - 1);
+    carouselIdx = (carouselIdx - 1 + TV_SCREENS.length) % TV_SCREENS.length;
+    screenStartedAt = Date.now();
   }
 
   function goToScreen(idx: number) {
-    setScreen(idx);
+    carouselIdx = idx;
+    screenStartedAt = Date.now();
   }
 
   function togglePause() {
-    if (paused) {
-      paused = false;
-      screenStartedAt = Date.now() - screenElapsedMs;
-      startCarousel();
-      return;
-    }
-
-    syncScreenElapsed();
-    paused = true;
-    stopCarousel();
+    paused = !paused;
+    if (!paused) screenStartedAt = Date.now();
   }
 
   function startCarousel() {
-    if (paused || document.hidden) return;
     stopCarousel();
     carouselTimer = setInterval(advanceCarousel, 1000);
   }
@@ -110,7 +78,6 @@
 
   function restartCarousel() {
     screenStartedAt = Date.now();
-    screenElapsedMs = 0;
   }
 
   // --- Clock ---
@@ -171,10 +138,8 @@
   // --- Visibility change (re-sync on tab focus) ---
   function handleVisibilityChange() {
     if (document.hidden) {
-      syncScreenElapsed();
       stopCarousel();
     } else if (!paused) {
-      screenStartedAt = Date.now() - screenElapsedMs;
       startCarousel();
     }
   }
@@ -198,7 +163,6 @@
   const activeMapViewId = $derived(TV_SCREENS[carouselIdx]?.mapViewId ?? 'county');
   const isMapScreenActive = $derived(!!TV_SCREENS[carouselIdx]?.mapViewId);
   const isConditionsScreenActive = $derived(TV_SCREENS[carouselIdx]?.id === 'conditions');
-  const isLeaderboardsScreenActive = $derived(TV_SCREENS[carouselIdx]?.id === 'leaderboards');
   // Use the first hourly period (current hour) for actual current temp,
   // NOT weatherForecast[0] which is the daytime high
   const currentTemp = $derived(hourlyPeriods[0]?.temperature ?? null);
@@ -279,17 +243,8 @@
   let reloadTimer: ReturnType<typeof setTimeout> | null = null;
 
   // --- Force dark theme ---
-  let originalThemeAttribute: string | null = null;
+  let originalTheme = '';
   let originalSettingsTheme: 'dark' | 'light' = 'dark';
-
-  function restoreOriginalTheme() {
-    if (originalThemeAttribute === null) {
-      document.documentElement.removeAttribute('data-theme');
-    } else {
-      document.documentElement.setAttribute('data-theme', originalThemeAttribute);
-    }
-    settings.setTheme(originalSettingsTheme);
-  }
 
   onMount(() => {
     // Reset shared state so TV mode starts county-wide, not town-scoped
@@ -298,8 +253,8 @@
 
     // Force dark theme — both data-theme attribute AND settings store
     // (MapContainer reads settings.theme for basemap style)
-    originalThemeAttribute = document.documentElement.getAttribute('data-theme');
-    originalSettingsTheme = get(settings).theme;
+    originalTheme = document.documentElement.getAttribute('data-theme') ?? '';
+    originalSettingsTheme = (document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark';
     document.documentElement.setAttribute('data-theme', 'dark');
     settings.setTheme('dark');
 
@@ -312,8 +267,7 @@
 
     // Cursor auto-hide
     resetCursorTimer();
-    window.addEventListener('pointermove', resetCursorTimer);
-    window.addEventListener('pointerdown', resetCursorTimer);
+    window.addEventListener('mousemove', resetCursorTimer);
 
     // Keyboard shortcuts
     window.addEventListener('keydown', handleKeydown);
@@ -323,7 +277,6 @@
 
     // Initial data load
     handleRefresh();
-    advanceCarousel();
 
     // Recurring data refresh
     refreshTimer = setInterval(handleRefresh, TV_REFRESH_INTERVAL_MS);
@@ -340,67 +293,38 @@
     if (reloadTimer) clearTimeout(reloadTimer);
 
     if (browser) {
-      window.removeEventListener('pointermove', resetCursorTimer);
-      window.removeEventListener('pointerdown', resetCursorTimer);
+      window.removeEventListener('mousemove', resetCursorTimer);
       window.removeEventListener('keydown', handleKeydown);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
 
       // Restore original theme (both data-theme and settings store)
-      restoreOriginalTheme();
+      document.documentElement.setAttribute('data-theme', originalTheme || 'dark');
+      settings.setTheme(originalSettingsTheme);
     }
   });
 </script>
 
 <div
-  class="fixed inset-0 grid min-h-[100dvh] grid-rows-[auto,minmax(0,1fr),auto] overflow-hidden bg-gray-950 text-gray-100 select-none"
+  class="fixed inset-0 bg-gray-950 text-gray-100 flex flex-col overflow-hidden select-none"
   class:cursor-none={cursorHidden}
 >
-  <TvWallboardHeader
-    {carouselIdx}
-    {paused}
-    {currentTemp}
-    {stories24h}
-    {alertCount}
-    {clockText}
-    activeScreenName={activeScreen.name}
-    activeScreenDescription={activeScreen.description}
-    screenProgress={screenProgress}
-    screenTimeLeftSeconds={screenTimeLeftSeconds}
-    onGoToScreen={goToScreen}
-  />
+  <TvWallboardHeader {carouselIdx} {paused} {currentTemp} {stories24h} {alertCount} {clockText} onGoToScreen={goToScreen} />
 
   <!-- Carousel area -->
-  <div class="relative min-h-0 overflow-hidden">
+  <div class="flex-1 relative" style="height: calc(100vh - 48px - 44px);">
     <!-- Persistent map — single MapContainer, never destroyed. Hidden when non-map screen active. -->
-    <div
-      class="absolute inset-0 transition-opacity duration-300"
-      aria-hidden={!isMapScreenActive}
-      style="z-index: {isMapScreenActive ? 1 : 0}; visibility: {isMapScreenActive ? 'visible' : 'hidden'}; pointer-events: {isMapScreenActive ? 'auto' : 'none'};"
-    >
+    <div class="absolute inset-0" style="z-index: {isMapScreenActive ? 1 : 0}; visibility: {isMapScreenActive ? 'visible' : 'hidden'};">
       <TvMapScreen {earthquakeItems} {fireIncidents} viewId={activeMapViewId} weather={regionWeather[activeMapViewId] ?? null} />
     </div>
 
     <!-- Persistent conditions — panels fetch on mount, so keep alive to avoid refetching every carousel pass -->
-    <div
-      class="absolute inset-0 transition-opacity duration-300"
-      aria-hidden={!isConditionsScreenActive}
-      style="z-index: {isConditionsScreenActive ? 1 : 0}; visibility: {isConditionsScreenActive ? 'visible' : 'hidden'}; pointer-events: {isConditionsScreenActive ? 'auto' : 'none'};"
-    >
+    <div class="absolute inset-0" style="z-index: {isConditionsScreenActive ? 1 : 0}; visibility: {isConditionsScreenActive ? 'visible' : 'hidden'};">
       <TvConditionsScreen />
-    </div>
-
-    <!-- Persistent leaderboards — avoids reloading segment tables on every carousel loop -->
-    <div
-      class="absolute inset-0 transition-opacity duration-300"
-      aria-hidden={!isLeaderboardsScreenActive}
-      style="z-index: {isLeaderboardsScreenActive ? 1 : 0}; visibility: {isLeaderboardsScreenActive ? 'visible' : 'hidden'}; pointer-events: {isLeaderboardsScreenActive ? 'auto' : 'none'};"
-    >
-      <TvLeaderboardsScreen />
     </div>
 
     <!-- Other non-map screens — destroyed/created normally -->
     {#each TV_SCREENS as screen, i (screen.id)}
-      {#if !screen.mapViewId && screen.id !== 'conditions' && screen.id !== 'leaderboards'}
+      {#if !screen.mapViewId && screen.id !== 'conditions'}
         <TvScreen active={carouselIdx === i}>
           {#if screen.id === 'news-wire'}
             <NewsWireScreen />
@@ -414,6 +338,8 @@
             <TvCameraClusterScreen clusterId="west-north" />
           {:else if screen.id === 'community'}
             <TvCommunityScreen />
+          {:else if screen.id === 'leaderboards'}
+            <TvLeaderboardsScreen />
           {/if}
         </TvScreen>
       {/if}
