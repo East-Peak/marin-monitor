@@ -80,6 +80,18 @@
 			</div>
 		{/if}
 
+		{#if isPanelVisible('school-tuition')}
+			<div class="signal-card signal-school-tuition animate-enter-up stagger-4 hover-lift">
+				<SchoolTuitionPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('driveway')}
+			<div class="signal-card signal-driveway animate-enter-up stagger-4 hover-lift">
+				<DrivewayPanel />
+			</div>
+		{/if}
+
 		{#if isPanelVisible('narrative') || isPanelVisible('correlation')}
 			<div class="signal-card signal-signals animate-enter-up stagger-4 hover-lift">
 				<SignalsPanel news={$allNewsItems} />
@@ -130,6 +142,18 @@
 				<EnvironmentPanel />
 			</div>
 		{/if}
+
+		{#if isPanelVisible('cappuccino')}
+			<div class="signal-card signal-cappuccino animate-enter-up stagger-4 hover-lift">
+				<CappuccinoPanel />
+			</div>
+		{/if}
+
+		{#if isPanelVisible('fitness')}
+			<div class="signal-card signal-fitness animate-enter-up stagger-4 hover-lift">
+				<FitnessPanel />
+			</div>
+		{/if}
 	</div>
 
 	<div class="signal-column signal-column-right">
@@ -157,33 +181,9 @@
 			</div>
 		{/if}
 
-		{#if isPanelVisible('cappuccino')}
-			<div class="signal-card signal-cappuccino animate-enter-up stagger-4 hover-lift">
-				<CappuccinoPanel />
-			</div>
-		{/if}
-
 		{#if isPanelVisible('wine-index')}
 			<div class="signal-card signal-wine-index animate-enter-up stagger-4 hover-lift">
 				<WineIndexPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('school-tuition')}
-			<div class="signal-card signal-school-tuition animate-enter-up stagger-4 hover-lift">
-				<SchoolTuitionPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('fitness')}
-			<div class="signal-card signal-fitness animate-enter-up stagger-4 hover-lift">
-				<FitnessPanel />
-			</div>
-		{/if}
-
-		{#if isPanelVisible('driveway')}
-			<div class="signal-card signal-driveway animate-enter-up stagger-4 hover-lift">
-				<DrivewayPanel />
 			</div>
 		{/if}
 	</div>
