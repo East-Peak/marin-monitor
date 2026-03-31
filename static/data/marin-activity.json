@@ -103,6 +103,50 @@
     ]
   },
   {
+    "id": "shows:mac-s-at-19-broadway:afternoon-jazz-vibes-jules-broussard-his-new-orleans-band-live-at-mac-s:https-www-eventbrite-com-e-afternoon-jazz-vibes-jules-broussard-his-new-orleans-band-live-at-macs-tickets-1985944856526",
+    "title": "Afternoon Jazz Vibes: Jules Broussard & His New Orleans Band live at Mac's",
+    "link": "https://www.eventbrite.com/e/afternoon-jazz-vibes-jules-broussard-his-new-orleans-band-live-at-macs-tickets-1985944856526",
+    "pubDate": "2026-04-25T07:00:00.000Z",
+    "timestamp": 1777100400000,
+    "description": "Upcoming Fairfax show at Mac’s at 19 Broadway.",
+    "content": "Fairfax live music, comedy, and nightlife calendar.",
+    "source": "Mac's at 19 Broadway",
+    "category": "shows",
+    "verification": "community",
+    "town": "Fairfax",
+    "townSlug": "fairfax",
+    "lat": 37.9871,
+    "lon": -122.5889,
+    "locationConfidence": "exact",
+    "locationEvidence": "Mac's at 19 Broadway",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:mac-s-at-19-broadway:sticky-s-backyard-ft-dj-j-cue-the-piedmont-underground-live-at-mac-s:https-www-eventbrite-com-e-stickys-backyard-ft-dj-jcue-the-piedmont-underground-live-at-macs-tickets-1984509337851",
+    "title": "Sticky’s Backyard ft. DJ J.Cue & The Piedmont Underground – Live at Mac's",
+    "link": "https://www.eventbrite.com/e/stickys-backyard-ft-dj-jcue-the-piedmont-underground-live-at-macs-tickets-1984509337851",
+    "pubDate": "2026-04-25T07:00:00.000Z",
+    "timestamp": 1777100400000,
+    "description": "Upcoming Fairfax show at Mac’s at 19 Broadway.",
+    "content": "Fairfax live music, comedy, and nightlife calendar.",
+    "source": "Mac's at 19 Broadway",
+    "category": "shows",
+    "verification": "community",
+    "town": "Fairfax",
+    "townSlug": "fairfax",
+    "lat": 37.9871,
+    "lon": -122.5889,
+    "locationConfidence": "exact",
+    "locationEvidence": "Mac's at 19 Broadway",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
     "id": "shows:rancho-nicasio:mitch-polzak-the-royal-deuces:https-ranchonicasio-com-event-mitch-polzak-the-royal-deuces-6",
     "title": "MITCH POLZAK & THE ROYAL DEUCES",
     "link": "https://ranchonicasio.com/event/mitch-polzak-the-royal-deuces-6/",
@@ -147,6 +191,28 @@
     ]
   },
   {
+    "id": "shows:mac-s-at-19-broadway:tiffany-bond-s-40th-birthday-bash-a-night-of-soul-blues-rock-at-mac-s:https-www-eventbrite-com-e-tiffany-bonds-40th-birthday-bash-a-night-of-soul-blues-rock-at-macs-tickets-1984508381992",
+    "title": "Tiffany Bond’s 40th Birthday Bash – A Night of Soul, Blues & Rock at Mac’s",
+    "link": "https://www.eventbrite.com/e/tiffany-bonds-40th-birthday-bash-a-night-of-soul-blues-rock-at-macs-tickets-1984508381992",
+    "pubDate": "2026-04-17T07:00:00.000Z",
+    "timestamp": 1776409200000,
+    "description": "Upcoming Fairfax show at Mac’s at 19 Broadway.",
+    "content": "Fairfax live music, comedy, and nightlife calendar.",
+    "source": "Mac's at 19 Broadway",
+    "category": "shows",
+    "verification": "community",
+    "town": "Fairfax",
+    "townSlug": "fairfax",
+    "lat": 37.9871,
+    "lon": -122.5889,
+    "locationConfidence": "exact",
+    "locationEvidence": "Mac's at 19 Broadway",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
     "id": "shows:rancho-nicasio:johnny-june-forever:https-ranchonicasio-com-event-johnny-june-forever-2",
     "title": "JOHNNY & JUNE FOREVER",
     "link": "https://ranchonicasio.com/event/johnny-june-forever-2/",
@@ -166,6 +232,50 @@
     "topics": [
       "music",
       "shows"
+    ]
+  },
+  {
+    "id": "shows:osher-marin-jcc:game-on-mexican-train-rummikub-scrabble:https-www-marinjcc-org-event-game-on-mexican-train-rummikub-scrabble-5",
+    "title": "Game On! Mexican Train, Rummikub & Scrabble",
+    "link": "https://www.marinjcc.org/event/game-on-mexican-train-rummikub-scrabble-5/",
+    "pubDate": "2026-04-14T20:00:00.000Z",
+    "timestamp": 1776196800000,
+    "description": "Come! Learn! Play! Join in our live, in-person game program to meet and connect with others while playing a fun game. \\n",
+    "content": "Osher Marin JCC · Kurland Center for Adult Living & Learning · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
+    "source": "Osher Marin JCC",
+    "category": "shows",
+    "verification": "community",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9557,
+    "lon": -122.5376,
+    "locationConfidence": "exact",
+    "locationEvidence": "Osher Marin JCC",
+    "topics": [
+      "community-events",
+      "arts"
+    ]
+  },
+  {
+    "id": "shows:osher-marin-jcc:marin-yom-hashoah-commemoration:https-www-marinjcc-org-event-marin-yom-hashoah-commemoration",
+    "title": "Marin Yom Hashoah Commemoration",
+    "link": "https://www.marinjcc.org/event/marin-yom-hashoah-commemoration/",
+    "pubDate": "2026-04-14T01:30:00.000Z",
+    "timestamp": 1776130200000,
+    "description": "Join us in the memory of those who perished, recognize the bravery of those who resisted, and reflect on the lessons of the past for our future. \\n",
+    "content": "Congregation Kol Shofar · Taube Center for Jewish Peoplehood · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
+    "source": "Osher Marin JCC",
+    "category": "shows",
+    "verification": "community",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9557,
+    "lon": -122.5376,
+    "locationConfidence": "exact",
+    "locationEvidence": "Osher Marin JCC",
+    "topics": [
+      "community-events",
+      "arts"
     ]
   },
   {
@@ -345,6 +455,28 @@
     ]
   },
   {
+    "id": "shows:mac-s-at-19-broadway:mood-swing-live-house-funk-afro-dance-night-at-mac-s:https-www-eventbrite-com-e-mood-swing-live-house-funk-afro-dance-night-at-macs-tickets-1986164702090",
+    "title": "MOOD SWING LIVE: House • Funk • Afro • Dance Night at Mac’s",
+    "link": "https://www.eventbrite.com/e/mood-swing-live-house-funk-afro-dance-night-at-macs-tickets-1986164702090",
+    "pubDate": "2026-04-10T07:00:00.000Z",
+    "timestamp": 1775804400000,
+    "description": "Upcoming Fairfax show at Mac’s at 19 Broadway.",
+    "content": "Fairfax live music, comedy, and nightlife calendar.",
+    "source": "Mac's at 19 Broadway",
+    "category": "shows",
+    "verification": "community",
+    "town": "Fairfax",
+    "townSlug": "fairfax",
+    "lat": 37.9871,
+    "lon": -122.5889,
+    "locationConfidence": "exact",
+    "locationEvidence": "Mac's at 19 Broadway",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
     "id": "shows:rancho-nicasio:chris-cain-band:https-ranchonicasio-com-event-chris-cain-band-3",
     "title": "CHRIS CAIN BAND",
     "link": "https://ranchonicasio.com/event/chris-cain-band-3/",
@@ -396,28 +528,6 @@
     "timestamp": 1775592000000,
     "description": "January 6-February 10 Tuesdays from 1:00-2:45 PM Dancing is great for the mind, body, and soul, and it’s also fun! We’ll be dancing to a wonderful assortment of Israeli and world music. The first hour is tailored to beg…",
     "content": "Osher Marin JCC · Taube Center for Jewish Peoplehood · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
-    "source": "Osher Marin JCC",
-    "category": "shows",
-    "verification": "community",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9557,
-    "lon": -122.5376,
-    "locationConfidence": "exact",
-    "locationEvidence": "Osher Marin JCC",
-    "topics": [
-      "community-events",
-      "arts"
-    ]
-  },
-  {
-    "id": "shows:osher-marin-jcc:game-on-mexican-train-rummikub-scrabble:https-www-marinjcc-org-event-game-on-mexican-train-rummikub-scrabble-4",
-    "title": "Game On! Mexican Train, Rummikub & Scrabble",
-    "link": "https://www.marinjcc.org/event/game-on-mexican-train-rummikub-scrabble-4/",
-    "pubDate": "2026-04-07T20:00:00.000Z",
-    "timestamp": 1775592000000,
-    "description": "Come! Learn! Play! Join in our live, in-person game program to meet and connect with others while playing a fun game. \\n",
-    "content": "Osher Marin JCC · Kurland Center for Adult Living & Learning · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
     "source": "Osher Marin JCC",
     "category": "shows",
     "verification": "community",
@@ -587,6 +697,29 @@
     ]
   },
   {
+    "id": "shows:dance-palace:point-reyes-books-presents-terry-tempest-williams:https-dancepalace-org-event-point-reyes-books-presents-terry-tempest-williams",
+    "title": "Point Reyes Books Presents: Terry Tempest Williams*",
+    "link": "https://dancepalace.org/event/point-reyes-books-presents-terry-tempest-williams/",
+    "pubDate": "2026-04-01T01:30:00.000Z",
+    "timestamp": 1775007000000,
+    "description": "Terry Tempest Williams returns to Point Reyes to discuss her new book, The Glorians: Visitations from the Holy Ordinary (Grove Press). \"I go to Terry Tempest Williams for the reasons I go to Whitman and Thoreau: to reco…",
+    "content": "Main Hall · Point Reyes Books · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
+    "source": "Dance Palace",
+    "category": "shows",
+    "verification": "community",
+    "town": "Point Reyes Station",
+    "townSlug": "point-reyes",
+    "lat": 38.0699,
+    "lon": -122.8089,
+    "locationConfidence": "exact",
+    "locationEvidence": "Dance Palace",
+    "topics": [
+      "music",
+      "community-events",
+      "west-marin"
+    ]
+  },
+  {
     "id": "shows:dance-palace:aikido-with-bruce-fox:https-dancepalace-org-event-aikido-with-bruce-fox-6-2026-03-31",
     "title": "Aikido with Bruce Fox*",
     "link": "https://dancepalace.org/event/aikido-with-bruce-fox-6/2026-03-31/",
@@ -679,6 +812,420 @@
     ]
   },
   {
+    "id": "outdoors:california-department-of-fish-wildlife:crab-trap-and-season-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-crab",
+    "title": "Crab trap and season regulations",
+    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Crab",
+    "pubDate": "2026-03-31T09:01:36.000Z",
+    "timestamp": 1774947696000,
+    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
+    "source": "California Department of Fish & Wildlife",
+    "category": "outdoors",
+    "verification": "official",
+    "topics": [
+      "fishing",
+      "regulations"
+    ]
+  },
+  {
+    "id": "farm:point-reyes-farmstead-cheese:point-reyes-farmstead-cheese-journal:https-www-pointreyescheese-com-blogs-news",
+    "title": "Point Reyes Farmstead Cheese journal",
+    "link": "https://www.pointreyescheese.com/blogs/news",
+    "pubDate": "2026-03-31T09:01:35.000Z",
+    "timestamp": 1774947695000,
+    "description": "Official Point Reyes Farmstead Cheese news and seasonal product updates.",
+    "source": "Point Reyes Farmstead Cheese",
+    "category": "farm",
+    "verification": "official",
+    "town": "Point Reyes Station",
+    "townSlug": "point-reyes",
+    "lat": 38.0764,
+    "lon": -122.8012,
+    "locationConfidence": "exact",
+    "locationEvidence": "Point Reyes Farmstead Cheese",
+    "topics": [
+      "cheese",
+      "farm-market"
+    ]
+  },
+  {
+    "id": "outdoors:california-department-of-fish-wildlife:ocean-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations",
+    "title": "Ocean sport fishing regulations",
+    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations",
+    "pubDate": "2026-03-31T09:01:35.000Z",
+    "timestamp": 1774947695000,
+    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
+    "source": "California Department of Fish & Wildlife",
+    "category": "outdoors",
+    "verification": "official",
+    "topics": [
+      "fishing",
+      "regulations"
+    ]
+  },
+  {
+    "id": "outdoors:california-department-of-fish-wildlife:san-francisco-ocean-fishing-map-and-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-fishing-map-sf",
+    "title": "San Francisco ocean fishing map and regulations",
+    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Fishing-Map/SF",
+    "pubDate": "2026-03-31T09:01:35.000Z",
+    "timestamp": 1774947695000,
+    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
+    "source": "California Department of Fish & Wildlife",
+    "category": "outdoors",
+    "verification": "official",
+    "topics": [
+      "fishing",
+      "regulations"
+    ]
+  },
+  {
+    "id": "outdoors:california-department-of-fish-wildlife:ocean-salmon-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-salmon",
+    "title": "Ocean salmon sport fishing regulations",
+    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Salmon",
+    "pubDate": "2026-03-31T09:01:35.000Z",
+    "timestamp": 1774947695000,
+    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
+    "source": "California Department of Fish & Wildlife",
+    "category": "outdoors",
+    "verification": "official",
+    "topics": [
+      "fishing",
+      "regulations"
+    ]
+  },
+  {
+    "id": "prep:marin-highlanders-rugby:marin-highlanders-rugby-club-hub:https-www-marinhighlandersrugby-org",
+    "title": "Marin Highlanders Rugby club hub",
+    "link": "https://www.marinhighlandersrugby.org/",
+    "pubDate": "2026-03-31T09:01:31.000Z",
+    "timestamp": 1774947691000,
+    "description": "Local sports hub for schedules, fixtures, club updates, or season information.",
+    "source": "Marin Highlanders Rugby",
+    "category": "prep",
+    "verification": "community",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9756,
+    "lon": -122.5123,
+    "locationConfidence": "exact",
+    "locationEvidence": "Marin Highlanders Rugby",
+    "topics": [
+      "rugby",
+      "club-sports"
+    ]
+  },
+  {
+    "id": "prep:tamalpais-union-high-school-district:tuhsd-athletics-hub:https-www-tamdistrict-org-students-athletics",
+    "title": "TUHSD athletics hub",
+    "link": "https://www.tamdistrict.org/students/athletics",
+    "pubDate": "2026-03-31T09:01:28.000Z",
+    "timestamp": 1774947688000,
+    "description": "Official athletics or team hub for a Marin-area school or league program.",
+    "source": "Tamalpais Union High School District",
+    "category": "prep",
+    "verification": "official",
+    "lat": 37.9341,
+    "lon": -122.5353,
+    "locationConfidence": "exact",
+    "locationEvidence": "Tamalpais Union High School District",
+    "topics": [
+      "prep-sports",
+      "district"
+    ]
+  },
+  {
+    "id": "prep:archie-williams-mtb:archie-williams-mountain-bike-team-hub:https-www-awmtb-com",
+    "title": "Archie Williams mountain bike team hub",
+    "link": "https://www.awmtb.com/",
+    "pubDate": "2026-03-31T09:01:28.000Z",
+    "timestamp": 1774947688000,
+    "description": "Official athletics or team hub for a Marin-area school or league program.",
+    "source": "Archie Williams MTB",
+    "category": "prep",
+    "verification": "official",
+    "town": "San Anselmo",
+    "townSlug": "san-anselmo",
+    "lat": 37.9746,
+    "lon": -122.5648,
+    "locationConfidence": "exact",
+    "locationEvidence": "Archie Williams MTB",
+    "topics": [
+      "prep-sports",
+      "mountain-bike"
+    ]
+  },
+  {
+    "id": "prep:san-rafael-athletics:san-rafael-high-athletics-hub:https-sanrafael-srcs-org-athletics",
+    "title": "San Rafael High athletics hub",
+    "link": "https://sanrafael.srcs.org/athletics",
+    "pubDate": "2026-03-31T09:01:25.000Z",
+    "timestamp": 1774947685000,
+    "description": "Official athletics or team hub for a Marin-area school or league program.",
+    "source": "San Rafael Athletics",
+    "category": "prep",
+    "verification": "official",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9752,
+    "lon": -122.5248,
+    "locationConfidence": "exact",
+    "locationEvidence": "San Rafael Athletics",
+    "topics": [
+      "prep-sports",
+      "schedule"
+    ]
+  },
+  {
+    "id": "prep:archie-williams-athletics:archie-williams-athletics-hub:https-archiewilliams-tamdistrict-org-athletics",
+    "title": "Archie Williams athletics hub",
+    "link": "https://archiewilliams.tamdistrict.org/athletics",
+    "pubDate": "2026-03-31T09:01:24.000Z",
+    "timestamp": 1774947684000,
+    "description": "Official athletics or team hub for a Marin-area school or league program.",
+    "source": "Archie Williams Athletics",
+    "category": "prep",
+    "verification": "official",
+    "town": "San Anselmo",
+    "townSlug": "san-anselmo",
+    "lat": 37.9746,
+    "lon": -122.5648,
+    "locationConfidence": "exact",
+    "locationEvidence": "Archie Williams Athletics",
+    "topics": [
+      "prep-sports",
+      "schedule"
+    ]
+  },
+  {
+    "id": "prep:marin-catholic-athletics:marin-catholic-athletic-calendar:https-www-marincatholic-org-athletics-athletic-calendar",
+    "title": "Marin Catholic athletic calendar",
+    "link": "https://www.marincatholic.org/athletics/athletic-calendar",
+    "pubDate": "2026-03-31T09:01:22.000Z",
+    "timestamp": 1774947682000,
+    "description": "Official athletics or team hub for a Marin-area school or league program.",
+    "source": "Marin Catholic Athletics",
+    "category": "prep",
+    "verification": "official",
+    "town": "Kentfield",
+    "townSlug": "kentfield",
+    "lat": 37.9506,
+    "lon": -122.5578,
+    "locationConfidence": "exact",
+    "locationEvidence": "Marin Catholic Athletics",
+    "topics": [
+      "prep-sports",
+      "schedule"
+    ]
+  },
+  {
+    "id": "endurance:dipsea-race:dipsea-race-hub-and-season-updates:https-www-dipsea-org",
+    "title": "Dipsea race hub and season updates",
+    "link": "https://www.dipsea.org/",
+    "pubDate": "2026-03-31T09:01:21.000Z",
+    "timestamp": 1774947681000,
+    "description": "Official Dipsea race site for race information, entry details, and latest news.",
+    "source": "Dipsea Race",
+    "category": "endurance",
+    "verification": "official",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.906,
+    "lon": -122.5491,
+    "locationConfidence": "exact",
+    "locationEvidence": "Dipsea Race",
+    "topics": [
+      "running",
+      "trail-race"
+    ]
+  },
+  {
+    "id": "shows:marin-county-free-library:marin-county-free-library-events:https-marinlibrary-bibliocommons-com-v2-events",
+    "title": "Marin County Free Library events",
+    "link": "https://marinlibrary.bibliocommons.com/v2/events",
+    "pubDate": "2026-03-31T09:01:18.000Z",
+    "timestamp": 1774947678000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Marin County Free Library",
+    "category": "shows",
+    "verification": "community",
+    "lat": 37.9991,
+    "lon": -122.5234,
+    "locationConfidence": "exact",
+    "locationEvidence": "Marin County Free Library",
+    "topics": [
+      "community-events",
+      "library"
+    ]
+  },
+  {
+    "id": "shows:sausalito-seahorse:sausalito-seahorse-calendar:https-www-sausalitoseahorse-com-calendar",
+    "title": "Sausalito Seahorse calendar",
+    "link": "https://www.sausalitoseahorse.com/calendar/",
+    "pubDate": "2026-03-31T09:01:16.000Z",
+    "timestamp": 1774947676000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Sausalito Seahorse",
+    "category": "shows",
+    "verification": "community",
+    "town": "Sausalito",
+    "townSlug": "sausalito",
+    "lat": 37.8584,
+    "lon": -122.4853,
+    "locationConfidence": "exact",
+    "locationEvidence": "Sausalito Seahorse",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:marin-symphony:marin-symphony-tickets-and-events:https-marinsymphony-org-tickets-events",
+    "title": "Marin Symphony tickets and events",
+    "link": "https://marinsymphony.org/tickets-events/",
+    "pubDate": "2026-03-31T09:01:16.000Z",
+    "timestamp": 1774947676000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Marin Symphony",
+    "category": "shows",
+    "verification": "community",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9715,
+    "lon": -122.52,
+    "locationConfidence": "exact",
+    "locationEvidence": "Marin Symphony",
+    "topics": [
+      "music",
+      "classical"
+    ]
+  },
+  {
+    "id": "shows:kwmr:kwmr-events-and-tickets-hub:https-kwmr-org-events",
+    "title": "KWMR events and tickets hub",
+    "link": "https://kwmr.org/events",
+    "pubDate": "2026-03-31T09:01:12.000Z",
+    "timestamp": 1774947672000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "KWMR",
+    "category": "shows",
+    "verification": "community",
+    "town": "Point Reyes Station",
+    "townSlug": "point-reyes",
+    "lat": 38.0699,
+    "lon": -122.8097,
+    "locationConfidence": "exact",
+    "locationEvidence": "KWMR",
+    "topics": [
+      "music",
+      "community-events",
+      "west-marin"
+    ]
+  },
+  {
+    "id": "shows:the-junction:the-junction-music-calendar:https-www-thejunc-com-music-calendar",
+    "title": "The Junction music calendar",
+    "link": "https://www.thejunc.com/music-calendar",
+    "pubDate": "2026-03-31T09:01:05.000Z",
+    "timestamp": 1774947665000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "The Junction",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.906,
+    "lon": -122.5458,
+    "locationConfidence": "exact",
+    "locationEvidence": "The Junction",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:smiley-s-saloon:smiley-s-saloon-shows-and-supper-club-hub:https-smileyssaloon-com",
+    "title": "Smiley's Saloon shows and supper club hub",
+    "link": "https://smileyssaloon.com/",
+    "pubDate": "2026-03-31T09:01:05.000Z",
+    "timestamp": 1774947665000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Smiley's Saloon",
+    "category": "shows",
+    "verification": "community",
+    "town": "Bolinas",
+    "townSlug": "bolinas",
+    "lat": 37.9096,
+    "lon": -122.6864,
+    "locationConfidence": "exact",
+    "locationEvidence": "Smiley's Saloon",
+    "topics": [
+      "music",
+      "west-marin"
+    ]
+  },
+  {
+    "id": "shows:peri-s-tavern:peri-s-tavern-music-calendar:https-peristavern-com-music-calendar",
+    "title": "Peri's Tavern music calendar",
+    "link": "https://peristavern.com/music-calendar/",
+    "pubDate": "2026-03-31T09:01:04.000Z",
+    "timestamp": 1774947664000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Peri's Tavern",
+    "category": "shows",
+    "verification": "community",
+    "town": "Fairfax",
+    "townSlug": "fairfax",
+    "lat": 37.9871,
+    "lon": -122.5889,
+    "locationConfidence": "exact",
+    "locationEvidence": "Peri's Tavern",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:mill-valley-library:mill-valley-library-calendar:https-millvalleylibrary-gov-calendar-aspx",
+    "title": "Mill Valley Library calendar",
+    "link": "https://millvalleylibrary.gov/calendar.aspx",
+    "pubDate": "2026-03-31T09:00:44.000Z",
+    "timestamp": 1774947644000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "Mill Valley Library",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9058,
+    "lon": -122.5478,
+    "locationConfidence": "exact",
+    "locationEvidence": "Mill Valley Library",
+    "topics": [
+      "community-events",
+      "library"
+    ]
+  },
+  {
+    "id": "shows:san-rafael-elks:san-rafael-elks-lodge-calendar:https-www-elks1108-org-calendar",
+    "title": "San Rafael Elks Lodge calendar",
+    "link": "https://www.elks1108.org/calendar",
+    "pubDate": "2026-03-31T08:53:44.000Z",
+    "timestamp": 1774947224000,
+    "description": "Curated Marin venue or community calendar worth checking directly.",
+    "source": "San Rafael Elks",
+    "category": "shows",
+    "verification": "community",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9735,
+    "lon": -122.5241,
+    "locationConfidence": "exact",
+    "locationEvidence": "San Rafael Elks",
+    "topics": [
+      "community-events",
+      "fraternal"
+    ]
+  },
+  {
     "id": "shows:mac-s-at-19-broadway:90-seconds-comedy-time-bomb-kill-tony-style-open-mic-panel-show:https-www-eventbrite-com-e-90-seconds-comedy-time-bomb-kill-tony-style-open-mic-panel-show-tickets-1981877937261",
     "title": "90 Seconds Comedy: Time Bomb – Kill Tony-Style Open Mic & Panel Show",
     "link": "https://www.eventbrite.com/e/90-seconds-comedy-time-bomb-kill-tony-style-open-mic-panel-show-tickets-1981877937261",
@@ -698,6 +1245,147 @@
     "topics": [
       "music",
       "shows"
+    ]
+  },
+  {
+    "id": "farm:agricultural-institute-of-marin:thursday-marin-farmers-market-every-thursday-8am-1pm-year-round:https-www-agriculturalinstitute-org-thursday-marin",
+    "title": "Thursday Marin farmers market · Every Thursday, 8am - 1pm, Year-round",
+    "link": "https://www.agriculturalinstitute.org/thursday-marin",
+    "pubDate": "2026-03-31T06:08:08.000Z",
+    "timestamp": 1774937288000,
+    "description": "Every Thursday · 8am - 1pm · Year-round at Marin County Civic Center",
+    "source": "Agricultural Institute of Marin",
+    "category": "farm",
+    "verification": "official",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9991,
+    "lon": -122.5234,
+    "locationConfidence": "exact",
+    "locationEvidence": "Agricultural Institute of Marin",
+    "topics": [
+      "farmers-market",
+      "produce"
+    ]
+  },
+  {
+    "id": "farm:agricultural-institute-of-marin:point-reyes-farmers-market-every-saturday-9am-2pm-may-2-october-10-2026:https-www-agriculturalinstitute-org-point-reyes",
+    "title": "Point Reyes farmers market · Every Saturday, 9am–2pm, May 2 – October 10, 2026",
+    "link": "https://www.agriculturalinstitute.org/point-reyes",
+    "pubDate": "2026-03-31T05:38:46.000Z",
+    "timestamp": 1774935526000,
+    "description": "Every Saturday · 9am–2pm · May 2 – October 10, 2026 at Toby’s Feed Barn",
+    "source": "Agricultural Institute of Marin",
+    "category": "farm",
+    "verification": "official",
+    "town": "Point Reyes Station",
+    "townSlug": "point-reyes",
+    "lat": 38.0702,
+    "lon": -122.8105,
+    "locationConfidence": "exact",
+    "locationEvidence": "Agricultural Institute of Marin",
+    "topics": [
+      "farmers-market",
+      "produce"
+    ]
+  },
+  {
+    "id": "prep:redwood-bark:boys-tennis-takes-down-tam-in-a-7-0-sweep:https-redwoodbark-org-109270-sports-boys-tennis-takes-down-tam-in-a-7-0-sweep",
+    "title": "Boys tennis takes down Tam in a 7-0 sweep",
+    "link": "https://redwoodbark.org/109270/sports/boys-tennis-takes-down-tam-in-a-7-0-sweep/",
+    "pubDate": "2026-03-31T04:59:46.000Z",
+    "timestamp": 1774933186000,
+    "description": "On March 28th, the boys varsity tennis team dominated their match against Tamalpais (Tam) High School at home, securing a great win that boosts their momentum this season. The team came into the match with high energy a…",
+    "content": "On March 28th, the boys varsity tennis team dominated their match against Tamalpais (Tam) High School at home, securing a great win that boosts their momentum this season. The team came into the match with high energy and confidence, ready to take control early as they look to keep building a strong record, being undefeated in the league. “I think going into today's match, we knew they were a good team, but we felt pretty confident because we worked well together and were ready to play,” freshman Carter Smith said. Smith and sophomore Body Zampa battled through a competitive match, coming out on top 7-5, 6-3. The match stayed tight, but they were able to pull ahead in the key moments and finish strong in both sets. Sophomore Brody Zampa and freshman Carter Smith congratulate each other after scoring a point to secure their win. “Our biggest challenge was closing the points because we kept getting up in the games and in the set, however we couldn't close the duces and the important points, which is something we need to work on in the rest of the season,” Smith said. Smith and Zampa weren't the only doubles team to take home a win, as Joshua Friedman and Owen Adams also came out on top 6-1, 6-1. “Going into today's match I felt great. My shots and serves were pretty good and I had a great attitude. I liked how I was playing out there. It was really fun,” Adams said. Coach Craig Flax praised the duo for staying consistent and stepping up when it mattered the most. When reflecting on his performance, Adams felt that there was room for improvement but felt confident about the majority of his play, and came through when it mattered. “Next match I could probably make more of my serves. I felt like I missed them long, other than that I feel like I played really well,” Adams said. Friedman and Adams pulled off a strong doubles win, and across the courts, the single players were also in action, looking to add more victories to the team. Junior Calado Fazal brought a strong win 6-0, 6-0, leading the team to an overall 7-0 victory. “I stayed focused and I stayed calm. I don't think I played particularly well, but I was consistent so I won,” Fazal said. Junior Calado Fazal strikes the ball in a serve to send it to the opposing side. His standout performance helped lock in the team's 7-0 win and showed how strong the team was in both singles and doubles.",
+    "source": "Redwood Bark",
+    "category": "prep",
+    "verification": "community",
+    "town": "Larkspur",
+    "townSlug": "larkspur",
+    "lat": 37.9341,
+    "lon": -122.5353,
+    "locationConfidence": "exact",
+    "locationEvidence": "Redwood Bark",
+    "topics": [
+      "prep-sports"
+    ]
+  },
+  {
+    "id": "prep:redwood-bark:girls-varsity-lacrosse-slams-archie-williams-with-a-15-0-win:https-redwoodbark-org-109214-sports-girls-varsity-lacrosse-slams-archie-williams-with-a-15-0-win",
+    "title": "Girls varsity lacrosse slams Archie Williams with a 15-0 win",
+    "link": "https://redwoodbark.org/109214/sports/girls-varsity-lacrosse-slams-archie-williams-with-a-15-0-win/",
+    "pubDate": "2026-03-31T04:08:10.000Z",
+    "timestamp": 1774930090000,
+    "description": "On Thursday, March 26, the girls varsity lacrosse team competed in an intense match against the Archie Williams Falcons. The first quarter ended with a 9-0 lead, as the team used its momentum to shut down the Falcons an…",
+    "content": "On Thursday, March 26, the girls varsity lacrosse team competed in an intense match against the Archie Williams Falcons. The first quarter ended with a 9-0 lead, as the team used its momentum to shut down the Falcons and secure a 15-0 blowout. From the first whistle to the last, the Giants dominated the field. The players went goal after goal, never giving Archie a chance to score. Assistant Coach Billie Buck said that the team used this high-intensity game to grow their chemistry on the field. “They were all playing together as a team, and were playing fluidly; it was very nice to see,” Buck said. Junior Ellie Washing pushes forward on offense during the second half. Redwood then started off the second quarter strong by scoring another goal within the first minute. They kept possession of the ball for the majority of the game and put intense pressure on the opponent’s defense. When the match reached halftime, Redwood still held a strong lead at 13-0. Sophomore and Goalie Wells Von Stroh described the positive energy she saw on the field. “It was electric, we all had a great time,” Von Stroh said. Senior Shea Donnelly reflected on a similar feeling as well. “The energy was super positive, upbeat and exciting,” Donnelly said. Going through the second half, the score stayed steady, with no new goals during the third quarter. Senior Mimi Wood scored her first goal of the season and the fifteenth goal of the game. “She had a very beautiful shot, and the sidelines just went wild,” Buck said. This match showed the team’s alignment among each and every member. They practiced chemistry and sportsmanship, preparing for the rest of their season. “We have a couple tough games coming up next week. This game helped us get ready for those,” Wood said. “I think this game helped us bond more as a team,” Von Stroh said. From the opening draw, the players moved the ball with purpose and confidence. They had constant communication with one another, and stayed disciplined to what they came there to do: win. Teammates on the bench watch closely, supporting from the sidelines. This game served as a chance to build rhythm and to improve as a unit. “We are working on playing together and not just counting on one or two players, but counting on everybody, and I think we did a nice job of that today,” said Buck. “This game showed how well our team can work together; we have very good team chemistry,” Donnelly said. Next week, Redwood faces Tamalpais and Terra Linda High School.",
+    "source": "Redwood Bark",
+    "category": "prep",
+    "verification": "community",
+    "town": "Larkspur",
+    "townSlug": "larkspur",
+    "lat": 37.9341,
+    "lon": -122.5353,
+    "locationConfidence": "exact",
+    "locationEvidence": "Redwood Bark",
+    "topics": [
+      "prep-sports"
+    ]
+  },
+  {
+    "id": "farm:agricultural-institute-of-marin:rollin-root-mobile-market-schedule:https-www-agriculturalinstitute-org-rollin-root",
+    "title": "Rollin' Root mobile market schedule",
+    "link": "https://www.agriculturalinstitute.org/rollin-root",
+    "pubDate": "2026-03-31T04:05:13.000Z",
+    "timestamp": 1774929913000,
+    "description": "Official market schedule from the Agricultural Institute of Marin.",
+    "source": "Agricultural Institute of Marin",
+    "category": "farm",
+    "verification": "official",
+    "topics": [
+      "farmers-market",
+      "produce"
+    ]
+  },
+  {
+    "id": "farm:agricultural-institute-of-marin:san-rafael-summer-market-schedule:https-www-agriculturalinstitute-org-san-rafael-summer-1",
+    "title": "San Rafael Summer market schedule",
+    "link": "https://www.agriculturalinstitute.org/san-rafael-summer-1",
+    "pubDate": "2026-03-31T03:50:49.000Z",
+    "timestamp": 1774929049000,
+    "description": "Official market schedule from the Agricultural Institute of Marin.",
+    "source": "Agricultural Institute of Marin",
+    "category": "farm",
+    "verification": "official",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9735,
+    "lon": -122.5311,
+    "locationConfidence": "exact",
+    "locationEvidence": "Agricultural Institute of Marin",
+    "topics": [
+      "farmers-market",
+      "produce"
+    ]
+  },
+  {
+    "id": "farm:agricultural-institute-of-marin:sunday-marin-farmers-market-every-sunday-8am-1pm-year-round:https-www-agriculturalinstitute-org-sunday-marin",
+    "title": "Sunday Marin farmers market · Every Sunday, 8am - 1pm, Year-round",
+    "link": "https://www.agriculturalinstitute.org/sunday-marin",
+    "pubDate": "2026-03-31T03:21:41.000Z",
+    "timestamp": 1774927301000,
+    "description": "Every Sunday · 8am - 1pm · Year-round at Marin County Civic Center",
+    "source": "Agricultural Institute of Marin",
+    "category": "farm",
+    "verification": "official",
+    "town": "San Rafael",
+    "townSlug": "san-rafael",
+    "lat": 37.9991,
+    "lon": -122.5234,
+    "locationConfidence": "exact",
+    "locationEvidence": "Agricultural Institute of Marin",
+    "topics": [
+      "farmers-market",
+      "produce"
     ]
   },
   {
@@ -770,47 +1458,45 @@
     ]
   },
   {
-    "id": "shows:osher-marin-jcc:ecstatic-jewish-dance-group:https-www-marinjcc-org-event-ecstatic-jewish-dance-group-15-2026-03-30",
-    "title": "Ecstatic Jewish Dance Group",
-    "link": "https://www.marinjcc.org/event/ecstatic-jewish-dance-group-15/2026-03-30/",
-    "pubDate": "2026-03-30T22:30:00.000Z",
-    "timestamp": 1774909800000,
-    "description": "Come join us for a monthly Jewish embodied dance group, the last Monday of the month! Free for members, $10 non-members. Please register in advance to reserve your spot. \\n",
-    "content": "JCC 2nd Floor Yoga Studio · Taube Center for Jewish Peoplehood · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
-    "source": "Osher Marin JCC",
-    "category": "shows",
+    "id": "prep:redwood-bark:jv-girls-softball-defeats-rival-archie-williams-in-a-triumphant-11-9-win:https-redwoodbark-org-109213-sports-jv-girls-softball-defeats-rival-archie-williams-in-a-triumphant-11-9-win",
+    "title": "JV girls softball defeats rival Archie Williams in a triumphant 11-9 win",
+    "link": "https://redwoodbark.org/109213/sports/jv-girls-softball-defeats-rival-archie-williams-in-a-triumphant-11-9-win/",
+    "pubDate": "2026-03-30T19:05:49.000Z",
+    "timestamp": 1774897549000,
+    "description": "On Thursday, March 26, the junior varsity (JV) girls softball team beat rival Archie Williams in a close game, 11-9. In the first inning, the Giants were behind 0-3. During the second inning, they had three home runs, a…",
+    "content": "On Thursday, March 26, the junior varsity (JV) girls softball team beat rival Archie Williams in a close game, 11-9. In the first inning, the Giants were behind 0-3. During the second inning, they had three home runs, allowing them to trail Archie 3-4. In the fourth inning, outfielder Lucy Farrow caught a hit from the opposing team, getting them an out. This allowed the Giants to take the lead, making the score 6-5. During the fifth and sixth innings, the Giants scored five more home runs, making the score 11-9. Team captain Lucy Farrow explained how she felt about the team's overall performance in the game. “There was a time when we were like, okay, we just really got to hold on and we did that, and it turned out well,” Farrow said. JV coach Dan Emerson spoke about the high-pressure situations he creates for the girls to prepare them for the pressure they may experience in a real game. “We celebrate the win tonight, but we are getting ready to play Archie like we haven’t before, so we could get that win,” Emerson said. The Giants will face Archie Williams again on Saturday Mar. 27, at Archie. Gallery &bull; 5 Photos Sophomore Lucy Farrow gets ready to bat.",
+    "source": "Redwood Bark",
+    "category": "prep",
     "verification": "community",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9557,
-    "lon": -122.5376,
+    "town": "Larkspur",
+    "townSlug": "larkspur",
+    "lat": 37.9341,
+    "lon": -122.5353,
     "locationConfidence": "exact",
-    "locationEvidence": "Osher Marin JCC",
+    "locationEvidence": "Redwood Bark",
     "topics": [
-      "community-events",
-      "arts"
+      "prep-sports"
     ]
   },
   {
-    "id": "shows:osher-marin-jcc:jewish-meditation-group:https-www-marinjcc-org-event-jewish-meditation-group-4-3-2-2026-03-30",
-    "title": "Jewish Meditation Group",
-    "link": "https://www.marinjcc.org/event/jewish-meditation-group-4-3-2/2026-03-30/",
-    "pubDate": "2026-03-30T20:30:00.000Z",
-    "timestamp": 1774902600000,
-    "description": "Come join us for a monthly Jewish Meditation Group, led by Larry and Diane Yermack. Meets monthly on the last Monday of each month. No registration needed, just drop-in! In this group you will discover the joy and impac…",
-    "content": "JCC 2nd Floor Yoga Studio · Taube Center for Jewish Peoplehood · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
-    "source": "Osher Marin JCC",
-    "category": "shows",
+    "id": "prep:redwood-bark:boys-varsity-lacrosse-rolls-to-a-14-8-victory-over-berkeley-high:https-redwoodbark-org-109231-sports-boys-varsity-lacrosse-rolls-to-a-14-8-victory-over-berkeley-high",
+    "title": "Boys varsity lacrosse rolls to a 14-8 victory over Berkeley High",
+    "link": "https://redwoodbark.org/109231/sports/boys-varsity-lacrosse-rolls-to-a-14-8-victory-over-berkeley-high/",
+    "pubDate": "2026-03-30T17:54:28.000Z",
+    "timestamp": 1774893268000,
+    "description": "On Tuesday, March 24, boys varsity lacrosse defeated Berkeley High in a dominant 14-8 win, utilizing an early scoring run to take control of the game. The Giants came out strong and set the tone early with a 5-0 start.…",
+    "content": "On Tuesday, March 24, boys varsity lacrosse defeated Berkeley High in a dominant 14-8 win, utilizing an early scoring run to take control of the game. The Giants came out strong and set the tone early with a 5-0 start. Berkeley broke through scoring their first goal with 2:25 remaining in the first quarter, but Redwood responded and ended the quarter with a 6-1 lead. Junior Ash Weir defends the crease from an oncoming attacker. (Photo by Drew Schultz) Redwood Head Coach Neil Butterfield emphasized the team's depth as a key factor in their win, with many players stepping up throughout the game. “In today's game and in games recently we’ve been getting into our depth and playing a lot of guys that can contribute,” Butterfield said. Berkeley attempted to shift the momentum, responding with a brief run in the second quarter where they scored twice. However, Redwood remained composed and continued to capitalize on offensive possessions. The Giants entered halftime with a comfortable 10-4 lead. “Our depth is what we’re counting on especially as we get into league because we [have] a lot of good athletes,” Butterfield said. Redwood held the momentum throughout the second half, continuing to add to their lead and maintain control of the game. The Giants’ consistency on both ends of the field prevented Berkeley from threatening their lead. Junior Charlie Anderson strides up the field looking for a pass. (Photo by Drew Schultz) Sophomore defender Knox Donnelly credited the team’s effort and preparation as key factors in the win. “Our overall hustle is something that we focus on in practice that contributes to when we play,” Donnelly said. “Practicing our fundamentals like stick skills and ground balls is something that if we can clean up, we can clean everything else up.” Redwood closed out the game with confidence, finishing strong to secure a 14-8 win. In this dominant performance, the Giants showcased their depth and ability to maintain momentum throughout all four quarters.",
+    "source": "Redwood Bark",
+    "category": "prep",
     "verification": "community",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9557,
-    "lon": -122.5376,
+    "town": "Larkspur",
+    "townSlug": "larkspur",
+    "lat": 37.9341,
+    "lon": -122.5353,
     "locationConfidence": "exact",
-    "locationEvidence": "Osher Marin JCC",
+    "locationEvidence": "Redwood Bark",
     "topics": [
-      "community-events",
-      "arts"
+      "prep-sports"
     ]
   },
   {
@@ -837,425 +1523,11 @@
     ]
   },
   {
-    "id": "outdoors:california-department-of-fish-wildlife:crab-trap-and-season-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-crab",
-    "title": "Crab trap and season regulations",
-    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Crab",
-    "pubDate": "2026-03-30T14:59:15.000Z",
-    "timestamp": 1774882755000,
-    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
-    "source": "California Department of Fish & Wildlife",
-    "category": "outdoors",
-    "verification": "official",
-    "topics": [
-      "fishing",
-      "regulations"
-    ]
-  },
-  {
-    "id": "outdoors:california-department-of-fish-wildlife:san-francisco-ocean-fishing-map-and-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-fishing-map-sf",
-    "title": "San Francisco ocean fishing map and regulations",
-    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Fishing-Map/SF",
-    "pubDate": "2026-03-30T14:59:14.000Z",
-    "timestamp": 1774882754000,
-    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
-    "source": "California Department of Fish & Wildlife",
-    "category": "outdoors",
-    "verification": "official",
-    "topics": [
-      "fishing",
-      "regulations"
-    ]
-  },
-  {
-    "id": "outdoors:california-department-of-fish-wildlife:ocean-salmon-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations-salmon",
-    "title": "Ocean salmon sport fishing regulations",
-    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations/Salmon",
-    "pubDate": "2026-03-30T14:59:14.000Z",
-    "timestamp": 1774882754000,
-    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
-    "source": "California Department of Fish & Wildlife",
-    "category": "outdoors",
-    "verification": "official",
-    "topics": [
-      "fishing",
-      "regulations"
-    ]
-  },
-  {
-    "id": "farm:point-reyes-farmstead-cheese:point-reyes-farmstead-cheese-journal:https-www-pointreyescheese-com-blogs-news",
-    "title": "Point Reyes Farmstead Cheese journal",
-    "link": "https://www.pointreyescheese.com/blogs/news",
-    "pubDate": "2026-03-30T14:59:13.000Z",
-    "timestamp": 1774882753000,
-    "description": "Official Point Reyes Farmstead Cheese news and seasonal product updates.",
-    "source": "Point Reyes Farmstead Cheese",
-    "category": "farm",
-    "verification": "official",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0764,
-    "lon": -122.8012,
-    "locationConfidence": "exact",
-    "locationEvidence": "Point Reyes Farmstead Cheese",
-    "topics": [
-      "cheese",
-      "farm-market"
-    ]
-  },
-  {
-    "id": "outdoors:california-department-of-fish-wildlife:ocean-sport-fishing-regulations:https-wildlife-ca-gov-fishing-ocean-regulations",
-    "title": "Ocean sport fishing regulations",
-    "link": "https://wildlife.ca.gov/Fishing/Ocean/Regulations",
-    "pubDate": "2026-03-30T14:59:13.000Z",
-    "timestamp": 1774882753000,
-    "description": "Official California fishing regulations and season information relevant to the Marin / SF coast.",
-    "source": "California Department of Fish & Wildlife",
-    "category": "outdoors",
-    "verification": "official",
-    "topics": [
-      "fishing",
-      "regulations"
-    ]
-  },
-  {
-    "id": "prep:marin-highlanders-rugby:marin-highlanders-rugby-club-hub:https-www-marinhighlandersrugby-org",
-    "title": "Marin Highlanders Rugby club hub",
-    "link": "https://www.marinhighlandersrugby.org/",
-    "pubDate": "2026-03-30T14:59:09.000Z",
-    "timestamp": 1774882749000,
-    "description": "Local sports hub for schedules, fixtures, club updates, or season information.",
-    "source": "Marin Highlanders Rugby",
-    "category": "prep",
-    "verification": "community",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9756,
-    "lon": -122.5123,
-    "locationConfidence": "exact",
-    "locationEvidence": "Marin Highlanders Rugby",
-    "topics": [
-      "rugby",
-      "club-sports"
-    ]
-  },
-  {
-    "id": "prep:tamalpais-union-high-school-district:tuhsd-athletics-hub:https-www-tamdistrict-org-students-athletics",
-    "title": "TUHSD athletics hub",
-    "link": "https://www.tamdistrict.org/students/athletics",
-    "pubDate": "2026-03-30T14:59:06.000Z",
-    "timestamp": 1774882746000,
-    "description": "Official athletics or team hub for a Marin-area school or league program.",
-    "source": "Tamalpais Union High School District",
-    "category": "prep",
-    "verification": "official",
-    "lat": 37.9341,
-    "lon": -122.5353,
-    "locationConfidence": "exact",
-    "locationEvidence": "Tamalpais Union High School District",
-    "topics": [
-      "prep-sports",
-      "district"
-    ]
-  },
-  {
-    "id": "prep:archie-williams-mtb:archie-williams-mountain-bike-team-hub:https-www-awmtb-com",
-    "title": "Archie Williams mountain bike team hub",
-    "link": "https://www.awmtb.com/",
-    "pubDate": "2026-03-30T14:59:06.000Z",
-    "timestamp": 1774882746000,
-    "description": "Official athletics or team hub for a Marin-area school or league program.",
-    "source": "Archie Williams MTB",
-    "category": "prep",
-    "verification": "official",
-    "town": "San Anselmo",
-    "townSlug": "san-anselmo",
-    "lat": 37.9746,
-    "lon": -122.5648,
-    "locationConfidence": "exact",
-    "locationEvidence": "Archie Williams MTB",
-    "topics": [
-      "prep-sports",
-      "mountain-bike"
-    ]
-  },
-  {
-    "id": "prep:san-rafael-athletics:san-rafael-high-athletics-hub:https-sanrafael-srcs-org-athletics",
-    "title": "San Rafael High athletics hub",
-    "link": "https://sanrafael.srcs.org/athletics",
-    "pubDate": "2026-03-30T14:59:04.000Z",
-    "timestamp": 1774882744000,
-    "description": "Official athletics or team hub for a Marin-area school or league program.",
-    "source": "San Rafael Athletics",
-    "category": "prep",
-    "verification": "official",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9752,
-    "lon": -122.5248,
-    "locationConfidence": "exact",
-    "locationEvidence": "San Rafael Athletics",
-    "topics": [
-      "prep-sports",
-      "schedule"
-    ]
-  },
-  {
-    "id": "prep:archie-williams-athletics:archie-williams-athletics-hub:https-archiewilliams-tamdistrict-org-athletics",
-    "title": "Archie Williams athletics hub",
-    "link": "https://archiewilliams.tamdistrict.org/athletics",
-    "pubDate": "2026-03-30T14:59:03.000Z",
-    "timestamp": 1774882743000,
-    "description": "Official athletics or team hub for a Marin-area school or league program.",
-    "source": "Archie Williams Athletics",
-    "category": "prep",
-    "verification": "official",
-    "town": "San Anselmo",
-    "townSlug": "san-anselmo",
-    "lat": 37.9746,
-    "lon": -122.5648,
-    "locationConfidence": "exact",
-    "locationEvidence": "Archie Williams Athletics",
-    "topics": [
-      "prep-sports",
-      "schedule"
-    ]
-  },
-  {
-    "id": "prep:marin-catholic-athletics:marin-catholic-athletic-calendar:https-www-marincatholic-org-athletics-athletic-calendar",
-    "title": "Marin Catholic athletic calendar",
-    "link": "https://www.marincatholic.org/athletics/athletic-calendar",
-    "pubDate": "2026-03-30T14:59:00.000Z",
-    "timestamp": 1774882740000,
-    "description": "Official athletics or team hub for a Marin-area school or league program.",
-    "source": "Marin Catholic Athletics",
-    "category": "prep",
-    "verification": "official",
-    "town": "Kentfield",
-    "townSlug": "kentfield",
-    "lat": 37.9506,
-    "lon": -122.5578,
-    "locationConfidence": "exact",
-    "locationEvidence": "Marin Catholic Athletics",
-    "topics": [
-      "prep-sports",
-      "schedule"
-    ]
-  },
-  {
-    "id": "endurance:dipsea-race:dipsea-race-hub-and-season-updates:https-www-dipsea-org",
-    "title": "Dipsea race hub and season updates",
-    "link": "https://www.dipsea.org/",
-    "pubDate": "2026-03-30T14:58:59.000Z",
-    "timestamp": 1774882739000,
-    "description": "Official Dipsea race site for race information, entry details, and latest news.",
-    "source": "Dipsea Race",
-    "category": "endurance",
-    "verification": "official",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.906,
-    "lon": -122.5491,
-    "locationConfidence": "exact",
-    "locationEvidence": "Dipsea Race",
-    "topics": [
-      "running",
-      "trail-race"
-    ]
-  },
-  {
-    "id": "shows:marin-county-free-library:marin-county-free-library-events:https-marinlibrary-bibliocommons-com-v2-events",
-    "title": "Marin County Free Library events",
-    "link": "https://marinlibrary.bibliocommons.com/v2/events",
-    "pubDate": "2026-03-30T14:58:56.000Z",
-    "timestamp": 1774882736000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Marin County Free Library",
-    "category": "shows",
-    "verification": "community",
-    "lat": 37.9991,
-    "lon": -122.5234,
-    "locationConfidence": "exact",
-    "locationEvidence": "Marin County Free Library",
-    "topics": [
-      "community-events",
-      "library"
-    ]
-  },
-  {
-    "id": "shows:marin-symphony:marin-symphony-tickets-and-events:https-marinsymphony-org-tickets-events",
-    "title": "Marin Symphony tickets and events",
-    "link": "https://marinsymphony.org/tickets-events/",
-    "pubDate": "2026-03-30T14:58:54.000Z",
-    "timestamp": 1774882734000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Marin Symphony",
-    "category": "shows",
-    "verification": "community",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9715,
-    "lon": -122.52,
-    "locationConfidence": "exact",
-    "locationEvidence": "Marin Symphony",
-    "topics": [
-      "music",
-      "classical"
-    ]
-  },
-  {
-    "id": "shows:sausalito-seahorse:sausalito-seahorse-calendar:https-www-sausalitoseahorse-com-calendar",
-    "title": "Sausalito Seahorse calendar",
-    "link": "https://www.sausalitoseahorse.com/calendar/",
-    "pubDate": "2026-03-30T14:58:53.000Z",
-    "timestamp": 1774882733000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Sausalito Seahorse",
-    "category": "shows",
-    "verification": "community",
-    "town": "Sausalito",
-    "townSlug": "sausalito",
-    "lat": 37.8584,
-    "lon": -122.4853,
-    "locationConfidence": "exact",
-    "locationEvidence": "Sausalito Seahorse",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:kwmr:kwmr-events-and-tickets-hub:https-kwmr-org-events",
-    "title": "KWMR events and tickets hub",
-    "link": "https://kwmr.org/events",
-    "pubDate": "2026-03-30T14:58:49.000Z",
-    "timestamp": 1774882729000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "KWMR",
-    "category": "shows",
-    "verification": "community",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0699,
-    "lon": -122.8097,
-    "locationConfidence": "exact",
-    "locationEvidence": "KWMR",
-    "topics": [
-      "music",
-      "community-events",
-      "west-marin"
-    ]
-  },
-  {
-    "id": "shows:smiley-s-saloon:smiley-s-saloon-shows-and-supper-club-hub:https-smileyssaloon-com",
-    "title": "Smiley's Saloon shows and supper club hub",
-    "link": "https://smileyssaloon.com/",
-    "pubDate": "2026-03-30T14:58:45.000Z",
-    "timestamp": 1774882725000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Smiley's Saloon",
-    "category": "shows",
-    "verification": "community",
-    "town": "Bolinas",
-    "townSlug": "bolinas",
-    "lat": 37.9096,
-    "lon": -122.6864,
-    "locationConfidence": "exact",
-    "locationEvidence": "Smiley's Saloon",
-    "topics": [
-      "music",
-      "west-marin"
-    ]
-  },
-  {
-    "id": "shows:peri-s-tavern:peri-s-tavern-music-calendar:https-peristavern-com-music-calendar",
-    "title": "Peri's Tavern music calendar",
-    "link": "https://peristavern.com/music-calendar/",
-    "pubDate": "2026-03-30T14:58:44.000Z",
-    "timestamp": 1774882724000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Peri's Tavern",
-    "category": "shows",
-    "verification": "community",
-    "town": "Fairfax",
-    "townSlug": "fairfax",
-    "lat": 37.9871,
-    "lon": -122.5889,
-    "locationConfidence": "exact",
-    "locationEvidence": "Peri's Tavern",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:the-junction:the-junction-music-calendar:https-www-thejunc-com-music-calendar",
-    "title": "The Junction music calendar",
-    "link": "https://www.thejunc.com/music-calendar",
-    "pubDate": "2026-03-30T14:58:44.000Z",
-    "timestamp": 1774882724000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "The Junction",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.906,
-    "lon": -122.5458,
-    "locationConfidence": "exact",
-    "locationEvidence": "The Junction",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:mill-valley-library:mill-valley-library-calendar:https-millvalleylibrary-gov-calendar-aspx",
-    "title": "Mill Valley Library calendar",
-    "link": "https://millvalleylibrary.gov/calendar.aspx",
-    "pubDate": "2026-03-30T14:58:26.000Z",
-    "timestamp": 1774882706000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "Mill Valley Library",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.9058,
-    "lon": -122.5478,
-    "locationConfidence": "exact",
-    "locationEvidence": "Mill Valley Library",
-    "topics": [
-      "community-events",
-      "library"
-    ]
-  },
-  {
-    "id": "shows:san-rafael-elks:san-rafael-elks-lodge-calendar:https-www-elks1108-org-calendar",
-    "title": "San Rafael Elks Lodge calendar",
-    "link": "https://www.elks1108.org/calendar",
-    "pubDate": "2026-03-30T08:58:00.000Z",
-    "timestamp": 1774861080000,
-    "description": "Curated Marin venue or community calendar worth checking directly.",
-    "source": "San Rafael Elks",
-    "category": "shows",
-    "verification": "community",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9735,
-    "lon": -122.5241,
-    "locationConfidence": "exact",
-    "locationEvidence": "San Rafael Elks",
-    "topics": [
-      "community-events",
-      "fraternal"
-    ]
-  },
-  {
     "id": "shows:hopmonk-novato:hopmonk-novato-live-music-calendar:https-www-hopmonk-com-livemusic",
     "title": "HopMonk Novato live music calendar",
     "link": "https://www.hopmonk.com/livemusic",
-    "pubDate": "2026-03-29T16:29:39.000Z",
-    "timestamp": 1774801779000,
+    "pubDate": "2026-03-30T16:17:25.000Z",
+    "timestamp": 1774887445000,
     "description": "Curated Marin venue or community calendar worth checking directly.",
     "source": "HopMonk Novato",
     "category": "shows",
@@ -1272,26 +1544,25 @@
     ]
   },
   {
-    "id": "shows:dance-palace:tai-chi-with-ellen-serber-outdoors:https-dancepalace-org-event-tai-chi-with-ellen-serber-outdoors-2026-03-29",
-    "title": "Tai Chi with Ellen Serber* – Outdoors",
-    "link": "https://dancepalace.org/event/tai-chi-with-ellen-serber-outdoors/2026-03-29/",
-    "pubDate": "2026-03-29T15:30:00.000Z",
-    "timestamp": 1774798200000,
-    "description": "We practice outside, behind the Dance Palace. Warm-up and practice of Tai Chi set as taught by Sifu Kuo Lien Ying, who certified Ellen to teach in 1978. Shaolin and weapons sets for advanced students. New students are t…",
-    "content": "Outdoors · Ellen Serber · https://schema.org/OfflineEventAttendanceMode · https://schema.org/EventScheduled",
-    "source": "Dance Palace",
+    "id": "shows:sweetwater-music-hall:ariel-posen:https-sweetwatermusichall-org-event-ariel-posen-sweetwater-music-hall-mill-valley-california",
+    "title": "Ariel Posen",
+    "link": "https://sweetwatermusichall.org/event/ariel-posen/sweetwater-music-hall/mill-valley-california/",
+    "pubDate": "2026-03-30T15:00:00.000Z",
+    "timestamp": 1774882800000,
+    "description": "Ariel Posen stands as a beacon of artistic ingenuity, transcending conventional boundaries with an unparalleled musical vision that defies categorization. At the core of his creative odyssey lies an unwavering commitmen…",
+    "content": "Ariel Posen stands as a beacon of artistic ingenuity, transcending conventional boundaries with an unparalleled musical vision that defies categorization. At the core of his creative odyssey lies an unwavering commitment to artistic expression, weaving together a sonic tapestry that resonates with profound authenticity and emotional depth. His music is a testament to the boundless possibilities of artistic exploration, seamlessly melding elements of heartland rock & roll, electrified Americana, blue-eyed soul, R&B, and Beatles-inspired pop into a singular, captivating sound. With each soul-stirring lyric and every emotive chord progression, Posen invites listeners on a transformative journey, transcending genres and touching the very essence of human experience. Ariel Posen's artistic brilliance has garnered widespread acclaim, earning him standing ovations from enraptured audiences and accolades from industry luminaries alike. Rolling Stone heralds him as \"a modern-day musical virtuoso,\" recognizing not only his exceptional skill as a guitarist but also his innate ability to evoke profound emotion through his artistry. Furthermore, Posen's impact extends far beyond the confines of his instrument, as evidenced by his nominations for Breakout Artist of the Year and subsequent recognition in categories such as Rock Artist of the Year and Recording of the Year at the esteemed Western Canadian Music Awards. In every facet of his craft, Ariel Posen epitomizes the essence of artistic excellence, leaving an indelible imprint on the landscape of contemporary music and inspiring generations to come.",
+    "source": "Sweetwater Music Hall",
     "category": "shows",
     "verification": "community",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0699,
-    "lon": -122.8089,
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9059,
+    "lon": -122.5491,
     "locationConfidence": "exact",
-    "locationEvidence": "Dance Palace",
+    "locationEvidence": "Sweetwater Music Hall",
     "topics": [
       "music",
-      "community-events",
-      "west-marin"
+      "shows"
     ]
   },
   {
@@ -1311,28 +1582,6 @@
     "lon": -122.5491,
     "locationConfidence": "exact",
     "locationEvidence": "Sweetwater Music Hall",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:mac-s-at-19-broadway:music-of-the-isles-songs-ballads-live-at-mac-s:https-www-eventbrite-com-e-music-of-the-isles-songs-ballads-live-at-macs-tickets-1984931993024",
-    "title": "Music of the Isles — Songs & Ballads - Live at Mac's",
-    "link": "https://www.eventbrite.com/e/music-of-the-isles-songs-ballads-live-at-macs-tickets-1984931993024",
-    "pubDate": "2026-03-29T07:00:00.000Z",
-    "timestamp": 1774767600000,
-    "description": "Upcoming Fairfax show at Mac’s at 19 Broadway.",
-    "content": "Fairfax live music, comedy, and nightlife calendar.",
-    "source": "Mac's at 19 Broadway",
-    "category": "shows",
-    "verification": "community",
-    "town": "Fairfax",
-    "townSlug": "fairfax",
-    "lat": 37.9871,
-    "lon": -122.5889,
-    "locationConfidence": "exact",
-    "locationEvidence": "Mac's at 19 Broadway",
     "topics": [
       "music",
       "shows"
@@ -1382,149 +1631,6 @@
     ]
   },
   {
-    "id": "shows:mac-s-at-19-broadway:the-legendary-jules-broussard-his-new-orleans-jazz-band-live-at-mac-s:https-www-eventbrite-com-e-the-legendary-jules-broussard-his-new-orleans-jazz-band-live-at-macs-tickets-1984078232403",
-    "title": "The Legendary Jules Broussard & His New Orleans Jazz Band – Live at Mac’s",
-    "link": "https://www.eventbrite.com/e/the-legendary-jules-broussard-his-new-orleans-jazz-band-live-at-macs-tickets-1984078232403",
-    "pubDate": "2026-03-28T07:00:00.000Z",
-    "timestamp": 1774681200000,
-    "description": "Upcoming Fairfax show at Mac’s at 19 Broadway.",
-    "content": "Fairfax live music, comedy, and nightlife calendar.",
-    "source": "Mac's at 19 Broadway",
-    "category": "shows",
-    "verification": "community",
-    "town": "Fairfax",
-    "townSlug": "fairfax",
-    "lat": 37.9871,
-    "lon": -122.5889,
-    "locationConfidence": "exact",
-    "locationEvidence": "Mac's at 19 Broadway",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:mac-s-at-19-broadway:dj-throwback-party-at-mac-s-motown-90s-hip-hop-old-school-dance-night:https-www-eventbrite-com-e-dj-throwback-party-at-macs-motown-90s-hip-hop-old-school-dance-night-tickets-1985530003690",
-    "title": "DJ Throwback Party at Mac’s – Motown, 90s Hip Hop & Old School Dance Night",
-    "link": "https://www.eventbrite.com/e/dj-throwback-party-at-macs-motown-90s-hip-hop-old-school-dance-night-tickets-1985530003690",
-    "pubDate": "2026-03-28T07:00:00.000Z",
-    "timestamp": 1774681200000,
-    "description": "Upcoming Fairfax show at Mac’s at 19 Broadway.",
-    "content": "Fairfax live music, comedy, and nightlife calendar.",
-    "source": "Mac's at 19 Broadway",
-    "category": "shows",
-    "verification": "community",
-    "town": "Fairfax",
-    "townSlug": "fairfax",
-    "lat": 37.9871,
-    "lon": -122.5889,
-    "locationConfidence": "exact",
-    "locationEvidence": "Mac's at 19 Broadway",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "farm:agricultural-institute-of-marin:san-rafael-summer-market-schedule:https-www-agriculturalinstitute-org-san-rafael-summer-1",
-    "title": "San Rafael Summer market schedule",
-    "link": "https://www.agriculturalinstitute.org/san-rafael-summer-1",
-    "pubDate": "2026-03-28T00:03:10.000Z",
-    "timestamp": 1774656190000,
-    "description": "Official market schedule from the Agricultural Institute of Marin.",
-    "source": "Agricultural Institute of Marin",
-    "category": "farm",
-    "verification": "official",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9735,
-    "lon": -122.5311,
-    "locationConfidence": "exact",
-    "locationEvidence": "Agricultural Institute of Marin",
-    "topics": [
-      "farmers-market",
-      "produce"
-    ]
-  },
-  {
-    "id": "farm:agricultural-institute-of-marin:point-reyes-farmers-market-every-saturday-9am-2pm-may-2-october-10-2026:https-www-agriculturalinstitute-org-point-reyes",
-    "title": "Point Reyes farmers market · Every Saturday, 9am–2pm, May 2 – October 10, 2026",
-    "link": "https://www.agriculturalinstitute.org/point-reyes",
-    "pubDate": "2026-03-27T22:20:54.000Z",
-    "timestamp": 1774650054000,
-    "description": "Every Saturday · 9am–2pm · May 2 – October 10, 2026 at Toby’s Feed Barn",
-    "source": "Agricultural Institute of Marin",
-    "category": "farm",
-    "verification": "official",
-    "town": "Point Reyes Station",
-    "townSlug": "point-reyes",
-    "lat": 38.0702,
-    "lon": -122.8105,
-    "locationConfidence": "exact",
-    "locationEvidence": "Agricultural Institute of Marin",
-    "topics": [
-      "farmers-market",
-      "produce"
-    ]
-  },
-  {
-    "id": "farm:agricultural-institute-of-marin:rollin-root-mobile-market-schedule:https-www-agriculturalinstitute-org-rollin-root",
-    "title": "Rollin' Root mobile market schedule",
-    "link": "https://www.agriculturalinstitute.org/rollin-root",
-    "pubDate": "2026-03-27T22:20:54.000Z",
-    "timestamp": 1774650054000,
-    "description": "Official market schedule from the Agricultural Institute of Marin.",
-    "source": "Agricultural Institute of Marin",
-    "category": "farm",
-    "verification": "official",
-    "topics": [
-      "farmers-market",
-      "produce"
-    ]
-  },
-  {
-    "id": "farm:agricultural-institute-of-marin:sunday-marin-farmers-market-every-sunday-8am-1pm-year-round:https-www-agriculturalinstitute-org-sunday-marin",
-    "title": "Sunday Marin farmers market · Every Sunday, 8am - 1pm, Year-round",
-    "link": "https://www.agriculturalinstitute.org/sunday-marin",
-    "pubDate": "2026-03-27T21:53:38.000Z",
-    "timestamp": 1774648418000,
-    "description": "Every Sunday · 8am - 1pm · Year-round at Marin County Civic Center",
-    "source": "Agricultural Institute of Marin",
-    "category": "farm",
-    "verification": "official",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9991,
-    "lon": -122.5234,
-    "locationConfidence": "exact",
-    "locationEvidence": "Agricultural Institute of Marin",
-    "topics": [
-      "farmers-market",
-      "produce"
-    ]
-  },
-  {
-    "id": "farm:agricultural-institute-of-marin:thursday-marin-farmers-market-every-thursday-8am-1pm-year-round:https-www-agriculturalinstitute-org-thursday-marin",
-    "title": "Thursday Marin farmers market · Every Thursday, 8am - 1pm, Year-round",
-    "link": "https://www.agriculturalinstitute.org/thursday-marin",
-    "pubDate": "2026-03-27T21:52:06.000Z",
-    "timestamp": 1774648326000,
-    "description": "Every Thursday · 8am - 1pm · Year-round at Marin County Civic Center",
-    "source": "Agricultural Institute of Marin",
-    "category": "farm",
-    "verification": "official",
-    "town": "San Rafael",
-    "townSlug": "san-rafael",
-    "lat": 37.9991,
-    "lon": -122.5234,
-    "locationConfidence": "exact",
-    "locationEvidence": "Agricultural Institute of Marin",
-    "topics": [
-      "farmers-market",
-      "produce"
-    ]
-  },
-  {
     "id": "prep:redwood-bark:from-tip-off-to-takeover-a-historic-season-for-the-girls-varsity-basketball-team:https-redwoodbark-org-109180-sports-from-tip-off-to-takeover-a-historic-season-for-the-girls-varsity-basketball-team",
     "title": "From tip-off to takeover: A historic season for the girls varsity basketball team",
     "link": "https://redwoodbark.org/109180/sports/from-tip-off-to-takeover-a-historic-season-for-the-girls-varsity-basketball-team/",
@@ -1543,28 +1649,6 @@
     "locationEvidence": "Redwood Bark",
     "topics": [
       "prep-sports"
-    ]
-  },
-  {
-    "id": "shows:mac-s-at-19-broadway:hall-pass-live-at-mac-s-eclectic-rock-covers-originals:https-www-eventbrite-com-e-hall-pass-live-at-macs-eclectic-rock-covers-originals-tickets-1984507710985",
-    "title": "Hall Pass LIVE at Mac’s – Eclectic Rock Covers & Originals",
-    "link": "https://www.eventbrite.com/e/hall-pass-live-at-macs-eclectic-rock-covers-originals-tickets-1984507710985",
-    "pubDate": "2026-03-27T07:00:00.000Z",
-    "timestamp": 1774594800000,
-    "description": "Upcoming Fairfax show at Mac’s at 19 Broadway.",
-    "content": "Fairfax live music, comedy, and nightlife calendar.",
-    "source": "Mac's at 19 Broadway",
-    "category": "shows",
-    "verification": "community",
-    "town": "Fairfax",
-    "townSlug": "fairfax",
-    "lat": 37.9871,
-    "lon": -122.5889,
-    "locationConfidence": "exact",
-    "locationEvidence": "Mac's at 19 Broadway",
-    "topics": [
-      "music",
-      "shows"
     ]
   },
   {
@@ -1723,6 +1807,50 @@
     ]
   },
   {
+    "id": "shows:sweetwater-music-hall:teddy-thompson:https-sweetwatermusichall-org-event-teddy-thompson-sweetwater-music-hall-mill-valley-california",
+    "title": "Teddy Thompson",
+    "link": "https://sweetwatermusichall.org/event/teddy-thompson/sweetwater-music-hall/mill-valley-california/",
+    "pubDate": "2026-03-24T17:00:00.000Z",
+    "timestamp": 1774371600000,
+    "description": "Beloved London-born, Brooklyn-based singer/songwriter Teddy Thompson has returned with the exquisitely crafted Never Be The Same, his first collection of original material since 2020. Across ten tracks, Thompson refines…",
+    "content": "Beloved London-born, Brooklyn-based singer/songwriter Teddy Thompson has returned with the exquisitely crafted Never Be The Same, his first collection of original material since 2020. Across ten tracks, Thompson refines his craft via an exploration of music's enduring preoccupations — love, longing, and the uneasy passage of time. This album wasn't built upon a grand narrative. There was no self-imposed exile, no forced reinvention. Instead, it is centered around an exhortation that is threaded through the songs like a refrain: \"Never Be The Same,\" its title only revealing itself to Thompson after he'd completed the recording. \"It's a phrase that, unconsciously, I used twice. And when I saw it on the page, I realized, this is the message of this album,\" says Thompson. \"Don't ever be the same. Change. Grow! Even when the sentiment is, woe is me, I'll never recover after that love or loss. The message is still, change. Don't get too comfortable. Everything is temporary, so evolve or perish!\" For Thompson, the search for this truth starts with authenticity and personal experience. \"Songwriting is magical. You can hear one hundred people sing ‘I love you,' and you know which one is telling the truth,\" Thompson says. \"If the root of the sentiment is authentic, it will resonate.\"",
+    "source": "Sweetwater Music Hall",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9059,
+    "lon": -122.5491,
+    "locationConfidence": "exact",
+    "locationEvidence": "Sweetwater Music Hall",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:sweetwater-music-hall:san-miguel-fraser:https-sweetwatermusichall-org-event-san-miguel-fraser-sweetwater-music-hall-mill-valley-california",
+    "title": "San Miguel Fraser",
+    "link": "https://sweetwatermusichall.org/event/san-miguel-fraser/sweetwater-music-hall/mill-valley-california/",
+    "pubDate": "2026-03-24T17:00:00.000Z",
+    "timestamp": 1774371600000,
+    "description": "San Miguel Fraser is redefining folk music with their dynamic fusion of Castilian and Celtic traditions. The duo, featuring María San Miguel—an Oviedo Conservatory graduate deeply rooted in the vibrant music of Castile—…",
+    "content": "San Miguel Fraser is redefining folk music with their dynamic fusion of Castilian and Celtic traditions. The duo, featuring María San Miguel—an Oviedo Conservatory graduate deeply rooted in the vibrant music of Castile—and Galen Fraser—a Berklee College of Music alumnus and son of the legendary fiddler Alasdair Fraser, blends heartfelt vocals, intricate string arrangements, and the lively charm of the cittern. Their music celebrates the shared spirit of their homelands while embracing the beauty of innovation. Their latest album, Dots of Light, is a testament to their artistry, shining with vibrant new compositions and imaginative reworkings of traditional tunes. With their unique chamber-folk style, San Miguel Fraser crafts performances that resonate deeply with audiences worldwide. The band has captivated listeners at prestigious festivals and venues, including Celtic Connections, Festival Internacional de Ortigueira, Sisters Folk Fest, KVMR Celtic Festival, and Miguel Delibes Auditorium. Whether performing at intimate gatherings or grand stages, they bring a heartfelt connection and a celebratory spirit to every performance.",
+    "source": "Sweetwater Music Hall",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9059,
+    "lon": -122.5491,
+    "locationConfidence": "exact",
+    "locationEvidence": "Sweetwater Music Hall",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
     "id": "shows:sweetwater-music-hall:the-high-green-chilly-winds:https-sweetwatermusichall-org-event-the-high-green-chilly-winds-sweetwater-music-hall-mill-valley-california",
     "title": "The High Green Chilly Winds",
     "link": "https://sweetwatermusichall.org/event/the-high-green-chilly-winds/sweetwater-music-hall/mill-valley-california/",
@@ -1796,50 +1924,6 @@
     "timestamp": 1774371600000,
     "description": "Dark N Stormy has been delivering sets of original renditions of timeless jam-based and funky classics to packed crowds in the San Francisco Bay Area since their formation in 2015. Guitarists Jeff Webb and Pete Petitt l…",
     "content": "Dark N Stormy has been delivering sets of original renditions of timeless jam-based and funky classics to packed crowds in the San Francisco Bay Area since their formation in 2015. Guitarists Jeff Webb and Pete Petitt lead the way with intertwining and alternating string work, complemented by the driving keys of John Amster. Each trades off with lead vocals, and three-part harmonies rise from the mix. All is stacked on a rock-solid rhythm section coupling Kevin Woodhouse on drums with Scott Lipsitz on bass. We play our own revival of jam-based and funky classics, rooted in the nostalgic sounds the Grateful Dead, the Allman Brothers Band, Little Feat and other giants of jam. Our music is familiar and never the same twice! Visit us at www.darknstormy.band.",
-    "source": "Sweetwater Music Hall",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.9059,
-    "lon": -122.5491,
-    "locationConfidence": "exact",
-    "locationEvidence": "Sweetwater Music Hall",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:sweetwater-music-hall:teddy-thompson:https-sweetwatermusichall-org-event-teddy-thompson-sweetwater-music-hall-mill-valley-california",
-    "title": "Teddy Thompson",
-    "link": "https://sweetwatermusichall.org/event/teddy-thompson/sweetwater-music-hall/mill-valley-california/",
-    "pubDate": "2026-03-24T17:00:00.000Z",
-    "timestamp": 1774371600000,
-    "description": "Beloved London-born, Brooklyn-based singer/songwriter Teddy Thompson has returned with the exquisitely crafted Never Be The Same, his first collection of original material since 2020. Across ten tracks, Thompson refines…",
-    "content": "Beloved London-born, Brooklyn-based singer/songwriter Teddy Thompson has returned with the exquisitely crafted Never Be The Same, his first collection of original material since 2020. Across ten tracks, Thompson refines his craft via an exploration of music's enduring preoccupations — love, longing, and the uneasy passage of time. This album wasn't built upon a grand narrative. There was no self-imposed exile, no forced reinvention. Instead, it is centered around an exhortation that is threaded through the songs like a refrain: \"Never Be The Same,\" its title only revealing itself to Thompson after he'd completed the recording. \"It's a phrase that, unconsciously, I used twice. And when I saw it on the page, I realized, this is the message of this album,\" says Thompson. \"Don't ever be the same. Change. Grow! Even when the sentiment is, woe is me, I'll never recover after that love or loss. The message is still, change. Don't get too comfortable. Everything is temporary, so evolve or perish!\" For Thompson, the search for this truth starts with authenticity and personal experience. \"Songwriting is magical. You can hear one hundred people sing ‘I love you,' and you know which one is telling the truth,\" Thompson says. \"If the root of the sentiment is authentic, it will resonate.\"",
-    "source": "Sweetwater Music Hall",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.9059,
-    "lon": -122.5491,
-    "locationConfidence": "exact",
-    "locationEvidence": "Sweetwater Music Hall",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:sweetwater-music-hall:san-miguel-fraser:https-sweetwatermusichall-org-event-san-miguel-fraser-sweetwater-music-hall-mill-valley-california",
-    "title": "San Miguel Fraser",
-    "link": "https://sweetwatermusichall.org/event/san-miguel-fraser/sweetwater-music-hall/mill-valley-california/",
-    "pubDate": "2026-03-24T17:00:00.000Z",
-    "timestamp": 1774371600000,
-    "description": "San Miguel Fraser is redefining folk music with their dynamic fusion of Castilian and Celtic traditions. The duo, featuring María San Miguel—an Oviedo Conservatory graduate deeply rooted in the vibrant music of Castile—…",
-    "content": "San Miguel Fraser is redefining folk music with their dynamic fusion of Castilian and Celtic traditions. The duo, featuring María San Miguel—an Oviedo Conservatory graduate deeply rooted in the vibrant music of Castile—and Galen Fraser—a Berklee College of Music alumnus and son of the legendary fiddler Alasdair Fraser, blends heartfelt vocals, intricate string arrangements, and the lively charm of the cittern. Their music celebrates the shared spirit of their homelands while embracing the beauty of innovation. Their latest album, Dots of Light, is a testament to their artistry, shining with vibrant new compositions and imaginative reworkings of traditional tunes. With their unique chamber-folk style, San Miguel Fraser crafts performances that resonate deeply with audiences worldwide. The band has captivated listeners at prestigious festivals and venues, including Celtic Connections, Festival Internacional de Ortigueira, Sisters Folk Fest, KVMR Celtic Festival, and Miguel Delibes Auditorium. Whether performing at intimate gatherings or grand stages, they bring a heartfelt connection and a celebratory spirit to every performance.",
     "source": "Sweetwater Music Hall",
     "category": "shows",
     "verification": "community",
@@ -1995,47 +2079,6 @@
     ]
   },
   {
-    "id": "prep:redwood-bark:meet-the-captains-spring-edition:https-redwoodbark-org-108498-sports-meet-the-captains-spring-edition",
-    "title": "Meet the captains: Spring edition",
-    "link": "https://redwoodbark.org/108498/sports/meet-the-captains-spring-edition/",
-    "pubDate": "2026-03-20T15:00:00.000Z",
-    "timestamp": 1774018800000,
-    "content": "",
-    "source": "Redwood Bark",
-    "category": "prep",
-    "verification": "community",
-    "town": "Larkspur",
-    "townSlug": "larkspur",
-    "lat": 37.9341,
-    "lon": -122.5353,
-    "locationConfidence": "exact",
-    "locationEvidence": "Redwood Bark",
-    "topics": [
-      "prep-sports"
-    ]
-  },
-  {
-    "id": "prep:redwood-bark:who-will-win-the-big-dance:https-redwoodbark-org-108709-sports-who-will-win-the-big-dance",
-    "title": "Who will win the Big Dance?",
-    "link": "https://redwoodbark.org/108709/sports/who-will-win-the-big-dance/",
-    "pubDate": "2026-03-20T05:10:28.000Z",
-    "timestamp": 1773983428000,
-    "description": "View this post on Instagram A post shared by The Redwood Bark (@theredwoodbark)",
-    "content": "View this post on Instagram A post shared by The Redwood Bark (@theredwoodbark)",
-    "source": "Redwood Bark",
-    "category": "prep",
-    "verification": "community",
-    "town": "Larkspur",
-    "townSlug": "larkspur",
-    "lat": 37.9341,
-    "lon": -122.5353,
-    "locationConfidence": "exact",
-    "locationEvidence": "Redwood Bark",
-    "topics": [
-      "prep-sports"
-    ]
-  },
-  {
     "id": "shows:sweetwater-music-hall:dirtyspoon-with-love-handles:https-sweetwatermusichall-org-event-dirtyspoon-with-love-handles-sweetwater-music-hall-mill-valley-california",
     "title": "DirtySpoon with Love Handles",
     "link": "https://sweetwatermusichall.org/event/dirtyspoon-with-love-handles/sweetwater-music-hall/mill-valley-california/",
@@ -2058,27 +2101,6 @@
     ]
   },
   {
-    "id": "prep:redwood-bark:boys-lacrosse-falls-to-de-la-salle-in-early-season-test:https-redwoodbark-org-108443-sports-boys-lacrosse-falls-to-de-la-salle-in-early-season-test",
-    "title": "Boys lacrosse falls to De La Salle in early-season test",
-    "link": "https://redwoodbark.org/108443/sports/boys-lacrosse-falls-to-de-la-salle-in-early-season-test/",
-    "pubDate": "2026-03-16T20:24:17.000Z",
-    "timestamp": 1773692657000,
-    "description": "Boys varsity lacrosse dropped a 15-4 loss to De La Salle Thursday, but the shorthanded Giants say the loss carries lessons they plan to bring into the postseason. De La Salle opened strong, scoring four straight goals b…",
-    "content": "Boys varsity lacrosse dropped a 15-4 loss to De La Salle Thursday, but the shorthanded Giants say the loss carries lessons they plan to bring into the postseason. De La Salle opened strong, scoring four straight goals before the Giants brought the gap to 4–5 by the end of the second quarter. Despite the Giants gaining confidence, after halftime the momentum shifted back to De La Salle, who pulled away with eight unanswered goals to seal a dominant 15–4 final. Sophomore Joe Connolly said the team came in with a clear game plan. Sophomore Joe Connolly charges onto the field to start the second half. ( Solomon Strasburg ) “Our game plan was coming in strong, keeping the momentum on the offensive side,” Connolly said. But missing key players made execution difficult, and De La Salle’s depth became a deciding factor early on. Sophomore Knox Donnelly described the moment things turned. “After we went on a run to make it 5-4, they went on a big run, and our energy just plateaued after that and dropped off,” Donelly said. Both players said De La Salle emphasized that depth was a key factor in the game. With a bigger roster, De La Salle’s players stayed fresh while Redwood’s wore down. “They had a lot more bodies than we did, and they were a lot fresher than we were,” Donnelly said. Adjustments were made mid-game, but the deficit proved too large to close. Connolly said the biggest takeaway from the game was learning the team needs to improve their physical conditioning. “We need to keep our energy up throughout the whole game. Mentally, we were good, but physically, we need to stay strong and make sure we make every possession count instead of turning over those transitions,” Connoly said. Spencer Springfield darts past defenders en route to a goal. ( Solomon Strasburg ) Donnelly kept it simple about what needs to change “The whole team needs to work harder, get in better shape and practice the fundamentals,” Donnelly said. Despite the loss, both players said they aren’t worried. A Marin County Athletic League (MCAL) title and a shot at North Coast Sectionals (NCS) are still on the table in May, and they see early losses as part of getting ready for what matters most. “These early games are supposed to prepare us for May,” Connolly said, “When it really matters.”",
-    "source": "Redwood Bark",
-    "category": "prep",
-    "verification": "community",
-    "town": "Larkspur",
-    "townSlug": "larkspur",
-    "lat": 37.9341,
-    "lon": -122.5353,
-    "locationConfidence": "exact",
-    "locationEvidence": "Redwood Bark",
-    "topics": [
-      "prep-sports"
-    ]
-  },
-  {
     "id": "endurance:inside-trail-racing:marin-ultra-challenge-mar-14-2026:https-insidetrail-com-events-marin-ultra-challenge",
     "title": "Marin Ultra Challenge — Mar 14, 2026",
     "link": "https://insidetrail.com/events/marin-ultra-challenge/",
@@ -2098,27 +2120,6 @@
     ]
   },
   {
-    "id": "prep:redwood-bark:boys-tennis-dominates-in-win-over-terra-linda:https-redwoodbark-org-108686-sports-boys-tennis-dominates-in-win-over-terra-linda",
-    "title": "Boys Tennis Dominates in Win Over Terra Linda",
-    "link": "https://redwoodbark.org/108686/sports/boys-tennis-dominates-in-win-over-terra-linda/",
-    "pubDate": "2026-03-12T18:43:37.000Z",
-    "timestamp": 1773341017000,
-    "description": "On Wednesday, March 13, the boys varsity tennis team took on the Terra Linda Trojans at home, ultimately securing a win. With this, the team improves to a 8-2 record on the season and 5-0 in league play. Coming off a hu…",
-    "content": "On Wednesday, March 13, the boys varsity tennis team took on the Terra Linda Trojans at home, ultimately securing a win. With this, the team improves to a 8-2 record on the season and 5-0 in league play. Coming off a huge win against University on Monday, Redwood looked to continue their momentum against a league opponent. They did not disappoint, winning all seven of their matches, which included four single matches and three doubles. Calado Fazal, a junior and captain, reflected on the work the team has put in during pre-season to get to where they are. “I think our team is playing really well right now. We have built some momentum. We had a really good win on Monday. The guys are feeling great and our morale is pretty high right now,” Fazal said. Sophomore Josh Friedman flew through his match, winning his first and second set by a score of 6 to 1. The other singles matches continued that trend with junior Alejandro Puentes , senior Lukas Berger and Owen Adams . Junior Jonah Kizer gets ready to attack the ball and start the point off strong for Redwood. Because tennis matches are a best-of-seven formatted game, those four alone were able to secure the Giants’ win. However, Redwood didn't take its foot off the gas for the doubles matches. Junior Jonah Kizer and sophomore Benicio Bhasin comfortably dismantled the opposing Trojans quickly, winning in straight sets, 6 to 2 and 6 to 0. The duos of Declan Gray and Oliver Weston, and Milo Mancl and Carter Smith, followed in similar fashion. Both teams won two sets to nothing. “Milo and I played great together. It was an overall great match, but we won both sets six-zero. They were good opponents, but we played together and finished our volleys to secure the win,” Smith said. Fazal steps forward and gets ready to use his momentum to send the ball onto the opposing side. The Giants take their talents down to Los Angeles this weekend for the annual All American Tournament, where they play Canyon Crest of San Diego for their first match.",
-    "source": "Redwood Bark",
-    "category": "prep",
-    "verification": "community",
-    "town": "Larkspur",
-    "townSlug": "larkspur",
-    "lat": 37.9341,
-    "lon": -122.5353,
-    "locationConfidence": "exact",
-    "locationEvidence": "Redwood Bark",
-    "topics": [
-      "prep-sports"
-    ]
-  },
-  {
     "id": "shows:sweetwater-music-hall:teal-s-after-party:https-sweetwatermusichall-org-event-teals-after-party",
     "title": "Teal’s After Party",
     "link": "https://sweetwatermusichall.org/event/teals-after-party/",
@@ -2126,50 +2127,6 @@
     "timestamp": 1773162039000,
     "description": "A free community event For the first time ever at Sweetwater, Teal’s After Party arrives—a full-blown dance conspiracy in motion. Fronted by powerhouse vocalist Teal Collins—whose gold and platinum credits (Third Eye Bl…",
     "content": "A free community event For the first time ever at Sweetwater, Teal’s After Party arrives—a full-blown dance conspiracy in motion. Fronted by powerhouse vocalist Teal Collins—whose gold and platinum credits (Third Eye Blind, Motown’s Shanice Williams) and worldwide touring with The Mother Truckers fuel her signature mix of soul, grit, and unstoppable energy. Teal has shared stages […]",
-    "source": "Sweetwater Music Hall",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.9059,
-    "lon": -122.5491,
-    "locationConfidence": "exact",
-    "locationEvidence": "Sweetwater Music Hall",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:sweetwater-music-hall:shoplifters-united-the-smiths-tribute-with-just-like-heaven-the-cure-tribute:https-sweetwatermusichall-org-event-shoplifters-united-the-smiths-tribute-with-just-like-heaven-the-cure-tribute-sweetwater-music-hall-mill-valley-california",
-    "title": "Shoplifters United (The Smiths tribute) with Just Like Heaven (The Cure tribute))",
-    "link": "https://sweetwatermusichall.org/event/shoplifters-united-the-smiths-tribute-with-just-like-heaven-the-cure-tribute/sweetwater-music-hall/mill-valley-california/",
-    "pubDate": "2026-03-10T17:00:00.000Z",
-    "timestamp": 1773162000000,
-    "description": "Based in the San Francisco Bay Area, Shoplifters United bring to life the brilliant songs of legendary group The Smiths with an energetic live show and highly accurate sonic recreations of beloved album tracks and deep…",
-    "content": "Based in the San Francisco Bay Area, Shoplifters United bring to life the brilliant songs of legendary group The Smiths with an energetic live show and highly accurate sonic recreations of beloved album tracks and deep cuts. Formed in 1982, iconic British rock group The Smiths are regarded as one of the most influential and important groups to emerge from the 1980s. From Morrissey's lyrical poetry to the inspired musicianship of Johnny Marr, Andy Rourke, and Mike Joyce, their influence can be heard throughout popular music for decades since and yet their sound is still unique and timeless. Bizarre coincidence? Shoplifters United had their very first rehearsal on the same day in September of 2022 as the death of Queen Elizabeth II. The Queen was truly, and quite literally, dead and a humble Smiths tribute band was born. Shoplifters United are Pascal, Matt, Tommy, and James, a group of friends who share a love for the music of The Smiths. Great care has been taken to emulate the sound on those classic Smiths records down to every note and groove. Our hope is that when you go to a Shoplifters United show, you can close your eyes and imagine the year is 1984 and you are at The Haçienda nightclub in Manchester. Shoplifters of the world, unite and take over!",
-    "source": "Sweetwater Music Hall",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.9059,
-    "lon": -122.5491,
-    "locationConfidence": "exact",
-    "locationEvidence": "Sweetwater Music Hall",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:sweetwater-music-hall:north-mississippi-allstars:https-sweetwatermusichall-org-event-north-mississippi-allstars-2-sweetwater-music-hall-mill-valley-california",
-    "title": "North Mississippi Allstars",
-    "link": "https://sweetwatermusichall.org/event/north-mississippi-allstars-2/sweetwater-music-hall/mill-valley-california/",
-    "pubDate": "2026-03-10T17:00:00.000Z",
-    "timestamp": 1773162000000,
-    "description": "North Mississippi Allstars was started by brothers Luther and Cody Dickinson in 1996 as a loose collective of musicians from their North Mississippi home, inspired by their father Jim Dickinson as well as neighbors and…",
-    "content": "North Mississippi Allstars was started by brothers Luther and Cody Dickinson in 1996 as a loose collective of musicians from their North Mississippi home, inspired by their father Jim Dickinson as well as neighbors and musical elders of their community; RL Burnside, Junior Kimbrough, Otha Turner and Fred McDowell. Luther's first national tour was the RL Burnside Ass Pocket of Whiskey tour in 1997, selling out shows in the US and Canada. \"Kenny Brown hired me to tour with RL and Cedric and showed me the ropes. That experience blew my mind. Cody and I have been on the road ever since.\" NMA began touring in 1998 and over the years the touring lineup has included, Cedric, Duwayne and Garry Burnside, Chris Chew, Berry Oakley Jr, Oteil Burbruidgem and currently Joey Williams of the Blind Boys of Alabama and Ray Ray Hollowman, guitar player for Eminem and Nee-O. Since their debut album in 2000 and hitting the never ending road, they have shared the stage with countless legends; Phil Lesh, Mavis Staples, Robert Plant, John Hiatt, the Allman Brothers, The Black Crowes, Buddy Guy, Snoop Dogg, and Jon Spencer to name a few, while earning multiple Grammy nominations for their experimental albums of they like to call Modern Mississippi Music.",
     "source": "Sweetwater Music Hall",
     "category": "shows",
     "verification": "community",
@@ -2207,6 +2164,28 @@
     ]
   },
   {
+    "id": "shows:sweetwater-music-hall:north-mississippi-allstars:https-sweetwatermusichall-org-event-north-mississippi-allstars-2-sweetwater-music-hall-mill-valley-california",
+    "title": "North Mississippi Allstars",
+    "link": "https://sweetwatermusichall.org/event/north-mississippi-allstars-2/sweetwater-music-hall/mill-valley-california/",
+    "pubDate": "2026-03-10T17:00:00.000Z",
+    "timestamp": 1773162000000,
+    "description": "North Mississippi Allstars was started by brothers Luther and Cody Dickinson in 1996 as a loose collective of musicians from their North Mississippi home, inspired by their father Jim Dickinson as well as neighbors and…",
+    "content": "North Mississippi Allstars was started by brothers Luther and Cody Dickinson in 1996 as a loose collective of musicians from their North Mississippi home, inspired by their father Jim Dickinson as well as neighbors and musical elders of their community; RL Burnside, Junior Kimbrough, Otha Turner and Fred McDowell. Luther's first national tour was the RL Burnside Ass Pocket of Whiskey tour in 1997, selling out shows in the US and Canada. \"Kenny Brown hired me to tour with RL and Cedric and showed me the ropes. That experience blew my mind. Cody and I have been on the road ever since.\" NMA began touring in 1998 and over the years the touring lineup has included, Cedric, Duwayne and Garry Burnside, Chris Chew, Berry Oakley Jr, Oteil Burbruidgem and currently Joey Williams of the Blind Boys of Alabama and Ray Ray Hollowman, guitar player for Eminem and Nee-O. Since their debut album in 2000 and hitting the never ending road, they have shared the stage with countless legends; Phil Lesh, Mavis Staples, Robert Plant, John Hiatt, the Allman Brothers, The Black Crowes, Buddy Guy, Snoop Dogg, and Jon Spencer to name a few, while earning multiple Grammy nominations for their experimental albums of they like to call Modern Mississippi Music.",
+    "source": "Sweetwater Music Hall",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9059,
+    "lon": -122.5491,
+    "locationConfidence": "exact",
+    "locationEvidence": "Sweetwater Music Hall",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
     "id": "shows:sweetwater-music-hall:starman-sf-david-bowie-tribute:https-sweetwatermusichall-org-event-starman-sf-david-bowie-tribute-sweetwater-music-hall-mill-valley-california",
     "title": "Starman SF (David Bowie Tribute)",
     "link": "https://sweetwatermusichall.org/event/starman-sf-david-bowie-tribute/sweetwater-music-hall/mill-valley-california/",
@@ -2214,6 +2193,28 @@
     "timestamp": 1773162000000,
     "description": "Starman SF came to life when a group of some of the Bay Area's most talented musicians united over a shared admiration for the legendary David Bowie. Each member, with diverse musical backgrounds and deep respect for Bo…",
     "content": "Starman SF came to life when a group of some of the Bay Area's most talented musicians united over a shared admiration for the legendary David Bowie. Each member, with diverse musical backgrounds and deep respect for Bowie's artistry, came together to create a tribute band that would honor his extraordinary legacy. The vision behind Starman SF is simple yet powerful: to celebrate the life, music, and transformative influence of David Bowie, while capturing the essence of his iconic performances and groundbreaking sound. Through their heartfelt renditions of Bowie's greatest hits, the band strives to bring his timeless artistry to new audiences, ensuring that his spirit continues to inspire for generations to come.",
+    "source": "Sweetwater Music Hall",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9059,
+    "lon": -122.5491,
+    "locationConfidence": "exact",
+    "locationEvidence": "Sweetwater Music Hall",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:sweetwater-music-hall:shoplifters-united-the-smiths-tribute-with-just-like-heaven-the-cure-tribute:https-sweetwatermusichall-org-event-shoplifters-united-the-smiths-tribute-with-just-like-heaven-the-cure-tribute-sweetwater-music-hall-mill-valley-california",
+    "title": "Shoplifters United (The Smiths tribute) with Just Like Heaven (The Cure tribute))",
+    "link": "https://sweetwatermusichall.org/event/shoplifters-united-the-smiths-tribute-with-just-like-heaven-the-cure-tribute/sweetwater-music-hall/mill-valley-california/",
+    "pubDate": "2026-03-10T17:00:00.000Z",
+    "timestamp": 1773162000000,
+    "description": "Based in the San Francisco Bay Area, Shoplifters United bring to life the brilliant songs of legendary group The Smiths with an energetic live show and highly accurate sonic recreations of beloved album tracks and deep…",
+    "content": "Based in the San Francisco Bay Area, Shoplifters United bring to life the brilliant songs of legendary group The Smiths with an energetic live show and highly accurate sonic recreations of beloved album tracks and deep cuts. Formed in 1982, iconic British rock group The Smiths are regarded as one of the most influential and important groups to emerge from the 1980s. From Morrissey's lyrical poetry to the inspired musicianship of Johnny Marr, Andy Rourke, and Mike Joyce, their influence can be heard throughout popular music for decades since and yet their sound is still unique and timeless. Bizarre coincidence? Shoplifters United had their very first rehearsal on the same day in September of 2022 as the death of Queen Elizabeth II. The Queen was truly, and quite literally, dead and a humble Smiths tribute band was born. Shoplifters United are Pascal, Matt, Tommy, and James, a group of friends who share a love for the music of The Smiths. Great care has been taken to emulate the sound on those classic Smiths records down to every note and groove. Our hope is that when you go to a Shoplifters United show, you can close your eyes and imagine the year is 1984 and you are at The Haçienda nightclub in Manchester. Shoplifters of the world, unite and take over!",
     "source": "Sweetwater Music Hall",
     "category": "shows",
     "verification": "community",
@@ -2383,6 +2384,72 @@
     ]
   },
   {
+    "id": "shows:sweetwater-music-hall:griffin-house:https-sweetwatermusichall-org-event-griffin-house-3-sweetwater-music-hall-mill-valley-california",
+    "title": "Griffin House",
+    "link": "https://sweetwatermusichall.org/event/griffin-house-3/sweetwater-music-hall/mill-valley-california/",
+    "pubDate": "2026-02-17T18:00:00.000Z",
+    "timestamp": 1771351200000,
+    "description": "Griffin House is an American singer-songwriter and storyteller. Touring and making records for over 20 years, House has a discography that includes13 albums. His debut record \"Lost and Found\" (2004) was featured on CBS…",
+    "content": "Griffin House is an American singer-songwriter and storyteller. Touring and making records for over 20 years, House has a discography that includes13 albums. His debut record \"Lost and Found\" (2004) was featured on CBS Sunday Morning by music critic and then VP MTV/VH1, Bill Flanagan, who named House one of the best emerging singer-songwriters of our time. After forging a loyal fan base through years of grassroots touring as an opener for acts such as John Mellencamp and the Cranberries, House broke through as a national headliner in 2009 with an appearance on Late Night with Craig Ferguson and the release of his underground hit \"The Guy That Says Goodbye to You is Out of His Mind.\" The music documentary \"Rising Star,\" released on Amazon Prime in 2019, chronicles House's journey through the music business, as he attempts to balance the challenges of life as a traveling modern-day troubadour with marriage, fatherhood and sobriety. House's music has been featured on prime time television shows such One Tree Hill, Rescue Me, Party of Five, and Everwood, and reviewed in magazines such as Paste, No Depression and Rolling Stone. American Songwriter writes \"if you want to be blown away by raw talent, look no further than Griffin House.\"",
+    "source": "Sweetwater Music Hall",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9059,
+    "lon": -122.5491,
+    "locationConfidence": "exact",
+    "locationEvidence": "Sweetwater Music Hall",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:sweetwater-music-hall:an-intimate-evening-with-molly-tuttle-ketch-secor:https-sweetwatermusichall-org-event-an-intimate-evening-with-molly-tuttle-ketch-secor-sweetwater-music-hall-mill-valley-california",
+    "title": "An Intimate Evening with Molly Tuttle & Ketch Secor",
+    "link": "https://sweetwatermusichall.org/event/an-intimate-evening-with-molly-tuttle-ketch-secor/sweetwater-music-hall/mill-valley-california/",
+    "pubDate": "2026-02-17T18:00:00.000Z",
+    "timestamp": 1771351200000,
+    "description": "Please note: ADA seating is SOLD OUT for this event. VIP Package includes: ● One (1) General Admission ticket ● Pre-show meet & greet and personal photo opportunity with Molly Tuttle and Ketch Secor ● One (1) poster, si…",
+    "content": "Please note: ADA seating is SOLD OUT for this event. VIP Package includes: ● One (1) General Admission ticket ● Pre-show meet & greet and personal photo opportunity with Molly Tuttle and Ketch Secor ● One (1) poster, signed by Molly & Ketch ● First entry into the venue By purchasing a VIP ticket, you agree to these terms and conditions.",
+    "source": "Sweetwater Music Hall",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9059,
+    "lon": -122.5491,
+    "locationConfidence": "exact",
+    "locationEvidence": "Sweetwater Music Hall",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
+    "id": "shows:sweetwater-music-hall:holly-bowling:https-sweetwatermusichall-org-event-holly-bowling-sweetwater-music-hall-mill-valley-california",
+    "title": "Holly Bowling",
+    "link": "https://sweetwatermusichall.org/event/holly-bowling/sweetwater-music-hall/mill-valley-california/",
+    "pubDate": "2026-02-17T18:00:00.000Z",
+    "timestamp": 1771351200000,
+    "description": "Cast aside any and all expectations. Whether behind the piano on a windswept mountainous cliff, at a hallowed venue such as Carnegie Hall, or playing shoulder-to-shoulder with some of the most legendary musicians in his…",
+    "content": "Cast aside any and all expectations. Whether behind the piano on a windswept mountainous cliff, at a hallowed venue such as Carnegie Hall, or playing shoulder-to-shoulder with some of the most legendary musicians in history, solo pianist Holly Bowling subverts convention with virtuosic playing, emotional immersion, and a thirst for invention. Acclaimed by Rolling Stone, Billboard, Relix, and more and sought-after by icons such as Phil Lesh, Bob Weir, and Warren Haynes, she once again flips the script on her 2020 album and second reimagining of Grateful Dead staples entitled Seeking All That's Still Unsung.\"When you go to see someone play solo piano, you're not expecting them to stand up, pluck the strings, drum on the frame, hit the strings with mallets, or place magnets and EBows inside of the piano,\" she smiles. \"It doesn't fit with the expectations of how you're supposed to play this instrument. I think it works though.\"Her introduction to the instrument happened at just five-years-old when mom and dad bought a piano from a yard sale down the street. They gave their daughter a choice: ballet or piano. As the sounds of Mozart, Beethoven, and The Grateful Dead piped through their home, she obviously chose the latter without hesitation.After a childhood dedicated to the instrument, she studied piano performance at SF State University. Intermittent gigs around San Francisco followed before she ended up on stage for an impromptu jam with Marco Benevento. \"I paid him a dollar to go up there,\" she recalls. \"It reminded me that for most of my life I wanted to be on stage playing, and I couldn''t let that slip away.\" After catching a 2013 Phish show in Lake Tahoe renowned for its extended rendition of \"Tweezer,\" she transcribed and arranged the entire 37-minute improvisational masterpiece into a nuanced and intricate piano opus. She humbly refers to it as \"a nerdy pet project that somehow inspired people to demand Phish on piano.\" It announced her arrival as an exciting outlier and paved the way for Distillation Of A Dream: The Music Of Phish Reimagined For Solo Piano in 2015.As her profile rose, she delivered Better Left Unsung only a year later. For this triple-LP, she rearranged iconic moments from the Grateful Dead on her piano. It bowed in the Top 25 of the Billboard Top Classical Albums Chart. She went on to share the stage with everyone from The Dead's Weir and Lesh to Haynes, John Scofield, Jim James, Branford Marsalis, Don Was, Robert Randolph, Greensky Bluegrass, and more. Along the way, she graced the bills of Lesh's Terrapin Crossroads and Haynes's annual Christmas Jam and unveiled the concert recording Live at the Old Church. Simultaneously, she co-founded improvisational rock outfit Ghost Light in 2018. Engaging a faithful audience even in the midst of the \"new normal\" of 2020, she launched a series of living room livestreams chronicled on the eight-volume Alone Together: The Living Room Sessions highlighted by her innovative re-imaginings of Radiohead, Nine Inch Nails, and many others. In the end, Holly consistently redefines what's possible on her instrument of choice.",
+    "source": "Sweetwater Music Hall",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9059,
+    "lon": -122.5491,
+    "locationConfidence": "exact",
+    "locationEvidence": "Sweetwater Music Hall",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
     "id": "shows:sweetwater-music-hall:school-of-rock:https-sweetwatermusichall-org-event-school-of-rock-19-sweetwater-music-hall-mill-valley-california",
     "title": "School of Rock",
     "link": "https://sweetwatermusichall.org/event/school-of-rock-19/sweetwater-music-hall/mill-valley-california/",
@@ -2515,72 +2582,6 @@
     ]
   },
   {
-    "id": "shows:sweetwater-music-hall:griffin-house:https-sweetwatermusichall-org-event-griffin-house-3-sweetwater-music-hall-mill-valley-california",
-    "title": "Griffin House",
-    "link": "https://sweetwatermusichall.org/event/griffin-house-3/sweetwater-music-hall/mill-valley-california/",
-    "pubDate": "2026-02-17T18:00:00.000Z",
-    "timestamp": 1771351200000,
-    "description": "Griffin House is an American singer-songwriter and storyteller. Touring and making records for over 20 years, House has a discography that includes13 albums. His debut record \"Lost and Found\" (2004) was featured on CBS…",
-    "content": "Griffin House is an American singer-songwriter and storyteller. Touring and making records for over 20 years, House has a discography that includes13 albums. His debut record \"Lost and Found\" (2004) was featured on CBS Sunday Morning by music critic and then VP MTV/VH1, Bill Flanagan, who named House one of the best emerging singer-songwriters of our time. After forging a loyal fan base through years of grassroots touring as an opener for acts such as John Mellencamp and the Cranberries, House broke through as a national headliner in 2009 with an appearance on Late Night with Craig Ferguson and the release of his underground hit \"The Guy That Says Goodbye to You is Out of His Mind.\" The music documentary \"Rising Star,\" released on Amazon Prime in 2019, chronicles House's journey through the music business, as he attempts to balance the challenges of life as a traveling modern-day troubadour with marriage, fatherhood and sobriety. House's music has been featured on prime time television shows such One Tree Hill, Rescue Me, Party of Five, and Everwood, and reviewed in magazines such as Paste, No Depression and Rolling Stone. American Songwriter writes \"if you want to be blown away by raw talent, look no further than Griffin House.\"",
-    "source": "Sweetwater Music Hall",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.9059,
-    "lon": -122.5491,
-    "locationConfidence": "exact",
-    "locationEvidence": "Sweetwater Music Hall",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:sweetwater-music-hall:an-intimate-evening-with-molly-tuttle-ketch-secor:https-sweetwatermusichall-org-event-an-intimate-evening-with-molly-tuttle-ketch-secor-sweetwater-music-hall-mill-valley-california",
-    "title": "An Intimate Evening with Molly Tuttle & Ketch Secor",
-    "link": "https://sweetwatermusichall.org/event/an-intimate-evening-with-molly-tuttle-ketch-secor/sweetwater-music-hall/mill-valley-california/",
-    "pubDate": "2026-02-17T18:00:00.000Z",
-    "timestamp": 1771351200000,
-    "description": "Please note: ADA seating is SOLD OUT for this event. VIP Package includes: ● One (1) General Admission ticket ● Pre-show meet & greet and personal photo opportunity with Molly Tuttle and Ketch Secor ● One (1) poster, si…",
-    "content": "Please note: ADA seating is SOLD OUT for this event. VIP Package includes: ● One (1) General Admission ticket ● Pre-show meet & greet and personal photo opportunity with Molly Tuttle and Ketch Secor ● One (1) poster, signed by Molly & Ketch ● First entry into the venue By purchasing a VIP ticket, you agree to these terms and conditions.",
-    "source": "Sweetwater Music Hall",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.9059,
-    "lon": -122.5491,
-    "locationConfidence": "exact",
-    "locationEvidence": "Sweetwater Music Hall",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:sweetwater-music-hall:holly-bowling:https-sweetwatermusichall-org-event-holly-bowling-sweetwater-music-hall-mill-valley-california",
-    "title": "Holly Bowling",
-    "link": "https://sweetwatermusichall.org/event/holly-bowling/sweetwater-music-hall/mill-valley-california/",
-    "pubDate": "2026-02-17T18:00:00.000Z",
-    "timestamp": 1771351200000,
-    "description": "Cast aside any and all expectations. Whether behind the piano on a windswept mountainous cliff, at a hallowed venue such as Carnegie Hall, or playing shoulder-to-shoulder with some of the most legendary musicians in his…",
-    "content": "Cast aside any and all expectations. Whether behind the piano on a windswept mountainous cliff, at a hallowed venue such as Carnegie Hall, or playing shoulder-to-shoulder with some of the most legendary musicians in history, solo pianist Holly Bowling subverts convention with virtuosic playing, emotional immersion, and a thirst for invention. Acclaimed by Rolling Stone, Billboard, Relix, and more and sought-after by icons such as Phil Lesh, Bob Weir, and Warren Haynes, she once again flips the script on her 2020 album and second reimagining of Grateful Dead staples entitled Seeking All That's Still Unsung.\"When you go to see someone play solo piano, you're not expecting them to stand up, pluck the strings, drum on the frame, hit the strings with mallets, or place magnets and EBows inside of the piano,\" she smiles. \"It doesn't fit with the expectations of how you're supposed to play this instrument. I think it works though.\"Her introduction to the instrument happened at just five-years-old when mom and dad bought a piano from a yard sale down the street. They gave their daughter a choice: ballet or piano. As the sounds of Mozart, Beethoven, and The Grateful Dead piped through their home, she obviously chose the latter without hesitation.After a childhood dedicated to the instrument, she studied piano performance at SF State University. Intermittent gigs around San Francisco followed before she ended up on stage for an impromptu jam with Marco Benevento. \"I paid him a dollar to go up there,\" she recalls. \"It reminded me that for most of my life I wanted to be on stage playing, and I couldn''t let that slip away.\" After catching a 2013 Phish show in Lake Tahoe renowned for its extended rendition of \"Tweezer,\" she transcribed and arranged the entire 37-minute improvisational masterpiece into a nuanced and intricate piano opus. She humbly refers to it as \"a nerdy pet project that somehow inspired people to demand Phish on piano.\" It announced her arrival as an exciting outlier and paved the way for Distillation Of A Dream: The Music Of Phish Reimagined For Solo Piano in 2015.As her profile rose, she delivered Better Left Unsung only a year later. For this triple-LP, she rearranged iconic moments from the Grateful Dead on her piano. It bowed in the Top 25 of the Billboard Top Classical Albums Chart. She went on to share the stage with everyone from The Dead's Weir and Lesh to Haynes, John Scofield, Jim James, Branford Marsalis, Don Was, Robert Randolph, Greensky Bluegrass, and more. Along the way, she graced the bills of Lesh's Terrapin Crossroads and Haynes's annual Christmas Jam and unveiled the concert recording Live at the Old Church. Simultaneously, she co-founded improvisational rock outfit Ghost Light in 2018. Engaging a faithful audience even in the midst of the \"new normal\" of 2020, she launched a series of living room livestreams chronicled on the eight-volume Alone Together: The Living Room Sessions highlighted by her innovative re-imaginings of Radiohead, Nine Inch Nails, and many others. In the end, Holly consistently redefines what's possible on her instrument of choice.",
-    "source": "Sweetwater Music Hall",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.9059,
-    "lon": -122.5491,
-    "locationConfidence": "exact",
-    "locationEvidence": "Sweetwater Music Hall",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
     "id": "shows:sweetwater-music-hall:carsie-blanton:https-sweetwatermusichall-org-event-carsie-blanton-sweetwater-music-hall-mill-valley-california",
     "title": "Carsie Blanton",
     "link": "https://sweetwatermusichall.org/event/carsie-blanton/sweetwater-music-hall/mill-valley-california/",
@@ -2588,28 +2589,6 @@
     "timestamp": 1771264800000,
     "description": "Carsie Blanton is a songwriter with hooks, chutzpah, and revolutionary optimism. A radical folk artist in the tradition of Woody Guthrie, her infectious melodies and lyrical wit keep listeners rapt while she conjures sp…",
     "content": "Carsie Blanton is a songwriter with hooks, chutzpah, and revolutionary optimism. A radical folk artist in the tradition of Woody Guthrie, her infectious melodies and lyrical wit keep listeners rapt while she conjures spirits of vaudeville, campfire singalongs, and punk rock. Blanton and her road-tested band deploy humor, camaraderie, and considerable musical muscle to enroll each audience in a rare vision of hope and solidarity. In addition to writing and performing music, Carsie works as a political organizer and activist. In fall of 2025, she participated in the Global Sumud Flotilla, a direct action to bring humanitarian aid to Gaza by sailboat. In early October, after a month at sea, she was imprisoned in Israel for five days along with hundreds of her comrades. Soon after, Blanton released The Little Flame, a song of solidarity covered widely on social media during her detention. The Little Flame features background vocals from Irish band Ye Vagabonds and Carsie's Palestinian/New Zealander prison-mate Rana Hamida, and appears on her latest album, The Red Album Vol II. After two decades spent on the road, Blanton has amassed a dedicated fan base and a small menagerie of viral hits, and regularly sells out mid-size venues across the U.S. and Europe. 2026 will find her touring heavily with her own band and in collaboration with Canadian folk-punk rabblerousers The Burning Hell, as well as continuing her organizing work with Artists Against Apartheid, Party for Socialism and Liberation and others. \"Beautiful, militant anthems.\" - Ken Tucker, NPR's Fresh Air \"Carsie Blanton is fighting fascism with big hooks and an even bigger heart.\" -American Songwriter",
-    "source": "Sweetwater Music Hall",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.9059,
-    "lon": -122.5491,
-    "locationConfidence": "exact",
-    "locationEvidence": "Sweetwater Music Hall",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:sweetwater-music-hall:bandworks-live-learn-rock:https-sweetwatermusichall-org-event-bandworks-live-learn-rock-15-sweetwater-music-hall-mill-valley-california",
-    "title": "Bandworks – Live. Learn. Rock.",
-    "link": "https://sweetwatermusichall.org/event/bandworks-live-learn-rock-15/sweetwater-music-hall/mill-valley-california/",
-    "pubDate": "2026-02-13T20:09:00.000Z",
-    "timestamp": 1771013340000,
-    "description": "Tickets $15 at the door. (No advance sales.)BandWorks is a local music program started in 1993 that builds bands by matching youth, teen and adult musicians with peers. The bands rehearse two hours a week and perform se…",
-    "content": "Tickets $15 at the door. (No advance sales.)BandWorks is a local music program started in 1993 that builds bands by matching youth, teen and adult musicians with peers. The bands rehearse two hours a week and perform seasonally at venues like the Sweetwater Music Hall in Mill Valley. Sweetwater Music Hall Inc. is a non-profit 501(c)(3) organization that is fully devoted to advancing education, understanding and appreciation of music, bay area music history, culture and arts.",
     "source": "Sweetwater Music Hall",
     "category": "shows",
     "verification": "community",
@@ -2779,6 +2758,28 @@
     ]
   },
   {
+    "id": "shows:sweetwater-music-hall:israel-vibration-roots-radics:https-sweetwatermusichall-org-event-israel-vibration-roots-radics-sweetwater-music-hall-mill-valley-california",
+    "title": "Israel Vibration & Roots Radics",
+    "link": "https://sweetwatermusichall.org/event/israel-vibration-roots-radics/sweetwater-music-hall/mill-valley-california/",
+    "pubDate": "2026-02-03T18:00:00.000Z",
+    "timestamp": 1770141600000,
+    "description": "Israel Vibration A living lesson in fortitude, the vocal trio of Cecil \"Skeley\" Spence, Albert \"Apple Gabriel\" Craig, and Lascelle \"Wiss\" Bulgin overcame adversity, illness, and poverty to become one of the finest roots…",
+    "content": "Israel Vibration A living lesson in fortitude, the vocal trio of Cecil \"Skeley\" Spence, Albert \"Apple Gabriel\" Craig, and Lascelle \"Wiss\" Bulgin overcame adversity, illness, and poverty to become one of the finest roots groups in Jamaica's history. All three had been afflicted by polio and first became acquainted, albeit briefly, at Kingston's Mona Rehabilitation Clinic. The three teens had individually all previously converted to rastafarianism, now their shared faith and childhood experiences helped forge a strong friendship. They spent the next six years singing around Kingston for their suppers and by 1975, Israel Vibration was a vocal force to be reckoned with. The group's exquisite dread sound and militant cultural themes made an instant impression and the trio now found themselves on-stage opening for the likes of Bob Marley and Dennis Brown. The trio's deeply devotional songs, cultural themes, inspirational lyrics, and original take on the roots style had struck a chord with reggae fans around the world. They relocated to New York City, perhaps believing that the large immigrant community could sustain them, or that America was now ready to embrace roots. But a few occasional live appearances aside, the group swiftly disappeared from view. All three attempted solo careers, but only Bulgin made it on to record; his Mr. Sunshine album paired him with the Freedom Fighters Band. In 1997, Apple Gabriel left the group to pursue a solo career, releasing the album Another Moses in 1999. Skelly and Wiss continue to record albums and tour the world as Israel Vibration, backed by longtime associates Roots Radics.In December 2014 they were reportedly recording a new album set for release in early 2015. The new album, entitled \"Play It Real\" was released on 31 March 2015 via Utopia. On March 23rd, 2020, Albert \"Apple Gabriel\" co-founder and former member of the group died due to 'compilation sickness', earlier reports indicated that Albert was not well for quite some time, this was supposedly due to some of the polio infections left in his body. On a Facebook post on March 7, 2020, he had indicated that he had suffered a stroke. He died on March 23, 2020. On August 26th, 2022, Cecil \"Skelly\" Spence died of lung cancer. Wiss carries on the music with the Roots Radics, and Israel Vibration continues to keep audiences dancing worldwide.",
+    "source": "Sweetwater Music Hall",
+    "category": "shows",
+    "verification": "community",
+    "town": "Mill Valley",
+    "townSlug": "mill-valley",
+    "lat": 37.9059,
+    "lon": -122.5491,
+    "locationConfidence": "exact",
+    "locationEvidence": "Sweetwater Music Hall",
+    "topics": [
+      "music",
+      "shows"
+    ]
+  },
+  {
     "id": "shows:sweetwater-music-hall:westerly-with-travis-hayes-and-the-new-westerns:https-sweetwatermusichall-org-event-westerly-with-travis-hayes-and-the-new-westerns-sweetwater-music-hall-mill-valley-california",
     "title": "Westerly with Travis Hayes and the New Westerns",
     "link": "https://sweetwatermusichall.org/event/westerly-with-travis-hayes-and-the-new-westerns/sweetwater-music-hall/mill-valley-california/",
@@ -2830,28 +2831,6 @@
     "timestamp": 1770141600000,
     "description": "Dan Tyminski was six years old when his parents began taking him to fiddle contests, square dances, and bluegrass festivals across New England. For a young musician who would later become one of the biggest names in mod…",
     "content": "Dan Tyminski was six years old when his parents began taking him to fiddle contests, square dances, and bluegrass festivals across New England. For a young musician who would later become one of the biggest names in modern-day bluegrass, those early experiences were life changing. \"Watching live music always spoke to me much louder than sitting in front of my record player,\" he remembers. \"I loved it. Wherever music was being played, I wanted to go watch. Years later, I still feel that way.\" Throughout his 30+ year career, Tyminski has left his mark in every corner of modern music. His voice famously accompanies George Clooney's performance of the Stanley Brothers' classic song, \"I Am A Man of Constant Sorrow,\" in the film, Oh Brother, Where Art Thou? and his vocal collaboration with Swedish DJ Avicii on the song \"Hey Brother\" was a global smash, having been streamed more than a billion times to date. His diverse solo projects and years of work with Alison Krauss and Union Station have yielded troves of award-winning music. With his newest album release – the Grammy-nominated 2024 concert album Dan Tyminski: Live From The Ryman – he captures the magic of those live shows, while also proving that he still has the same passion for live music as he did when he was growing up. His earliest touring and recording work was as a part of the band, Green Mountain Bluegrass. He later joined the influential bluegrass group, Lonesome River Band, before embarking on his three decades of work with Alison Krauss and Union Station. The first album that Tyminski recorded as a solo artist was the soul-stirring Carry Me Across the Mountain (2000), followed by the Grammy-nominated Wheels (2008) which was named the 2009 Album of the Year by the International Bluegrass Music Association. His work with the EDM artist, Avicii, inspired Dan to create the genre-defying Southern Gothic album, released in 2017 to much critical acclaim. Tyminski would then showcase again his heart for bluegrass with the 2022 EP tribute to Tony Rice, One More Time Before You Go, which included guest performances by Molly Tuttle, Sam Bush, Dailey & Vincent, and Billy Strings. The following year saw the release of the full-length bluegrass album, God Fearing Heathen, which quickly hit #1 on Billboard's Bluegrass Albums chart. Over the course of his career, Tyminski has also evolved into a prolific songwriter, penning songs with Monty Criswell, Phillip Lammonds, Kristian Bush, Ashley Monroe, Chris Stapleton and many others. Dan has been honored with 14 Grammy Awards and is a four-time Male Vocalist of the Year honoree by the International Bluegrass Music Association. He has also recorded instrumental or vocal harmony contributions for projects by Martina McBride, Reba McEntire, Brad Paisley, Dolly Parton, Willie Nelson, Joan Osborne, Charlie Daniels, Kenny Chesney, LeAnn Rimes, Rob Thomas, and Charlie Haden, to name a few. Tyminski certainly represents the pinnacle of modern bluegrass music. While Dan enjoys a good conversation and a good cigar, he can often be found participating in charitable Pro-Am golf tournaments, as well as competing regularly in the Foosball tournament circuit.",
-    "source": "Sweetwater Music Hall",
-    "category": "shows",
-    "verification": "community",
-    "town": "Mill Valley",
-    "townSlug": "mill-valley",
-    "lat": 37.9059,
-    "lon": -122.5491,
-    "locationConfidence": "exact",
-    "locationEvidence": "Sweetwater Music Hall",
-    "topics": [
-      "music",
-      "shows"
-    ]
-  },
-  {
-    "id": "shows:sweetwater-music-hall:israel-vibration-roots-radics:https-sweetwatermusichall-org-event-israel-vibration-roots-radics-sweetwater-music-hall-mill-valley-california",
-    "title": "Israel Vibration & Roots Radics",
-    "link": "https://sweetwatermusichall.org/event/israel-vibration-roots-radics/sweetwater-music-hall/mill-valley-california/",
-    "pubDate": "2026-02-03T18:00:00.000Z",
-    "timestamp": 1770141600000,
-    "description": "Israel Vibration A living lesson in fortitude, the vocal trio of Cecil \"Skeley\" Spence, Albert \"Apple Gabriel\" Craig, and Lascelle \"Wiss\" Bulgin overcame adversity, illness, and poverty to become one of the finest roots…",
-    "content": "Israel Vibration A living lesson in fortitude, the vocal trio of Cecil \"Skeley\" Spence, Albert \"Apple Gabriel\" Craig, and Lascelle \"Wiss\" Bulgin overcame adversity, illness, and poverty to become one of the finest roots groups in Jamaica's history. All three had been afflicted by polio and first became acquainted, albeit briefly, at Kingston's Mona Rehabilitation Clinic. The three teens had individually all previously converted to rastafarianism, now their shared faith and childhood experiences helped forge a strong friendship. They spent the next six years singing around Kingston for their suppers and by 1975, Israel Vibration was a vocal force to be reckoned with. The group's exquisite dread sound and militant cultural themes made an instant impression and the trio now found themselves on-stage opening for the likes of Bob Marley and Dennis Brown. The trio's deeply devotional songs, cultural themes, inspirational lyrics, and original take on the roots style had struck a chord with reggae fans around the world. They relocated to New York City, perhaps believing that the large immigrant community could sustain them, or that America was now ready to embrace roots. But a few occasional live appearances aside, the group swiftly disappeared from view. All three attempted solo careers, but only Bulgin made it on to record; his Mr. Sunshine album paired him with the Freedom Fighters Band. In 1997, Apple Gabriel left the group to pursue a solo career, releasing the album Another Moses in 1999. Skelly and Wiss continue to record albums and tour the world as Israel Vibration, backed by longtime associates Roots Radics.In December 2014 they were reportedly recording a new album set for release in early 2015. The new album, entitled \"Play It Real\" was released on 31 March 2015 via Utopia. On March 23rd, 2020, Albert \"Apple Gabriel\" co-founder and former member of the group died due to 'compilation sickness', earlier reports indicated that Albert was not well for quite some time, this was supposedly due to some of the polio infections left in his body. On a Facebook post on March 7, 2020, he had indicated that he had suffered a stroke. He died on March 23, 2020. On August 26th, 2022, Cecil \"Skelly\" Spence died of lung cancer. Wiss carries on the music with the Roots Radics, and Israel Vibration continues to keep audiences dancing worldwide.",
     "source": "Sweetwater Music Hall",
     "category": "shows",
     "verification": "community",
@@ -3329,13 +3308,13 @@
     ]
   },
   {
-    "id": "shows:sweetwater-music-hall:blues-explosion-featuring-the-dynamic-miss-faye-carol-lady-bianca-alvon-johnson-and-alabama-mike:https-sweetwatermusichall-org-event-blues-explosion-featuring-the-dynamic-miss-faye-carol-lady-bianca-alvon-johnson-and-alabama-mike-sweetwater-music-hall-mill-valley-california",
-    "title": "BLUES EXPLOSION featuring THE DYNAMIC MISS FAYE CAROL, LADY BIANCA, ALVON JOHNSON, AND ALABAMA MIKE",
-    "link": "https://sweetwatermusichall.org/event/blues-explosion-featuring-the-dynamic-miss-faye-carol-lady-bianca-alvon-johnson-and-alabama-mike/sweetwater-music-hall/mill-valley-california/",
+    "id": "shows:sweetwater-music-hall:marshall-crenshaw-with-james-mastro:https-sweetwatermusichall-org-event-marshall-crenshaw-with-james-mastro-sweetwater-music-hall-mill-valley-california",
+    "title": "Marshall Crenshaw with James Mastro",
+    "link": "https://sweetwatermusichall.org/event/marshall-crenshaw-with-james-mastro/sweetwater-music-hall/mill-valley-california/",
     "pubDate": "2025-12-02T18:00:00.000Z",
     "timestamp": 1764698400000,
-    "description": "JaZzLine INSTITUTE presents Blues Explosion, a powerhouse lineup featuring four of the finest blues artists from the Bay Area and beyond. Get ready for blues, blues, and more blues as this slammin' band and these renown…",
-    "content": "JaZzLine INSTITUTE presents Blues Explosion, a powerhouse lineup featuring four of the finest blues artists from the Bay Area and beyond. Get ready for blues, blues, and more blues as this slammin' band and these renowned artists each raise the roof and let loose in their own unique style. Supported by the California Arts Council. The Dynamic Miss Faye Carol is known as an icon in the Bay Area and beyond, highly regarded for her powerful voice, astonishing versatility, and gift of connecting with her audience. Equally at home in jazz, blues, R&B, gospel, funk, latin, and hip-hop, she has developed her own authentic sound and unique delivery, delighting audiences young and old across the globe. After beginning her career with gospel music, Faye Carol made her name singing with Oakland blues and funk legend Johnny Talbot & De Thangs before forming her own trio and gaining fame in San Francisco's jazz, blues, and cabaret clubs of the 1970s and 80s. Over a 60-year career in music, this living legend has developed her own unique acoustic sound and style in Black Music – drawing from funk, blues, gospel, and straight ahead swingin' – and cultivated an audience that remains as diverse as her uplifting music. She has maintained a high level of musicianship in her groups, mentoring some of the Bay Area's brightest young talent including pianist Benny Green, bassist/composer Marcus Shelby, and her daughter, pianist/composer Kito Kamili. Her vocal proteges include international superstars Kehlani and Ledisi. Lady Bianca is a blues, gospel, and R&B vocalist/pianist, artist, and producer with roots in Kansas City, MO. Raised by a father who taught her Texas Blues piano as a child, Bianca's formal training began at age nine with the San Francisco Conservatory of Music. Her exceptional talent garnered her a full four year scholarship and she went on to study music theory, composition, and received her operatic vocal and piano training. Bianca's first paying gig was at the age of seventeen with Quinn Harris & The Masterminds and it was Harris who bestowed the title of Lady on Bianca as she was \"so pure and conservative\". Since then, Lady Bianca has evolved into an icon in the San Francisco Bay Area and is widely known as the \"Queen of the Blues and Gospel\". With her partner, Stanley Lippitt, she has amassed a catalog of over 300 songs, and has produced, arranged and recorded 9 albums, via her own label, Magic-O Records - Home of the Mighty Oakland Sound. Alvon Johnson is one of the most versatile musicians, singers, and entertainers on the music scene today. He travels the world singing and swinging jazz standards with Big Bands. He also gallops the globe performing the songs that he performed while working with the rock and roll hall of fame group, The Coasters. When he travels to Russia he is referred to as the \"King of the Blues\" and the \"Ambassador of the Blues\". His love and respect for the American Art form is shared by large and enthusiastic audiences all over the world. Alabama Mike is a hard-driving blues singer who will remind you of the early original blues legends, whom you may have heard on the Chess, Duke, Trumpet and Galaxy Record labels, and even maybe some Elmore James, Buddy Guy, Little Junior Parker, Little Johnny Taylor, and BB King (in his early years). He can blaze up a good old blues shuffle and have you moving and grooving, then effortlessly transport you through his unique style, offering a soulful gospel tinged ballad, and his jovial style of storytelling will send you through a range of exhilarating emotions.",
+    "description": "Born in 1953 in Detroit, Michigan, Marshall Crenshaw learned to tune a guitar correctly at age ten and has been trying ever since. His first big break came in 1978 playing John Lennon in \"Beatlemania\", first as an under…",
+    "content": "Born in 1953 in Detroit, Michigan, Marshall Crenshaw learned to tune a guitar correctly at age ten and has been trying ever since. His first big break came in 1978 playing John Lennon in \"Beatlemania\", first as an understudy in New York, then in the West Coast company followed by a national touring company. Removing himself from that situation in Feb. 1980, Marshall settled in New York City. After crossing paths with the great and legendary Alan Betrock, Marshall recorded his debut single \"Something's Gonna Happen\" (for Betrock's Shake Records label), which led to a deal with Warner Bros. His debut album, Marshall Crenshaw, was acclaimed as a masterpiece upon its release in 1982 and established him as a singular songwriter, record maker, and guitarist. The album spawned the hit single \"Someday, Someway,\" and other classics such as \"(You're My) Favorite Waste of Time,\" \"Whenever You're On My Mind\" and \"Cynical Girl.\" Over the course of a career that's spanned three decades, 13 albums, Grammy and Golden Globe nominations, film and TV appearances (Buddy Holly in \"La Bamba\") and thousands of performances, Marshall Crenshaw's musical output has maintained a consistent fidelity to the qualities of artfulness, craftsmanship and passion, and his efforts have been rewarded with the devotion of a broad and remarkably loyal fan base. Along with touring around the country and the occasional recording project, Marshall currently hosts his own radio show, \"The Bottomless Pit\", every Saturday at 10 PM on New York's WFUV. Other current projects include a documentary film-in progress about legendary record producer Tom Wilson. Says Crenshaw, \"This is a road that I never imagined taking before, but it's been amazing and is going great..\" \"Although he was seen as a latter-day Buddy Holly at the outset, he soon proved too talented and original to be anyone but himself.\" – Trouser Press",
     "source": "Sweetwater Music Hall",
     "category": "shows",
     "verification": "community",
@@ -3351,13 +3330,13 @@
     ]
   },
   {
-    "id": "shows:sweetwater-music-hall:marshall-crenshaw-with-james-mastro:https-sweetwatermusichall-org-event-marshall-crenshaw-with-james-mastro-sweetwater-music-hall-mill-valley-california",
-    "title": "Marshall Crenshaw with James Mastro",
-    "link": "https://sweetwatermusichall.org/event/marshall-crenshaw-with-james-mastro/sweetwater-music-hall/mill-valley-california/",
+    "id": "shows:sweetwater-music-hall:blues-explosion-featuring-the-dynamic-miss-faye-carol-lady-bianca-alvon-johnson-and-alabama-mike:https-sweetwatermusichall-org-event-blues-explosion-featuring-the-dynamic-miss-faye-carol-lady-bianca-alvon-johnson-and-alabama-mike-sweetwater-music-hall-mill-valley-california",
+    "title": "BLUES EXPLOSION featuring THE DYNAMIC MISS FAYE CAROL, LADY BIANCA, ALVON JOHNSON, AND ALABAMA MIKE",
+    "link": "https://sweetwatermusichall.org/event/blues-explosion-featuring-the-dynamic-miss-faye-carol-lady-bianca-alvon-johnson-and-alabama-mike/sweetwater-music-hall/mill-valley-california/",
     "pubDate": "2025-12-02T18:00:00.000Z",
     "timestamp": 1764698400000,
-    "description": "Born in 1953 in Detroit, Michigan, Marshall Crenshaw learned to tune a guitar correctly at age ten and has been trying ever since. His first big break came in 1978 playing John Lennon in \"Beatlemania\", first as an under…",
-    "content": "Born in 1953 in Detroit, Michigan, Marshall Crenshaw learned to tune a guitar correctly at age ten and has been trying ever since. His first big break came in 1978 playing John Lennon in \"Beatlemania\", first as an understudy in New York, then in the West Coast company followed by a national touring company. Removing himself from that situation in Feb. 1980, Marshall settled in New York City. After crossing paths with the great and legendary Alan Betrock, Marshall recorded his debut single \"Something's Gonna Happen\" (for Betrock's Shake Records label), which led to a deal with Warner Bros. His debut album, Marshall Crenshaw, was acclaimed as a masterpiece upon its release in 1982 and established him as a singular songwriter, record maker, and guitarist. The album spawned the hit single \"Someday, Someway,\" and other classics such as \"(You're My) Favorite Waste of Time,\" \"Whenever You're On My Mind\" and \"Cynical Girl.\" Over the course of a career that's spanned three decades, 13 albums, Grammy and Golden Globe nominations, film and TV appearances (Buddy Holly in \"La Bamba\") and thousands of performances, Marshall Crenshaw's musical output has maintained a consistent fidelity to the qualities of artfulness, craftsmanship and passion, and his efforts have been rewarded with the devotion of a broad and remarkably loyal fan base. Along with touring around the country and the occasional recording project, Marshall currently hosts his own radio show, \"The Bottomless Pit\", every Saturday at 10 PM on New York's WFUV. Other current projects include a documentary film-in progress about legendary record producer Tom Wilson. Says Crenshaw, \"This is a road that I never imagined taking before, but it's been amazing and is going great..\" \"Although he was seen as a latter-day Buddy Holly at the outset, he soon proved too talented and original to be anyone but himself.\" – Trouser Press",
+    "description": "JaZzLine INSTITUTE presents Blues Explosion, a powerhouse lineup featuring four of the finest blues artists from the Bay Area and beyond. Get ready for blues, blues, and more blues as this slammin' band and these renown…",
+    "content": "JaZzLine INSTITUTE presents Blues Explosion, a powerhouse lineup featuring four of the finest blues artists from the Bay Area and beyond. Get ready for blues, blues, and more blues as this slammin' band and these renowned artists each raise the roof and let loose in their own unique style. Supported by the California Arts Council. The Dynamic Miss Faye Carol is known as an icon in the Bay Area and beyond, highly regarded for her powerful voice, astonishing versatility, and gift of connecting with her audience. Equally at home in jazz, blues, R&B, gospel, funk, latin, and hip-hop, she has developed her own authentic sound and unique delivery, delighting audiences young and old across the globe. After beginning her career with gospel music, Faye Carol made her name singing with Oakland blues and funk legend Johnny Talbot & De Thangs before forming her own trio and gaining fame in San Francisco's jazz, blues, and cabaret clubs of the 1970s and 80s. Over a 60-year career in music, this living legend has developed her own unique acoustic sound and style in Black Music – drawing from funk, blues, gospel, and straight ahead swingin' – and cultivated an audience that remains as diverse as her uplifting music. She has maintained a high level of musicianship in her groups, mentoring some of the Bay Area's brightest young talent including pianist Benny Green, bassist/composer Marcus Shelby, and her daughter, pianist/composer Kito Kamili. Her vocal proteges include international superstars Kehlani and Ledisi. Lady Bianca is a blues, gospel, and R&B vocalist/pianist, artist, and producer with roots in Kansas City, MO. Raised by a father who taught her Texas Blues piano as a child, Bianca's formal training began at age nine with the San Francisco Conservatory of Music. Her exceptional talent garnered her a full four year scholarship and she went on to study music theory, composition, and received her operatic vocal and piano training. Bianca's first paying gig was at the age of seventeen with Quinn Harris & The Masterminds and it was Harris who bestowed the title of Lady on Bianca as she was \"so pure and conservative\". Since then, Lady Bianca has evolved into an icon in the San Francisco Bay Area and is widely known as the \"Queen of the Blues and Gospel\". With her partner, Stanley Lippitt, she has amassed a catalog of over 300 songs, and has produced, arranged and recorded 9 albums, via her own label, Magic-O Records - Home of the Mighty Oakland Sound. Alvon Johnson is one of the most versatile musicians, singers, and entertainers on the music scene today. He travels the world singing and swinging jazz standards with Big Bands. He also gallops the globe performing the songs that he performed while working with the rock and roll hall of fame group, The Coasters. When he travels to Russia he is referred to as the \"King of the Blues\" and the \"Ambassador of the Blues\". His love and respect for the American Art form is shared by large and enthusiastic audiences all over the world. Alabama Mike is a hard-driving blues singer who will remind you of the early original blues legends, whom you may have heard on the Chess, Duke, Trumpet and Galaxy Record labels, and even maybe some Elmore James, Buddy Guy, Little Junior Parker, Little Johnny Taylor, and BB King (in his early years). He can blaze up a good old blues shuffle and have you moving and grooving, then effortlessly transport you through his unique style, offering a soulful gospel tinged ballad, and his jovial style of storytelling will send you through a range of exhilarating emotions.",
     "source": "Sweetwater Music Hall",
     "category": "shows",
     "verification": "community",
@@ -3395,13 +3374,13 @@
     ]
   },
   {
-    "id": "shows:sweetwater-music-hall:purple-haze-tribute-to-jimi-hendrix:https-sweetwatermusichall-org-event-purple-haze-tribute-to-jimi-hendrix-3-sweetwater-music-hall-mill-valley-california",
-    "title": "Purple Haze – Tribute to Jimi Hendrix",
-    "link": "https://sweetwatermusichall.org/event/purple-haze-tribute-to-jimi-hendrix-3/sweetwater-music-hall/mill-valley-california/",
+    "id": "shows:sweetwater-music-hall:rash-a-tribute-to-rush:https-sweetwatermusichall-org-event-rash-a-tribute-to-rush-4-sweetwater-music-hall-mill-valley-california",
+    "title": "Rash: A Tribute to Rush",
+    "link": "https://sweetwatermusichall.org/event/rash-a-tribute-to-rush-4/sweetwater-music-hall/mill-valley-california/",
     "pubDate": "2025-11-11T18:00:00.000Z",
     "timestamp": 1762884000000,
-    "description": "Ralph Woodson's Purple Haze is not your typical tribute band. He has studied his idol to the point of being able to play the guitar behind his back, and with his teeth. Ralph's a Hendrix authority, and it's obvious when…",
-    "content": "Ralph Woodson's Purple Haze is not your typical tribute band. He has studied his idol to the point of being able to play the guitar behind his back, and with his teeth. Ralph's a Hendrix authority, and it's obvious when you see him perform. The youngest of nine, he grew up in Richmond, CA, and was initially struck by the sound of the \"Band of Gypsys\" record. Ralph has toured with Hedzoli Sounds (of which Hugh Masekela was a member), as well as The Mighty Diamonds, Lady Bianca, Faye Carol, and a Bill Kreutzmann (Grateful Dead)/Sy Klopps (Herbie Herbert) collaboration called the Trichromes. With the Trichromes and later with the Sy Klopps Blues Band, Ralph played on big stages opening for Tower of Power, James Brown, ZZ Top, and Lynyrd Skynyrd, among others. He's appeared at the College of Marin and on KFOG-FM with author/Hendrix expert Steve Roby, demonstrating the sound and techniques of Jimi Hendrix. Ralph formed the Ralph Woodson Experience in 2001 (which became Purple Haze in 2010), focusing on the Hendrix material that he grew up with and always loved. Purple Haze has gained a steady following in the Bay Area and knock people out wherever they go. Ralph's showmanship and command of the Hendrix material is second to none. Pete Roberts (bass, backing vocal) enjoyed music at a very early age and began playing bass and guitar when he was twelve. Pete has logged thousands of miles on the road and has appeared at several festivals, including the Atlanta Jazz Festival. Leo Vigil (drums) dynamic and aggressive playing brings new life to the project. Leo is an in demand session drummer all over California and has played or recorded with Carlos Reyes, Steve Miller and Dave Koz among many others.",
+    "description": "Rush music the way it was meant to be heard — live and in concert.Since 2010, Rash: A Tribute to Rush has been recreating the energy, the sounds – the whole spectacle – of Rush in their prime, with greatest hits and dee…",
+    "content": "Rush music the way it was meant to be heard — live and in concert.Since 2010, Rash: A Tribute to Rush has been recreating the energy, the sounds – the whole spectacle – of Rush in their prime, with greatest hits and deep cuts for the casual listener and hardcore fans alike.",
     "source": "Sweetwater Music Hall",
     "category": "shows",
     "verification": "community",
@@ -3417,13 +3396,13 @@
     ]
   },
   {
-    "id": "shows:sweetwater-music-hall:rash-a-tribute-to-rush:https-sweetwatermusichall-org-event-rash-a-tribute-to-rush-4-sweetwater-music-hall-mill-valley-california",
-    "title": "Rash: A Tribute to Rush",
-    "link": "https://sweetwatermusichall.org/event/rash-a-tribute-to-rush-4/sweetwater-music-hall/mill-valley-california/",
+    "id": "shows:sweetwater-music-hall:purple-haze-tribute-to-jimi-hendrix:https-sweetwatermusichall-org-event-purple-haze-tribute-to-jimi-hendrix-3-sweetwater-music-hall-mill-valley-california",
+    "title": "Purple Haze – Tribute to Jimi Hendrix",
+    "link": "https://sweetwatermusichall.org/event/purple-haze-tribute-to-jimi-hendrix-3/sweetwater-music-hall/mill-valley-california/",
     "pubDate": "2025-11-11T18:00:00.000Z",
     "timestamp": 1762884000000,
-    "description": "Rush music the way it was meant to be heard — live and in concert.Since 2010, Rash: A Tribute to Rush has been recreating the energy, the sounds – the whole spectacle – of Rush in their prime, with greatest hits and dee…",
-    "content": "Rush music the way it was meant to be heard — live and in concert.Since 2010, Rash: A Tribute to Rush has been recreating the energy, the sounds – the whole spectacle – of Rush in their prime, with greatest hits and deep cuts for the casual listener and hardcore fans alike.",
+    "description": "Ralph Woodson's Purple Haze is not your typical tribute band. He has studied his idol to the point of being able to play the guitar behind his back, and with his teeth. Ralph's a Hendrix authority, and it's obvious when…",
+    "content": "Ralph Woodson's Purple Haze is not your typical tribute band. He has studied his idol to the point of being able to play the guitar behind his back, and with his teeth. Ralph's a Hendrix authority, and it's obvious when you see him perform. The youngest of nine, he grew up in Richmond, CA, and was initially struck by the sound of the \"Band of Gypsys\" record. Ralph has toured with Hedzoli Sounds (of which Hugh Masekela was a member), as well as The Mighty Diamonds, Lady Bianca, Faye Carol, and a Bill Kreutzmann (Grateful Dead)/Sy Klopps (Herbie Herbert) collaboration called the Trichromes. With the Trichromes and later with the Sy Klopps Blues Band, Ralph played on big stages opening for Tower of Power, James Brown, ZZ Top, and Lynyrd Skynyrd, among others. He's appeared at the College of Marin and on KFOG-FM with author/Hendrix expert Steve Roby, demonstrating the sound and techniques of Jimi Hendrix. Ralph formed the Ralph Woodson Experience in 2001 (which became Purple Haze in 2010), focusing on the Hendrix material that he grew up with and always loved. Purple Haze has gained a steady following in the Bay Area and knock people out wherever they go. Ralph's showmanship and command of the Hendrix material is second to none. Pete Roberts (bass, backing vocal) enjoyed music at a very early age and began playing bass and guitar when he was twelve. Pete has logged thousands of miles on the road and has appeared at several festivals, including the Atlanta Jazz Festival. Leo Vigil (drums) dynamic and aggressive playing brings new life to the project. Leo is an in demand session drummer all over California and has played or recorded with Carlos Reyes, Steve Miller and Dave Koz among many others.",
     "source": "Sweetwater Music Hall",
     "category": "shows",
     "verification": "community",

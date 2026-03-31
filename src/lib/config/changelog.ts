@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-03-31',
+		title: 'County-Wide Strava Catalog',
+		description:
+			'Completed full Marin segment discovery and enrichment: 2,225 segments total. Added a 100 ride / 100 run curated shortlist with override files, made the curated 200 the default dashboard catalog, and wired the daily leaderboard cron to track that set.'
+	},
+	{
 		date: '2026-03-29',
 		title: 'Cost of Being Marin',
 		description:
@@ -51,9 +57,9 @@ export const CHANGELOG: ChangelogEntry[] = [
 	},
 	{
 		date: '2026-03-29',
-		title: 'Cappuccino Index',
+		title: 'Marin Coffee Index',
 		description:
-			'Gas-prices-style map showing cappuccino prices at 11 Marin coffee shops. Map pins with toggle.'
+			'Gas-prices-style coffee tracker with Marin shop pins, multi-drink hover details, and cappuccino as the countywide benchmark.'
 	},
 	{
 		date: '2026-03-28',

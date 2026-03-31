@@ -1,6 +1,6 @@
 # Marin Monitor — Backlog
 
-Updated: 2026-03-01
+Updated: 2026-03-31
 
 ## Current Snapshot
 
@@ -68,6 +68,13 @@ Updated: 2026-03-01
 - [ ] Improve mobile density and readability under 768px
 - [ ] Surface per-source freshness and error states in UI
 - [ ] Add a small diagnostic/dev panel for source latency + failures
+
+### 6) Coffee Index Coverage
+
+- [ ] Keep Red Whale visible on the map/panel while price sourcing remains unresolved
+- [ ] Find a reliable current-price source or manual fallback for Red Whale Coffee in San Rafael
+- [ ] Add 1-2 more Central Marin coffee shops with public priced menus, starting with Aroma Cafe in San Rafael
+- [ ] Evaluate Fairfax / Greenbrae additions only if they expose current prices or we accept curated fallback entries
 
 ## Parked / Deferred
 
