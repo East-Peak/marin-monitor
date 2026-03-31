@@ -238,9 +238,17 @@ export type {
 
 export type {
 	CoffeeSource,
+	CoffeeDrinkId,
 	CoffeeShop,
 	CoffeeSnapshot,
-	CoffeeData
+	CoffeeData,
+	CoffeeDrinkPrice,
+	CoffeeIndexShop,
+	CoffeeDrinkSummary,
+	CoffeeDrinkSummaryMap,
+	CoffeeIndexSnapshot,
+	CoffeeIndexHistoryEntry,
+	CoffeeIndexData
 } from './coffee';
 
 export type {

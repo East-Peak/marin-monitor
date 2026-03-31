@@ -5,7 +5,7 @@
 import { writable, derived, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import {
-	PANELS,
+	DEFAULT_PANEL_ORDER,
 	NON_DRAGGABLE_PANELS,
 	PRESETS,
 	ONBOARDING_STORAGE_KEY,
@@ -46,13 +46,34 @@ export interface SettingsState extends PanelSettings {
 	initialized: boolean;
 }
 
+const knownPanelIds = new Set<PanelId>(DEFAULT_PANEL_ORDER);
+
+function normalizePanelOrder(order?: PanelId[]): PanelId[] {
+	const normalized: PanelId[] = [];
+	const seen = new Set<PanelId>();
+
+	for (const id of order ?? []) {
+		if (!knownPanelIds.has(id) || seen.has(id)) continue;
+		seen.add(id);
+		normalized.push(id);
+	}
+
+	for (const id of DEFAULT_PANEL_ORDER) {
+		if (seen.has(id)) continue;
+		normalized.push(id);
+	}
+
+	return normalized;
+}
+
 // Default settings
 function getDefaultSettings(): PanelSettings {
-	const allPanelIds = Object.keys(PANELS) as PanelId[];
-
 	return {
-		enabled: Object.fromEntries(allPanelIds.map((id) => [id, true])) as Record<PanelId, boolean>,
-		order: allPanelIds,
+		enabled: Object.fromEntries(DEFAULT_PANEL_ORDER.map((id) => [id, true])) as Record<
+			PanelId,
+			boolean
+		>,
+		order: [...DEFAULT_PANEL_ORDER],
 		sizes: {} as Record<PanelId, { width?: number; height?: number }>,
 		theme: 'dark',
 		locationId: DEFAULT_LOCATION_ID,
@@ -125,7 +146,7 @@ function createSettingsStore() {
 
 	const initialState: SettingsState = {
 		enabled: { ...defaults.enabled, ...saved.enabled },
-		order: saved.order ?? defaults.order,
+		order: normalizePanelOrder(saved.order ?? defaults.order),
 		sizes: { ...defaults.sizes, ...saved.sizes },
 		theme: saved.theme ?? defaults.theme,
 		locationId: saved.locationId ?? defaults.locationId,
@@ -198,9 +219,10 @@ function createSettingsStore() {
 		 * Update panel order (for drag-drop)
 		 */
 		updateOrder(newOrder: PanelId[]) {
+			const normalizedOrder = normalizePanelOrder(newOrder);
 			update((state) => {
-				saveToStorage('order', newOrder);
-				return { ...state, order: newOrder };
+				saveToStorage('order', normalizedOrder);
+				return { ...state, order: normalizedOrder };
 			});
 		},
 
@@ -219,8 +241,9 @@ function createSettingsStore() {
 				newOrder.splice(currentIndex, 1);
 				newOrder.splice(toIndex, 0, panelId);
 
-				saveToStorage('order', newOrder);
-				return { ...state, order: newOrder };
+				const normalizedOrder = normalizePanelOrder(newOrder);
+				saveToStorage('order', normalizedOrder);
+				return { ...state, order: normalizedOrder };
 			});
 		},
 
@@ -392,14 +415,15 @@ function createSettingsStore() {
 			}
 
 			// Build panel settings - disable all panels first, then enable preset panels
-			const allPanelIds = Object.keys(PANELS) as PanelId[];
 			const newEnabled = Object.fromEntries(
-				allPanelIds.map((id) => [id, preset.panels.includes(id)])
+				DEFAULT_PANEL_ORDER.map((id) => [id, preset.panels.includes(id)])
 			) as Record<PanelId, boolean>;
 
 			update((state) => {
+				const normalizedOrder = normalizePanelOrder(state.order);
 				saveToStorage('panels', newEnabled);
-				return { ...state, enabled: newEnabled };
+				saveToStorage('order', normalizedOrder);
+				return { ...state, enabled: newEnabled, order: normalizedOrder };
 			});
 
 			// Mark onboarding complete and save preset

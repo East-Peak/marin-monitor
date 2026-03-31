@@ -133,9 +133,9 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 		description: 'SFO and OAK delays, conditions, and TSA wait times'
 	},
 	cappuccino: {
-		name: 'Cappuccino Index',
+		name: 'Marin Coffee Index',
 		priority: 3,
-		description: 'Cappuccino prices at coffee shops across Marin'
+		description: 'Coffee prices across Marin, with cappuccino as the headline benchmark'
 	},
 	'grocery-basket': {
 		name: 'The Bare Essentials',
@@ -174,7 +174,7 @@ export const NON_DRAGGABLE_PANELS: PanelId[] = ['map'];
 /**
  * Default panel display order
  */
-export const DEFAULT_PANEL_ORDER: PanelId[] = [
+const CURATED_PANEL_ORDER: PanelId[] = [
 	'map',
 	'composite',
 	'pulse',
@@ -205,4 +205,12 @@ export const DEFAULT_PANEL_ORDER: PanelId[] = [
 	'correlation',
 	'narrative',
 	'satire'
+];
+
+const registeredPanelIds = Object.keys(PANELS) as PanelId[];
+const registeredPanelSet = new Set<PanelId>(registeredPanelIds);
+
+export const DEFAULT_PANEL_ORDER: PanelId[] = [
+	...CURATED_PANEL_ORDER.filter((id) => registeredPanelSet.has(id)),
+	...registeredPanelIds.filter((id) => !CURATED_PANEL_ORDER.includes(id))
 ];

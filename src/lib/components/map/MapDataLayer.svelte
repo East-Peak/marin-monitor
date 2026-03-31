@@ -7,7 +7,7 @@
 	import { townFilter } from '$lib/stores/town-filter';
 	import { TOWN_BY_SLUG } from '$lib/config/towns';
 	import { currentGasStations } from '$lib/stores/gas-prices';
-	import { currentCoffeeShops } from '$lib/stores/cappuccino';
+	import { currentCoffeeShops } from '$lib/stores/coffee';
 	import { currentFitnessStudios } from '$lib/stores/fitness';
 	import { currentChargingStations } from '$lib/stores/ev-charging';
 	import { MARIN_TOWNS, LAYER_COLORS, MARIN_BOUNDS } from '$lib/config';
@@ -17,6 +17,12 @@
 	import type { AirportStatus } from '$lib/types/airport';
 	import { MAPBOX_TOKEN } from '$lib/config/api';
 	import { findNearestTown } from '$lib/geo/proximity';
+	import {
+		formatCoffeeMenuSummary,
+		formatCoffeePrice,
+		getCoffeeHeadlinePrice,
+		getCoffeeStatusLabel
+	} from '$lib/utils/coffee-index';
 	import type { NewsItem, MapFeatureInspectorData, MapLayer } from '$lib/types';
 
 	let boundaryData: GeoJSON.FeatureCollection | null = null;
@@ -1001,7 +1007,12 @@
 			source: 'coffee-shops',
 			minzoom: 12,
 			layout: {
-				'text-field': ['concat', ['get', 'name'], '\n', ['get', 'price']],
+				'text-field': [
+					'case',
+					['==', ['get', 'hasPrice'], 1],
+					['concat', ['get', 'name'], '\n', ['get', 'price']],
+					['concat', ['get', 'name'], '\n', ['get', 'statusLabel']]
+				],
 				'text-size': 9,
 				'text-offset': [0, 1.4],
 				'text-anchor': 'top',
@@ -1266,13 +1277,21 @@
 				const feature = e.features?.[0];
 				const name = String(feature?.properties?.name ?? 'Coffee Shop');
 				const price = String(feature?.properties?.price ?? '');
+				const headlineLabel = String(feature?.properties?.headlineLabel ?? '');
 				const address = String(feature?.properties?.address ?? '');
+				const menuSummary = String(feature?.properties?.menuSummary ?? '');
+				const statusLabel = String(feature?.properties?.statusLabel ?? 'Tracking soon');
 				onFeatureClick?.({
 					kind: 'coffee-shop',
 					title: name,
-					subtitle: price ? `Cappuccino: ${price}` : 'Price unavailable',
-					description: address,
-					source: 'Marin Monitor'
+					subtitle:
+						price && headlineLabel
+							? `${headlineLabel}: ${price}`
+							: price
+								? price
+								: statusLabel,
+					description: [address, menuSummary].filter(Boolean).join('\n'),
+					source: 'Marin Coffee Index'
 				});
 			});
 
@@ -1649,28 +1668,37 @@
 		// Coffee shops
 		const coffeeShops = get(currentCoffeeShops);
 		const mapCoffeeVisible = mapState.activeLayers['coffee'];
-		const coffeeFeatures: GeoJSON.Feature[] = mapCoffeeVisible
-			? coffeeShops
-					.filter(
-						(s) =>
-							!currentTownFilter || findNearestTown(s.lat, s.lon) === currentTownFilter
-					)
-					.filter((s) => s.price !== null)
-					.map((s) => ({
-						type: 'Feature' as const,
-						id: s.id,
-						geometry: {
-							type: 'Point' as const,
-							coordinates: [s.lon, s.lat]
-						},
-						properties: {
-							name: s.name,
-							price: `$${s.price!.toFixed(2)}`,
-							address: s.address,
-							town: s.town
-						}
-					}))
-			: [];
+		const coffeeFeatures: GeoJSON.Feature[] = [];
+		if (mapCoffeeVisible) {
+			for (const shop of coffeeShops) {
+				if (currentTownFilter && findNearestTown(shop.lat, shop.lon) !== currentTownFilter) {
+					continue;
+				}
+
+				const headline = getCoffeeHeadlinePrice(shop);
+				const menuSummary = formatCoffeeMenuSummary(shop);
+				const statusLabel = getCoffeeStatusLabel(shop);
+
+				coffeeFeatures.push({
+					type: 'Feature',
+					id: shop.id,
+					geometry: {
+						type: 'Point',
+						coordinates: [shop.lon, shop.lat]
+					},
+					properties: {
+						name: shop.name,
+						price: headline ? formatCoffeePrice(headline.price) : '',
+						headlineLabel: headline?.label ?? '',
+						address: shop.address,
+						town: shop.town,
+						menuSummary: menuSummary || statusLabel,
+						statusLabel,
+						hasPrice: headline ? 1 : 0
+					}
+				});
+			}
+		}
 
 		const coffeeSource = map.getSource('coffee-shops') as GeoJSONSource;
 		if (coffeeSource) {

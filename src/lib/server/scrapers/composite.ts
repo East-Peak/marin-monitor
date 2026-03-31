@@ -10,7 +10,7 @@
 
 import { TIER_CONFIGS, STATIC_MARIN_NUMBER_ITEMS, DYNAMIC_DEFAULTS } from '$lib/config/composite';
 import { withSuccessfulScrapeMetadata } from '$lib/server/scrape-metadata';
-import type { CoffeeData } from '$lib/types/coffee';
+import type { CoffeeData, CoffeeIndexData } from '$lib/types/coffee';
 import type { GroceryBasketData } from '$lib/types/grocery';
 import type { WineIndexData, WineCategory } from '$lib/types/wine';
 import type { FitnessData } from '$lib/types/fitness';
@@ -66,7 +66,7 @@ export interface RivianLeaseData {
 /** Input data from all index blobs */
 export interface CompositeInputs {
 	grocery: GroceryBasketData | null;
-	cappuccino: CoffeeData | null;
+	cappuccino: CoffeeData | CoffeeIndexData | null;
 	wine: WineIndexData | null;
 	fitness: FitnessData | null;
 	school: SchoolIndexData | null;
@@ -89,11 +89,17 @@ export function getGroceryMonthly(data: GroceryBasketData | null): number | null
 }
 
 /**
- * Extract monthly coffee cost from cappuccino data.
- * Median cappuccino price × 22 workdays.
+ * Extract monthly coffee cost from coffee index data.
+ * Uses the active primary drink median × 22 workdays.
  */
-export function getCoffeeMonthly(data: CoffeeData | null): number | null {
-	const median = data?.current?.medianPrice ?? null;
+export function getCoffeeMonthly(data: CoffeeData | CoffeeIndexData | null): number | null {
+	const current = data?.current ?? null;
+	if (!current) return null;
+
+	const median =
+		'primaryDrinkSummary' in current
+			? current.primaryDrinkSummary.medianPrice
+			: current.medianPrice;
 	if (median === null) return null;
 	return Math.round(median * 22);
 }
@@ -299,10 +305,10 @@ export function buildCompositeSnapshot(inputs: CompositeInputs): CompositeSnapsh
 			sourceIndex: 'grocery-basket'
 		},
 		{
-			label: 'Coffee (daily cappuccino x 22)',
+			label: 'Coffee (daily primary coffee x 22)',
 			monthly: coffeeMonthly,
 			source: getCoffeeMonthly(inputs.cappuccino) !== null ? 'live' : 'static',
-			sourceIndex: 'cappuccino'
+			sourceIndex: 'coffee'
 		},
 		{
 			label: 'Wine (2 bottles Napa Cab)',

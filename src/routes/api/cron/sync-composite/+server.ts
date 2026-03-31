@@ -11,13 +11,13 @@ import {
 	type RivianLeaseData
 } from '$lib/server/scrapers/composite';
 import { COMPOSITE_BLOB_KEY, MAX_COMPOSITE_HISTORY } from '$lib/config/composite';
-import { CAPPUCCINO_BLOB_KEY } from '$lib/config/coffee';
+import { CAPPUCCINO_BLOB_KEY, COFFEE_INDEX_BLOB_KEY } from '$lib/config/coffee';
 import { WINE_INDEX_BLOB_KEY } from '$lib/config/wine';
 import { FITNESS_BLOB_KEY } from '$lib/config/fitness';
 import { SCHOOL_TUITION_BLOB_KEY } from '$lib/config/schools';
 import type { RequestHandler } from './$types';
 import type { CompositeData, CompositeSnapshot } from '$lib/types/composite';
-import type { CoffeeData } from '$lib/types/coffee';
+import type { CoffeeData, CoffeeIndexData } from '$lib/types/coffee';
 import type { GroceryBasketData } from '$lib/types/grocery';
 import type { WineIndexData } from '$lib/types/wine';
 import type { FitnessData } from '$lib/types/fitness';
@@ -78,7 +78,8 @@ export const GET: RequestHandler = async ({ request }) => {
 		// Read all index blobs in parallel
 		const [
 			grocery,
-			cappuccino,
+			coffee,
+			legacyCappuccino,
 			wine,
 			fitness,
 			school,
@@ -90,6 +91,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			rivianLease
 		] = await Promise.all([
 			readBlob<GroceryBasketData>(GROCERY_BLOB_KEY),
+			readBlob<CoffeeIndexData>(COFFEE_INDEX_BLOB_KEY),
 			readBlob<CoffeeData>(CAPPUCCINO_BLOB_KEY),
 			readBlob<WineIndexData>(WINE_INDEX_BLOB_KEY),
 			readBlob<FitnessData>(FITNESS_BLOB_KEY),
@@ -104,7 +106,7 @@ export const GET: RequestHandler = async ({ request }) => {
 
 		const inputs: CompositeInputs = {
 			grocery,
-			cappuccino,
+			cappuccino: coffee ?? legacyCappuccino,
 			wine,
 			fitness,
 			school,

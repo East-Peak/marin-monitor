@@ -46,8 +46,8 @@ const DATA_SOURCES: DataSourceConfig[] = [
 	},
 	{ name: 'Housing', blobKey: 'marin-housing.json', expectedCadence: 'monthly', maxAgeDays: 45 },
 	{
-		name: 'Cappuccino Index',
-		blobKey: 'marin-cappuccino.json',
+		name: 'Marin Coffee Index',
+		blobKey: 'marin-coffee-index.json',
 		expectedCadence: 'weekly',
 		maxAgeDays: 10,
 		freshnessMode: 'content'

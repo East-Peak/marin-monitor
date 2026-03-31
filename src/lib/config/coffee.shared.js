@@ -66,6 +66,28 @@ export const COFFEE_SHOPS_DATA = [
 		hasCappuccino: true
 	},
 	{
+		id: 'longway-san-anselmo',
+		name: 'LONGWAY Coffee Shop',
+		address: '641 San Anselmo Ave, San Anselmo',
+		town: 'San Anselmo',
+		lat: 37.9777,
+		lon: -122.5689,
+		source: 'toast',
+		url: 'https://order.toasttab.com/online/longway-coffee-shop',
+		hasCappuccino: true
+	},
+	{
+		id: 'good-earth-fairfax',
+		name: 'Good Earth Cafe',
+		address: '720 Center Blvd, Fairfax',
+		town: 'Fairfax',
+		lat: 37.9863,
+		lon: -122.5832,
+		source: 'toast',
+		url: 'https://order.toasttab.com/online/good-earth-natural-foods-fairfax',
+		hasCappuccino: true
+	},
+	{
 		id: 'mcr-ignacio',
 		name: 'Marin Coffee Roasters',
 		address: '466 Ignacio Blvd, Novato',
@@ -95,7 +117,18 @@ export const COFFEE_SHOPS_DATA = [
 		lat: 37.8584,
 		lon: -122.4848,
 		source: 'html',
-		url: 'https://www.firehousecoffeeandtea.com/menu',
+		url: 'https://www.firehousecoffeetea.com/menu',
+		hasCappuccino: true
+	},
+	{
+		id: 'aroma-san-rafael',
+		name: 'Aroma Cafe',
+		address: '1122 4th St, San Rafael',
+		town: 'San Rafael',
+		lat: 37.9733,
+		lon: -122.5288,
+		source: 'html',
+		url: 'https://www.aromacafesanrafael.com/menu',
 		hasCappuccino: true
 	},
 	{
@@ -105,9 +138,11 @@ export const COFFEE_SHOPS_DATA = [
 		town: 'San Rafael',
 		lat: 37.9723,
 		lon: -122.5213,
-		source: 'delivery',
-		url: 'https://www.doordash.com/store/fox-kit-san-rafael-27819798/',
-		hasCappuccino: true
+		source: 'html',
+		url: 'https://www.foxandkit.com/menu',
+		hasCappuccino: true,
+		supportsLivePriceScrape: false,
+		fallbackReason: 'Official menu lists drinks but does not publish current prices.'
 	},
 	{
 		id: 'philz-corte-madera',
@@ -117,9 +152,11 @@ export const COFFEE_SHOPS_DATA = [
 		lat: 37.9261,
 		lon: -122.5174,
 		source: 'html',
-		url: 'https://philzcoffee.order.online/',
+		url: 'https://philzcoffee.com/menu/corte-madera/coffee',
 		hasCappuccino: false,
-		altDrink: 'Pour-Over (Tesora)'
+		altDrink: 'Pour-Over (Tesora)',
+		supportsLivePriceScrape: false,
+		fallbackReason: 'Official location menu shows drinks and blends but no drink prices.'
 	},
 	{
 		id: 'red-whale-san-rafael',
@@ -130,12 +167,82 @@ export const COFFEE_SHOPS_DATA = [
 		lon: -122.5369,
 		source: 'html',
 		url: 'https://www.redwhalecoffee.com/',
-		hasCappuccino: true
+		hasCappuccino: true,
+		supportsLivePriceScrape: false,
+		fallbackReason: 'Official site highlights the roastery but does not publish current cafe drink prices.'
 	}
 ];
 
 export const CAPPUCCINO_USER_AGENT =
 	'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+
+export const COFFEE_INDEX_NAME_DATA = 'Marin Coffee Index';
+export const COFFEE_PRIMARY_DRINK_ID = 'cappuccino';
+
+export const COFFEE_INDEX_DRINKS_DATA = [
+	{
+		id: 'cappuccino',
+		label: 'Cappuccino',
+		aliases: ['cappuccino'],
+		excludeTerms: ['iced']
+	},
+	{
+		id: 'latte',
+		label: 'Latte',
+		aliases: ['latte', 'caffe latte'],
+		excludeTerms: ['iced', 'vanilla', 'mocha', 'matcha', 'chai', 'pumpkin', 'seasonal']
+	},
+	{
+		id: 'flat_white',
+		label: 'Flat White',
+		aliases: ['flat white'],
+		excludeTerms: ['iced']
+	},
+	{
+		id: 'house_coffee',
+		label: 'Coffee',
+		aliases: [
+			'coffee',
+			'drip coffee',
+			'brewed coffee',
+			'house coffee',
+			'coffee of the day',
+			'batch brew',
+			'filter coffee',
+			'brew of the day',
+			'daily drip'
+		],
+		excludeTerms: [
+			'cold brew',
+			'nitro',
+			'pour over',
+			'pour-over',
+			'espresso',
+			'americano',
+			'latte',
+			'cappuccino',
+			'chai',
+			'matcha',
+			'tea',
+			'cake',
+			'bean',
+			'bag',
+			'pack',
+			'mug',
+			'filters',
+			'dripper',
+			'brewer',
+			'instant',
+			'protein'
+		]
+	},
+	{
+		id: 'pour_over',
+		label: 'Pour-Over',
+		aliases: ['pour over', 'pour-over', 'pour over coffee'],
+		excludeTerms: ['iced']
+	}
+];
 
 /**
  * Minimum share of live Toast shops that must return a fresh price before the
@@ -143,8 +250,20 @@ export const CAPPUCCINO_USER_AGENT =
  */
 export const CAPPUCCINO_MIN_FRESH_LIVE_RATIO = 0.5;
 
+/**
+ * Minimum share of shops that must return at least one live menu price before
+ * the new generic coffee blob advances its freshness timestamp.
+ */
+export const COFFEE_INDEX_MIN_FRESH_LIVE_MENU_RATIO = 0.5;
+
 export const CAPPUCCINO_HARDCODED_PRICES = {
 	'firehouse-sausalito': { price: 5.5, source: 'hardcoded' },
 	'fox-kit-san-rafael': { price: 5.5, source: 'hardcoded' },
 	'philz-corte-madera': { price: null, altPrice: 5.75, source: 'hardcoded' }
+};
+
+export const COFFEE_INDEX_FALLBACK_PRICES = {
+	'firehouse-sausalito': { cappuccino: 5.5 },
+	'fox-kit-san-rafael': { cappuccino: 5.5 },
+	'philz-corte-madera': { pour_over: 5.75 }
 };

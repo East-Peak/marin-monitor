@@ -2,7 +2,7 @@
  * Onboarding presets for first-time users
  */
 
-import type { PanelId } from './panels';
+import { DEFAULT_PANEL_ORDER, type PanelId } from './panels';
 
 export interface Preset {
 	id: string;
@@ -66,30 +66,7 @@ export const PRESETS: Record<string, Preset> = {
 		name: 'Everything',
 		icon: '*',
 		description: 'All panels enabled — the full Marin experience',
-		panels: [
-			'map',
-			'pulse',
-			'local-wire',
-			'safety',
-			'weather',
-			'cameras',
-			'conditions',
-			'airport-status',
-			'wastewater',
-			'civic',
-			'outdoors',
-			'housing',
-			'gas-prices',
-			'ev-charging',
-			'cycling',
-			'shows',
-			'prep',
-			'farm',
-			'monitors',
-			'correlation',
-			'narrative',
-			'satire'
-		]
+		panels: DEFAULT_PANEL_ORDER
 	}
 };
 

@@ -15,9 +15,11 @@
 		"lint": "eslint . && prettier --check .",
 		"format": "prettier --write .",
 		"strava:explore": "node scripts/strava-explore.mjs",
+		"strava:curate": "node scripts/strava-curate.mjs",
 		"traffic:evaluate": "node scripts/evaluate-traffic-sources.mjs",
 		"sync:police": "node scripts/extract-police-logs.mjs",
 		"sync:activity": "node scripts/extract-activity-feeds.mjs",
+		"sync:coffee-index": "node scripts/sync-coffee-index.mjs",
 		"sync:install": "bash scripts/manage-sync.sh install",
 		"sync:uninstall": "bash scripts/manage-sync.sh uninstall",
 		"sync:status": "bash scripts/manage-sync.sh status"

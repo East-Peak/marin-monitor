@@ -138,6 +138,7 @@
 		color: var(--text-muted);
 		font-size: 0.6rem;
 		line-height: 1.35;
+		white-space: pre-line;
 	}
 
 	.feature-source {

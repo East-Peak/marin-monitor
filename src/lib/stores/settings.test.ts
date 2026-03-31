@@ -41,15 +41,18 @@ describe('Settings Store', () => {
 	});
 
 	it('should have default state with all panels enabled', async () => {
-		const { settings } = await import('./settings');
+		const [{ settings }, { PANELS, DEFAULT_PANEL_ORDER }] = await Promise.all([
+			import('./settings'),
+			import('../config')
+		]);
 
 		const state = get(settings);
 		expect(state.initialized).toBe(false);
+		expect(state.order).toEqual(DEFAULT_PANEL_ORDER);
 
-		// Check that common panels are enabled by default
-		expect(state.enabled['map']).toBe(true);
-		expect(state.enabled['local-wire']).toBe(true);
-		expect(state.enabled['safety']).toBe(true);
+		for (const panelId of Object.keys(PANELS) as Array<keyof typeof PANELS>) {
+			expect(state.enabled[panelId]).toBe(true);
+		}
 	});
 
 	it('should toggle panel visibility', async () => {
@@ -124,7 +127,10 @@ describe('Settings Store', () => {
 	});
 
 	it('should reset to defaults', async () => {
-		const { settings } = await import('./settings');
+		const [{ settings }, { DEFAULT_PANEL_ORDER }] = await Promise.all([
+			import('./settings'),
+			import('../config')
+		]);
 
 		// Make some changes
 		settings.togglePanel('outdoors');
@@ -136,6 +142,34 @@ describe('Settings Store', () => {
 		const state = get(settings);
 		expect(state.enabled['outdoors']).toBe(true);
 		expect(state.sizes['map']).toBeUndefined();
+		expect(state.order).toEqual(DEFAULT_PANEL_ORDER);
+	});
+
+	it('should enable every registered panel for the everything preset', async () => {
+		const [{ settings }, { PANELS, PRESETS, DEFAULT_PANEL_ORDER }] = await Promise.all([
+			import('./settings'),
+			import('../config')
+		]);
+
+		expect(PRESETS.everything.panels).toEqual(DEFAULT_PANEL_ORDER);
+
+		settings.applyPreset('everything');
+
+		const state = get(settings);
+		expect(state.order).toEqual(DEFAULT_PANEL_ORDER);
+
+		for (const panelId of Object.keys(PANELS) as Array<keyof typeof PANELS>) {
+			expect(state.enabled[panelId]).toBe(true);
+		}
+	});
+
+	it('should restore missing panels into saved order', async () => {
+		const { DEFAULT_PANEL_ORDER } = await import('../config');
+		localStorage.setItem('mm_panelOrder', JSON.stringify(DEFAULT_PANEL_ORDER.slice(0, 4)));
+
+		const { settings } = await import('./settings');
+
+		expect(get(settings).order).toEqual(DEFAULT_PANEL_ORDER);
 	});
 
 	it('should derive enabled panels correctly', async () => {
