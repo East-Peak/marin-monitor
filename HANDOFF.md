@@ -1,6 +1,6 @@
 # Marin Monitor - Handoff
 
-Updated: 2026-03-01
+Updated: 2026-03-31
 Workspace: `/Users/tammypais/projects/marin-monitor`
 
 ## What This Project Is
@@ -220,6 +220,15 @@ Two NWS data paths:
 
 Sources: B-17/Webscorer, Marinduro, Dipsea, Quad Dipsea, Miwok 100K, Marin Ultra Challenge
 
+Strava status:
+
+- county-wide Marin discovery/enrichment is complete: 2,225 segments discovered and enriched
+- curated monitoring set is now 100 ride + 100 run segments
+- `src/lib/config/strava-curated.generated.ts` is the generated source of truth for the curated 200
+- dashboard Strava views now use that curated order/count by default
+- daily Vercel cron `/api/cron/sync-strava-leaderboards` is intended to scrape the curated 200
+- `data/strava-curation.overrides.json` is the manual review hook for future force-include / force-exclude changes
+
 ### Shows & Events
 
 Sources: Sweetwater, Rancho Nicasio, Mac's, Dance Palace, JCC, Tourist Club, Peri's, Smiley's, KWMR, Seahorse, Symphony, HopMonk, The Junction, libraries, Elks
@@ -254,7 +263,7 @@ Worth building later:
 
 Explicitly deprioritized / parked:
 
-- broad Strava KOM tracking as a near-term backbone
+- expanding beyond the curated Strava 200 before reviewing the monitored set
 - Magicseaweed / Surfline API strategy
 
 ## Current Open Issues
