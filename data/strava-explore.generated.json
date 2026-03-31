@@ -1,0 +1,2182 @@
+{
+  "generatedAt": "2026-03-28T21:29:36.717Z",
+  "source": "strava-explore",
+  "options": {
+    "maxDepth": 3,
+    "minRequestGapMs": 10000,
+    "tileLimit": 12,
+    "segmentLimit": 40
+  },
+  "summary": {
+    "discoveredIds": 78,
+    "exploredTiles": 12,
+    "enrichedSegments": 40,
+    "qualifiedRideSegments": 33,
+    "qualifiedRunSegments": 0
+  },
+  "recommendedFeatured": {
+    "ride": [
+      {
+        "id": 99243,
+        "name": "Hawk Hill Saddle",
+        "startLatlng": [
+          37.833172,
+          -122.483441
+        ],
+        "qualityScore": 92967
+      },
+      {
+        "id": 2451142,
+        "name": "Camino Alto (Mill Valley side)",
+        "startLatlng": [
+          37.9021295,
+          -122.5279554
+        ],
+        "qualityScore": 66086
+      },
+      {
+        "id": 2371095,
+        "name": "McCullough Rd. (Headlands)",
+        "startLatlng": [
+          37.836073,
+          -122.5023015
+        ],
+        "qualityScore": 44947
+      },
+      {
+        "id": 4119312,
+        "name": "Meadow Club to Pine Mt. Climb",
+        "startLatlng": [
+          37.97259,
+          -122.620689
+        ],
+        "qualityScore": 37780
+      },
+      {
+        "id": 611363,
+        "name": "Sister 5 and 6",
+        "startLatlng": [
+          37.9256978,
+          -122.6409332
+        ],
+        "qualityScore": 34818
+      },
+      {
+        "id": 627467,
+        "name": "White's Hill (SV Official)",
+        "startLatlng": [
+          38.002496,
+          -122.612511
+        ],
+        "qualityScore": 34806
+      },
+      {
+        "id": 39470008,
+        "name": "White's Hill (Eastbound)",
+        "startLatlng": [
+          38.012601,
+          -122.630041
+        ],
+        "qualityScore": 34329
+      },
+      {
+        "id": 637196,
+        "name": "Pine Mtn. Pass",
+        "startLatlng": [
+          37.9823178704828,
+          -122.592867538333
+        ],
+        "qualityScore": 33419
+      },
+      {
+        "id": 563888,
+        "name": "Alpine Dam to Ridgecrest Climb",
+        "startLatlng": [
+          37.936706,
+          -122.638077
+        ],
+        "qualityScore": 32121
+      },
+      {
+        "id": 862949,
+        "name": "Whites Hill ",
+        "startLatlng": [
+          38.01467528566718,
+          -122.65613112598658
+        ],
+        "qualityScore": 29959
+      },
+      {
+        "id": 24522292,
+        "name": "Final hairpins",
+        "startLatlng": [
+          37.939817,
+          -122.655441
+        ],
+        "qualityScore": 29282
+      },
+      {
+        "id": 1173191,
+        "name": "Four Corners Climb",
+        "startLatlng": [
+          37.90677270758782,
+          -122.5567734132422
+        ],
+        "qualityScore": 27446
+      },
+      {
+        "id": 4793848,
+        "name": "Hwy 1 climb from Muir Beach ",
+        "startLatlng": [
+          37.863399,
+          -122.573366
+        ],
+        "qualityScore": 21897
+      },
+      {
+        "id": 154,
+        "name": "Olema Hill (Olema side)",
+        "startLatlng": [
+          38.0405759,
+          -122.7876307
+        ],
+        "qualityScore": 21172
+      },
+      {
+        "id": 157,
+        "name": "Stinson Climb 1, south ",
+        "startLatlng": [
+          37.8960039,
+          -122.63654
+        ],
+        "qualityScore": 17908
+      },
+      {
+        "id": 6588105,
+        "name": "Julian Dirt Descent - Just The Fun Part",
+        "startLatlng": [
+          37.833854,
+          -122.494789
+        ],
+        "qualityScore": 17152
+      },
+      {
+        "id": 626742,
+        "name": "NVR to Big Rock",
+        "startLatlng": [
+          38.0546459835023,
+          -122.693142006174
+        ],
+        "qualityScore": 16132
+      },
+      {
+        "id": 1154584,
+        "name": "Bottom of Big Rock Hill to Summit",
+        "startLatlng": [
+          38.04250395856798,
+          -122.60964458808303
+        ],
+        "qualityScore": 16100
+      },
+      {
+        "id": 1707949,
+        "name": "BoFax Climb",
+        "startLatlng": [
+          37.9354751827195,
+          -122.694386889227
+        ],
+        "qualityScore": 15981
+      },
+      {
+        "id": 1723,
+        "name": "Old Railroad Grade to West Point Inn",
+        "startLatlng": [
+          37.9194502,
+          -122.5539031
+        ],
+        "qualityScore": 15867
+      },
+      {
+        "id": 626859,
+        "name": "Stinson to Pantoll (Climb up Panoramic Hwy)",
+        "startLatlng": [
+          37.8964527242726,
+          -122.63622728638
+        ],
+        "qualityScore": 15279
+      },
+      {
+        "id": 118,
+        "name": "Marincello Trail",
+        "startLatlng": [
+          37.8612248,
+          -122.5346008
+        ],
+        "qualityScore": 15184
+      },
+      {
+        "id": 735,
+        "name": "Dogtown Climb",
+        "startLatlng": [
+          37.954157,
+          -122.7139506
+        ],
+        "qualityScore": 14358
+      },
+      {
+        "id": 621620,
+        "name": "Bobcat Trail",
+        "startLatlng": [
+          37.8356394264847,
+          -122.517698463053
+        ],
+        "qualityScore": 13890
+      },
+      {
+        "id": 634332,
+        "name": "Middle Eldridge",
+        "startLatlng": [
+          37.9450517892838,
+          -122.580827012658
+        ],
+        "qualityScore": 11756
+      }
+    ],
+    "run": []
+  },
+  "segments": [
+    {
+      "id": 99243,
+      "name": "Hawk Hill Saddle",
+      "activityType": "ride",
+      "polyline": "ih|eFppqjVvAQr@Nx@\\lBdAj@Pj@Nn@Fn@Bt@?^Qr@qA^i@`@M^\\FXB~B?rCRr@hArA^r@@^Qj@g@x@c@h@a@FgA?mDDw@P_An@gBv@{@n@c@r@wArA_@n@Ip@Hf@^bALh@Cx@Yn@Mv@Lh@r@p@Xr@El@MZm@l@_Ad@g@ZWn@m@fF",
+      "startLatlng": [
+        37.833172,
+        -122.483441
+      ],
+      "endLatlng": [
+        37.833634,
+        -122.49357
+      ],
+      "distance": 1768.83,
+      "elevationGain": 87.4,
+      "avgGrade": 4.9,
+      "climbCategory": 1,
+      "totalAttempts": 1134537,
+      "totalAthletes": 78507,
+      "discoveryHits": 2,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.83,
+            -122.75,
+            37.94,
+            -122.48
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.83,
+            -122.61500000000001,
+            37.885,
+            -122.48
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 92967
+    },
+    {
+      "id": 2451142,
+      "name": "Camino Alto (Mill Valley side)",
+      "activityType": "ride",
+      "polyline": "iwifFvfzjVaAYq@e@{@eAc@a@s@Y[IiAOm@Di@\\c@l@g@ZgCFSBu@f@]~@a@j@o@Fc@Vm@r@k@h@g@HSWGo@Sm@a@e@y@Wg@J}@f@y@XkHJm@WQm@AsASg@g@Me@R_AhASJQJi@@WKEu@UmAa@]m@GaB@m@_@c@eAq@s@m@_@y@Gg@ViAvA{@^_@@s@SOOwCiDc@a@w@S",
+      "startLatlng": [
+        37.9021295,
+        -122.5279554
+      ],
+      "endLatlng": [
+        37.9166871,
+        -122.525552
+      ],
+      "distance": 1982.32,
+      "elevationGain": 0,
+      "avgGrade": 4.7,
+      "climbCategory": 1,
+      "totalAttempts": 777547,
+      "totalAthletes": 56962,
+      "discoveryHits": 2,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.83,
+            -122.75,
+            37.94,
+            -122.48
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.885,
+            -122.61500000000001,
+            37.94,
+            -122.48
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 66086
+    },
+    {
+      "id": 2371095,
+      "name": "McCullough Rd. (Headlands)",
+      "activityType": "ride",
+      "polyline": "mz|eFlfujV|@iB`@cANs@H{DAMOs@Uc@e@]u@Uc@[Kk@Dk@l@aB\\eAl@_BHi@C[S_@]Mq@Fy@Nw@D]SO[Km@Uu@c@_@i@Y[a@Ai@Pa@JE^AXTv@xAj@b@f@Jh@C`@Of@a@hByCjBcBl@q@n@a@z@Qr@U",
+      "startLatlng": [
+        37.836073,
+        -122.5023015
+      ],
+      "endLatlng": [
+        37.8338899,
+        -122.4941542
+      ],
+      "distance": 1368.94,
+      "elevationGain": 116.8,
+      "avgGrade": 8.5,
+      "climbCategory": 1,
+      "totalAttempts": 492932,
+      "totalAthletes": 40145,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.83,
+            -122.61500000000001,
+            37.885,
+            -122.48
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 44947
+    },
+    {
+      "id": 4119312,
+      "name": "Meadow Club to Pine Mt. Climb",
+      "activityType": "ride",
+      "polyline": "sowfFhjlkVz@jAb@Zr@XVVPn@@r@OtAg@fC]^]RSHaAx@]R]^En@Nd@NX\\`ADL@XC`AG\\Wh@_@n@a@hAFl@ZV^CXUXg@H]JSXYp@[LMb@y@`@SF?HB`@Tr@d@NPVj@Fj@Nl@\\l@PPLDPGNMN_@Ho@NUf@?FEFMNg@MqAJ]JKLIZ@ZHDDLV\\L\\Cr@SL?TBPLRZPNLHXHP@d@CVQl@iBFMd@i@XKbAIXBVRZFPAn@SN?`@Dj@VNB`@C^GH?^DhDp@",
+      "startLatlng": [
+        37.97259,
+        -122.620689
+      ],
+      "endLatlng": [
+        37.964016,
+        -122.625187
+      ],
+      "distance": 1958.6,
+      "elevationGain": 105.4,
+      "avgGrade": 5.4,
+      "climbCategory": 1,
+      "totalAttempts": 299269,
+      "totalAthletes": 38328,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.88,
+            -122.8,
+            37.98,
+            -122.62
+          ],
+          "depth": 0
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 37780
+    },
+    {
+      "id": 611363,
+      "name": "Sister 5 and 6",
+      "activityType": "ride",
+      "polyline": "qjnfFzhpkVx@YfBu@b@ORMVWL[e@aAY]Sm@Fo@Zy@LSn@u@f@e@f@o@dAsBNYVw@No@PmA\\oA^cAb@qBP_@tAiBdAgBVeAXg@h@i@FKJi@?u@Lk@Vm@X{@N{@d@wB",
+      "startLatlng": [
+        37.9256978,
+        -122.6409332
+      ],
+      "endLatlng": [
+        37.9207115,
+        -122.6309918
+      ],
+      "distance": 1130.03,
+      "elevationGain": 96.6124,
+      "avgGrade": 8.5,
+      "climbCategory": 1,
+      "totalAttempts": 241126,
+      "totalAthletes": 36722,
+      "discoveryHits": 2,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.88,
+            -122.8,
+            37.98,
+            -122.62
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.885,
+            -122.75,
+            37.94,
+            -122.61500000000001
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 34818
+    },
+    {
+      "id": 627467,
+      "name": "White's Hill (SV Official)",
+      "activityType": "ride",
+      "polyline": "qj}fFfwjkV]zAi@nAYb@Y`@o@h@}@d@y@Pg@D}ED[DYJ[Ns@l@o@t@oAbAc@l@o@n@GDeAZi@ZWVSZaAfC]h@ONQJm@Ni@@oBW[CW@aAP{Bl@[La@T_@\\UXQZM^SfACd@?v@TtE",
+      "startLatlng": [
+        38.002496,
+        -122.612511
+      ],
+      "endLatlng": [
+        38.011421,
+        -122.6203
+      ],
+      "distance": 1366.3,
+      "elevationGain": 105.162,
+      "avgGrade": 7.7,
+      "climbCategory": 1,
+      "totalAttempts": 355073,
+      "totalAthletes": 32141,
+      "discoveryHits": 3,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.92,
+            -122.68,
+            38.02,
+            -122.45
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            38,
+            -122.7,
+            38.08,
+            -122.45
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            38,
+            -122.7,
+            38.04,
+            -122.575
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 34806
+    },
+    {
+      "id": 39470008,
+      "name": "White's Hill (Eastbound)",
+      "activityType": "ride",
+      "polyline": "wi_gFxdnkVn@sAn@iBt@qA`@y@hAkBv@{Ad@oARoAHiDEaAIw@Qq@Sa@K_@mAeC]{@UmAKeA?{Ar@_DFc@PqBBk@GqA?}@",
+      "startLatlng": [
+        38.012601,
+        -122.630041
+      ],
+      "endLatlng": [
+        38.011365,
+        -122.619892
+      ],
+      "distance": 996.9,
+      "elevationGain": 48.8,
+      "avgGrade": 4.9,
+      "climbCategory": 0,
+      "totalAttempts": 287556,
+      "totalAthletes": 34240,
+      "discoveryHits": 3,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.92,
+            -122.68,
+            38.02,
+            -122.45
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            38,
+            -122.7,
+            38.08,
+            -122.45
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            38,
+            -122.7,
+            38.04,
+            -122.575
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 34329
+    },
+    {
+      "id": 637196,
+      "name": "Pine Mtn. Pass",
+      "activityType": "ride",
+      "polyline": "mlyfFl|fkV|ADlA?|@Lt@FXJNZG^KRCTFRn@jAZ`AVZRbARZFVr@|@FLRRb@~@LT|@|@PZRn@Hh@VF^?l@MXSREd@Dp@\\LHT\\Vh@TZzAv@\\HH@^JL@ZE`@CbARRRT\\h@d@VHt@FPFd@`@`@d@h@f@`AfAx@r@r@zAb@pAd@bBHLRJHHFNFh@FbBInB@ZHh@?d@CTOf@Ib@KjBBxBSlAEHCNA|@Dp@Lv@BbBH`@L`@H^Kf@k@h@Ub@G^Ah@HvAAVGZC`@@d@Jt@FpAKr@Yr@MPQLo@LIDIZ@jCCl@BnAGfAMh@?h@XfAK|@Mb@CpBW`@m@TI@[PWVM`@?j@VhAFj@C\\KZ]h@M\\CVBd@Fn@FRFP\\f@Pb@DT?NGZwAbBKZC`@F^PV`@Rf@PXRJLNVPh@T\\VLP@x@AP@f@Pt@t@vB`D\\Xf@Pb@VHRFRDn@GfA]xB_@|@IRONy@p@a@Ta@Rk@\\O`@DXfAdCDb@@XEVKd@[n@i@`AITGX@ZJX`@N`@QV[JUPw@LOVSp@[NSLc@JMNGNA|@d@d@ZVTNTLXNfAr@nAHHL@PKRc@VuAJIZ@NITsA?uAJGHAZFh@j@ZJV?|@[T?^Jp@n@JDl@D^EXOJq@f@y@TYXS~@QX?~@ZPAd@QXAj@Hv@\\ZAXIZAbDn@`@DT?",
+      "startLatlng": [
+        37.9823178704828,
+        -122.592867538333
+      ],
+      "endLatlng": [
+        37.9638762585819,
+        -122.625166447833
+      ],
+      "distance": 5463.89,
+      "elevationGain": 290.6,
+      "avgGrade": 5.3,
+      "climbCategory": 2,
+      "totalAttempts": 235809,
+      "totalAthletes": 34928,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.92,
+            -122.68,
+            38.02,
+            -122.45
+          ],
+          "depth": 0
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 33419
+    },
+    {
+      "id": 563888,
+      "name": "Alpine Dam to Ridgecrest Climb",
+      "activityType": "ride",
+      "polyline": "kopfF~vokV[Ik@FMFWTKNWl@Wz@IHE@]Ca@I_ATs@AD?{@BUFKHO`@AJBzBSrACf@FlBJx@d@v@DNBPCTc@dA@\\H^l@|@^x@T\\h@j@Vb@Nj@AJe@z@ERKdBIPc@JKAi@FQHYh@K`@CXB\\BLJLv@b@XTL`@RzAEXUh@CVBf@BVC^GP{@rAM\\CTDr@Ib@[Vo@RUNMTUpA?l@PlAVdAX`@jAn@JLLRLr@JZ?\\EP_@b@ANDT^~@Db@AJQZu@`@QRI`ABtA?x@I`@KTg@|@MTEbAMv@BLHDHAFQDa@X}@DEj@Uv@EVGf@]d@_@z@cAROBADBAN_@\\Wp@Cn@@v@GL_@PDCcATk@d@Ur@KzBKb@KJGDi@GY@ODKHOZGVOXKDi@IW?SFiCtA_Ax@_@TKL@FHJF?xAs@hAQf@A`@Bl@\\^J|@DZL",
+      "startLatlng": [
+        37.936706,
+        -122.638077
+      ],
+      "endLatlng": [
+        37.939514,
+        -122.658327
+      ],
+      "distance": 3242.87,
+      "elevationGain": 0,
+      "avgGrade": 7.7,
+      "climbCategory": 2,
+      "totalAttempts": 204877,
+      "totalAthletes": 34546,
+      "discoveryHits": 4,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.83,
+            -122.75,
+            37.94,
+            -122.48
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.92,
+            -122.68,
+            38.02,
+            -122.45
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.88,
+            -122.8,
+            37.98,
+            -122.62
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.885,
+            -122.75,
+            37.94,
+            -122.61500000000001
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 32121
+    },
+    {
+      "id": 862949,
+      "name": "Whites Hill ",
+      "activityType": "ride",
+      "polyline": "uv_gFzgskVi@id@KuNIeEkAeQcB_VQwCCuCDkDNyBTeC^cCp@aD^uA\\aAx@sBtAqCfJmQ~GcNd@cAVw@L_AFo@@s@CoBMeAOs@So@Ui@mA}B[}@Oi@KqAAc@FiALy@b@iBPyAFeAA}@",
+      "startLatlng": [
+        38.01467528566718,
+        -122.65613112598658
+      ],
+      "endLatlng": [
+        38.01130659878254,
+        -122.62041214853525
+      ],
+      "distance": 3362.94,
+      "elevationGain": 75,
+      "avgGrade": 2.2,
+      "climbCategory": 0,
+      "totalAttempts": 250934,
+      "totalAthletes": 29827,
+      "discoveryHits": 3,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            38,
+            -122.7,
+            38.08,
+            -122.45
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.96,
+            -122.8,
+            38.08,
+            -122.62
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            38,
+            -122.7,
+            38.04,
+            -122.575
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 29959
+    },
+    {
+      "id": 24522292,
+      "name": "Final hairpins",
+      "activityType": "ride",
+      "polyline": "ybqfFpcskVFHLSVaAZORCn@?NAhAs@|@}@P[ROBBOCSPS\\Md@Al@C\\OH[HWJ_@^GJSbAY`DQXSF]AQC[JUlAYPWDADFDEA_@DIH_A`@g@X]Dk@`@a@NW^ADDf@f@KXWVIfBWVDf@`@`@RPFtBH",
+      "startLatlng": [
+        37.939817,
+        -122.655441
+      ],
+      "endLatlng": [
+        37.939441,
+        -122.658359
+      ],
+      "distance": 1101.6,
+      "elevationGain": 105,
+      "avgGrade": 8.4,
+      "climbCategory": 1,
+      "totalAttempts": 147151,
+      "totalAthletes": 33098,
+      "discoveryHits": 2,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.88,
+            -122.8,
+            37.98,
+            -122.62
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.885,
+            -122.75,
+            37.94,
+            -122.61500000000001
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 29282
+    },
+    {
+      "id": 1173191,
+      "name": "Four Corners Climb",
+      "activityType": "ride",
+      "polyline": "itjfFzz_kVVh@JbAMhAY|ASvBU`AEj@?V@dAHX\\n@JZBb@AfA@THHRBZiA?_@KeA[gAAUHu@Pg@NYNIfAQRIBS?YC]e@{@CU?c@H_@FQN[JM\\UzAIJc@@YFURMf@Ij@MNMDOD[?k@CmACQDONKL?RH@@CBDGREQLCAHGH?NKZ?TCHMHWZeAtA_B^m@Ji@LS@WFQJEPBv@XN@`@C`@KD]FO@[YyADa@HSBe@Go@@_@Tu@LQd@]XGLBFh@?lCH~ATbA@\\C^e@~Ba@vA_@v@gBjBKVMt@Wx@Yf@EPBf@Aj@p@~BD\\ArBBPJNXHPKVUZQ\\Ip@EX@nADr@FjAv@R@XWNU^UXLx@x@b@TR@p@E`@DJAXKLAh@Nh@VP?VI`@c@PKLAbBPb@ETIxAy@xA}A`Ac@~@u@d@SRA|APZA~@FPA",
+      "startLatlng": [
+        37.90677270758782,
+        -122.5567734132422
+      ],
+      "endLatlng": [
+        37.89376557182331,
+        -122.5572840799247
+      ],
+      "distance": 3422.68,
+      "elevationGain": 250.47,
+      "avgGrade": 5.4,
+      "climbCategory": 2,
+      "totalAttempts": 276761,
+      "totalAthletes": 25373,
+      "discoveryHits": 2,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.83,
+            -122.75,
+            37.94,
+            -122.48
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.885,
+            -122.61500000000001,
+            37.94,
+            -122.48
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 27446
+    },
+    {
+      "id": 4793848,
+      "name": "Hwy 1 climb from Muir Beach ",
+      "activityType": "ride",
+      "polyline": "eebfFpbckVZs@FYHoAKcAUiA_@cAa@c@oA_AWqAWk@Ca@H}@Ia@W[_@M_@UU]Eg@d@oBAs@UkA]_A_@Si@?w@Gg@WC_@Fs@GaAU_AmA{AKs@Ym@_@Ye@Oo@GsAq@k@?g@Go@S[Lk@v@YHe@BYWAg@D]@k@Sy@[e@[WUI}@Mc@Q{@{@w@g@g@Iu@Js@Xi@f@g@^W[Go@Ye@UOc@o@a@Ww@Ga@MWs@KMg@QUC[_@Qq@_@g@s@IiAl@s@Re@JUKE[`@wAZsBDs@Is@YsBSk@[c@a@YU_@Ko@wAqDe@]a@A_Bj@a@CK[?}@FgAK_A]y@k@{@g@k@g@UgBUe@]IUKk@e@s@]KmA@[O",
+      "startLatlng": [
+        37.863399,
+        -122.573366
+      ],
+      "endLatlng": [
+        37.879408,
+        -122.554597
+      ],
+      "distance": 3078.1,
+      "elevationGain": 211.5,
+      "avgGrade": 6,
+      "climbCategory": 2,
+      "totalAttempts": 143886,
+      "totalAthletes": 23306,
+      "discoveryHits": 2,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.83,
+            -122.75,
+            37.94,
+            -122.48
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.83,
+            -122.61500000000001,
+            37.885,
+            -122.48
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 21897
+    },
+    {
+      "id": 154,
+      "name": "Olema Hill (Olema side)",
+      "activityType": "ride",
+      "polyline": "qxdgFv}llVmAoAcHwH}@gAe@y@uAmE]wAY_BK{D[wBkAiG}@}Ge@cAu@q@mBsAi@q@wGwKe@{@QiAJcAt@aBR{@bAqGh@mCj@mB",
+      "startLatlng": [
+        38.0405759,
+        -122.7876307
+      ],
+      "endLatlng": [
+        38.0462281,
+        -122.7710442
+      ],
+      "distance": 1769.76,
+      "elevationGain": 95.6512,
+      "avgGrade": 5.3,
+      "climbCategory": 1,
+      "totalAttempts": 145843,
+      "totalAthletes": 22326,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.96,
+            -122.8,
+            38.08,
+            -122.62
+          ],
+          "depth": 0
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 21172
+    },
+    {
+      "id": 3894290,
+      "name": "Endor - Complete and Accurate Tamarancho Flow Trail",
+      "activityType": "ride",
+      "polyline": "{w|fFxjmkVEEM?WFu@HIKCMVO@E?ITWBOIIE?WJSNEAROT[DCp@KpAc@\\s@\\KTa@d@uA^B?KYC?GBODCLC\\JCI[ISBe@RMCKi@Oa@OOi@GAIHKLCPBXNBABGCME?MWKGa@Aa@@DMZGFMECOHM@FCJA?IQABGP?b@BPJFCDkAEB?XEJGBW@g@MCEHGl@BUKg@KGBMABGLCEKH@NI`@I\\o@DQ",
+      "startLatlng": [
+        37.999507,
+        -122.625884
+      ],
+      "endLatlng": [
+        37.998986,
+        -122.622049
+      ],
+      "distance": 1110,
+      "elevationGain": 32.9489,
+      "avgGrade": -7.1,
+      "climbCategory": 0,
+      "totalAttempts": 120091,
+      "totalAthletes": 19661,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.96,
+            -122.8,
+            38.08,
+            -122.62
+          ],
+          "depth": 0
+        }
+      ],
+      "passesThresholds": false,
+      "qualifyingReasons": [
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 18370
+    },
+    {
+      "id": 3928502,
+      "name": "Hwy 1 Northbound Wall",
+      "activityType": "ride",
+      "polyline": "ghefFpokkVCXQb@w@bAyCjEs@xAONIDe@JQHQNe@p@KTCZFdAAj@GZMT[Tm@POLMPy@dBQTWLi@JMAi@IM?MDKJINa@fAUZMHMDM?o@KQBKH_@nAKLOB",
+      "startLatlng": [
+        37.879245,
+        -122.616403
+      ],
+      "endLatlng": [
+        37.884459,
+        -122.622446
+      ],
+      "distance": 863.7,
+      "elevationGain": 0,
+      "avgGrade": 5.2,
+      "climbCategory": 0,
+      "totalAttempts": 100778,
+      "totalAthletes": 19922,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.83,
+            -122.75,
+            37.885,
+            -122.61500000000001
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": false,
+      "qualifyingReasons": [
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 17977
+    },
+    {
+      "id": 157,
+      "name": "Stinson Climb 1, south ",
+      "activityType": "ride",
+      "polyline": "_qhfFjmokVb@e@d@OVCx@SXO~@gArBq@|Aq@tAWb@a@Fe@Ey@?aAVy@\\i@n@YR?bADxBZz@En@Sd@a@rAeBd@aAXiApB}ELi@TyBZcAh@kAd@g@f@Mn@Bn@Rb@\\d@X`@BZIX]Bm@Em@@_@Pq@r@}B\\yAXs@@e@Kw@VwBKcCBwACeAQmCBW\\aBZu@~@_Ad@YhAQ",
+      "startLatlng": [
+        37.8960039,
+        -122.63654
+      ],
+      "endLatlng": [
+        37.8855589,
+        -122.6225755
+      ],
+      "distance": 2029.45,
+      "elevationGain": 103.822,
+      "avgGrade": 5.1,
+      "climbCategory": 1,
+      "totalAttempts": 98539,
+      "totalAthletes": 19859,
+      "discoveryHits": 2,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.88,
+            -122.8,
+            37.98,
+            -122.62
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.885,
+            -122.75,
+            37.94,
+            -122.61500000000001
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 17908
+    },
+    {
+      "id": 6588105,
+      "name": "Julian Dirt Descent - Just The Fun Part",
+      "activityType": "ride",
+      "polyline": "ql|eFlwsjVS|AYt@CPOdBYrAIj@{@xCEn@DXNl@JPLLNDz@I|@@PB|@b@h@t@nAhAPX@PIXSXc@j@m@l@i@t@c@Xw@b@QNORKVMVo@t@Kj@@TDTFP\\`@LJPDPAb@OfAWR?TDNJNPr@v@JVHVDXB\\Bv@Ev@?x@Gp@@VDT\\fA`@`BVb@LFJ?JI\\w@^c@v@i@t@m@Te@~@cAZe@p@{AHCJBHL@b@Cp@?zAM`BAZBX@~A@XDRANELIFKBEF?LTbAKhA",
+      "startLatlng": [
+        37.833854,
+        -122.494789
+      ],
+      "endLatlng": [
+        37.830362,
+        -122.506617
+      ],
+      "distance": 1963.3,
+      "elevationGain": 0,
+      "avgGrade": -5.8,
+      "climbCategory": 0,
+      "totalAttempts": 160494,
+      "totalAthletes": 16413,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.83,
+            -122.61500000000001,
+            37.885,
+            -122.48
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 17152
+    },
+    {
+      "id": 626742,
+      "name": "NVR to Big Rock",
+      "activityType": "ride",
+      "polyline": "opggFdozkVFa@Po@Vk@hAwDj@oA`BmCd@mA`AmDFc@Du@F}GDaBFa@Xk@bAaATSr@_@h@g@Va@j@oAl@{Al@gAROr@_AVc@Tk@De@Gc@ASEWKiAGeBIo@Aq@@MJm@JQDODe@Tg@LQDe@Rs@~@iAn@iAf@uABg@D_@Kc@IQk@m@K}@Wi@CiASe@Gs@Hk@FIBK@mANeBc@sBBS@i@ESw@aAw@gAs@mAu@yAa@{BWmB[q@y@m@m@w@_@q@c@cAUScAyA_@iAwAiCM]u@iEc@{A{C}E{CiFy@sAk@q@}@uBOkAEcAQu@UuAScAQ_BLaAHa@XmBDcBCsAa@_F?eBJuDPqEJeBR}Ad@yCbA}DTo@ZiAb@aCd@iBPc@`@s@X]pAy@b@o@LmAHoANiAd@}Av@wBrA{BpBsAT_@t@gBh@{@Xo@|BcEjBaCh@_@^OvEm@~@[l@IdAJdBX^Bv@C`AOzAOxAq@ZEnA_@~B_BXKhAi@j@c@NWNc@N}@FcBHsG^yBh@qAPq@D_@@cADm@BOJYDWA[Is@FiACe@@c@FYDs@As@GSKSgAgASc@SSKG}@OIEOSA]F]Tk@Ja@@WCy@Mi@Se@[a@Om@YmCEKIe@Bi@AMYgCGWY_@IG[]kBkCUYc@]]Sg@UmC_Aq@Qa@YQQ[m@]kASuE?eBB_BC_ASgDg@mCEsA@q@JaAJq@ZiA",
+      "startLatlng": [
+        38.0546459835023,
+        -122.693142006174
+      ],
+      "endLatlng": [
+        38.0479382816702,
+        -122.622214257717
+      ],
+      "distance": 7843.37,
+      "elevationGain": 128.8,
+      "avgGrade": 1.6,
+      "climbCategory": 0,
+      "totalAttempts": 117643,
+      "totalAthletes": 16626,
+      "discoveryHits": 3,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            38,
+            -122.7,
+            38.08,
+            -122.45
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.96,
+            -122.8,
+            38.08,
+            -122.62
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            38.04,
+            -122.7,
+            38.08,
+            -122.575
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 16132
+    },
+    {
+      "id": 1154584,
+      "name": "Bottom of Big Rock Hill to Summit",
+      "activityType": "ride",
+      "polyline": "sdegFhejkVKh@AZOn@OV_A`AUh@IVEv@UpAENq@lAQ~@?VKt@F`AA`@ENU`@CVFfBRpA?PC`@M^u@l@a@n@Yx@Gh@?j@BXTx@PhAEj@UR]b@IDi@PIDGFIXCh@HjB?dAVr@`@h@JRBNGNUHc@HSNWd@UnAEHSLQBW?y@QSBs@TS?q@E[Ju@h@WHm@DUHQTSd@mAxC",
+      "startLatlng": [
+        38.04250395856798,
+        -122.60964458808303
+      ],
+      "endLatlng": [
+        38.04798983037472,
+        -122.62212482281029
+      ],
+      "distance": 1505.31,
+      "elevationGain": 117.2,
+      "avgGrade": 7.8,
+      "climbCategory": 1,
+      "totalAttempts": 121466,
+      "totalAthletes": 16538,
+      "discoveryHits": 2,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            38,
+            -122.7,
+            38.08,
+            -122.45
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            38.04,
+            -122.7,
+            38.08,
+            -122.575
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 16100
+    },
+    {
+      "id": 1707949,
+      "name": "BoFax Climb",
+      "activityType": "ride",
+      "polyline": "ugpfF|vzkVYw@SUSOa@Im@?q@BUAMEASBIFIrAeALSHSDg@CY]qAC]@MDIh@_@NYHs@CoABSDGJGN?t@Pp@XP@b@?J@NPLp@LTHBTCLSDQDs@T{@B[I_@_@w@Um@W}@?c@T{AEg@Sg@u@cA_@q@MMUI}@E_AMJ@_@Cg@?c@Gg@O]QUUUk@SCEFALB^Jl@^rABXCPGHIDM@UGGG[a@g@iAK_@Gy@G_@Sq@Ue@SS[EY?_@I_@e@GOES?KPo@@SG]Q]_@a@g@[UGe@@c@KAC]y@Oe@CW?k@A[[yAO]}@sAWWe@C]Nu@r@OQb@}C@]E]EQ]i@kDyDQGs@I]K{@e@SOMUKaAI_@Q_@SYe@[]OSEe@?q@DWEES@m@CYKa@SYs@[gAm@i@S{A[[MMOQcAIOa@]aAY_@UUYISG[?a@LWDELCr@FPAJEd@g@PGPCVHvAt@h@PP@NCj@c@TGTDf@\\PFRBPAVKPMJOJUD_@AuBBOHMNEn@IZ?RF`@Z^L`@Dl@Ab@IVORU^o@F]?WU{@AW@S\\iA@OAUEUOYq@y@QYEWEiAKWQUo@i@]c@GS?c@DMTg@Da@OwCE]Me@GMMI]Kc@Ea@IOIOSCI@O\\{@De@Ko@c@oAEYAaAIc@Y_A?CJOHELAn@@lAR^PdBlA`@NR@HCLIFIFSPgB?g@ESISo@{@Wg@cAmDYw@MUEEWEI@a@LG?MGGo@GMOQq@YKS?MFSNSp@_@^a@NKR?l@HZAn@KVQFMF[HcBC[W{@AUBQFQTW\\Ub@SNMp@aARSJCPDJJb@l@RT`@Pb@Dr@?^GROFQDUCg@M]m@aAGO?UFKHI`@[LER?b@HH?JGJMBQ@c@Eq@Gc@Oe@OU]a@EO@WFIf@c@h@s@",
+      "startLatlng": [
+        37.9354751827195,
+        -122.694386889227
+      ],
+      "endLatlng": [
+        37.9395158970729,
+        -122.65861536283
+      ],
+      "distance": 6335.2,
+      "elevationGain": 0,
+      "avgGrade": 7.1,
+      "climbCategory": 3,
+      "totalAttempts": 95804,
+      "totalAthletes": 17318,
+      "discoveryHits": 3,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.83,
+            -122.75,
+            37.94,
+            -122.48
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.88,
+            -122.8,
+            37.98,
+            -122.62
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.885,
+            -122.75,
+            37.94,
+            -122.61500000000001
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 15981
+    },
+    {
+      "id": 1723,
+      "name": "Old Railroad Grade to West Point Inn",
+      "activityType": "ride",
+      "polyline": "ocmfF|h_kVkAEUBs@^c@d@qBvCOn@?N_@\\YP]E]@g@VYTmAb@{@`@c@z@]pAYRwALmABURSZa@NkAVy@v@iAT]RIhA[z@W\\s@TYBq@E_@TsAb@s@ZiAISPk@vAa@Le@J{BRg@Ia@DOZAH@XVNNA`BLr@?x@Fd@PZZd@HVk@Hq@Z[fCS`@X^f@b@?Z]b@[x@Q`@FR\\@j@AZBfAHr@@xBCz@If@Mb@W^Gf@b@Vb@Ab@F\\`@b@dAVP^SBG?QIgCPe@hCaB\\DTXZrCG`@Sb@Cz@Jt@Rr@f@r@TRnAz@L?h@Of@c@ZAf@M^i@`@y@Fk@GW[i@EYFu@JeARy@Rg@Zg@NBVLx@t@nAHPXBt@Or@Cn@L\\NFl@[h@o@r@[PAt@SR[Ti@b@_@VLNZJ\\EfAW^}@P]Rc@HOAq@R{A`Ae@p@Al@BTVjACd@a@b@_@V]l@Wp@Ud@?n@^rC?x@W^s@d@c@xAY`@MVKh@Jn@Gh@a@zABj@Tr@NZ^VdAOd@MXOVa@`@a@\\I`@JZb@X`AFr@Ar@NvC?~@Ap@Fd@TVl@ZF^Mh@]NYSS_@Sw@KaBQw@a@W_@FEFMh@Lv@~@hCr@`BVdCIb@QPa@?UUIc@OcBMo@_@S_@JMf@H`FGb@[\\[f@@b@Zb@lAb@nB|@V`@CrADJTTp@T^b@Cd@WVuAz@mAn@WRUf@@ZHJHFl@RRZAZSv@Db@r@p@NxAh@f@\\Vd@TV\\d@b@t@`B`@^D^I^YNeAXi@f@O`@Iz@Uh@c@^e@L[RQn@Bn@Cf@Y`@Sl@UdAUt@YXUJsA@o@Ge@S[YWAE@E`@x@`BPx@RTP~@E`@]lANv@b@Fn@An@Et@D`@Nf@B~@Qd@Hd@En@Kd@Ht@rAPt@An@WXs@^_@h@An@DdAO`@s@f@_B~@Oh@BR\\^JB^ZB`@_@z@Lp@d@t@Bj@CXHt@JNXRZ^^Xb@LVRj@JZGp@?`@b@ZfAJTf@\\JBh@VHJp@n@HB",
+      "startLatlng": [
+        37.9194502,
+        -122.5539031
+      ],
+      "endLatlng": [
+        37.9165482,
+        -122.5936652
+      ],
+      "distance": 8622.52,
+      "elevationGain": 486.908,
+      "avgGrade": 5.6,
+      "climbCategory": 3,
+      "totalAttempts": 131655,
+      "totalAthletes": 15572,
+      "discoveryHits": 2,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.83,
+            -122.75,
+            37.94,
+            -122.48
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.885,
+            -122.61500000000001,
+            37.94,
+            -122.48
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 15867
+    },
+    {
+      "id": 626859,
+      "name": "Stinson to Pantoll (Climb up Panoramic Hwy)",
+      "activityType": "ride",
+      "polyline": "yshfFlkokVu@oB[k@c@o@s@y@{@y@]Ya@UWCc@F_A^u@TcATa@FG?c@KCCGOAODUzAyDZs@z@uARW^]PGJATBr@PXAHE`@WjB{Bp@q@d@QH?XDp@\\H@VCNGLIPYx@sC^aAZo@pAmBNWDYC[CCQEI?UJs@l@w@z@_@XM@OGAWFYzAcET_@\\]j@a@nDuBVUT]La@|@_ERm@R_@d@c@|Ay@JKTYLi@Di@@kDb@cD@UAUGOQEMBOLe@hAYb@i@f@w@d@i@PqARu@XM@OIFWv@w@P[HSHm@XcD@a@Ea@k@uAWmAKWSYs@_@OOGIK[Ac@D]Xs@Fg@IwB@s@CUK[GIIGYAa@F{@ViAVu@@UMOi@CU@]H]f@iARk@Fe@@UCe@Iq@]cBCi@D_@A]Og@w@_BOQWOiAc@]YIMCW@KPc@Hi@Am@SaAGMSU]W[KqAIm@M{@UWAkAHSKGi@EcAK_@k@}@sA{ASQ_@Ci@TQLa@NK@SIO]?KVu@DYFc@?QKa@w@eBMQSOKC_AEWK[U_@O[Gm@C_DLFCk@Ha@PeAdAaA\\u@^{@b@_@XUBWIAA?QTiA?UKkAJm@Rc@T]\\Wf@WLKX]HUBUAa@g@}AEc@?WF_@JUt@cATa@Ha@JuBf@kBLs@A_@I]c@_@}Aq@",
+      "startLatlng": [
+        37.8964527242726,
+        -122.63622728638
+      ],
+      "endLatlng": [
+        37.9039763801336,
+        -122.604237287367
+      ],
+      "distance": 5611.8,
+      "elevationGain": 0,
+      "avgGrade": 7.3,
+      "climbCategory": 3,
+      "totalAttempts": 82642,
+      "totalAthletes": 16921,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.83,
+            -122.75,
+            37.94,
+            -122.48
+          ],
+          "depth": 0
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 15279
+    },
+    {
+      "id": 118,
+      "name": "Marincello Trail",
+      "activityType": "ride",
+      "polyline": "swafFhp{jVSQy@iAg@cBQc@_AwBc@m@s@s@Y_@_@_@k@]_@]_@Uq@{@WQi@M_@W}@cBq@qBUeB[wAIm@@{@VqBCm@F_@Tg@f@aA^c@t@o@zB{AlBeA`BmBXk@|@gAd@o@Ti@pAoF`AiDVq@Vg@l@y@d@Up@Qp@Qb@A~AJ|AZh@?h@Mp@U`@]`@k@`@aA|@kCTqBv@cDJyA@i@IgB?e@",
+      "startLatlng": [
+        37.8612248,
+        -122.5346008
+      ],
+      "endLatlng": [
+        37.8568765,
+        -122.5169881
+      ],
+      "distance": 2243.74,
+      "elevationGain": 193.706,
+      "avgGrade": 8.7,
+      "climbCategory": 2,
+      "totalAttempts": 126220,
+      "totalAthletes": 15081,
+      "discoveryHits": 2,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.83,
+            -122.75,
+            37.94,
+            -122.48
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.83,
+            -122.61500000000001,
+            37.885,
+            -122.48
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 15184
+    },
+    {
+      "id": 735,
+      "name": "Dogtown Climb",
+      "activityType": "ride",
+      "polyline": "m|sfFfq~kVWFuBXOAm@Dk@L]DuAf@SDo@B[NEDwAz@]n@Gj@Wn@qAHUPY`@o@b@m@XUVS`@ITIx@@f@Ch@OpAIbA@~@M~@aBjD_@f@e@Xc@Fu@BmAKiAYgAMcAJaAj@uAjBq@jAYp@U`Ag@zA_@v@[f@",
+      "startLatlng": [
+        37.954157,
+        -122.7139506
+      ],
+      "endLatlng": [
+        37.9633702,
+        -122.7224262
+      ],
+      "distance": 1435.24,
+      "elevationGain": 85.5574,
+      "avgGrade": 5.9,
+      "climbCategory": 1,
+      "totalAttempts": 55537,
+      "totalAthletes": 16862,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.88,
+            -122.8,
+            37.98,
+            -122.62
+          ],
+          "depth": 0
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 14358
+    },
+    {
+      "id": 621620,
+      "name": "Bobcat Trail",
+      "activityType": "ride",
+      "polyline": "uw|eFrfxjV_@]e@Ym@e@c@[{B{@sAm@k@]w@]sAa@iBc@g@_@e@M]Q][Sa@Ks@AmAM]KOi@UQGcBWiAKmAw@s@q@UYMSWgAGaAFq@A}@{@eEMYo@_AYg@[_AMm@Qg@Qq@Go@{@aDWo@Qs@k@iAc@m@MGKAKFKVAbAIXWb@_@`@cAhBYVw@PYA}@M]QMUG[Bq@E[KWa@q@Oa@a@uA]i@SMa@KQAW@cARQ@KAIEEICQ@MDIb@UDI?UEMEGg@S{AMOIGKE[IuAWgACg@DaAEQIGEAKBKHYb@YVkCz@i@Jy@H{@Nk@?_@IOKSW]q@U}@Q[YUMEWAYLW\\}@xAe@hAGDOBMASIWQKMGSG_@CaAGm@K_@KSa@]e@Wi@QU?UF[XMTc@zAWb@",
+      "startLatlng": [
+        37.8356394264847,
+        -122.517698463053
+      ],
+      "endLatlng": [
+        37.8546099364758,
+        -122.504494031891
+      ],
+      "distance": 3233.58,
+      "elevationGain": 226.4,
+      "avgGrade": 7,
+      "climbCategory": 2,
+      "totalAttempts": 107402,
+      "totalAthletes": 14083,
+      "discoveryHits": 2,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.83,
+            -122.75,
+            37.94,
+            -122.48
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.83,
+            -122.61500000000001,
+            37.885,
+            -122.48
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 13890
+    },
+    {
+      "id": 634332,
+      "name": "Middle Eldridge",
+      "activityType": "ride",
+      "polyline": "qcrfFdqdkV~AaAnAeANIH?J@`@VRDRCt@WJMJWNcAHKLENAdALVF\\\\Zf@^f@TRPDD?A?RIPWROVIT@f@PVDV?PE\\UfAgA\\QXApANTEFEBMKsA?{@Fe@Nq@?YMs@AYFYV[FWE}@@i@Da@J_@JMPKx@IVGTQP_@FITIzBKpARbA@NIDI@MEiA?y@ZsBB_@CMGGa@UMMCSBS\\u@t@cAPIf@CPEPM^k@NI\\G",
+      "startLatlng": [
+        37.9450517892838,
+        -122.580827012658
+      ],
+      "endLatlng": [
+        37.9356285715476,
+        -122.572860742919
+      ],
+      "distance": 1679.91,
+      "elevationGain": 0,
+      "avgGrade": 7.4,
+      "climbCategory": 1,
+      "totalAttempts": 126436,
+      "totalAthletes": 10572,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.92,
+            -122.68,
+            38.02,
+            -122.45
+          ],
+          "depth": 0
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 11756
+    },
+    {
+      "id": 4178476,
+      "name": "OH Sh*t just the goods!",
+      "activityType": "ride",
+      "polyline": "{qvfFtxmkVg@Ro@j@y@^c@`@MTw@p@q@ZW`@_AlBSd@a@xAIPQj@SbAIRWTy@jAUj@SPQ`@Ol@m@hBWb@Q|@IJSf@_@n@Wj@ETAfAKn@Ab@EVQ`@s@bCU^_@b@CHy@dDOf@",
+      "startLatlng": [
+        37.967826,
+        -122.628109
+      ],
+      "endLatlng": [
+        37.973149,
+        -122.637561
+      ],
+      "distance": 1059.6,
+      "elevationGain": 99.6,
+      "avgGrade": 8.9,
+      "climbCategory": 1,
+      "totalAttempts": 40245,
+      "totalAthletes": 7218,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.88,
+            -122.8,
+            37.98,
+            -122.62
+          ],
+          "depth": 0
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 6664
+    },
+    {
+      "id": 4517744,
+      "name": "711 Trail ",
+      "activityType": "ride",
+      "polyline": "ii}fFtwujVKEISYIg@?AEkDd@_@HYLYZMVI\\G`AGh@q@^IL}@x@OFSRIXCf@EREh@SFCDGj@CHIOCYMSIIUIKIGOKs@GWKGS@EHN|@LT`@XJNDR@RCRe@nAKh@?dAAh@BZE@GY@a@D_@?]Y}@Ca@@[EIIEWEI?ODCD?J`@h@?b@Hd@ATEP]d@Qb@IH]NY@CGZg@DK?IICU?KBw@jASf@If@Gt@DJPR@HEZDZDFXLj@`@JLXf@x@`@?N_@|@G`@Ad@CNWb@K^@HPRJVLbAC\\]xACd@BXl@v@Xd@HZX\\`@TXJLCJIJOBc@DQIeB@g@TGH?Dx@j@jANd@?`@ILG\\S|BQVGR",
+      "startLatlng": [
+        38.002292,
+        -122.505066
+      ],
+      "endLatlng": [
+        38.005451,
+        -122.515643
+      ],
+      "distance": 2237,
+      "elevationGain": 90,
+      "avgGrade": -8,
+      "climbCategory": 0,
+      "totalAttempts": 22998,
+      "totalAthletes": 3511,
+      "discoveryHits": 2,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            38,
+            -122.7,
+            38.08,
+            -122.45
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            38,
+            -122.575,
+            38.04,
+            -122.45
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 3371
+    },
+    {
+      "id": 890134,
+      "name": "Hunt Camp DH",
+      "activityType": "ride",
+      "polyline": "ul}fFruvkVEMIcAKc@o@iAQWEOASK[Y_@KHKMc@Yg@g@WGc@YIOSy@KKc@Os@Mi@OWqAMYGCcAKu@Se@ASFa@?WC[MG?e@Jo@FYAi@MIBIZi@t@Of@EDSAYIc@BWJ_@ZYLi@N]@]Eu@W",
+      "startLatlng": [
+        38.002834003418684,
+        -122.67369104549289
+      ],
+      "endLatlng": [
+        38.00958210602403,
+        -122.67102560028434
+      ],
+      "distance": 927.68,
+      "elevationGain": 0,
+      "avgGrade": -11.4,
+      "climbCategory": 0,
+      "totalAttempts": 13929,
+      "totalAthletes": 3039,
+      "discoveryHits": 4,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.92,
+            -122.68,
+            38.02,
+            -122.45
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            38,
+            -122.7,
+            38.08,
+            -122.45
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.96,
+            -122.8,
+            38.08,
+            -122.62
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            38,
+            -122.7,
+            38.04,
+            -122.575
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": false,
+      "qualifyingReasons": [
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 2710
+    },
+    {
+      "id": 648204,
+      "name": "Fallen Oak",
+      "activityType": "ride",
+      "polyline": "s{|fFpqsjVGUGGi@YKAIIc@YGGEs@IG]i@OKO]G_@MY?MGOSMS]OKaAc@GB_@\\{@HIAKDMAUJk@AICm@GSDa@M[By@VKAOHW@i@Ge@OGGYE_@k@EOQUg@}@GOH[?SCSOg@Lc@VYVq@PI^[Be@J?JHb@f@@JIf@@LBLFFj@?h@EFDFILCPm@HOPGRW\\w@AsB",
+      "startLatlng": [
+        38.000105023384094,
+        -122.4938464164734
+      ],
+      "endLatlng": [
+        38.003302216529846,
+        -122.48890578746796
+      ],
+      "distance": 1155.68,
+      "elevationGain": 13.57,
+      "avgGrade": -10.9,
+      "climbCategory": 0,
+      "totalAttempts": 10995,
+      "totalAthletes": 2110,
+      "discoveryHits": 3,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.92,
+            -122.68,
+            38.02,
+            -122.45
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            38,
+            -122.7,
+            38.08,
+            -122.45
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            38,
+            -122.575,
+            38.04,
+            -122.45
+          ],
+          "depth": 1
+        }
+      ],
+      "passesThresholds": false,
+      "qualifyingReasons": [
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 1931
+    },
+    {
+      "id": 968171,
+      "name": "Jewel Climb Proper",
+      "activityType": "ride",
+      "polyline": "m}cgFl_elVO`@QVWx@a@d@e@Ay@FaAIUIYEOJENJb@TTbAX`@ZTJR?b@GFFENIDu@Ti@XGFIVBNLNz@`@NRDNFr@Cn@SpC@NLd@\\x@L`@NjAJX\\\\Vd@FTBVGZWl@S~AQr@c@x@KXIJUh@KrAArABd@Jd@^rAHPDRL\\Dz@Ct@@l@Ln@Vh@x@bAR^",
+      "startLatlng": [
+        38.03623680956662,
+        -122.74694192223251
+      ],
+      "endLatlng": [
+        38.03603321313858,
+        -122.75796571746469
+      ],
+      "distance": 1370.18,
+      "elevationGain": 129.8,
+      "avgGrade": 9.5,
+      "climbCategory": 1,
+      "totalAttempts": 7201,
+      "totalAthletes": 2194,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.96,
+            -122.8,
+            38.08,
+            -122.62
+          ],
+          "depth": 0
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 1914
+    },
+    {
+      "id": 666438,
+      "name": "Randall Trail",
+      "activityType": "ride",
+      "polyline": "wswfFfvalVo@[]UIMY[S]I}@KSWu@Gc@M_@Es@GQUg@QI]e@Ym@AMGQE_@Um@@]OaAMk@Uo@O[_@[o@uAOSCGUIWWSo@_@s@Ic@M_@c@Sc@Me@@y@I[@e@COOUo@B[Ea@Ja@As@DUGi@Da@C_@@k@QOS@IEI?]Lk@SGEISBOZWJMHa@N[BS@UCw@MmAGGw@_@OYSSUKQEWc@Sg@Dg@BKd@@XC\\]BSG]Ek@GWIKUQM@MSYGc@AUMc@BCIFWPCFEh@cAXa@Js@Fs@?e@SAk@Jk@`@_@JIDE@MCOOKe@@QSc@a@KG?MFMNK@GCMQ?KUq@C?EBKLI?S[EMCEQ?Wk@M_@Fi@NUJc@CACg@?[AGICOHWBC@GZILo@PI??MLq@@c@J[?GGOMGMBCBCE?SEEOKWCUSWa@IQAIBGEc@GSGAq@u@CAO@OGc@c@GEKJMR",
+      "startLatlng": [
+        37.97324244864285,
+        -122.73011810146272
+      ],
+      "endLatlng": [
+        37.98329369165003,
+        -122.7128071244806
+      ],
+      "distance": 2514.67,
+      "elevationGain": 273.8,
+      "avgGrade": 10.9,
+      "climbCategory": 2,
+      "totalAttempts": 6209,
+      "totalAthletes": 2151,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.96,
+            -122.8,
+            38.08,
+            -122.62
+          ],
+          "depth": 0
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 1904
+    },
+    {
+      "id": 9087084,
+      "name": "Split Rock Complete Precise GPS/GLONASS",
+      "activityType": "ride",
+      "polyline": "qy{fFrlpkV|@f@z@V^Bn@U\\_@h@c@h@QPDRXTIRBPPTNFRPBFFB@@G?IG[Fm@@]@GHOTeA?IIWBMA]BGHqAVmAHoANKP[h@c@JMN]BU?WISDOJoA?a@Rk@@E^IVY\\UNYZaAZ]@KDG?sBQw@?MJYLUFQV[Le@LGDULWl@}@n@k@f@k@Lq@LIN[BAxA]JQJ?XGBFH?@GESBCL?LFF@BED[U]AMDSFMPCJ@VCR`@RJ\\Qx@Qd@YRcA@OCIGES?GEOe@?o@LcAFOZa@N[PU?SB]ROTCZ[L@NCLWD]XcAZW@KGW[e@?E@ENCH@Z?FG?KC_@UOMS@GBEIU@EDGTCf@SJALOR_@@ABDB?\\SD@DHD@JCDGDIAe@BW\\c@RMVa@Hm@Aw@G@WZGBK?KEAOb@}@HsAXa@b@YFIF]FKHG^FHCNQH_@D{@FQf@eAJMZSFK?QCK?u@^iBJQ`@]FINa@NSTKHAHGdAqAZsAHUAYJOFALFDDNl@HFXB`@V`@GFE?GIOBO\\[",
+      "startLatlng": [
+        37.994654,
+        -122.641532
+      ],
+      "endLatlng": [
+        37.980992,
+        -122.621118
+      ],
+      "distance": 3102.3,
+      "elevationGain": 54,
+      "avgGrade": -8.7,
+      "climbCategory": 0,
+      "totalAttempts": 8050,
+      "totalAthletes": 1569,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.96,
+            -122.8,
+            38.08,
+            -122.62
+          ],
+          "depth": 0
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "elevation",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 1471
+    },
+    {
+      "id": 8374087,
+      "name": "Y2K - the Real Deal",
+      "activityType": "ride",
+      "polyline": "klwfFj~nkVC_@JUCOLYLs@Cc@@y@PmA@g@@IRk@IaABa@D[Rm@GEO[CYCGMKO_@DC@GGQw@w@MCO?Ea@K_@@SAIUe@USIa@Ya@Yi@IG]CII]}@W_@",
+      "startLatlng": [
+        37.972062,
+        -122.634131
+      ],
+      "endLatlng": [
+        37.973487,
+        -122.62829
+      ],
+      "distance": 631.2,
+      "elevationGain": 0,
+      "avgGrade": -22.9,
+      "climbCategory": 0,
+      "totalAttempts": 3422,
+      "totalAthletes": 867,
+      "discoveryHits": 2,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.88,
+            -122.8,
+            37.98,
+            -122.62
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.96,
+            -122.8,
+            38.08,
+            -122.62
+          ],
+          "depth": 0
+        }
+      ],
+      "passesThresholds": false,
+      "qualifyingReasons": [
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 762
+    },
+    {
+      "id": 925819,
+      "name": "Happersberger",
+      "activityType": "ride",
+      "polyline": "s{wfFfeokVg@kA_@m@M_@c@a@Yu@WWMAIQUCe@Ks@c@IIUu@Oa@IKg@Ic@CKK]iA?]BKAQg@cAIc@MKIQE[@IBIGc@Cu@NI@IGg@IOAQ@g@CKKEO[SaAWUCICUKOIWQYASQw@MQEYFMCIOIOEUe@EQAQT_AHM^[p@aAOe@Es@@GRQBQ?_@Di@CUGCY@IMMa@EYLm@Ac@LO_@a@Wq@Bu@F_@AwAOiADg@Mw@Oa@Kg@@kAJc@COMIMOGc@[eAAK?eAFs@ZQRi@@OE[]s@Ma@@WLk@^_AFa@Ec@BUDUFQDE\\QJAVjADf@TOFM?GZDXAFM@OFMNCDGKo@KWAMRIBC?AUi@k@i@W[",
+      "startLatlng": [
+        37.974503338336945,
+        -122.63523110188544
+      ],
+      "endLatlng": [
+        37.97788459807634,
+        -122.61713851243258
+      ],
+      "distance": 2083.65,
+      "elevationGain": 5.4,
+      "avgGrade": -15.5,
+      "climbCategory": 0,
+      "totalAttempts": 3643,
+      "totalAthletes": 783,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.92,
+            -122.68,
+            38.02,
+            -122.45
+          ],
+          "depth": 0
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 727
+    },
+    {
+      "id": 6664062,
+      "name": "Nail Trail Only: Precise GPS/GLONASS",
+      "activityType": "ride",
+      "polyline": "{eufFnvpkVCf@e@d@QTGTS@ILUDM@GCGBEDOBQTAL@JFVJPILIXBl@AFGBALCBQ?SH]b@ITg@Xk@TEJCTOb@I`@KNMp@[fA]b@E\\GVMVMLSXWr@MLSh@QTIz@CFYPu@bBK\\Ad@EPMXe@P{@Aa@TSVUb@]D[HS@YGKGMSIAQKKKWCIEIWQWKEKBUP",
+      "startLatlng": [
+        37.960785,
+        -122.643118
+      ],
+      "endLatlng": [
+        37.966795,
+        -122.649684
+      ],
+      "distance": 1058.1,
+      "elevationGain": 0,
+      "avgGrade": -20.4,
+      "climbCategory": 0,
+      "totalAttempts": 3463,
+      "totalAthletes": 769,
+      "discoveryHits": 2,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.88,
+            -122.8,
+            37.98,
+            -122.62
+          ],
+          "depth": 0
+        },
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.96,
+            -122.8,
+            38.08,
+            -122.62
+          ],
+          "depth": 0
+        }
+      ],
+      "passesThresholds": false,
+      "qualifyingReasons": [
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 695
+    },
+    {
+      "id": 1093680,
+      "name": "Whopper",
+      "activityType": "ride",
+      "polyline": "s|egFt|`kV^Kd@S^WLMd@y@D_@NWHYNWPCx@ARIJAJFPARU`AIJGZGVMd@[ZM\\o@\\wAHg@@_ANYPKPS\\UJUTkA?YBM?e@JYE_@F{@BMXg@N{@Ve@FGHAXc@r@_@DSNMZIRu@N}@\\cAJIJCb@o@v@m@t@_@R?ZI`@FHLP?b@]b@IJDVPNVDpAAt@@\\Dh@",
+      "startLatlng": [
+        38.04634630680084,
+        -122.56218910217284
+      ],
+      "endLatlng": [
+        38.039039969444275,
+        -122.5555157661438
+      ],
+      "distance": 1300.01,
+      "elevationGain": 0,
+      "avgGrade": -21.4,
+      "climbCategory": 0,
+      "totalAttempts": 3500,
+      "totalAthletes": 666,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            38,
+            -122.7,
+            38.08,
+            -122.45
+          ],
+          "depth": 0
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 623
+    },
+    {
+      "id": 1004944,
+      "name": "Corte Madera DH",
+      "activityType": "ride",
+      "polyline": "yrnfF|v|jV[YI?CQOYCSMQOG]GWLYW}@GMFe@Bc@ASGGGM_@?UTy@GCQUGAQSMFE?ICGM",
+      "startLatlng": [
+        37.92701776139438,
+        -122.54078096710145
+      ],
+      "endLatlng": [
+        37.92917828075588,
+        -122.53919200971723
+      ],
+      "distance": 321.78,
+      "elevationGain": 0,
+      "avgGrade": -30.5,
+      "climbCategory": 0,
+      "totalAttempts": 3576,
+      "totalAthletes": 582,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            37.92,
+            -122.68,
+            38.02,
+            -122.45
+          ],
+          "depth": 0
+        }
+      ],
+      "passesThresholds": false,
+      "qualifyingReasons": [
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 548
+    },
+    {
+      "id": 7155460,
+      "name": "Jep?",
+      "activityType": "ride",
+      "polyline": "}ifgF~|akVKBCAM?OFUFY\\OJY?ODGAGj@DH?JGJMDUSIWCAIBENOTa@LKFOBSCQFYAOBOAc@BE@KAc@NMBQPAl@St@IDGTONFJ?JSTOZMNUvAERy@n@g@?OH]Ju@Lo@KI?g@P_ALUHM@o@Ae@Ps@Hm@Gg@B_@W[MMG]EULk@Dw@Za@BQL]JK?SJO@c@AQHWA[F{@OGWi@UWEEEc@CWI]J[DMHQZYXUf@ER@^K`@EBU?YGCXGFYDe@^WVaAxAMVGXKPSRCf@EFF\\ALEJGBKL",
+      "startLatlng": [
+        38.048472,
+        -122.567358
+      ],
+      "endLatlng": [
+        38.060468,
+        -122.573661
+      ],
+      "distance": 1630.9,
+      "elevationGain": 12.2,
+      "avgGrade": -21.4,
+      "climbCategory": 0,
+      "totalAttempts": 1562,
+      "totalAthletes": 386,
+      "discoveryHits": 1,
+      "discoveredFrom": [
+        {
+          "activityType": "ride",
+          "bounds": [
+            38,
+            -122.7,
+            38.08,
+            -122.45
+          ],
+          "depth": 0
+        }
+      ],
+      "passesThresholds": true,
+      "qualifyingReasons": [
+        "distance",
+        "attempts",
+        "athletes"
+      ],
+      "qualityScore": 361
+    }
+  ]
+}

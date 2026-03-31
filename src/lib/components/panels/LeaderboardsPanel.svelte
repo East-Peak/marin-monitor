@@ -4,24 +4,23 @@
 	import SegmentCard from './leaderboards/SegmentCard.svelte';
 	import RecentActivity from './leaderboards/RecentActivity.svelte';
 	import { stravaSegments, loadStravaData } from '$lib/stores/strava';
-	import { STRAVA_ENABLED } from '$lib/config/strava';
-
-	const CYCLING_SEGMENT_LIMIT = 25;
-	const RUNNING_SEGMENT_LIMIT = 12;
+	import {
+		STRAVA_ENABLED,
+		STRAVA_DASHBOARD_RIDE_LIMIT,
+		STRAVA_DASHBOARD_RUN_LIMIT
+	} from '$lib/config/strava';
 	const PREFETCH_SEGMENT_LIMIT = 6;
 
 	const cyclingSegments = $derived(
 		$stravaSegments.segments
 			.filter((s) => s.activityType === 'ride')
-			.sort((a, b) => b.totalAttempts - a.totalAttempts)
-			.slice(0, CYCLING_SEGMENT_LIMIT)
+			.slice(0, STRAVA_DASHBOARD_RIDE_LIMIT)
 	);
 
 	const runningSegments = $derived(
 		$stravaSegments.segments
 			.filter((s) => s.activityType === 'run')
-			.sort((a, b) => b.totalAttempts - a.totalAttempts)
-			.slice(0, RUNNING_SEGMENT_LIMIT)
+			.slice(0, STRAVA_DASHBOARD_RUN_LIMIT)
 	);
 
 	onMount(() => {

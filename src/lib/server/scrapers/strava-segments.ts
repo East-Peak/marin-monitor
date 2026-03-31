@@ -10,10 +10,18 @@
  * Falls back gracefully to the seed list if OAuth credentials are missing.
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { StravaSegment, StravaSegmentCatalog } from '$lib/types/strava';
 import { SEED_SEGMENTS } from '$lib/config/strava';
 import { readSuccessfulScrapeAt } from '$lib/server/scrape-metadata';
 import { getStravaAccessToken } from './strava-auth';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const ROOT = path.resolve(__dirname, '../../../..');
+const LOCAL_CURATED_FILE = path.join(ROOT, 'data', 'strava-curated.json');
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -40,6 +48,66 @@ function seedToSegment(
 		climbCategory: existing?.climbCategory ?? 0,
 		totalAttempts: existing?.totalAttempts ?? 0,
 		totalAthletes: existing?.totalAthletes ?? 0
+	};
+}
+
+interface LocalCuratedCatalogFile {
+	catalog?: StravaSegmentCatalog | null;
+}
+
+export function readLocalCuratedCatalog(): StravaSegmentCatalog | null {
+	if (!fs.existsSync(LOCAL_CURATED_FILE)) return null;
+
+	try {
+		const payload = JSON.parse(fs.readFileSync(LOCAL_CURATED_FILE, 'utf8')) as LocalCuratedCatalogFile;
+		if (!payload?.catalog || !Array.isArray(payload.catalog.segments)) return null;
+		return payload.catalog;
+	} catch (err) {
+		console.warn('[strava-segments] Failed to read local curated catalog:', String(err));
+		return null;
+	}
+}
+
+function mergeCatalogSegment(base: StravaSegment, existing: StravaSegment | undefined): StravaSegment {
+	if (!existing) return base;
+
+	return {
+		...base,
+		polyline: existing.polyline ?? base.polyline,
+		startLatlng: existing.startLatlng ?? base.startLatlng,
+		endLatlng: existing.endLatlng ?? base.endLatlng,
+		distance: existing.distance > 0 ? existing.distance : base.distance,
+		elevationGain: existing.elevationGain > 0 ? existing.elevationGain : base.elevationGain,
+		avgGrade: existing.avgGrade > 0 ? existing.avgGrade : base.avgGrade,
+		climbCategory: existing.climbCategory > 0 ? existing.climbCategory : base.climbCategory,
+		totalAttempts: existing.totalAttempts > 0 ? existing.totalAttempts : base.totalAttempts,
+		totalAthletes: existing.totalAthletes > 0 ? existing.totalAthletes : base.totalAthletes
+	};
+}
+
+export function mergeCatalogWithFallback(
+	primaryCatalog: StravaSegmentCatalog | null,
+	fallbackCatalog: StravaSegmentCatalog | null
+): StravaSegmentCatalog {
+	const fallback = normalizeCatalogToSeedSegments(fallbackCatalog);
+	if (!primaryCatalog) {
+		return fallback;
+	}
+
+	const primary = normalizeCatalogToSeedSegments(primaryCatalog);
+	const primaryById = new Map<number, StravaSegment>(
+		primary.segments.map((segment) => [segment.id, segment])
+	);
+
+	return {
+		segments: fallback.segments.map((segment) =>
+			mergeCatalogSegment(segment, primaryById.get(segment.id))
+		),
+		lastUpdated: primaryCatalog.lastUpdated ?? fallback.lastUpdated,
+		lastSuccessfulScrapeAt:
+			readSuccessfulScrapeAt(primaryCatalog) ??
+			readSuccessfulScrapeAt(fallbackCatalog) ??
+			fallback.lastUpdated
 	};
 }
 
@@ -132,6 +200,32 @@ async function fetchSegmentDetail(
 export async function buildSegmentCatalog(
 	existingCatalog: StravaSegmentCatalog | null
 ): Promise<StravaSegmentCatalog> {
+	const localCuratedCatalog = readLocalCuratedCatalog();
+	if (localCuratedCatalog) {
+		const localById = new Map<number, StravaSegment>(
+			localCuratedCatalog.segments.map((segment) => [segment.id, segment])
+		);
+		const existingById = new Map<number, StravaSegment>(
+			existingCatalog?.segments.map((segment) => [segment.id, segment]) ?? []
+		);
+		const nowIso = new Date().toISOString();
+
+		return {
+			segments: SEED_SEGMENTS.map((seed) =>
+				mergeCatalogSegment(
+					localById.get(seed.id) ??
+						seedToSegment(seed.id, seed.name, seed.activityType, seed.startLatlng, undefined),
+					existingById.get(seed.id)
+				)
+			),
+			lastUpdated: nowIso,
+			lastSuccessfulScrapeAt:
+				readSuccessfulScrapeAt(existingCatalog) ??
+				readSuccessfulScrapeAt(localCuratedCatalog) ??
+				nowIso
+		};
+	}
+
 	const baseCatalog = normalizeCatalogToSeedSegments(existingCatalog);
 	const existingById = new Map<number, StravaSegment>(
 		baseCatalog.segments.map((segment) => [segment.id, segment])

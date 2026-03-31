@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { SEED_SEGMENTS, MARIN_BOUNDING_BOXES, stravaLeaderboardBlob, STRAVA_ENABLED } from './strava';
+import {
+	SEED_SEGMENTS,
+	MARIN_BOUNDING_BOXES,
+	stravaLeaderboardBlob,
+	STRAVA_ENABLED,
+	STRAVA_DASHBOARD_RIDE_LIMIT,
+	STRAVA_DASHBOARD_RUN_LIMIT
+} from './strava';
 
 describe('strava config', () => {
 	it('has unique segment IDs in seed list', () => {
@@ -23,8 +30,14 @@ describe('strava config', () => {
 	});
 
 	it('has expanded coverage for cycling and trail segments', () => {
-		expect(SEED_SEGMENTS.filter((seg) => seg.activityType === 'ride')).toHaveLength(17);
-		expect(SEED_SEGMENTS.filter((seg) => seg.activityType === 'run')).toHaveLength(9);
+		expect(STRAVA_DASHBOARD_RIDE_LIMIT).toBe(100);
+		expect(STRAVA_DASHBOARD_RUN_LIMIT).toBe(100);
+		expect(SEED_SEGMENTS.filter((seg) => seg.activityType === 'ride')).toHaveLength(
+			STRAVA_DASHBOARD_RIDE_LIMIT
+		);
+		expect(SEED_SEGMENTS.filter((seg) => seg.activityType === 'run')).toHaveLength(
+			STRAVA_DASHBOARD_RUN_LIMIT
+		);
 	});
 
 	it('bounding boxes cover Marin latitude range', () => {

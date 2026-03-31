@@ -2,8 +2,9 @@ import { put, head } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
 import { scrapeSegmentLeaderboardResult } from '$lib/server/scrapers/strava-leaderboards';
 import {
-	normalizeCatalogToSeedSegments,
-	catalogHasAllSeedSegments
+	mergeCatalogWithFallback,
+	catalogHasAllSeedSegments,
+	readLocalCuratedCatalog
 } from '$lib/server/scrapers/strava-segments';
 import { verifyCronAuth } from '$lib/server/cron-auth';
 import { readSuccessfulScrapeAt } from '$lib/server/scrape-metadata';
@@ -167,18 +168,11 @@ export const GET: RequestHandler = async ({ request }) => {
 
 	const start = Date.now();
 	try {
-		// Read segment catalog — required to know what to scrape
 		const storedCatalog = await readBlob<StravaSegmentCatalog>(STRAVA_SEGMENTS_BLOB);
-		if (!storedCatalog) {
-			return new Response(
-				JSON.stringify({ ok: false, error: 'No segment catalog found. Run sync-strava-segments first.' }),
-				{ status: 400, headers: { 'Content-Type': 'application/json' } }
-			);
-		}
+		const localCuratedCatalog = readLocalCuratedCatalog();
 
-		// Scrape from the current seed list instead of trusting whatever blob happened to be readable.
-		// This avoids shrinking the scrape set if the catalog blob is temporarily stale.
-		const segments = normalizeCatalogToSeedSegments(storedCatalog).segments;
+		// Always scrape from the current curated seed list, even when blob storage is empty or stale.
+		const segments = mergeCatalogWithFallback(storedCatalog, localCuratedCatalog).segments;
 
 		// Read existing events log
 		const existingEventLog = await readBlob<StravaEventLog>(STRAVA_EVENTS_BLOB);
@@ -216,53 +210,47 @@ export const GET: RequestHandler = async ({ request }) => {
 
 		let catalogUpdated = false;
 		const latestCatalog = await readBlob<StravaSegmentCatalog>(STRAVA_SEGMENTS_BLOB);
-		if (!catalogHasAllSeedSegments(latestCatalog)) {
-			console.warn(
-				'[sync-strava-leaderboards] Skipping catalog write because the current catalog read was incomplete'
-			);
-		} else {
-			const catalog = normalizeCatalogToSeedSegments(latestCatalog);
+		const catalog = mergeCatalogWithFallback(latestCatalog ?? storedCatalog, localCuratedCatalog);
 
-			// Update segment catalog with fresh stats from the leaderboards we just scraped.
-			for (const seg of catalog.segments) {
-				const lb = leaderboardResults.get(seg.id);
-				if (!lb) continue;
+		// Update segment catalog with fresh stats from the leaderboards we just scraped.
+		for (const seg of catalog.segments) {
+			const lb = leaderboardResults.get(seg.id);
+			if (!lb) continue;
 
-				if (lb.totalAttempts > 0) {
-					seg.totalAttempts = lb.totalAttempts;
-					catalogUpdated = true;
-				}
-				if (lb.totalAthletes > 0) {
-					seg.totalAthletes = lb.totalAthletes;
-					catalogUpdated = true;
-				}
-				if (lb.distance != null && lb.distance > 0) {
-					seg.distance = lb.distance;
-					catalogUpdated = true;
-				}
-				if (lb.elevationGain != null && lb.elevationGain > 0) {
-					seg.elevationGain = lb.elevationGain;
-					catalogUpdated = true;
-				}
-				if (lb.avgGrade != null && lb.avgGrade > 0) {
-					seg.avgGrade = lb.avgGrade;
-					catalogUpdated = true;
-				}
+			if (lb.totalAttempts > 0) {
+				seg.totalAttempts = lb.totalAttempts;
+				catalogUpdated = true;
 			}
-
-			// Write updated catalog back to blob if any stats changed
-			if (catalogUpdated) {
-				catalog.lastUpdated = new Date().toISOString();
-				catalog.lastSuccessfulScrapeAt = catalog.lastUpdated;
-				await put(STRAVA_SEGMENTS_BLOB, JSON.stringify(catalog), {
-					access: 'private',
-					contentType: 'application/json',
-					addRandomSuffix: false,
-					allowOverwrite: true,
-					token: env.BLOB_READ_WRITE_TOKEN
-				});
-				console.log('[sync-strava-leaderboards] Updated segment catalog with fresh stats');
+			if (lb.totalAthletes > 0) {
+				seg.totalAthletes = lb.totalAthletes;
+				catalogUpdated = true;
 			}
+			if (lb.distance != null && lb.distance > 0) {
+				seg.distance = lb.distance;
+				catalogUpdated = true;
+			}
+			if (lb.elevationGain != null && lb.elevationGain > 0) {
+				seg.elevationGain = lb.elevationGain;
+				catalogUpdated = true;
+			}
+			if (lb.avgGrade != null && lb.avgGrade > 0) {
+				seg.avgGrade = lb.avgGrade;
+				catalogUpdated = true;
+			}
+		}
+
+		const shouldWriteCatalog = catalogUpdated || !catalogHasAllSeedSegments(latestCatalog);
+		if (shouldWriteCatalog) {
+			catalog.lastUpdated = new Date().toISOString();
+			catalog.lastSuccessfulScrapeAt = catalog.lastUpdated;
+			await put(STRAVA_SEGMENTS_BLOB, JSON.stringify(catalog), {
+				access: 'private',
+				contentType: 'application/json',
+				addRandomSuffix: false,
+				allowOverwrite: true,
+				token: env.BLOB_READ_WRITE_TOKEN
+			});
+			console.log('[sync-strava-leaderboards] Updated segment catalog with fresh stats');
 		}
 
 		// Prepend new events and prune old ones

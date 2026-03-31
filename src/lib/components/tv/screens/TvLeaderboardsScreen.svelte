@@ -12,14 +12,12 @@
 	const cyclingSegments = $derived(
 		$stravaSegments.segments
 			.filter((s) => s.activityType === 'ride')
-			.sort((a, b) => b.totalAttempts - a.totalAttempts)
 			.slice(0, 8)
 	);
 
 	const runningSegments = $derived(
 		$stravaSegments.segments
 			.filter((s) => s.activityType === 'run')
-			.sort((a, b) => b.totalAttempts - a.totalAttempts)
 			.slice(0, 8)
 	);
 
@@ -80,11 +78,9 @@
 		const visible = [
 			...$stravaSegments.segments
 				.filter((s) => s.activityType === 'ride')
-				.sort((a, b) => b.totalAttempts - a.totalAttempts)
 				.slice(0, 8),
 			...$stravaSegments.segments
 				.filter((s) => s.activityType === 'run')
-				.sort((a, b) => b.totalAttempts - a.totalAttempts)
 				.slice(0, 8),
 		];
 		await Promise.all(visible.map((seg) => maybeFetch(seg)));
