@@ -1,5 +1,5 @@
 import { writable, derived, get } from 'svelte/store';
-import { fetchStravaSegments, fetchStravaLeaderboard, fetchStravaEvents } from '$lib/api/marin/strava';
+import { fetchStravaSegments, fetchStravaLeaderboard, fetchAllStravaLeaderboards, fetchStravaEvents } from '$lib/api/marin/strava';
 import { STRAVA_ENABLED } from '$lib/config/strava';
 import type { StravaSegmentCatalog, StravaLeaderboard, StravaEventLog } from '$lib/types/strava';
 
@@ -50,6 +50,21 @@ export async function loadStravaData(): Promise<void> {
 
 	stravaSegments.set(catalog);
 	stravaEvents.set(events);
+}
+
+/** Bulk-load all leaderboards in one request (for TV mode). */
+export async function loadAllLeaderboards(): Promise<void> {
+	const bulk = await fetchAllStravaLeaderboards();
+	if (bulk.size === 0) return;
+
+	leaderboardCache.update(($cache) => {
+		const next = new Map($cache);
+		const now = Date.now();
+		for (const [segmentId, data] of bulk) {
+			next.set(segmentId, { data, fetchedAt: now });
+		}
+		return next;
+	});
 }
 
 export async function loadLeaderboard(segmentId: number): Promise<StravaLeaderboard | null> {

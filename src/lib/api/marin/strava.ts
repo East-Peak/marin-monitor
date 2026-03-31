@@ -42,6 +42,27 @@ export async function fetchStravaLeaderboard(segmentId: number): Promise<StravaL
 	}
 }
 
+export async function fetchAllStravaLeaderboards(): Promise<Map<number, StravaLeaderboard>> {
+	try {
+		logger.log('Strava', 'Loading all Strava leaderboards from /api/data/strava-leaderboards');
+
+		const response = await fetchWithTimeout('/api/data/strava-leaderboards', { cache: 'no-store' });
+		if (!response.ok) {
+			throw new Error(`Strava leaderboards bulk fetch failed: ${response.status}`);
+		}
+
+		const data = (await response.json()) as { leaderboards: Record<string, StravaLeaderboard>; lastUpdated: string };
+		const map = new Map<number, StravaLeaderboard>();
+		for (const [id, lb] of Object.entries(data.leaderboards)) {
+			map.set(Number(id), lb);
+		}
+		return map;
+	} catch (error) {
+		logger.warn('Strava', `Strava leaderboards bulk fetch failed: ${(error as Error).message}`);
+		return new Map();
+	}
+}
+
 export async function fetchStravaEvents(): Promise<StravaEventLog> {
 	try {
 		logger.log('Strava', 'Loading Strava events from /api/data/strava-events');

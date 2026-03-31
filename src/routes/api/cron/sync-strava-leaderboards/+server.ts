@@ -12,6 +12,7 @@ import {
 	STRAVA_ENABLED,
 	STRAVA_SEGMENTS_BLOB,
 	STRAVA_EVENTS_BLOB,
+	STRAVA_LEADERBOARDS_BLOB,
 	STRAVA_EVENT_MAX_AGE_MS,
 	stravaLeaderboardBlob
 } from '$lib/config/strava';
@@ -268,6 +269,19 @@ export const GET: RequestHandler = async ({ request }) => {
 		};
 
 		await put(STRAVA_EVENTS_BLOB, JSON.stringify(eventLog), {
+			access: 'private',
+			contentType: 'application/json',
+			addRandomSuffix: false,
+			allowOverwrite: true,
+			token: env.BLOB_READ_WRITE_TOKEN
+		});
+
+		// Write combined leaderboards blob (all 200 in one file — eliminates N+1 client fetches)
+		const combinedLeaderboards: Record<string, StravaLeaderboard> = {};
+		for (const [id, lb] of leaderboardResults) {
+			combinedLeaderboards[String(id)] = lb;
+		}
+		await put(STRAVA_LEADERBOARDS_BLOB, JSON.stringify({ leaderboards: combinedLeaderboards, lastUpdated: nowIso }), {
 			access: 'private',
 			contentType: 'application/json',
 			addRandomSuffix: false,

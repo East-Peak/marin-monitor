@@ -11,6 +11,7 @@ export const STRAVA_ENABLED = true;
 /** Blob storage keys */
 export const STRAVA_SEGMENTS_BLOB = 'strava-segments.json';
 export const STRAVA_EVENTS_BLOB = 'strava-events.json';
+export const STRAVA_LEADERBOARDS_BLOB = 'strava-leaderboards-all.json';
 export function stravaLeaderboardBlob(segmentId: number): string {
 	return `strava-leaderboard-${segmentId}.json`;
 }

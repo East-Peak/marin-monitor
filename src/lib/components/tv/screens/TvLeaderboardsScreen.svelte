@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { stravaSegments, stravaEvents, stravaLeaderboards, loadStravaData, loadLeaderboard } from '$lib/stores/strava';
+	import { stravaSegments, stravaEvents, stravaLeaderboards, loadStravaData, loadAllLeaderboards } from '$lib/stores/strava';
 	import TvAutoScroll from '$lib/components/tv/TvAutoScroll.svelte';
 	import type { StravaSegment, StravaLeaderboard, StravaLeaderboardRow } from '$lib/types/strava';
 
@@ -95,22 +95,10 @@
 		return $stravaLeaderboards.get(segmentId);
 	}
 
-	// ---- Lazy-load leaderboards for visible segments ----
-	let loadedIds = $state(new Set<number>());
-
-	async function maybeFetch(segment: StravaSegment) {
-		if (loadedIds.has(segment.id)) return;
-		loadedIds = new Set([...loadedIds, segment.id]);
-		await loadLeaderboard(segment.id);
-	}
-
-	// ---- Mount: load catalog + events, then fetch leaderboards ----
+	// ---- Mount: load catalog + events + all leaderboards in one shot ----
 	onMount(async () => {
 		await loadStravaData();
-
-		// Fetch leaderboards for the selected segments
-		const visible = [...cyclingSegments, ...runningSegments];
-		await Promise.all(visible.map((seg) => maybeFetch(seg)));
+		await loadAllLeaderboards();
 	});
 
 	// ---- Event type label ----
