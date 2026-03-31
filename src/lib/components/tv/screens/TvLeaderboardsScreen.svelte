@@ -8,21 +8,55 @@
 		displayRank: number;
 	};
 
+	const TV_SEGMENTS_PER_COLUMN = 20;
+
+	// ---- Pick segments: events first, then random smattering ----
+	function pickTvSegments(
+		segments: StravaSegment[],
+		activityType: 'ride' | 'run',
+		eventSegmentIds: Set<number>
+	): StravaSegment[] {
+		const pool = segments.filter((s) => s.activityType === activityType);
+		if (pool.length === 0) return [];
+
+		// Segments with recent KOM/QOM changes always show first
+		const withEvents: StravaSegment[] = [];
+		const rest: StravaSegment[] = [];
+		for (const seg of pool) {
+			if (eventSegmentIds.has(seg.id)) {
+				withEvents.push(seg);
+			} else {
+				rest.push(seg);
+			}
+		}
+
+		// Shuffle the rest (Fisher-Yates)
+		const shuffled = [...rest];
+		for (let i = shuffled.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+		}
+
+		const remaining = TV_SEGMENTS_PER_COLUMN - withEvents.length;
+		return [...withEvents, ...shuffled.slice(0, Math.max(0, remaining))];
+	}
+
+	// ---- Set of segment IDs with recent events ----
+	const eventSegmentIds = $derived(
+		new Set($stravaEvents.events.map((e) => e.segmentId))
+	);
+
 	// ---- Derived segment lists ----
 	const cyclingSegments = $derived(
-		$stravaSegments.segments
-			.filter((s) => s.activityType === 'ride')
-			.slice(0, 8)
+		pickTvSegments($stravaSegments.segments, 'ride', eventSegmentIds)
 	);
 
 	const runningSegments = $derived(
-		$stravaSegments.segments
-			.filter((s) => s.activityType === 'run')
-			.slice(0, 8)
+		pickTvSegments($stravaSegments.segments, 'run', eventSegmentIds)
 	);
 
 	// ---- Recent events for footer ----
-	const recentEvents = $derived($stravaEvents.events.slice(0, 3));
+	const recentEvents = $derived($stravaEvents.events.slice(0, 5));
 
 	// ---- Climb category labels ----
 	function categoryLabel(cat: number): string {
@@ -74,15 +108,8 @@
 	onMount(async () => {
 		await loadStravaData();
 
-		// Fetch leaderboards for visible segments (up to 16 total)
-		const visible = [
-			...$stravaSegments.segments
-				.filter((s) => s.activityType === 'ride')
-				.slice(0, 8),
-			...$stravaSegments.segments
-				.filter((s) => s.activityType === 'run')
-				.slice(0, 8),
-		];
+		// Fetch leaderboards for the selected segments
+		const visible = [...cyclingSegments, ...runningSegments];
 		await Promise.all(visible.map((seg) => maybeFetch(seg)));
 	});
 
