@@ -15,9 +15,27 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-03-31',
+		title: 'TV Leaderboards Refresh',
+		description:
+			'TV mode now shows 20 random segments per column instead of the same 8. Segments with recent KOM/QOM changes pinned to top. Different mix each page load.'
+	},
+	{
+		date: '2026-03-31',
+		title: 'Coffee Index Now Automated',
+		description:
+			'Coffee price scraper runs weekly. Previously manual-only, which is why live sources showed 0/11.'
+	},
+	{
+		date: '2026-03-31',
 		title: 'County-Wide Strava Catalog',
 		description:
-			'Completed full Marin segment discovery and enrichment: 2,225 segments total. Added a 100 ride / 100 run curated shortlist with override files, made the curated 200 the default dashboard catalog, and wired the daily leaderboard cron to track that set.'
+			'Full Marin segment discovery: 2,225 segments total. Curated 100 ride / 100 run shortlist as default dashboard catalog with daily leaderboard cron.'
+	},
+	{
+		date: '2026-03-31',
+		title: 'Panel Defaults Fixed',
+		description:
+			'New panels (composite, leaderboards, cappuccino, grocery, wine, tuition, fitness, driveway) now automatically included in presets. Older saved layouts updated on load.'
 	},
 	{
 		date: '2026-03-29',

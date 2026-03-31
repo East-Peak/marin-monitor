@@ -4,6 +4,18 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-03-31
+
+### Added
+- **Strava County-Wide Catalog** — Full Marin segment discovery (2,225 total). Curated 100 ride / 100 run shortlist with override files. Daily leaderboard cron tracks the curated 200.
+- **Coffee Index weekly cron** — Automated the coffee price scraper to run weekly (was manual-only, so live sources showed 0/11).
+
+### Changed
+- **TV Leaderboards** — Show 20 segments per column (up from 8) with randomized selection. Segments with recent KOM/QOM changes pinned to top. Different smattering each page load.
+- **Panel defaults** — "Everything" preset and default panel order now derived from panel registry instead of stale hand-maintained list. New panels (composite, leaderboards, cappuccino, grocery, wine, tuition, fitness, driveway) automatically included. Older localStorage normalized to include newly added panels.
+
+---
+
 ## 2026-03-29
 
 ### Added
