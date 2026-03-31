@@ -35,6 +35,9 @@ Thumbs.db
 # Playwright MCP screenshots
 .playwright-mcp/
 
+# Strava exploration state (large, regenerable)
+data/strava-explore.state*
+
 # Archive folder
 archive/
 .vercel
