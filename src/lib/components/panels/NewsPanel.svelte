@@ -15,7 +15,8 @@
 		showsNews,
 		prepNews,
 		farmNews,
-		satireNews
+		satireNews,
+		threeOneOneNews
 	} from '$lib/stores';
 	import { townFilter } from '$lib/stores/town-filter';
 
@@ -39,7 +40,8 @@
 		shows: showsNews,
 		prep: prepNews,
 		farm: farmNews,
-		satire: satireNews
+		satire: satireNews,
+		'311': threeOneOneNews
 	};
 
 	function resolveCategoryStore() {

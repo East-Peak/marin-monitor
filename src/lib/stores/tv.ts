@@ -5,7 +5,8 @@ import {
   safetyNews,
   localNews,
   civicNews,
-  alerts
+  alerts,
+  threeOneOneNews
 } from '$lib/stores/news';
 import { stravaEvents } from '$lib/stores/strava';
 import { STRAVA_CHYRON_MAX_AGE_MS } from '$lib/config/strava';
@@ -33,8 +34,8 @@ function newsToTicker(
  * Items that fail or are empty are silently excluded.
  */
 export const tvTickerItems = derived(
-  [safetyNews, localNews, civicNews, alerts, stravaEvents],
-  ([$safety, $local, $civic, $alerts, $strava]) => {
+  [safetyNews, localNews, civicNews, alerts, stravaEvents, threeOneOneNews],
+  ([$safety, $local, $civic, $alerts, $strava, $threeOneOne]) => {
     // NOTE: $safety, $local, $civic are CategoryState objects — access .items for NewsItem[]
     // $alerts is already NewsItem[]
     const safetyItems = $safety.items ?? [];
@@ -90,6 +91,12 @@ export const tvTickerItems = derived(
       // Civic — latest 2
       for (const item of civicItems.slice(0, 2)) {
         items.push(newsToTicker(item, 'CV'));
+      }
+
+      // 311 — latest 3
+      const threeOneOneItems = $threeOneOne.items ?? [];
+      for (const item of threeOneOneItems.slice(0, 3)) {
+        items.push(newsToTicker(item, '311'));
       }
 
       // Strava KOM/QOM events (max 4, within 48h)

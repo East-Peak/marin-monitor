@@ -25,7 +25,8 @@ const ALL_LAYERS: MapLayer[] = [
 	'gas',
 	'ev-charging',
 	'coffee',
-	'fitness'
+	'fitness',
+	'311'
 ];
 
 function createInitialState(): MapState {
@@ -53,7 +54,8 @@ export const LAYER_TO_CATEGORY: Partial<Record<MapLayer, NewsCategory>> = {
 	civic: 'civic',
 	safety: 'safety',
 	housing: 'housing',
-	satire: 'satire'
+	satire: 'satire',
+	'311': '311'
 };
 
 /**
@@ -70,7 +72,8 @@ export const CATEGORY_TO_LAYER: Record<NewsCategory, MapLayer> = {
 	civic: 'civic',
 	safety: 'safety',
 	housing: 'housing',
-	satire: 'satire'
+	satire: 'satire',
+	'311': '311'
 };
 
 function createMapStore() {

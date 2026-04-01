@@ -187,7 +187,10 @@ export const FEEDS: Record<NewsCategory, FeedSource[]> = {
 			verification: 'satire',
 			confirmed: true
 		}
-	]
+	],
+
+	// 311 items are fetched from the FixItMarin adapter, not RSS feeds
+	'311': []
 };
 
 /**

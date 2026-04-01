@@ -38,6 +38,7 @@ export {
 	prepNews,
 	farmNews,
 	satireNews,
+	threeOneOneNews,
 	allNewsItems,
 	alerts,
 	isLoading as isNewsLoading,

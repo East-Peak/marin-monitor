@@ -32,7 +32,8 @@ const NEWS_CATEGORIES: NewsCategory[] = [
 	'shows',
 	'prep',
 	'farm',
-	'satire'
+	'satire',
+	'311'
 ];
 
 // Create initial state for a category
@@ -331,6 +332,7 @@ export const showsNews = derived(news, ($news) => $news.categories.shows);
 export const prepNews = derived(news, ($news) => $news.categories.prep);
 export const farmNews = derived(news, ($news) => $news.categories.farm);
 export const satireNews = derived(news, ($news) => $news.categories.satire);
+export const threeOneOneNews = derived(news, ($news) => $news.categories['311']);
 
 // Derived store for all news items (reactive, deduplicated by id)
 export const allNewsItems = derived(news, ($news) => {

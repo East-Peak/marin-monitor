@@ -19,7 +19,8 @@
 			| 'farm'
 			| 'satire'
 			| 'pulse'
-			| 'community';
+			| 'community'
+			| '311';
 		count?: number | string | null;
 		status?: string;
 		statusClass?: string;
@@ -76,6 +77,7 @@
 	class:variant-satire={variant === 'satire'}
 	class:variant-pulse={variant === 'pulse'}
 	class:variant-community={variant === 'community'}
+	class:variant-311={variant === '311'}
 	data-panel-id={id}
 >
 	<div class="panel-header">
@@ -291,6 +293,10 @@
 
 	.panel.variant-community {
 		border-top-color: #a855f7;
+	}
+
+	.panel.variant-311 {
+		border-top-color: #ff6b35;
 	}
 
 	.panel.variant-community .panel-count {
