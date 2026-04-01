@@ -94,5 +94,14 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 		})
 	);
 
+	// 311 has no RSS feeds — set items directly from the blob adapter
+	if (seeClickFixIssues.length > 0 || !news.getItems('311').length) {
+		const enriched311 = await enrichItemsForRelevance(seeClickFixIssues);
+		news.setItems('311', enriched311);
+		if (enriched311.length > 0) {
+			void news.enrichLocations('311');
+		}
+	}
+
 	return { earthquakeNews, earthquakesRaw: earthquakes };
 }
