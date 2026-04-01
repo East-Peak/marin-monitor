@@ -42,15 +42,15 @@ async function storeImage(issueId: number, imageUrl: string, size: 'full' | 'thu
 		}
 
 		const contentType = response.headers.get('content-type') || 'image/jpeg';
-		const result = await put(blobKey, Buffer.from(imageData), {
-			access: 'public',
+		await put(blobKey, Buffer.from(imageData), {
+			access: 'private',
 			contentType,
 			addRandomSuffix: false,
 			allowOverwrite: true,
 			token: env.BLOB_READ_WRITE_TOKEN
 		});
 
-		return result.url;
+		return `/api/data/311-image?id=${issueId}&size=${size}`;
 	} catch (err) {
 		console.warn(`[sync-311] Image store error for ${issueId}: ${err instanceof Error ? err.message : String(err)}`);
 		return null;
