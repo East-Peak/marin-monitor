@@ -15,8 +15,6 @@ import {
 	fetchSheriffCrimeBlotter,
 	fetchSupplementalPoliceLogs,
 	fetchSupplementalActivityFeeds,
-	fetchSeeClickFixIssues,
-	fetchCitizenIncidents,
 	enrichItemsForRelevance
 } from '$lib/api/marin';
 
@@ -48,18 +46,14 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 		fetchTransitAlerts().then((r) => r.items),
 		fetchSheriffCrimeBlotter(),
 		fetchSupplementalPoliceLogs(),
-		fetchSupplementalActivityFeeds(),
-		fetchSeeClickFixIssues(),
-		fetchCitizenIncidents()
+		fetchSupplementalActivityFeeds()
 	]);
 
-	const [rssResults, npsAlerts, earthquakes, transitAlerts, sheriffBlotter, policeLogs, supplementalActivity, seeClickFixIssues, citizenIncidents] =
+	const [rssResults, npsAlerts, earthquakes, transitAlerts, sheriffBlotter, policeLogs, supplementalActivity] =
 		settled.map((r) => (r.status === 'fulfilled' ? r.value : [])) as [
 			Awaited<ReturnType<typeof fetchAllFeeds>>,
 			NewsItem[],
 			EarthquakeData[],
-			NewsItem[],
-			NewsItem[],
 			NewsItem[],
 			NewsItem[],
 			NewsItem[],
@@ -77,10 +71,8 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 		rssResults.map(async (result) => {
 			const extraItems =
 				result.category === 'safety'
-					? [...earthquakeNews, ...transitAlerts, ...sheriffBlotter, ...policeLogs, ...citizenIncidents, ...(supplementalByCategory.get(result.category) ?? [])]
-					: result.category === 'civic'
-						? [...seeClickFixIssues, ...(supplementalByCategory.get(result.category) ?? [])]
-						: result.category === 'outdoors'
+					? [...earthquakeNews, ...transitAlerts, ...sheriffBlotter, ...policeLogs, ...(supplementalByCategory.get(result.category) ?? [])]
+					: result.category === 'outdoors'
 							? [...npsAlerts, ...(supplementalByCategory.get(result.category) ?? [])]
 							: (supplementalByCategory.get(result.category) ?? []);
 
