@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { buildIdxTickerItems } from './tv';
 import { get } from 'svelte/store';
 
 // Mock the news stores before importing tv.ts
@@ -144,5 +145,80 @@ describe('tvTickerItems', () => {
 
 		// Should appear only once (either GG or PD, not both)
 		expect(matchingItems.length).toBe(1);
+	});
+});
+
+describe('buildIdxTickerItems', () => {
+	it('returns empty array when all data is null', () => {
+		const items = buildIdxTickerItems({});
+		expect(items).toEqual([]);
+	});
+
+	it('builds composite ticker item with Marin Number', () => {
+		const items = buildIdxTickerItems({
+			composite: {
+				current: {
+					timestamp: '2026-04-01',
+					tiers: [],
+					compositeScore: 100,
+					marinNumber: { total: 21110, items: [], annualized: 253320 }
+				},
+				history: []
+			}
+		});
+		const marinItem = items.find((i) => i.text.includes('Marin Number'));
+		expect(marinItem).toBeDefined();
+		expect(marinItem!.badge).toBe('IDX');
+		expect(marinItem!.text).toContain('21,110');
+	});
+
+	it('builds cappuccino ticker item with median price', () => {
+		const items = buildIdxTickerItems({
+			cappuccino: {
+				current: {
+					timestamp: '2026-04-01',
+					shopCount: 12,
+					medianPrice: 5.75,
+					avgPrice: 5.80,
+					minPrice: 4.50,
+					maxPrice: 7.00,
+					shops: []
+				},
+				history: []
+			}
+		});
+		const coffeeItem = items.find((i) => i.text.includes('Cappuccino'));
+		expect(coffeeItem).toBeDefined();
+		expect(coffeeItem!.text).toContain('$5.75');
+	});
+
+	it('caps at 5 IDX items', () => {
+		const items = buildIdxTickerItems({
+			cappuccino: {
+				current: { timestamp: '2026-04-01', shopCount: 12, medianPrice: 5.75, avgPrice: 5.80, minPrice: 4.50, maxPrice: 7.00, shops: [] },
+				history: []
+			},
+			grocery: {
+				current: { timestamp: '2026-04-01', totalCheapest: 187, totalExpensive: 245, itemsFound: 12, items: [] },
+				history: []
+			},
+			composite: {
+				current: { timestamp: '2026-04-01', tiers: [], compositeScore: 100, marinNumber: { total: 21110, items: [], annualized: 253320 } },
+				history: []
+			},
+			gas: {
+				current: { timestamp: '2026-04-01', stationCount: 30, avgRegular: 5.89, avgMidgrade: 6.19, avgPremium: 6.49, avgDiesel: 5.99, minRegular: 5.39, maxRegular: 6.29, stations: [] },
+				history: []
+			},
+			tuition: {
+				current: { timestamp: '2026-04-01', medianHouseholdIncome: 150000, incomeSource: 'ACS', incomeYear: '2024', tiers: [], schools: [], cumulativeK12: 698998 },
+				history: []
+			},
+			driveway: {
+				current: { timestamp: '2026-04-01', dataYear: 2025, totalVehicles: 200000, topMakes: [], fuelBreakdown: [{ fuelType: 'battery-electric', count: 16600, pct: 8.3 }], funStats: { rivian: 200, lucid: 12, porsche: 5000, tesla: 15000, hydrogen: 68 } },
+				history: []
+			}
+		});
+		expect(items.length).toBeLessThanOrEqual(5);
 	});
 });
