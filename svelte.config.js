@@ -33,6 +33,7 @@ const config = {
 					'https://cdns.abclocal.go.com',
 					'https://*.cartocdn.com',
 					'https://seeclickfix.com',
+					'https://*.public.blob.vercel-storage.com',
 					'data:',
 					'blob:'
 				],
