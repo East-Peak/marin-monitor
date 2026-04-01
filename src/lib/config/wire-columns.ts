@@ -5,6 +5,7 @@ export const WIRE_COLUMNS: { panelId: PanelId; category: NewsCategory; title: st
 	{ panelId: 'local-wire', category: 'local', title: 'Local Wire' },
 	{ panelId: 'safety', category: 'safety', title: 'Crime & Safety' },
 	{ panelId: 'civic', category: 'civic', title: 'Civic' },
+	{ panelId: '311', category: '311', title: '311' },
 	{ panelId: 'outdoors', category: 'outdoors', title: 'Outdoors & Lifestyle' },
 	{ panelId: 'satire', category: 'satire', title: 'Marin Lately (satire)' },
 	{ panelId: 'cycling', category: 'cycling', title: 'Cycling & Endurance' },

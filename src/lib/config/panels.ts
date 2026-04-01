@@ -38,7 +38,8 @@ export type PanelId =
 	| 'school-tuition'
 	| 'fitness'
 	| 'driveway'
-	| 'composite';
+	| 'composite'
+	| '311';
 
 export const PANELS: Record<PanelId, PanelConfig> = {
 	map: { name: 'Marin Map', priority: 1, description: 'County map with layered data' },
@@ -166,6 +167,11 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 		name: 'Cost of Being Marin',
 		priority: 1,
 		description: 'Composite cost index and The Marin Number: the all-in monthly price of the Marin lifestyle'
+	},
+	'311': {
+		name: '311',
+		priority: 2,
+		description: 'Fix It Marin civic issue reports — potholes, dumping, graffiti, and more'
 	}
 };
 
@@ -186,6 +192,7 @@ const CURATED_PANEL_ORDER: PanelId[] = [
 	'airport-status',
 	'wastewater',
 	'civic',
+	'311',
 	'outdoors',
 	'housing',
 	'gas-prices',

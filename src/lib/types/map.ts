@@ -8,7 +8,8 @@ export type MapFeatureKind =
 	| 'ev-charging-station'
 	| 'coffee-shop'
 	| 'fitness-studio'
-	| 'airport';
+	| 'airport'
+	| '311-report';
 
 export interface MapFeatureInspectorData {
 	kind: MapFeatureKind;
@@ -17,4 +18,5 @@ export interface MapFeatureInspectorData {
 	description?: string;
 	severity?: string;
 	source?: string;
+	imageUrl?: string;
 }

@@ -29,7 +29,8 @@ export const LAYER_COLORS = {
 	gas: '#22d3ee', // cyan
 	'ev-charging': '#a855f7', // purple
 	coffee: '#a16207', // warm brown
-	fitness: '#ec4899' // pink
+	fitness: '#ec4899', // pink
+	'311': '#ff6b35'
 } as const;
 
 /**

@@ -14,7 +14,8 @@ export type NewsCategory =
 	| 'shows'
 	| 'prep'
 	| 'farm'
-	| 'satire';
+	| 'satire'
+	| '311';
 
 /**
  * Verification level for every story/item
@@ -24,7 +25,7 @@ export type VerificationLevel = 'official' | 'local_media' | 'community' | 'sati
 /**
  * Map layer toggles
  */
-export type MapLayer = 'civic' | 'news' | 'safety' | 'housing' | 'activity' | 'satire' | 'gas' | 'ev-charging' | 'coffee' | 'fitness';
+export type MapLayer = 'civic' | 'news' | 'safety' | 'housing' | 'activity' | 'satire' | 'gas' | 'ev-charging' | 'coffee' | 'fitness' | '311';
 
 export type { MapFeatureKind, MapFeatureInspectorData } from './map';
 
