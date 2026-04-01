@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { safetyNews, alerts } from '$lib/stores';
-	import TvAutoScroll from '$lib/components/tv/TvAutoScroll.svelte';
+	import TvScroller from '$lib/components/tv/TvScroller.svelte';
 	import { timeAgo } from '$lib/utils';
+
+	interface Props {
+		active?: boolean;
+	}
+	let { active = true }: Props = $props();
 
 	const safetyItems = $derived($safetyNews.items.slice(0, 20));
 	const activeAlerts = $derived($alerts.slice(0, 4));
@@ -22,7 +27,7 @@
 	{/if}
 
 	<div class="flex-1 min-h-0">
-		<TvAutoScroll>
+		<TvScroller screenId="safety" {active}>
 			<div class="grid grid-cols-2 gap-2">
 				{#each safetyItems as item, i (item.id + '-' + i)}
 					<div class="bg-gray-800/60 rounded-lg p-2.5 border border-gray-700/50">
@@ -34,6 +39,6 @@
 					</div>
 				{/each}
 			</div>
-		</TvAutoScroll>
+		</TvScroller>
 	</div>
 </div>

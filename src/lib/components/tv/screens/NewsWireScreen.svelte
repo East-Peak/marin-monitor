@@ -1,7 +1,12 @@
 <script lang="ts">
   import { localNews } from '$lib/stores';
-  import TvAutoScroll from '$lib/components/tv/TvAutoScroll.svelte';
+  import TvScroller from '$lib/components/tv/TvScroller.svelte';
   import { timeAgo } from '$lib/utils';
+
+  interface Props {
+    active?: boolean;
+  }
+  let { active = true }: Props = $props();
 
   const items = $derived($localNews.items.slice(0, 16));
 </script>
@@ -9,7 +14,7 @@
 <div class="h-full flex flex-col p-6">
   <h2 class="text-2xl font-bold text-gray-100 mb-4 shrink-0">Local News Wire</h2>
   <div class="flex-1 min-h-0">
-    <TvAutoScroll>
+    <TvScroller screenId="news-wire" {active}>
       <div class="grid grid-cols-2 gap-4">
         {#each items as item, i (item.id + '-' + i)}
           <div class="bg-gray-800/60 rounded-lg p-4 border border-gray-700/50">
@@ -26,6 +31,6 @@
           </div>
         {/each}
       </div>
-    </TvAutoScroll>
+    </TvScroller>
   </div>
 </div>

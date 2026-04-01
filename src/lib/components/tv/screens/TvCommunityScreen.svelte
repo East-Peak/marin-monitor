@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { outdoorsNews, civicNews } from '$lib/stores';
-	import TvAutoScroll from '$lib/components/tv/TvAutoScroll.svelte';
+	import TvScroller from '$lib/components/tv/TvScroller.svelte';
 	import { timeAgo } from '$lib/utils';
+
+	interface Props {
+		active?: boolean;
+	}
+	let { active = true }: Props = $props();
 
 	const outdoorItems = $derived($outdoorsNews.items.slice(0, 12));
 	const civicItems = $derived($civicNews.items.slice(0, 12));
@@ -13,7 +18,7 @@
 		<h2 class="text-xl font-bold text-gray-100 flex-1">Civic</h2>
 	</div>
 	<div class="flex-1 min-h-0">
-		<TvAutoScroll>
+		<TvScroller screenId="community" {active}>
 			<div class="grid grid-cols-2 gap-x-6 gap-y-2">
 				{#each Array(Math.max(outdoorItems.length, civicItems.length)) as _, i}
 					<div>
@@ -40,6 +45,6 @@
 					</div>
 				{/each}
 			</div>
-		</TvAutoScroll>
+		</TvScroller>
 	</div>
 </div>

@@ -1,8 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { stravaSegments, stravaEvents, stravaLeaderboards, loadStravaData, loadAllLeaderboards } from '$lib/stores/strava';
-	import TvAutoScroll from '$lib/components/tv/TvAutoScroll.svelte';
+	import TvScroller from '$lib/components/tv/TvScroller.svelte';
 	import type { StravaSegment, StravaLeaderboard, StravaLeaderboardRow } from '$lib/types/strava';
+
+	interface Props {
+		active?: boolean;
+	}
+	let { active = true }: Props = $props();
 
 	type VisibleLeaderboardRow = StravaLeaderboardRow & {
 		displayRank: number;
@@ -135,7 +140,7 @@
 		<div class="flex-1 min-w-0 flex flex-col gap-2">
 			<div class="shrink-0 text-xs font-bold uppercase tracking-widest" style="color:#f59e0b;">Cycling</div>
 			<div class="flex-1 min-h-0">
-				<TvAutoScroll speed={12}>
+				<TvScroller screenId="leaderboards-cycling" {active} speed={12}>
 					<div class="flex flex-col gap-2">
 						{#each cyclingSegments as seg (seg.id)}
 							{@const lb = getLeaderboard(seg.id)}
@@ -208,7 +213,7 @@
 							<div class="text-xs text-gray-600 italic text-center py-4">No cycling segments loaded</div>
 						{/if}
 					</div>
-				</TvAutoScroll>
+				</TvScroller>
 			</div>
 		</div>
 
@@ -219,7 +224,7 @@
 		<div class="flex-1 min-w-0 flex flex-col gap-2">
 			<div class="shrink-0 text-xs font-bold uppercase tracking-widest" style="color:#2dd4bf;">Running</div>
 			<div class="flex-1 min-h-0">
-				<TvAutoScroll speed={12}>
+				<TvScroller screenId="leaderboards-running" {active} speed={12}>
 					<div class="flex flex-col gap-2">
 						{#each runningSegments as seg (seg.id)}
 							{@const lb = getLeaderboard(seg.id)}
@@ -283,7 +288,7 @@
 							<div class="text-xs text-gray-600 italic text-center py-4">No running segments loaded</div>
 						{/if}
 					</div>
-				</TvAutoScroll>
+				</TvScroller>
 			</div>
 		</div>
 
