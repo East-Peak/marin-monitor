@@ -2,7 +2,7 @@
 	import { getContext, onMount, onDestroy } from 'svelte';
 	import { get, type Writable } from 'svelte/store';
 	import type { Map as MapLibreMap, GeoJSONSource, MapLayerMouseEvent } from 'maplibre-gl';
-	import { allNewsItems } from '$lib/stores/news';
+	import { allNewsItems, threeOneOneNews } from '$lib/stores/news';
 	import { mapStore, CATEGORY_TO_LAYER } from '$lib/stores/map';
 	import { townFilter } from '$lib/stores/town-filter';
 	import { TOWN_BY_SLUG } from '$lib/config/towns';
@@ -579,6 +579,12 @@
 			data: { type: 'FeatureCollection', features: [] }
 		});
 
+		// 311 reports source (SeeClickFix / Fix It Marin)
+		map.addSource('311-reports', {
+			type: 'geojson',
+			data: { type: 'FeatureCollection', features: [] }
+		});
+
 		// --- Layers ---
 		const trafficEventRadius = [
 			'case',
@@ -1069,6 +1075,50 @@
 			}
 		});
 
+		// 311 report dots (orange)
+		map.addLayer({
+			id: '311-reports-layer',
+			type: 'circle',
+			source: '311-reports',
+			paint: {
+				'circle-radius': hoverCase(8.5, 5),
+				'circle-color': '#ff6b35',
+				'circle-opacity': hoverCase(0.98, 0.8),
+				'circle-stroke-width': hoverCase(3, 1),
+				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(10, 10, 10, 0.8)')
+			}
+		});
+
+		map.addLayer({
+			id: '311-reports-hit-layer',
+			type: 'circle',
+			source: '311-reports',
+			paint: {
+				'circle-radius': 14,
+				'circle-color': 'rgba(0, 0, 0, 0)'
+			}
+		});
+
+		// 311 report labels (visible at higher zoom)
+		map.addLayer({
+			id: '311-reports-label',
+			type: 'symbol',
+			source: '311-reports',
+			minzoom: 12,
+			layout: {
+				'text-field': ['get', 'label'],
+				'text-size': 9,
+				'text-offset': [0, 1.4],
+				'text-anchor': 'top',
+				'text-optional': true
+			},
+			paint: {
+				'text-color': '#ff6b35',
+				'text-halo-color': 'rgba(10, 10, 10, 0.9)',
+				'text-halo-width': 1.5
+			}
+		});
+
 		// News pins (small dots per item)
 		map.addLayer({
 			id: 'news-pins-layer',
@@ -1170,6 +1220,7 @@
 				'fitness-studios-hit-layer',
 				'fitness-studios-label'
 			];
+			const threeOneOneTriggerLayers = ['311-reports-layer', '311-reports-hit-layer'];
 			const fireIncidentTriggerLayers = ['fire-incidents-layer', 'fire-incidents-label'];
 			const airportTriggerLayers = ['airports-layer', 'airports-hit-layer', 'airports-label'];
 
@@ -1311,6 +1362,20 @@
 				});
 			});
 
+			bindLayerGroupClick(map, threeOneOneTriggerLayers, (e: MapLayerMouseEvent) => {
+				const feature = e.features?.[0];
+				if (!feature?.properties) return;
+				const props = feature.properties;
+				onFeatureClick?.({
+					kind: '311-report',
+					title: String(props.category ?? '311 Report'),
+					subtitle: String(props.address ?? ''),
+					description: String(props.description ?? ''),
+					source: 'Fix It Marin',
+					imageUrl: props.imageUrl ? String(props.imageUrl) : undefined
+				});
+			});
+
 			bindLayerGroupClick(map, fireIncidentTriggerLayers, (e: MapLayerMouseEvent) => {
 				if (clickHitsVisibleStravaFeature(map, e)) return;
 				const feature = e.features?.[0];
@@ -1362,6 +1427,10 @@
 			bindInteractiveHover(map, {
 				triggerLayerIds: fitnessTriggerLayers,
 				sourceId: 'fitness-studios'
+			});
+			bindInteractiveHover(map, {
+				triggerLayerIds: threeOneOneTriggerLayers,
+				sourceId: '311-reports'
 			});
 			bindInteractiveHover(map, {
 				triggerLayerIds: fireIncidentTriggerLayers,
@@ -1780,6 +1849,51 @@
 			);
 		}
 
+		// 311 reports (SeeClickFix / Fix It Marin)
+		const threeOneOneItems = get(threeOneOneNews).items ?? [];
+		const map311Visible = mapState.activeLayers['311'];
+		const threeOneOneFeatures: GeoJSON.Feature[] = [];
+		if (map311Visible) {
+			for (const item of threeOneOneItems) {
+				if (!item.lat || !item.lon) continue;
+				if (currentTownFilter && item.townSlug !== currentTownFilter) continue;
+
+				const category = item.title.includes(' · ')
+					? item.title.split(' · ')[0]
+					: item.title;
+				const street = item.title.includes(' · ')
+					? item.title.split(' · ')[1]
+					: '';
+
+				threeOneOneFeatures.push({
+					type: 'Feature',
+					id: item.id.replace('seeclickfix-', ''),
+					geometry: {
+						type: 'Point',
+						coordinates: [item.lon, item.lat]
+					},
+					properties: {
+						category,
+						label: street ? `${category}\n${street}` : category,
+						address: item.locationEvidence ?? '',
+						description: item.description ?? '',
+						imageUrl: item.imageUrl ?? ''
+					}
+				});
+			}
+		}
+
+		const threeOneOneSource = map.getSource('311-reports') as GeoJSONSource;
+		if (threeOneOneSource) {
+			threeOneOneSource.setData({ type: 'FeatureCollection', features: threeOneOneFeatures });
+		}
+
+		for (const layerId of ['311-reports-layer', '311-reports-hit-layer', '311-reports-label']) {
+			if (map.getLayer(layerId)) {
+				map.setLayoutProperty(layerId, 'visibility', map311Visible ? 'visible' : 'none');
+			}
+		}
+
 		applyTrafficVisibility(map);
 	}
 
@@ -1844,6 +1958,7 @@
 	let unsubscribeEv: (() => void) | null = null;
 	let unsubscribeCoffee: (() => void) | null = null;
 	let unsubscribeFitness: (() => void) | null = null;
+	let unsubscribe311: (() => void) | null = null;
 	let updateDataTimer: ReturnType<typeof setTimeout> | null = null;
 
 	onMount(() => {
@@ -1937,6 +2052,17 @@
 					updateDataTimer = setTimeout(() => {
 						const m = getMap();
 						if (!m || !m.getSource('fitness-studios')) return;
+						updateData(m);
+					}, 100);
+				});
+			}
+
+			if (!unsubscribe311) {
+				unsubscribe311 = threeOneOneNews.subscribe(() => {
+					if (updateDataTimer) clearTimeout(updateDataTimer);
+					updateDataTimer = setTimeout(() => {
+						const m = getMap();
+						if (!m || !m.getSource('311-reports')) return;
 						updateData(m);
 					}, 100);
 				});
@@ -2036,6 +2162,8 @@
 		unsubscribeEv?.();
 		unsubscribeCoffee?.();
 		unsubscribeFitness?.();
+		unsubscribe311?.();
+		unsubscribe311 = null;
 		unsubscribeTownFilter?.();
 		if (trafficRefreshTimer) {
 			clearInterval(trafficRefreshTimer);
