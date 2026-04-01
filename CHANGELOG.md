@@ -4,6 +4,28 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-04-01
+
+### Added
+- **TV Mode Refresh v2** — 20-screen carousel (up from 13) with hero/anchor/card screen types
+  - Cost of Being Marin hero screen with The Marin Number ($21,110/mo)
+  - 311 Photo Wall ("Wall of Grievances") — scrolling grid of complaint photos
+  - Daily Life card (cappuccino + grocery basket + gas prices)
+  - Lifestyle card (wine index + fitness drop-in prices)
+  - Structural Marin card (private school tuition + housing)
+  - Marin Driveway card (vehicle registration, EV share, fuel breakdown)
+  - Conditions card (weather + AQI + tides)
+  - Outdoors card (surf report + Hero Dirt tracker + stream gauges)
+- **Map overlays** — Each TV map region shows contextual data pins (311 photos, coffee/gas prices, fitness studios)
+- **IDX chyron category** — Index data headlines scroll in the ticker (cappuccino prices, grocery basket, Marin Number, etc.)
+
+### Changed
+- **Scroll system replaced** — CSS animation (TvAutoScroll) replaced with JS rAF-driven scroll (TvScroller) that preserves position across carousel cycles
+- **Variable screen durations** — Hero screens (22s), anchor screens (18-20s), card screens (12s), map screens (15s)
+- **Conditions screen split** — Old grab-bag environmental screen split into focused Conditions + Outdoors cards
+
+---
+
 ## 2026-03-31
 
 ### Added

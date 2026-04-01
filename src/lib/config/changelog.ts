@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-04-01',
+		title: 'TV Mode Refresh v2',
+		description:
+			'20-screen carousel with Cost of Being Marin hero, 311 Photo Wall, index cards, map overlays, and scroll that remembers where you left off.'
+	},
+	{
 		date: '2026-03-31',
 		title: 'TV Leaderboards Refresh',
 		description:
