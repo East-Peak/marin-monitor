@@ -12,7 +12,10 @@
 
 	let failedIds = $state(new Set<string>());
 
-	const photoItems = $derived(items.filter((it) => it.imageUrl));
+	const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+	const photoItems = $derived(
+		items.filter((i) => i.imageUrl && (Date.now() - i.timestamp) < SEVEN_DAYS_MS)
+	);
 
 	const colCount = $derived(
 		photoItems.length < 3 ? 1 : photoItems.length < 6 ? 2 : 3

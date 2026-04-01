@@ -146,6 +146,16 @@ function createMapStore() {
 			}));
 		},
 
+		clearAllLayers() {
+			update((state) => {
+				const cleared = {} as Record<MapLayer, boolean>;
+				for (const layer of ALL_LAYERS) {
+					cleared[layer] = false;
+				}
+				return { ...state, activeLayers: cleared };
+			});
+		},
+
 		reset() {
 			set(createInitialState());
 		}

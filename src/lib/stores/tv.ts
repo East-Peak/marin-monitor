@@ -1,6 +1,6 @@
 // src/lib/stores/tv.ts
 
-import { derived, writable, get } from 'svelte/store';
+import { derived, writable } from 'svelte/store';
 import {
   safetyNews,
   localNews,
@@ -206,8 +206,8 @@ export function buildIdxTickerItems(sources: IndexDataSources): TickerItem[] {
  * Items that fail or are empty are silently excluded.
  */
 export const tvTickerItems = derived(
-  [safetyNews, localNews, civicNews, alerts, stravaEvents, threeOneOneNews],
-  ([$safety, $local, $civic, $alerts, $strava, $threeOneOne]) => {
+  [safetyNews, localNews, civicNews, alerts, stravaEvents, threeOneOneNews, tvIndexData],
+  ([$safety, $local, $civic, $alerts, $strava, $threeOneOne, $indexData]) => {
     // NOTE: $safety, $local, $civic are CategoryState objects — access .items for NewsItem[]
     // $alerts is already NewsItem[]
     const safetyItems = $safety.items ?? [];
@@ -291,8 +291,7 @@ export const tvTickerItems = derived(
       }
 
       // IDX — index data headlines
-      const idxSources = get(tvIndexData);
-      const idxItems = buildIdxTickerItems(idxSources);
+      const idxItems = buildIdxTickerItems($indexData);
       items.push(...idxItems);
     } catch {
       // Silent fail — don't break chyron

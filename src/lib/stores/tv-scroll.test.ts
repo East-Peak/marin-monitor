@@ -11,32 +11,34 @@ describe('tv-scroll store', () => {
 		resetAllScrollPositions();
 	});
 
-	it('returns 0 for unknown screen', () => {
-		expect(getScrollPosition('unknown')).toBe(0);
+	it('returns null for unknown screen', () => {
+		expect(getScrollPosition('unknown')).toBeNull();
 	});
 
-	it('saves and retrieves scroll position', () => {
-		saveScrollPosition('news-wire', 150);
-		expect(getScrollPosition('news-wire')).toBe(150);
+	it('saves and retrieves scroll position with content height', () => {
+		saveScrollPosition('news-wire', 150, 800);
+		const saved = getScrollPosition('news-wire');
+		expect(saved).toEqual({ scrollTop: 150, contentHeight: 800 });
 	});
 
 	it('overwrites previous position', () => {
-		saveScrollPosition('safety', 100);
-		saveScrollPosition('safety', 250);
-		expect(getScrollPosition('safety')).toBe(250);
+		saveScrollPosition('safety', 100, 600);
+		saveScrollPosition('safety', 250, 900);
+		const saved = getScrollPosition('safety');
+		expect(saved).toEqual({ scrollTop: 250, contentHeight: 900 });
 	});
 
 	it('resets individual screen position', () => {
-		saveScrollPosition('safety', 100);
+		saveScrollPosition('safety', 100, 600);
 		resetScrollPosition('safety');
-		expect(getScrollPosition('safety')).toBe(0);
+		expect(getScrollPosition('safety')).toBeNull();
 	});
 
 	it('resets all positions', () => {
-		saveScrollPosition('safety', 100);
-		saveScrollPosition('news-wire', 200);
+		saveScrollPosition('safety', 100, 600);
+		saveScrollPosition('news-wire', 200, 1000);
 		resetAllScrollPositions();
-		expect(getScrollPosition('safety')).toBe(0);
-		expect(getScrollPosition('news-wire')).toBe(0);
+		expect(getScrollPosition('safety')).toBeNull();
+		expect(getScrollPosition('news-wire')).toBeNull();
 	});
 });

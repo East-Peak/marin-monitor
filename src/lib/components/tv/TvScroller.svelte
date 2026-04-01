@@ -1,5 +1,6 @@
 <!-- src/lib/components/tv/TvScroller.svelte -->
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import type { Snippet } from 'svelte';
 	import { saveScrollPosition, getScrollPosition } from '$lib/stores/tv-scroll';
 
@@ -32,11 +33,20 @@
 	function startScrolling(): void {
 		if (rafId !== null) return;
 
-		// Restore saved position
+		// Restore saved position (with content height sanity check)
 		const saved = getScrollPosition(screenId);
-		if (containerEl && saved > 0) {
-			const maxScroll = getMaxScroll();
-			containerEl.scrollTop = Math.min(saved, maxScroll);
+		if (containerEl && saved) {
+			const currentHeight = contentEl?.scrollHeight ?? 0;
+			const heightChanged = saved.contentHeight > 0 &&
+				Math.abs(currentHeight - saved.contentHeight) / saved.contentHeight > 0.2;
+
+			if (heightChanged) {
+				// Content changed significantly — start from top
+				containerEl.scrollTop = 0;
+			} else {
+				const maxScroll = getMaxScroll();
+				containerEl.scrollTop = Math.min(saved.scrollTop, maxScroll);
+			}
 		}
 
 		lastFrameTime = null;
@@ -100,11 +110,27 @@
 		}
 		lastFrameTime = null;
 
-		// Save position
+		// Save position with content height
 		if (containerEl) {
-			saveScrollPosition(screenId, containerEl.scrollTop);
+			saveScrollPosition(screenId, containerEl.scrollTop, contentEl?.scrollHeight ?? 0);
 		}
 	}
+
+	onDestroy(() => {
+		// Save position before component is destroyed
+		if (containerEl) {
+			saveScrollPosition(screenId, containerEl.scrollTop, contentEl?.scrollHeight ?? 0);
+		}
+		// Clean up any pending animation frame or timeout
+		if (rafId !== null) {
+			cancelAnimationFrame(rafId);
+			rafId = null;
+		}
+		if (pauseTimeout !== null) {
+			clearTimeout(pauseTimeout);
+			pauseTimeout = null;
+		}
+	});
 
 	$effect(() => {
 		if (active && needsScroll) {

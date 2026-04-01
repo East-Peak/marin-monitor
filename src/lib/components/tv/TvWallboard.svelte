@@ -123,7 +123,11 @@
   }
 
   function goToScreen(idx: number) {
-    carouselIdx = idx;
+    let targetIdx = idx;
+    if (shouldSkipScreen(targetIdx)) {
+      targetIdx = nextValidIdx(targetIdx);
+    }
+    carouselIdx = targetIdx;
     screenStartedAt = Date.now();
   }
 
@@ -364,6 +368,9 @@
     // Reset shared state so TV mode starts county-wide, not town-scoped
     townFilter.clear();
     mapStore.selectTown(null);
+
+    // Reset map layers to prevent dashboard layer bleed
+    mapStore.clearAllLayers();
 
     // Force dark theme — both data-theme attribute AND settings store
     // (MapContainer reads settings.theme for basemap style)
