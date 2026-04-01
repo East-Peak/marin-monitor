@@ -8,6 +8,8 @@
 	}
 	let { items, active = true }: Props = $props();
 
+	const ORANGE = '#ff6b35';
+
 	let failedIds = $state(new Set<string>());
 
 	const photoItems = $derived(items.filter((it) => it.imageUrl));
@@ -36,17 +38,17 @@
 		failedIds = new Set([...failedIds, id]);
 	}
 
-	/** Map 311 categories to simple placeholder labels */
+	/** Map 311 categories to emoji-style icons for fallback cards */
 	function categoryIcon(category: string): string {
 		const lower = category.toLowerCase();
-		if (lower.includes('pothole') || lower.includes('road')) return 'Road';
-		if (lower.includes('graffiti')) return 'Graffiti';
-		if (lower.includes('dumping') || lower.includes('trash')) return 'Dumping';
-		if (lower.includes('tree') || lower.includes('vegetation')) return 'Tree';
-		if (lower.includes('sidewalk') || lower.includes('curb')) return 'Sidewalk';
-		if (lower.includes('sign')) return 'Sign';
-		if (lower.includes('light') || lower.includes('lamp')) return 'Light';
-		if (lower.includes('water') || lower.includes('drain')) return 'Water';
+		if (lower.includes('pothole') || lower.includes('road')) return 'ROAD';
+		if (lower.includes('graffiti')) return 'GRAFFITI';
+		if (lower.includes('dumping') || lower.includes('trash')) return 'DUMPING';
+		if (lower.includes('tree') || lower.includes('vegetation')) return 'TREE';
+		if (lower.includes('sidewalk') || lower.includes('curb')) return 'SIDEWALK';
+		if (lower.includes('sign')) return 'SIGN';
+		if (lower.includes('light') || lower.includes('lamp')) return 'LIGHT';
+		if (lower.includes('water') || lower.includes('drain')) return 'WATER';
 		return '311';
 	}
 </script>
@@ -55,44 +57,80 @@
 	<!-- Skip screen: no photos -->
 {:else}
 	<div class="h-full flex flex-col px-12 py-8">
-		<div class="flex items-center gap-3">
-			<h2 class="text-lg font-medium uppercase tracking-widest text-zinc-400">Fix It Marin</h2>
-			<span class="rounded-full bg-zinc-700 px-2.5 py-0.5 text-xs font-medium tabular-nums text-zinc-300">
+		<!-- Header -->
+		<div class="flex items-center gap-4">
+			<h2 class="text-2xl font-bold uppercase tracking-widest" style="color: {ORANGE}">
+				Fix It Marin
+			</h2>
+			<div
+				class="rounded-full px-3 py-1 text-sm font-bold tabular-nums text-white"
+				style="background: {ORANGE}"
+			>
 				{photoItems.length}
-			</span>
+			</div>
+			<div class="flex-1"></div>
+			<span class="text-sm text-zinc-500">Recent reports with photos</span>
 		</div>
 
-		<div class="mt-6 flex-1 min-h-0">
+		<div class="mt-5 flex-1 min-h-0">
 			<TvScroller screenId="311-photos" {active} speed={25}>
 				<div
-					class="grid gap-6"
+					class="grid gap-5"
 					style:grid-template-columns="repeat({colCount}, minmax(0, 1fr))"
 				>
 					{#each photoItems as item, i (item.id + '-' + i)}
 						{@const parsed = parseTitle(item.title)}
-						<div class="rounded-xl bg-zinc-800/60 overflow-hidden">
+						<div
+							class="rounded-lg overflow-hidden shadow-lg"
+							style="border-bottom: 3px solid {ORANGE}; background: rgba(39, 39, 42, 0.7);"
+						>
 							{#if failedIds.has(item.id)}
-								<div class="aspect-[4/3] w-full flex flex-col items-center justify-center bg-zinc-700/40">
-									<span class="text-4xl font-bold text-zinc-500">{categoryIcon(parsed.category)}</span>
-									<p class="mt-2 text-xs text-zinc-500">Photo unavailable</p>
+								<!-- Styled fallback when photo fails -->
+								<div
+									class="aspect-[4/3] w-full flex flex-col items-center justify-center relative overflow-hidden"
+								>
+									<!-- Gradient background -->
+									<div
+										class="absolute inset-0"
+										style="background: linear-gradient(135deg, rgba(255, 107, 53, 0.25) 0%, rgba(255, 107, 53, 0.08) 100%);"
+									></div>
+									<div class="relative z-10 text-center px-4">
+										<span class="text-sm font-bold uppercase tracking-widest" style="color: {ORANGE}">
+											{categoryIcon(parsed.category)}
+										</span>
+										<p class="mt-3 text-xl font-bold text-white leading-snug">
+											{parsed.category}
+										</p>
+										{#if parsed.street}
+											<p class="mt-1 text-sm text-zinc-400">{parsed.street}</p>
+										{/if}
+									</div>
 								</div>
 							{:else}
-								<img
-									src={item.imageUrl}
-									alt={item.title}
-									class="aspect-[4/3] w-full object-cover"
-									loading="lazy"
-									onerror={() => handleImgError(item.id)}
-								/>
+								<!-- Photo with dark gradient overlay for text readability -->
+								<div class="relative aspect-[4/3] w-full">
+									<img
+										src={item.imageUrl}
+										alt={item.title}
+										class="absolute inset-0 w-full h-full object-cover"
+										loading="lazy"
+										onerror={() => handleImgError(item.id)}
+									/>
+									<!-- Bottom gradient overlay -->
+									<div
+										class="absolute inset-x-0 bottom-0 h-1/3"
+										style="background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);"
+									></div>
+								</div>
 							{/if}
 							<div class="p-3">
-								<p class="text-sm font-medium text-zinc-300">{parsed.category}</p>
+								<p class="text-sm font-bold text-white">{parsed.category}</p>
 								{#if parsed.street}
-									<p class="text-xs text-zinc-500">{parsed.street}</p>
+									<p class="text-xs text-zinc-400 mt-0.5">{parsed.street}</p>
 								{/if}
-								<div class="mt-1 flex items-center gap-2">
+								<div class="mt-1.5 flex items-center gap-2">
 									{#if item.town}
-										<span class="text-xs text-zinc-500">{item.town}</span>
+										<span class="text-xs text-zinc-400">{item.town}</span>
 									{/if}
 									<span class="text-xs text-zinc-600">{timeAgo(item.timestamp)}</span>
 								</div>

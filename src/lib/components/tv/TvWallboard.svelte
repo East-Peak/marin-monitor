@@ -479,7 +479,7 @@
           {:else if screen.id === 'outdoors'}
             <TvOutdoorsCard
               surf={[]}
-              dirt={heroDirt ? { condition: heroDirt.label, lastRain: heroDirt.summary } : null}
+              dirt={heroDirt ? { condition: heroDirt.label, color: heroDirt.color, lastRain: heroDirt.summary } : null}
               streams={streamGauges.filter(s => s.streamflow != null).map(s => ({ name: s.shortName || s.name, cfs: Math.round(s.streamflow!), trend: 'stable' as const }))}
             />
           {/if}
