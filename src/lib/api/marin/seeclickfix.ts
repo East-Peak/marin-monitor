@@ -3,8 +3,6 @@ import { logger } from '$lib/config/api';
 import type { NewsItem } from '$lib/types';
 import { fetchWithTimeout } from './fetch-helpers';
 
-const SEECLICKFIX_API = 'https://seeclickfix.com/api/v2/issues';
-
 /** Marin County bounding box — filter out stray issues outside the county. */
 const MARIN_BOUNDS = {
 	latMin: 37.83,
@@ -38,15 +36,10 @@ interface SeeClickFixIssue {
 	html_url?: string;
 }
 
-interface SeeClickFixResponse {
+interface SeeClickFixBlobData {
 	issues: SeeClickFixIssue[];
-	metadata?: {
-		pagination?: {
-			pages: number;
-			per_page: number;
-			entries: number;
-		};
-	};
+	lastUpdated: string;
+	count: number;
 }
 
 function isInMarinCounty(lat: number | null, lng: number | null): boolean {
@@ -122,36 +115,21 @@ function issueToNewsItem(issue: SeeClickFixIssue): NewsItem | null {
 	};
 }
 
-export async function fetchSeeClickFixIssues(
-	hours: number = 72,
-	limit: number = 50
-): Promise<NewsItem[]> {
+/**
+ * Fetch 311 issues from the pre-synced blob (via /api/data/311).
+ * The cron job at /api/cron/sync-311 refreshes the blob every 4 hours.
+ */
+export async function fetchSeeClickFixIssues(): Promise<NewsItem[]> {
 	try {
-		const now = new Date();
-		now.setMinutes(0, 0, 0);
-		const cutoff = new Date(now.getTime() - hours * 60 * 60 * 1000).toISOString();
+		logger.log('SEECLICKFIX', 'Fetching 311 issues from blob');
 
-		const params = new URLSearchParams({
-			place_url: 'marin-county',
-			per_page: String(limit),
-			status: 'open,acknowledged',
-			sort: 'created_at',
-			sort_direction: 'DESC',
-			after: cutoff
-		});
-
-		const url = `${SEECLICKFIX_API}?${params}`;
-		logger.log('SEECLICKFIX', 'Fetching SeeClickFix civic issues');
-
-		const response = await fetchWithTimeout(url, {
-			headers: { 'User-Agent': 'MarinMonitor/1.0' }
-		});
+		const response = await fetchWithTimeout('/api/data/311', { cache: 'no-store' });
 
 		if (!response.ok) {
 			throw new Error(`HTTP ${response.status}`);
 		}
 
-		const data = (await response.json()) as SeeClickFixResponse;
+		const data = (await response.json()) as SeeClickFixBlobData;
 
 		if (!data.issues || !Array.isArray(data.issues)) {
 			logger.warn('SEECLICKFIX', 'Unexpected response shape — no issues array');
@@ -163,10 +141,10 @@ export async function fetchSeeClickFixIssues(
 			.filter((item): item is NewsItem => !!item)
 			.sort((a, b) => b.timestamp - a.timestamp);
 
-		logger.log('SEECLICKFIX', `Fetched ${items.length} civic issues from SeeClickFix`);
+		logger.log('SEECLICKFIX', `Loaded ${items.length} issues from blob`);
 		return items;
 	} catch (error) {
-		logger.warn('SEECLICKFIX', `SeeClickFix fetch failed: ${(error as Error).message}`);
+		logger.warn('SEECLICKFIX', `311 blob fetch failed: ${(error as Error).message}`);
 		return [];
 	}
 }
