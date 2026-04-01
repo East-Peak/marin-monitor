@@ -3,20 +3,41 @@
 	import { STRAVA_ENABLED } from '$lib/config/strava';
 	import TvMapPosition from '$lib/components/tv/TvMapPosition.svelte';
 	import TvMapSidebar from '$lib/components/tv/TvMapSidebar.svelte';
+	import TvMapOverlay from '$lib/components/tv/TvMapOverlay.svelte';
 	import { allNewsItems } from '$lib/stores';
 	import { MARIN_TOWNS } from '$lib/config/towns';
 	import { TV_MAP_VIEWS } from '$lib/config/tv';
 	import type { FireIncident } from '$lib/api/marin/calfire';
 	import type { NewsItem } from '$lib/types';
+	import type { GasStation } from '$lib/types/gas';
+	import type { CoffeeShop } from '$lib/types/coffee';
+	import type { FitnessStudio } from '$lib/types/fitness';
 
 	interface Props {
 		earthquakeItems: NewsItem[];
 		fireIncidents: FireIncident[];
 		viewId: string;
 		weather: { temp: number; wind: string; shortForecast: string } | null;
+		/** 311 complaint items with lat/lon for county view overlay */
+		threeOneOneItems?: NewsItem[];
+		/** Coffee shops for south view overlay */
+		coffeeShops?: CoffeeShop[];
+		/** Gas stations for south/north view overlay */
+		gasStations?: GasStation[];
+		/** Fitness studios for central view overlay */
+		fitnessStudios?: FitnessStudio[];
 	}
 
-	let { earthquakeItems, fireIncidents, viewId, weather }: Props = $props();
+	let {
+		earthquakeItems,
+		fireIncidents,
+		viewId,
+		weather,
+		threeOneOneItems = [],
+		coffeeShops = [],
+		gasStations = [],
+		fitnessStudios = []
+	}: Props = $props();
 
 	const view = $derived(TV_MAP_VIEWS.find((v) => v.id === viewId) ?? TV_MAP_VIEWS[0]);
 
@@ -55,6 +76,13 @@
 			{#if STRAVA_ENABLED}
 				<SegmentLayer />
 			{/if}
+			<TvMapOverlay
+				{viewId}
+				{threeOneOneItems}
+				{coffeeShops}
+				{gasStations}
+				{fitnessStudios}
+			/>
 			<TvMapPosition center={view.center} zoom={view.zoom} />
 		</MapContainer>
 		<div class="absolute top-16 left-3 z-10 px-3 py-1.5 rounded bg-gray-900/80 backdrop-blur-sm border border-gray-700/50">
