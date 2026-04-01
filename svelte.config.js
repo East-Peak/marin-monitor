@@ -32,6 +32,7 @@ const config = {
 					'https://cwwp2.dot.ca.gov',
 					'https://cdns.abclocal.go.com',
 					'https://*.cartocdn.com',
+					'https://seeclickfix.com',
 					'data:',
 					'blob:'
 				],
@@ -55,7 +56,9 @@ const config = {
 					'https://incidents.fire.ca.gov',
 					'https://marine-api.open-meteo.com',
 					'https://api.open-meteo.com',
-					'https://data.marincounty.gov'
+					'https://data.marincounty.gov',
+					'https://seeclickfix.com',
+					'https://citizen.com'
 				],
 				'font-src': ['self', 'https://fonts.gstatic.com'],
 				'frame-src': ['https://webcams.windy.com']
