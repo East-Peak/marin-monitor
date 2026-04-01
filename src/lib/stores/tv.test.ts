@@ -9,16 +9,19 @@ vi.mock('$lib/stores/news', () => {
 	const mockLocalState = writable({ items: [], loading: false, error: null, lastUpdated: null });
 	const mockCivicState = writable({ items: [], loading: false, error: null, lastUpdated: null });
 	const mockAlerts = writable([]);
+	const mockThreeOneOneState = writable({ items: [], loading: false, error: null, lastUpdated: null });
 
 	return {
 		safetyNews: mockSafetyState,
 		localNews: mockLocalState,
 		civicNews: mockCivicState,
 		alerts: mockAlerts,
+		threeOneOneNews: mockThreeOneOneState,
 		__mockSafetyState: mockSafetyState,
 		__mockLocalState: mockLocalState,
 		__mockCivicState: mockCivicState,
-		__mockAlerts: mockAlerts
+		__mockAlerts: mockAlerts,
+		__mockThreeOneOneState: mockThreeOneOneState
 	};
 });
 

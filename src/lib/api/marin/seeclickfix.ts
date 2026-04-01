@@ -108,7 +108,7 @@ function issueToNewsItem(issue: SeeClickFixIssue): NewsItem | null {
 		description,
 		content: description,
 		source: 'Fix It Marin',
-		category: 'civic',
+		category: '311',
 		verification: 'official',
 		town: town?.name,
 		townSlug: town?.slug,
