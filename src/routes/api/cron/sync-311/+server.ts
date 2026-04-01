@@ -1,4 +1,4 @@
-import { put, head } from '@vercel/blob';
+import { put } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
 import { verifyCronAuth } from '$lib/server/cron-auth';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
@@ -24,35 +24,35 @@ interface SeeClickFixIssue {
 async function storeImage(issueId: number, imageUrl: string, size: 'full' | 'thumb'): Promise<string | null> {
 	const blobKey = `311-images/${issueId}-${size}.jpg`;
 
-	// Check if we already have this image
-	try {
-		const existing = await head(blobKey, { token: env.BLOB_READ_WRITE_TOKEN });
-		if (existing) return existing.url;
-	} catch {
-		// Not found — download it
-	}
-
 	try {
 		const response = await fetchWithTimeout(imageUrl, {
 			headers: { 'User-Agent': 'MarinMonitor/1.0' },
 			redirect: 'follow'
 		}, 10000);
 
-		if (!response.ok) return null;
+		if (!response.ok) {
+			console.warn(`[sync-311] Image fetch failed for ${issueId}: HTTP ${response.status}`);
+			return null;
+		}
 
 		const imageData = await response.arrayBuffer();
-		if (imageData.byteLength < 100) return null; // skip broken images
+		if (imageData.byteLength < 100) {
+			console.warn(`[sync-311] Image too small for ${issueId}: ${imageData.byteLength} bytes`);
+			return null;
+		}
 
+		const contentType = response.headers.get('content-type') || 'image/jpeg';
 		const result = await put(blobKey, Buffer.from(imageData), {
 			access: 'public',
-			contentType: 'image/jpeg',
+			contentType,
 			addRandomSuffix: false,
 			allowOverwrite: true,
 			token: env.BLOB_READ_WRITE_TOKEN
 		});
 
 		return result.url;
-	} catch {
+	} catch (err) {
+		console.warn(`[sync-311] Image store error for ${issueId}: ${err instanceof Error ? err.message : String(err)}`);
 		return null;
 	}
 }
