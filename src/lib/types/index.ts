@@ -51,6 +51,8 @@ export interface NewsItem {
 	isAlert?: boolean;
 	alertKeyword?: string;
 	topics?: string[];
+	imageUrl?: string;
+	thumbnailUrl?: string;
 }
 
 /**

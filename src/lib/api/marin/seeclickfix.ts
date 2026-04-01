@@ -116,7 +116,9 @@ function issueToNewsItem(issue: SeeClickFixIssue): NewsItem | null {
 		lon,
 		locationConfidence: lat !== undefined && lon !== undefined ? 'exact' : 'town',
 		locationEvidence: issue.address || town?.name,
-		topics: ['311', 'seeclickfix']
+		topics: ['311', 'seeclickfix'],
+		imageUrl: issue.media?.image_full || undefined,
+		thumbnailUrl: issue.media?.image_square_100x100 || undefined
 	};
 }
 
