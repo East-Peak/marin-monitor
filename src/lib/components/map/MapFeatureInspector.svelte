@@ -30,6 +30,8 @@
 				return 'Fitness Studio';
 			case 'airport':
 				return 'Airport Status';
+			case '311-report':
+				return 'Fix It Marin';
 			default:
 				return 'Map Feature';
 		}
@@ -54,6 +56,14 @@
 	{/if}
 	{#if feature.severity}
 		<div class="feature-severity">{feature.severity}</div>
+	{/if}
+	{#if feature.imageUrl}
+		<img
+			class="feature-image"
+			src={feature.imageUrl}
+			alt={feature.title}
+			loading="lazy"
+		/>
 	{/if}
 	{#if feature.description}
 		<div class="feature-description">{feature.description}</div>
@@ -147,5 +157,13 @@
 		font-size: 0.55rem;
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
+	}
+
+	.feature-image {
+		margin-top: 0.35rem;
+		width: 100%;
+		border-radius: 3px;
+		max-height: 200px;
+		object-fit: cover;
 	}
 </style>
