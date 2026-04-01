@@ -12,7 +12,7 @@ Add FixItMarin (SeeClickFix) as a first-class data source with its own map layer
 
 - **Color:** orange `#ff6b35` — single color for all 311 pins regardless of category
 - **Pin label** (zoom 12+): English category + street snippet (e.g. "Dumping · Lincoln Ave")
-- **Click popup:** category, address, description, status badge (OPEN/ACKNOWLEDGED/CLOSED), photo (800x600) if available
+- **Click inspector:** category, address, description, status badge (OPEN/ACKNOWLEDGED/CLOSED), photo (800x600) if available — this is the only place photos render
 - **Hover:** standard MapLibre hover state (enlarged pin + stroke glow), same pattern as coffee/gas/fitness
 - **Toggle:** independent layer in MapControls, labeled "311"
 - **Town filter:** respects existing town filter store
@@ -21,12 +21,9 @@ Add FixItMarin (SeeClickFix) as a first-class data source with its own map layer
 
 - **New `NewsCategory`:** `'311'`
 - **New `PanelId`:** `'311'`
-- Photo-rich card layout:
-  - Header: category name (Spanish stripped) + street snippet
-  - Subheader: town + relative time + status badge
-  - Photo: full-width 800x600 image when `imageUrl` is present
-  - Body: truncated description (300 chars max)
-  - Footer: "Fix It Marin" source attribution
+- Uses standard `NewsPanel` component (same as every other wire column)
+- No inline photos — photos appear only on map pin click inspector
+- Cards show: category + street snippet, town, relative time, source attribution
 
 ## Chyron
 
@@ -45,12 +42,6 @@ SeeClickFix API v2 (direct fetch on refresh, no cron/blob)
   → map store → 311 map layer pins (MapDataLayer.svelte)
   → tv ticker store → chyron (tvTickerItems)
 ```
-
-## Files to Create
-
-| File | Purpose |
-|------|---------|
-| `src/lib/components/panels/ThreeOneOnePanel.svelte` | Wire column panel with photo-rich cards |
 
 ## Files to Modify
 
