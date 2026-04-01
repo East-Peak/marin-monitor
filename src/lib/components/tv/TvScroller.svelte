@@ -1,6 +1,5 @@
 <!-- src/lib/components/tv/TvScroller.svelte -->
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import type { Snippet } from 'svelte';
 	import { saveScrollPosition, getScrollPosition } from '$lib/stores/tv-scroll';
 
@@ -18,7 +17,6 @@
 	let needsScroll = $state(false);
 	let rafId: number | null = null;
 	let lastFrameTime: number | null = null;
-	let pausedAtBottom = false;
 	let pauseTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	function getMaxScroll(): number {
@@ -42,7 +40,6 @@
 		}
 
 		lastFrameTime = null;
-		pausedAtBottom = false;
 
 		function tick(now: number): void {
 			if (!active) return;
@@ -50,11 +47,6 @@
 
 			if (lastFrameTime === null) {
 				lastFrameTime = now;
-				rafId = requestAnimationFrame(tick);
-				return;
-			}
-
-			if (pausedAtBottom) {
 				rafId = requestAnimationFrame(tick);
 				return;
 			}
@@ -76,12 +68,17 @@
 
 			if (newTop >= maxScroll) {
 				containerEl.scrollTop = maxScroll;
-				pausedAtBottom = true;
+				// Cancel rAF during pause — restart after timeout
+				if (rafId !== null) cancelAnimationFrame(rafId);
+				rafId = null;
 				pauseTimeout = setTimeout(() => {
 					if (containerEl) containerEl.scrollTop = 0;
-					pausedAtBottom = false;
 					lastFrameTime = null;
+					if (active && needsScroll) {
+						rafId = requestAnimationFrame(tick);
+					}
 				}, 2000);
+				return; // Don't schedule another rAF
 			} else {
 				containerEl.scrollTop = newTop;
 			}
@@ -102,7 +99,6 @@
 			pauseTimeout = null;
 		}
 		lastFrameTime = null;
-		pausedAtBottom = false;
 
 		// Save position
 		if (containerEl) {
@@ -123,14 +119,7 @@
 		if (!contentEl) return;
 
 		const observer = new ResizeObserver(() => {
-			const prevNeeded = needsScroll;
 			checkOverflow();
-
-			// If content height changed significantly while inactive, consider resetting
-			if (active && needsScroll && !prevNeeded && containerEl) {
-				containerEl.scrollTop = 0;
-				saveScrollPosition(screenId, 0);
-			}
 		});
 
 		observer.observe(contentEl);
@@ -139,9 +128,6 @@
 		return () => observer.disconnect();
 	});
 
-	onMount(() => {
-		return () => stopScrolling();
-	});
 </script>
 
 <div
