@@ -9,9 +9,16 @@
   import NewsWireScreen from './screens/NewsWireScreen.svelte';
   import SafetyScreen from './screens/SafetyScreen.svelte';
   import TvCameraClusterScreen from './screens/TvCameraClusterScreen.svelte';
-  import TvConditionsScreen from './screens/TvConditionsScreen.svelte';
   import TvCommunityScreen from './screens/TvCommunityScreen.svelte';
   import TvLeaderboardsScreen from './screens/TvLeaderboardsScreen.svelte';
+  import TvCompositeHero from './screens/TvCompositeHero.svelte';
+  import TvDailyLifeCard from './screens/TvDailyLifeCard.svelte';
+  import TvLifestyleCard from './screens/TvLifestyleCard.svelte';
+  import TvStructuralCard from './screens/TvStructuralCard.svelte';
+  import TvDrivewayCard from './screens/TvDrivewayCard.svelte';
+  import Tv311PhotoWall from './screens/Tv311PhotoWall.svelte';
+  import TvConditionsCard from './screens/TvConditionsCard.svelte';
+  import TvOutdoorsCard from './screens/TvOutdoorsCard.svelte';
   import { loadStravaData } from '$lib/stores/strava';
   import {
     TV_SCREENS,
@@ -19,12 +26,42 @@
     CURSOR_HIDE_MS,
     TV_REFRESH_INTERVAL_MS
   } from '$lib/config/tv';
-  import { refresh, allNewsItems, alerts, mapStore, settings } from '$lib/stores';
+  import { refresh, allNewsItems, alerts, mapStore, settings, threeOneOneNews } from '$lib/stores';
   import { townFilter } from '$lib/stores/town-filter';
   import { fetchFireIncidents } from '$lib/api/marin';
   import { loadAllNews } from '$lib/api/marin/load-all';
   import { fetchHourlyForecast } from '$lib/api/marin/nws-hourly';
+  import { fetchCompositeData } from '$lib/api/marin/composite';
+  import { fetchCappuccinoData } from '$lib/api/marin/cappuccino';
+  import { fetchGroceryBasketData } from '$lib/api/marin/grocery-basket';
+  import { fetchWineIndexData } from '$lib/api/marin/wine-index';
+  import { fetchFitnessData } from '$lib/api/marin/fitness';
+  import { fetchSchoolTuitionData } from '$lib/api/marin/school-tuition';
+  import { fetchDrivewayData } from '$lib/api/marin/driveway';
+  import { fetchGasPriceData } from '$lib/api/marin/gas-prices';
+  import { tvIndexData } from '$lib/stores/tv';
   import type { NewsItem } from '$lib/types';
+  import type { CompositeData } from '$lib/types/composite';
+  import type { CoffeeData } from '$lib/types/coffee';
+  import type { GroceryBasketData } from '$lib/types/grocery';
+  import type { WineIndexData } from '$lib/types/wine';
+  import type { FitnessData } from '$lib/types/fitness';
+  import type { SchoolIndexData } from '$lib/types/school';
+  import type { DrivewayData } from '$lib/types/driveway';
+  import type { GasPriceData } from '$lib/types/gas';
+
+  // --- Index data state ---
+  let compositeData = $state<CompositeData | null>(null);
+  let cappuccinoData = $state<CoffeeData | null>(null);
+  let groceryData = $state<GroceryBasketData | null>(null);
+  let wineData = $state<WineIndexData | null>(null);
+  let fitnessData = $state<FitnessData | null>(null);
+  let tuitionData = $state<SchoolIndexData | null>(null);
+  let drivewayData = $state<DrivewayData | null>(null);
+  let gasData = $state<GasPriceData | null>(null);
+
+  // 311 items from the store (for 311 photo wall and map overlay)
+  const threeOneOneItems = $derived($threeOneOneNews.items ?? []);
 
   // --- Carousel state ---
   // Uses a single setInterval that ticks every second and checks elapsed time.
@@ -35,22 +72,43 @@
   let carouselTimer: ReturnType<typeof setInterval> | null = null;
   let screenStartedAt = Date.now();
 
+  /** Check if a screen should be skipped (e.g., 311-photos with no photos) */
+  function shouldSkipScreen(idx: number): boolean {
+    const screen = TV_SCREENS[idx];
+    if (screen.id === '311-photos') {
+      const photoItems = threeOneOneItems.filter(i => i.imageUrl);
+      return photoItems.length === 0;
+    }
+    return false;
+  }
+
+  /** Find the next valid screen index, skipping screens with no content */
+  function nextValidIdx(fromIdx: number, direction: 1 | -1 = 1): number {
+    let nextIdx = (fromIdx + direction + TV_SCREENS.length) % TV_SCREENS.length;
+    let attempts = 0;
+    while (shouldSkipScreen(nextIdx) && attempts < TV_SCREENS.length) {
+      nextIdx = (nextIdx + direction + TV_SCREENS.length) % TV_SCREENS.length;
+      attempts++;
+    }
+    return nextIdx;
+  }
+
   function advanceCarousel() {
     if (paused) return;
     const duration = TV_SCREENS[carouselIdx]?.durationMs ?? 20_000;
     if (Date.now() - screenStartedAt >= duration) {
-      carouselIdx = (carouselIdx + 1) % TV_SCREENS.length;
+      carouselIdx = nextValidIdx(carouselIdx, 1);
       screenStartedAt = Date.now();
     }
   }
 
   function nextScreen() {
-    carouselIdx = (carouselIdx + 1) % TV_SCREENS.length;
+    carouselIdx = nextValidIdx(carouselIdx, 1);
     screenStartedAt = Date.now();
   }
 
   function prevScreen() {
-    carouselIdx = (carouselIdx - 1 + TV_SCREENS.length) % TV_SCREENS.length;
+    carouselIdx = nextValidIdx(carouselIdx, -1);
     screenStartedAt = Date.now();
   }
 
@@ -162,7 +220,6 @@
   // Derived: current map viewId (for the persistent map instance)
   const activeMapViewId = $derived(TV_SCREENS[carouselIdx]?.mapViewId ?? 'county');
   const isMapScreenActive = $derived(!!TV_SCREENS[carouselIdx]?.mapViewId);
-  const isConditionsScreenActive = $derived(TV_SCREENS[carouselIdx]?.id === 'conditions');
   // Use the first hourly period (current hour) for actual current temp,
   // NOT weatherForecast[0] which is the daytime high
   const currentTemp = $derived(hourlyPeriods[0]?.temperature ?? null);
@@ -220,13 +277,39 @@
     }
   }
 
+  async function loadIndexData(): Promise<void> {
+    const [composite, cappuccino, grocery, wine, fitness, tuition, driveway, gas] =
+      await Promise.all([
+        fetchCompositeData().catch(() => null),
+        fetchCappuccinoData().catch(() => null),
+        fetchGroceryBasketData().catch(() => null),
+        fetchWineIndexData().catch(() => null),
+        fetchFitnessData().catch(() => null),
+        fetchSchoolTuitionData().catch(() => null),
+        fetchDrivewayData().catch(() => null),
+        fetchGasPriceData().catch(() => null)
+      ]);
+
+    compositeData = composite;
+    cappuccinoData = cappuccino;
+    groceryData = grocery;
+    wineData = wine;
+    fitnessData = fitness;
+    tuitionData = tuition;
+    drivewayData = driveway;
+    gasData = gas;
+
+    // Update ticker store with index data for chyron
+    tvIndexData.set({ composite, cappuccino, grocery, wine, fitness, tuition, driveway, gas });
+  }
+
   let refreshInFlight = false;
   async function handleRefresh() {
     if (refreshInFlight) return;
     refreshInFlight = true;
     refresh.startRefresh();
     try {
-      await Promise.all([loadNews(), loadWeather(), loadFireIncidents(), loadStravaData()]);
+      await Promise.all([loadNews(), loadWeather(), loadFireIncidents(), loadStravaData(), loadIndexData()]);
       refresh.endRefresh();
     } catch (error) {
       refresh.endRefresh([String(error)]);
@@ -314,32 +397,52 @@
   <div class="flex-1 relative" style="height: calc(100vh - 48px - 44px);">
     <!-- Persistent map — single MapContainer, never destroyed. Hidden when non-map screen active. -->
     <div class="absolute inset-0" style="z-index: {isMapScreenActive ? 1 : 0}; visibility: {isMapScreenActive ? 'visible' : 'hidden'};">
-      <TvMapScreen {earthquakeItems} {fireIncidents} viewId={activeMapViewId} weather={regionWeather[activeMapViewId] ?? null} />
+      <TvMapScreen
+        {earthquakeItems}
+        {fireIncidents}
+        viewId={activeMapViewId}
+        weather={regionWeather[activeMapViewId] ?? null}
+        {threeOneOneItems}
+        coffeeShops={cappuccinoData?.current?.shops ?? []}
+        gasStations={gasData?.current?.stations ?? []}
+        fitnessStudios={fitnessData?.current?.studios ?? []}
+      />
     </div>
 
-    <!-- Persistent conditions — panels fetch on mount, so keep alive to avoid refetching every carousel pass -->
-    <div class="absolute inset-0" style="z-index: {isConditionsScreenActive ? 1 : 0}; visibility: {isConditionsScreenActive ? 'visible' : 'hidden'};">
-      <TvConditionsScreen />
-    </div>
-
-    <!-- Other non-map screens — destroyed/created normally -->
+    <!-- Non-map screens — destroyed/created normally -->
     {#each TV_SCREENS as screen, i (screen.id)}
-      {#if !screen.mapViewId && screen.id !== 'conditions'}
+      {#if !screen.mapViewId}
         <TvScreen active={carouselIdx === i}>
           {#if screen.id === 'news-wire'}
-            <NewsWireScreen />
+            <NewsWireScreen active={carouselIdx === i} />
           {:else if screen.id === 'safety'}
-            <SafetyScreen />
+            <SafetyScreen active={carouselIdx === i} />
           {:else if screen.id === 'cameras-tam-coast'}
             <TvCameraClusterScreen clusterId="tam-coast" />
           {:else if screen.id === 'cameras-central-highway'}
             <TvCameraClusterScreen clusterId="central-highway" />
           {:else if screen.id === 'cameras-west-north'}
             <TvCameraClusterScreen clusterId="west-north" />
+          {:else if screen.id === 'composite'}
+            <TvCompositeHero data={compositeData} />
+          {:else if screen.id === 'daily-life'}
+            <TvDailyLifeCard cappuccino={cappuccinoData} grocery={groceryData} gas={gasData} />
+          {:else if screen.id === 'lifestyle'}
+            <TvLifestyleCard wine={wineData} fitness={fitnessData} />
+          {:else if screen.id === 'structural'}
+            <TvStructuralCard tuition={tuitionData} />
+          {:else if screen.id === 'driveway'}
+            <TvDrivewayCard data={drivewayData} />
+          {:else if screen.id === '311-photos'}
+            <Tv311PhotoWall items={threeOneOneItems} active={carouselIdx === i} />
           {:else if screen.id === 'community'}
-            <TvCommunityScreen />
+            <TvCommunityScreen active={carouselIdx === i} />
           {:else if screen.id === 'leaderboards'}
-            <TvLeaderboardsScreen />
+            <TvLeaderboardsScreen active={carouselIdx === i} />
+          {:else if screen.id === 'conditions'}
+            <TvConditionsCard weather={regionWeather?.['county'] ?? null} aqi={null} tides={[]} />
+          {:else if screen.id === 'outdoors'}
+            <TvOutdoorsCard surf={[]} dirt={null} streams={[]} />
           {/if}
         </TvScreen>
       {/if}

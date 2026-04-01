@@ -33,10 +33,10 @@
 	</div>
 	<div class="flex items-center gap-4">
 		<span class="text-sm text-gray-300 tabular-nums">{clockText}</span>
-		<div class="flex items-center gap-1.5">
+		<div class="flex items-center gap-1">
 			{#each TV_SCREENS as screen, i (screen.id)}
 				<button
-					class="w-2.5 h-2.5 rounded-full transition-colors"
+					class="w-2 h-2 rounded-full transition-colors"
 					class:bg-blue-400={carouselIdx === i}
 					class:bg-gray-600={carouselIdx !== i}
 					onclick={() => onGoToScreen(i)}
