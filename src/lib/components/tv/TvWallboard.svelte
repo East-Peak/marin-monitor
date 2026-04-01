@@ -28,7 +28,8 @@
   } from '$lib/config/tv';
   import { refresh, allNewsItems, alerts, mapStore, settings, threeOneOneNews } from '$lib/stores';
   import { townFilter } from '$lib/stores/town-filter';
-  import { fetchFireIncidents } from '$lib/api/marin';
+  import { fetchFireIncidents, fetchAirQuality, fetchStreamGauges, fetchObservedWeather } from '$lib/api/marin';
+  import { fetchTidePredictions } from '$lib/api/marin/tides';
   import { loadAllNews } from '$lib/api/marin/load-all';
   import { fetchHourlyForecast } from '$lib/api/marin/nws-hourly';
   import { fetchCompositeData } from '$lib/api/marin/composite';
@@ -39,8 +40,9 @@
   import { fetchSchoolTuitionData } from '$lib/api/marin/school-tuition';
   import { fetchDrivewayData } from '$lib/api/marin/driveway';
   import { fetchGasPriceData } from '$lib/api/marin/gas-prices';
+  import { computeHeroDirt } from '$lib/analysis/indicators';
   import { tvIndexData } from '$lib/stores/tv';
-  import type { NewsItem } from '$lib/types';
+  import type { NewsItem, AirQualityData, TidePrediction } from '$lib/types';
   import type { CompositeData } from '$lib/types/composite';
   import type { CoffeeData } from '$lib/types/coffee';
   import type { GroceryBasketData } from '$lib/types/grocery';
@@ -49,6 +51,8 @@
   import type { SchoolIndexData } from '$lib/types/school';
   import type { DrivewayData } from '$lib/types/driveway';
   import type { GasPriceData } from '$lib/types/gas';
+  import type { StreamGauge } from '$lib/api/marin/streams';
+  import type { HeroDirtScore } from '$lib/analysis/indicators';
 
   // --- Index data state ---
   let compositeData = $state<CompositeData | null>(null);
@@ -59,6 +63,12 @@
   let tuitionData = $state<SchoolIndexData | null>(null);
   let drivewayData = $state<DrivewayData | null>(null);
   let gasData = $state<GasPriceData | null>(null);
+
+  // --- Conditions & outdoors data state ---
+  let aqiData = $state<AirQualityData | null>(null);
+  let tidePredictions = $state<TidePrediction[]>([]);
+  let streamGauges = $state<StreamGauge[]>([]);
+  let heroDirt = $state<HeroDirtScore | null>(null);
 
   // 311 items from the store (for 311 photo wall and map overlay)
   const threeOneOneItems = $derived($threeOneOneNews.items ?? []);
@@ -206,7 +216,7 @@
   // --- Shared data for map screens ---
   let earthquakeItems = $state<NewsItem[]>([]);
   let fireIncidents = $state<import('$lib/api/marin/calfire').FireIncident[]>([]);
-  let hourlyPeriods = $state<{ temperature: number }[]>([]);
+  let hourlyPeriods = $state<import('$lib/api/marin/nws-hourly').HourlyPeriod[]>([]);
 
   // Pre-fetched weather cache for all map regions
   let regionWeather = $state<Record<string, { temp: number; wind: string; shortForecast: string }>>({});
@@ -301,6 +311,27 @@
 
     // Update ticker store with index data for chyron
     tvIndexData.set({ composite, cappuccino, grocery, wine, fitness, tuition, driveway, gas });
+
+    // Conditions & outdoors data (separate batch to avoid blocking index cards)
+    const [aqiResult, tidesResult, streamsResult, observedResult] = await Promise.all([
+      fetchAirQuality().catch(() => null),
+      fetchTidePredictions().catch(() => []),
+      fetchStreamGauges().catch(() => []),
+      fetchObservedWeather(37.97, -122.53).catch(() => null)
+    ]);
+
+    aqiData = aqiResult;
+    tidePredictions = tidesResult ?? [];
+    streamGauges = streamsResult ?? [];
+
+    // Compute Hero Dirt if we have observed weather + hourly forecast
+    if (observedResult && hourlyPeriods.length > 0) {
+      try {
+        heroDirt = computeHeroDirt(observedResult, hourlyPeriods);
+      } catch { heroDirt = null; }
+    } else {
+      heroDirt = null;
+    }
   }
 
   let refreshInFlight = false;
@@ -440,9 +471,17 @@
           {:else if screen.id === 'leaderboards'}
             <TvLeaderboardsScreen active={carouselIdx === i} />
           {:else if screen.id === 'conditions'}
-            <TvConditionsCard weather={regionWeather?.['county'] ?? null} aqi={null} tides={[]} />
+            <TvConditionsCard
+              weather={regionWeather?.['county'] ?? null}
+              aqi={aqiData ? { value: aqiData.aqi, category: aqiData.category } : null}
+              tides={tidePredictions}
+            />
           {:else if screen.id === 'outdoors'}
-            <TvOutdoorsCard surf={[]} dirt={null} streams={[]} />
+            <TvOutdoorsCard
+              surf={[]}
+              dirt={heroDirt ? { condition: heroDirt.label, lastRain: heroDirt.summary } : null}
+              streams={streamGauges.filter(s => s.streamflow != null).map(s => ({ name: s.shortName || s.name, cfs: Math.round(s.streamflow!), trend: 'stable' as const }))}
+            />
           {/if}
         </TvScreen>
       {/if}

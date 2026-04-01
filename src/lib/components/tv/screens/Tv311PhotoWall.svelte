@@ -8,6 +8,8 @@
 	}
 	let { items, active = true }: Props = $props();
 
+	let failedIds = $state(new Set<string>());
+
 	const photoItems = $derived(items.filter((it) => it.imageUrl));
 
 	const colCount = $derived(
@@ -28,6 +30,24 @@
 			category: parts[0]?.trim() ?? title,
 			street: parts[1]?.trim() ?? ''
 		};
+	}
+
+	function handleImgError(id: string) {
+		failedIds = new Set([...failedIds, id]);
+	}
+
+	/** Map 311 categories to simple placeholder labels */
+	function categoryIcon(category: string): string {
+		const lower = category.toLowerCase();
+		if (lower.includes('pothole') || lower.includes('road')) return 'Road';
+		if (lower.includes('graffiti')) return 'Graffiti';
+		if (lower.includes('dumping') || lower.includes('trash')) return 'Dumping';
+		if (lower.includes('tree') || lower.includes('vegetation')) return 'Tree';
+		if (lower.includes('sidewalk') || lower.includes('curb')) return 'Sidewalk';
+		if (lower.includes('sign')) return 'Sign';
+		if (lower.includes('light') || lower.includes('lamp')) return 'Light';
+		if (lower.includes('water') || lower.includes('drain')) return 'Water';
+		return '311';
 	}
 </script>
 
@@ -51,12 +71,20 @@
 					{#each photoItems as item, i (item.id + '-' + i)}
 						{@const parsed = parseTitle(item.title)}
 						<div class="rounded-xl bg-zinc-800/60 overflow-hidden">
-							<img
-								src={item.imageUrl}
-								alt={item.title}
-								class="aspect-[4/3] w-full object-cover"
-								loading="lazy"
-							/>
+							{#if failedIds.has(item.id)}
+								<div class="aspect-[4/3] w-full flex flex-col items-center justify-center bg-zinc-700/40">
+									<span class="text-4xl font-bold text-zinc-500">{categoryIcon(parsed.category)}</span>
+									<p class="mt-2 text-xs text-zinc-500">Photo unavailable</p>
+								</div>
+							{:else}
+								<img
+									src={item.imageUrl}
+									alt={item.title}
+									class="aspect-[4/3] w-full object-cover"
+									loading="lazy"
+									onerror={() => handleImgError(item.id)}
+								/>
+							{/if}
 							<div class="p-3">
 								<p class="text-sm font-medium text-zinc-300">{parsed.category}</p>
 								{#if parsed.street}
