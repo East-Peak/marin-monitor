@@ -486,14 +486,14 @@
           {:else if screen.id === 'conditions'}
             <TvConditionsCard
               weather={regionWeather?.['county'] ?? null}
-              aqi={aqiData ? { value: aqiData.aqi, category: aqiData.category } : null}
+              aqi={aqiData ? { value: aqiData.aqi, category: aqiData.category, pollutant: aqiData.pollutant } : null}
               tides={tidePredictions}
             />
           {:else if screen.id === 'outdoors'}
             <TvOutdoorsCard
               surf={[]}
-              dirt={heroDirt ? { condition: heroDirt.label, color: heroDirt.color, lastRain: heroDirt.summary } : null}
-              streams={streamGauges.filter(s => s.streamflow != null).map(s => ({ name: s.shortName || s.name, cfs: Math.round(s.streamflow!), trend: 'stable' as const }))}
+              dirt={heroDirt ? { condition: heroDirt.label, color: heroDirt.color, lastRain: heroDirt.summary, score: heroDirt.score, moistureEstimate: heroDirt.moistureEstimate, dryingRate: heroDirt.dryingRate, seasonalBaseline: heroDirt.seasonalBaseline, confidence: heroDirt.confidence, trailIntel: heroDirt.trailIntel } : null}
+              streams={streamGauges.filter(s => s.streamflow != null).map(s => ({ name: s.shortName || s.name, cfs: Math.round(s.streamflow!), trend: 'stable' as const, gageHeight: s.gageHeight }))}
             />
           {/if}
         </TvScreen>
