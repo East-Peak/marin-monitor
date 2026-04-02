@@ -40,6 +40,7 @@
   import { fetchSchoolTuitionData } from '$lib/api/marin/school-tuition';
   import { fetchDrivewayData } from '$lib/api/marin/driveway';
   import { fetchGasPriceData } from '$lib/api/marin/gas-prices';
+  import { fetchHousingData } from '$lib/api/marin/housing';
   import { computeHeroDirt } from '$lib/analysis/indicators';
   import { tvIndexData } from '$lib/stores/tv';
   import type { NewsItem, AirQualityData, TidePrediction } from '$lib/types';
@@ -51,6 +52,7 @@
   import type { SchoolIndexData } from '$lib/types/school';
   import type { DrivewayData } from '$lib/types/driveway';
   import type { GasPriceData } from '$lib/types/gas';
+  import type { HousingMetric } from '$lib/api/marin/housing';
   import type { StreamGauge } from '$lib/api/marin/streams';
   import type { HeroDirtScore } from '$lib/analysis/indicators';
 
@@ -63,6 +65,7 @@
   let tuitionData = $state<SchoolIndexData | null>(null);
   let drivewayData = $state<DrivewayData | null>(null);
   let gasData = $state<GasPriceData | null>(null);
+  let housingData = $state<HousingMetric[]>([]);
 
   // --- Conditions & outdoors data state ---
   let aqiData = $state<AirQualityData | null>(null);
@@ -316,6 +319,9 @@
     // Update ticker store with index data for chyron
     tvIndexData.set({ composite, cappuccino, grocery, wine, fitness, tuition, driveway, gas });
 
+    // Housing data (loaded here to avoid blocking index cards)
+    housingData = await fetchHousingData().catch(() => []);
+
     // Conditions & outdoors data (separate batch to avoid blocking index cards)
     const [aqiResult, tidesResult, streamsResult, observedResult] = await Promise.all([
       fetchAirQuality().catch(() => null),
@@ -468,7 +474,7 @@
           {:else if screen.id === 'lifestyle'}
             <TvLifestyleCard wine={wineData} fitness={fitnessData} />
           {:else if screen.id === 'structural'}
-            <TvStructuralCard tuition={tuitionData} />
+            <TvStructuralCard tuition={tuitionData} housing={housingData} />
           {:else if screen.id === 'driveway'}
             <TvDrivewayCard data={drivewayData} />
           {:else if screen.id === '311-photos'}

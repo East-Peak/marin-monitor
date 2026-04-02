@@ -1,6 +1,8 @@
 <script lang="ts">
-	import type { WineIndexData, WineCategory } from '$lib/types/wine';
-	import type { FitnessData, FitnessType } from '$lib/types/fitness';
+	import type { WineIndexData, WineCategory, WineCategorySnapshot, WineStaffPick } from '$lib/types/wine';
+	import type { FitnessData, FitnessStudio, FitnessType } from '$lib/types/fitness';
+	import { WINE_ACCENT, WINE_CATEGORY_ORDER } from '$lib/config/wine';
+	import { FITNESS_ACCENT, TYPE_ORDER, TYPE_LABELS, TYPE_COLORS, computeMedian } from '$lib/config/fitness';
 	import { scaleLinear } from 'd3-scale';
 	import { line, curveMonotoneX } from 'd3-shape';
 
@@ -10,43 +12,55 @@
 	}
 	let { wine, fitness }: Props = $props();
 
+	// --- Wine helpers ---
+
 	const wineCategoryLabels: Record<WineCategory, string> = {
 		'napa-sonoma': 'Napa/Sonoma Cab',
 		burgundy: 'Burgundy',
 		champagne: 'Champagne'
 	};
 
-	const fitnessTypeLabels: Record<FitnessType, string> = {
-		yoga: 'Yoga',
-		pilates: 'Pilates',
-		cycling: 'Cycling',
-		crossfit: 'CrossFit',
-		hiit: 'HIIT'
-	};
+	const orderedCategories = $derived.by<WineCategorySnapshot[]>(() => {
+		if (!wine?.current) return [];
+		const result: WineCategorySnapshot[] = [];
+		for (const cat of WINE_CATEGORY_ORDER) {
+			const snap = wine.current.categories.find((c) => c.category === cat);
+			if (snap) result.push(snap);
+		}
+		return result;
+	});
 
-	const fitnessTypes: FitnessType[] = ['yoga', 'pilates', 'cycling', 'crossfit', 'hiit'];
-
-	function fmtPrice(n: number | null | undefined): string {
-		if (n == null) return '—';
-		return '$' + n.toFixed(0);
+	function computeWeeklyChange(category: WineCategory): { value: number; label: string } | null {
+		const history = wine?.history;
+		if (!history || history.length < 2) return null;
+		const sorted = [...history].sort(
+			(a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+		);
+		const latest = sorted[sorted.length - 1].categories.find((c) => c.category === category);
+		const previous = sorted[sorted.length - 2].categories.find((c) => c.category === category);
+		if (!latest?.medianPrice || !previous?.medianPrice) return null;
+		const diff = Math.round((latest.medianPrice - previous.medianPrice) * 100) / 100;
+		const pct = previous.medianPrice !== 0 ? Math.round((diff / previous.medianPrice) * 1000) / 10 : 0;
+		return { value: diff, label: `${diff >= 0 ? '+' : ''}${pct.toFixed(1)}%` };
 	}
 
-	/** Mini sparkline for a wine category's median price over history */
 	function makeWineSparkline(
 		category: WineCategory
 	): { linePath: string | null; w: number; h: number } | null {
 		const history = wine?.history;
 		if (!history || history.length < 2) return null;
-		const values = history
+		const sorted = [...history].sort(
+			(a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+		);
+		const values = sorted
 			.map((h) => h.categories.find((c) => c.category === category)?.medianPrice)
 			.filter((v): v is number => v != null);
 		if (values.length < 2) return null;
-		const w = 120,
-			h = 36;
-		const x = scaleLinear().domain([0, values.length - 1]).range([0, w]);
+		const w = 100, h = 28;
+		const x = scaleLinear().domain([0, values.length - 1]).range([2, w - 2]);
 		const y = scaleLinear()
 			.domain([Math.min(...values) * 0.9, Math.max(...values) * 1.1])
-			.range([h, 0]);
+			.range([h - 2, 2]);
 		const linePath = line<number>()
 			.x((_, i) => x(i))
 			.y((d) => y(d))
@@ -54,201 +68,219 @@
 		return { linePath, w, h };
 	}
 
-	/** Total product count across wine categories */
 	const totalWineProducts = $derived(
 		wine?.current?.categories?.reduce((sum, c) => sum + c.productCount, 0) ?? 0
 	);
 
-	/** Staff picks count */
-	const staffPickCount = $derived(wine?.current?.staffPicks?.length ?? 0);
+	const staffPicks = $derived<WineStaffPick[]>(wine?.current?.staffPicks ?? []);
 
-	/** Studio count from current fitness snapshot */
+	// --- Fitness helpers ---
+
+	const fitnessStudios = $derived.by<FitnessStudio[]>(() => {
+		if (!fitness?.current?.studios) return [];
+		return [...fitness.current.studios].sort((a, b) => a.dropInPrice - b.dropInPrice);
+	});
+
 	const studioCount = $derived(fitness?.current?.studioCount ?? 0);
 
-	/** Fitness price range bars — compute min and max across all types for the scale */
-	const fitnessBarData = $derived.by(() => {
-		if (!fitness?.current) return null;
-		const current = fitness.current;
-		const allPrices: number[] = [];
-
-		// Gather all per-type medians to find the global range
-		for (const ft of fitnessTypes) {
-			const median = current.medianByType?.[ft];
-			if (median != null) allPrices.push(median);
+	const filteredMedianByType = $derived.by<Partial<Record<FitnessType, number>>>(() => {
+		const result: Partial<Record<FitnessType, number>> = {};
+		if (!fitness?.current?.studios) return result;
+		for (const type of TYPE_ORDER) {
+			const prices = fitness.current.studios
+				.filter((s) => s.type === type)
+				.map((s) => s.dropInPrice);
+			const median = computeMedian(prices);
+			if (median !== null) result[type] = median;
 		}
-
-		// Also use the studio-level data for true min/max per type if available
-		const byType: Record<
-			string,
-			{ min: number; max: number; median: number }
-		> = {};
-		for (const ft of fitnessTypes) {
-			const studios = current.studios?.filter((s) => s.type === ft) ?? [];
-			const prices = studios.map((s) => s.dropInPrice).filter((p) => p > 0);
-			const median = current.medianByType?.[ft];
-			if (prices.length > 0 && median != null) {
-				byType[ft] = {
-					min: Math.min(...prices),
-					max: Math.max(...prices),
-					median
-				};
-				allPrices.push(...prices);
-			} else if (median != null) {
-				byType[ft] = { min: median, max: median, median };
-			}
-		}
-
-		if (allPrices.length === 0) return null;
-		const globalMin = Math.min(...allPrices);
-		const globalMax = Math.max(...allPrices);
-		return { byType, globalMin, globalMax };
+		return result;
 	});
+
+	const studioCountByType = $derived.by<Partial<Record<FitnessType, number>>>(() => {
+		const result: Partial<Record<FitnessType, number>> = {};
+		if (!fitness?.current?.studios) return result;
+		for (const type of TYPE_ORDER) {
+			const count = fitness.current.studios.filter((s) => s.type === type).length;
+			if (count > 0) result[type] = count;
+		}
+		return result;
+	});
+
+	function fmtPrice(n: number | null | undefined, decimals = 0): string {
+		if (n == null) return '--';
+		return '$' + n.toFixed(decimals);
+	}
 </script>
 
-<div class="h-full flex flex-col px-12 py-8">
-	<h2 class="text-lg font-medium uppercase tracking-widest text-zinc-400">Lifestyle</h2>
+<div class="h-full flex flex-col p-4">
+	<h2 class="text-xl font-bold text-gray-100 mb-3 shrink-0">Lifestyle</h2>
 
-	<div class="mt-4 grid flex-1 grid-cols-2 gap-6">
-		<!-- Wine Index -->
-		<div class="rounded-xl bg-zinc-800/60 flex flex-col overflow-hidden">
-			<!-- Header with accent underline -->
-			<div class="px-6 pt-5 pb-3">
+	<div class="flex-1 grid grid-cols-2 gap-3 min-h-0">
+		<!-- WINE INDEX COLUMN -->
+		<div class="bg-gray-800/60 rounded-lg border border-gray-700/50 flex flex-col overflow-hidden">
+			<!-- Header -->
+			<div class="px-3 pt-3 pb-2 border-b border-gray-700/40">
 				<div class="flex items-baseline justify-between">
-					<p class="text-base font-medium uppercase tracking-wider text-zinc-300">
-						Wine Index
-					</p>
-					<div class="flex gap-4 text-sm text-zinc-500">
-						{#if totalWineProducts > 0}
-							<span>{totalWineProducts} bottles tracked</span>
-						{/if}
-						{#if staffPickCount > 0}
-							<span>{staffPickCount} staff picks</span>
-						{/if}
-					</div>
+					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Wine Index</span>
+					<span class="text-[10px] text-zinc-500">{totalWineProducts} bottles tracked</span>
 				</div>
-				<div class="mt-2 h-0.5 w-full" style="background: #7c3aed"></div>
 			</div>
 
-			<!-- Wine categories -->
-			<div class="flex-1 flex flex-col justify-center px-6 pb-5 gap-5">
-				{#each wine?.current?.categories ?? [] as cat}
+			<!-- Category cards -->
+			<div class="px-3 py-2 space-y-2 border-b border-gray-700/30">
+				{#each orderedCategories as cat}
 					{@const sparkline = makeWineSparkline(cat.category)}
-					<div class="flex items-center gap-4">
-						<!-- Label + count -->
-						<div class="w-44 shrink-0">
-							<p class="text-lg text-zinc-200">
-								{wineCategoryLabels[cat.category] ?? cat.label}
-							</p>
-							<p class="text-sm text-zinc-500">{cat.productCount} bottles</p>
+					{@const change = computeWeeklyChange(cat.category)}
+					<div class="flex items-center gap-2 bg-zinc-800/40 rounded px-2.5 py-1.5 border border-zinc-700/30">
+						<div class="flex-1 min-w-0">
+							<div class="flex items-baseline gap-1.5">
+								<span class="text-xs font-semibold text-zinc-200">
+									{wineCategoryLabels[cat.category]}
+								</span>
+								<span class="text-[9px] text-zinc-500">{cat.productCount} wines</span>
+							</div>
+							<div class="flex items-baseline gap-1.5 mt-0.5">
+								<span class="text-lg font-bold tabular-nums" style="color: {WINE_ACCENT}">
+									{fmtPrice(cat.medianPrice)}
+								</span>
+								<span class="text-[9px] text-zinc-500">median</span>
+								{#if change}
+									<span class="text-[10px] font-semibold {change.value > 0 ? 'text-amber-400' : 'text-emerald-400'}">
+										{change.label}
+									</span>
+								{/if}
+							</div>
 						</div>
+						{#if sparkline}
+							<svg
+								width={sparkline.w}
+								height={sparkline.h}
+								viewBox="0 0 {sparkline.w} {sparkline.h}"
+								class="shrink-0"
+							>
+								<path
+									d={sparkline.linePath}
+									fill="none"
+									stroke={WINE_ACCENT}
+									stroke-width="1.5"
+									opacity="0.7"
+								/>
+							</svg>
+						{/if}
+					</div>
+				{/each}
+				{#if orderedCategories.length === 0}
+					<p class="text-[10px] text-zinc-600">No wine data</p>
+				{/if}
+			</div>
 
-						<!-- Sparkline -->
-						<div class="flex-1 flex items-center justify-center">
-							{#if sparkline}
-								<svg
-									viewBox="0 0 {sparkline.w} {sparkline.h}"
-									class="w-full h-9"
-									preserveAspectRatio="none"
-								>
-									<path
-										d={sparkline.linePath}
-										fill="none"
-										stroke="#7c3aed"
-										stroke-width="2"
-										opacity="0.7"
-									/>
-								</svg>
+			<!-- Staff Picks -->
+			<div class="flex-1 px-3 py-2 overflow-hidden">
+				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Staff Picks</div>
+				{#each staffPicks.slice(0, 5) as pick}
+					<div class="flex items-center justify-between py-0.5">
+						<div class="flex flex-col min-w-0 flex-1 mr-2">
+							<span class="text-xs font-medium text-zinc-200 truncate">{pick.title}</span>
+							<span class="text-[9px] text-zinc-500 truncate">{pick.vendor}</span>
+						</div>
+						<div class="flex items-center gap-1 shrink-0">
+							{#if pick.compareAtPrice}
+								<span class="text-[9px] text-zinc-600 line-through">${pick.compareAtPrice.toFixed(0)}</span>
 							{/if}
-						</div>
-
-						<!-- Price + range -->
-						<div class="text-right shrink-0 w-32">
-							<p class="text-3xl font-bold tabular-nums text-white">
-								{fmtPrice(cat.medianPrice)}
-							</p>
-							{#if cat.minPrice != null && cat.maxPrice != null}
-								<p class="text-sm text-zinc-500 tabular-nums">
-									{fmtPrice(cat.minPrice)}–{fmtPrice(cat.maxPrice)}
-								</p>
+							<span class="text-xs font-bold tabular-nums {pick.compareAtPrice ? 'text-emerald-400' : 'text-zinc-100'}">
+								${pick.price.toFixed(0)}
+							</span>
+							{#if !pick.available}
+								<span class="text-[8px] font-semibold uppercase px-1 py-0.5 rounded bg-amber-500/15 text-amber-400">Out</span>
 							{/if}
 						</div>
 					</div>
 				{/each}
-				{#if !wine?.current?.categories?.length}
-					<p class="text-base text-zinc-500">No wine data</p>
+				{#if staffPicks.length === 0}
+					<p class="text-[10px] text-zinc-600">No staff picks available</p>
 				{/if}
+			</div>
+
+			<!-- Attribution -->
+			<div class="px-3 pb-2 text-[8px] text-zinc-600 text-center">
+				Data via PlumpJack Wine & Spirits
 			</div>
 		</div>
 
-		<!-- Fitness Drop-in -->
-		<div class="rounded-xl bg-zinc-800/60 flex flex-col overflow-hidden">
-			<!-- Header with accent underline -->
-			<div class="px-6 pt-5 pb-3">
+		<!-- FITNESS DROP-IN COLUMN -->
+		<div class="bg-gray-800/60 rounded-lg border border-gray-700/50 flex flex-col overflow-hidden">
+			<!-- Header -->
+			<div class="px-3 pt-3 pb-2 border-b border-gray-700/40">
 				<div class="flex items-baseline justify-between">
-					<p class="text-base font-medium uppercase tracking-wider text-zinc-300">
-						Fitness Drop-in
-					</p>
-					{#if studioCount > 0}
-						<span class="text-sm text-zinc-500">{studioCount} studios</span>
-					{/if}
+					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Fitness Drop-in</span>
+					<span class="text-[10px] text-zinc-500">{studioCount} studios</span>
 				</div>
-				<div class="mt-2 h-0.5 w-full" style="background: #ec4899"></div>
+				{#if fitness?.current}
+					<div class="flex items-baseline gap-3 mt-1">
+						<div class="flex items-baseline gap-1">
+							<span class="text-lg font-bold tabular-nums" style="color: {FITNESS_ACCENT}">
+								{fmtPrice(fitness.current.medianPrice)}
+							</span>
+							<span class="text-[9px] text-zinc-500">median</span>
+						</div>
+						{#if fitness.current.minPrice != null}
+							<div class="flex items-baseline gap-1">
+								<span class="text-sm font-semibold tabular-nums text-emerald-400">
+									{fmtPrice(fitness.current.minPrice)}
+								</span>
+								<span class="text-[9px] text-zinc-500">low</span>
+							</div>
+						{/if}
+						{#if fitness.current.maxPrice != null}
+							<div class="flex items-baseline gap-1">
+								<span class="text-sm font-semibold tabular-nums text-amber-400">
+									{fmtPrice(fitness.current.maxPrice)}
+								</span>
+								<span class="text-[9px] text-zinc-500">high</span>
+							</div>
+						{/if}
+					</div>
+				{/if}
 			</div>
 
-			<!-- Fitness types with horizontal bar chart -->
-			<div class="flex-1 flex flex-col justify-center px-6 pb-5 gap-4">
-				{#each fitnessTypes as ft}
-					{@const median = fitness?.current?.medianByType?.[ft]}
-					{@const barInfo = fitnessBarData?.byType[ft]}
-					<div class="flex items-center gap-4">
-						<!-- Label -->
-						<div class="w-24 shrink-0">
-							<p class="text-lg text-zinc-200">{fitnessTypeLabels[ft]}</p>
-						</div>
+			<!-- Type summary -->
+			<div class="px-3 py-2 border-b border-gray-700/30">
+				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">By Type</div>
+				<div class="space-y-1">
+					{#each TYPE_ORDER as type}
+						{@const median = filteredMedianByType[type]}
+						{@const count = studioCountByType[type]}
+						{#if median != null}
+							<div class="flex items-center gap-2">
+								<span class="w-2 h-2 rounded-full shrink-0" style="background: {TYPE_COLORS[type]}"></span>
+								<span class="text-xs text-zinc-300 flex-1">{TYPE_LABELS[type]}</span>
+								<span class="text-[9px] text-zinc-500 mr-1">{count ?? 0}</span>
+								<span class="text-sm font-bold tabular-nums text-zinc-100">{fmtPrice(median)}</span>
+							</div>
+						{/if}
+					{/each}
+				</div>
+			</div>
 
-						<!-- Horizontal bar (min—max range with median dot) -->
-						<div class="flex-1 h-8 relative">
-							{#if barInfo && fitnessBarData}
-								{@const scale = scaleLinear()
-									.domain([fitnessBarData.globalMin * 0.8, fitnessBarData.globalMax * 1.1])
-									.range([0, 100])}
-								{@const leftPct = scale(barInfo.min)}
-								{@const rightPct = scale(barInfo.max)}
-								{@const medianPct = scale(barInfo.median)}
-								<!-- Track background -->
-								<div class="absolute inset-0 rounded bg-zinc-700/30"></div>
-								<!-- Range bar -->
-								<div
-									class="absolute top-1/2 -translate-y-1/2 h-3 rounded-full"
-									style="left: {leftPct}%; width: {Math.max(rightPct - leftPct, 2)}%; background: #ec4899; opacity: 0.35;"
-								></div>
-								<!-- Median dot -->
-								<div
-									class="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 border-zinc-900"
-									style="left: {medianPct}%; transform: translate(-50%, -50%); background: #ec4899;"
-								></div>
-							{:else}
-								<div class="absolute inset-0 rounded bg-zinc-700/20"></div>
-							{/if}
+			<!-- Individual studios -->
+			<div class="flex-1 px-3 py-2 overflow-hidden">
+				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Studios (cheapest first)</div>
+				{#each fitnessStudios.slice(0, 7) as studio}
+					<div class="flex items-center justify-between py-0.5">
+						<div class="flex items-center gap-1.5 min-w-0 flex-1 mr-2">
+							<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background: {TYPE_COLORS[studio.type]}"></span>
+							<div class="flex flex-col min-w-0 flex-1">
+								<span class="text-xs font-medium text-zinc-200 truncate">{studio.name}</span>
+								<span class="text-[9px] text-zinc-500 truncate">{studio.town}</span>
+							</div>
 						</div>
-
-						<!-- Price -->
-						<div class="w-20 text-right shrink-0">
-							<p class="text-2xl font-bold tabular-nums text-white">
-								{fmtPrice(median)}
-							</p>
-						</div>
-					</div>
-				{/each}
-
-				<!-- Overall median -->
-				{#if fitness?.current?.medianPrice != null}
-					<div class="mt-2 pt-3 border-t border-zinc-700/50 flex items-baseline justify-between">
-						<span class="text-sm uppercase tracking-wider text-zinc-500">Overall Median</span>
-						<span class="text-2xl font-bold tabular-nums" style="color: #ec4899">
-							{fmtPrice(fitness.current.medianPrice)}
+						<span class="text-sm font-bold tabular-nums text-zinc-100 shrink-0">
+							{fmtPrice(studio.dropInPrice)}
 						</span>
 					</div>
+				{/each}
+				{#if fitnessStudios.length === 0}
+					<p class="text-[10px] text-zinc-600">No fitness data</p>
 				{/if}
 			</div>
 		</div>
