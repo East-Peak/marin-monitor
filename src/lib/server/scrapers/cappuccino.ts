@@ -120,7 +120,8 @@ async function scrapeToastShop(
 
 		await page
 			.waitForFunction(() => {
-				const state = (window as any).__OO_STATE__;
+				const w = window as Window & { __OO_STATE__?: Record<string, unknown> };
+				const state = w.__OO_STATE__;
 				return state && Object.keys(state).length > 1;
 			}, { timeout: TOAST_PAGE_TIMEOUT })
 			.catch(() => {
@@ -129,7 +130,8 @@ async function scrapeToastShop(
 
 		// Extract the __OO_STATE__ object from the window
 		const ooState = await page.evaluate(() => {
-			return (window as any).__OO_STATE__ ?? null;
+			const w = window as Window & { __OO_STATE__?: Record<string, unknown> };
+			return w.__OO_STATE__ ?? null;
 		});
 
 		if (ooState) {

@@ -35,7 +35,7 @@ export const ADS: AdConfig[] = [
 		placement: 'wire',
 		headline: 'Marin Families',
 		body: 'Optimize where to enrich your children this summer. Find camps, daycare, preschools, and activities across 32 Marin towns without the group-chat panic or twenty open browser tabs.',
-		image: '/images/marin-families.png',
+		image: '/images/marin-families.webp',
 		sponsor: 'East Peak Advisors',
 		url: 'https://marinfamilies.com',
 		priority: 8,

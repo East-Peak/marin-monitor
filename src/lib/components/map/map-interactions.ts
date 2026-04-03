@@ -18,15 +18,21 @@ export const HOVER_STATE = ['boolean', ['feature-state', 'hover'], false] as con
 /** Warm off-white stroke shown on hovered features. */
 export const INVITING_HOVER_STROKE = 'rgba(255, 247, 220, 0.98)';
 
-/** Return `hoverValue` when hovered, `baseValue` otherwise. */
+/**
+ * MapLibre style expression — a JSON array representing a data-driven property.
+ * Typed as `any` because MapLibre's ExpressionSpecification is a 30+ member
+ * discriminated union that cannot be satisfied by dynamically constructed arrays.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function hoverCase(hoverValue: unknown, baseValue: unknown): any {
+type StyleExpression = any;
+
+/** Return `hoverValue` when hovered, `baseValue` otherwise. */
+export function hoverCase(hoverValue: unknown, baseValue: unknown): StyleExpression {
 	return ['case', HOVER_STATE, hoverValue, baseValue];
 }
 
 /** Add `amount` to a numeric `baseValue` on hover. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function hoverAdd(baseValue: unknown, amount: number): any {
+export function hoverAdd(baseValue: unknown, amount: number): StyleExpression {
 	return hoverCase(['+', baseValue, amount], baseValue);
 }
 
