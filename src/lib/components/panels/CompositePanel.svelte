@@ -3,17 +3,16 @@
 	import { Panel } from '$lib/components/common';
 	import { fetchCompositeData } from '$lib/api/marin/composite';
 	import { compositeStore } from '$lib/stores/composite';
-	import { select } from 'd3-selection';
-	import { scaleLinear } from 'd3-scale';
-	import { area, line, curveMonotoneX } from 'd3-shape';
-	import type { CompositeData, CompositeSnapshot } from '$lib/types/composite';
+	import { buildChart, type ChartPaths } from '$lib/utils/chart';
+	import type { CompositeData } from '$lib/types/composite';
 
 	const ACCENT = '#dc2626';
-	const CHART_LEFT = 44;
-	const CHART_RIGHT = 10;
+	const CHART_HEIGHT = 140;
+	const CHART_MARGINS = { top: 12, right: 10, bottom: 24, left: 44 };
 
 	let data = $state<CompositeData>({ current: null, history: [] });
-	let chartSvg = $state<SVGSVGElement>(undefined!);
+	let chartContainer = $state<HTMLDivElement>(undefined!);
+	let chartWidth = $state(0);
 	let dataLoading = $state(false);
 	let breakdownExpanded = $state(true);
 
@@ -43,6 +42,21 @@
 		return marinNumber.total - prev.marinNumber.total;
 	});
 
+	// Build chart geometry reactively via shared utility
+	const chartPaths = $derived.by<ChartPaths | null>(() => {
+		if (chartWidth === 0 || history.length < 2) return null;
+		return buildChart({
+			width: chartWidth,
+			height: CHART_HEIGHT,
+			margins: CHART_MARGINS,
+			accentColor: ACCENT,
+			data: history.map((h) => ({
+				value: h.compositeScore,
+				label: formatDate(h.timestamp)
+			}))
+		});
+	});
+
 	function formatMoney(n: number): string {
 		return '$' + n.toLocaleString('en-US');
 	}
@@ -65,162 +79,36 @@
 	}
 
 	function updateHover(event: PointerEvent) {
-		if (history.length === 0) return;
+		if (!chartPaths) return;
 		const target = event.currentTarget as SVGSVGElement;
 		const rect = target.getBoundingClientRect();
-		const innerWidth = rect.width - CHART_LEFT - CHART_RIGHT;
-		const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - CHART_LEFT));
+		const innerWidth = rect.width - CHART_MARGINS.left - CHART_MARGINS.right;
+		const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - CHART_MARGINS.left));
 		const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
 		const index = Math.max(
 			0,
-			Math.min(history.length - 1, Math.round(ratio * (history.length - 1)))
+			Math.min(chartPaths.dots.length - 1, Math.round(ratio * (chartPaths.dots.length - 1)))
 		);
-		const pointX =
-			CHART_LEFT + (innerWidth * index) / Math.max(history.length - 1, 1);
-		hoverState = { index, x: pointX };
+		hoverState = { index, x: CHART_MARGINS.left + chartPaths.dots[index].x };
 	}
 
 	function clearHover() {
 		hoverState = null;
 	}
 
-	function drawChart() {
-		if (!chartSvg || history.length < 2) return;
-
-		const svg = select(chartSvg);
-		svg.selectAll('*').remove();
-
-		const width = chartSvg.clientWidth;
-		const height = 140;
-		const margin = { top: 12, right: CHART_RIGHT, bottom: 24, left: CHART_LEFT };
-		const innerW = width - margin.left - margin.right;
-		const innerH = height - margin.top - margin.bottom;
-
-		const scores = history.map((h) => h.compositeScore);
-		const yMin = Math.min(...scores) * 0.98;
-		const yMax = Math.max(...scores) * 1.02;
-
-		const x = scaleLinear()
-			.domain([0, history.length - 1])
-			.range([0, innerW]);
-		const y = scaleLinear().domain([yMin, yMax]).range([innerH, 0]);
-
-		const g = svg
-			.attr('width', width)
-			.attr('height', height)
-			.append('g')
-			.attr('transform', `translate(${margin.left},${margin.top})`);
-
-		// Baseline reference line at 100
-		if (yMin <= 100 && yMax >= 100) {
-			g.append('line')
-				.attr('x1', 0)
-				.attr('x2', innerW)
-				.attr('y1', y(100))
-				.attr('y2', y(100))
-				.attr('stroke', 'rgba(255,255,255,0.1)')
-				.attr('stroke-width', 1)
-				.attr('stroke-dasharray', '4,4');
-
-			g.append('text')
-				.attr('x', innerW + 4)
-				.attr('y', y(100))
-				.attr('dominant-baseline', 'middle')
-				.attr('fill', '#555')
-				.attr('font-size', '6px')
-				.text('100');
-		}
-
-		const areaGen = area<CompositeSnapshot>()
-			.x((_d, i) => x(i))
-			.y0(innerH)
-			.y1((d) => y(d.compositeScore))
-			.curve(curveMonotoneX);
-
-		g.append('path')
-			.datum(history)
-			.attr('d', areaGen)
-			.attr('fill', 'rgba(220, 38, 38, 0.08)');
-
-		const lineGen = line<CompositeSnapshot>()
-			.x((_d, i) => x(i))
-			.y((d) => y(d.compositeScore))
-			.curve(curveMonotoneX);
-
-		g.append('path')
-			.datum(history)
-			.attr('d', lineGen)
-			.attr('fill', 'none')
-			.attr('stroke', ACCENT)
-			.attr('stroke-width', 1.5);
-
-		g.selectAll('.dot')
-			.data(history)
-			.enter()
-			.append('circle')
-			.attr('cx', (_d, i) => x(i))
-			.attr('cy', (d) => y(d.compositeScore))
-			.attr('r', 2.2)
-			.attr('fill', ACCENT);
-
-		if (hoverState) {
-			g.append('line')
-				.attr('x1', x(hoverState.index))
-				.attr('x2', x(hoverState.index))
-				.attr('y1', 0)
-				.attr('y2', innerH)
-				.attr('stroke', 'rgba(255,255,255,0.35)')
-				.attr('stroke-width', 1)
-				.attr('stroke-dasharray', '3,3');
-
-			g.append('circle')
-				.attr('cx', x(hoverState.index))
-				.attr('cy', y(history[hoverState.index].compositeScore))
-				.attr('r', 4)
-				.attr('fill', ACCENT)
-				.attr('stroke', '#111')
-				.attr('stroke-width', 1);
-		}
-
-		// Y axis labels
-		g.append('text')
-			.attr('x', -4)
-			.attr('y', y(yMax))
-			.attr('text-anchor', 'end')
-			.attr('dominant-baseline', 'middle')
-			.attr('fill', '#888')
-			.attr('font-size', '7px')
-			.text(yMax.toFixed(1));
-
-		g.append('text')
-			.attr('x', -4)
-			.attr('y', y(yMin))
-			.attr('text-anchor', 'end')
-			.attr('dominant-baseline', 'middle')
-			.attr('fill', '#888')
-			.attr('font-size', '7px')
-			.text(yMin.toFixed(1));
-
-		// X axis labels
-		const labelIndices = [0, Math.floor(history.length / 2), history.length - 1];
-		for (const idx of labelIndices) {
-			g.append('text')
-				.attr('x', x(idx))
-				.attr('y', innerH + 14)
-				.attr('text-anchor', 'middle')
-				.attr('fill', '#666')
-				.attr('font-size', '7px')
-				.text(formatDate(history[idx].timestamp));
+	function measureWidth() {
+		if (chartContainer) {
+			chartWidth = chartContainer.clientWidth;
 		}
 	}
 
 	onMount(() => {
+		measureWidth();
+
 		let resizeTimer: ReturnType<typeof setTimeout>;
 		function handleResize() {
 			clearTimeout(resizeTimer);
-			resizeTimer = setTimeout(() => {
-				if (history.length > 1 && chartSvg) drawChart();
-			}, 150);
+			resizeTimer = setTimeout(measureWidth, 150);
 		}
 
 		window.addEventListener('resize', handleResize);
@@ -240,8 +128,9 @@
 		};
 	});
 
+	// Re-measure width when history arrives (container may have been hidden)
 	$effect(() => {
-		if (history.length > 1 && chartSvg) drawChart();
+		if (history.length > 1) measureWidth();
 	});
 </script>
 
@@ -285,15 +174,69 @@
 		{#if history.length > 1}
 			<div class="chart-section">
 				<div class="section-label">Composite Trend</div>
-				<div class="chart-wrap">
-					<svg
-						class="chart-svg"
-						bind:this={chartSvg}
-						role="img"
-						aria-label="Composite trend chart"
-						onpointermove={updateHover}
-						onpointerleave={clearHover}
-					></svg>
+				<div class="chart-wrap" bind:this={chartContainer}>
+					{#if chartPaths}
+						<svg
+							class="chart-svg"
+							width={chartWidth}
+							height={CHART_HEIGHT}
+							role="img"
+							aria-label="Composite trend chart"
+							onpointermove={updateHover}
+							onpointerleave={clearHover}
+						>
+							<g transform={`translate(${CHART_MARGINS.left},${CHART_MARGINS.top})`}>
+								<!-- Baseline reference line at 100 -->
+								{#if chartPaths.yMin <= 100 && chartPaths.yMax >= 100}
+									<line
+										x1="0"
+										x2={chartWidth - CHART_MARGINS.left - CHART_MARGINS.right}
+										y1={chartPaths.yScale(100)}
+										y2={chartPaths.yScale(100)}
+										stroke="rgba(255,255,255,0.1)"
+										stroke-width="1"
+										stroke-dasharray="4,4"
+									/>
+									<text x={chartWidth - CHART_MARGINS.left - CHART_MARGINS.right + 4} y={chartPaths.yScale(100)} dominant-baseline="middle" fill="#555" font-size="6px">100</text>
+								{/if}
+								<!-- Filled area -->
+								<path d={chartPaths.areaPath} fill="rgba(220, 38, 38, 0.08)" />
+								<!-- Line -->
+								<path d={chartPaths.linePath} fill="none" stroke={ACCENT} stroke-width="1.5" />
+								<!-- Dots -->
+								{#each chartPaths.dots as dot}
+									<circle cx={dot.x} cy={dot.y} r="2.2" fill={ACCENT} />
+								{/each}
+								<!-- Hover crosshair + highlight -->
+								{#if hoverState}
+									<line
+										x1={chartPaths.dots[hoverState.index].x}
+										x2={chartPaths.dots[hoverState.index].x}
+										y1="0"
+										y2={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom}
+										stroke="rgba(255,255,255,0.35)"
+										stroke-width="1"
+										stroke-dasharray="3,3"
+									/>
+									<circle
+										cx={chartPaths.dots[hoverState.index].x}
+										cy={chartPaths.dots[hoverState.index].y}
+										r="4"
+										fill={ACCENT}
+										stroke="#111"
+										stroke-width="1"
+									/>
+								{/if}
+								<!-- Y axis labels -->
+								<text x="-4" y={chartPaths.yScale(chartPaths.yMax)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{chartPaths.yMax.toFixed(1)}</text>
+								<text x="-4" y={chartPaths.yScale(chartPaths.yMin)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{chartPaths.yMin.toFixed(1)}</text>
+								<!-- X axis labels -->
+								{#each chartPaths.axisLabels.x as lbl}
+									<text x={lbl.x} y={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom + 14} text-anchor="middle" fill="#666" font-size="7px">{lbl.label}</text>
+								{/each}
+							</g>
+						</svg>
+					{/if}
 					{#if hoverState}
 						<div class="chart-tooltip" style={`left:${Math.max(20, hoverState.x - 80)}px`}>
 							<div class="tooltip-time">{formatDate(history[hoverState.index].timestamp)}</div>

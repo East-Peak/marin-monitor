@@ -5,9 +5,7 @@
 	import { fitnessStore } from '$lib/stores/fitness';
 	import { townFilter } from '$lib/stores/town-filter';
 	import { findNearestTown } from '$lib/geo';
-	import { select } from 'd3-selection';
-	import { scaleLinear } from 'd3-scale';
-	import { area, line, curveMonotoneX } from 'd3-shape';
+	import { buildChart, type ChartPaths } from '$lib/utils/chart';
 	import {
 		FITNESS_ACCENT,
 		FITNESS_ACCENT_FILL,
@@ -20,11 +18,12 @@
 
 	type HoverState = { index: number; x: number } | null;
 
-	const CHART_LEFT = 44;
-	const CHART_RIGHT = 10;
+	const CHART_HEIGHT = 200;
+	const CHART_MARGINS = { top: 12, right: 10, bottom: 24, left: 44 };
 
 	let data = $state<FitnessData>({ current: null, history: [] });
-	let chartSvg = $state<SVGSVGElement>(undefined!);
+	let chartContainer = $state<HTMLDivElement>(undefined!);
+	let chartWidth = $state(0);
 	let dataLoading = $state(false);
 	let hoverState = $state<HoverState>(null);
 
@@ -34,6 +33,21 @@
 			.filter((h) => h.medianPrice !== null)
 			.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
 	);
+
+	// Build chart geometry reactively via shared utility
+	const chartPaths = $derived.by<ChartPaths | null>(() => {
+		if (chartWidth === 0 || history.length < 2) return null;
+		return buildChart({
+			width: chartWidth,
+			height: CHART_HEIGHT,
+			margins: CHART_MARGINS,
+			accentColor: FITNESS_ACCENT,
+			data: history.map((h) => ({
+				value: h.medianPrice!,
+				label: formatDate(h.timestamp)
+			}))
+		});
+	});
 
 	// Filter studios by selected town (proximity match)
 	const filteredStudios = $derived.by<FitnessStudio[]>(() => {
@@ -92,144 +106,36 @@
 	}
 
 	function updateHover(event: PointerEvent) {
-		if (history.length === 0) return;
+		if (!chartPaths) return;
 		const target = event.currentTarget as SVGSVGElement;
 		const rect = target.getBoundingClientRect();
-		const innerWidth = rect.width - CHART_LEFT - CHART_RIGHT;
-		const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - CHART_LEFT));
+		const innerWidth = rect.width - CHART_MARGINS.left - CHART_MARGINS.right;
+		const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - CHART_MARGINS.left));
 		const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
 		const index = Math.max(
 			0,
-			Math.min(history.length - 1, Math.round(ratio * (history.length - 1)))
+			Math.min(chartPaths.dots.length - 1, Math.round(ratio * (chartPaths.dots.length - 1)))
 		);
-		const pointX =
-			CHART_LEFT + (innerWidth * index) / Math.max(history.length - 1, 1);
-		hoverState = { index, x: pointX };
+		hoverState = { index, x: CHART_MARGINS.left + chartPaths.dots[index].x };
 	}
 
 	function clearHover() {
 		hoverState = null;
 	}
 
-	function drawChart() {
-		if (!chartSvg || history.length < 2) return;
-
-		const svg = select(chartSvg);
-		svg.selectAll('*').remove();
-
-		const width = chartSvg.clientWidth;
-		const height = 200;
-		const margin = { top: 12, right: CHART_RIGHT, bottom: 24, left: CHART_LEFT };
-		const innerW = width - margin.left - margin.right;
-		const innerH = height - margin.top - margin.bottom;
-
-		const prices = history.map((h) => h.medianPrice!);
-		const yMin = Math.min(...prices) * 0.95;
-		const yMax = Math.max(...prices) * 1.05;
-
-		const x = scaleLinear()
-			.domain([0, history.length - 1])
-			.range([0, innerW]);
-		const y = scaleLinear().domain([yMin, yMax]).range([innerH, 0]);
-
-		const g = svg
-			.attr('width', width)
-			.attr('height', height)
-			.append('g')
-			.attr('transform', `translate(${margin.left},${margin.top})`);
-
-		type HistoryEntry = (typeof history)[number];
-
-		const areaGen = area<HistoryEntry>()
-			.x((_d, i) => x(i))
-			.y0(innerH)
-			.y1((d) => y(d.medianPrice!))
-			.curve(curveMonotoneX);
-
-		g.append('path')
-			.datum(history)
-			.attr('d', areaGen)
-			.attr('fill', FITNESS_ACCENT_FILL);
-
-		const lineGen = line<HistoryEntry>()
-			.x((_d, i) => x(i))
-			.y((d) => y(d.medianPrice!))
-			.curve(curveMonotoneX);
-
-		g.append('path')
-			.datum(history)
-			.attr('d', lineGen)
-			.attr('fill', 'none')
-			.attr('stroke', FITNESS_ACCENT)
-			.attr('stroke-width', 1.5);
-
-		g.selectAll('.dot')
-			.data(history)
-			.enter()
-			.append('circle')
-			.attr('cx', (_d, i) => x(i))
-			.attr('cy', (d) => y(d.medianPrice!))
-			.attr('r', 2.2)
-			.attr('fill', FITNESS_ACCENT);
-
-		if (hoverState) {
-			g.append('line')
-				.attr('x1', x(hoverState.index))
-				.attr('x2', x(hoverState.index))
-				.attr('y1', 0)
-				.attr('y2', innerH)
-				.attr('stroke', 'rgba(255,255,255,0.35)')
-				.attr('stroke-width', 1)
-				.attr('stroke-dasharray', '3,3');
-
-			g.append('circle')
-				.attr('cx', x(hoverState.index))
-				.attr('cy', y(history[hoverState.index].medianPrice!))
-				.attr('r', 4)
-				.attr('fill', FITNESS_ACCENT)
-				.attr('stroke', '#111')
-				.attr('stroke-width', 1);
-		}
-
-		// Y axis labels
-		g.append('text')
-			.attr('x', -4)
-			.attr('y', y(yMax))
-			.attr('text-anchor', 'end')
-			.attr('dominant-baseline', 'middle')
-			.attr('fill', '#888')
-			.attr('font-size', '7px')
-			.text(formatPrice(yMax));
-
-		g.append('text')
-			.attr('x', -4)
-			.attr('y', y(yMin))
-			.attr('text-anchor', 'end')
-			.attr('dominant-baseline', 'middle')
-			.attr('fill', '#888')
-			.attr('font-size', '7px')
-			.text(formatPrice(yMin));
-
-		// X axis labels
-		const labelIndices = [0, Math.floor(history.length / 2), history.length - 1];
-		for (const idx of labelIndices) {
-			g.append('text')
-				.attr('x', x(idx))
-				.attr('y', innerH + 14)
-				.attr('text-anchor', 'middle')
-				.attr('fill', '#666')
-				.attr('font-size', '7px')
-				.text(formatDate(history[idx].timestamp));
+	function measureWidth() {
+		if (chartContainer) {
+			chartWidth = chartContainer.clientWidth;
 		}
 	}
 
 	onMount(() => {
+		measureWidth();
+
 		let resizeTimer: ReturnType<typeof setTimeout>;
 		function handleResize() {
 			clearTimeout(resizeTimer);
-			resizeTimer = setTimeout(() => {
-				if (history.length > 1 && chartSvg) drawChart();
-			}, 150);
+			resizeTimer = setTimeout(measureWidth, 150);
 		}
 
 		window.addEventListener('resize', handleResize);
@@ -249,8 +155,9 @@
 		};
 	});
 
+	// Re-measure width when history arrives (container may have been hidden)
 	$effect(() => {
-		if (history.length > 1 && chartSvg) drawChart();
+		if (history.length > 1) measureWidth();
 	});
 </script>
 
@@ -296,15 +203,56 @@
 	{#if history.length > 1}
 		<div class="chart-section">
 			<div class="section-label">Median Drop-in Price Trend</div>
-			<div class="chart-wrap">
-				<svg
-					class="chart-svg"
-					bind:this={chartSvg}
-					role="img"
-					aria-label="Median fitness drop-in price trend"
-					onpointermove={updateHover}
-					onpointerleave={clearHover}
-				></svg>
+			<div class="chart-wrap" bind:this={chartContainer}>
+				{#if chartPaths}
+					<svg
+						class="chart-svg"
+						width={chartWidth}
+						height={CHART_HEIGHT}
+						role="img"
+						aria-label="Median fitness drop-in price trend"
+						onpointermove={updateHover}
+						onpointerleave={clearHover}
+					>
+						<g transform={`translate(${CHART_MARGINS.left},${CHART_MARGINS.top})`}>
+							<!-- Filled area -->
+							<path d={chartPaths.areaPath} fill={FITNESS_ACCENT_FILL} />
+							<!-- Line -->
+							<path d={chartPaths.linePath} fill="none" stroke={FITNESS_ACCENT} stroke-width="1.5" />
+							<!-- Dots -->
+							{#each chartPaths.dots as dot}
+								<circle cx={dot.x} cy={dot.y} r="2.2" fill={FITNESS_ACCENT} />
+							{/each}
+							<!-- Hover crosshair + highlight -->
+							{#if hoverState}
+								<line
+									x1={chartPaths.dots[hoverState.index].x}
+									x2={chartPaths.dots[hoverState.index].x}
+									y1="0"
+									y2={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom}
+									stroke="rgba(255,255,255,0.35)"
+									stroke-width="1"
+									stroke-dasharray="3,3"
+								/>
+								<circle
+									cx={chartPaths.dots[hoverState.index].x}
+									cy={chartPaths.dots[hoverState.index].y}
+									r="4"
+									fill={FITNESS_ACCENT}
+									stroke="#111"
+									stroke-width="1"
+								/>
+							{/if}
+							<!-- Y axis labels -->
+							<text x="-4" y={chartPaths.yScale(chartPaths.yMax)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{formatPrice(chartPaths.yMax)}</text>
+							<text x="-4" y={chartPaths.yScale(chartPaths.yMin)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{formatPrice(chartPaths.yMin)}</text>
+							<!-- X axis labels -->
+							{#each chartPaths.axisLabels.x as lbl}
+								<text x={lbl.x} y={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom + 14} text-anchor="middle" fill="#666" font-size="7px">{lbl.label}</text>
+							{/each}
+						</g>
+					</svg>
+				{/if}
 				{#if hoverState}
 					<div class="chart-tooltip" style={`left:${Math.max(20, hoverState.x - 80)}px`}>
 						<div class="tooltip-time">{formatDate(history[hoverState.index].timestamp)}</div>

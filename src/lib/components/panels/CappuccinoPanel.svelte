@@ -6,9 +6,7 @@
 	import { coffeeIndexStore } from '$lib/stores/coffee';
 	import { townFilter, selectedTownObj } from '$lib/stores/town-filter';
 	import { findNearestTown } from '$lib/geo';
-	import { select } from 'd3-selection';
-	import { scaleLinear } from 'd3-scale';
-	import { area, line, curveMonotoneX } from 'd3-shape';
+	import { buildChart, type ChartPaths } from '$lib/utils/chart';
 	import {
 		formatCoffeePrice,
 		getOrderedCoffeeDrinkPrices,
@@ -18,7 +16,6 @@
 		CoffeeDrinkId,
 		CoffeeDrinkPrice,
 		CoffeeIndexData,
-		CoffeeIndexHistoryEntry,
 		CoffeeIndexShop
 	} from '$lib/types/coffee';
 
@@ -27,12 +24,13 @@
 	type DrinkCard = { label: string; value: string; detail: string; tone?: 'default' | 'positive' | 'warning' };
 	type ShopRow = { shop: CoffeeIndexShop; headline: CoffeeDrinkPrice | null; drinks: CoffeeDrinkPrice[] };
 
-	const CHART_LEFT = 44;
-	const CHART_RIGHT = 10;
 	const ACCENT = '#a16207';
+	const CHART_HEIGHT = 200;
+	const CHART_MARGINS = { top: 12, right: 10, bottom: 24, left: 44 };
 
 	let data = $state<CoffeeIndexData>({ current: null, history: [] });
-	let chartSvg = $state<SVGSVGElement>(undefined!);
+	let chartContainer = $state<HTMLDivElement>(undefined!);
+	let chartWidth = $state(0);
 	let dataLoading = $state(false);
 	let hoverState = $state<HoverState>(null);
 
@@ -44,6 +42,21 @@
 			.filter((entry) => entry.primaryDrinkSummary.medianPrice !== null)
 			.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
 	);
+
+	// Build chart geometry reactively via shared utility
+	const chartPaths = $derived.by<ChartPaths | null>(() => {
+		if (chartWidth === 0 || historySeries.length < 2) return null;
+		return buildChart({
+			width: chartWidth,
+			height: CHART_HEIGHT,
+			margins: CHART_MARGINS,
+			accentColor: ACCENT,
+			data: historySeries.map((entry) => ({
+				value: entry.primaryDrinkSummary.medianPrice!,
+				label: formatDate(entry.timestamp)
+			}))
+		});
+	});
 
 	const filteredShops = $derived.by<CoffeeIndexShop[]>(() => {
 		if (!current?.shops) return [];
@@ -167,142 +180,36 @@
 	}
 
 	function updateHover(event: PointerEvent) {
-		if (historySeries.length === 0) return;
+		if (!chartPaths) return;
 		const target = event.currentTarget as SVGSVGElement;
 		const rect = target.getBoundingClientRect();
-		const innerWidth = rect.width - CHART_LEFT - CHART_RIGHT;
-		const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - CHART_LEFT));
+		const innerWidth = rect.width - CHART_MARGINS.left - CHART_MARGINS.right;
+		const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - CHART_MARGINS.left));
 		const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
-		const index = Math.max(0, Math.min(historySeries.length - 1, Math.round(ratio * (historySeries.length - 1))));
-		const pointX = CHART_LEFT + (innerWidth * index) / Math.max(historySeries.length - 1, 1);
-		hoverState = { index, x: pointX };
+		const index = Math.max(
+			0,
+			Math.min(chartPaths.dots.length - 1, Math.round(ratio * (chartPaths.dots.length - 1)))
+		);
+		hoverState = { index, x: CHART_MARGINS.left + chartPaths.dots[index].x };
 	}
 
 	function clearHover() {
 		hoverState = null;
 	}
 
-	function drawChart() {
-		if (!chartSvg || historySeries.length < 2) return;
-
-		const svg = select(chartSvg);
-		svg.selectAll('*').remove();
-
-		const width = chartSvg.clientWidth;
-		const height = 200;
-		const margin = { top: 12, right: CHART_RIGHT, bottom: 24, left: CHART_LEFT };
-		const innerWidth = width - margin.left - margin.right;
-		const innerHeight = height - margin.top - margin.bottom;
-
-		const prices = historySeries.map((entry) => entry.primaryDrinkSummary.medianPrice!);
-		const yMin = Math.min(...prices) * 0.98;
-		const yMax = Math.max(...prices) * 1.02;
-
-		const x = scaleLinear().domain([0, historySeries.length - 1]).range([0, innerWidth]);
-		const y = scaleLinear().domain([yMin, yMax]).range([innerHeight, 0]);
-
-		const group = svg
-			.attr('width', width)
-			.attr('height', height)
-			.append('g')
-			.attr('transform', `translate(${margin.left},${margin.top})`);
-
-		const areaGen = area<CoffeeIndexHistoryEntry>()
-			.x((_entry, index) => x(index))
-			.y0(innerHeight)
-			.y1((entry) => y(entry.primaryDrinkSummary.medianPrice!))
-			.curve(curveMonotoneX);
-
-		group
-			.append('path')
-			.datum(historySeries)
-			.attr('d', areaGen)
-			.attr('fill', 'rgba(161, 98, 7, 0.1)');
-
-		const lineGen = line<CoffeeIndexHistoryEntry>()
-			.x((_entry, index) => x(index))
-			.y((entry) => y(entry.primaryDrinkSummary.medianPrice!))
-			.curve(curveMonotoneX);
-
-		group
-			.append('path')
-			.datum(historySeries)
-			.attr('d', lineGen)
-			.attr('fill', 'none')
-			.attr('stroke', ACCENT)
-			.attr('stroke-width', 1.5);
-
-		group
-			.selectAll('.dot')
-			.data(historySeries)
-			.enter()
-			.append('circle')
-			.attr('cx', (_entry, index) => x(index))
-			.attr('cy', (entry) => y(entry.primaryDrinkSummary.medianPrice!))
-			.attr('r', 2.2)
-			.attr('fill', ACCENT);
-
-		if (hoverState) {
-			group
-				.append('line')
-				.attr('x1', x(hoverState.index))
-				.attr('x2', x(hoverState.index))
-				.attr('y1', 0)
-				.attr('y2', innerHeight)
-				.attr('stroke', 'rgba(255,255,255,0.35)')
-				.attr('stroke-width', 1)
-				.attr('stroke-dasharray', '3,3');
-
-			group
-				.append('circle')
-				.attr('cx', x(hoverState.index))
-				.attr('cy', y(historySeries[hoverState.index].primaryDrinkSummary.medianPrice!))
-				.attr('r', 4)
-				.attr('fill', ACCENT)
-				.attr('stroke', '#111')
-				.attr('stroke-width', 1);
-		}
-
-		group
-			.append('text')
-			.attr('x', -4)
-			.attr('y', y(yMax))
-			.attr('text-anchor', 'end')
-			.attr('dominant-baseline', 'middle')
-			.attr('fill', '#888')
-			.attr('font-size', '7px')
-			.text(formatCoffeePrice(yMax));
-
-		group
-			.append('text')
-			.attr('x', -4)
-			.attr('y', y(yMin))
-			.attr('text-anchor', 'end')
-			.attr('dominant-baseline', 'middle')
-			.attr('fill', '#888')
-			.attr('font-size', '7px')
-			.text(formatCoffeePrice(yMin));
-
-		const labelIndices = [0, Math.floor(historySeries.length / 2), historySeries.length - 1];
-		for (const index of labelIndices) {
-			group
-				.append('text')
-				.attr('x', x(index))
-				.attr('y', innerHeight + 14)
-				.attr('text-anchor', 'middle')
-				.attr('fill', '#666')
-				.attr('font-size', '7px')
-				.text(formatDate(historySeries[index].timestamp));
+	function measureWidth() {
+		if (chartContainer) {
+			chartWidth = chartContainer.clientWidth;
 		}
 	}
 
 	onMount(() => {
+		measureWidth();
+
 		let resizeTimer: ReturnType<typeof setTimeout>;
 		function handleResize() {
 			clearTimeout(resizeTimer);
-			resizeTimer = setTimeout(() => {
-				if (historySeries.length > 1 && chartSvg) drawChart();
-			}, 150);
+			resizeTimer = setTimeout(measureWidth, 150);
 		}
 
 		window.addEventListener('resize', handleResize);
@@ -322,8 +229,9 @@
 		};
 	});
 
+	// Re-measure width when history arrives (container may have been hidden)
 	$effect(() => {
-		if (historySeries.length > 1 && chartSvg) drawChart();
+		if (historySeries.length > 1) measureWidth();
 	});
 </script>
 
@@ -343,15 +251,56 @@
 	{#if historySeries.length > 1}
 		<div class="chart-section">
 			<div class="section-label">{currentPrimaryLabel} Trend</div>
-			<div class="chart-wrap">
-				<svg
-					class="chart-svg"
-					bind:this={chartSvg}
-					role="img"
-					aria-label={`${currentPrimaryLabel} price trend`}
-					onpointermove={updateHover}
-					onpointerleave={clearHover}
-				></svg>
+			<div class="chart-wrap" bind:this={chartContainer}>
+				{#if chartPaths}
+					<svg
+						class="chart-svg"
+						width={chartWidth}
+						height={CHART_HEIGHT}
+						role="img"
+						aria-label={`${currentPrimaryLabel} price trend`}
+						onpointermove={updateHover}
+						onpointerleave={clearHover}
+					>
+						<g transform={`translate(${CHART_MARGINS.left},${CHART_MARGINS.top})`}>
+							<!-- Filled area -->
+							<path d={chartPaths.areaPath} fill="rgba(161, 98, 7, 0.1)" />
+							<!-- Line -->
+							<path d={chartPaths.linePath} fill="none" stroke={ACCENT} stroke-width="1.5" />
+							<!-- Dots -->
+							{#each chartPaths.dots as dot}
+								<circle cx={dot.x} cy={dot.y} r="2.2" fill={ACCENT} />
+							{/each}
+							<!-- Hover crosshair + highlight -->
+							{#if hoverState}
+								<line
+									x1={chartPaths.dots[hoverState.index].x}
+									x2={chartPaths.dots[hoverState.index].x}
+									y1="0"
+									y2={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom}
+									stroke="rgba(255,255,255,0.35)"
+									stroke-width="1"
+									stroke-dasharray="3,3"
+								/>
+								<circle
+									cx={chartPaths.dots[hoverState.index].x}
+									cy={chartPaths.dots[hoverState.index].y}
+									r="4"
+									fill={ACCENT}
+									stroke="#111"
+									stroke-width="1"
+								/>
+							{/if}
+							<!-- Y axis labels -->
+							<text x="-4" y={chartPaths.yScale(chartPaths.yMax)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{formatCoffeePrice(chartPaths.yMax)}</text>
+							<text x="-4" y={chartPaths.yScale(chartPaths.yMin)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{formatCoffeePrice(chartPaths.yMin)}</text>
+							<!-- X axis labels -->
+							{#each chartPaths.axisLabels.x as lbl}
+								<text x={lbl.x} y={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom + 14} text-anchor="middle" fill="#666" font-size="7px">{lbl.label}</text>
+							{/each}
+						</g>
+					</svg>
+				{/if}
 				{#if hoverState}
 					<div class="chart-tooltip" style={`left:${Math.max(20, hoverState.x - 80)}px`}>
 						<div class="tooltip-time">{formatDate(historySeries[hoverState.index].timestamp)}</div>
