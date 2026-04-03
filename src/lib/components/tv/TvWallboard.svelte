@@ -241,6 +241,95 @@
   // NOT weatherForecast[0] which is the daytime high
   const currentTemp = $derived(hourlyPeriods[0]?.temperature ?? null);
 
+  // --- Region context for map sidebar ---
+  type RegionContextItem = { label: string; value: string };
+
+  /** Region lat/lon bounding boxes for filtering shops/stations by map view */
+  const REGION_BOUNDS: Record<string, { latMin: number; latMax: number; lonMin: number; lonMax: number }> = {
+    south: { latMin: 37.83, latMax: 37.92, lonMin: -122.60, lonMax: -122.45 },
+    central: { latMin: 37.92, latMax: 38.00, lonMin: -122.60, lonMax: -122.45 },
+    north: { latMin: 38.00, latMax: 38.12, lonMin: -122.65, lonMax: -122.45 },
+    west: { latMin: 37.90, latMax: 38.10, lonMin: -122.85, lonMax: -122.60 },
+  };
+
+  function inBounds(lat: number, lon: number, bounds: { latMin: number; latMax: number; lonMin: number; lonMax: number }): boolean {
+    return lat >= bounds.latMin && lat <= bounds.latMax && lon >= bounds.lonMin && lon <= bounds.lonMax;
+  }
+
+  const regionContext = $derived.by((): RegionContextItem[] => {
+    const viewId = activeMapViewId;
+
+    if (viewId === 'county') {
+      const items: RegionContextItem[] = [];
+      if (aqiData) items.push({ label: 'AQI', value: `${aqiData.aqi} ${aqiData.category}` });
+      const activeStreams = streamGauges.filter(s => s.streamflow != null).length;
+      if (activeStreams > 0) items.push({ label: 'Stream gauges', value: `${activeStreams} reporting` });
+      if (threeOneOneItems.length > 0) items.push({ label: '311 reports', value: `${threeOneOneItems.length} this week` });
+      return items;
+    }
+
+    if (viewId === 'south') {
+      const items: RegionContextItem[] = [];
+      const bounds = REGION_BOUNDS.south;
+      const southShops = (cappuccinoData?.current?.shops ?? []).filter(s => s.price != null && inBounds(s.lat, s.lon, bounds));
+      if (southShops.length > 0) {
+        const cheapest = southShops.reduce((a, b) => (a.price! < b.price! ? a : b));
+        items.push({ label: 'Cappuccino', value: `$${cheapest.price!.toFixed(2)} at ${cheapest.name}` });
+      }
+      const southGas = (gasData?.current?.stations ?? []).filter(s => inBounds(s.lat, s.lon, bounds));
+      const southRegular = southGas.flatMap(s => s.fuelPrices.filter(f => f.type === 'REGULAR_UNLEADED').map(f => ({ price: f.price, name: s.name })));
+      if (southRegular.length > 0) {
+        const cheapestGas = southRegular.reduce((a, b) => a.price < b.price ? a : b);
+        items.push({ label: 'Regular gas', value: `$${cheapestGas.price.toFixed(2)} at ${cheapestGas.name}` });
+      }
+      return items;
+    }
+
+    if (viewId === 'central') {
+      const items: RegionContextItem[] = [];
+      const bounds = REGION_BOUNDS.central;
+      const centralStudios = (fitnessData?.current?.studios ?? []).filter(s => inBounds(s.lat, s.lon, bounds));
+      if (centralStudios.length > 0) {
+        const prices = centralStudios.map(s => s.dropInPrice).sort((a, b) => a - b);
+        const median = prices[Math.floor(prices.length / 2)];
+        items.push({ label: 'Fitness drop-in', value: `$${median} median (${centralStudios.length} studios)` });
+      }
+      const centralShops = (cappuccinoData?.current?.shops ?? []).filter(s => s.price != null && inBounds(s.lat, s.lon, bounds));
+      if (centralShops.length > 0) {
+        const cheapest = centralShops.reduce((a, b) => (a.price! < b.price! ? a : b));
+        items.push({ label: 'Cappuccino', value: `$${cheapest.price!.toFixed(2)} at ${cheapest.name}` });
+      }
+      return items;
+    }
+
+    if (viewId === 'north') {
+      const items: RegionContextItem[] = [];
+      const bounds = REGION_BOUNDS.north;
+      const northGas = (gasData?.current?.stations ?? []).filter(s => inBounds(s.lat, s.lon, bounds));
+      const northRegular = northGas.flatMap(s => s.fuelPrices.filter(f => f.type === 'REGULAR_UNLEADED').map(f => f.price));
+      if (northRegular.length > 0) {
+        const avg = northRegular.reduce((a, b) => a + b, 0) / northRegular.length;
+        items.push({ label: 'Gas avg (regular)', value: `$${avg.toFixed(2)} (${northGas.length} stations)` });
+      }
+      const north311 = threeOneOneItems.filter(i => i.lat != null && i.lon != null && inBounds(i.lat!, i.lon!, bounds));
+      if (north311.length > 0) items.push({ label: '311 reports', value: `${north311.length} nearby` });
+      return items;
+    }
+
+    if (viewId === 'west') {
+      const items: RegionContextItem[] = [];
+      if (heroDirt) items.push({ label: 'Trail conditions', value: heroDirt.label });
+      const westStreams = streamGauges.filter(s => s.streamflow != null && s.lon < -122.60);
+      if (westStreams.length > 0) {
+        const avgCfs = Math.round(westStreams.reduce((a, s) => a + s.streamflow!, 0) / westStreams.length);
+        items.push({ label: 'Avg streamflow', value: `${avgCfs} cfs (${westStreams.length} gauges)` });
+      }
+      return items;
+    }
+
+    return [];
+  });
+
   async function loadNews() {
     const result = await loadAllNews();
     earthquakeItems = result.earthquakeNews;
@@ -450,6 +539,7 @@
         coffeeShops={cappuccinoData?.current?.shops ?? []}
         gasStations={gasData?.current?.stations ?? []}
         fitnessStudios={fitnessData?.current?.studios ?? []}
+        {regionContext}
       />
     </div>
 
@@ -488,6 +578,7 @@
               weather={regionWeather?.['county'] ?? null}
               aqi={aqiData ? { value: aqiData.aqi, category: aqiData.category, pollutant: aqiData.pollutant } : null}
               tides={tidePredictions}
+              hourlyForecast={hourlyPeriods}
             />
           {:else if screen.id === 'outdoors'}
             <TvOutdoorsCard

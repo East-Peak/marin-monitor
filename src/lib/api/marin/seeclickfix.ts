@@ -73,6 +73,22 @@ function addressSnippet(address: string): string {
 	return firstPart.replace(/^\d+\s+/, '');
 }
 
+/**
+ * Ensure image URLs use our blob proxy rather than raw SeeClickFix CDN URLs.
+ * The cron job rewrites URLs to `/api/data/311-image?id=X&size=Y` when it
+ * successfully stores images, but if storage fails the raw CDN URL persists.
+ * External CDN URLs fail in the browser due to CORS / hotlinking restrictions,
+ * so we rewrite them to the proxy format. If the blob doesn't have the image,
+ * the proxy returns 404, which triggers the fallback card via onerror.
+ */
+function ensureProxyUrl(url: string | null | undefined, issueId: number, size: 'full' | 'thumb'): string | undefined {
+	if (!url) return undefined;
+	// Already a proxy URL — keep as-is
+	if (url.startsWith('/api/data/311-image')) return url;
+	// External URL — rewrite to proxy
+	return `/api/data/311-image?id=${issueId}&size=${size}`;
+}
+
 function issueToNewsItem(issue: SeeClickFixIssue): NewsItem | null {
 	if (!issue.id || !issue.created_at) return null;
 	if (!isInMarinCounty(issue.lat, issue.lng)) return null;
@@ -110,8 +126,8 @@ function issueToNewsItem(issue: SeeClickFixIssue): NewsItem | null {
 		locationConfidence: lat !== undefined && lon !== undefined ? 'exact' : 'town',
 		locationEvidence: issue.address || town?.name,
 		topics: ['311', 'seeclickfix'],
-		imageUrl: issue.media?.image_full || undefined,
-		thumbnailUrl: issue.media?.image_square_100x100 || undefined
+		imageUrl: ensureProxyUrl(issue.media?.image_full, issue.id, 'full'),
+		thumbnailUrl: ensureProxyUrl(issue.media?.image_square_100x100, issue.id, 'thumb')
 	};
 }
 

@@ -3,6 +3,7 @@
 	import { STRAVA_ENABLED } from '$lib/config/strava';
 	import TvMapPosition from '$lib/components/tv/TvMapPosition.svelte';
 	import TvMapSidebar from '$lib/components/tv/TvMapSidebar.svelte';
+	import type { RegionContextItem } from '$lib/components/tv/TvMapSidebar.svelte';
 	import TvMapOverlay from '$lib/components/tv/TvMapOverlay.svelte';
 	import { allNewsItems } from '$lib/stores';
 	import { MARIN_TOWNS } from '$lib/config/towns';
@@ -26,6 +27,8 @@
 		gasStations?: GasStation[];
 		/** Fitness studios for central view overlay */
 		fitnessStudios?: FitnessStudio[];
+		/** Region-specific context data for sidebar */
+		regionContext?: RegionContextItem[];
 	}
 
 	let {
@@ -36,7 +39,8 @@
 		threeOneOneItems = [],
 		coffeeShops = [],
 		gasStations = [],
-		fitnessStudios = []
+		fitnessStudios = [],
+		regionContext = []
 	}: Props = $props();
 
 	const view = $derived(TV_MAP_VIEWS.find((v) => v.id === viewId) ?? TV_MAP_VIEWS[0]);
@@ -96,6 +100,7 @@
 			{stories}
 			{alerts}
 			loading={weather === null}
+			{regionContext}
 		/>
 	</div>
 </div>

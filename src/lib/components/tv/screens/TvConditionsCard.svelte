@@ -1,10 +1,45 @@
 <script lang="ts">
+	interface HourlyPeriod {
+		temperature: number;
+		shortForecast?: string;
+		startTime: string;
+	}
+
 	interface Props {
 		weather: { temp: number | null; wind: string | null; shortForecast: string | null } | null;
 		aqi: { value: number; category: string; pollutant?: string } | null;
 		tides: Array<{ time: string; height: number; type: 'H' | 'L' }>;
+		/** Optional hourly forecast periods for the mini-forecast strip */
+		hourlyForecast?: HourlyPeriod[];
 	}
-	let { weather, aqi, tides }: Props = $props();
+	let { weather, aqi, tides, hourlyForecast = [] }: Props = $props();
+
+	/** Extract high/low from the next 12 hours of hourly data */
+	const forecastHiLo = $derived.by(() => {
+		const temps = hourlyForecast.slice(0, 12).map(h => h.temperature);
+		if (temps.length === 0) return null;
+		return { hi: Math.max(...temps), lo: Math.min(...temps) };
+	});
+
+	/** Next 4 hours for the mini-forecast strip */
+	const nextHours = $derived(hourlyForecast.slice(1, 5));
+
+	function formatHour(iso: string): string {
+		try {
+			const d = new Date(iso);
+			return d.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true });
+		} catch {
+			return '';
+		}
+	}
+
+	/** Short health guidance based on AQI range */
+	function aqiGuidance(value: number): string {
+		if (value <= 50) return 'Air quality is satisfactory. No health concern.';
+		if (value <= 100) return 'Acceptable. Sensitive individuals should limit prolonged outdoor exertion.';
+		if (value <= 150) return 'Sensitive groups may experience effects. Limit prolonged outdoor exertion.';
+		return 'Everyone may experience health effects. Avoid prolonged outdoor exertion.';
+	}
 
 	function aqiBgColor(value: number): string {
 		if (value <= 50) return '#22c55e';
@@ -114,6 +149,35 @@
 					</div>
 				{/if}
 
+				<!-- Hi/Lo from hourly forecast -->
+				{#if forecastHiLo}
+					<div class="mb-2">
+						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">12h Range</div>
+						<div class="flex items-baseline gap-3">
+							<span class="text-xs text-zinc-400">Lo <span class="text-sm font-bold tabular-nums" style="color: {tempColor(forecastHiLo.lo)}">{forecastHiLo.lo}&deg;</span></span>
+							<span class="text-xs text-zinc-400">Hi <span class="text-sm font-bold tabular-nums" style="color: {tempColor(forecastHiLo.hi)}">{forecastHiLo.hi}&deg;</span></span>
+						</div>
+					</div>
+				{/if}
+
+				<!-- Mini hourly forecast strip -->
+				{#if nextHours.length > 0}
+					<div class="mb-2 pt-2 border-t border-gray-700/30">
+						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Next Hours</div>
+						<div class="grid grid-cols-4 gap-1">
+							{#each nextHours as hour}
+								<div class="text-center">
+									<div class="text-[9px] text-zinc-500">{formatHour(hour.startTime)}</div>
+									<div class="text-sm font-bold tabular-nums" style="color: {tempColor(hour.temperature)}">{hour.temperature}&deg;</div>
+									{#if hour.shortForecast}
+										<div class="text-[8px] text-zinc-500 leading-tight line-clamp-1">{hour.shortForecast}</div>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/if}
+
 				<!-- Quick tide summary -->
 				{#if nextHigh || nextLow}
 					<div class="mt-auto pt-2 border-t border-gray-700/30">
@@ -195,6 +259,12 @@
 								</div>
 							{/each}
 						</div>
+					</div>
+
+					<!-- Health guidance -->
+					<div class="mt-3 w-full border-t border-gray-700/30 pt-2">
+						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">Guidance</div>
+						<p class="text-[10px] text-zinc-400 leading-snug">{aqiGuidance(aqi.value)}</p>
 					</div>
 				{:else}
 					<div class="flex-1 flex items-center justify-center">
