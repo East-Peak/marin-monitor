@@ -12,10 +12,9 @@
 	import { currentChargingStations } from '$lib/stores/ev-charging';
 	import { MARIN_TOWNS, LAYER_COLORS, MARIN_BOUNDS } from '$lib/config';
 	import { TYPE_COLORS as FITNESS_TYPE_COLORS, TYPE_LABELS as FITNESS_TYPE_LABELS } from '$lib/config/fitness';
-	import { FIRE_ZONES, LANDMARKS, AIRPORT_PINS, AIRPORT_STATUS_COLORS } from '$lib/config/map';
+	import { AIRPORT_PINS, AIRPORT_STATUS_COLORS } from '$lib/config/map';
 	import { fetchAirportStatus } from '$lib/api/marin/airport-status';
 	import type { AirportStatus } from '$lib/types/airport';
-	import { MAPBOX_TOKEN } from '$lib/config/api';
 	import { findNearestTown } from '$lib/geo/proximity';
 	import {
 		formatCoffeeMenuSummary,
@@ -23,7 +22,23 @@
 		getCoffeeHeadlinePrice,
 		getCoffeeStatusLabel
 	} from '$lib/utils/coffee-index';
-	import type { NewsItem, MapFeatureInspectorData, MapLayer } from '$lib/types';
+	import type { NewsItem, MapFeatureInspectorData } from '$lib/types';
+
+	// Extracted modules
+	import {
+		buildTrafficEventFeatures,
+		filterTrafficByTown,
+		getStoryCountsByTown,
+		getDominantColor,
+		isWithinMarinView
+	} from './map-data';
+	import { setupSources } from './map-layers';
+	import {
+		hoveredFeatureIds,
+		bindInteractiveHover,
+		bindLayerGroupClick,
+		clickHitsVisibleStravaFeature
+	} from './map-interactions';
 
 	let boundaryData: GeoJSON.FeatureCollection | null = null;
 
@@ -69,279 +84,10 @@
 	let rawTrafficFeatures: GeoJSON.Feature[] = [];
 
 	const TRAFFIC_REFRESH_MS = 3 * 60 * 1000;
-	const TRAFFIC_BOUNDS_BUFFER = 0.12;
-	const mapboxToken = MAPBOX_TOKEN.trim();
-	const STRAVA_CLICK_LAYERS = [
-		'strava-lines-ride',
-		'strava-lines-run',
-		'strava-pins',
-		'strava-pins-labels'
-	] as const;
-	const HOVER_STATE = ['boolean', ['feature-state', 'hover'], false] as const;
-	const INVITING_HOVER_STROKE = 'rgba(255, 247, 220, 0.98)';
-	const hoveredFeatureIds = new Map<string, string | number | null>();
 
-	type HoveredMapFeature = NonNullable<MapLayerMouseEvent['features']>[number];
-
-	interface HoverBindingOptions {
-		triggerLayerIds: string[];
-		sourceId: string;
-		hoverKey?: string;
-		onFeatureChange?: (feature: HoveredMapFeature | null) => void;
-	}
-
-	function hoverCase(hoverValue: unknown, baseValue: unknown): any {
-		return ['case', HOVER_STATE, hoverValue, baseValue];
-	}
-
-	function hoverAdd(baseValue: unknown, amount: number): any {
-		return hoverCase(['+', baseValue, amount], baseValue);
-	}
-
-	function getFeatureId(feature: { id?: unknown } | null | undefined): string | number | null {
-		if (typeof feature?.id === 'string' || typeof feature?.id === 'number') {
-			return feature.id;
-		}
-		return null;
-	}
-
-	function setHoveredFeatureState(
-		map: MapLibreMap,
-		hoverKey: string,
-		sourceId: string,
-		nextFeatureId: string | number | null
-	) {
-		const previousFeatureId = hoveredFeatureIds.get(hoverKey) ?? null;
-		if (previousFeatureId === nextFeatureId) return;
-
-		if (previousFeatureId !== null && map.getSource(sourceId)) {
-			map.setFeatureState({ source: sourceId, id: previousFeatureId }, { hover: false });
-		}
-
-		hoveredFeatureIds.set(hoverKey, nextFeatureId);
-
-		if (nextFeatureId !== null && map.getSource(sourceId)) {
-			map.setFeatureState({ source: sourceId, id: nextFeatureId }, { hover: true });
-		}
-	}
-
-	function clearHoveredFeatureState(map: MapLibreMap, hoverKey: string, sourceId: string) {
-		setHoveredFeatureState(map, hoverKey, sourceId, null);
-	}
-
-	function bindInteractiveHover(map: MapLibreMap, options: HoverBindingOptions) {
-		let lastFeatureId: string | number | null = null;
-		let leaveTimer: ReturnType<typeof setTimeout> | null = null;
-		const hoverKey = options.hoverKey ?? options.sourceId;
-
-		const cancelPendingLeave = () => {
-			if (leaveTimer) {
-				clearTimeout(leaveTimer);
-				leaveTimer = null;
-			}
-		};
-
-		const handleHover = (e: MapLayerMouseEvent) => {
-			cancelPendingLeave();
-			map.getCanvas().style.cursor = 'pointer';
-			const feature = e.features?.[0] ?? null;
-			const nextFeatureId = getFeatureId(feature);
-			setHoveredFeatureState(map, hoverKey, options.sourceId, nextFeatureId);
-			if (nextFeatureId === lastFeatureId) return;
-			lastFeatureId = nextFeatureId;
-			options.onFeatureChange?.(feature);
-		};
-
-		const handleLeave = () => {
-			cancelPendingLeave();
-			leaveTimer = setTimeout(() => {
-				lastFeatureId = null;
-				clearHoveredFeatureState(map, hoverKey, options.sourceId);
-				const hasHoveredFeature = Array.from(hoveredFeatureIds.values()).some(
-					(featureId) => featureId !== null
-				);
-				if (!hasHoveredFeature) {
-					map.getCanvas().style.cursor = '';
-				}
-				options.onFeatureChange?.(null);
-				leaveTimer = null;
-			}, 0);
-		};
-
-		for (const layerId of options.triggerLayerIds) {
-			map.on('mouseenter', layerId, handleHover);
-			map.on('mousemove', layerId, handleHover);
-			map.on('mouseleave', layerId, handleLeave);
-		}
-	}
-
-	function bindLayerGroupClick(
-		map: MapLibreMap,
-		layerIds: string[],
-		handler: (e: MapLayerMouseEvent) => void
-	) {
-		for (const layerId of layerIds) {
-			map.on('click', layerId, handler);
-		}
-	}
-
-	function buildFallbackFeatureId(prefix: string, coordinates: [number, number], label: string): string {
-		return `${prefix}:${label}:${coordinates[0].toFixed(5)},${coordinates[1].toFixed(5)}`;
-	}
-
-	function toNumber(value: unknown): number | null {
-		if (typeof value === 'number' && Number.isFinite(value)) return value;
-		if (typeof value === 'string') {
-			const parsed = parseFloat(value);
-			return Number.isFinite(parsed) ? parsed : null;
-		}
-		return null;
-	}
-
-	function extractCoordinates(event: Record<string, unknown>): [number, number] | null {
-		const directLat = toNumber(
-			event.lat ?? event.latitude ?? event.Latitude ?? event.Lat ?? event.y ?? null
-		);
-		const directLon = toNumber(
-			event.lon ?? event.lng ?? event.longitude ?? event.Longitude ?? event.Long ?? event.x ?? null
-		);
-		if (directLat !== null && directLon !== null) return [directLon, directLat];
-
-		const point = event.point as Record<string, unknown> | undefined;
-		if (point) {
-			const pointLat = toNumber(point.lat ?? point.latitude ?? null);
-			const pointLon = toNumber(point.lon ?? point.lng ?? point.longitude ?? null);
-			if (pointLat !== null && pointLon !== null) return [pointLon, pointLat];
-		}
-
-		const geometryCandidates = [event.geometry, event.geography];
-		for (const candidate of geometryCandidates) {
-			if (!candidate || typeof candidate !== 'object') continue;
-			const geometry = candidate as Record<string, unknown>;
-			const coordinates = geometry.coordinates;
-			if (!Array.isArray(coordinates)) continue;
-
-			if (
-				coordinates.length >= 2 &&
-				typeof coordinates[0] === 'number' &&
-				typeof coordinates[1] === 'number'
-			) {
-				return [coordinates[0], coordinates[1]];
-			}
-
-			const first = coordinates[0];
-			if (
-				Array.isArray(first) &&
-				first.length >= 2 &&
-				typeof first[0] === 'number' &&
-				typeof first[1] === 'number'
-			) {
-				return [first[0], first[1]];
-			}
-
-			const nestedFirst = Array.isArray(first) ? first[0] : null;
-			if (
-				Array.isArray(nestedFirst) &&
-				nestedFirst.length >= 2 &&
-				typeof nestedFirst[0] === 'number' &&
-				typeof nestedFirst[1] === 'number'
-			) {
-				return [nestedFirst[0], nestedFirst[1]];
-			}
-		}
-
-		return null;
-	}
-
-	function clickHitsVisibleStravaFeature(map: MapLibreMap, e: MapLayerMouseEvent): boolean {
-		const interactiveLayers = STRAVA_CLICK_LAYERS.filter((layerId) => {
-			if (!map.getLayer(layerId)) return false;
-			return map.getLayoutProperty(layerId, 'visibility') !== 'none';
-		});
-		if (interactiveLayers.length === 0) return false;
-		return map.queryRenderedFeatures(e.point, { layers: [...interactiveLayers] }).length > 0;
-	}
-
-	function parseTrafficSeverity(
-		event: Record<string, unknown>
-	): 'MODERATE' | 'MAJOR' | 'SEVERE' | 'UNKNOWN' {
-		const raw = String(
-			event.severity ??
-				event.Severity ??
-				(event.severityLevel as string | undefined) ??
-				(event.impact as string | undefined) ??
-				''
-		).toUpperCase();
-
-		if (raw.includes('SEVERE')) return 'SEVERE';
-		if (raw.includes('MAJOR') || raw.includes('HIGH')) return 'MAJOR';
-		if (raw.includes('MODERATE') || raw.includes('MEDIUM')) return 'MODERATE';
-
-		const typeText = String(
-			event.event_type ?? event.eventType ?? event.type ?? event.category ?? ''
-		).toUpperCase();
-		if (typeText.includes('CLOS')) return 'MAJOR';
-		if (typeText.includes('COLLISION') || typeText.includes('CRASH')) return 'MAJOR';
-
-		return 'UNKNOWN';
-	}
-
-	function isWithinMarinView(lon: number, lat: number): boolean {
-		return (
-			lon >= MARIN_BOUNDS.west - TRAFFIC_BOUNDS_BUFFER &&
-			lon <= MARIN_BOUNDS.east + TRAFFIC_BOUNDS_BUFFER &&
-			lat >= MARIN_BOUNDS.south - TRAFFIC_BOUNDS_BUFFER &&
-			lat <= MARIN_BOUNDS.north + TRAFFIC_BOUNDS_BUFFER
-		);
-	}
-
-	function buildTrafficEventFeatures(events: Record<string, unknown>[]): GeoJSON.Feature[] {
-		const features: GeoJSON.Feature[] = [];
-		for (const event of events) {
-			const coords = extractCoordinates(event);
-			if (!coords) continue;
-			if (!isWithinMarinView(coords[0], coords[1])) continue;
-
-			const severity = parseTrafficSeverity(event);
-			if (severity === 'UNKNOWN') continue;
-
-			const title =
-				String(
-					event.headline ?? event.Headline ?? event.description ?? event.Description ?? ''
-				).trim() || 'Traffic event';
-			const type = String(event.event_type ?? event.eventType ?? event.type ?? 'incident');
-			const id =
-				String(event.id ?? event.Id ?? '').trim() || buildFallbackFeatureId('traffic', coords, title);
-
-			features.push({
-				type: 'Feature',
-				id,
-				properties: {
-					id,
-					title,
-					type,
-					severity,
-					source: '511 Traffic',
-					layer: 'traffic'
-				},
-				geometry: {
-					type: 'Point',
-					coordinates: coords
-				}
-			});
-		}
-
-		return features;
-	}
-
-	function filterTrafficByTown(features: GeoJSON.Feature[]): GeoJSON.Feature[] {
-		const slug = get(townFilter);
-		if (!slug) return features;
-		return features.filter((f) => {
-			const coords = (f.geometry as GeoJSON.Point).coordinates;
-			return findNearestTown(coords[1], coords[0]) === slug;
-		});
-	}
+	// -------------------------------------------------------------------
+	// Traffic data fetching
+	// -------------------------------------------------------------------
 
 	async function refreshTrafficEvents(map: MapLibreMap) {
 		if (isTrafficFetchInFlight) return;
@@ -359,7 +105,7 @@
 			const source = map.getSource('traffic-events') as GeoJSONSource;
 			source.setData({
 				type: 'FeatureCollection',
-				features: filterTrafficByTown(rawTrafficFeatures)
+				features: filterTrafficByTown(rawTrafficFeatures, get(townFilter))
 			});
 		} catch {
 			// Silent fail: traffic is additive and should not block map rendering.
@@ -395,1081 +141,303 @@
 		}
 	}
 
-	// Count stories per town
-	function getStoryCountsByTown(
-		items: NewsItem[]
-	): Map<string, { total: number; byLayer: Record<string, number>; topHeadline: string }> {
-		const counts = new Map<
-			string,
-			{ total: number; byLayer: Record<string, number>; topHeadline: string }
-		>();
-		for (const item of items) {
-			if (!item.townSlug) continue;
-			const layer = CATEGORY_TO_LAYER[item.category];
-			if (!layer) continue;
+	// -------------------------------------------------------------------
+	// Interaction bindings  (called once from setupAndBind)
+	// -------------------------------------------------------------------
 
-			const existing = counts.get(item.townSlug);
-			if (existing) {
-				existing.total++;
-				existing.byLayer[layer] = (existing.byLayer[layer] || 0) + 1;
-			} else {
-				counts.set(item.townSlug, {
-					total: 1,
-					byLayer: { [layer]: 1 },
-					topHeadline: item.title
-				});
-			}
-		}
-		return counts;
-	}
+	function bindInteractions(map: MapLibreMap) {
+		if (interactionsBound) return;
+		interactionsBound = true;
 
-	// Determine dominant layer color for a town
-	function getDominantColor(byLayer: Record<string, number>): string {
-		let maxCount = 0;
-		let dominant: MapLayer = 'news';
-		for (const [layer, count] of Object.entries(byLayer)) {
-			if (count > maxCount) {
-				maxCount = count;
-				dominant = layer as MapLayer;
-			}
-		}
-		return LAYER_COLORS[dominant] || LAYER_COLORS.news;
-	}
+		const townTriggerLayers = ['towns-layer', 'towns-label'];
+		const newsTriggerLayers = ['news-pins-hit-layer', 'news-pins-layer'];
+		const landmarkTriggerLayers = ['landmarks-layer', 'landmarks-hit-layer', 'landmarks-label'];
+		const fireZoneTriggerLayers = ['fire-zones-layer'];
+		const trafficTriggerLayers = ['traffic-events-layer', 'traffic-events-hit-layer'];
+		const earthquakeTriggerLayers = ['earthquakes-layer', 'earthquakes-ring-layer'];
+		const gasTriggerLayers = ['gas-stations-layer', 'gas-stations-hit-layer', 'gas-stations-label'];
+		const evTriggerLayers = [
+			'ev-charging-stations-layer',
+			'ev-charging-stations-hit-layer',
+			'ev-charging-stations-label'
+		];
+		const coffeeTriggerLayers = [
+			'coffee-shops-layer',
+			'coffee-shops-hit-layer',
+			'coffee-shops-label'
+		];
+		const fitnessTriggerLayers = [
+			'fitness-studios-layer',
+			'fitness-studios-hit-layer',
+			'fitness-studios-label'
+		];
+		const threeOneOneTriggerLayers = ['311-reports-layer', '311-reports-hit-layer'];
+		const fireIncidentTriggerLayers = ['fire-incidents-layer', 'fire-incidents-label'];
+		const airportTriggerLayers = ['airports-layer', 'airports-hit-layer', 'airports-label'];
 
-	function setupSources(map: MapLibreMap) {
-		// Style swaps remove custom sources/layers. Re-add when missing.
-		if (map.getSource('towns')) return;
-		hoveredFeatureIds.clear();
-		map.getCanvas().style.cursor = '';
+		// --- Click handlers ---
 
-		// Town boundary highlight source (Census polygons)
-		map.addSource('town-boundary', {
-			type: 'geojson',
-			data: { type: 'FeatureCollection', features: [] }
+		bindLayerGroupClick(map, townTriggerLayers, (e: MapLayerMouseEvent) => {
+			if (clickHitsVisibleStravaFeature(map, e)) return;
+			const slug = e.features?.[0]?.properties?.slug;
+			if (slug && onTownClick) onTownClick(slug);
 		});
 
-		// Town dots source
-		map.addSource('towns', {
-			type: 'geojson',
-			data: { type: 'FeatureCollection', features: [] }
+		bindLayerGroupClick(map, newsTriggerLayers, (e: MapLayerMouseEvent) => {
+			if (clickHitsVisibleStravaFeature(map, e)) return;
+			const id = e.features?.[0]?.properties?.id;
+			if (id && onPinClick) onPinClick(String(id));
 		});
 
-		// News pins source
-		map.addSource('news-pins', {
-			type: 'geojson',
-			data: { type: 'FeatureCollection', features: [] }
-		});
-
-		// Alert pulses source
-		map.addSource('alert-pulses', {
-			type: 'geojson',
-			data: { type: 'FeatureCollection', features: [] }
-		});
-
-		// Earthquake source
-		map.addSource('earthquakes', {
-			type: 'geojson',
-			data: { type: 'FeatureCollection', features: [] }
-		});
-
-		// Active fire incidents source
-		map.addSource('fire-incidents', {
-			type: 'geojson',
-			data: { type: 'FeatureCollection', features: [] }
-		});
-
-		// 511 traffic events source (major/severe/moderate incidents)
-		map.addSource('traffic-events', {
-			type: 'geojson',
-			data: { type: 'FeatureCollection', features: [] }
-		});
-
-		// Mapbox vector traffic source (optional)
-		if (mapboxToken) {
-			map.addSource('traffic-congestion', {
-				type: 'vector',
-				tiles: [
-					`https://api.mapbox.com/v4/mapbox.mapbox-traffic-v1/{z}/{x}/{y}.vector.pbf?access_token=${encodeURIComponent(
-						mapboxToken
-					)}&v=2`
-				],
-				minzoom: 6,
-				maxzoom: 16
+		bindLayerGroupClick(map, landmarkTriggerLayers, (e: MapLayerMouseEvent) => {
+			if (clickHitsVisibleStravaFeature(map, e)) return;
+			const feature = e.features?.[0];
+			const name = String(feature?.properties?.name ?? 'Landmark');
+			const type = String(feature?.properties?.type ?? 'reference point');
+			onFeatureClick?.({
+				kind: 'landmark',
+				title: name,
+				subtitle: `Landmark (${type})`,
+				source: 'Marin reference layer'
 			});
-		}
-
-		// Fire zones source
-		map.addSource('fire-zones', {
-			type: 'geojson',
-			data: {
-				type: 'FeatureCollection',
-				features: FIRE_ZONES.map((zone) => ({
-					type: 'Feature' as const,
-					id: zone.name,
-					properties: { name: zone.name, desc: zone.desc },
-					geometry: {
-						type: 'Point' as const,
-						coordinates: [zone.center.lon, zone.center.lat]
-					}
-				}))
-			}
 		});
 
-		// Landmarks source
-		map.addSource('landmarks', {
-			type: 'geojson',
-			data: {
-				type: 'FeatureCollection',
-				features: LANDMARKS.map((lm) => ({
-					type: 'Feature' as const,
-					id: `${lm.type}:${lm.name}`,
-					properties: { name: lm.name, type: lm.type },
-					geometry: {
-						type: 'Point' as const,
-						coordinates: [lm.lon, lm.lat]
-					}
-				}))
-			}
+		bindLayerGroupClick(map, fireZoneTriggerLayers, (e: MapLayerMouseEvent) => {
+			if (clickHitsVisibleStravaFeature(map, e)) return;
+			const feature = e.features?.[0];
+			const name = String(feature?.properties?.name ?? 'Fire zone');
+			const desc = String(feature?.properties?.desc ?? '').trim();
+			onFeatureClick?.({
+				kind: 'fire-zone',
+				title: name,
+				subtitle: 'Wildfire risk corridor',
+				description: desc,
+				source: 'Marin fire context layer'
+			});
 		});
 
-		// Airport status pins source
-		map.addSource('airports', {
-			type: 'geojson',
-			data: {
-				type: 'FeatureCollection',
-				features: AIRPORT_PINS.map((ap) => ({
-					type: 'Feature' as const,
-					id: ap.code,
-					properties: {
-						code: ap.code,
-						name: ap.name,
-						color: '#6b7280',
-						statusLabel: 'Loading…',
-						weatherSummary: ''
-					},
-					geometry: {
-						type: 'Point' as const,
-						coordinates: [ap.lon, ap.lat]
-					}
-				}))
-			}
+		bindLayerGroupClick(map, trafficTriggerLayers, (e: MapLayerMouseEvent) => {
+			if (clickHitsVisibleStravaFeature(map, e)) return;
+			const feature = e.features?.[0];
+			const title = String(feature?.properties?.title ?? 'Traffic event');
+			const severity = String(feature?.properties?.severity ?? 'UNKNOWN');
+			const eventType = String(feature?.properties?.type ?? 'incident');
+			onFeatureClick?.({
+				kind: 'traffic-event',
+				title,
+				subtitle: `${eventType} \u00b7 ${severity}`,
+				severity,
+				source: String(feature?.properties?.source ?? '511 Traffic')
+			});
 		});
 
-		// Gas stations source
-		map.addSource('gas-stations', {
-			type: 'geojson',
-			data: { type: 'FeatureCollection', features: [] }
+		bindLayerGroupClick(map, earthquakeTriggerLayers, (e: MapLayerMouseEvent) => {
+			if (clickHitsVisibleStravaFeature(map, e)) return;
+			const feature = e.features?.[0];
+			const title = String(feature?.properties?.title ?? 'Earthquake');
+			const magnitude = String(feature?.properties?.magnitude ?? '');
+			onFeatureClick?.({
+				kind: 'earthquake',
+				title,
+				subtitle: magnitude ? `Magnitude ${magnitude}` : 'Seismic event',
+				source: 'USGS'
+			});
 		});
 
-		// EV charging stations source
-		map.addSource('ev-charging-stations', {
-			type: 'geojson',
-			data: { type: 'FeatureCollection', features: [] }
+		bindLayerGroupClick(map, gasTriggerLayers, (e: MapLayerMouseEvent) => {
+			if (clickHitsVisibleStravaFeature(map, e)) return;
+			const feature = e.features?.[0];
+			const name = String(feature?.properties?.name ?? 'Gas Station');
+			const price = String(feature?.properties?.price ?? '');
+			const address = String(feature?.properties?.address ?? '');
+			onFeatureClick?.({
+				kind: 'gas-station',
+				title: name,
+				subtitle: price ? `Regular: ${price}` : 'Price unavailable',
+				description: address,
+				source: 'Google Places'
+			});
 		});
 
-		// Coffee shops source
-		map.addSource('coffee-shops', {
-			type: 'geojson',
-			data: { type: 'FeatureCollection', features: [] }
+		bindLayerGroupClick(map, evTriggerLayers, (e: MapLayerMouseEvent) => {
+			if (clickHitsVisibleStravaFeature(map, e)) return;
+			const feature = e.features?.[0];
+			const name = String(feature?.properties?.name ?? 'EV Station');
+			const network = String(feature?.properties?.network ?? '');
+			const level = String(feature?.properties?.level ?? '');
+			const connectors = String(feature?.properties?.connectors ?? '');
+			const pricing = String(feature?.properties?.pricing ?? '');
+			onFeatureClick?.({
+				kind: 'ev-charging-station',
+				title: name,
+				subtitle: [network, level].filter(Boolean).join(' \u00b7 '),
+				description: [connectors, pricing].filter(Boolean).join('\n'),
+				source: 'NREL AFDC'
+			});
 		});
 
-		// Fitness studios source
-		map.addSource('fitness-studios', {
-			type: 'geojson',
-			data: { type: 'FeatureCollection', features: [] }
+		bindLayerGroupClick(map, coffeeTriggerLayers, (e: MapLayerMouseEvent) => {
+			if (clickHitsVisibleStravaFeature(map, e)) return;
+			const feature = e.features?.[0];
+			const name = String(feature?.properties?.name ?? 'Coffee Shop');
+			const price = String(feature?.properties?.price ?? '');
+			const headlineLabel = String(feature?.properties?.headlineLabel ?? '');
+			const address = String(feature?.properties?.address ?? '');
+			const menuSummary = String(feature?.properties?.menuSummary ?? '');
+			const statusLabel = String(feature?.properties?.statusLabel ?? 'Tracking soon');
+			onFeatureClick?.({
+				kind: 'coffee-shop',
+				title: name,
+				subtitle:
+					price && headlineLabel
+						? `${headlineLabel}: ${price}`
+						: price
+							? price
+							: statusLabel,
+				description: [address, menuSummary].filter(Boolean).join('\n'),
+				source: 'Marin Coffee Index'
+			});
 		});
 
-		// 311 reports source (SeeClickFix / Fix It Marin)
-		map.addSource('311-reports', {
-			type: 'geojson',
-			data: { type: 'FeatureCollection', features: [] }
+		bindLayerGroupClick(map, fitnessTriggerLayers, (e: MapLayerMouseEvent) => {
+			if (clickHitsVisibleStravaFeature(map, e)) return;
+			const feature = e.features?.[0];
+			const name = String(feature?.properties?.name ?? 'Fitness Studio');
+			const price = String(feature?.properties?.price ?? '');
+			const typeName = String(feature?.properties?.typeName ?? '');
+			const town = String(feature?.properties?.town ?? '');
+			onFeatureClick?.({
+				kind: 'fitness-studio',
+				title: name,
+				subtitle: price ? `Drop-in: ${price}` : 'Price unavailable',
+				description: [typeName, town].filter(Boolean).join(' \u00b7 '),
+				source: 'Marin Monitor'
+			});
 		});
 
-		// --- Layers ---
-		const trafficEventRadius = [
-			'case',
-			['==', ['get', 'severity'], 'SEVERE'],
-			8,
-			['==', ['get', 'severity'], 'MAJOR'],
-			6,
-			5
-		];
-		const earthquakeRadius = [
-			'interpolate',
-			['linear'],
-			['get', 'magnitude'],
-			1,
-			4,
-			2,
-			6,
-			3,
-			10,
-			4,
-			14,
-			5,
-			20,
-			6,
-			28
-		];
-		const earthquakeRingRadius = [
-			'interpolate',
-			['linear'],
-			['get', 'magnitude'],
-			1,
-			8,
-			2,
-			12,
-			3,
-			18,
-			4,
-			24,
-			5,
-			32,
-			6,
-			44
-		];
-		const fireIncidentRadius = [
-			'interpolate',
-			['linear'],
-			['get', 'acres'],
-			0,
-			6,
-			100,
-			10,
-			1000,
-			16,
-			10000,
-			24
-		];
-		const townRadius = ['coalesce', ['get', 'radius'], 3];
-		const townOpacity = ['coalesce', ['get', 'opacity'], 0.18];
-		const townLabelOpacity = ['coalesce', ['get', 'labelOpacity'], 0.25];
-		const townStrokeOpacity = [
-			'case',
-			['>', ['coalesce', ['get', 'total'], 0], 0],
-			0.5,
-			0.2
-		];
-
-		// Town boundary highlight (renders beneath everything)
-		map.addLayer({
-			id: 'town-boundary-fill',
-			type: 'fill',
-			source: 'town-boundary',
-			paint: {
-				'fill-color': 'rgba(139, 92, 246, 0.06)',
-				'fill-outline-color': 'rgba(139, 92, 246, 0.2)'
-			}
+		bindLayerGroupClick(map, threeOneOneTriggerLayers, (e: MapLayerMouseEvent) => {
+			const feature = e.features?.[0];
+			if (!feature?.properties) return;
+			const props = feature.properties;
+			onFeatureClick?.({
+				kind: '311-report',
+				title: String(props.category ?? '311 Report'),
+				subtitle: String(props.address ?? ''),
+				description: String(props.description ?? ''),
+				source: 'Fix It Marin',
+				imageUrl: props.imageUrl ? String(props.imageUrl) : undefined
+			});
 		});
 
-		map.addLayer({
-			id: 'town-boundary-stroke',
-			type: 'line',
-			source: 'town-boundary',
-			paint: {
-				'line-color': 'rgba(139, 92, 246, 0.35)',
-				'line-width': 1.5,
-				'line-dasharray': [4, 3]
-			}
+		bindLayerGroupClick(map, fireIncidentTriggerLayers, (e: MapLayerMouseEvent) => {
+			if (clickHitsVisibleStravaFeature(map, e)) return;
+			const feature = e.features?.[0];
+			const name = String(feature?.properties?.name ?? 'Fire');
+			const acres = Number(feature?.properties?.acres ?? 0);
+			const containment = Number(feature?.properties?.containment ?? 0);
+			const url = String(feature?.properties?.url ?? '');
+			onFeatureClick?.({
+				kind: 'fire-incident',
+				title: `${name} Fire`,
+				subtitle: `${acres.toLocaleString()} acres \u00b7 ${containment}% contained`,
+				description: url ? `Details: ${url}` : undefined,
+				source: String(feature?.properties?.source ?? 'CAL FIRE')
+			});
 		});
 
-		// Fire zones (semi-transparent red circles)
-		map.addLayer({
-			id: 'fire-zones-layer',
-			type: 'circle',
-			source: 'fire-zones',
-			paint: {
-				'circle-radius': hoverCase(24, 20),
-				'circle-color': hoverCase('rgba(248, 113, 113, 0.18)', 'rgba(239, 68, 68, 0.12)'),
-				'circle-stroke-width': hoverCase(1.8, 1),
-				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(239, 68, 68, 0.3)')
-			}
+		bindLayerGroupClick(map, airportTriggerLayers, (e: MapLayerMouseEvent) => {
+			if (clickHitsVisibleStravaFeature(map, e)) return;
+			const feature = e.features?.[0];
+			const code = String(feature?.properties?.code ?? '');
+			const name = String(feature?.properties?.name ?? 'Airport');
+			const statusLabel = String(feature?.properties?.statusLabel ?? 'Unknown');
+			const weatherSummary = String(feature?.properties?.weatherSummary ?? '');
+			onFeatureClick?.({
+				kind: 'airport',
+				title: `${code} \u2014 ${name}`,
+				subtitle: statusLabel,
+				description: weatherSummary || undefined,
+				source: 'FAA / Aviation Weather'
+			});
 		});
 
-		if (mapboxToken) {
-			map.addLayer({
-				id: 'traffic-congestion-layer',
-				type: 'line',
-				source: 'traffic-congestion',
-				'source-layer': 'traffic',
-				filter: [
-					'any',
-					['==', ['get', 'congestion'], 'moderate'],
-					['==', ['get', 'congestion'], 'heavy'],
-					['==', ['get', 'congestion'], 'severe'],
-					['==', ['get', 'closed'], true],
-					['==', ['get', 'closed'], 'yes']
-				],
-				paint: {
-					'line-color': [
-						'case',
-						['any', ['==', ['get', 'closed'], true], ['==', ['get', 'closed'], 'yes']],
-						'#7f1d1d',
-						['==', ['get', 'congestion'], 'severe'],
-						'#dc2626',
-						['==', ['get', 'congestion'], 'heavy'],
-						'#f97316',
-						'#f59e0b'
-					],
-					'line-opacity': ['case', ['==', ['get', 'congestion'], 'moderate'], 0.46, 0.78],
-					'line-width': ['interpolate', ['linear'], ['zoom'], 8, 1.6, 11, 2.9, 14, 5.2]
+		// --- Hover bindings ---
+
+		bindInteractiveHover(map, {
+			triggerLayerIds: airportTriggerLayers,
+			sourceId: 'airports'
+		});
+		bindInteractiveHover(map, {
+			triggerLayerIds: gasTriggerLayers,
+			sourceId: 'gas-stations'
+		});
+		bindInteractiveHover(map, {
+			triggerLayerIds: evTriggerLayers,
+			sourceId: 'ev-charging-stations'
+		});
+		bindInteractiveHover(map, {
+			triggerLayerIds: coffeeTriggerLayers,
+			sourceId: 'coffee-shops'
+		});
+		bindInteractiveHover(map, {
+			triggerLayerIds: fitnessTriggerLayers,
+			sourceId: 'fitness-studios'
+		});
+		bindInteractiveHover(map, {
+			triggerLayerIds: threeOneOneTriggerLayers,
+			sourceId: '311-reports'
+		});
+		bindInteractiveHover(map, {
+			triggerLayerIds: fireIncidentTriggerLayers,
+			sourceId: 'fire-incidents'
+		});
+		bindInteractiveHover(map, {
+			triggerLayerIds: townTriggerLayers,
+			sourceId: 'towns',
+			onFeatureChange: (feature) => {
+				const slug = feature?.properties?.slug;
+				if (slug && onTownHover) {
+					onTownHover(String(slug));
+					return;
 				}
-			});
-		}
-
-		map.addLayer({
-			id: 'traffic-events-layer',
-			type: 'circle',
-			source: 'traffic-events',
-			paint: {
-				'circle-radius': hoverAdd(trafficEventRadius, 3),
-				'circle-color': [
-					'case',
-					['==', ['get', 'severity'], 'SEVERE'],
-					'#dc2626',
-					['==', ['get', 'severity'], 'MAJOR'],
-					'#f97316',
-					'#f59e0b'
-				],
-				'circle-opacity': hoverCase(0.96, 0.7),
-				'circle-stroke-width': hoverCase(2, 1),
-				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(10, 10, 10, 0.8)')
+				if (onTownHover) onTownHover(null);
 			}
 		});
-
-		map.addLayer({
-			id: 'traffic-events-hit-layer',
-			type: 'circle',
-			source: 'traffic-events',
-			paint: {
-				'circle-radius': 14,
-				'circle-color': 'rgba(0, 0, 0, 0)'
-			}
+		bindInteractiveHover(map, {
+			triggerLayerIds: newsTriggerLayers,
+			sourceId: 'news-pins'
 		});
-
-		// Landmarks (subtle small markers)
-		map.addLayer({
-			id: 'landmarks-layer',
-			type: 'circle',
-			source: 'landmarks',
-			paint: {
-				'circle-radius': hoverCase(5.5, 3),
-				'circle-color': hoverCase('rgba(255, 244, 214, 0.38)', 'rgba(255, 255, 255, 0.2)'),
-				'circle-stroke-width': hoverCase(1.8, 0.5),
-				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(255, 255, 255, 0.3)')
-			}
+		bindInteractiveHover(map, {
+			triggerLayerIds: landmarkTriggerLayers,
+			sourceId: 'landmarks'
 		});
-
-		map.addLayer({
-			id: 'landmarks-hit-layer',
-			type: 'circle',
-			source: 'landmarks',
-			paint: {
-				'circle-radius': 13,
-				'circle-color': 'rgba(0, 0, 0, 0)'
-			}
+		bindInteractiveHover(map, {
+			triggerLayerIds: fireZoneTriggerLayers,
+			sourceId: 'fire-zones'
 		});
-
-		// Landmark labels
-		map.addLayer({
-			id: 'landmarks-label',
-			type: 'symbol',
-			source: 'landmarks',
-			layout: {
-				'text-field': ['get', 'name'],
-				'text-size': 9,
-				'text-offset': [0, 1.2],
-				'text-anchor': 'top',
-				'text-optional': true
-			},
-			paint: {
-				'text-color': 'rgba(255, 255, 255, 0.25)',
-				'text-halo-color': 'rgba(10, 10, 10, 0.8)',
-				'text-halo-width': 1
-			}
+		bindInteractiveHover(map, {
+			triggerLayerIds: trafficTriggerLayers,
+			sourceId: 'traffic-events'
 		});
-
-		// Airport status pins (larger dots, color from status)
-		map.addLayer({
-			id: 'airports-layer',
-			type: 'circle',
-			source: 'airports',
-			paint: {
-				'circle-radius': hoverCase(10.5, 7),
-				'circle-color': ['get', 'color'],
-				'circle-opacity': hoverCase(1, 0.9),
-				'circle-stroke-width': hoverCase(3, 1.5),
-				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(255, 255, 255, 0.8)')
-			}
+		bindInteractiveHover(map, {
+			triggerLayerIds: earthquakeTriggerLayers,
+			sourceId: 'earthquakes'
 		});
+	}
 
-		map.addLayer({
-			id: 'airports-hit-layer',
-			type: 'circle',
-			source: 'airports',
-			paint: {
-				'circle-radius': 14,
-				'circle-color': 'rgba(0, 0, 0, 0)'
-			}
-		});
+	// -------------------------------------------------------------------
+	// Source setup + interaction binding (single entry point)
+	// -------------------------------------------------------------------
 
-		// Airport labels (code above dot)
-		map.addLayer({
-			id: 'airports-label',
-			type: 'symbol',
-			source: 'airports',
-			layout: {
-				'text-field': ['get', 'code'],
-				'text-size': 10,
-				'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-				'text-offset': [0, -1.4],
-				'text-anchor': 'bottom',
-				'text-optional': true
-			},
-			paint: {
-				'text-color': ['get', 'color'],
-				'text-halo-color': 'rgba(10, 10, 10, 0.9)',
-				'text-halo-width': 1.5
-			}
-		});
-
-		// Earthquake dots — amber/yellow, distinct from red crime/safety
-		// Radius scales with magnitude: M2 = 6px, M3 = 10px, M4 = 14px, M5+ = 18px+
-		map.addLayer({
-			id: 'earthquakes-layer',
-			type: 'circle',
-			source: 'earthquakes',
-			paint: {
-				'circle-radius': hoverAdd(earthquakeRadius, 3.25),
-				'circle-color': hoverCase('rgba(252, 211, 77, 0.72)', 'rgba(251, 191, 36, 0.5)'),
-				'circle-stroke-width': hoverCase(2.8, 2),
-				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, '#f59e0b'),
-				'circle-opacity': hoverCase(0.96, 0.7)
-			}
-		});
-
-		// Earthquake outer ring — concentric ring effect for visual distinction
-		map.addLayer({
-			id: 'earthquakes-ring-layer',
-			type: 'circle',
-			source: 'earthquakes',
-			paint: {
-				'circle-radius': hoverAdd(earthquakeRingRadius, 3),
-				'circle-color': 'transparent',
-				'circle-stroke-width': hoverCase(2.2, 1.5),
-				'circle-stroke-color': hoverCase('rgba(255, 247, 220, 0.72)', 'rgba(251, 191, 36, 0.3)'),
-				'circle-stroke-opacity': hoverCase(0.92, 0.6)
-			}
-		});
-
-		// Active fire incidents (pulsing orange/red circles, sized by acreage)
-		map.addLayer({
-			id: 'fire-incidents-layer',
-			type: 'circle',
-			source: 'fire-incidents',
-			paint: {
-				'circle-radius': hoverAdd(fireIncidentRadius, 4),
-				'circle-color': hoverCase('rgba(255, 153, 62, 0.88)', 'rgba(255, 120, 0, 0.7)'),
-				'circle-stroke-width': hoverCase(3.4, 2),
-				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, '#ef4444')
-			}
-		});
-
-		// Fire incident labels
-		map.addLayer({
-			id: 'fire-incidents-label',
-			type: 'symbol',
-			source: 'fire-incidents',
-			layout: {
-				'text-field': ['get', 'name'],
-				'text-size': 10,
-				'text-offset': [0, 1.6],
-				'text-anchor': 'top',
-				'text-optional': true
-			},
-			paint: {
-				'text-color': '#fbbf24',
-				'text-halo-color': 'rgba(10, 10, 10, 0.9)',
-				'text-halo-width': 1.5
-			}
-		});
-
-		// Gas station dots (cyan)
-		map.addLayer({
-			id: 'gas-stations-layer',
-			type: 'circle',
-			source: 'gas-stations',
-			paint: {
-				'circle-radius': hoverCase(8.5, 5),
-				'circle-color': '#22d3ee',
-				'circle-opacity': hoverCase(0.98, 0.8),
-				'circle-stroke-width': hoverCase(3, 1),
-				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(10, 10, 10, 0.8)')
-			}
-		});
-
-		map.addLayer({
-			id: 'gas-stations-hit-layer',
-			type: 'circle',
-			source: 'gas-stations',
-			paint: {
-				'circle-radius': 14,
-				'circle-color': 'rgba(0, 0, 0, 0)'
-			}
-		});
-
-		// Gas station labels (visible at higher zoom)
-		map.addLayer({
-			id: 'gas-stations-label',
-			type: 'symbol',
-			source: 'gas-stations',
-			minzoom: 12,
-			layout: {
-				'text-field': ['concat', ['get', 'name'], '\n', ['get', 'price']],
-				'text-size': 9,
-				'text-offset': [0, 1.4],
-				'text-anchor': 'top',
-				'text-optional': true
-			},
-			paint: {
-				'text-color': '#22d3ee',
-				'text-halo-color': 'rgba(10, 10, 10, 0.9)',
-				'text-halo-width': 1.5
-			}
-		});
-
-		// EV charging station dots (purple)
-		map.addLayer({
-			id: 'ev-charging-stations-layer',
-			type: 'circle',
-			source: 'ev-charging-stations',
-			paint: {
-				'circle-radius': hoverCase(8.5, 5),
-				'circle-color': '#a855f7',
-				'circle-opacity': hoverCase(0.98, 0.8),
-				'circle-stroke-width': hoverCase(3, 1),
-				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(10, 10, 10, 0.8)')
-			}
-		});
-
-		map.addLayer({
-			id: 'ev-charging-stations-hit-layer',
-			type: 'circle',
-			source: 'ev-charging-stations',
-			paint: {
-				'circle-radius': 14,
-				'circle-color': 'rgba(0, 0, 0, 0)'
-			}
-		});
-
-		// EV charging station labels (visible at higher zoom)
-		map.addLayer({
-			id: 'ev-charging-stations-label',
-			type: 'symbol',
-			source: 'ev-charging-stations',
-			minzoom: 12,
-			layout: {
-				'text-field': ['concat', ['get', 'network'], '\n', ['get', 'level']],
-				'text-size': 9,
-				'text-offset': [0, 1.4],
-				'text-anchor': 'top',
-				'text-optional': true
-			},
-			paint: {
-				'text-color': '#a855f7',
-				'text-halo-color': 'rgba(10, 10, 10, 0.9)',
-				'text-halo-width': 1.5
-			}
-		});
-
-		// Coffee shop dots (warm brown)
-		map.addLayer({
-			id: 'coffee-shops-layer',
-			type: 'circle',
-			source: 'coffee-shops',
-			paint: {
-				'circle-radius': hoverCase(8.5, 5),
-				'circle-color': '#a16207',
-				'circle-opacity': hoverCase(0.98, 0.8),
-				'circle-stroke-width': hoverCase(3, 1),
-				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(10, 10, 10, 0.8)')
-			}
-		});
-
-		map.addLayer({
-			id: 'coffee-shops-hit-layer',
-			type: 'circle',
-			source: 'coffee-shops',
-			paint: {
-				'circle-radius': 14,
-				'circle-color': 'rgba(0, 0, 0, 0)'
-			}
-		});
-
-		// Coffee shop labels (visible at higher zoom)
-		map.addLayer({
-			id: 'coffee-shops-label',
-			type: 'symbol',
-			source: 'coffee-shops',
-			minzoom: 12,
-			layout: {
-				'text-field': [
-					'case',
-					['==', ['get', 'hasPrice'], 1],
-					['concat', ['get', 'name'], '\n', ['get', 'price']],
-					['concat', ['get', 'name'], '\n', ['get', 'statusLabel']]
-				],
-				'text-size': 9,
-				'text-offset': [0, 1.4],
-				'text-anchor': 'top',
-				'text-optional': true
-			},
-			paint: {
-				'text-color': '#a16207',
-				'text-halo-color': 'rgba(10, 10, 10, 0.9)',
-				'text-halo-width': 1.5
-			}
-		});
-
-		// Fitness studio dots (type-colored)
-		map.addLayer({
-			id: 'fitness-studios-layer',
-			type: 'circle',
-			source: 'fitness-studios',
-			paint: {
-				'circle-radius': hoverCase(8.5, 5),
-				'circle-color': ['get', 'color'],
-				'circle-opacity': hoverCase(0.98, 0.8),
-				'circle-stroke-width': hoverCase(3, 1),
-				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(10, 10, 10, 0.8)')
-			}
-		});
-
-		map.addLayer({
-			id: 'fitness-studios-hit-layer',
-			type: 'circle',
-			source: 'fitness-studios',
-			paint: {
-				'circle-radius': 14,
-				'circle-color': 'rgba(0, 0, 0, 0)'
-			}
-		});
-
-		// Fitness studio labels (visible at higher zoom)
-		map.addLayer({
-			id: 'fitness-studios-label',
-			type: 'symbol',
-			source: 'fitness-studios',
-			minzoom: 12,
-			layout: {
-				'text-field': ['concat', ['get', 'name'], '\n', ['get', 'price']],
-				'text-size': 9,
-				'text-offset': [0, 1.4],
-				'text-anchor': 'top',
-				'text-optional': true
-			},
-			paint: {
-				'text-color': '#ec4899',
-				'text-halo-color': 'rgba(10, 10, 10, 0.9)',
-				'text-halo-width': 1.5
-			}
-		});
-
-		// 311 report dots (orange)
-		map.addLayer({
-			id: '311-reports-layer',
-			type: 'circle',
-			source: '311-reports',
-			paint: {
-				'circle-radius': hoverCase(8.5, 5),
-				'circle-color': '#ff6b35',
-				'circle-opacity': hoverCase(0.98, 0.8),
-				'circle-stroke-width': hoverCase(3, 1),
-				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(10, 10, 10, 0.8)')
-			}
-		});
-
-		map.addLayer({
-			id: '311-reports-hit-layer',
-			type: 'circle',
-			source: '311-reports',
-			paint: {
-				'circle-radius': 14,
-				'circle-color': 'rgba(0, 0, 0, 0)'
-			}
-		});
-
-		// 311 report labels (visible at higher zoom)
-		map.addLayer({
-			id: '311-reports-label',
-			type: 'symbol',
-			source: '311-reports',
-			minzoom: 12,
-			layout: {
-				'text-field': ['get', 'label'],
-				'text-size': 9,
-				'text-offset': [0, 1.4],
-				'text-anchor': 'top',
-				'text-optional': true
-			},
-			paint: {
-				'text-color': '#ff6b35',
-				'text-halo-color': 'rgba(10, 10, 10, 0.9)',
-				'text-halo-width': 1.5
-			}
-		});
-
-		// News pins (small dots per item)
-		map.addLayer({
-			id: 'news-pins-layer',
-			type: 'circle',
-			source: 'news-pins',
-			paint: {
-				'circle-radius': hoverCase(5.2, 3),
-				'circle-color': ['get', 'color'],
-				'circle-opacity': hoverCase(0.96, 0.7),
-				'circle-stroke-width': hoverCase(2, 0.5),
-				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(255, 255, 255, 0.3)')
-			}
-		});
-
-		// Invisible hit target to make tiny pins easier to hover.
-		map.addLayer({
-			id: 'news-pins-hit-layer',
-			type: 'circle',
-			source: 'news-pins',
-			paint: {
-				'circle-radius': 11,
-				'circle-color': 'rgba(0, 0, 0, 0)'
-			}
-		});
-
-		// Alert pulse rings (outer glow)
-		map.addLayer({
-			id: 'alert-pulse-layer',
-			type: 'circle',
-			source: 'alert-pulses',
-			paint: {
-				'circle-radius': 14,
-				'circle-color': 'transparent',
-				'circle-stroke-width': 2,
-				'circle-stroke-color': '#ef4444',
-				'circle-stroke-opacity': 0.6
-			}
-		});
-
-		// Town dots (circles sized by story count)
-		map.addLayer({
-			id: 'towns-layer',
-			type: 'circle',
-			source: 'towns',
-			paint: {
-				'circle-radius': hoverAdd(townRadius, 2.5),
-				'circle-color': ['coalesce', ['get', 'color'], '#8b5cf6'],
-				'circle-opacity': hoverCase(0.98, townOpacity),
-				'circle-stroke-width': hoverCase(2.4, 1.5),
-				'circle-stroke-color': hoverCase(INVITING_HOVER_STROKE, 'rgba(255, 255, 255, 0.5)'),
-				'circle-stroke-opacity': hoverCase(0.96, townStrokeOpacity)
-			}
-		});
-
-		// Town labels
-		map.addLayer({
-			id: 'towns-label',
-			type: 'symbol',
-			source: 'towns',
-			layout: {
-				'text-field': ['get', 'name'],
-				'text-size': 10,
-				'text-offset': [0, 1.5],
-				'text-anchor': 'top',
-				'text-optional': true
-			},
-			paint: {
-				'text-color': hoverCase('rgba(255, 255, 255, 0.96)', 'rgba(232, 232, 232, 0.7)'),
-				'text-halo-color': 'rgba(10, 10, 10, 0.9)',
-				'text-halo-width': 1,
-				'text-opacity': hoverCase(0.96, townLabelOpacity)
-			}
-		});
-
+	function setupAndBind(map: MapLibreMap) {
+		setupSources(map);
+		bindInteractions(map);
 		applyTrafficVisibility(map);
-
-		// --- Interactions ---
-		if (!interactionsBound) {
-			interactionsBound = true;
-			const townTriggerLayers = ['towns-layer', 'towns-label'];
-			const newsTriggerLayers = ['news-pins-hit-layer', 'news-pins-layer'];
-			const landmarkTriggerLayers = ['landmarks-layer', 'landmarks-hit-layer', 'landmarks-label'];
-			const fireZoneTriggerLayers = ['fire-zones-layer'];
-			const trafficTriggerLayers = ['traffic-events-layer', 'traffic-events-hit-layer'];
-			const earthquakeTriggerLayers = ['earthquakes-layer', 'earthquakes-ring-layer'];
-			const gasTriggerLayers = ['gas-stations-layer', 'gas-stations-hit-layer', 'gas-stations-label'];
-			const evTriggerLayers = [
-				'ev-charging-stations-layer',
-				'ev-charging-stations-hit-layer',
-				'ev-charging-stations-label'
-			];
-			const coffeeTriggerLayers = [
-				'coffee-shops-layer',
-				'coffee-shops-hit-layer',
-				'coffee-shops-label'
-			];
-			const fitnessTriggerLayers = [
-				'fitness-studios-layer',
-				'fitness-studios-hit-layer',
-				'fitness-studios-label'
-			];
-			const threeOneOneTriggerLayers = ['311-reports-layer', '311-reports-hit-layer'];
-			const fireIncidentTriggerLayers = ['fire-incidents-layer', 'fire-incidents-label'];
-			const airportTriggerLayers = ['airports-layer', 'airports-hit-layer', 'airports-label'];
-
-			bindLayerGroupClick(map, townTriggerLayers, (e: MapLayerMouseEvent) => {
-				if (clickHitsVisibleStravaFeature(map, e)) return;
-				const slug = e.features?.[0]?.properties?.slug;
-				if (slug && onTownClick) onTownClick(slug);
-			});
-
-			bindLayerGroupClick(map, newsTriggerLayers, (e: MapLayerMouseEvent) => {
-				if (clickHitsVisibleStravaFeature(map, e)) return;
-				const id = e.features?.[0]?.properties?.id;
-				if (id && onPinClick) onPinClick(String(id));
-			});
-
-			bindLayerGroupClick(map, landmarkTriggerLayers, (e: MapLayerMouseEvent) => {
-				if (clickHitsVisibleStravaFeature(map, e)) return;
-				const feature = e.features?.[0];
-				const name = String(feature?.properties?.name ?? 'Landmark');
-				const type = String(feature?.properties?.type ?? 'reference point');
-				onFeatureClick?.({
-					kind: 'landmark',
-					title: name,
-					subtitle: `Landmark (${type})`,
-					source: 'Marin reference layer'
-				});
-			});
-
-			bindLayerGroupClick(map, fireZoneTriggerLayers, (e: MapLayerMouseEvent) => {
-				if (clickHitsVisibleStravaFeature(map, e)) return;
-				const feature = e.features?.[0];
-				const name = String(feature?.properties?.name ?? 'Fire zone');
-				const desc = String(feature?.properties?.desc ?? '').trim();
-				onFeatureClick?.({
-					kind: 'fire-zone',
-					title: name,
-					subtitle: 'Wildfire risk corridor',
-					description: desc,
-					source: 'Marin fire context layer'
-				});
-			});
-
-			bindLayerGroupClick(map, trafficTriggerLayers, (e: MapLayerMouseEvent) => {
-				if (clickHitsVisibleStravaFeature(map, e)) return;
-				const feature = e.features?.[0];
-				const title = String(feature?.properties?.title ?? 'Traffic event');
-				const severity = String(feature?.properties?.severity ?? 'UNKNOWN');
-				const eventType = String(feature?.properties?.type ?? 'incident');
-				onFeatureClick?.({
-					kind: 'traffic-event',
-					title,
-					subtitle: `${eventType} · ${severity}`,
-					severity,
-					source: String(feature?.properties?.source ?? '511 Traffic')
-				});
-			});
-
-			bindLayerGroupClick(map, earthquakeTriggerLayers, (e: MapLayerMouseEvent) => {
-				if (clickHitsVisibleStravaFeature(map, e)) return;
-				const feature = e.features?.[0];
-				const title = String(feature?.properties?.title ?? 'Earthquake');
-				const magnitude = String(feature?.properties?.magnitude ?? '');
-				onFeatureClick?.({
-					kind: 'earthquake',
-					title,
-					subtitle: magnitude ? `Magnitude ${magnitude}` : 'Seismic event',
-					source: 'USGS'
-				});
-			});
-
-			bindLayerGroupClick(map, gasTriggerLayers, (e: MapLayerMouseEvent) => {
-				if (clickHitsVisibleStravaFeature(map, e)) return;
-				const feature = e.features?.[0];
-				const name = String(feature?.properties?.name ?? 'Gas Station');
-				const price = String(feature?.properties?.price ?? '');
-				const address = String(feature?.properties?.address ?? '');
-				onFeatureClick?.({
-					kind: 'gas-station',
-					title: name,
-					subtitle: price ? `Regular: ${price}` : 'Price unavailable',
-					description: address,
-					source: 'Google Places'
-				});
-			});
-
-			bindLayerGroupClick(map, evTriggerLayers, (e: MapLayerMouseEvent) => {
-				if (clickHitsVisibleStravaFeature(map, e)) return;
-				const feature = e.features?.[0];
-				const name = String(feature?.properties?.name ?? 'EV Station');
-				const network = String(feature?.properties?.network ?? '');
-				const level = String(feature?.properties?.level ?? '');
-				const connectors = String(feature?.properties?.connectors ?? '');
-				const pricing = String(feature?.properties?.pricing ?? '');
-				onFeatureClick?.({
-					kind: 'ev-charging-station',
-					title: name,
-					subtitle: [network, level].filter(Boolean).join(' \u00b7 '),
-					description: [connectors, pricing].filter(Boolean).join('\n'),
-					source: 'NREL AFDC'
-				});
-			});
-
-			bindLayerGroupClick(map, coffeeTriggerLayers, (e: MapLayerMouseEvent) => {
-				if (clickHitsVisibleStravaFeature(map, e)) return;
-				const feature = e.features?.[0];
-				const name = String(feature?.properties?.name ?? 'Coffee Shop');
-				const price = String(feature?.properties?.price ?? '');
-				const headlineLabel = String(feature?.properties?.headlineLabel ?? '');
-				const address = String(feature?.properties?.address ?? '');
-				const menuSummary = String(feature?.properties?.menuSummary ?? '');
-				const statusLabel = String(feature?.properties?.statusLabel ?? 'Tracking soon');
-				onFeatureClick?.({
-					kind: 'coffee-shop',
-					title: name,
-					subtitle:
-						price && headlineLabel
-							? `${headlineLabel}: ${price}`
-							: price
-								? price
-								: statusLabel,
-					description: [address, menuSummary].filter(Boolean).join('\n'),
-					source: 'Marin Coffee Index'
-				});
-			});
-
-			bindLayerGroupClick(map, fitnessTriggerLayers, (e: MapLayerMouseEvent) => {
-				if (clickHitsVisibleStravaFeature(map, e)) return;
-				const feature = e.features?.[0];
-				const name = String(feature?.properties?.name ?? 'Fitness Studio');
-				const price = String(feature?.properties?.price ?? '');
-				const typeName = String(feature?.properties?.typeName ?? '');
-				const town = String(feature?.properties?.town ?? '');
-				onFeatureClick?.({
-					kind: 'fitness-studio',
-					title: name,
-					subtitle: price ? `Drop-in: ${price}` : 'Price unavailable',
-					description: [typeName, town].filter(Boolean).join(' \u00b7 '),
-					source: 'Marin Monitor'
-				});
-			});
-
-			bindLayerGroupClick(map, threeOneOneTriggerLayers, (e: MapLayerMouseEvent) => {
-				const feature = e.features?.[0];
-				if (!feature?.properties) return;
-				const props = feature.properties;
-				onFeatureClick?.({
-					kind: '311-report',
-					title: String(props.category ?? '311 Report'),
-					subtitle: String(props.address ?? ''),
-					description: String(props.description ?? ''),
-					source: 'Fix It Marin',
-					imageUrl: props.imageUrl ? String(props.imageUrl) : undefined
-				});
-			});
-
-			bindLayerGroupClick(map, fireIncidentTriggerLayers, (e: MapLayerMouseEvent) => {
-				if (clickHitsVisibleStravaFeature(map, e)) return;
-				const feature = e.features?.[0];
-				const name = String(feature?.properties?.name ?? 'Fire');
-				const acres = Number(feature?.properties?.acres ?? 0);
-				const containment = Number(feature?.properties?.containment ?? 0);
-				const url = String(feature?.properties?.url ?? '');
-				onFeatureClick?.({
-					kind: 'fire-incident',
-					title: `${name} Fire`,
-					subtitle: `${acres.toLocaleString()} acres · ${containment}% contained`,
-					description: url ? `Details: ${url}` : undefined,
-					source: String(feature?.properties?.source ?? 'CAL FIRE')
-				});
-			});
-
-			bindLayerGroupClick(map, airportTriggerLayers, (e: MapLayerMouseEvent) => {
-				if (clickHitsVisibleStravaFeature(map, e)) return;
-				const feature = e.features?.[0];
-				const code = String(feature?.properties?.code ?? '');
-				const name = String(feature?.properties?.name ?? 'Airport');
-				const statusLabel = String(feature?.properties?.statusLabel ?? 'Unknown');
-				const weatherSummary = String(feature?.properties?.weatherSummary ?? '');
-				onFeatureClick?.({
-					kind: 'airport',
-					title: `${code} — ${name}`,
-					subtitle: statusLabel,
-					description: weatherSummary || undefined,
-					source: 'FAA / Aviation Weather'
-				});
-			});
-
-			bindInteractiveHover(map, {
-				triggerLayerIds: airportTriggerLayers,
-				sourceId: 'airports'
-			});
-			bindInteractiveHover(map, {
-				triggerLayerIds: gasTriggerLayers,
-				sourceId: 'gas-stations'
-			});
-			bindInteractiveHover(map, {
-				triggerLayerIds: evTriggerLayers,
-				sourceId: 'ev-charging-stations'
-			});
-			bindInteractiveHover(map, {
-				triggerLayerIds: coffeeTriggerLayers,
-				sourceId: 'coffee-shops'
-			});
-			bindInteractiveHover(map, {
-				triggerLayerIds: fitnessTriggerLayers,
-				sourceId: 'fitness-studios'
-			});
-			bindInteractiveHover(map, {
-				triggerLayerIds: threeOneOneTriggerLayers,
-				sourceId: '311-reports'
-			});
-			bindInteractiveHover(map, {
-				triggerLayerIds: fireIncidentTriggerLayers,
-				sourceId: 'fire-incidents'
-			});
-			bindInteractiveHover(map, {
-				triggerLayerIds: townTriggerLayers,
-				sourceId: 'towns',
-				onFeatureChange: (feature) => {
-					const slug = feature?.properties?.slug;
-					if (slug && onTownHover) {
-						onTownHover(String(slug));
-						return;
-					}
-					if (onTownHover) onTownHover(null);
-				}
-			});
-			bindInteractiveHover(map, {
-				triggerLayerIds: newsTriggerLayers,
-				sourceId: 'news-pins'
-			});
-			bindInteractiveHover(map, {
-				triggerLayerIds: landmarkTriggerLayers,
-				sourceId: 'landmarks'
-			});
-			bindInteractiveHover(map, {
-				triggerLayerIds: fireZoneTriggerLayers,
-				sourceId: 'fire-zones'
-			});
-			bindInteractiveHover(map, {
-				triggerLayerIds: trafficTriggerLayers,
-				sourceId: 'traffic-events'
-			});
-			bindInteractiveHover(map, {
-				triggerLayerIds: earthquakeTriggerLayers,
-				sourceId: 'earthquakes'
-			});
-		}
 	}
+
+	// -------------------------------------------------------------------
+	// Data synchronization  (pushes store state into GeoJSON sources)
+	// -------------------------------------------------------------------
 
 	function updateData(map: MapLibreMap) {
 		const items = get(allNewsItems);
@@ -1479,7 +447,7 @@
 			const layer = CATEGORY_TO_LAYER[item.category];
 			return Boolean(layer && mapState.activeLayers[layer]);
 		});
-		const storyCounts = getStoryCountsByTown(activeItems);
+		const storyCounts = getStoryCountsByTown(activeItems, CATEGORY_TO_LAYER);
 
 		// Town dots GeoJSON
 		const townFeatures = MARIN_TOWNS.map((town) => {
@@ -1492,7 +460,7 @@
 			const color = isDimmed
 				? 'rgba(255, 255, 255, 0.1)'
 				: hasData
-					? getDominantColor(stats!.byLayer)
+					? getDominantColor(stats!.byLayer, LAYER_COLORS)
 					: 'rgba(255, 255, 255, 0.2)';
 			const opacity = isDimmed ? 0.08 : hasData ? 0.88 : 0.16;
 			const labelOpacity = isDimmed ? 0.08 : hasData ? 0.72 : 0.28;
@@ -1858,11 +826,11 @@
 				if (!item.lat || !item.lon) continue;
 				if (currentTownFilter && item.townSlug !== currentTownFilter) continue;
 
-				const category = item.title.includes(' · ')
-					? item.title.split(' · ')[0]
+				const category = item.title.includes(' \u00b7 ')
+					? item.title.split(' \u00b7 ')[0]
 					: item.title;
-				const street = item.title.includes(' · ')
-					? item.title.split(' · ')[1]
+				const street = item.title.includes(' \u00b7 ')
+					? item.title.split(' \u00b7 ')[1]
 					: '';
 
 				threeOneOneFeatures.push({
@@ -1897,6 +865,10 @@
 		applyTrafficVisibility(map);
 	}
 
+	// -------------------------------------------------------------------
+	// Airport status refresh
+	// -------------------------------------------------------------------
+
 	async function refreshAirportStatus(map: MapLibreMap) {
 		if (!map.getSource('airports')) return;
 		try {
@@ -1929,9 +901,9 @@
 					const parts: string[] = [w.fltCat];
 					parts.push(`${w.visibility} vis`);
 					if (w.ceiling !== null) parts.push(`Ceiling ${w.ceiling} ft`);
-					parts.push(`${w.windDir}° ${w.windSpeed}${w.windGust ? `g${w.windGust}` : ''} kt`);
+					parts.push(`${w.windDir}\u00b0 ${w.windSpeed}${w.windGust ? `g${w.windGust}` : ''} kt`);
 					if (w.fogRisk) parts.push('Fog Risk');
-					weatherSummary = parts.join(' · ');
+					weatherSummary = parts.join(' \u00b7 ');
 				}
 
 				return {
@@ -1952,6 +924,10 @@
 		}
 	}
 
+	// -------------------------------------------------------------------
+	// Lifecycle & store subscriptions
+	// -------------------------------------------------------------------
+
 	let unsubscribeNews: (() => void) | null = null;
 	let unsubscribeMap: (() => void) | null = null;
 	let unsubscribeGas: (() => void) | null = null;
@@ -1967,14 +943,14 @@
 			const map = getMap();
 			if (!map) return;
 
-			setupSources(map);
+			setupAndBind(map);
 			updateData(map);
 			void refreshTrafficEvents(map);
 			void refreshAirportStatus(map);
 
 			removeStyleLoadListener?.();
 			const handleStyleLoad = () => {
-				setupSources(map);
+				setupAndBind(map);
 				updateData(map);
 				void refreshTrafficEvents(map);
 				void refreshAirportStatus(map);
@@ -2127,7 +1103,7 @@
 			if (trafficSource && rawTrafficFeatures.length > 0) {
 				trafficSource.setData({
 					type: 'FeatureCollection',
-					features: filterTrafficByTown(rawTrafficFeatures)
+					features: filterTrafficByTown(rawTrafficFeatures, slug)
 				});
 			}
 
