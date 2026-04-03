@@ -2,8 +2,7 @@
 	import type { SchoolIndexData, School } from '$lib/types/school';
 	import type { HousingMetric } from '$lib/api/marin/housing';
 	import { LEVEL_LABELS } from '$lib/config/schools';
-	import { scaleLinear } from 'd3-scale';
-	import { area, line, curveMonotoneX } from 'd3-shape';
+	import { buildTvSparkline } from '$lib/components/tv/sparkline';
 
 	interface Props {
 		tuition: SchoolIndexData | null;
@@ -41,24 +40,12 @@
 	/** Sparkline of cumulative K-12 cost over history */
 	const k12Sparkline = $derived.by(() => {
 		const history = tuition?.history;
-		if (!history || history.length < 2) return null;
-		const values = history.map((h) => h.cumulativeK12).filter((v) => v != null);
-		if (values.length < 2) return null;
-		const w = 80, h = 24;
-		const x = scaleLinear().domain([0, values.length - 1]).range([0, w]);
-		const y = scaleLinear()
-			.domain([Math.min(...values) * 0.95, Math.max(...values) * 1.05])
-			.range([h, 0]);
-		const linePath = line<number>()
-			.x((_, i) => x(i))
-			.y((d) => y(d))
-			.curve(curveMonotoneX)(values);
-		const areaPath = area<number>()
-			.x((_, i) => x(i))
-			.y0(h)
-			.y1((d) => y(d))
-			.curve(curveMonotoneX)(values);
-		return { linePath, areaPath, w, h };
+		if (!history?.length) return null;
+		return buildTvSparkline(
+			history.map((entry) => entry.cumulativeK12),
+			80,
+			24
+		);
 	});
 
 	// --- Housing helpers ---
@@ -88,24 +75,12 @@
 
 	/** Sparkline of median price over 12 months */
 	const housingSparkline = $derived.by(() => {
-		if (housing.length < 2) return null;
-		const values = housing.map((h) => h.medianPrice).filter((v): v is number => v != null);
-		if (values.length < 2) return null;
-		const w = 80, h = 24;
-		const x = scaleLinear().domain([0, values.length - 1]).range([0, w]);
-		const y = scaleLinear()
-			.domain([Math.min(...values) * 0.95, Math.max(...values) * 1.05])
-			.range([h, 0]);
-		const linePath = line<number>()
-			.x((_, i) => x(i))
-			.y((d) => y(d))
-			.curve(curveMonotoneX)(values);
-		const areaPath = area<number>()
-			.x((_, i) => x(i))
-			.y0(h)
-			.y1((d) => y(d))
-			.curve(curveMonotoneX)(values);
-		return { linePath, areaPath, w, h };
+		if (housing.length === 0) return null;
+		return buildTvSparkline(
+			housing.map((entry) => entry.medianPrice),
+			80,
+			24
+		);
 	});
 
 	function fmtCompact(n: number | null | undefined): string {
@@ -169,7 +144,7 @@
 							{#if k12Sparkline}
 								<svg viewBox="0 0 {k12Sparkline.w} {k12Sparkline.h}" class="w-20 h-6 shrink-0">
 									<path d={k12Sparkline.areaPath} fill={CYAN} opacity="0.15" />
-									<path d={k12Sparkline.linePath} fill="none" stroke={CYAN} stroke-width="1.5" />
+									<path d={k12Sparkline.linePath} fill="none" stroke={CYAN} stroke-width="1.5" stroke-linecap="round" />
 								</svg>
 							{/if}
 						</div>
@@ -224,7 +199,7 @@
 						{#if housingSparkline}
 							<svg viewBox="0 0 {housingSparkline.w} {housingSparkline.h}" class="w-20 h-6 shrink-0 ml-auto">
 								<path d={housingSparkline.areaPath} fill={HOUSING_BLUE} opacity="0.15" />
-								<path d={housingSparkline.linePath} fill="none" stroke={HOUSING_BLUE} stroke-width="1.5" />
+								<path d={housingSparkline.linePath} fill="none" stroke={HOUSING_BLUE} stroke-width="1.5" stroke-linecap="round" />
 							</svg>
 						{/if}
 					</div>

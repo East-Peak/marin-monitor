@@ -2,8 +2,7 @@
 	import type { CoffeeData, CoffeeShop } from '$lib/types/coffee';
 	import type { GroceryBasketData, BasketItemPrices } from '$lib/types/grocery';
 	import type { GasPriceData, GasStation } from '$lib/types/gas';
-	import { scaleLinear } from 'd3-scale';
-	import { area, line, curveMonotoneX } from 'd3-shape';
+	import { buildTvSparkline } from '$lib/components/tv/sparkline';
 
 	interface Props {
 		cappuccino: CoffeeData | null;
@@ -31,31 +30,6 @@
 		return { text: `${sign}$${Math.abs(diff).toFixed(2)}`, color };
 	}
 
-	function makeSparkline(
-		values: (number | null | undefined)[],
-		svgW: number,
-		svgH: number
-	): { linePath: string | null; areaPath: string | null; w: number; h: number } | null {
-		const clean = values.filter((v): v is number => v != null);
-		if (clean.length < 2) return null;
-		const w = svgW,
-			h = svgH;
-		const x = scaleLinear().domain([0, clean.length - 1]).range([0, w]);
-		const y = scaleLinear()
-			.domain([Math.min(...clean) * 0.95, Math.max(...clean) * 1.05])
-			.range([h, 0]);
-		const linePath = line<number>()
-			.x((_, i) => x(i))
-			.y((d) => y(d))
-			.curve(curveMonotoneX)(clean);
-		const areaPath = area<number>()
-			.x((_, i) => x(i))
-			.y0(h)
-			.y1((d) => y(d))
-			.curve(curveMonotoneX)(clean);
-		return { linePath, areaPath, w, h };
-	}
-
 	// --- Cappuccino derived data ---
 
 	const cappuccinoShops = $derived.by<CoffeeShop[]>(() => {
@@ -70,7 +44,7 @@
 	);
 
 	const cappuccinoSparkline = $derived.by(() =>
-		makeSparkline(
+		buildTvSparkline(
 			cappuccino?.history?.map((h) => h.medianPrice) ?? [],
 			80,
 			24
@@ -84,7 +58,7 @@
 	);
 
 	const grocerySparkline = $derived.by(() =>
-		makeSparkline(
+		buildTvSparkline(
 			grocery?.history?.map((h) => h.totalCheapest) ?? [],
 			80,
 			24
@@ -119,7 +93,7 @@
 	);
 
 	const gasSparkline = $derived.by(() =>
-		makeSparkline(
+		buildTvSparkline(
 			gas?.history?.map((h) => h.avgRegular) ?? [],
 			80,
 			24
@@ -179,7 +153,7 @@
 					{#if cappuccinoSparkline}
 						<svg viewBox="0 0 {cappuccinoSparkline.w} {cappuccinoSparkline.h}" class="w-20 h-6 shrink-0 ml-auto">
 							<path d={cappuccinoSparkline.areaPath} fill="#a16207" opacity="0.15" />
-							<path d={cappuccinoSparkline.linePath} fill="none" stroke="#a16207" stroke-width="1.5" />
+							<path d={cappuccinoSparkline.linePath} fill="none" stroke="#a16207" stroke-width="1.5" stroke-linecap="round" />
 						</svg>
 					{/if}
 				</div>
@@ -227,7 +201,7 @@
 					{#if grocerySparkline}
 						<svg viewBox="0 0 {grocerySparkline.w} {grocerySparkline.h}" class="w-20 h-6 shrink-0 ml-auto">
 							<path d={grocerySparkline.areaPath} fill="#f59e0b" opacity="0.15" />
-							<path d={grocerySparkline.linePath} fill="none" stroke="#f59e0b" stroke-width="1.5" />
+							<path d={grocerySparkline.linePath} fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" />
 						</svg>
 					{/if}
 				</div>
@@ -292,7 +266,7 @@
 					{#if gasSparkline}
 						<svg viewBox="0 0 {gasSparkline.w} {gasSparkline.h}" class="w-20 h-6 shrink-0 ml-auto">
 							<path d={gasSparkline.areaPath} fill="#10b981" opacity="0.15" />
-							<path d={gasSparkline.linePath} fill="none" stroke="#10b981" stroke-width="1.5" />
+							<path d={gasSparkline.linePath} fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" />
 						</svg>
 					{/if}
 				</div>

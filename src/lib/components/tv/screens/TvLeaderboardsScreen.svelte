@@ -125,32 +125,32 @@
 	}
 </script>
 
-<div class="h-full flex flex-col" style="background:#0a0a0a; color:#f3f4f6;">
+<div class="h-full flex flex-col overflow-hidden" style="background:#0a0a0a; color:#f3f4f6;">
 
 	<!-- Header -->
-	<div class="shrink-0 px-4 py-2 flex items-center gap-3 border-b border-gray-800">
+	<div class="shrink-0 px-4 py-1.5 flex items-center gap-3 border-b border-gray-800">
 		<span class="text-lg font-bold tracking-wide" style="color:#fc4c02;">MARIN LEADERBOARDS</span>
 		<span class="text-xs text-gray-500 uppercase tracking-widest">Strava KOMs &amp; QOMs</span>
 	</div>
 
 	<!-- Two-column body -->
-	<div class="flex-1 min-h-0 flex gap-3 px-4 py-3">
+	<div class="flex-1 min-h-0 flex gap-2 px-3 py-2">
 
 		<!-- Cycling column -->
-		<div class="flex-1 min-w-0 flex flex-col gap-2">
+		<div class="flex-1 min-w-0 flex flex-col gap-1.5">
 			<div class="shrink-0 text-xs font-bold uppercase tracking-widest" style="color:#f59e0b;">Cycling</div>
 			<div class="flex-1 min-h-0">
-				<TvScroller screenId="leaderboards-cycling" {active} speed={12}>
-					<div class="flex flex-col gap-2">
+				<TvScroller screenId="leaderboards-cycling" {active} speed={16}>
+					<div class="flex flex-col gap-1.5">
 						{#each cyclingSegments as seg (seg.id)}
 							{@const lb = getLeaderboard(seg.id)}
 							{@const topRows = visibleTopRows(lb)}
 							{@const climbLabel = categoryLabel(seg.climbCategory)}
 							{@const distanceLabel = segmentDistanceLabel(seg, lb)}
-							<div class="rounded-lg border border-gray-800 p-2.5" style="background:#111;">
+							<div class="rounded-lg border border-gray-800 p-2" style="background:#111;">
 								<!-- Segment header -->
-								<div class="flex items-center gap-2 mb-1">
-									<span class="text-xs font-semibold text-gray-100 truncate flex-1">{seg.name}</span>
+								<div class="mb-0.5 flex items-center gap-2">
+									<span class="flex-1 truncate text-[11px] font-semibold text-gray-100">{seg.name}</span>
 									{#if climbLabel}
 										<span
 											class="text-[9px] font-bold px-1.5 py-0.5 rounded"
@@ -166,19 +166,19 @@
 
 								{#if lb}
 									<div class="flex gap-2 min-w-0">
-										<div class="min-w-0 basis-[54%] flex flex-col gap-1.5">
+										<div class="min-w-0 basis-[52%] flex flex-col gap-1">
 											{#if lb.cr}
 												<div class="flex items-center gap-1.5">
 													<span class="text-[9px] font-bold px-1 py-0.5 rounded" style="background:#fc4c0222; color:#fc4c02; border:1px solid #fc4c0244;">KOM</span>
-													<span class="text-[10px] text-gray-300 truncate flex-1">{lb.cr.athleteName}</span>
-													<span class="text-[10px] font-mono" style="color:#fc4c02;">{lb.cr.time}</span>
+													<span class="text-[9px] text-gray-300 truncate flex-1">{lb.cr.athleteName}</span>
+													<span class="text-[9px] font-mono" style="color:#fc4c02;">{lb.cr.time}</span>
 												</div>
 											{/if}
 											{#if lb.qom}
 												<div class="flex items-center gap-1.5">
 													<span class="text-[9px] font-bold px-1 py-0.5 rounded" style="background:#a855f722; color:#a855f7; border:1px solid #a855f744;">QOM</span>
-													<span class="text-[10px] text-gray-300 truncate flex-1">{lb.qom.athleteName}</span>
-													<span class="text-[10px] font-mono" style="color:#a855f7;">{lb.qom.time}</span>
+													<span class="text-[9px] text-gray-300 truncate flex-1">{lb.qom.athleteName}</span>
+													<span class="text-[9px] font-mono" style="color:#a855f7;">{lb.qom.time}</span>
 												</div>
 											{/if}
 											{#if !lb.cr && !lb.qom}
@@ -221,19 +221,19 @@
 		<div class="shrink-0 w-px bg-gray-800 self-stretch"></div>
 
 		<!-- Running column -->
-		<div class="flex-1 min-w-0 flex flex-col gap-2">
+		<div class="flex-1 min-w-0 flex flex-col gap-1.5">
 			<div class="shrink-0 text-xs font-bold uppercase tracking-widest" style="color:#2dd4bf;">Running</div>
 			<div class="flex-1 min-h-0">
-				<TvScroller screenId="leaderboards-running" {active} speed={12}>
-					<div class="flex flex-col gap-2">
+				<TvScroller screenId="leaderboards-running" {active} speed={16}>
+					<div class="flex flex-col gap-1.5">
 						{#each runningSegments as seg (seg.id)}
 							{@const lb = getLeaderboard(seg.id)}
 							{@const topRows = visibleTopRows(lb)}
 							{@const distanceLabel = segmentDistanceLabel(seg, lb)}
-							<div class="rounded-lg border border-gray-800 p-2.5" style="background:#111;">
+							<div class="rounded-lg border border-gray-800 p-2" style="background:#111;">
 								<!-- Segment header -->
-								<div class="flex items-center gap-2 mb-1">
-									<span class="text-xs font-semibold text-gray-100 truncate flex-1">{seg.name}</span>
+								<div class="mb-0.5 flex items-center gap-2">
+									<span class="flex-1 truncate text-[11px] font-semibold text-gray-100">{seg.name}</span>
 									{#if distanceLabel}
 										<span class="text-[9px] text-gray-500">{distanceLabel}</span>
 									{/if}
@@ -241,19 +241,19 @@
 
 								{#if lb}
 									<div class="flex gap-2 min-w-0">
-										<div class="min-w-0 basis-[54%] flex flex-col gap-1.5">
+										<div class="min-w-0 basis-[52%] flex flex-col gap-1">
 											{#if lb.cr}
 												<div class="flex items-center gap-1.5">
 													<span class="text-[9px] font-bold px-1 py-0.5 rounded" style="background:#2dd4bf22; color:#2dd4bf; border:1px solid #2dd4bf44;">KOM</span>
-													<span class="text-[10px] text-gray-300 truncate flex-1">{lb.cr.athleteName}</span>
-													<span class="text-[10px] font-mono" style="color:#2dd4bf;">{lb.cr.time}</span>
+													<span class="text-[9px] text-gray-300 truncate flex-1">{lb.cr.athleteName}</span>
+													<span class="text-[9px] font-mono" style="color:#2dd4bf;">{lb.cr.time}</span>
 												</div>
 											{/if}
 											{#if lb.qom}
 												<div class="flex items-center gap-1.5">
 													<span class="text-[9px] font-bold px-1 py-0.5 rounded" style="background:#a855f722; color:#a855f7; border:1px solid #a855f744;">QOM</span>
-													<span class="text-[10px] text-gray-300 truncate flex-1">{lb.qom.athleteName}</span>
-													<span class="text-[10px] font-mono" style="color:#a855f7;">{lb.qom.time}</span>
+													<span class="text-[9px] text-gray-300 truncate flex-1">{lb.qom.athleteName}</span>
+													<span class="text-[9px] font-mono" style="color:#a855f7;">{lb.qom.time}</span>
 												</div>
 											{/if}
 											{#if !lb.cr && !lb.qom}
@@ -296,7 +296,7 @@
 
 	<!-- Recent events footer strip -->
 	{#if recentEvents.length > 0}
-		<div class="shrink-0 border-t border-gray-800 px-4 py-1.5 flex items-center gap-4">
+		<div class="shrink-0 border-t border-gray-800 px-4 py-1 flex items-center gap-4">
 			<span class="text-[9px] font-bold uppercase tracking-widest" style="color:#fc4c02;">Recent</span>
 			{#each recentEvents as evt}
 				<div class="flex items-center gap-1.5">

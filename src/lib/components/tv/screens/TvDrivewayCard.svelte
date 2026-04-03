@@ -2,8 +2,7 @@
 	import type { DrivewayData } from '$lib/types/driveway';
 	import { FUEL_TYPE_COLORS, FUEL_TYPE_LABELS, FUEL_TYPE_ORDER } from '$lib/config/driveway';
 	import type { FuelType } from '$lib/types/driveway';
-	import { scaleLinear } from 'd3-scale';
-	import { area, line, curveMonotoneX } from 'd3-shape';
+	import { buildTvSparkline } from '$lib/components/tv/sparkline';
 
 	interface Props {
 		data: DrivewayData | null;
@@ -80,29 +79,15 @@
 	/** EV penetration sparkline from history */
 	const evSparkline = $derived.by(() => {
 		const history = data?.history;
-		if (!history || history.length < 2) return null;
-		const values = history
-			.map((h) => {
-				const ev = h.fuelBreakdown.find((f) => f.fuelType === 'battery-electric');
+		if (!history?.length) return null;
+		return buildTvSparkline(
+			history.map((entry) => {
+				const ev = entry.fuelBreakdown.find((fuel) => fuel.fuelType === 'battery-electric');
 				return ev?.pct ?? null;
-			})
-			.filter((v): v is number => v != null);
-		if (values.length < 2) return null;
-		const w = 80, h = 24;
-		const x = scaleLinear().domain([0, values.length - 1]).range([0, w]);
-		const y = scaleLinear()
-			.domain([0, Math.max(...values) * 1.2])
-			.range([h, 0]);
-		const linePath = line<number>()
-			.x((_, i) => x(i))
-			.y((d) => y(d))
-			.curve(curveMonotoneX)(values);
-		const areaPath = area<number>()
-			.x((_, i) => x(i))
-			.y0(h)
-			.y1((d) => y(d))
-			.curve(curveMonotoneX)(values);
-		return { linePath, areaPath, w, h };
+			}),
+			80,
+			24
+		);
 	});
 </script>
 
@@ -136,9 +121,9 @@
 							<div class="flex items-center justify-center gap-1.5">
 								<span class="text-lg font-bold tabular-nums" style="color: #22c55e">{evShare}%</span>
 								{#if evSparkline}
-									<svg viewBox="0 0 {evSparkline.w} {evSparkline.h}" class="w-14 h-5 shrink-0">
+									<svg viewBox="0 0 {evSparkline.w} {evSparkline.h}" class="w-16 h-5 shrink-0">
 										<path d={evSparkline.areaPath} fill="#22c55e" opacity="0.15" />
-										<path d={evSparkline.linePath} fill="none" stroke="#22c55e" stroke-width="1.5" />
+										<path d={evSparkline.linePath} fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" />
 									</svg>
 								{/if}
 							</div>

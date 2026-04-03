@@ -18,7 +18,7 @@
 	);
 
 	const colCount = $derived(
-		photoItems.length < 3 ? 1 : photoItems.length < 6 ? 2 : 3
+		photoItems.length < 3 ? 1 : photoItems.length < 6 ? 2 : photoItems.length < 12 ? 3 : 4
 	);
 
 	function timeAgo(ts: number): string {
@@ -59,10 +59,10 @@
 {#if photoItems.length === 0}
 	<!-- Skip screen: no photos -->
 {:else}
-	<div class="h-full flex flex-col px-12 py-8">
+	<div class="h-full flex flex-col overflow-hidden px-8 py-5">
 		<!-- Header -->
-		<div class="flex items-center gap-4">
-			<h2 class="text-2xl font-bold uppercase tracking-widest" style="color: {ORANGE}">
+		<div class="flex items-center gap-3 shrink-0">
+			<h2 class="text-xl font-bold uppercase tracking-[0.25em]" style="color: {ORANGE}">
 				Fix It Marin
 			</h2>
 			<div
@@ -72,25 +72,25 @@
 				{photoItems.length}
 			</div>
 			<div class="flex-1"></div>
-			<span class="text-sm text-zinc-500">Recent reports with photos</span>
+			<span class="text-xs text-zinc-500">Recent reports with photos</span>
 		</div>
 
-		<div class="mt-5 flex-1 min-h-0">
-			<TvScroller screenId="311-photos" {active} speed={25}>
+		<div class="mt-3 flex-1 min-h-0">
+			<TvScroller screenId="311-photos" {active} speed={28}>
 				<div
-					class="grid gap-5"
+					class="grid gap-3"
 					style:grid-template-columns="repeat({colCount}, minmax(0, 1fr))"
 				>
 					{#each photoItems as item, i (item.id + '-' + i)}
 						{@const parsed = parseTitle(item.title)}
 						<div
-							class="rounded-lg overflow-hidden shadow-lg"
+							class="rounded-xl overflow-hidden shadow-lg"
 							style="border-bottom: 3px solid {ORANGE}; background: rgba(39, 39, 42, 0.7);"
 						>
 							{#if failedIds.has(item.id)}
 								<!-- Styled fallback when photo fails -->
 								<div
-									class="aspect-[4/3] w-full flex flex-col items-center justify-center relative overflow-hidden"
+									class="aspect-[16/9] w-full flex flex-col items-center justify-center relative overflow-hidden"
 								>
 									<!-- Gradient background -->
 									<div
@@ -111,7 +111,7 @@
 								</div>
 							{:else}
 								<!-- Photo with dark gradient overlay for text readability -->
-								<div class="relative aspect-[4/3] w-full">
+								<div class="relative aspect-[16/9] w-full">
 									<img
 										src={item.imageUrl}
 										alt={item.title}
@@ -126,12 +126,12 @@
 									></div>
 								</div>
 							{/if}
-							<div class="p-3">
+							<div class="p-2">
 								<p class="text-sm font-bold text-white">{parsed.category}</p>
 								{#if parsed.street}
 									<p class="text-xs text-zinc-400 mt-0.5">{parsed.street}</p>
 								{/if}
-								<div class="mt-1.5 flex items-center gap-2">
+								<div class="mt-1 flex items-center gap-2">
 									{#if item.town}
 										<span class="text-xs text-zinc-400">{item.town}</span>
 									{/if}

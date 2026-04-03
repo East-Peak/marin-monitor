@@ -12,33 +12,33 @@
 	const civicItems = $derived($civicNews.items.slice(0, 12));
 </script>
 
-<div class="h-full flex flex-col p-4 gap-3">
+<div class="h-full flex flex-col overflow-hidden px-4 py-3 gap-2">
 	<div class="flex gap-6 shrink-0">
-		<h2 class="text-xl font-bold text-gray-100 flex-1">Outdoors & Lifestyle</h2>
-		<h2 class="text-xl font-bold text-gray-100 flex-1">Civic</h2>
+		<h2 class="flex-1 text-[1.45rem] font-bold text-gray-100">Outdoors & Lifestyle</h2>
+		<h2 class="flex-1 text-[1.45rem] font-bold text-gray-100">Civic</h2>
 	</div>
 	<div class="flex-1 min-h-0">
-		<TvScroller screenId="community" {active}>
-			<div class="grid grid-cols-2 gap-x-6 gap-y-2">
+		<TvScroller screenId="community" {active} speed={34}>
+			<div class="grid grid-cols-2 gap-x-4 gap-y-1.5">
 				{#each Array(Math.max(outdoorItems.length, civicItems.length)) as _, i}
 					<div>
 						{#if outdoorItems[i]}
-							<div class="bg-gray-800/60 rounded-lg p-2.5 border border-gray-700/50">
-								<h3 class="text-sm font-medium text-gray-100 line-clamp-2">{outdoorItems[i].title}</h3>
-								<div class="flex items-center gap-2 mt-1">
-									<span class="text-[10px] text-gray-400">{outdoorItems[i].source}</span>
-									<span class="text-[10px] text-gray-500">{timeAgo(outdoorItems[i].timestamp)}</span>
+							<div class="rounded-lg border border-gray-700/50 bg-gray-800/60 p-2">
+								<h3 class="line-clamp-2 text-[0.95rem] font-semibold text-gray-100">{outdoorItems[i].title}</h3>
+								<div class="mt-0.5 flex items-center gap-2">
+									<span class="text-[11px] text-gray-400">{outdoorItems[i].source}</span>
+									<span class="text-[11px] text-gray-500">{timeAgo(outdoorItems[i].timestamp)}</span>
 								</div>
 							</div>
 						{/if}
 					</div>
 					<div>
 						{#if civicItems[i]}
-							<div class="bg-gray-800/60 rounded-lg p-2.5 border border-gray-700/50">
-								<h3 class="text-sm font-medium text-gray-100 line-clamp-2">{civicItems[i].title}</h3>
-								<div class="flex items-center gap-2 mt-1">
-									<span class="text-[10px] text-gray-400">{civicItems[i].source}</span>
-									<span class="text-[10px] text-gray-500">{timeAgo(civicItems[i].timestamp)}</span>
+							<div class="rounded-lg border border-gray-700/50 bg-gray-800/60 p-2">
+								<h3 class="line-clamp-2 text-[0.95rem] font-semibold text-gray-100">{civicItems[i].title}</h3>
+								<div class="mt-0.5 flex items-center gap-2">
+									<span class="text-[11px] text-gray-400">{civicItems[i].source}</span>
+									<span class="text-[11px] text-gray-500">{timeAgo(civicItems[i].timestamp)}</span>
 								</div>
 							</div>
 						{/if}

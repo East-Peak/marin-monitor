@@ -1,6 +1,6 @@
 <!-- src/lib/components/tv/TvScroller.svelte -->
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { onDestroy, tick } from 'svelte';
 	import type { Snippet } from 'svelte';
 	import { saveScrollPosition, getScrollPosition } from '$lib/stores/tv-scroll';
 
@@ -19,6 +19,7 @@
 	let rafId: number | null = null;
 	let lastFrameTime: number | null = null;
 	let pauseTimeout: ReturnType<typeof setTimeout> | null = null;
+	let scrollPosition = 0;
 
 	function getMaxScroll(): number {
 		if (!containerEl || !contentEl) return 0;
@@ -27,7 +28,20 @@
 
 	function checkOverflow(): void {
 		const maxScroll = getMaxScroll();
+		if (scrollPosition > maxScroll) {
+			scrollPosition = maxScroll;
+		}
+		if (containerEl && containerEl.scrollTop > maxScroll) {
+			containerEl.scrollTop = maxScroll;
+		}
 		needsScroll = maxScroll > 10;
+	}
+
+	function scheduleOverflowCheck(): void {
+		void tick().then(() => {
+			if (!containerEl || !contentEl) return;
+			checkOverflow();
+		});
 	}
 
 	function startScrolling(): void {
@@ -48,6 +62,7 @@
 				containerEl.scrollTop = Math.min(saved.scrollTop, maxScroll);
 			}
 		}
+		scrollPosition = containerEl?.scrollTop ?? 0;
 
 		lastFrameTime = null;
 
@@ -74,14 +89,16 @@
 				return;
 			}
 
-			const newTop = containerEl.scrollTop + pxToScroll;
+			const newTop = scrollPosition + pxToScroll;
 
 			if (newTop >= maxScroll) {
+				scrollPosition = maxScroll;
 				containerEl.scrollTop = maxScroll;
 				// Cancel rAF during pause — restart after timeout
 				if (rafId !== null) cancelAnimationFrame(rafId);
 				rafId = null;
 				pauseTimeout = setTimeout(() => {
+					scrollPosition = 0;
 					if (containerEl) containerEl.scrollTop = 0;
 					lastFrameTime = null;
 					if (active && needsScroll) {
@@ -90,7 +107,8 @@
 				}, 2000);
 				return; // Don't schedule another rAF
 			} else {
-				containerEl.scrollTop = newTop;
+				scrollPosition = newTop;
+				containerEl.scrollTop = scrollPosition;
 			}
 
 			rafId = requestAnimationFrame(tick);
@@ -109,6 +127,7 @@
 			pauseTimeout = null;
 		}
 		lastFrameTime = null;
+		scrollPosition = containerEl?.scrollTop ?? 0;
 
 		// Save position with content height
 		if (containerEl) {
@@ -140,18 +159,31 @@
 		}
 	});
 
-	// Check overflow when content changes
+	// Recalculate when either the content or viewport changes size.
 	$effect(() => {
-		if (!contentEl) return;
+		if (!containerEl || !contentEl) return;
 
 		const observer = new ResizeObserver(() => {
+			scheduleOverflowCheck();
+		});
+
+		observer.observe(containerEl);
+		observer.observe(contentEl);
+
+		scheduleOverflowCheck();
+		const frameId = requestAnimationFrame(() => {
 			checkOverflow();
 		});
 
-		observer.observe(contentEl);
-		checkOverflow();
+		return () => {
+			observer.disconnect();
+			cancelAnimationFrame(frameId);
+		};
+	});
 
-		return () => observer.disconnect();
+	$effect(() => {
+		active;
+		scheduleOverflowCheck();
 	});
 
 </script>

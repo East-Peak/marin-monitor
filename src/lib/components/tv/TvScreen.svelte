@@ -10,7 +10,7 @@
 </script>
 
 {#if active}
-	<div class="tv-screen absolute inset-0 flex flex-col">
+	<div class="tv-screen absolute inset-0 flex min-h-0 flex-col overflow-hidden">
 		{@render children()}
 	</div>
 {/if}

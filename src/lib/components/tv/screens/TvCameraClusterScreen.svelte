@@ -40,16 +40,16 @@
   }
 </script>
 
-<div class="h-full flex flex-col p-2">
-  <h2 class="text-xl font-bold text-gray-100 mb-2 px-2">{clusterLabel}</h2>
-  <div class="flex-1 grid grid-cols-4 auto-rows-fr gap-2 min-h-0 overflow-hidden">
+<div class="h-full min-h-0 overflow-hidden flex flex-col p-2">
+  <h2 class="text-lg font-bold leading-tight text-gray-100 mb-1.5 px-2 shrink-0">{clusterLabel}</h2>
+  <div class="flex-1 grid min-h-0 grid-cols-4 grid-rows-2 gap-1.5 overflow-hidden">
     {#each cameras as cam (cam.id)}
-      <div class="relative bg-gray-800 rounded overflow-hidden min-h-0 min-w-0">
+      <div class="relative min-h-0 min-w-0 overflow-hidden rounded bg-gray-800">
         {#if cam.type === 'image'}
           <img
             src={imageUrl(cam)}
             alt={cam.name}
-            class="w-full h-full object-cover"
+            class="block h-full w-full object-cover"
             loading="eager"
             onerror={(e) => { const el = e.currentTarget as HTMLImageElement; el.style.display = 'none'; }}
           />
@@ -57,7 +57,7 @@
           <iframe
             src={cam.url}
             title={cam.name}
-            class="w-full h-full border-0"
+            class="block h-full w-full border-0"
             loading="eager"
             allow="autoplay"
           ></iframe>

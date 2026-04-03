@@ -527,7 +527,7 @@
   <TvWallboardHeader {carouselIdx} {paused} {currentTemp} {stories24h} {alertCount} {clockText} onGoToScreen={goToScreen} />
 
   <!-- Carousel area -->
-  <div class="flex-1 relative" style="height: calc(100vh - 48px - 44px);">
+  <div class="relative min-h-0 shrink-0" style="height: calc(100dvh - 48px - 45px);">
     <!-- Persistent map — single MapContainer, never destroyed. Hidden when non-map screen active. -->
     <div class="absolute inset-0" style="z-index: {isMapScreenActive ? 1 : 0}; visibility: {isMapScreenActive ? 'visible' : 'hidden'};">
       <TvMapScreen
