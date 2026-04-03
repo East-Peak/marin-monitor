@@ -3,20 +3,18 @@
 	import { Panel } from '$lib/components/common';
 	import { fetchWineIndexData } from '$lib/api/marin/wine-index';
 	import { wineIndexStore } from '$lib/stores/wine-index';
-	import { select } from 'd3-selection';
-	import { scaleLinear } from 'd3-scale';
-	import { line, curveMonotoneX } from 'd3-shape';
+	import { buildChart, type ChartPaths } from '$lib/utils/chart';
 	import type { WineIndexData, WineCategory, WineCategorySnapshot } from '$lib/types/wine';
 	import { WINE_ACCENT, WINE_CATEGORY_ORDER } from '$lib/config/wine';
 
 	const SPARKLINE_W = 80;
 	const SPARKLINE_H = 24;
+	const SPARKLINE_MARGINS = { top: 2, right: 2, bottom: 2, left: 2 };
 
 	let data = $state<WineIndexData>({ current: null, history: [] });
 	let dataLoading = $state(false);
 	let showAllStaffPicks = $state(false);
 	let showAllAllocated = $state(false);
-	let sparklineRefs = $state<Record<string, SVGSVGElement>>({});
 
 	const current = $derived(data.current);
 
@@ -46,6 +44,24 @@
 		}
 
 		return histories;
+	});
+
+	// Build sparkline paths reactively via shared utility
+	const sparklinePaths = $derived.by(() => {
+		const paths = new Map<WineCategory, ChartPaths>();
+		for (const cat of WINE_CATEGORY_ORDER) {
+			const history = categoryHistories.get(cat);
+			if (!history || history.length < 2) continue;
+			const result = buildChart({
+				width: SPARKLINE_W,
+				height: SPARKLINE_H,
+				margins: SPARKLINE_MARGINS,
+				accentColor: WINE_ACCENT,
+				data: history.map((h) => ({ value: h.medianPrice }))
+			});
+			if (result) paths.set(cat, result);
+		}
+		return paths;
 	});
 
 	// Ordered categories from current snapshot
@@ -83,42 +99,6 @@
 		};
 	}
 
-	function drawSparkline(svg: SVGSVGElement, category: WineCategory) {
-		const history = categoryHistories.get(category);
-		if (!svg || !history || history.length < 2) return;
-
-		const s = select(svg);
-		s.selectAll('*').remove();
-
-		const prices = history.map((h) => h.medianPrice);
-		const yMin = Math.min(...prices) * 0.98;
-		const yMax = Math.max(...prices) * 1.02;
-
-		const x = scaleLinear()
-			.domain([0, prices.length - 1])
-			.range([2, SPARKLINE_W - 2]);
-		const y = scaleLinear().domain([yMin, yMax]).range([SPARKLINE_H - 2, 2]);
-
-		const lineGen = line<number>()
-			.x((_d, i) => x(i))
-			.y((d) => y(d))
-			.curve(curveMonotoneX);
-
-		s.append('path')
-			.datum(prices)
-			.attr('d', lineGen)
-			.attr('fill', 'none')
-			.attr('stroke', WINE_ACCENT)
-			.attr('stroke-width', 1.5);
-
-		// End dot
-		s.append('circle')
-			.attr('cx', x(prices.length - 1))
-			.attr('cy', y(prices[prices.length - 1]))
-			.attr('r', 2)
-			.attr('fill', WINE_ACCENT);
-	}
-
 	onMount(() => {
 		void (async () => {
 			dataLoading = true;
@@ -130,16 +110,6 @@
 			}
 		})();
 	});
-
-	// Draw sparklines when data or refs change
-	$effect(() => {
-		for (const cat of WINE_CATEGORY_ORDER) {
-			const el = sparklineRefs[cat];
-			if (el) {
-				drawSparkline(el, cat);
-			}
-		}
-	});
 </script>
 
 <Panel id="wine-index" title="Wine Index" loading={dataLoading}>
@@ -148,7 +118,6 @@
 		<div class="categories-grid">
 			{#each orderedCategories as cat}
 				{@const change = computeWeeklyChange(cat.category)}
-				{@const history = categoryHistories.get(cat.category)}
 				<div class="category-card">
 					<div class="category-header">
 						<span class="category-label">{cat.label}</span>
@@ -170,13 +139,18 @@
 								</span>
 							{/if}
 						</div>
-						{#if history && history.length >= 2}
+						{#if sparklinePaths.has(cat.category)}
+							{@const paths = sparklinePaths.get(cat.category)!}
 							<svg
 								class="sparkline-svg"
 								width={SPARKLINE_W}
 								height={SPARKLINE_H}
-								bind:this={sparklineRefs[cat.category]}
-							></svg>
+							>
+								<g transform={`translate(${SPARKLINE_MARGINS.left},${SPARKLINE_MARGINS.top})`}>
+									<path d={paths.linePath} fill="none" stroke={WINE_ACCENT} stroke-width="1.5" />
+									<circle cx={paths.dots[paths.dots.length - 1].x} cy={paths.dots[paths.dots.length - 1].y} r="2" fill={WINE_ACCENT} />
+								</g>
+							</svg>
 						{/if}
 					</div>
 				</div>

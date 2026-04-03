@@ -14,7 +14,7 @@
 	import type { Selection } from 'd3-selection';
 	import { scaleLinear } from 'd3-scale';
 	import type { ScaleLinear } from 'd3-scale';
-	import { area, line, curveBasis } from 'd3-shape';
+	import { buildChart, type ChartPaths } from '$lib/utils/chart';
 
 	interface Props {
 		tideStation?: string;
@@ -42,6 +42,9 @@
 
 	const CHART_LEFT = 42;
 	const CHART_RIGHT = 4;
+	const TIDE_ACCENT = '#10b981';
+	const TIDE_HEIGHT = 162;
+	const TIDE_MARGINS = { top: 8, right: CHART_RIGHT, bottom: 18, left: CHART_LEFT };
 
 	let tidePredictions = $state<TidePrediction[]>([]);
 	let hourlyTides = $state<{ time: string; height: number }[]>([]);
@@ -51,9 +54,25 @@
 	let coastalPoints = $state<CoastalPoint[]>([]);
 	let waveSvg = $state<SVGSVGElement>(undefined!);
 	let windSvg = $state<SVGSVGElement>(undefined!);
-	let tideSvg = $state<SVGSVGElement>(undefined!);
+	let tideContainer = $state<HTMLDivElement>(undefined!);
+	let tideWidth = $state(0);
 	let hoverState = $state<HoverState | null>(null);
 	let loading = $state(true);
+
+	// Build tide chart geometry reactively via shared utility
+	const tideChartPaths = $derived.by<ChartPaths | null>(() => {
+		if (tideWidth === 0 || coastalPoints.length < 2) return null;
+		return buildChart({
+			width: tideWidth,
+			height: TIDE_HEIGHT,
+			margins: TIDE_MARGINS,
+			accentColor: TIDE_ACCENT,
+			data: coastalPoints.map((p) => ({
+				value: p.tideHeight ?? 0,
+				label: formatHourLabel(p.time)
+			}))
+		});
+	});
 
 	function formatTideTime(t: string): string {
 		const parts = t.split(' ');
@@ -141,25 +160,40 @@
 	}
 
 	function handleHover(event: PointerEvent, chart: HoverChart) {
-		if (coastalPoints.length === 0) return;
-		const target = event.currentTarget as SVGSVGElement;
-		const rect = target.getBoundingClientRect();
-		const innerWidth = rect.width - CHART_LEFT - CHART_RIGHT;
-		const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - CHART_LEFT));
-		const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
-		const index = Math.max(
-			0,
-			Math.min(coastalPoints.length - 1, Math.round(ratio * (coastalPoints.length - 1)))
-		);
-		const pointX = CHART_LEFT + (innerWidth * index) / Math.max(coastalPoints.length - 1, 1);
-		hoverState = { chart, index, x: pointX };
+		if (chart === 'tide') {
+			if (!tideChartPaths) return;
+			const target = event.currentTarget as SVGSVGElement;
+			const rect = target.getBoundingClientRect();
+			const innerWidth = rect.width - TIDE_MARGINS.left - TIDE_MARGINS.right;
+			const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - TIDE_MARGINS.left));
+			const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
+			const index = Math.max(
+				0,
+				Math.min(tideChartPaths.dots.length - 1, Math.round(ratio * (tideChartPaths.dots.length - 1)))
+			);
+			hoverState = { chart, index, x: TIDE_MARGINS.left + tideChartPaths.dots[index].x };
+		} else {
+			if (coastalPoints.length === 0) return;
+			const target = event.currentTarget as SVGSVGElement;
+			const rect = target.getBoundingClientRect();
+			const innerWidth = rect.width - CHART_LEFT - CHART_RIGHT;
+			const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - CHART_LEFT));
+			const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
+			const index = Math.max(
+				0,
+				Math.min(coastalPoints.length - 1, Math.round(ratio * (coastalPoints.length - 1)))
+			);
+			const pointX = CHART_LEFT + (innerWidth * index) / Math.max(coastalPoints.length - 1, 1);
+			hoverState = { chart, index, x: pointX };
+		}
 	}
 
 	function clearHover() {
 		hoverState = null;
 	}
 
-	function drawSharedXAxis(
+	// Shared helpers for imperative bar charts (wave + wind)
+	function drawBarXAxis(
 		g: Selection<SVGGElement, unknown, null, undefined>,
 		x: ScaleLinear<number, number>,
 		innerH: number,
@@ -187,7 +221,7 @@
 		}
 	}
 
-	function drawHoverGuide(
+	function drawBarHoverGuide(
 		g: Selection<SVGGElement, unknown, null, undefined>,
 		x: ScaleLinear<number, number>,
 		innerH: number
@@ -203,6 +237,7 @@
 			.attr('stroke-dasharray', '3,3');
 	}
 
+	// Wave and wind bar charts stay imperative (not area/line pattern)
 	function drawWaveChart() {
 		if (!waveSvg || coastalPoints.length === 0) return;
 		const waveValues = coastalPoints.map((point) => point.waveHeight ?? 0);
@@ -257,8 +292,8 @@
 			.attr('font-size', '8px')
 			.text("0'");
 
-		drawHoverGuide(g, x, innerH);
-		drawSharedXAxis(g, x, innerH, coastalPoints);
+		drawBarHoverGuide(g, x, innerH);
+		drawBarXAxis(g, x, innerH, coastalPoints);
 	}
 
 	function drawWindChart() {
@@ -315,95 +350,24 @@
 			.attr('font-size', '8px')
 			.text('0');
 
-		drawHoverGuide(g, x, innerH);
-		drawSharedXAxis(g, x, innerH, coastalPoints, true);
+		drawBarHoverGuide(g, x, innerH);
+		drawBarXAxis(g, x, innerH, coastalPoints, true);
 	}
 
-	function drawTideChart() {
-		if (!tideSvg || coastalPoints.length === 0) return;
-		const tideValues = coastalPoints.map((point) => point.tideHeight ?? 0);
-		const svg = select(tideSvg);
-		svg.selectAll('*').remove();
-
-		const width = tideSvg.clientWidth;
-		const height = 162;
-		const margin = { top: 8, right: CHART_RIGHT, bottom: 18, left: CHART_LEFT };
-		const innerW = width - margin.left - margin.right;
-		const innerH = height - margin.top - margin.bottom;
-		const yMin = Math.min(...tideValues) - 0.5;
-		const yMax = Math.max(...tideValues) + 0.5;
-
-		const x = scaleLinear()
-			.domain([0, coastalPoints.length - 1])
-			.range([0, innerW]);
-		const y = scaleLinear().domain([yMin, yMax]).range([innerH, 0]);
-
-		const g = svg
-			.attr('width', width)
-			.attr('height', height)
-			.append('g')
-			.attr('transform', `translate(${margin.left},${margin.top})`);
-
-		if (yMin < 0) {
-			g.append('line')
-				.attr('x1', 0)
-				.attr('x2', innerW)
-				.attr('y1', y(0))
-				.attr('y2', y(0))
-				.attr('stroke', '#333')
-				.attr('stroke-dasharray', '2,2');
-		}
-
-		const areaGen = area<CoastalPoint>()
-			.x((_d, i) => x(i))
-			.y0(innerH)
-			.y1((d) => y(d.tideHeight ?? 0))
-			.curve(curveBasis);
-
-		g.append('path').datum(coastalPoints).attr('d', areaGen).attr('fill', 'rgba(16, 185, 129, 0.1)');
-
-		const lineGen = line<CoastalPoint>()
-			.x((_d, i) => x(i))
-			.y((d) => y(d.tideHeight ?? 0))
-			.curve(curveBasis);
-
-		g.append('path')
-			.datum(coastalPoints)
-			.attr('d', lineGen)
-			.attr('fill', 'none')
-			.attr('stroke', '#10b981')
-			.attr('stroke-width', 1.5);
-
-		g.append('text')
-			.attr('x', -4)
-			.attr('y', y(yMax))
-			.attr('text-anchor', 'end')
-			.attr('dominant-baseline', 'middle')
-			.attr('fill', '#888')
-			.attr('font-size', '8px')
-			.text(`${yMax.toFixed(1)}'`);
-
-		g.append('text')
-			.attr('x', -4)
-			.attr('y', y(yMin))
-			.attr('text-anchor', 'end')
-			.attr('dominant-baseline', 'middle')
-			.attr('fill', '#888')
-			.attr('font-size', '8px')
-			.text(`${yMin.toFixed(1)}'`);
-
-		drawHoverGuide(g, x, innerH);
-		drawSharedXAxis(g, x, innerH, coastalPoints);
+	function measureTideWidth() {
+		if (tideContainer) tideWidth = tideContainer.clientWidth;
 	}
 
 	onMount(() => {
+		measureTideWidth();
+
 		let resizeTimer: ReturnType<typeof setTimeout>;
 		function handleResize() {
 			clearTimeout(resizeTimer);
 			resizeTimer = setTimeout(() => {
 				if (coastalPoints.length > 0 && waveSvg) drawWaveChart();
 				if (coastalPoints.length > 0 && windSvg) drawWindChart();
-				if (coastalPoints.length > 0 && tideSvg) drawTideChart();
+				measureTideWidth();
 			}, 150);
 		}
 
@@ -440,8 +404,9 @@
 		if (coastalPoints.length > 0 && windSvg) drawWindChart();
 	});
 
+	// Re-measure tide width when coastal points arrive
 	$effect(() => {
-		if (coastalPoints.length > 0 && tideSvg) drawTideChart();
+		if (coastalPoints.length > 1) measureTideWidth();
 	});
 </script>
 
@@ -543,15 +508,57 @@
 
 		<div class="chart-section chart-section-last">
 			<div class="section-label">Tides (24h)</div>
-			<div class="chart-wrap">
-				<svg
-					class="chart-svg tide-svg"
-					bind:this={tideSvg}
-					role="img"
-					aria-label="24 hour tide chart"
-					onpointermove={(event) => handleHover(event, 'tide')}
-					onpointerleave={clearHover}
-				></svg>
+			<div class="chart-wrap" bind:this={tideContainer}>
+				{#if tideChartPaths}
+					<svg
+						class="chart-svg tide-svg"
+						width={tideWidth}
+						height={TIDE_HEIGHT}
+						role="img"
+						aria-label="24 hour tide chart"
+						onpointermove={(event) => handleHover(event, 'tide')}
+						onpointerleave={clearHover}
+					>
+						<g transform={`translate(${TIDE_MARGINS.left},${TIDE_MARGINS.top})`}>
+							{#if tideChartPaths.yMin < 0}
+								<line
+									x1="0"
+									x2={tideWidth - TIDE_MARGINS.left - TIDE_MARGINS.right}
+									y1={tideChartPaths.yScale(0)}
+									y2={tideChartPaths.yScale(0)}
+									stroke="#333"
+									stroke-dasharray="2,2"
+								/>
+							{/if}
+							<path d={tideChartPaths.areaPath} fill="rgba(16, 185, 129, 0.1)" />
+							<path d={tideChartPaths.linePath} fill="none" stroke={TIDE_ACCENT} stroke-width="1.5" />
+							{#if hoverState?.chart === 'tide'}
+								<line
+									x1={tideChartPaths.dots[hoverState.index].x}
+									x2={tideChartPaths.dots[hoverState.index].x}
+									y1="0"
+									y2={TIDE_HEIGHT - TIDE_MARGINS.top - TIDE_MARGINS.bottom}
+									stroke="rgba(255,255,255,0.35)"
+									stroke-width="1"
+									stroke-dasharray="3,3"
+								/>
+								<circle
+									cx={tideChartPaths.dots[hoverState.index].x}
+									cy={tideChartPaths.dots[hoverState.index].y}
+									r="4"
+									fill={TIDE_ACCENT}
+									stroke="#111"
+									stroke-width="1"
+								/>
+							{/if}
+							<text x="-4" y={tideChartPaths.yScale(tideChartPaths.yMax)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="8px">{tideChartPaths.yMax.toFixed(1)}'</text>
+							<text x="-4" y={tideChartPaths.yScale(tideChartPaths.yMin)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="8px">{tideChartPaths.yMin.toFixed(1)}'</text>
+							{#each tideChartPaths.axisLabels.x as lbl}
+								<text x={lbl.x} y={TIDE_HEIGHT - TIDE_MARGINS.top - TIDE_MARGINS.bottom + 12} text-anchor="middle" fill="#666" font-size="7px">{lbl.label}</text>
+							{/each}
+						</g>
+					</svg>
+				{/if}
 				{#if hoverState?.chart === 'tide'}
 					<div class="chart-tooltip" style={`left:${Math.max(16, hoverState.x - 58)}px`}>
 						<div class="tooltip-time">

@@ -6,11 +6,7 @@
 	import { fetchHourlyForecast, fetchDailyRainForecast } from '$lib/api/marin/nws-hourly';
 	import { fetchSunTimes } from '$lib/api/marin/sun';
 	import type { SunData } from '$lib/api/marin/sun';
-	import { select } from 'd3-selection';
-	import type { Selection } from 'd3-selection';
-	import { scaleLinear } from 'd3-scale';
-	import type { ScaleLinear } from 'd3-scale';
-	import { area, line, curveBasis } from 'd3-shape';
+	import { buildChart, type ChartPaths } from '$lib/utils/chart';
 
 	interface Props {
 		forecast: (WeatherData & { name: string })[];
@@ -29,6 +25,15 @@
 		tone?: 'default' | 'accent' | 'warning';
 	};
 
+	type HoverState = { chart: 'temp' | 'precip'; index: number; x: number } | null;
+
+	const TEMP_ACCENT = '#4488ff';
+	const PRECIP_ACCENT = '#22c55e';
+	const TEMP_HEIGHT = 196;
+	const PRECIP_HEIGHT = 144;
+	const TEMP_MARGINS = { top: 8, right: 4, bottom: 18, left: 24 };
+	const PRECIP_MARGINS = { top: 8, right: 4, bottom: 16, left: 24 };
+
 	let {
 		forecast = [],
 		alerts = [],
@@ -40,15 +45,45 @@
 	}: Props = $props();
 
 	const currentPeriod = $derived(forecast[0] ?? null);
-	const CHART_LEFT = 24;
-	const CHART_RIGHT = 4;
 
 	let hourlyData = $state<HourlyPeriod[]>([]);
 	let dailyRain = $state<DailyRainForecast[]>([]);
 	let sunData = $state<SunData | null>(null);
-	let hourlySvg = $state<SVGSVGElement>(undefined!);
-	let precipSvg = $state<SVGSVGElement>(undefined!);
-	let hoverState = $state<{ chart: 'temp' | 'precip'; index: number; x: number } | null>(null);
+	let tempContainer = $state<HTMLDivElement>(undefined!);
+	let precipContainer = $state<HTMLDivElement>(undefined!);
+	let tempWidth = $state(0);
+	let precipWidth = $state(0);
+	let hoverState = $state<HoverState>(null);
+
+	// Build chart geometry reactively via shared utility
+	const tempChartPaths = $derived.by<ChartPaths | null>(() => {
+		if (tempWidth === 0 || hourlyData.length < 2) return null;
+		return buildChart({
+			width: tempWidth,
+			height: TEMP_HEIGHT,
+			margins: TEMP_MARGINS,
+			accentColor: TEMP_ACCENT,
+			data: hourlyData.map((h) => ({
+				value: h.temperature,
+				label: formatHour(h.startTime)
+			}))
+		});
+	});
+
+	const precipChartPaths = $derived.by<ChartPaths | null>(() => {
+		if (precipWidth === 0 || hourlyData.length < 2) return null;
+		return buildChart({
+			width: precipWidth,
+			height: PRECIP_HEIGHT,
+			margins: PRECIP_MARGINS,
+			accentColor: PRECIP_ACCENT,
+			data: hourlyData.map((h) => ({
+				value: Math.max(0, Math.min(100, h.precipitationChance)),
+				label: formatHour(h.startTime)
+			}))
+		});
+	});
+
 	const summarySignals = $derived.by<SummarySignal[]>(() => {
 		if (hourlyData.length === 0) return [];
 		const temps = hourlyData.map((period) => period.temperature);
@@ -133,191 +168,38 @@
 		return nums.reduce((sum, num) => sum + num, 0) / nums.length;
 	}
 
-	function handleHover(event: PointerEvent, chart: 'temp' | 'precip') {
-		if (hourlyData.length === 0) return;
+	function updateHover(event: PointerEvent, chart: 'temp' | 'precip') {
+		const paths = chart === 'temp' ? tempChartPaths : precipChartPaths;
+		const margins = chart === 'temp' ? TEMP_MARGINS : PRECIP_MARGINS;
+		if (!paths) return;
 		const target = event.currentTarget as SVGSVGElement;
 		const rect = target.getBoundingClientRect();
-		const innerWidth = rect.width - CHART_LEFT - CHART_RIGHT;
-		const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - CHART_LEFT));
+		const innerWidth = rect.width - margins.left - margins.right;
+		const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - margins.left));
 		const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
 		const index = Math.max(
 			0,
-			Math.min(hourlyData.length - 1, Math.round(ratio * (hourlyData.length - 1)))
+			Math.min(paths.dots.length - 1, Math.round(ratio * (paths.dots.length - 1)))
 		);
-		const pointX = CHART_LEFT + (innerWidth * index) / Math.max(hourlyData.length - 1, 1);
-		hoverState = { chart, index, x: pointX };
+		hoverState = { chart, index, x: margins.left + paths.dots[index].x };
 	}
 
 	function clearHover() {
 		hoverState = null;
 	}
 
-	function drawHoverGuide(
-		g: Selection<SVGGElement, unknown, null, undefined>,
-		x: ScaleLinear<number, number>,
-		innerH: number
-	) {
-		if (!hoverState) return;
-		g.append('line')
-			.attr('x1', x(hoverState.index))
-			.attr('x2', x(hoverState.index))
-			.attr('y1', 0)
-			.attr('y2', innerH)
-			.attr('stroke', 'rgba(255,255,255,0.35)')
-			.attr('stroke-width', 1)
-			.attr('stroke-dasharray', '3,3');
-	}
-
-	function drawTempChart() {
-		if (!hourlySvg || hourlyData.length === 0) return;
-
-		const svg = select(hourlySvg);
-		svg.selectAll('*').remove();
-
-		const width = hourlySvg.clientWidth;
-		const height = 196;
-		const margin = { top: 8, right: CHART_RIGHT, bottom: 18, left: CHART_LEFT };
-		const innerW = width - margin.left - margin.right;
-		const innerH = height - margin.top - margin.bottom;
-
-		const temps = hourlyData.map((d) => d.temperature);
-		const yMin = Math.min(...temps) - 2;
-		const yMax = Math.max(...temps) + 2;
-
-		const x = scaleLinear()
-			.domain([0, hourlyData.length - 1])
-			.range([0, innerW]);
-		const y = scaleLinear().domain([yMin, yMax]).range([innerH, 0]);
-
-		const g = svg
-			.attr('width', width)
-			.attr('height', height)
-			.append('g')
-			.attr('transform', `translate(${margin.left},${margin.top})`);
-
-		const areaGen = area<HourlyPeriod>()
-			.x((_d, i) => x(i))
-			.y0(innerH)
-			.y1((d) => y(d.temperature))
-			.curve(curveBasis);
-
-		g.append('path').datum(hourlyData).attr('d', areaGen).attr('fill', 'rgba(68, 136, 255, 0.1)');
-
-		const lineGen = line<HourlyPeriod>()
-			.x((_d, i) => x(i))
-			.y((d) => y(d.temperature))
-			.curve(curveBasis);
-
-		g.append('path')
-			.datum(hourlyData)
-			.attr('d', lineGen)
-			.attr('fill', 'none')
-			.attr('stroke', '#4488ff')
-			.attr('stroke-width', 1.5);
-
-		g.append('text')
-			.attr('x', -4)
-			.attr('y', y(yMax))
-			.attr('text-anchor', 'end')
-			.attr('dominant-baseline', 'middle')
-			.attr('fill', '#888')
-			.attr('font-size', '8px')
-			.text(`${Math.round(yMax)}°`);
-
-		g.append('text')
-			.attr('x', -4)
-			.attr('y', y(yMin))
-			.attr('text-anchor', 'end')
-			.attr('dominant-baseline', 'middle')
-			.attr('fill', '#888')
-			.attr('font-size', '8px')
-			.text(`${Math.round(yMin)}°`);
-
-		drawHoverGuide(g, x, innerH);
-
-		for (let i = 0; i < hourlyData.length; i += 4) {
-			g.append('text')
-				.attr('x', x(i))
-				.attr('y', innerH + 12)
-				.attr('text-anchor', 'middle')
-				.attr('fill', '#666')
-				.attr('font-size', '7px')
-				.text(formatHour(hourlyData[i].startTime));
-		}
-	}
-
-	function drawPrecipChart() {
-		if (!precipSvg || hourlyData.length === 0) return;
-
-		const svg = select(precipSvg);
-		svg.selectAll('*').remove();
-
-		const width = precipSvg.clientWidth;
-		const height = 144;
-		const margin = { top: 8, right: CHART_RIGHT, bottom: 16, left: CHART_LEFT };
-		const innerW = width - margin.left - margin.right;
-		const innerH = height - margin.top - margin.bottom;
-
-		const x = scaleLinear()
-			.domain([0, hourlyData.length - 1])
-			.range([0, innerW]);
-		const y = scaleLinear().domain([0, 100]).range([innerH, 0]);
-
-		const g = svg
-			.attr('width', width)
-			.attr('height', height)
-			.append('g')
-			.attr('transform', `translate(${margin.left},${margin.top})`);
-
-		const areaGen = area<HourlyPeriod>()
-			.x((_d, i) => x(i))
-			.y0(innerH)
-			.y1((d) => y(Math.max(0, Math.min(100, d.precipitationChance))))
-			.curve(curveBasis);
-
-		g.append('path').datum(hourlyData).attr('d', areaGen).attr('fill', 'rgba(34, 197, 94, 0.14)');
-
-		const lineGen = line<HourlyPeriod>()
-			.x((_d, i) => x(i))
-			.y((d) => y(Math.max(0, Math.min(100, d.precipitationChance))))
-			.curve(curveBasis);
-
-		g.append('path')
-			.datum(hourlyData)
-			.attr('d', lineGen)
-			.attr('fill', 'none')
-			.attr('stroke', '#22c55e')
-			.attr('stroke-width', 1.4);
-
-		g.append('text')
-			.attr('x', -4)
-			.attr('y', y(100))
-			.attr('text-anchor', 'end')
-			.attr('dominant-baseline', 'middle')
-			.attr('fill', '#888')
-			.attr('font-size', '8px')
-			.text('100%');
-
-		g.append('text')
-			.attr('x', -4)
-			.attr('y', y(0))
-			.attr('text-anchor', 'end')
-			.attr('dominant-baseline', 'middle')
-			.attr('fill', '#888')
-			.attr('font-size', '8px')
-			.text('0%');
-
-		drawHoverGuide(g, x, innerH);
+	function measureWidths() {
+		if (tempContainer) tempWidth = tempContainer.clientWidth;
+		if (precipContainer) precipWidth = precipContainer.clientWidth;
 	}
 
 	onMount(() => {
+		measureWidths();
+
 		let resizeTimer: ReturnType<typeof setTimeout>;
 		function handleResize() {
 			clearTimeout(resizeTimer);
-			resizeTimer = setTimeout(() => {
-				if (hourlyData.length > 0 && hourlySvg) drawTempChart();
-				if (hourlyData.length > 0 && precipSvg) drawPrecipChart();
-			}, 150);
+			resizeTimer = setTimeout(measureWidths, 150);
 		}
 
 		window.addEventListener('resize', handleResize);
@@ -337,12 +219,9 @@
 		};
 	});
 
+	// Re-measure widths when hourly data arrives
 	$effect(() => {
-		if (hourlyData.length > 0 && hourlySvg) drawTempChart();
-	});
-
-	$effect(() => {
-		if (hourlyData.length > 0 && precipSvg) drawPrecipChart();
+		if (hourlyData.length > 1) measureWidths();
 	});
 </script>
 
@@ -378,18 +257,50 @@
 			</div>
 		</div>
 
-		{#if hourlyData.length > 0}
+		{#if hourlyData.length > 1}
 			<div class="chart-section">
 				<div class="section-label">24h Temperature</div>
-				<div class="chart-wrap">
-					<svg
-						class="chart-svg temp-svg"
-						bind:this={hourlySvg}
-						role="img"
-						aria-label="24 hour temperature chart"
-						onpointermove={(event) => handleHover(event, 'temp')}
-						onpointerleave={clearHover}
-					></svg>
+				<div class="chart-wrap" bind:this={tempContainer}>
+					{#if tempChartPaths}
+						<svg
+							class="chart-svg temp-svg"
+							width={tempWidth}
+							height={TEMP_HEIGHT}
+							role="img"
+							aria-label="24 hour temperature chart"
+							onpointermove={(event) => updateHover(event, 'temp')}
+							onpointerleave={clearHover}
+						>
+							<g transform={`translate(${TEMP_MARGINS.left},${TEMP_MARGINS.top})`}>
+								<path d={tempChartPaths.areaPath} fill="rgba(68, 136, 255, 0.1)" />
+								<path d={tempChartPaths.linePath} fill="none" stroke={TEMP_ACCENT} stroke-width="1.5" />
+								{#if hoverState?.chart === 'temp'}
+									<line
+										x1={tempChartPaths.dots[hoverState.index].x}
+										x2={tempChartPaths.dots[hoverState.index].x}
+										y1="0"
+										y2={TEMP_HEIGHT - TEMP_MARGINS.top - TEMP_MARGINS.bottom}
+										stroke="rgba(255,255,255,0.35)"
+										stroke-width="1"
+										stroke-dasharray="3,3"
+									/>
+									<circle
+										cx={tempChartPaths.dots[hoverState.index].x}
+										cy={tempChartPaths.dots[hoverState.index].y}
+										r="4"
+										fill={TEMP_ACCENT}
+										stroke="#111"
+										stroke-width="1"
+									/>
+								{/if}
+								<text x="-4" y={tempChartPaths.yScale(tempChartPaths.yMax)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="8px">{Math.round(tempChartPaths.yMax)}°</text>
+								<text x="-4" y={tempChartPaths.yScale(tempChartPaths.yMin)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="8px">{Math.round(tempChartPaths.yMin)}°</text>
+								{#each tempChartPaths.axisLabels.x as lbl}
+									<text x={lbl.x} y={TEMP_HEIGHT - TEMP_MARGINS.top - TEMP_MARGINS.bottom + 12} text-anchor="middle" fill="#666" font-size="7px">{lbl.label}</text>
+								{/each}
+							</g>
+						</svg>
+					{/if}
 					{#if hoverState?.chart === 'temp'}
 						<div class="chart-tooltip" style={`left:${Math.max(16, hoverState.x - 58)}px`}>
 							<div class="tooltip-time">
@@ -409,18 +320,50 @@
 			</div>
 		{/if}
 
-		{#if hourlyData.length > 0}
+		{#if hourlyData.length > 1}
 			<div class="chart-section precip-section">
 				<div class="section-label">Chance of Precipitation (24h)</div>
-				<div class="chart-wrap">
-					<svg
-						class="chart-svg precip-svg"
-						bind:this={precipSvg}
-						role="img"
-						aria-label="24 hour precipitation chance chart"
-						onpointermove={(event) => handleHover(event, 'precip')}
-						onpointerleave={clearHover}
-					></svg>
+				<div class="chart-wrap" bind:this={precipContainer}>
+					{#if precipChartPaths}
+						<svg
+							class="chart-svg precip-svg"
+							width={precipWidth}
+							height={PRECIP_HEIGHT}
+							role="img"
+							aria-label="24 hour precipitation chance chart"
+							onpointermove={(event) => updateHover(event, 'precip')}
+							onpointerleave={clearHover}
+						>
+							<g transform={`translate(${PRECIP_MARGINS.left},${PRECIP_MARGINS.top})`}>
+								<path d={precipChartPaths.areaPath} fill="rgba(34, 197, 94, 0.14)" />
+								<path d={precipChartPaths.linePath} fill="none" stroke={PRECIP_ACCENT} stroke-width="1.4" />
+								{#if hoverState?.chart === 'precip'}
+									<line
+										x1={precipChartPaths.dots[hoverState.index].x}
+										x2={precipChartPaths.dots[hoverState.index].x}
+										y1="0"
+										y2={PRECIP_HEIGHT - PRECIP_MARGINS.top - PRECIP_MARGINS.bottom}
+										stroke="rgba(255,255,255,0.35)"
+										stroke-width="1"
+										stroke-dasharray="3,3"
+									/>
+									<circle
+										cx={precipChartPaths.dots[hoverState.index].x}
+										cy={precipChartPaths.dots[hoverState.index].y}
+										r="4"
+										fill={PRECIP_ACCENT}
+										stroke="#111"
+										stroke-width="1"
+									/>
+								{/if}
+								<text x="-4" y={precipChartPaths.yScale(precipChartPaths.yMax)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="8px">{Math.round(precipChartPaths.yMax)}%</text>
+								<text x="-4" y={precipChartPaths.yScale(precipChartPaths.yMin)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="8px">{Math.round(precipChartPaths.yMin)}%</text>
+								{#each precipChartPaths.axisLabels.x as lbl}
+									<text x={lbl.x} y={PRECIP_HEIGHT - PRECIP_MARGINS.top - PRECIP_MARGINS.bottom + 12} text-anchor="middle" fill="#666" font-size="7px">{lbl.label}</text>
+								{/each}
+							</g>
+						</svg>
+					{/if}
 					{#if hoverState?.chart === 'precip'}
 						<div class="chart-tooltip" style={`left:${Math.max(16, hoverState.x - 58)}px`}>
 							<div class="tooltip-time">

@@ -5,10 +5,8 @@
 	import { townFilter } from '$lib/stores/town-filter';
 	import { fetchHousingData, type HousingMetric } from '$lib/api/marin/housing';
 	import { select } from 'd3-selection';
-	import type { Selection } from 'd3-selection';
 	import { scaleLinear } from 'd3-scale';
-	import type { ScaleLinear } from 'd3-scale';
-	import { area, line, curveMonotoneX } from 'd3-shape';
+	import { buildChart, type ChartPaths } from '$lib/utils/chart';
 
 	type HoverChart = 'price' | 'inventory';
 	type HoverState = { chart: HoverChart; index: number; x: number } | null;
@@ -19,11 +17,15 @@
 		tone?: 'default' | 'positive' | 'warning';
 	};
 
-	const CHART_LEFT = 44;
-	const CHART_RIGHT = 10;
+	const PRICE_ACCENT = '#f59e0b';
+	const PRICE_HEIGHT = 236;
+	const PRICE_MARGINS = { top: 12, right: 10, bottom: 24, left: 44 };
+	const INV_HEIGHT = 148;
+	const INV_MARGINS = { top: 8, right: 10, bottom: 22, left: 44 };
 
 	let housingData = $state<HousingMetric[]>([]);
-	let priceSvg = $state<SVGSVGElement>(undefined!);
+	let priceContainer = $state<HTMLDivElement>(undefined!);
+	let priceWidth = $state(0);
 	let inventorySvg = $state<SVGSVGElement>(undefined!);
 	let dataLoading = $state(false);
 	let hoverState = $state<HoverState>(null);
@@ -34,6 +36,22 @@
 	const firstMetrics = $derived(housingData.length > 0 ? housingData[0] : null);
 	const priceData = $derived(housingData.filter((d) => d.medianPrice !== null));
 	const inventoryData = $derived(housingData.filter((d) => d.inventory !== null));
+
+	// Build price chart geometry reactively via shared utility
+	const priceChartPaths = $derived.by<ChartPaths | null>(() => {
+		if (priceWidth === 0 || priceData.length < 2) return null;
+		return buildChart({
+			width: priceWidth,
+			height: PRICE_HEIGHT,
+			margins: PRICE_MARGINS,
+			accentColor: PRICE_ACCENT,
+			data: priceData.map((d) => ({
+				value: d.medianPrice!,
+				label: formatMonthLabel(d.month)
+			}))
+		});
+	});
+
 	const summaryCards = $derived.by<SummaryCard[]>(() => {
 		if (!latestMetrics || !firstMetrics) return [];
 
@@ -145,141 +163,34 @@
 		};
 	}
 
-	function getSeries(chart: HoverChart): HousingMetric[] {
-		return chart === 'price' ? priceData : inventoryData;
-	}
-
 	function updateHover(event: PointerEvent, chart: HoverChart) {
-		const series = getSeries(chart);
-		if (series.length === 0) return;
-		const target = event.currentTarget as SVGSVGElement;
-		const rect = target.getBoundingClientRect();
-		const innerWidth = rect.width - CHART_LEFT - CHART_RIGHT;
-		const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - CHART_LEFT));
-		const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
-		const index = Math.max(0, Math.min(series.length - 1, Math.round(ratio * (series.length - 1))));
-		const pointX = CHART_LEFT + (innerWidth * index) / Math.max(series.length - 1, 1);
-		hoverState = { chart, index, x: pointX };
+		if (chart === 'price') {
+			if (!priceChartPaths) return;
+			const target = event.currentTarget as SVGSVGElement;
+			const rect = target.getBoundingClientRect();
+			const innerWidth = rect.width - PRICE_MARGINS.left - PRICE_MARGINS.right;
+			const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - PRICE_MARGINS.left));
+			const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
+			const index = Math.max(0, Math.min(priceChartPaths.dots.length - 1, Math.round(ratio * (priceChartPaths.dots.length - 1))));
+			hoverState = { chart, index, x: PRICE_MARGINS.left + priceChartPaths.dots[index].x };
+		} else {
+			if (inventoryData.length === 0) return;
+			const target = event.currentTarget as SVGSVGElement;
+			const rect = target.getBoundingClientRect();
+			const innerWidth = rect.width - INV_MARGINS.left - INV_MARGINS.right;
+			const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - INV_MARGINS.left));
+			const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
+			const index = Math.max(0, Math.min(inventoryData.length - 1, Math.round(ratio * (inventoryData.length - 1))));
+			const pointX = INV_MARGINS.left + (innerWidth * index) / Math.max(inventoryData.length - 1, 1);
+			hoverState = { chart, index, x: pointX };
+		}
 	}
 
 	function clearHover() {
 		hoverState = null;
 	}
 
-	function drawSharedXAxis(
-		g: Selection<SVGGElement, unknown, null, undefined>,
-		x: ScaleLinear<number, number>,
-		innerH: number,
-		series: HousingMetric[]
-	) {
-		const labelIndices = [0, Math.floor(series.length / 2), series.length - 1];
-		for (const idx of labelIndices) {
-			g.append('text')
-				.attr('x', x(idx))
-				.attr('y', innerH + 14)
-				.attr('text-anchor', 'middle')
-				.attr('fill', '#666')
-				.attr('font-size', '7px')
-				.text(formatMonthLabel(series[idx].month));
-		}
-	}
-
-	function drawPriceChart() {
-		if (!priceSvg || priceData.length < 2) return;
-
-		const svg = select(priceSvg);
-		svg.selectAll('*').remove();
-
-		const width = priceSvg.clientWidth;
-		const height = 236;
-		const margin = { top: 12, right: CHART_RIGHT, bottom: 24, left: CHART_LEFT };
-		const innerW = width - margin.left - margin.right;
-		const innerH = height - margin.top - margin.bottom;
-
-		const prices = priceData.map((d) => d.medianPrice!);
-		const yMin = Math.min(...prices) * 0.95;
-		const yMax = Math.max(...prices) * 1.05;
-
-		const x = scaleLinear()
-			.domain([0, priceData.length - 1])
-			.range([0, innerW]);
-		const y = scaleLinear().domain([yMin, yMax]).range([innerH, 0]);
-
-		const g = svg
-			.attr('width', width)
-			.attr('height', height)
-			.append('g')
-			.attr('transform', `translate(${margin.left},${margin.top})`);
-
-		const areaGen = area<HousingMetric>()
-			.x((_d, i) => x(i))
-			.y0(innerH)
-			.y1((d) => y(d.medianPrice!))
-			.curve(curveMonotoneX);
-
-		g.append('path').datum(priceData).attr('d', areaGen).attr('fill', 'rgba(245, 158, 11, 0.1)');
-
-		const lineGen = line<HousingMetric>()
-			.x((_d, i) => x(i))
-			.y((d) => y(d.medianPrice!))
-			.curve(curveMonotoneX);
-
-		g.append('path')
-			.datum(priceData)
-			.attr('d', lineGen)
-			.attr('fill', 'none')
-			.attr('stroke', '#f59e0b')
-			.attr('stroke-width', 1.5);
-
-		g.selectAll('.dot')
-			.data(priceData)
-			.enter()
-			.append('circle')
-			.attr('cx', (_d, i) => x(i))
-			.attr('cy', (d) => y(d.medianPrice!))
-			.attr('r', 2.2)
-			.attr('fill', '#f59e0b');
-
-		if (hoverState?.chart === 'price') {
-			g.append('line')
-				.attr('x1', x(hoverState.index))
-				.attr('x2', x(hoverState.index))
-				.attr('y1', 0)
-				.attr('y2', innerH)
-				.attr('stroke', 'rgba(255,255,255,0.35)')
-				.attr('stroke-width', 1)
-				.attr('stroke-dasharray', '3,3');
-
-			g.append('circle')
-				.attr('cx', x(hoverState.index))
-				.attr('cy', y(priceData[hoverState.index].medianPrice!))
-				.attr('r', 4)
-				.attr('fill', '#f59e0b')
-				.attr('stroke', '#111')
-				.attr('stroke-width', 1);
-		}
-
-		g.append('text')
-			.attr('x', -4)
-			.attr('y', y(yMax))
-			.attr('text-anchor', 'end')
-			.attr('dominant-baseline', 'middle')
-			.attr('fill', '#888')
-			.attr('font-size', '7px')
-			.text(formatPrice(yMax));
-
-		g.append('text')
-			.attr('x', -4)
-			.attr('y', y(yMin))
-			.attr('text-anchor', 'end')
-			.attr('dominant-baseline', 'middle')
-			.attr('fill', '#888')
-			.attr('font-size', '7px')
-			.text(formatPrice(yMin));
-
-		drawSharedXAxis(g, x, innerH, priceData);
-	}
-
+	// Inventory chart stays imperative (bar chart — not an area/line pattern)
 	function drawInventoryChart() {
 		if (!inventorySvg || inventoryData.length < 2) return;
 
@@ -287,10 +198,8 @@
 		svg.selectAll('*').remove();
 
 		const width = inventorySvg.clientWidth;
-		const height = 148;
-		const margin = { top: 8, right: CHART_RIGHT, bottom: 22, left: CHART_LEFT };
-		const innerW = width - margin.left - margin.right;
-		const innerH = height - margin.top - margin.bottom;
+		const innerW = width - INV_MARGINS.left - INV_MARGINS.right;
+		const innerH = INV_HEIGHT - INV_MARGINS.top - INV_MARGINS.bottom;
 
 		const inventories = inventoryData.map((d) => d.inventory!);
 		const yMax = Math.max(...inventories) * 1.1;
@@ -303,9 +212,9 @@
 
 		const g = svg
 			.attr('width', width)
-			.attr('height', height)
+			.attr('height', INV_HEIGHT)
 			.append('g')
-			.attr('transform', `translate(${margin.left},${margin.top})`);
+			.attr('transform', `translate(${INV_MARGINS.left},${INV_MARGINS.top})`);
 
 		g.selectAll('rect')
 			.data(inventoryData)
@@ -347,15 +256,30 @@
 			.attr('font-size', '7px')
 			.text('0');
 
-		drawSharedXAxis(g, x, innerH, inventoryData);
+		const labelIndices = [0, Math.floor(inventoryData.length / 2), inventoryData.length - 1];
+		for (const idx of labelIndices) {
+			g.append('text')
+				.attr('x', x(idx))
+				.attr('y', innerH + 14)
+				.attr('text-anchor', 'middle')
+				.attr('fill', '#666')
+				.attr('font-size', '7px')
+				.text(formatMonthLabel(inventoryData[idx].month));
+		}
+	}
+
+	function measureWidth() {
+		if (priceContainer) priceWidth = priceContainer.clientWidth;
 	}
 
 	onMount(() => {
+		measureWidth();
+
 		let resizeTimer: ReturnType<typeof setTimeout>;
 		function handleResize() {
 			clearTimeout(resizeTimer);
 			resizeTimer = setTimeout(() => {
-				if (priceData.length > 1 && priceSvg) drawPriceChart();
+				measureWidth();
 				if (inventoryData.length > 1 && inventorySvg) drawInventoryChart();
 			}, 150);
 		}
@@ -376,10 +300,12 @@
 		};
 	});
 
+	// Re-measure width when data arrives
 	$effect(() => {
-		if (priceData.length > 1 && priceSvg) drawPriceChart();
+		if (priceData.length > 1) measureWidth();
 	});
 
+	// Inventory bar chart still needs imperative redraw
 	$effect(() => {
 		if (inventoryData.length > 1 && inventorySvg) drawInventoryChart();
 	});
@@ -421,15 +347,50 @@
 	{#if priceData.length > 1}
 		<div class="chart-section">
 			<div class="section-label">Median Sale Price (12 mo)</div>
-			<div class="chart-wrap">
-				<svg
-					class="chart-svg price-chart-svg"
-					bind:this={priceSvg}
-					role="img"
-					aria-label="12 month median sale price chart"
-					onpointermove={(event) => updateHover(event, 'price')}
-					onpointerleave={clearHover}
-				></svg>
+			<div class="chart-wrap" bind:this={priceContainer}>
+				{#if priceChartPaths}
+					<svg
+						class="chart-svg price-chart-svg"
+						width={priceWidth}
+						height={PRICE_HEIGHT}
+						role="img"
+						aria-label="12 month median sale price chart"
+						onpointermove={(event) => updateHover(event, 'price')}
+						onpointerleave={clearHover}
+					>
+						<g transform={`translate(${PRICE_MARGINS.left},${PRICE_MARGINS.top})`}>
+							<path d={priceChartPaths.areaPath} fill="rgba(245, 158, 11, 0.1)" />
+							<path d={priceChartPaths.linePath} fill="none" stroke={PRICE_ACCENT} stroke-width="1.5" />
+							{#each priceChartPaths.dots as dot}
+								<circle cx={dot.x} cy={dot.y} r="2.2" fill={PRICE_ACCENT} />
+							{/each}
+							{#if hoverState?.chart === 'price'}
+								<line
+									x1={priceChartPaths.dots[hoverState.index].x}
+									x2={priceChartPaths.dots[hoverState.index].x}
+									y1="0"
+									y2={PRICE_HEIGHT - PRICE_MARGINS.top - PRICE_MARGINS.bottom}
+									stroke="rgba(255,255,255,0.35)"
+									stroke-width="1"
+									stroke-dasharray="3,3"
+								/>
+								<circle
+									cx={priceChartPaths.dots[hoverState.index].x}
+									cy={priceChartPaths.dots[hoverState.index].y}
+									r="4"
+									fill={PRICE_ACCENT}
+									stroke="#111"
+									stroke-width="1"
+								/>
+							{/if}
+							<text x="-4" y={priceChartPaths.yScale(priceChartPaths.yMax)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{formatPrice(priceChartPaths.yMax)}</text>
+							<text x="-4" y={priceChartPaths.yScale(priceChartPaths.yMin)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{formatPrice(priceChartPaths.yMin)}</text>
+							{#each priceChartPaths.axisLabels.x as lbl}
+								<text x={lbl.x} y={PRICE_HEIGHT - PRICE_MARGINS.top - PRICE_MARGINS.bottom + 14} text-anchor="middle" fill="#666" font-size="7px">{lbl.label}</text>
+							{/each}
+						</g>
+					</svg>
+				{/if}
 				{#if hoverState?.chart === 'price'}
 					<div class="chart-tooltip" style={`left:${Math.max(20, hoverState.x - 64)}px`}>
 						<div class="tooltip-time">{formatMonthLabel(priceData[hoverState.index].month)}</div>
