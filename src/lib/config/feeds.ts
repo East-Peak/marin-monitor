@@ -1,7 +1,9 @@
 /**
  * Marin County RSS feed and news source configuration
  *
- * All feeds verified working as of 2026-02-26 unless marked broken.
+ * All feeds verified working as of 2026-04-03 unless marked broken.
+ * Marin IJ feeds switched from /feed/ and /location/ paths (403 since ~Apr 2026)
+ * to /tag/ paths which still work.
  * Dead/broken feeds are commented out with date and reason.
  */
 
@@ -22,7 +24,7 @@ export const FEEDS: Record<NewsCategory, FeedSource[]> = {
 		// --- Primary Marin sources ---
 		{
 			name: 'Marin Independent Journal',
-			url: 'https://www.marinij.com/feed/',
+			url: 'https://www.marinij.com/tag/news/feed/',
 			verification: 'local_media',
 			confirmed: true
 		},
@@ -81,7 +83,7 @@ export const FEEDS: Record<NewsCategory, FeedSource[]> = {
 		},
 		{
 			name: 'Marin IJ – Politics',
-			url: 'https://www.marinij.com/news/politics/feed/',
+			url: 'https://www.marinij.com/tag/politics/feed/',
 			verification: 'local_media',
 			confirmed: true
 		},
@@ -213,16 +215,16 @@ export const MARINIJ_TAG_FEEDS = {
  * Marin IJ per-city feeds — available for town-specific filtering
  */
 export const MARINIJ_LOCATION_FEEDS: Record<string, string> = {
-	'san-rafael': 'https://www.marinij.com/location/san-rafael/feed/',
-	novato: 'https://www.marinij.com/location/novato/feed/',
-	'mill-valley': 'https://www.marinij.com/location/mill-valley/feed/',
-	tiburon: 'https://www.marinij.com/location/tiburon/feed/',
-	sausalito: 'https://www.marinij.com/location/sausalito/feed/',
-	larkspur: 'https://www.marinij.com/location/larkspur/feed/',
-	'corte-madera': 'https://www.marinij.com/location/corte-madera/feed/',
-	'san-anselmo': 'https://www.marinij.com/location/san-anselmo/feed/',
-	fairfax: 'https://www.marinij.com/location/fairfax/feed/',
-	'marin-county': 'https://www.marinij.com/location/marin-county/feed/'
+	'san-rafael': 'https://www.marinij.com/tag/san-rafael/feed/',
+	novato: 'https://www.marinij.com/tag/novato/feed/',
+	'mill-valley': 'https://www.marinij.com/tag/mill-valley/feed/',
+	tiburon: 'https://www.marinij.com/tag/tiburon/feed/',
+	sausalito: 'https://www.marinij.com/tag/sausalito/feed/',
+	larkspur: 'https://www.marinij.com/tag/larkspur/feed/',
+	'corte-madera': 'https://www.marinij.com/tag/corte-madera/feed/',
+	'san-anselmo': 'https://www.marinij.com/tag/san-anselmo/feed/',
+	fairfax: 'https://www.marinij.com/tag/fairfax/feed/',
+	'marin-county': 'https://www.marinij.com/tag/marin-county/feed/'
 };
 
 /**
