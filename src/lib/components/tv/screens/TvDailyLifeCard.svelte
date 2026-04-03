@@ -72,8 +72,8 @@
 	const cappuccinoSparkline = $derived.by(() =>
 		makeSparkline(
 			cappuccino?.history?.map((h) => h.medianPrice) ?? [],
-			200,
-			40
+			80,
+			24
 		)
 	);
 
@@ -86,8 +86,8 @@
 	const grocerySparkline = $derived.by(() =>
 		makeSparkline(
 			grocery?.history?.map((h) => h.totalCheapest) ?? [],
-			200,
-			40
+			80,
+			24
 		)
 	);
 
@@ -121,8 +121,8 @@
 	const gasSparkline = $derived.by(() =>
 		makeSparkline(
 			gas?.history?.map((h) => h.avgRegular) ?? [],
-			200,
-			40
+			80,
+			24
 		)
 	);
 
@@ -166,7 +166,7 @@
 					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Cappuccino</span>
 					<span class="text-[10px] text-zinc-500">{cappuccino?.current?.pricedShopCount ?? 0} shops</span>
 				</div>
-				<div class="flex items-baseline gap-2 mt-1">
+				<div class="flex items-center gap-2 mt-1">
 					<span class="text-2xl font-bold tabular-nums" style="color: #a16207">
 						{fmtPrice(cappuccino?.current?.medianPrice)}
 					</span>
@@ -175,6 +175,12 @@
 						<span class="text-sm font-semibold tabular-nums {cappuccinoDelta.color}">
 							{cappuccinoDelta.text}
 						</span>
+					{/if}
+					{#if cappuccinoSparkline}
+						<svg viewBox="0 0 {cappuccinoSparkline.w} {cappuccinoSparkline.h}" class="w-20 h-6 shrink-0 ml-auto">
+							<path d={cappuccinoSparkline.areaPath} fill="#a16207" opacity="0.15" />
+							<path d={cappuccinoSparkline.linePath} fill="none" stroke="#a16207" stroke-width="1.5" />
+						</svg>
 					{/if}
 				</div>
 			</div>
@@ -198,24 +204,6 @@
 				{/if}
 			</div>
 
-			<!-- Sparkline -->
-			{#if cappuccinoSparkline}
-				<div class="mt-auto shrink-0 h-10 px-3 pb-2">
-					<svg
-						viewBox="0 0 {cappuccinoSparkline.w} {cappuccinoSparkline.h}"
-						class="w-full h-full"
-						preserveAspectRatio="none"
-					>
-						<path d={cappuccinoSparkline.areaPath} fill="#a16207" opacity="0.12" />
-						<path
-							d={cappuccinoSparkline.linePath}
-							fill="none"
-							stroke="#a16207"
-							stroke-width="1.5"
-						/>
-					</svg>
-				</div>
-			{/if}
 		</div>
 
 		<!-- GROCERY BASKET COLUMN -->
@@ -226,7 +214,7 @@
 					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Grocery Basket</span>
 					<span class="text-[10px] text-zinc-500">{grocery?.current?.itemsFound ?? 0} items</span>
 				</div>
-				<div class="flex items-baseline gap-2 mt-1">
+				<div class="flex items-center gap-2 mt-1">
 					<span class="text-2xl font-bold tabular-nums" style="color: #f59e0b">
 						{fmtPrice(grocery?.current?.totalCheapest)}
 					</span>
@@ -235,6 +223,12 @@
 						<span class="text-sm font-semibold tabular-nums {groceryDelta.color}">
 							{groceryDelta.text}
 						</span>
+					{/if}
+					{#if grocerySparkline}
+						<svg viewBox="0 0 {grocerySparkline.w} {grocerySparkline.h}" class="w-20 h-6 shrink-0 ml-auto">
+							<path d={grocerySparkline.areaPath} fill="#f59e0b" opacity="0.15" />
+							<path d={grocerySparkline.linePath} fill="none" stroke="#f59e0b" stroke-width="1.5" />
+						</svg>
 					{/if}
 				</div>
 			</div>
@@ -275,24 +269,6 @@
 				{/if}
 			</div>
 
-			<!-- Sparkline -->
-			{#if grocerySparkline}
-				<div class="mt-auto shrink-0 h-10 px-3 pb-2">
-					<svg
-						viewBox="0 0 {grocerySparkline.w} {grocerySparkline.h}"
-						class="w-full h-full"
-						preserveAspectRatio="none"
-					>
-						<path d={grocerySparkline.areaPath} fill="#f59e0b" opacity="0.12" />
-						<path
-							d={grocerySparkline.linePath}
-							fill="none"
-							stroke="#f59e0b"
-							stroke-width="1.5"
-						/>
-					</svg>
-				</div>
-			{/if}
 		</div>
 
 		<!-- GAS COLUMN -->
@@ -303,7 +279,7 @@
 					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Gas (Regular)</span>
 					<span class="text-[10px] text-zinc-500">{gas?.current?.stationCount ?? 0} stations</span>
 				</div>
-				<div class="flex items-baseline gap-2 mt-1">
+				<div class="flex items-center gap-2 mt-1">
 					<span class="text-2xl font-bold tabular-nums" style="color: #10b981">
 						{gas?.current?.avgRegular != null ? '$' + gas.current.avgRegular.toFixed(3) : '--'}
 					</span>
@@ -312,6 +288,12 @@
 						<span class="text-sm font-semibold tabular-nums {gasDelta.color}">
 							{gasDelta.text}
 						</span>
+					{/if}
+					{#if gasSparkline}
+						<svg viewBox="0 0 {gasSparkline.w} {gasSparkline.h}" class="w-20 h-6 shrink-0 ml-auto">
+							<path d={gasSparkline.areaPath} fill="#10b981" opacity="0.15" />
+							<path d={gasSparkline.linePath} fill="none" stroke="#10b981" stroke-width="1.5" />
+						</svg>
 					{/if}
 				</div>
 			</div>
@@ -347,24 +329,6 @@
 				{/if}
 			</div>
 
-			<!-- Sparkline -->
-			{#if gasSparkline}
-				<div class="mt-auto shrink-0 h-10 px-3 pb-2">
-					<svg
-						viewBox="0 0 {gasSparkline.w} {gasSparkline.h}"
-						class="w-full h-full"
-						preserveAspectRatio="none"
-					>
-						<path d={gasSparkline.areaPath} fill="#10b981" opacity="0.12" />
-						<path
-							d={gasSparkline.linePath}
-							fill="none"
-							stroke="#10b981"
-							stroke-width="1.5"
-						/>
-					</svg>
-				</div>
-			{/if}
 		</div>
 	</div>
 </div>

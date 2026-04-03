@@ -88,7 +88,7 @@
 			})
 			.filter((v): v is number => v != null);
 		if (values.length < 2) return null;
-		const w = 200, h = 40;
+		const w = 80, h = 24;
 		const x = scaleLinear().domain([0, values.length - 1]).range([0, w]);
 		const y = scaleLinear()
 			.domain([0, Math.max(...values) * 1.2])
@@ -133,7 +133,15 @@
 							<p class="text-[9px] text-zinc-500 uppercase">Gasoline</p>
 						</div>
 						<div class="text-center">
-							<span class="text-lg font-bold tabular-nums" style="color: #22c55e">{evShare}%</span>
+							<div class="flex items-center justify-center gap-1.5">
+								<span class="text-lg font-bold tabular-nums" style="color: #22c55e">{evShare}%</span>
+								{#if evSparkline}
+									<svg viewBox="0 0 {evSparkline.w} {evSparkline.h}" class="w-14 h-5 shrink-0">
+										<path d={evSparkline.areaPath} fill="#22c55e" opacity="0.15" />
+										<path d={evSparkline.linePath} fill="none" stroke="#22c55e" stroke-width="1.5" />
+									</svg>
+								{/if}
+							</div>
 							<p class="text-[9px] text-zinc-500 uppercase">EV</p>
 						</div>
 					</div>
@@ -195,22 +203,6 @@
 						<span class="text-[9px] text-zinc-400 ml-1">Hydrogen FCEVs (yes, {numberToWord(snapshot.funStats.hydrogen)})</span>
 					</div>
 
-					<!-- EV sparkline -->
-					{#if evSparkline}
-						<div class="mt-1 shrink-0">
-							<p class="text-[9px] text-zinc-500 mb-0.5">EV adoption trend</p>
-							<div class="h-8">
-								<svg
-									viewBox="0 0 {evSparkline.w} {evSparkline.h}"
-									class="w-full h-full"
-									preserveAspectRatio="none"
-								>
-									<path d={evSparkline.areaPath} fill="#22c55e" opacity="0.12" />
-									<path d={evSparkline.linePath} fill="none" stroke="#22c55e" stroke-width="1.5" />
-								</svg>
-							</div>
-						</div>
-					{/if}
 				</div>
 			</div>
 

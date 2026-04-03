@@ -42,9 +42,9 @@
 
 <div class="h-full flex flex-col p-2">
   <h2 class="text-xl font-bold text-gray-100 mb-2 px-2">{clusterLabel}</h2>
-  <div class="flex-1 grid grid-cols-4 gap-2 min-h-0">
+  <div class="flex-1 grid grid-cols-4 auto-rows-fr gap-2 min-h-0 overflow-hidden">
     {#each cameras as cam (cam.id)}
-      <div class="relative bg-gray-800 rounded overflow-hidden min-h-0">
+      <div class="relative bg-gray-800 rounded overflow-hidden min-h-0 min-w-0">
         {#if cam.type === 'image'}
           <img
             src={imageUrl(cam)}

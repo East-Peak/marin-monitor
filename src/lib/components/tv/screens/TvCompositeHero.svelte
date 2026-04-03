@@ -225,7 +225,7 @@
 				</div>
 
 				<!-- Sparkline -->
-				<div class="shrink-0 h-12 px-3 pt-2">
+				<div class="shrink-0 h-8 px-3 pt-2">
 					{#if heroSparkline}
 						<svg
 							viewBox="0 0 {heroSparkline.w} {heroSparkline.h}"

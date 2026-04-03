@@ -44,7 +44,7 @@
 		if (!history || history.length < 2) return null;
 		const values = history.map((h) => h.cumulativeK12).filter((v) => v != null);
 		if (values.length < 2) return null;
-		const w = 200, h = 36;
+		const w = 80, h = 24;
 		const x = scaleLinear().domain([0, values.length - 1]).range([0, w]);
 		const y = scaleLinear()
 			.domain([Math.min(...values) * 0.95, Math.max(...values) * 1.05])
@@ -91,7 +91,7 @@
 		if (housing.length < 2) return null;
 		const values = housing.map((h) => h.medianPrice).filter((v): v is number => v != null);
 		if (values.length < 2) return null;
-		const w = 200, h = 36;
+		const w = 80, h = 24;
 		const x = scaleLinear().domain([0, values.length - 1]).range([0, w]);
 		const y = scaleLinear()
 			.domain([Math.min(...values) * 0.95, Math.max(...values) * 1.05])
@@ -160,11 +160,19 @@
 			<!-- K-12 Cumulative -->
 			{#if tuition?.current?.cumulativeK12 != null}
 				<div class="px-3 py-2 border-b border-gray-700/30 bg-cyan-900/10">
-					<div class="flex items-baseline justify-between">
+					<div class="flex items-center justify-between">
 						<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">K-12 Cumulative</span>
-						<span class="text-xl font-bold tabular-nums" style="color: {CYAN}">
-							{fmtCurrency(tuition.current.cumulativeK12)}
-						</span>
+						<div class="flex items-center gap-3">
+							<span class="text-xl font-bold tabular-nums" style="color: {CYAN}">
+								{fmtCurrency(tuition.current.cumulativeK12)}
+							</span>
+							{#if k12Sparkline}
+								<svg viewBox="0 0 {k12Sparkline.w} {k12Sparkline.h}" class="w-20 h-6 shrink-0">
+									<path d={k12Sparkline.areaPath} fill={CYAN} opacity="0.15" />
+									<path d={k12Sparkline.linePath} fill="none" stroke={CYAN} stroke-width="1.5" />
+								</svg>
+							{/if}
+						</div>
 					</div>
 				</div>
 			{/if}
@@ -188,19 +196,6 @@
 				{/each}
 			</div>
 
-			<!-- K-12 Sparkline -->
-			{#if k12Sparkline}
-				<div class="mt-auto shrink-0 h-8 px-3 pb-1">
-					<svg
-						viewBox="0 0 {k12Sparkline.w} {k12Sparkline.h}"
-						class="w-full h-full"
-						preserveAspectRatio="none"
-					>
-						<path d={k12Sparkline.areaPath} fill={CYAN} opacity="0.12" />
-						<path d={k12Sparkline.linePath} fill="none" stroke={CYAN} stroke-width="1.5" />
-					</svg>
-				</div>
-			{/if}
 		</div>
 
 		<!-- HOUSING COLUMN -->
@@ -216,7 +211,7 @@
 			{#if latestHousing}
 				<!-- Median price headline -->
 				<div class="px-3 py-2 border-b border-gray-700/30">
-					<div class="flex items-baseline gap-2">
+					<div class="flex items-center gap-2">
 						<span class="text-2xl font-bold tabular-nums" style="color: {HOUSING_BLUE}">
 							{fmtCompact(latestHousing.medianPrice)}
 						</span>
@@ -225,6 +220,12 @@
 							<span class="text-sm font-semibold tabular-nums {priceDelta.color}">
 								{priceDelta.text}
 							</span>
+						{/if}
+						{#if housingSparkline}
+							<svg viewBox="0 0 {housingSparkline.w} {housingSparkline.h}" class="w-20 h-6 shrink-0 ml-auto">
+								<path d={housingSparkline.areaPath} fill={HOUSING_BLUE} opacity="0.15" />
+								<path d={housingSparkline.linePath} fill="none" stroke={HOUSING_BLUE} stroke-width="1.5" />
+							</svg>
 						{/if}
 					</div>
 				</div>
@@ -284,19 +285,6 @@
 					</div>
 				</div>
 
-				<!-- Sparkline -->
-				{#if housingSparkline}
-					<div class="mt-auto shrink-0 h-8 px-3 pb-1">
-						<svg
-							viewBox="0 0 {housingSparkline.w} {housingSparkline.h}"
-							class="w-full h-full"
-							preserveAspectRatio="none"
-						>
-							<path d={housingSparkline.areaPath} fill={HOUSING_BLUE} opacity="0.12" />
-							<path d={housingSparkline.linePath} fill="none" stroke={HOUSING_BLUE} stroke-width="1.5" />
-						</svg>
-					</div>
-				{/if}
 			{:else}
 				<div class="flex-1 flex items-center justify-center">
 					<p class="text-[10px] text-zinc-600">Housing data loading...</p>
