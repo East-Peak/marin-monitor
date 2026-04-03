@@ -1,13 +1,11 @@
 import { COFFEE_INDEX_DRINKS, COFFEE_PRIMARY_DRINK } from '$lib/config/coffee';
 import type { CoffeeDrinkId, CoffeeDrinkPrice, CoffeeIndexShop } from '$lib/types/coffee';
 
-const DRINK_LABELS = new Map(COFFEE_INDEX_DRINKS.map((drink) => [drink.id, drink.label]));
-
 export function formatCoffeePrice(price: number): string {
 	return `$${price.toFixed(2)}`;
 }
 
-export function getCoffeeDrinkOrder(preferred: CoffeeDrinkId = COFFEE_PRIMARY_DRINK): CoffeeDrinkId[] {
+function getCoffeeDrinkOrder(preferred: CoffeeDrinkId = COFFEE_PRIMARY_DRINK): CoffeeDrinkId[] {
 	const drinkIds = COFFEE_INDEX_DRINKS.map((drink) => drink.id);
 	return [preferred, ...drinkIds.filter((drinkId) => drinkId !== preferred)];
 }
@@ -60,8 +58,4 @@ export function sortCoffeeShopsByHeadline(
 		if (leftHeadline.price !== rightHeadline.price) return leftHeadline.price - rightHeadline.price;
 		return left.name.localeCompare(right.name);
 	});
-}
-
-export function getCoffeeDrinkLabel(drinkId: CoffeeDrinkId): string {
-	return DRINK_LABELS.get(drinkId) ?? drinkId.replace(/_/g, ' ');
 }
