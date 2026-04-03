@@ -42,3 +42,4 @@ data/strava-explore.state*
 archive/
 .vercel
 .env*.local
+tests/e2e/screenshots/
