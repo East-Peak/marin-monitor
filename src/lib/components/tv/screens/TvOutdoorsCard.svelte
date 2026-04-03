@@ -74,8 +74,8 @@
 	const allIntel = $derived([...primaryIntel, ...secondaryIntel].slice(0, 4));
 </script>
 
-<div class="h-full flex flex-col p-4">
-	<h2 class="text-xl font-bold text-gray-100 mb-3 shrink-0">Outdoors</h2>
+<div class="h-full flex flex-col overflow-hidden px-6 py-3">
+	<h2 class="text-base font-semibold text-gray-100 mb-2 shrink-0">Outdoors</h2>
 
 	<div class="flex-1 grid grid-cols-2 gap-3 min-h-0">
 		<!-- LEFT COLUMN: Hero Dirt Tracker -->

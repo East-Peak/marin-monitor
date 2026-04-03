@@ -103,8 +103,8 @@
 		<p class="text-lg text-zinc-500">Loading cost data...</p>
 	</div>
 {:else}
-	<div class="h-full flex flex-col p-4">
-		<h2 class="text-xl font-bold text-gray-100 mb-3 shrink-0">Cost of Being Marin</h2>
+	<div class="h-full flex flex-col overflow-hidden px-6 py-3">
+		<h2 class="text-base font-semibold text-gray-100 mb-2 shrink-0">Cost of Being Marin</h2>
 
 		<div class="flex-1 grid grid-cols-3 gap-3 min-h-0">
 			<!-- LEFT COLUMN: Marin Number Hero -->
@@ -225,12 +225,11 @@
 				</div>
 
 				<!-- Sparkline -->
-				<div class="px-3 pt-3 flex-shrink-0">
+				<div class="shrink-0 h-12 px-3 pt-2">
 					{#if heroSparkline}
 						<svg
 							viewBox="0 0 {heroSparkline.w} {heroSparkline.h}"
-							class="w-full"
-							style="height: 56px"
+							class="w-full h-full"
 							preserveAspectRatio="none"
 						>
 							<path d={heroSparkline.areaPath} fill="#dc2626" opacity="0.12" />
@@ -242,7 +241,7 @@
 							/>
 						</svg>
 					{:else}
-						<div class="h-14 flex items-center justify-center">
+						<div class="h-full flex items-center justify-center">
 							<span class="text-[10px] text-zinc-600">Not enough data for trend</span>
 						</div>
 					{/if}

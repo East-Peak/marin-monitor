@@ -112,8 +112,8 @@
 	}
 </script>
 
-<div class="h-full flex flex-col p-4">
-	<h2 class="text-xl font-bold text-gray-100 mb-3 shrink-0">Lifestyle</h2>
+<div class="h-full flex flex-col overflow-hidden px-6 py-3">
+	<h2 class="text-base font-semibold text-gray-100 mb-2 shrink-0">Lifestyle</h2>
 
 	<div class="flex-1 grid grid-cols-2 gap-3 min-h-0">
 		<!-- WINE INDEX COLUMN -->
@@ -177,7 +177,7 @@
 			<!-- Staff Picks -->
 			<div class="flex-1 px-3 py-2 overflow-hidden">
 				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Staff Picks</div>
-				{#each staffPicks.slice(0, 5) as pick}
+				{#each staffPicks.slice(0, 4) as pick}
 					<div class="flex items-center justify-between py-0.5">
 						<div class="flex flex-col min-w-0 flex-1 mr-2">
 							<span class="text-xs font-medium text-zinc-200 truncate">{pick.title}</span>
@@ -202,7 +202,7 @@
 			</div>
 
 			<!-- Attribution -->
-			<div class="px-3 pb-2 text-[8px] text-zinc-600 text-center">
+			<div class="shrink-0 px-3 pb-1 text-[8px] text-zinc-600 text-center">
 				Data via PlumpJack Wine & Spirits
 			</div>
 		</div>
@@ -265,7 +265,7 @@
 			<!-- Individual studios -->
 			<div class="flex-1 px-3 py-2 overflow-hidden">
 				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Studios (cheapest first)</div>
-				{#each fitnessStudios.slice(0, 7) as studio}
+				{#each fitnessStudios.slice(0, 6) as studio}
 					<div class="flex items-center justify-between py-0.5">
 						<div class="flex items-center gap-1.5 min-w-0 flex-1 mr-2">
 							<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background: {TYPE_COLORS[studio.type]}"></span>

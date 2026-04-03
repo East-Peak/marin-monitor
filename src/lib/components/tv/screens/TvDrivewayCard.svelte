@@ -111,8 +111,8 @@
 		<p class="text-lg text-zinc-500">Loading driveway data...</p>
 	</div>
 {:else}
-	<div class="h-full flex flex-col p-4">
-		<h2 class="text-xl font-bold text-gray-100 mb-3 shrink-0">The Marin Driveway</h2>
+	<div class="h-full flex flex-col overflow-hidden px-6 py-3">
+		<h2 class="text-base font-semibold text-gray-100 mb-2 shrink-0">The Marin Driveway</h2>
 
 		<div class="flex-1 grid grid-cols-2 gap-3 min-h-0">
 			<!-- LEFT COLUMN: Stats + Fuel Breakdown -->
@@ -197,17 +197,18 @@
 
 					<!-- EV sparkline -->
 					{#if evSparkline}
-						<div class="mt-2">
+						<div class="mt-1 shrink-0">
 							<p class="text-[9px] text-zinc-500 mb-0.5">EV adoption trend</p>
-							<svg
-								viewBox="0 0 {evSparkline.w} {evSparkline.h}"
-								class="w-full"
-								style="height: 36px"
-								preserveAspectRatio="none"
-							>
-								<path d={evSparkline.areaPath} fill="#22c55e" opacity="0.12" />
-								<path d={evSparkline.linePath} fill="none" stroke="#22c55e" stroke-width="1.5" />
-							</svg>
+							<div class="h-8">
+								<svg
+									viewBox="0 0 {evSparkline.w} {evSparkline.h}"
+									class="w-full h-full"
+									preserveAspectRatio="none"
+								>
+									<path d={evSparkline.areaPath} fill="#22c55e" opacity="0.12" />
+									<path d={evSparkline.linePath} fill="none" stroke="#22c55e" stroke-width="1.5" />
+								</svg>
+							</div>
 						</div>
 					{/if}
 				</div>

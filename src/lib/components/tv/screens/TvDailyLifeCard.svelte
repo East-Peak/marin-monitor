@@ -154,8 +154,8 @@
 	}
 </script>
 
-<div class="h-full flex flex-col p-4">
-	<h2 class="text-xl font-bold text-gray-100 mb-3 shrink-0">Daily Life</h2>
+<div class="h-full flex flex-col overflow-hidden px-6 py-3">
+	<h2 class="text-base font-semibold text-gray-100 mb-2 shrink-0">Daily Life</h2>
 
 	<div class="flex-1 grid grid-cols-3 gap-3 min-h-0">
 		<!-- CAPPUCCINO COLUMN -->
@@ -200,11 +200,10 @@
 
 			<!-- Sparkline -->
 			{#if cappuccinoSparkline}
-				<div class="px-3 pb-2">
+				<div class="mt-auto shrink-0 h-10 px-3 pb-2">
 					<svg
 						viewBox="0 0 {cappuccinoSparkline.w} {cappuccinoSparkline.h}"
-						class="w-full"
-						style="height: 36px"
+						class="w-full h-full"
 						preserveAspectRatio="none"
 					>
 						<path d={cappuccinoSparkline.areaPath} fill="#a16207" opacity="0.12" />
@@ -278,11 +277,10 @@
 
 			<!-- Sparkline -->
 			{#if grocerySparkline}
-				<div class="px-3 pb-2">
+				<div class="mt-auto shrink-0 h-10 px-3 pb-2">
 					<svg
 						viewBox="0 0 {grocerySparkline.w} {grocerySparkline.h}"
-						class="w-full"
-						style="height: 36px"
+						class="w-full h-full"
 						preserveAspectRatio="none"
 					>
 						<path d={grocerySparkline.areaPath} fill="#f59e0b" opacity="0.12" />
@@ -351,11 +349,10 @@
 
 			<!-- Sparkline -->
 			{#if gasSparkline}
-				<div class="px-3 pb-2">
+				<div class="mt-auto shrink-0 h-10 px-3 pb-2">
 					<svg
 						viewBox="0 0 {gasSparkline.w} {gasSparkline.h}"
-						class="w-full"
-						style="height: 36px"
+						class="w-full h-full"
 						preserveAspectRatio="none"
 					>
 						<path d={gasSparkline.areaPath} fill="#10b981" opacity="0.12" />

@@ -116,8 +116,8 @@
 	}
 </script>
 
-<div class="h-full flex flex-col p-4">
-	<h2 class="text-xl font-bold text-gray-100 mb-3 shrink-0">Structural Marin</h2>
+<div class="h-full flex flex-col overflow-hidden px-6 py-3">
+	<h2 class="text-base font-semibold text-gray-100 mb-2 shrink-0">Structural Marin</h2>
 
 	<div class="flex-1 grid grid-cols-2 gap-3 min-h-0">
 		<!-- PRIVATE SCHOOL TUITION COLUMN -->
@@ -190,11 +190,10 @@
 
 			<!-- K-12 Sparkline -->
 			{#if k12Sparkline}
-				<div class="px-3 pb-2">
+				<div class="mt-auto shrink-0 h-8 px-3 pb-1">
 					<svg
 						viewBox="0 0 {k12Sparkline.w} {k12Sparkline.h}"
-						class="w-full"
-						style="height: 32px"
+						class="w-full h-full"
 						preserveAspectRatio="none"
 					>
 						<path d={k12Sparkline.areaPath} fill={CYAN} opacity="0.12" />
@@ -263,14 +262,14 @@
 
 				<!-- Monthly history table -->
 				<div class="flex-1 px-3 py-2 overflow-hidden">
-					<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">12-Month History</div>
+					<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Recent History</div>
 					<div class="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 gap-y-0.5">
 						<!-- Header row -->
 						<span class="text-[8px] font-semibold uppercase text-zinc-600">Month</span>
 						<span class="text-[8px] font-semibold uppercase text-zinc-600 text-right">Median</span>
 						<span class="text-[8px] font-semibold uppercase text-zinc-600 text-right">Sold</span>
 						<span class="text-[8px] font-semibold uppercase text-zinc-600 text-right">DOM</span>
-						{#each housing.slice(-8) as month}
+						{#each housing.slice(-6) as month}
 							<span class="text-[10px] text-zinc-400">{month.month}</span>
 							<span class="text-[10px] tabular-nums text-zinc-200 text-right font-medium">
 								{fmtCompact(month.medianPrice)}
@@ -287,11 +286,10 @@
 
 				<!-- Sparkline -->
 				{#if housingSparkline}
-					<div class="px-3 pb-2">
+					<div class="mt-auto shrink-0 h-8 px-3 pb-1">
 						<svg
 							viewBox="0 0 {housingSparkline.w} {housingSparkline.h}"
-							class="w-full"
-							style="height: 36px"
+							class="w-full h-full"
 							preserveAspectRatio="none"
 						>
 							<path d={housingSparkline.areaPath} fill={HOUSING_BLUE} opacity="0.12" />
@@ -306,7 +304,7 @@
 			{/if}
 
 			<!-- Attribution -->
-			<div class="px-3 pb-2 text-[8px] text-zinc-600 text-center">
+			<div class="shrink-0 px-3 pb-1 text-[8px] text-zinc-600 text-center">
 				County-level data via Redfin
 			</div>
 		</div>
