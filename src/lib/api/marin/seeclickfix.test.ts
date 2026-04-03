@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { NewsItem } from '$lib/types';
 
 // Mock $lib/config (detectTown)
 vi.mock('$lib/config', () => ({

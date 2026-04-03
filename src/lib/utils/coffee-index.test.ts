@@ -2,7 +2,7 @@
  * Tests for coffee-index utilities
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import type { CoffeeDrinkId, CoffeeIndexShop } from '$lib/types/coffee';
 
 // Mock the coffee config module so tests are isolated from real data

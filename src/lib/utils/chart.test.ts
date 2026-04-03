@@ -5,7 +5,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { buildChart } from './chart';
-import type { ChartConfig, ChartPaths } from './chart';
+import type { ChartConfig } from './chart';
 
 // ---------------------------------------------------------------------------
 // Helpers

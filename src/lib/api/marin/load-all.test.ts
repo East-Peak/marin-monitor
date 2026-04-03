@@ -5,7 +5,7 @@
  * handling, category merging, 311 direct injection, and error aggregation.
  */
 
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { NewsItem, NewsCategory, EarthquakeData } from '$lib/types';
 import type { CategoryFetchResult } from './rss';
 
