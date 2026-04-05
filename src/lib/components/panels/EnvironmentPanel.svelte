@@ -296,4 +296,18 @@
 		text-align: center;
 		padding: 0.75rem;
 	}
+
+	@media (max-width: 1024px) {
+		.env-grid {
+			grid-template-columns: 1fr;
+		}
+		.stream-header,
+		.stream-row {
+			grid-template-columns: 2fr 1fr;
+		}
+		.stream-header > span:nth-child(n+3),
+		.stream-row > span:nth-child(n+3) {
+			display: none;
+		}
+	}
 </style>

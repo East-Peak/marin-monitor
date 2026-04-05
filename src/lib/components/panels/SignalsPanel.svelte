@@ -263,7 +263,7 @@
 
 	.stats-bar {
 		display: grid;
-		grid-template-columns: repeat(4, 1fr);
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 		gap: 0.35rem;
 		padding-bottom: 0.5rem;
 		border-bottom: 1px solid var(--border);
@@ -519,5 +519,11 @@
 		color: var(--text-secondary);
 		font-size: 0.7rem;
 		padding: 1rem;
+	}
+
+	@media (max-width: 1024px) {
+		.stats-bar {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
 	}
 </style>
