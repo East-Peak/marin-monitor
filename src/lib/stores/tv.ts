@@ -286,7 +286,8 @@ export const tvTickerItems = derived(
           category: 'KOM',
           text: `${prefix}: ${event.segmentName} — ${event.time} by ${event.athlete}${prev}`,
           timestamp: new Date(event.detectedAt).getTime(),
-          status: 'normal' as TickerStatus
+          status: 'normal' as TickerStatus,
+          href: `https://www.strava.com/segments/${event.segmentId}`
         });
       }
 

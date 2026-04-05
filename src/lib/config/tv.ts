@@ -79,6 +79,7 @@ export interface TickerItem {
   text: string;
   timestamp: number;
   status: TickerStatus;
+  href?: string;
 }
 
 /** Map sub-carousel views — camera fly-to only, NO town filter changes */

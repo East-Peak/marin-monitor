@@ -23,7 +23,7 @@
 					{event.type === 'new_kom' ? 'KOM' : 'QOM'}
 				</span>
 				<div class="event-info">
-					<span class="event-segment">{event.segmentName}</span>
+					<a class="event-segment" href="https://www.strava.com/segments/{event.segmentId}" target="_blank" rel="noopener noreferrer">{event.segmentName}</a>
 					<span class="event-detail">
 						<span class="event-athlete">{event.athlete}</span>
 						<span class="event-time">{event.time}</span>
@@ -119,6 +119,12 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+		text-decoration: none;
+	}
+
+	.event-segment:hover {
+		color: #fc4c02;
+		text-decoration: underline;
 	}
 
 	.event-detail {

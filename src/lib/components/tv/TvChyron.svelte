@@ -18,6 +18,18 @@
   <div class="overflow-hidden" style="height: 44px;">
     <div class="chyron-track flex items-center gap-12 whitespace-nowrap px-4 h-full" style="animation-duration: {scrollDuration}s;">
       {#each [...items, ...items] as item, i (item.id + '-' + i)}
+        {#if item.href}
+        <a href={item.href} target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 shrink-0 no-underline hover:underline">
+          <span
+            class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold tracking-wide"
+            style="background: {badgeBg(item.badge)}; color: {CATEGORY_COLORS[item.badge]}"
+          >
+            {item.badge}
+          </span>
+          <span class="text-sm text-gray-200">{item.text}</span>
+          <span class="text-xs text-gray-500">{timeAgo(item.timestamp)}</span>
+        </a>
+        {:else}
         <div class="flex items-center gap-2 shrink-0">
           <span
             class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold tracking-wide"
@@ -28,6 +40,7 @@
           <span class="text-sm text-gray-200">{item.text}</span>
           <span class="text-xs text-gray-500">{timeAgo(item.timestamp)}</span>
         </div>
+        {/if}
       {/each}
     </div>
   </div>
