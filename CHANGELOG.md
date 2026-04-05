@@ -4,6 +4,18 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-04-05
+
+### Fixed
+- Signal deck no longer causes horizontal page scroll on iPhone. Root cause was bare `1fr` grid tracks with implicit `auto` minimum; fixed to `minmax(0, 1fr)` at narrow breakpoints.
+- Signals panel stats bar collapses to a 2×2 grid on phone (was 4 cramped columns).
+- Environment panel stat cards stack vertically and stream table narrows to 2 columns on phone.
+
+### Added
+- TV mode: swipe left/right to navigate between screens on mobile. Map panning and sidebar scrolling are unaffected.
+
+---
+
 ## 2026-04-01
 
 ### Added

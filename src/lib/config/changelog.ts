@@ -14,6 +14,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-04-05',
+		title: 'Mobile layout fixes',
+		description:
+			'iPhone horizontal scroll eliminated from the signal deck. Signals and Environment panels are now legible on phone with collapsed stat grids and narrower tables.'
+	},
+	{
+		date: '2026-04-05',
+		title: 'TV mode: swipe to navigate',
+		description:
+			'Swipe left or right on the TV wallboard to change screens. Map panning and sidebar scrolling are unaffected.'
+	},
+	{
 		date: '2026-04-01',
 		title: 'TV Mode Refresh v2',
 		description:
