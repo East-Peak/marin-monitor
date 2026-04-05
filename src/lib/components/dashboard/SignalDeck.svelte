@@ -229,6 +229,7 @@
 		gap: 1rem;
 		padding: 0.5rem 0;
 		transition: all 0.3s ease;
+		overflow-x: clip;
 	}
 	.signal-layout.collapsed {
 		display: none;
@@ -237,6 +238,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+		min-width: 0;
 	}
 	.signal-card {
 		background: var(--card-bg);
@@ -244,6 +246,7 @@
 		border-radius: 0.5rem;
 		padding: 0.75rem;
 		transition: border-color 0.2s;
+		min-width: 0;
 	}
 	.hover-lift:hover {
 		border-color: var(--border-hover);
@@ -267,12 +270,12 @@
 	}
 	@media (max-width: 1024px) {
 		.signal-layout {
-			grid-template-columns: 1fr 1fr;
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 		}
 	}
 	@media (max-width: 640px) {
 		.signal-layout {
-			grid-template-columns: 1fr;
+			grid-template-columns: minmax(0, 1fr);
 		}
 	}
 </style>
