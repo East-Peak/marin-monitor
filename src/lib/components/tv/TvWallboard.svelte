@@ -55,6 +55,7 @@
   import type { HousingMetric } from '$lib/api/marin/housing';
   import type { StreamGauge } from '$lib/api/marin/streams';
   import type { HeroDirtScore } from '$lib/analysis/indicators';
+  import { initSwipe, progressSwipe, commitSwipe, shouldBailSwipe, type SwipeState } from './swipe';
 
   // --- Index data state ---
   let compositeData = $state<CompositeData | null>(null);
@@ -169,6 +170,9 @@
   let cursorHidden = $state(false);
   let cursorTimer: ReturnType<typeof setTimeout> | null = null;
 
+  // --- Touch swipe state ---
+  let swipeState: SwipeState | null = null;
+
   function resetCursorTimer() {
     cursorHidden = false;
     if (cursorTimer) clearTimeout(cursorTimer);
@@ -219,6 +223,34 @@
     }
   }
 
+  // --- Touch swipe handlers ---
+  function handleTouchStart(e: TouchEvent) {
+    swipeState = initSwipe(
+      e.touches[0].clientX,
+      e.touches[0].clientY,
+      e.touches.length,
+      shouldBailSwipe(e.target)
+    );
+  }
+
+  function handleTouchMove(e: TouchEvent) {
+    if (!swipeState) return;
+    const result = progressSwipe(e.touches[0].clientX, e.touches[0].clientY, swipeState);
+    swipeState = result.state;
+    if (result.preventDefault) e.preventDefault();
+  }
+
+  function handleTouchEnd(e: TouchEvent) {
+    if (!swipeState) return;
+    const action = commitSwipe(e.changedTouches[0].clientX, swipeState);
+    swipeState = null;
+    if (action === 'next') { nextScreen(); restartCarousel(); }
+    else if (action === 'prev') { prevScreen(); restartCarousel(); }
+  }
+
+  function handleTouchCancel() {
+    swipeState = null;
+  }
 
   // --- Shared data for map screens ---
   let earthquakeItems = $state<NewsItem[]>([]);
@@ -488,6 +520,12 @@
     // Keyboard shortcuts
     window.addEventListener('keydown', handleKeydown);
 
+    // Touch swipe
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', handleTouchCancel, { passive: true });
+
     // Visibility change
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -511,6 +549,10 @@
     if (browser) {
       window.removeEventListener('mousemove', resetCursorTimer);
       window.removeEventListener('keydown', handleKeydown);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchcancel', handleTouchCancel);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
 
       // Restore original theme (both data-theme and settings store)
