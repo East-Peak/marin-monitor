@@ -14,7 +14,7 @@
 	let { carouselIdx, paused, currentTemp, stories24h, alertCount, clockText, onGoToScreen }: Props = $props();
 </script>
 
-<header class="h-12 flex items-center justify-between px-4 bg-gray-900/80 border-b border-gray-800/50 shrink-0 z-10">
+<header class="tv-header h-12 flex items-center justify-between px-4 bg-gray-900/80 border-b border-gray-800/50 shrink-0 z-10">
 	<div class="flex items-center gap-3">
 		<h1 class="text-lg font-bold tracking-widest" style="background: linear-gradient(135deg, #f8fafc 0%, #0ea5e9 100%); -webkit-background-clip: text; background-clip: text; color: transparent;">MARIN MONITOR</h1>
 		{#if paused}
@@ -41,6 +41,8 @@
 					class:bg-gray-600={carouselIdx !== i}
 					onclick={() => onGoToScreen(i)}
 					title={screen.name}
+					data-screen-idx={i}
+					aria-current={carouselIdx === i ? 'true' : undefined}
 				></button>
 			{/each}
 		</div>
