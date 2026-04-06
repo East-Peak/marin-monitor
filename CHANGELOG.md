@@ -10,6 +10,10 @@ All notable changes to Marin Monitor are documented here.
 - Signal deck no longer causes horizontal page scroll on iPhone. Root cause was bare `1fr` grid tracks with implicit `auto` minimum; fixed to `minmax(0, 1fr)` at narrow breakpoints.
 - Signals panel stats bar collapses to a 2×2 grid on phone (was 4 cramped columns).
 - Environment panel stat cards stack vertically and stream table narrows to 2 columns on phone.
+- Map + camera sidebar now stacks to single column at 800px (was 1320px) — no more unusable 78px camera sliver on tablets/phones.
+- Main content padding smoothed across breakpoints: 1.5rem → 0.75rem (≤768px) → 0.375rem (≤480px). Was a harsh cliff from 1.5rem to 0.25rem.
+- Header tightened at 400px: smaller logo, compact buttons, reduced padding for narrow phones.
+- Tip banner wraps gracefully on mobile with reduced padding and font size.
 
 ### Added
 - TV mode: swipe left/right to navigate between screens on mobile. Map panning and sidebar scrolling are unaffected.

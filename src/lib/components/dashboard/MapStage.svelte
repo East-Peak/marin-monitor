@@ -114,7 +114,7 @@
 		font-size: 0.5rem;
 	}
 
-	@media (max-width: 1320px) {
+	@media (max-width: 800px) {
 		.top-stage {
 			grid-template-columns: 1fr;
 		}

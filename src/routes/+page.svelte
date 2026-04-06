@@ -401,7 +401,26 @@
 
 	@media (max-width: 768px) {
 		.main-content {
-			padding: 0.25rem;
+			padding: 0.75rem;
+		}
+
+		.tip-banner {
+			flex-wrap: wrap;
+		}
+
+		.tip-text {
+			font-size: 0.8rem;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.main-content {
+			padding: 0.375rem;
+		}
+
+		.tip-banner {
+			padding: 0.5rem 0.75rem;
+			gap: 0.5rem;
 		}
 	}
 </style>

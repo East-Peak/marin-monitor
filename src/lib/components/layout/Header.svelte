@@ -250,4 +250,20 @@
 			padding: 0.35rem 0.75rem;
 		}
 	}
+
+	@media (max-width: 400px) {
+		.header {
+			padding: 0.6rem 0.75rem;
+			gap: 0.5rem;
+		}
+
+		.logo {
+			font-size: 0.78rem;
+		}
+
+		.header-btn {
+			min-height: 2.25rem;
+			padding: 0.3rem 0.5rem;
+		}
+	}
 </style>
