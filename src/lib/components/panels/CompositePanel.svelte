@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Panel } from '$lib/components/common';
-	import { fetchCompositeData } from '$lib/api/marin/composite';
+	import { fetchCompositeDataWithStatus } from '$lib/api/marin/composite';
 	import { compositeStore } from '$lib/stores/composite';
 	import { buildChart, type ChartPaths } from '$lib/utils/chart';
 	import type { CompositeData } from '$lib/types/composite';
@@ -14,6 +14,7 @@
 	let chartContainer = $state<HTMLDivElement>(undefined!);
 	let chartWidth = $state(0);
 	let dataLoading = $state(false);
+	let dataError = $state<string | null>(null);
 	let breakdownExpanded = $state(true);
 
 	type HoverState = { index: number; x: number } | null;
@@ -115,9 +116,15 @@
 
 		void (async () => {
 			dataLoading = true;
+			dataError = null;
 			try {
-				data = await fetchCompositeData();
-				compositeStore.set(data);
+				const result = await fetchCompositeDataWithStatus();
+				if (result.ok) {
+					data = result.data;
+					compositeStore.set(result.data);
+				} else {
+					dataError = `Live data unavailable (${result.error})`;
+				}
 			} finally {
 				dataLoading = false;
 			}
@@ -134,7 +141,7 @@
 	});
 </script>
 
-<Panel id="composite" title="Cost of Being Marin" loading={dataLoading}>
+<Panel id="composite" title="Cost of Being Marin" loading={dataLoading} error={dataError}>
 	{#if current}
 		<!-- Composite Score Hero -->
 		<div class="composite-hero">

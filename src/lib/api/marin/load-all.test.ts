@@ -310,6 +310,48 @@ describe('loadAllNews orchestrator', () => {
 		expect(setItems311.length).toBe(1);
 	});
 
+	// R2 #2 — `loadAllNews` returns per-adapter errors so refresh callers
+	// (TV, dashboard) can pass them to `refresh.endRefresh(errors)` and have
+	// the refresh history correctly record degraded vs. clean cycles.
+
+	it('returns empty errors when every adapter succeeded', async () => {
+		const { loadAllNews } = await import('./load-all');
+		const result = await loadAllNews();
+		expect(result.errors).toEqual([]);
+	});
+
+	it('returns labeled errors for each rejected adapter', async () => {
+		mockFetchNpsAlerts.mockRejectedValue(new Error('NPS down'));
+		mockFetchSeeClickFixIssues.mockRejectedValue(new Error('311 503'));
+
+		const { loadAllNews } = await import('./load-all');
+		const result = await loadAllNews();
+
+		expect(result.errors).toEqual(
+			expect.arrayContaining([
+				expect.stringMatching(/^nps: NPS down/),
+				expect.stringMatching(/^seeclickfix: 311 503/)
+			])
+		);
+		expect(result.errors).toHaveLength(2);
+	});
+
+	it('surfaces per-feed RSS errors from CategoryFetchResult.errors', async () => {
+		mockFetchAllFeeds.mockResolvedValue([
+			makeCategoryResult('local', [], ['feed-1: timeout', 'feed-2: 502'])
+		]);
+
+		const { loadAllNews } = await import('./load-all');
+		const result = await loadAllNews();
+
+		expect(result.errors).toEqual(
+			expect.arrayContaining([
+				'rss:local: feed-1: timeout',
+				'rss:local: feed-2: 502'
+			])
+		);
+	});
+
 	// ---------- Sorting ----------
 
 	it('sorts merged items by timestamp descending before enrichment', async () => {

@@ -27,7 +27,25 @@ const RSS_CATEGORIES: NewsCategory[] = [
 export interface LoadAllResult {
 	earthquakeNews: NewsItem[];
 	earthquakesRaw: EarthquakeData[];
+	/**
+	 * Per-adapter failure messages collected during this refresh cycle.
+	 * Empty when every adapter succeeded. Callers that drive a refresh badge
+	 * (TV wallboard, dashboard) should pass this to `refresh.endRefresh(errors)`
+	 * so refresh history correctly records degraded vs. clean cycles.
+	 */
+	errors: string[];
 }
+
+const ADAPTER_LABELS = [
+	'rss',
+	'nps',
+	'earthquakes',
+	'transit',
+	'sheriff-blotter',
+	'police-logs',
+	'supplemental-activity',
+	'seeclickfix'
+] as const;
 
 /**
  * Fetch all news data, populate stores, and return earthquake items for the map.
@@ -40,6 +58,8 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 		});
 	}
 
+	const errors: string[] = [];
+
 	const settled = await Promise.allSettled([
 		fetchAllFeeds(),
 		fetchNpsAlerts(),
@@ -50,6 +70,13 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 		fetchSupplementalActivityFeeds(),
 		fetchSeeClickFixIssues()
 	]);
+
+	settled.forEach((result, i) => {
+		if (result.status === 'rejected') {
+			const message = (result.reason as Error)?.message ?? String(result.reason);
+			errors.push(`${ADAPTER_LABELS[i]}: ${message}`);
+		}
+	});
 
 	const [rssResults, npsAlerts, earthquakes, transitAlerts, sheriffBlotter, policeLogs, supplementalActivity, seeClickFixIssues] =
 		settled.map((r) => (r.status === 'fulfilled' ? r.value : [])) as [
@@ -62,6 +89,15 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 			NewsItem[],
 			NewsItem[]
 		];
+
+	// Per-feed errors inside fetchAllFeeds (HTTP failures on individual RSS
+	// sources) are reported in each CategoryFetchResult.errors — surface them
+	// alongside the adapter-level failures so the refresh badge reflects them.
+	for (const result of rssResults) {
+		for (const err of result.errors) {
+			errors.push(`rss:${result.category}: ${err}`);
+		}
+	}
 
 	// 311 has no RSS feed; the store is rewritten only from the SeeClickFix
 	// adapter. Track whether the fetch actually succeeded so we can preserve
@@ -89,12 +125,17 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 									: (supplementalByCategory.get(result.category) ?? []);
 
 			const allItems = [...result.items, ...extraItems].sort((a, b) => b.timestamp - a.timestamp);
-			const enrichedItems = await enrichItemsForRelevance(allItems);
 
-			news.setItems(result.category, enrichedItems);
-			if (enrichedItems.length > 0) {
-				void news.enrichLocations(result.category);
+			try {
+				const enrichedItems = await enrichItemsForRelevance(allItems);
+				news.setItems(result.category, enrichedItems);
+				if (enrichedItems.length > 0) {
+					void news.enrichLocations(result.category);
+				}
+			} catch (err) {
+				errors.push(`enrich:${result.category}: ${(err as Error).message}`);
 			}
+
 			if (result.errors.length > 0) {
 				console.warn(`[${result.category}] Feed errors:`, result.errors);
 			}
@@ -114,12 +155,16 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 	const shouldWrite311 =
 		!has311RssResult && (seeClickFixSucceeded || news.getItems('311').length === 0);
 	if (shouldWrite311) {
-		const enriched311 = await enrichItemsForRelevance(seeClickFixIssues);
-		news.setItems('311', enriched311);
-		if (enriched311.length > 0) {
-			void news.enrichLocations('311');
+		try {
+			const enriched311 = await enrichItemsForRelevance(seeClickFixIssues);
+			news.setItems('311', enriched311);
+			if (enriched311.length > 0) {
+				void news.enrichLocations('311');
+			}
+		} catch (err) {
+			errors.push(`enrich:311: ${(err as Error).message}`);
 		}
 	}
 
-	return { earthquakeNews, earthquakesRaw: earthquakes };
+	return { earthquakeNews, earthquakesRaw: earthquakes, errors };
 }

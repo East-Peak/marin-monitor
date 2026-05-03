@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Panel } from '$lib/components/common';
-	import { fetchSchoolTuitionData } from '$lib/api/marin/school-tuition';
+	import { fetchSchoolTuitionDataWithStatus } from '$lib/api/marin/school-tuition';
 	import { schoolTuitionStore } from '$lib/stores/school-tuition';
 	import { LEVEL_ORDER, LEVEL_LABELS } from '$lib/config/schools';
 	import type { SchoolIndexData, School, SchoolLevel } from '$lib/types/school';
 
 	let data = $state<SchoolIndexData>({ current: null, history: [] });
 	let dataLoading = $state(false);
+	let dataError = $state<string | null>(null);
 
 	const current = $derived(data.current);
 
@@ -39,9 +40,15 @@
 	onMount(() => {
 		void (async () => {
 			dataLoading = true;
+			dataError = null;
 			try {
-				data = await fetchSchoolTuitionData();
-				schoolTuitionStore.set(data);
+				const result = await fetchSchoolTuitionDataWithStatus();
+				if (result.ok) {
+					data = result.data;
+					schoolTuitionStore.set(result.data);
+				} else {
+					dataError = `Live data unavailable (${result.error})`;
+				}
 			} finally {
 				dataLoading = false;
 			}
@@ -49,7 +56,7 @@
 	});
 </script>
 
-<Panel id="school-tuition" title="Private School Tuition Index" loading={dataLoading}>
+<Panel id="school-tuition" title="Private School Tuition Index" loading={dataLoading} error={dataError}>
 	{#if current}
 		<!-- Tier averages -->
 		<div class="tiers-grid">

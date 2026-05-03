@@ -8,10 +8,11 @@
 		stories24h: number;
 		alertCount: number;
 		clockText: string;
+		degradedErrorCount: number;
 		onGoToScreen: (idx: number) => void;
 	}
 
-	let { carouselIdx, paused, currentTemp, stories24h, alertCount, clockText, onGoToScreen }: Props = $props();
+	let { carouselIdx, paused, currentTemp, stories24h, alertCount, clockText, degradedErrorCount, onGoToScreen }: Props = $props();
 </script>
 
 <header class="tv-header h-12 flex items-center justify-between px-4 bg-gray-900/80 border-b border-gray-800/50 shrink-0 z-10">
@@ -19,6 +20,9 @@
 		<h1 class="text-lg font-bold tracking-widest" style="background: linear-gradient(135deg, #f8fafc 0%, #0ea5e9 100%); -webkit-background-clip: text; background-clip: text; color: transparent;">MARIN MONITOR</h1>
 		{#if paused}
 			<span class="text-xs text-amber-400 font-medium">PAUSED</span>
+		{/if}
+		{#if degradedErrorCount > 0}
+			<span class="text-xs px-2 py-0.5 rounded font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40" title="{degradedErrorCount} data source(s) failed on the most recent refresh">DEGRADED · {degradedErrorCount}</span>
 		{/if}
 	</div>
 	<div class="flex items-center gap-3">

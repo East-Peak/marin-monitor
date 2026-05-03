@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Panel } from '$lib/components/common';
-	import { fetchGasPriceData } from '$lib/api/marin/gas-prices';
+	import { fetchGasPriceDataWithStatus } from '$lib/api/marin/gas-prices';
 	import { gasPriceStore } from '$lib/stores/gas-prices';
 	import { townFilter, selectedTownObj } from '$lib/stores/town-filter';
 	import { findNearestTown } from '$lib/geo';
@@ -24,6 +24,7 @@
 	let chartContainer = $state<HTMLDivElement>(undefined!);
 	let chartWidth = $state(0);
 	let dataLoading = $state(false);
+	let dataError = $state<string | null>(null);
 	let hoverState = $state<HoverState>(null);
 
 	const current = $derived(data.current);
@@ -189,9 +190,15 @@
 
 		void (async () => {
 			dataLoading = true;
+			dataError = null;
 			try {
-				data = await fetchGasPriceData();
-				gasPriceStore.set(data);
+				const result = await fetchGasPriceDataWithStatus();
+				if (result.ok) {
+					data = result.data;
+					gasPriceStore.set(result.data);
+				} else {
+					dataError = `Live data unavailable (${result.error})`;
+				}
 			} finally {
 				dataLoading = false;
 			}
@@ -208,7 +215,7 @@
 	});
 </script>
 
-<Panel id="gas-prices" title="Gas Prices" loading={dataLoading}>
+<Panel id="gas-prices" title="Gas Prices" loading={dataLoading} error={dataError}>
 	{#if current}
 		<div class="snapshot-bar">
 			{#if current.avgRegular !== null}

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Panel } from '$lib/components/common';
-	import { fetchFitnessData } from '$lib/api/marin/fitness';
+	import { fetchFitnessDataWithStatus } from '$lib/api/marin/fitness';
 	import { fitnessStore } from '$lib/stores/fitness';
 	import { townFilter } from '$lib/stores/town-filter';
 	import { findNearestTown } from '$lib/geo';
@@ -25,6 +25,7 @@
 	let chartContainer = $state<HTMLDivElement>(undefined!);
 	let chartWidth = $state(0);
 	let dataLoading = $state(false);
+	let dataError = $state<string | null>(null);
 	let hoverState = $state<HoverState>(null);
 
 	const current = $derived(data.current);
@@ -142,9 +143,15 @@
 
 		void (async () => {
 			dataLoading = true;
+			dataError = null;
 			try {
-				data = await fetchFitnessData();
-				fitnessStore.set(data);
+				const result = await fetchFitnessDataWithStatus();
+				if (result.ok) {
+					data = result.data;
+					fitnessStore.set(result.data);
+				} else {
+					dataError = `Live data unavailable (${result.error})`;
+				}
 			} finally {
 				dataLoading = false;
 			}
@@ -161,7 +168,7 @@
 	});
 </script>
 
-<Panel id="fitness" title="Fitness Drop-in Index" loading={dataLoading}>
+<Panel id="fitness" title="Fitness Drop-in Index" loading={dataLoading} error={dataError}>
 	{#if current}
 		<!-- Overall snapshot bar -->
 		<div class="snapshot-bar">

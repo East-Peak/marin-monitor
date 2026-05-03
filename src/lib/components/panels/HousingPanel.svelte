@@ -3,7 +3,7 @@
 	import { Panel } from '$lib/components/common';
 	import { housingNews } from '$lib/stores/news';
 	import { townFilter } from '$lib/stores/town-filter';
-	import { fetchHousingData, type HousingMetric } from '$lib/api/marin/housing';
+	import { fetchHousingDataWithStatus, type HousingMetric } from '$lib/api/marin/housing';
 	import { select } from 'd3-selection';
 	import { scaleLinear } from 'd3-scale';
 	import { buildChart, type ChartPaths } from '$lib/utils/chart';
@@ -28,7 +28,12 @@
 	let priceWidth = $state(0);
 	let inventorySvg = $state<SVGSVGElement>(undefined!);
 	let dataLoading = $state(false);
+	let dataError = $state<string | null>(null);
 	let hoverState = $state<HoverState>(null);
+
+	// Housing-data fetch error takes precedence over the housing-news RSS error
+	// — the panel's primary content is the data; news is a secondary list.
+	const panelError = $derived(dataError ?? $housingNews.error);
 
 	const latestMetrics = $derived(
 		housingData.length > 0 ? housingData[housingData.length - 1] : null
@@ -288,8 +293,14 @@
 
 		void (async () => {
 			dataLoading = true;
+			dataError = null;
 			try {
-				housingData = await fetchHousingData();
+				const result = await fetchHousingDataWithStatus();
+				if (result.ok) {
+					housingData = result.data.slice(-12);
+				} else {
+					dataError = `Live data unavailable (${result.error})`;
+				}
 			} finally {
 				dataLoading = false;
 			}
@@ -311,7 +322,7 @@
 	});
 </script>
 
-<Panel id="housing" title="Housing" loading={$housingNews.loading} error={$housingNews.error}>
+<Panel id="housing" title="Housing" loading={$housingNews.loading || dataLoading} error={panelError}>
 	{#if $townFilter}
 		<div class="county-badge">Showing Marin County — no per-town data available</div>
 	{/if}

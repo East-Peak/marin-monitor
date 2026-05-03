@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Panel } from '$lib/components/common';
-	import { fetchDrivewayData } from '$lib/api/marin/driveway';
+	import { fetchDrivewayDataWithStatus } from '$lib/api/marin/driveway';
 	import { drivewayStore } from '$lib/stores/driveway';
 	import {
 		DRIVEWAY_ACCENT,
@@ -13,6 +13,7 @@
 
 	let data = $state<DrivewayData>({ current: null, history: [] });
 	let dataLoading = $state(false);
+	let dataError = $state<string | null>(null);
 	let showAllMakes = $state(false);
 
 	const current = $derived(data.current);
@@ -46,9 +47,15 @@
 	onMount(() => {
 		void (async () => {
 			dataLoading = true;
+			dataError = null;
 			try {
-				data = await fetchDrivewayData();
-				drivewayStore.set(data);
+				const result = await fetchDrivewayDataWithStatus();
+				if (result.ok) {
+					data = result.data;
+					drivewayStore.set(result.data);
+				} else {
+					dataError = `Live data unavailable (${result.error})`;
+				}
 			} finally {
 				dataLoading = false;
 			}
@@ -56,7 +63,7 @@
 	});
 </script>
 
-<Panel id="driveway" title="The Marin Driveway Index" loading={dataLoading}>
+<Panel id="driveway" title="The Marin Driveway Index" loading={dataLoading} error={dataError}>
 	{#if current}
 		<!-- Headline stats -->
 		<div class="stats-grid">

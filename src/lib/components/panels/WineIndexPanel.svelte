@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Panel } from '$lib/components/common';
-	import { fetchWineIndexData } from '$lib/api/marin/wine-index';
+	import { fetchWineIndexDataWithStatus } from '$lib/api/marin/wine-index';
 	import { wineIndexStore } from '$lib/stores/wine-index';
 	import { buildChart, type ChartPaths } from '$lib/utils/chart';
 	import type { WineIndexData, WineCategory, WineCategorySnapshot } from '$lib/types/wine';
@@ -13,6 +13,7 @@
 
 	let data = $state<WineIndexData>({ current: null, history: [] });
 	let dataLoading = $state(false);
+	let dataError = $state<string | null>(null);
 	let showAllStaffPicks = $state(false);
 	let showAllAllocated = $state(false);
 
@@ -102,9 +103,15 @@
 	onMount(() => {
 		void (async () => {
 			dataLoading = true;
+			dataError = null;
 			try {
-				data = await fetchWineIndexData();
-				wineIndexStore.set(data);
+				const result = await fetchWineIndexDataWithStatus();
+				if (result.ok) {
+					data = result.data;
+					wineIndexStore.set(result.data);
+				} else {
+					dataError = `Live data unavailable (${result.error})`;
+				}
 			} finally {
 				dataLoading = false;
 			}
@@ -112,7 +119,7 @@
 	});
 </script>
 
-<Panel id="wine-index" title="Wine Index" loading={dataLoading}>
+<Panel id="wine-index" title="Wine Index" loading={dataLoading} error={dataError}>
 	{#if current}
 		<!-- Category medians with sparklines -->
 		<div class="categories-grid">

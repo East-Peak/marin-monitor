@@ -8,6 +8,7 @@ import {
   alerts,
   threeOneOneNews
 } from '$lib/stores/news';
+import { refresh } from '$lib/stores/refresh';
 import { stravaEvents } from '$lib/stores/strava';
 import { STRAVA_CHYRON_MAX_AGE_MS } from '$lib/config/strava';
 import type { TickerItem, TickerCategory, TickerStatus } from '$lib/config/tv';
@@ -206,8 +207,8 @@ export function buildIdxTickerItems(sources: IndexDataSources): TickerItem[] {
  * Items that fail or are empty are silently excluded.
  */
 export const tvTickerItems = derived(
-  [safetyNews, localNews, civicNews, alerts, stravaEvents, threeOneOneNews, tvIndexData],
-  ([$safety, $local, $civic, $alerts, $strava, $threeOneOne, $indexData]) => {
+  [safetyNews, localNews, civicNews, alerts, stravaEvents, threeOneOneNews, tvIndexData, refresh],
+  ([$safety, $local, $civic, $alerts, $strava, $threeOneOne, $indexData, $refresh]) => {
     // NOTE: $safety, $local, $civic are CategoryState objects — access .items for NewsItem[]
     // $alerts is already NewsItem[]
     const safetyItems = $safety.items ?? [];
@@ -308,8 +309,22 @@ export const tvTickerItems = derived(
       return true;
     });
 
-    // Fallback for quiet days
+    // Fallback when there's nothing to show. Distinguish "quiet day" (last
+    // refresh succeeded → "All clear") from "degraded" (last refresh had
+    // errors → don't claim quietness; show the degraded signal instead).
     if (deduped.length === 0) {
+      const lastRefresh = $refresh.refreshHistory[0];
+      const lastRefreshFailed = Boolean(lastRefresh && lastRefresh.errors.length > 0);
+      if (lastRefreshFailed) {
+        return [{
+          id: 'refresh-degraded',
+          badge: 'CV' as TickerCategory,
+          category: 'CV',
+          text: `Data refresh degraded — ${lastRefresh.errors.length} source(s) failed. Last clean refresh held in panels.`,
+          timestamp: Date.now(),
+          status: 'elevated' as TickerStatus
+        }];
+      }
       return [{
         id: 'all-clear',
         badge: 'CV' as TickerCategory,

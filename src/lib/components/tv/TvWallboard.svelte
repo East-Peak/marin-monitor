@@ -266,6 +266,11 @@
   );
   const alertCount = $derived($alerts.length);
 
+  // Degraded badge: surface count of failed adapters from the most recent
+  // refresh cycle. handleRefresh threads errors[] into refresh.endRefresh,
+  // which lands in refresh.refreshHistory[0].errors.
+  const degradedErrorCount = $derived($refresh.refreshHistory[0]?.errors.length ?? 0);
+
   // Derived: current map viewId (for the persistent map instance)
   const activeMapViewId = $derived(TV_SCREENS[carouselIdx]?.mapViewId ?? 'county');
   const isMapScreenActive = $derived(!!TV_SCREENS[carouselIdx]?.mapViewId);
@@ -366,6 +371,7 @@
     try {
       const result = await loadAllNews();
       earthquakeItems = result.earthquakeNews;
+      errors.push(...result.errors);
     } catch (err) {
       errors.push(`news: ${(err as Error).message}`);
     }
@@ -631,7 +637,7 @@
   class="fixed inset-0 bg-gray-950 text-gray-100 flex flex-col overflow-hidden select-none"
   class:cursor-none={cursorHidden}
 >
-  <TvWallboardHeader {carouselIdx} {paused} {currentTemp} {stories24h} {alertCount} {clockText} onGoToScreen={goToScreen} />
+  <TvWallboardHeader {carouselIdx} {paused} {currentTemp} {stories24h} {alertCount} {clockText} {degradedErrorCount} onGoToScreen={goToScreen} />
 
   <!-- Carousel area -->
   <div class="relative min-h-0 shrink-0" style="height: calc(100dvh - 48px - 45px);">

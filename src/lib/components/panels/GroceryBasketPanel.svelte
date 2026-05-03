@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Panel } from '$lib/components/common';
-	import { fetchGroceryBasketData } from '$lib/api/marin/grocery-basket';
+	import { fetchGroceryBasketDataWithStatus } from '$lib/api/marin/grocery-basket';
 	import { groceryBasketStore } from '$lib/stores/grocery-basket';
 	import { buildChart, type ChartPaths } from '$lib/utils/chart';
 	import type { GroceryBasketData, BasketItemPrices } from '$lib/types/grocery';
@@ -16,6 +16,7 @@
 	let chartContainer = $state<HTMLDivElement>(undefined!);
 	let chartWidth = $state(0);
 	let dataLoading = $state(false);
+	let dataError = $state<string | null>(null);
 	let hoverState = $state<HoverState>(null);
 	let showAllItems = $state(false);
 
@@ -113,9 +114,15 @@
 
 		void (async () => {
 			dataLoading = true;
+			dataError = null;
 			try {
-				data = await fetchGroceryBasketData();
-				groceryBasketStore.set(data);
+				const result = await fetchGroceryBasketDataWithStatus();
+				if (result.ok) {
+					data = result.data;
+					groceryBasketStore.set(result.data);
+				} else {
+					dataError = `Live data unavailable (${result.error})`;
+				}
 			} finally {
 				dataLoading = false;
 			}
@@ -132,7 +139,7 @@
 	});
 </script>
 
-<Panel id="grocery-basket" title="The Bare Essentials" loading={dataLoading}>
+<Panel id="grocery-basket" title="The Bare Essentials" loading={dataLoading} error={dataError}>
 	{#if current}
 		<div class="headline-bar">
 			<div class="basket-total">

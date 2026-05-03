@@ -74,18 +74,26 @@
 
 	let editMode = $state(false);
 
-	// Fetch all RSS feeds and API data, populate stores
-	async function loadNews() {
-		const result = await loadAllNews(true);
-		liveEarthquakeItems = result.earthquakeNews;
-		liveEarthquakesRaw = result.earthquakesRaw;
+	// Fetch all RSS feeds and API data, populate stores. Per-adapter failures
+	// inside loadAllNews surface as `result.errors` and are propagated up to
+	// `refresh.endRefresh(errors)` so refresh history correctly records
+	// degraded cycles.
+	async function loadNews(errors: string[]) {
+		try {
+			const result = await loadAllNews(true);
+			liveEarthquakeItems = result.earthquakeNews;
+			liveEarthquakesRaw = result.earthquakesRaw;
+			errors.push(...result.errors);
+		} catch (err) {
+			errors.push(`news: ${(err as Error).message}`);
+		}
 	}
 
 	// Request-ID guard so a slow earlier loadWeather() can't overwrite a faster later one
 	// (race triggered by quick town switches or visibility-change + auto-refresh overlap).
 	const weatherGuard = createRequestGuard();
 
-	async function loadWeather() {
+	async function loadWeather(errors?: string[]) {
 		const requestId = weatherGuard.next();
 		weatherLoadingState = true;
 		weatherError = null;
@@ -98,6 +106,7 @@
 		} catch (error) {
 			if (weatherGuard.isLatest(requestId)) {
 				weatherError = (error as Error).message;
+				errors?.push(`weather: ${(error as Error).message}`);
 			}
 		} finally {
 			if (weatherGuard.isLatest(requestId)) {
@@ -107,21 +116,33 @@
 		}
 	}
 
+	async function loadStravaSafe(errors: string[]) {
+		try {
+			await loadStravaData();
+		} catch (err) {
+			errors.push(`strava: ${(err as Error).message}`);
+		}
+	}
+
 	// Refresh handler. The in-flight flag prevents visibility-change,
 	// auto-refresh, and manual refreshes from overlapping — overlapping
 	// refreshes produce racey timestamps and let slower-older responses
 	// overwrite faster-newer ones (the wallboard already has the same gate).
+	// Per-loader failures are collected into `errors` and threaded into
+	// `refresh.endRefresh(errors)` so refresh history records degraded
+	// cycles instead of silently reporting success.
 	let refreshInFlight = false;
 	async function handleRefresh() {
 		if (refreshInFlight) return;
 		refreshInFlight = true;
 		refresh.startRefresh();
+		const errors: string[] = [];
 		try {
-			await Promise.all([loadNews(), loadWeather(), loadStravaData()]);
-			refresh.endRefresh();
+			await Promise.all([loadNews(errors), loadWeather(errors), loadStravaSafe(errors)]);
 		} catch (error) {
-			refresh.endRefresh([String(error)]);
+			errors.push(`refresh: ${(error as Error).message ?? String(error)}`);
 		} finally {
+			refresh.endRefresh(errors);
 			refreshInFlight = false;
 		}
 	}
@@ -176,24 +197,26 @@
 
 		async function initialLoad() {
 			refresh.startRefresh();
+			const errors: string[] = [];
 			try {
 				// News always loads client-side (uses DOMParser for RSS).
 				// Weather: skip the live fetch only when the server bootstrap already
 				// matches the user's active location. Otherwise the user would see
 				// Central Marin weather on Novato/Sausalito/etc. until something else
 				// triggered a refresh.
-				const fetches: Promise<void>[] = [loadNews(), loadStravaData()];
+				const fetches: Promise<void>[] = [loadNews(errors), loadStravaSafe(errors)];
 				const bootstrapMatchesUser =
 					bootstrapWeather !== null &&
 					bootstrapLocationId !== null &&
 					bootstrapLocationId === userLocation.id;
 				if (!bootstrapMatchesUser) {
-					fetches.push(loadWeather());
+					fetches.push(loadWeather(errors));
 				}
 				await Promise.all(fetches);
-				refresh.endRefresh();
 			} catch (error) {
-				refresh.endRefresh([String(error)]);
+				errors.push(`refresh: ${(error as Error).message ?? String(error)}`);
+			} finally {
+				refresh.endRefresh(errors);
 			}
 		}
 		initialLoad();
