@@ -282,40 +282,31 @@ function createRefreshStore() {
 		},
 
 		/**
-		 * Toggle auto-refresh
+		 * Toggle auto-refresh.
+		 *
+		 * State must be updated BEFORE setupAutoRefresh runs, because
+		 * setupAutoRefresh reads the store via get() to decide whether to start
+		 * or clear the timer. Calling it inside update() would observe the
+		 * pre-update state and produce the wrong timer (toggle off keeping the
+		 * old timer running, toggle on failing to start one).
 		 */
 		toggleAutoRefresh(callback?: () => void) {
-			update((state) => {
-				const newEnabled = !state.autoRefreshEnabled;
-				saveSettings(newEnabled, state.autoRefreshInterval);
-
-				if (callback) {
-					setupAutoRefresh(callback);
-				}
-
-				return {
-					...state,
-					autoRefreshEnabled: newEnabled
-				};
-			});
+			const state = get({ subscribe });
+			const newEnabled = !state.autoRefreshEnabled;
+			saveSettings(newEnabled, state.autoRefreshInterval);
+			update((s) => ({ ...s, autoRefreshEnabled: newEnabled }));
+			if (callback) setupAutoRefresh(callback);
 		},
 
 		/**
-		 * Set auto-refresh interval
+		 * Set auto-refresh interval. Same ordering invariant as toggleAutoRefresh:
+		 * persist + update state first, then reschedule against the new state.
 		 */
 		setAutoRefreshInterval(intervalMs: number, callback?: () => void) {
-			update((state) => {
-				saveSettings(state.autoRefreshEnabled, intervalMs);
-
-				if (callback) {
-					setupAutoRefresh(callback);
-				}
-
-				return {
-					...state,
-					autoRefreshInterval: intervalMs
-				};
-			});
+			const state = get({ subscribe });
+			saveSettings(state.autoRefreshEnabled, intervalMs);
+			update((s) => ({ ...s, autoRefreshInterval: intervalMs }));
+			if (callback) setupAutoRefresh(callback);
 		},
 
 		/**

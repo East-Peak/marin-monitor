@@ -180,4 +180,57 @@ describe('Refresh Store', () => {
 		const state = get(refresh);
 		expect(state.refreshHistory.length).toBe(10);
 	});
+
+	// FIX-5 — auto-refresh rescheduling must read the post-update state, not the
+	// pre-update state. Previously setupAutoRefresh() was called inside the
+	// update() closure, which means it observed the OLD state via get() and
+	// produced the wrong timer. These tests pin the corrected behavior.
+
+	it('toggleAutoRefresh(callback) from enabled→disabled stops the timer', async () => {
+		const { refresh } = await import('./refresh');
+		const callback = vi.fn();
+
+		refresh.setupAutoRefresh(callback);
+
+		// Default is enabled; timer fires at the default interval.
+		vi.advanceTimersByTime(5 * 60 * 1000);
+		expect(callback).toHaveBeenCalledTimes(1);
+		callback.mockClear();
+
+		// Toggle off and re-supply the callback. With the bug, setupAutoRefresh()
+		// reads autoRefreshEnabled=true (pre-update) and keeps the timer running.
+		refresh.toggleAutoRefresh(callback);
+
+		vi.advanceTimersByTime(15 * 60 * 1000);
+		expect(callback).not.toHaveBeenCalled();
+	});
+
+	it('toggleAutoRefresh(callback) from disabled→enabled starts the timer', async () => {
+		const { refresh } = await import('./refresh');
+		const callback = vi.fn();
+
+		refresh.toggleAutoRefresh(); // → disabled, no callback yet
+
+		// Now toggle back on with a callback.
+		refresh.toggleAutoRefresh(callback);
+
+		vi.advanceTimersByTime(5 * 60 * 1000);
+		expect(callback).toHaveBeenCalledTimes(1);
+	});
+
+	it('setAutoRefreshInterval(newInterval, callback) reschedules with the new cadence', async () => {
+		const { refresh } = await import('./refresh');
+		const callback = vi.fn();
+
+		refresh.setupAutoRefresh(callback);
+
+		// New interval is 1 minute (was the 5-minute default).
+		refresh.setAutoRefreshInterval(60 * 1000, callback);
+
+		vi.advanceTimersByTime(60 * 1000);
+		expect(callback).toHaveBeenCalledTimes(1);
+
+		vi.advanceTimersByTime(60 * 1000);
+		expect(callback).toHaveBeenCalledTimes(2);
+	});
 });

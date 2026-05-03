@@ -107,14 +107,22 @@
 		}
 	}
 
-	// Refresh handler
+	// Refresh handler. The in-flight flag prevents visibility-change,
+	// auto-refresh, and manual refreshes from overlapping — overlapping
+	// refreshes produce racey timestamps and let slower-older responses
+	// overwrite faster-newer ones (the wallboard already has the same gate).
+	let refreshInFlight = false;
 	async function handleRefresh() {
+		if (refreshInFlight) return;
+		refreshInFlight = true;
 		refresh.startRefresh();
 		try {
 			await Promise.all([loadNews(), loadWeather(), loadStravaData()]);
 			refresh.endRefresh();
 		} catch (error) {
 			refresh.endRefresh([String(error)]);
+		} finally {
+			refreshInFlight = false;
 		}
 	}
 
