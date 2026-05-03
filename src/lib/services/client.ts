@@ -122,7 +122,6 @@ export class ServiceClient {
 					this.log(`Retry attempt ${attempt} for ${serviceId}`);
 				}
 
-				breaker.trackHalfOpenRequest();
 				const data = await this.fetchWithTimeout<T>(url, options, config);
 				breaker.recordSuccess();
 
@@ -142,6 +141,14 @@ export class ServiceClient {
 					(error instanceof NetworkError &&
 						(error.status === 404 || error.status === 401 || error.status === 403))
 				) {
+					break;
+				}
+
+				// Honor the single-probe invariant: a HALF_OPEN probe gets ONE
+				// upstream attempt. The first failure should re-open the breaker
+				// so we don't hammer a still-failing service with retries while
+				// the breaker has already given us recovery permission.
+				if (breaker.state === 'HALF_OPEN') {
 					break;
 				}
 

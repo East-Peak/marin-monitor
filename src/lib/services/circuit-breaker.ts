@@ -72,10 +72,15 @@ export class CircuitBreaker {
 	}
 
 	/**
-	 * The real gate. May transition OPEN → HALF_OPEN once the reset timeout
-	 * has elapsed; only call this when actually about to issue a request.
+	 * The real gate. Atomically transitions OPEN → HALF_OPEN once the reset
+	 * timeout has elapsed AND reserves a half-open probe slot when admitted,
+	 * so concurrent callers can't all see "available" and each fire a probe.
+	 *
+	 * Only call this when actually about to issue a request — every
+	 * `canRequest() === true` consumes a half-open slot.
 	 */
 	canRequest(): boolean {
+		// OPEN → HALF_OPEN if the reset window has elapsed.
 		if (
 			this._state === CircuitBreakerStates.OPEN &&
 			this.lastFailureTime &&
@@ -84,9 +89,22 @@ export class CircuitBreaker {
 			this._state = CircuitBreakerStates.HALF_OPEN;
 			this.halfOpenRequests = 0;
 			console.log(`[CircuitBreaker] ${this.serviceId}: OPEN -> HALF_OPEN (testing recovery)`);
-			return true;
 		}
-		return this.peekCanRequest();
+
+		switch (this._state) {
+			case CircuitBreakerStates.CLOSED:
+				return true;
+			case CircuitBreakerStates.OPEN:
+				return false;
+			case CircuitBreakerStates.HALF_OPEN:
+				if (this.halfOpenRequests >= this.halfOpenMaxRequests) {
+					return false;
+				}
+				this.halfOpenRequests++;
+				return true;
+			default:
+				return false;
+		}
 	}
 
 	/**
@@ -126,12 +144,13 @@ export class CircuitBreaker {
 	}
 
 	/**
-	 * Track a half-open request
+	 * @deprecated The half-open slot is now reserved atomically by
+	 * `canRequest()`. This method is a no-op kept for back-compat with
+	 * existing call sites; remove once those are cleaned up.
 	 */
 	trackHalfOpenRequest(): void {
-		if (this._state === CircuitBreakerStates.HALF_OPEN) {
-			this.halfOpenRequests++;
-		}
+		// No-op — slot reservation moved into canRequest() to prevent
+		// concurrent callers each seeing "available" and bypassing the limit.
 	}
 
 	/**

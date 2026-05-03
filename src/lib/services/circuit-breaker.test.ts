@@ -182,6 +182,67 @@ describe('CircuitBreaker', () => {
 			vi.useRealTimers();
 		});
 	});
+
+	// R2 #8 — HALF_OPEN slot reservation must be atomic with the gate check.
+	// Previously `canRequest()` only reported "would be allowed"; a separate
+	// `trackHalfOpenRequest()` call did the increment. Concurrent callers
+	// would each see halfOpenRequests=0 and all probe simultaneously,
+	// violating the single-recovery-probe invariant.
+	describe('HALF_OPEN slot reservation', () => {
+		it('canRequest() reserves the half-open slot atomically; only one of N concurrent calls is admitted', () => {
+			vi.useFakeTimers();
+			const b = new CircuitBreaker('atomic-test', {
+				failureThreshold: 1,
+				resetTimeout: 1000,
+				halfOpenMaxRequests: 1
+			});
+			b.recordFailure(); // → OPEN
+			vi.advanceTimersByTime(2000); // past reset timeout
+
+			// Three concurrent gate checks: only the first should be admitted.
+			const a = b.canRequest();
+			const c = b.canRequest();
+			const d = b.canRequest();
+			expect([a, c, d]).toEqual([true, false, false]);
+			vi.useRealTimers();
+		});
+
+		it('canRequest() admits up to halfOpenMaxRequests concurrent probes', () => {
+			vi.useFakeTimers();
+			const b = new CircuitBreaker('multi-probe', {
+				failureThreshold: 1,
+				resetTimeout: 1000,
+				halfOpenMaxRequests: 3
+			});
+			b.recordFailure();
+			vi.advanceTimersByTime(2000);
+
+			expect(b.canRequest()).toBe(true);
+			expect(b.canRequest()).toBe(true);
+			expect(b.canRequest()).toBe(true);
+			expect(b.canRequest()).toBe(false); // 4th over the limit
+			vi.useRealTimers();
+		});
+
+		it('recordSuccess() releases reserved slots back to CLOSED state', () => {
+			vi.useFakeTimers();
+			const b = new CircuitBreaker('release-test', {
+				failureThreshold: 1,
+				resetTimeout: 1000,
+				halfOpenMaxRequests: 1
+			});
+			b.recordFailure();
+			vi.advanceTimersByTime(2000);
+
+			expect(b.canRequest()).toBe(true); // reserves the slot
+			expect(b.canRequest()).toBe(false); // no more
+
+			b.recordSuccess(); // recovery confirmed → CLOSED
+			expect(b.state).toBe(CircuitBreakerStates.CLOSED);
+			expect(b.canRequest()).toBe(true); // CLOSED admits freely
+			vi.useRealTimers();
+		});
+	});
 });
 
 describe('CircuitBreakerRegistry', () => {
