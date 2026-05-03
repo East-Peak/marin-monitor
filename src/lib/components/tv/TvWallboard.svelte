@@ -32,15 +32,15 @@
   import { fetchTidePredictions } from '$lib/api/marin/tides';
   import { loadAllNews } from '$lib/api/marin/load-all';
   import { fetchHourlyForecast } from '$lib/api/marin/nws-hourly';
-  import { fetchCompositeData } from '$lib/api/marin/composite';
-  import { fetchCappuccinoData } from '$lib/api/marin/cappuccino';
-  import { fetchGroceryBasketData } from '$lib/api/marin/grocery-basket';
-  import { fetchWineIndexData } from '$lib/api/marin/wine-index';
-  import { fetchFitnessData } from '$lib/api/marin/fitness';
-  import { fetchSchoolTuitionData } from '$lib/api/marin/school-tuition';
-  import { fetchDrivewayData } from '$lib/api/marin/driveway';
-  import { fetchGasPriceData } from '$lib/api/marin/gas-prices';
-  import { fetchHousingData } from '$lib/api/marin/housing';
+  import { fetchCompositeDataWithStatus } from '$lib/api/marin/composite';
+  import { fetchCappuccinoDataWithStatus } from '$lib/api/marin/cappuccino';
+  import { fetchGroceryBasketDataWithStatus } from '$lib/api/marin/grocery-basket';
+  import { fetchWineIndexDataWithStatus } from '$lib/api/marin/wine-index';
+  import { fetchFitnessDataWithStatus } from '$lib/api/marin/fitness';
+  import { fetchSchoolTuitionDataWithStatus } from '$lib/api/marin/school-tuition';
+  import { fetchDrivewayDataWithStatus } from '$lib/api/marin/driveway';
+  import { fetchGasPriceDataWithStatus } from '$lib/api/marin/gas-prices';
+  import { fetchHousingDataWithStatus } from '$lib/api/marin/housing';
   import { computeHeroDirt } from '$lib/analysis/indicators';
   import { tvIndexData } from '$lib/stores/tv';
   import type { NewsItem, AirQualityData, TidePrediction } from '$lib/types';
@@ -362,24 +362,26 @@
     return [];
   });
 
-  async function loadNews() {
-    const result = await loadAllNews();
-    earthquakeItems = result.earthquakeNews;
+  async function loadNews(errors: string[]) {
+    try {
+      const result = await loadAllNews();
+      earthquakeItems = result.earthquakeNews;
+    } catch (err) {
+      errors.push(`news: ${(err as Error).message}`);
+    }
   }
 
   let lastRegionWeatherFetch = 0;
   const REGION_WEATHER_TTL = 15 * 60 * 1000; // 15 minutes for map region weather
 
-  async function loadWeather() {
+  async function loadWeather(errors: string[]) {
     try {
-      // Fetch hourly for header temp display (every refresh cycle)
-      const hourly = await fetchHourlyForecast().catch(() => []);
+      const hourly = await fetchHourlyForecast();
       if (hourly.length > 0) hourlyPeriods = hourly;
-    } catch {
-      // Silent fail
+    } catch (err) {
+      errors.push(`weather/hourly: ${(err as Error).message}`);
     }
 
-    // Pre-fetch weather for all map regions — only every 15 minutes
     if (Date.now() - lastRegionWeatherFetch < REGION_WEATHER_TTL && Object.keys(regionWeather).length > 0) {
       return;
     }
@@ -393,73 +395,127 @@
         return null;
       })
     );
+
     const newWeather: Record<string, { temp: number; wind: string; shortForecast: string }> = { ...regionWeather };
-    for (const r of results) {
+    for (let i = 0; i < results.length; i++) {
+      const r = results[i];
       if (r.status === 'fulfilled' && r.value) {
         newWeather[r.value.id] = r.value.data;
+      } else if (r.status === 'rejected') {
+        errors.push(`weather/${TV_MAP_VIEWS[i].id}: ${(r.reason as Error)?.message ?? r.reason}`);
       }
     }
     regionWeather = newWeather;
-    // Only suppress retries if ALL views succeeded — partial failures should retry next cycle
     const allSucceeded = results.every((r) => r.status === 'fulfilled' && r.value !== null);
     if (allSucceeded) {
       lastRegionWeatherFetch = Date.now();
     }
   }
 
-  async function loadFireIncidents() {
+  async function loadFireIncidents(errors: string[]) {
     try {
       fireIncidents = await fetchFireIncidents();
-    } catch {
-      // Silent fail
+    } catch (err) {
+      errors.push(`fire-incidents: ${(err as Error).message}`);
     }
   }
 
-  async function loadIndexData(): Promise<void> {
+  async function loadStravaSafe(errors: string[]) {
+    try {
+      await loadStravaData();
+    } catch (err) {
+      errors.push(`strava: ${(err as Error).message}`);
+    }
+  }
+
+  /**
+   * Apply a tagged FetchResult to TV state. On success, `setter(result.data)`
+   * runs; on failure, previous state is preserved and the error is collected.
+   * Returns the value that should be used downstream — `data` on success,
+   * `null` on failure (so callers can skip publishing fallback data into the
+   * ticker store, etc.).
+   */
+  function applyResult<T>(
+    label: string,
+    result: { ok: true; data: T } | { ok: false; error: string; fallback: T },
+    setter: (value: T) => void,
+    errors: string[]
+  ): T | null {
+    if (result.ok) {
+      setter(result.data);
+      return result.data;
+    }
+    errors.push(`${label}: ${result.error}`);
+    return null;
+  }
+
+  async function loadIndexData(errors: string[]): Promise<void> {
     const [composite, cappuccino, grocery, wine, fitness, tuition, driveway, gas] =
       await Promise.all([
-        fetchCompositeData().catch(() => null),
-        fetchCappuccinoData().catch(() => null),
-        fetchGroceryBasketData().catch(() => null),
-        fetchWineIndexData().catch(() => null),
-        fetchFitnessData().catch(() => null),
-        fetchSchoolTuitionData().catch(() => null),
-        fetchDrivewayData().catch(() => null),
-        fetchGasPriceData().catch(() => null)
+        fetchCompositeDataWithStatus(),
+        fetchCappuccinoDataWithStatus(),
+        fetchGroceryBasketDataWithStatus(),
+        fetchWineIndexDataWithStatus(),
+        fetchFitnessDataWithStatus(),
+        fetchSchoolTuitionDataWithStatus(),
+        fetchDrivewayDataWithStatus(),
+        fetchGasPriceDataWithStatus()
       ]);
 
-    compositeData = composite;
-    cappuccinoData = cappuccino;
-    groceryData = grocery;
-    wineData = wine;
-    fitnessData = fitness;
-    tuitionData = tuition;
-    drivewayData = driveway;
-    gasData = gas;
+    const compositeLive = applyResult('composite', composite, (v) => (compositeData = v), errors);
+    const cappuccinoLive = applyResult('cappuccino', cappuccino, (v) => (cappuccinoData = v), errors);
+    const groceryLive = applyResult('grocery', grocery, (v) => (groceryData = v), errors);
+    const wineLive = applyResult('wine', wine, (v) => (wineData = v), errors);
+    const fitnessLive = applyResult('fitness', fitness, (v) => (fitnessData = v), errors);
+    const tuitionLive = applyResult('school-tuition', tuition, (v) => (tuitionData = v), errors);
+    const drivewayLive = applyResult('driveway', driveway, (v) => (drivewayData = v), errors);
+    const gasLive = applyResult('gas-prices', gas, (v) => (gasData = v), errors);
 
-    // Update ticker store with index data for chyron
-    tvIndexData.set({ composite, cappuccino, grocery, wine, fitness, tuition, driveway, gas });
+    // Ticker store gets only live values — silent fallbacks would scroll fake numbers.
+    tvIndexData.set({
+      composite: compositeLive,
+      cappuccino: cappuccinoLive,
+      grocery: groceryLive,
+      wine: wineLive,
+      fitness: fitnessLive,
+      tuition: tuitionLive,
+      driveway: drivewayLive,
+      gas: gasLive
+    });
 
-    // Housing data (loaded here to avoid blocking index cards)
-    housingData = await fetchHousingData().catch(() => []);
+    const housing = await fetchHousingDataWithStatus();
+    applyResult('housing', housing, (v) => (housingData = v), errors);
 
-    // Conditions & outdoors data (separate batch to avoid blocking index cards)
-    const [aqiResult, tidesResult, streamsResult, observedResult] = await Promise.all([
-      fetchAirQuality().catch(() => null),
-      fetchTidePredictions().catch(() => []),
-      fetchStreamGauges().catch(() => []),
-      fetchObservedWeather(37.97, -122.53).catch(() => null)
+    const [aqiResult, tidesResult, streamsResult, observedResult] = await Promise.allSettled([
+      fetchAirQuality(),
+      fetchTidePredictions(),
+      fetchStreamGauges(),
+      fetchObservedWeather(37.97, -122.53)
     ]);
 
-    aqiData = aqiResult;
-    tidePredictions = tidesResult ?? [];
-    streamGauges = streamsResult ?? [];
+    if (aqiResult.status === 'fulfilled') aqiData = aqiResult.value;
+    else errors.push(`aqi: ${(aqiResult.reason as Error)?.message ?? aqiResult.reason}`);
 
-    // Compute Hero Dirt if we have observed weather + hourly forecast
-    if (observedResult && hourlyPeriods.length > 0) {
+    if (tidesResult.status === 'fulfilled') tidePredictions = tidesResult.value ?? [];
+    else errors.push(`tides: ${(tidesResult.reason as Error)?.message ?? tidesResult.reason}`);
+
+    if (streamsResult.status === 'fulfilled') streamGauges = streamsResult.value ?? [];
+    else errors.push(`streams: ${(streamsResult.reason as Error)?.message ?? streamsResult.reason}`);
+
+    let observed: Awaited<ReturnType<typeof fetchObservedWeather>> | null = null;
+    if (observedResult.status === 'fulfilled') {
+      observed = observedResult.value;
+    } else {
+      errors.push(`observed-weather: ${(observedResult.reason as Error)?.message ?? observedResult.reason}`);
+    }
+
+    if (observed && hourlyPeriods.length > 0) {
       try {
-        heroDirt = computeHeroDirt(observedResult, hourlyPeriods);
-      } catch { heroDirt = null; }
+        heroDirt = computeHeroDirt(observed, hourlyPeriods);
+      } catch (err) {
+        errors.push(`hero-dirt: ${(err as Error).message}`);
+        heroDirt = null;
+      }
     } else {
       heroDirt = null;
     }
@@ -470,12 +526,21 @@
     if (refreshInFlight) return;
     refreshInFlight = true;
     refresh.startRefresh();
+    const errors: string[] = [];
     try {
-      await Promise.all([loadNews(), loadWeather(), loadFireIncidents(), loadStravaData(), loadIndexData()]);
-      refresh.endRefresh();
+      await Promise.all([
+        loadNews(errors),
+        loadWeather(errors),
+        loadFireIncidents(errors),
+        loadStravaSafe(errors),
+        loadIndexData(errors)
+      ]);
     } catch (error) {
-      refresh.endRefresh([String(error)]);
+      // Should be unreachable — every loader catches internally — but keep a
+      // belt-and-suspenders entry so an unexpected throw still surfaces.
+      errors.push(`refresh: ${(error as Error).message ?? String(error)}`);
     } finally {
+      refresh.endRefresh(errors);
       refreshInFlight = false;
     }
   }

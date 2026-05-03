@@ -20,7 +20,7 @@ vi.mock('$lib/config/api', () => ({
 	}
 }));
 
-import { createDataFetcher } from './data-fetcher';
+import { createDataFetcher, createDataFetcherWithStatus } from './data-fetcher';
 
 // ────────────────────────────────────────────
 // Helpers
@@ -179,5 +179,80 @@ describe('createDataFetcher', () => {
 		expect(result1).toEqual(payload1);
 		expect(result2).toEqual(payload2);
 		expect(mockFetchWithTimeout).toHaveBeenCalledTimes(2);
+	});
+});
+
+describe('createDataFetcherWithStatus', () => {
+	beforeEach(() => {
+		mockFetchWithTimeout.mockReset();
+		mockLoggerLog.mockReset();
+		mockLoggerWarn.mockReset();
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it('returns { ok: true, data } on success', async () => {
+		const payload = { current: 42, history: [1, 2, 3] };
+		mockFetchWithTimeout.mockResolvedValueOnce(jsonResponse(payload));
+
+		const fetcher = createDataFetcherWithStatus<{ current: number; history: number[] }>(
+			'/api/data/foo',
+			'FOO',
+			{ current: 0, history: [] }
+		);
+		const result = await fetcher();
+
+		expect(result).toEqual({ ok: true, data: payload });
+	});
+
+	it('returns { ok: false, error, fallback } on HTTP error', async () => {
+		mockFetchWithTimeout.mockResolvedValueOnce(
+			new Response('Internal Server Error', { status: 503 })
+		);
+
+		const fallback = { current: null, history: [] as number[] };
+		const fetcher = createDataFetcherWithStatus('/api/data/foo', 'FOO', fallback);
+		const result = await fetcher();
+
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.error).toContain('503');
+			expect(result.fallback).toEqual(fallback);
+		}
+	});
+
+	it('returns { ok: false, error, fallback } on network error', async () => {
+		mockFetchWithTimeout.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+		const fallback: string[] = [];
+		const fetcher = createDataFetcherWithStatus<string[]>('/api/data/foo', 'FOO', fallback);
+		const result = await fetcher();
+
+		expect(result.ok).toBe(false);
+		if (!result.ok) {
+			expect(result.error).toContain('Failed to fetch');
+			expect(result.fallback).toEqual(fallback);
+		}
+	});
+
+	it('still logs warning on failure (operator visibility preserved)', async () => {
+		mockFetchWithTimeout.mockRejectedValueOnce(new Error('Connection refused'));
+
+		const fetcher = createDataFetcherWithStatus('/api/data/foo', 'FOO', {});
+		await fetcher();
+
+		expect(mockLoggerWarn).toHaveBeenCalledWith('FOO', expect.stringContaining('Connection refused'));
+	});
+
+	it('still logs success on success', async () => {
+		mockFetchWithTimeout.mockResolvedValueOnce(jsonResponse({ ok: true }));
+
+		const fetcher = createDataFetcherWithStatus('/api/data/foo', 'FOO', {});
+		await fetcher();
+
+		expect(mockLoggerLog).toHaveBeenCalledWith('FOO', expect.stringContaining('/api/data/foo'));
+		expect(mockLoggerWarn).not.toHaveBeenCalled();
 	});
 });
