@@ -4,6 +4,14 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-05-03
+
+### Fixed
+- `/api/data/*` blob-backed endpoints now return `503` with a structured error body (`{ error, message, timestamp, blobKey, upstreamStatus? }`) when the blob is missing, env is unset, or upstream fetch fails. Previously returned `200 OK` with an empty payload, so a misconfigured deployment looked like "Marin has no data" instead of an operational outage. 16 endpoints migrated to a single `serveBlobJson` / `tryReadBlobText` helper.
+- Freshness pipeline no longer substitutes blob upload time for missing scrape metadata on live-scrape datasets. When `preferContent: true` and content lacks `lastSuccessfulScrapeAt` (or the fetch fails), `lastUpdated` is now `null` — so `/api/health` and the daily check-freshness cron correctly report stale data as stale instead of healthy.
+
+---
+
 ## 2026-04-05
 
 ### Fixed

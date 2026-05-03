@@ -21,13 +21,20 @@ export function extractBlobFreshnessTimestamp(data: unknown): string | null {
 	);
 }
 
-export function resolveBlobFreshnessTimestamp(
-	data: unknown,
-	uploadedAt: string | null
-): string | null {
-	return extractBlobFreshnessTimestamp(data) ?? uploadedAt;
-}
-
+/**
+ * Read freshness timestamp for a blob.
+ *
+ * Two distinct semantics:
+ *
+ * - **Manual datasets** (preferContent=false): the blob is a snapshot whose
+ *   freshness IS its upload time. Returns lastUpdated = uploadedAt.
+ *
+ * - **Live-scrape datasets** (preferContent=true): freshness is whatever
+ *   `lastSuccessfulScrapeAt` is embedded in the content. If the content has
+ *   no metadata, or the fetch fails, lastUpdated is null. We never substitute
+ *   uploadedAt for missing scrape metadata — that would lie about whether a
+ *   live scrape actually succeeded.
+ */
 export async function readBlobFreshnessTimestamp(
 	blobKey: string,
 	token: string,
@@ -46,24 +53,17 @@ export async function readBlobFreshnessTimestamp(
 	try {
 		const response = await fetchWithTimeout(
 			blob.downloadUrl,
-			{
-				headers: {
-					Authorization: `Bearer ${token}`
-				}
-			},
+			{ headers: { Authorization: `Bearer ${token}` } },
 			options.timeoutMs ?? 8000
 		);
 
 		if (!response.ok) {
-			return { uploadedAt, lastUpdated: uploadedAt };
+			return { uploadedAt, lastUpdated: null };
 		}
 
 		const data = await response.json();
-		return {
-			uploadedAt,
-			lastUpdated: resolveBlobFreshnessTimestamp(data, uploadedAt)
-		};
+		return { uploadedAt, lastUpdated: extractBlobFreshnessTimestamp(data) };
 	} catch {
-		return { uploadedAt, lastUpdated: uploadedAt };
+		return { uploadedAt, lastUpdated: null };
 	}
 }

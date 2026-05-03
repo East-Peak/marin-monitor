@@ -1,46 +1,36 @@
-import { head } from '@vercel/blob';
-import { env } from '$env/dynamic/private';
+import { blobErrorResponse, tryReadBlobText } from '$lib/server/blob-endpoint';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url }) => {
-	try {
-		const blob = await head('marin-activity.json', {
-			token: env.BLOB_READ_WRITE_TOKEN
+	const blob = await tryReadBlobText('marin-activity.json');
+	if (blob.ok) {
+		return new Response(blob.text, {
+			headers: {
+				'Content-Type': 'application/json',
+				'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+			}
 		});
-		const response = await fetchWithTimeout(blob.downloadUrl, {
-			headers: { Authorization: `Bearer ${env.BLOB_READ_WRITE_TOKEN}` }
-		}, 8000);
-		if (response.ok) {
-			return new Response(await response.text(), {
-				headers: {
-					'Content-Type': 'application/json',
-					'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
-				}
-			});
-		}
-	} catch {
-		// Blob not available — fall through to static file
 	}
 
 	try {
-		const staticRes = await fetchWithTimeout(new URL('/data/marin-activity.json', url.origin).href, undefined, 5000);
+		const staticRes = await fetchWithTimeout(
+			new URL('/data/marin-activity.json', url.origin).href,
+			undefined,
+			5000
+		);
 		if (staticRes.ok) {
 			return new Response(await staticRes.text(), {
 				headers: {
 					'Content-Type': 'application/json',
-					'Cache-Control': 'public, s-maxage=60'
+					'Cache-Control': 'public, s-maxage=60',
+					'X-Data-Source': 'static-fallback'
 				}
 			});
 		}
 	} catch {
-		// Static file not available
+		// Static file unreachable — fall through to error response
 	}
 
-	return new Response(JSON.stringify([]), {
-		headers: {
-			'Content-Type': 'application/json',
-			'Cache-Control': 'public, s-maxage=60'
-		}
-	});
+	return blobErrorResponse(blob.error);
 };

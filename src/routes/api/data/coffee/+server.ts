@@ -1,5 +1,3 @@
-import { head } from '@vercel/blob';
-import { env } from '$env/dynamic/private';
 import {
 	CAPPUCCINO_BLOB_KEY,
 	COFFEE_INDEX_BLOB_KEY,
@@ -7,7 +5,7 @@ import {
 	COFFEE_INDEX_NAME,
 	COFFEE_PRIMARY_DRINK
 } from '$lib/config/coffee';
-import { fetchWithTimeout } from '$lib/server/fetch-utils';
+import { blobErrorResponse, tryReadBlobText } from '$lib/server/blob-endpoint';
 import { summarizeDrinks, summarizeMenuCoverage } from '$lib/server/scrapers/coffee-index.shared.js';
 import type {
 	CoffeeData,
@@ -19,28 +17,6 @@ import type {
 	CoffeeSnapshot
 } from '$lib/types/coffee';
 import type { RequestHandler } from './$types';
-
-async function readBlobJson<T>(blobKey: string): Promise<T | null> {
-	try {
-		const blob = await head(blobKey, {
-			token: env.BLOB_READ_WRITE_TOKEN
-		});
-		const response = await fetchWithTimeout(
-			blob.downloadUrl,
-			{
-				headers: { Authorization: `Bearer ${env.BLOB_READ_WRITE_TOKEN}` }
-			},
-			8000
-		);
-		if (response.ok) {
-			return (await response.json()) as T;
-		}
-	} catch {
-		// Blob not available.
-	}
-
-	return null;
-}
 
 function toLegacyDrinkPrice(
 	snapshot: CoffeeSnapshot,
@@ -109,9 +85,9 @@ function buildCoffeeIndexDataFromLegacy(data: CoffeeData): CoffeeIndexData {
 }
 
 export const GET: RequestHandler = async () => {
-	const data = await readBlobJson<CoffeeIndexData>(COFFEE_INDEX_BLOB_KEY);
-	if (data) {
-		return new Response(JSON.stringify(data), {
+	const newFormat = await tryReadBlobText(COFFEE_INDEX_BLOB_KEY);
+	if (newFormat.ok) {
+		return new Response(newFormat.text, {
 			headers: {
 				'Content-Type': 'application/json',
 				'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200'
@@ -119,8 +95,9 @@ export const GET: RequestHandler = async () => {
 		});
 	}
 
-	const legacyData = await readBlobJson<CoffeeData>(CAPPUCCINO_BLOB_KEY);
-	if (legacyData) {
+	const legacy = await tryReadBlobText(CAPPUCCINO_BLOB_KEY);
+	if (legacy.ok) {
+		const legacyData = JSON.parse(legacy.text) as CoffeeData;
 		return new Response(JSON.stringify(buildCoffeeIndexDataFromLegacy(legacyData)), {
 			headers: {
 				'Content-Type': 'application/json',
@@ -129,10 +106,5 @@ export const GET: RequestHandler = async () => {
 		});
 	}
 
-	return new Response(JSON.stringify({ current: null, history: [] }), {
-		headers: {
-			'Content-Type': 'application/json',
-			'Cache-Control': 'public, s-maxage=60'
-		}
-	});
+	return blobErrorResponse(newFormat.error);
 };
