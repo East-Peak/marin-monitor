@@ -247,6 +247,48 @@ describe('loadAllNews orchestrator', () => {
 		expect(setItems311.length).toBeGreaterThanOrEqual(1);
 	});
 
+	// FIX-10 — 311 stale pinning. Old behavior: when fetchSeeClickFixIssues
+	// returned [] (failure or legitimate empty) AND the store already had
+	// items, the 311 store was never rewritten. Outages looked like "fresh
+	// 311 reports still present"; legitimate empty refreshes left stale data
+	// pinned forever. Correct semantics:
+	//   success → always rewrite (even with [])
+	//   failure → leave existing data intact (preserve last known good)
+
+	it('rewrites 311 store with empty array when SeeClickFix succeeds with no items', async () => {
+		mockFetchAllFeeds.mockResolvedValue([
+			makeCategoryResult('local', [makeNewsItem({ id: 'local-1', category: 'local' })])
+		]);
+		mockFetchSeeClickFixIssues.mockResolvedValue([]); // success, but no current issues
+		mockGetItems.mockReturnValue([
+			makeNewsItem({ id: 'stale-311-1', category: '311' }) // store had stale items
+		]);
+
+		const { loadAllNews } = await import('./load-all');
+		await loadAllNews();
+
+		// setItems must have been called for 311 with an empty list — old data cleared.
+		const setItems311 = mockSetItems.mock.calls.filter((c: unknown[]) => c[0] === '311');
+		expect(setItems311.length).toBe(1);
+		expect(setItems311[0][1]).toEqual([]);
+	});
+
+	it('does NOT rewrite the 311 store when SeeClickFix fetch fails (preserves last known good)', async () => {
+		mockFetchAllFeeds.mockResolvedValue([
+			makeCategoryResult('local', [makeNewsItem({ id: 'local-1', category: 'local' })])
+		]);
+		mockFetchSeeClickFixIssues.mockRejectedValue(new Error('upstream 503'));
+		mockGetItems.mockReturnValue([
+			makeNewsItem({ id: 'previous-311-1', category: '311' })
+		]);
+
+		const { loadAllNews } = await import('./load-all');
+		await loadAllNews();
+
+		const setItems311 = mockSetItems.mock.calls.filter((c: unknown[]) => c[0] === '311');
+		expect(setItems311.length).toBe(0);
+	});
+
 	// ---------- Sorting ----------
 
 	it('sorts merged items by timestamp descending before enrichment', async () => {

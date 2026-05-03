@@ -134,33 +134,35 @@ function issueToNewsItem(issue: SeeClickFixIssue): NewsItem | null {
 /**
  * Fetch 311 issues from the pre-synced blob (via /api/data/311).
  * The cron job at /api/cron/sync-311 refreshes the blob every 4 hours.
+ *
+ * Throws on fetch/parse failure. Callers should distinguish "succeeded with
+ * no issues" (legitimate empty) from "fetch failed" (preserve previous state)
+ * via Promise.allSettled or try/catch — silently returning `[]` for both
+ * caused stale 311 incidents to pin indefinitely during outages.
  */
 export async function fetchSeeClickFixIssues(): Promise<NewsItem[]> {
-	try {
-		logger.log('SEECLICKFIX', 'Fetching 311 issues from blob');
+	logger.log('SEECLICKFIX', 'Fetching 311 issues from blob');
 
-		const response = await fetchWithTimeout('/api/data/311', { cache: 'no-store' });
+	const response = await fetchWithTimeout('/api/data/311', { cache: 'no-store' });
 
-		if (!response.ok) {
-			throw new Error(`HTTP ${response.status}`);
-		}
+	if (!response.ok) {
+		const message = `HTTP ${response.status}`;
+		logger.warn('SEECLICKFIX', `311 blob fetch failed: ${message}`);
+		throw new Error(message);
+	}
 
-		const data = (await response.json()) as SeeClickFixBlobData;
+	const data = (await response.json()) as SeeClickFixBlobData;
 
-		if (!data.issues || !Array.isArray(data.issues)) {
-			logger.warn('SEECLICKFIX', 'Unexpected response shape — no issues array');
-			return [];
-		}
-
-		const items = data.issues
-			.map(issueToNewsItem)
-			.filter((item): item is NewsItem => !!item)
-			.sort((a, b) => b.timestamp - a.timestamp);
-
-		logger.log('SEECLICKFIX', `Loaded ${items.length} issues from blob`);
-		return items;
-	} catch (error) {
-		logger.warn('SEECLICKFIX', `311 blob fetch failed: ${(error as Error).message}`);
+	if (!data.issues || !Array.isArray(data.issues)) {
+		logger.warn('SEECLICKFIX', 'Unexpected response shape — no issues array');
 		return [];
 	}
+
+	const items = data.issues
+		.map(issueToNewsItem)
+		.filter((item): item is NewsItem => !!item)
+		.sort((a, b) => b.timestamp - a.timestamp);
+
+	logger.log('SEECLICKFIX', `Loaded ${items.length} issues from blob`);
+	return items;
 }

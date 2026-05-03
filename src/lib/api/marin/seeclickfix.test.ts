@@ -289,22 +289,24 @@ describe('fetchSeeClickFixIssues', () => {
 		expect(result[1].timestamp).toBeGreaterThan(result[2].timestamp);
 	});
 
-	it('returns empty array on API failure', async () => {
+	// FIX-10 — fetchSeeClickFixIssues now throws on failure rather than
+	// silently returning []. Callers (load-all.ts) distinguish "succeeded
+	// with no issues" (clear stale data) from "fetch failed" (preserve last
+	// known good) via Promise.allSettled status.
+	it('throws on API failure', async () => {
 		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
 
 		mockFetchFailure(500);
 
-		const result = await fetchSeeClickFixIssues();
-		expect(result).toEqual([]);
+		await expect(fetchSeeClickFixIssues()).rejects.toThrow(/HTTP 500/);
 	});
 
-	it('returns empty array on network error', async () => {
+	it('throws on network error', async () => {
 		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
 
 		global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
 
-		const result = await fetchSeeClickFixIssues();
-		expect(result).toEqual([]);
+		await expect(fetchSeeClickFixIssues()).rejects.toThrow(/Network error/);
 	});
 
 	it('returns empty array when response has no issues array', async () => {

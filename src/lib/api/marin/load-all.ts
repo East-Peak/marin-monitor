@@ -63,6 +63,13 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 			NewsItem[]
 		];
 
+	// 311 has no RSS feed; the store is rewritten only from the SeeClickFix
+	// adapter. Track whether the fetch actually succeeded so we can preserve
+	// the previous good data on failure instead of pinning stale items
+	// (success with [] is a legitimate "no current 311 reports" — that case
+	// SHOULD clear the store).
+	const seeClickFixSucceeded = settled[7].status === 'fulfilled';
+
 	const earthquakeNews = earthquakesToNewsItems(earthquakes);
 
 	const supplementalByCategory = new Map<NewsCategory, NewsItem[]>();
@@ -94,8 +101,13 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 		})
 	);
 
-	// 311 has no RSS feeds — set items directly from the blob adapter
-	if (seeClickFixIssues.length > 0 || !news.getItems('311').length) {
+	// 311 has no RSS feeds — set items directly from the blob adapter.
+	// On success: always rewrite (legitimate empty must clear stale items).
+	// On failure: leave the store alone unless it was empty to begin with
+	// (avoid blanking a panel that has previously-valid data during a
+	// transient outage).
+	const shouldWrite311 = seeClickFixSucceeded || news.getItems('311').length === 0;
+	if (shouldWrite311) {
 		const enriched311 = await enrichItemsForRelevance(seeClickFixIssues);
 		news.setItems('311', enriched311);
 		if (enriched311.length > 0) {

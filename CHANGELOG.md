@@ -17,6 +17,7 @@ All notable changes to Marin Monitor are documented here.
 - `staleWhileRevalidate` no longer defeats the circuit breaker. Background revalidation is now gated on `breaker.canRequest()`; when an upstream is down, stale-cache hits stop firing fresh retrying requests behind the scenes.
 - `CircuitBreaker.getState()` is now a pure read. It previously called `canRequest()` internally, which transitions OPEN→HALF_OPEN once the reset timeout has elapsed — so a monitoring/debug read could silently consume the recovery window. Split into `peekCanRequest()` (status reads) and `canRequest()` (the real gate); only the latter still mutates.
 - `CacheManager.invalidate(pattern)` actually honors the pattern now. Storage entries are written with their `originalKey` embedded; invalidation parses each entry and only removes those whose key matches. Previously the storage path ignored the pattern and flushed every prefix-matching entry — what looked like a targeted clear was a full cache wipe.
+- 311 (SeeClickFix) feed no longer pins stale incidents indefinitely on outage. `fetchSeeClickFixIssues` now throws on fetch failure (was silently returning `[]`); the orchestrator uses `Promise.allSettled` status to decide between "rewrite the store with fresh data" (success — including legitimate empty) and "preserve last known good" (failure). Previously a fetch failure left whatever was in the 311 panel visible forever, looking like fresh civic reports during an upstream outage.
 
 ---
 
