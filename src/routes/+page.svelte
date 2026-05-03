@@ -19,6 +19,7 @@
 	import { fetchWeather } from '$lib/api/marin';
 	import { loadAllNews } from '$lib/api/marin/load-all';
 	import { earthquakesToNewsItems } from '$lib/api/marin';
+	import { createRequestGuard } from '$lib/utils/request-guard';
 	import WireGrid from '$lib/components/dashboard/WireGrid.svelte';
 	import MapStage from '$lib/components/dashboard/MapStage.svelte';
 	import SignalDeck from '$lib/components/dashboard/SignalDeck.svelte';
@@ -31,6 +32,7 @@
 	// Location (derived from town filter, falls back to settings.locationId)
 	const userLocation = $derived($townLocation);
 	const bootstrapWeather = $derived(data?.bootstrap?.weather ?? null);
+	const bootstrapLocationId = $derived(data?.bootstrap?.locationId ?? null);
 	const bootstrapEarthquakes = $derived(data?.bootstrap?.earthquakes ?? []);
 
 	// Banner ad between signal deck and news area
@@ -79,20 +81,29 @@
 		liveEarthquakesRaw = result.earthquakesRaw;
 	}
 
-	// Fetch weather data from NWS using the active location (town filter or settings default)
+	// Request-ID guard so a slow earlier loadWeather() can't overwrite a faster later one
+	// (race triggered by quick town switches or visibility-change + auto-refresh overlap).
+	const weatherGuard = createRequestGuard();
+
 	async function loadWeather() {
+		const requestId = weatherGuard.next();
 		weatherLoadingState = true;
 		weatherError = null;
 		try {
 			const loc = userLocation;
 			const result = await fetchWeather(loc.lat, loc.lon);
+			if (!weatherGuard.isLatest(requestId)) return;
 			liveWeatherForecast = result.forecast;
 			liveWeatherAlerts = result.alerts;
 		} catch (error) {
-			weatherError = (error as Error).message;
+			if (weatherGuard.isLatest(requestId)) {
+				weatherError = (error as Error).message;
+			}
 		} finally {
-			weatherReady = true;
-			weatherLoadingState = false;
+			if (weatherGuard.isLatest(requestId)) {
+				weatherReady = true;
+				weatherLoadingState = false;
+			}
 		}
 	}
 
@@ -158,10 +169,17 @@
 		async function initialLoad() {
 			refresh.startRefresh();
 			try {
-				// News always loads client-side (uses DOMParser for RSS)
-				// Weather: skip if already hydrated from server bootstrap
+				// News always loads client-side (uses DOMParser for RSS).
+				// Weather: skip the live fetch only when the server bootstrap already
+				// matches the user's active location. Otherwise the user would see
+				// Central Marin weather on Novato/Sausalito/etc. until something else
+				// triggered a refresh.
 				const fetches: Promise<void>[] = [loadNews(), loadStravaData()];
-				if (!bootstrapWeather) {
+				const bootstrapMatchesUser =
+					bootstrapWeather !== null &&
+					bootstrapLocationId !== null &&
+					bootstrapLocationId === userLocation.id;
+				if (!bootstrapMatchesUser) {
 					fetches.push(loadWeather());
 				}
 				await Promise.all(fetches);
