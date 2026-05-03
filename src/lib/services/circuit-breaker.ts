@@ -50,29 +50,43 @@ export class CircuitBreaker {
 	}
 
 	/**
-	 * Check if a request can proceed
+	 * Pure read: would `canRequest()` allow a request right now?
+	 *
+	 * Does NOT transition state. Use this for monitoring, dashboards, debug
+	 * panels, and any other inspection path. Calling the mutating gate from
+	 * a status read consumes the recovery window without real traffic.
 	 */
-	canRequest(): boolean {
+	private peekCanRequest(): boolean {
 		switch (this._state) {
 			case CircuitBreakerStates.CLOSED:
 				return true;
-
 			case CircuitBreakerStates.OPEN:
-				// Check if reset timeout has passed
-				if (this.lastFailureTime && Date.now() - this.lastFailureTime >= this.resetTimeout) {
-					this._state = CircuitBreakerStates.HALF_OPEN;
-					this.halfOpenRequests = 0;
-					console.log(`[CircuitBreaker] ${this.serviceId}: OPEN -> HALF_OPEN (testing recovery)`);
-					return true;
-				}
-				return false;
-
+				return Boolean(
+					this.lastFailureTime && Date.now() - this.lastFailureTime >= this.resetTimeout
+				);
 			case CircuitBreakerStates.HALF_OPEN:
 				return this.halfOpenRequests < this.halfOpenMaxRequests;
-
 			default:
 				return false;
 		}
+	}
+
+	/**
+	 * The real gate. May transition OPEN → HALF_OPEN once the reset timeout
+	 * has elapsed; only call this when actually about to issue a request.
+	 */
+	canRequest(): boolean {
+		if (
+			this._state === CircuitBreakerStates.OPEN &&
+			this.lastFailureTime &&
+			Date.now() - this.lastFailureTime >= this.resetTimeout
+		) {
+			this._state = CircuitBreakerStates.HALF_OPEN;
+			this.halfOpenRequests = 0;
+			console.log(`[CircuitBreaker] ${this.serviceId}: OPEN -> HALF_OPEN (testing recovery)`);
+			return true;
+		}
+		return this.peekCanRequest();
 	}
 
 	/**
@@ -121,7 +135,7 @@ export class CircuitBreaker {
 	}
 
 	/**
-	 * Get current state information
+	 * Get current state information. Pure read — does not transition state.
 	 */
 	getState(): CircuitBreakerStatus {
 		return {
@@ -129,7 +143,7 @@ export class CircuitBreaker {
 			failures: this.failures,
 			successes: this.successes,
 			lastFailure: this.lastFailureTime,
-			canRequest: this.canRequest(),
+			canRequest: this.peekCanRequest(),
 			timeSinceLastFailure: this.lastFailureTime ? Date.now() - this.lastFailureTime : null,
 			timeUntilRetry:
 				this._state === CircuitBreakerStates.OPEN && this.lastFailureTime

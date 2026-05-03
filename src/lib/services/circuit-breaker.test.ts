@@ -144,6 +144,43 @@ describe('CircuitBreaker', () => {
 			expect(state.successes).toBe(2);
 			expect(state.canRequest).toBe(true);
 		});
+
+		// FIX-8 — getState() is a pure read. The earlier implementation called
+		// canRequest() internally, which transitions OPEN→HALF_OPEN once the
+		// reset timeout has elapsed. That meant a monitoring/debug read could
+		// silently consume the recovery window without any real traffic.
+		it('does NOT mutate state when called on an OPEN breaker past the reset timeout', () => {
+			vi.useFakeTimers();
+			const b = new CircuitBreaker('purity-test', {
+				failureThreshold: 1,
+				resetTimeout: 1000
+			});
+			b.recordFailure();
+			expect(b.state).toBe(CircuitBreakerStates.OPEN);
+
+			vi.advanceTimersByTime(2000); // past the reset timeout
+
+			const state = b.getState();
+			expect(state.canRequest).toBe(true); // it WOULD allow a request now
+			expect(b.state).toBe(CircuitBreakerStates.OPEN); // ...but inspection didn't transition
+			vi.useRealTimers();
+		});
+
+		it('canRequest() (the real gate) still transitions OPEN→HALF_OPEN past the reset timeout', () => {
+			vi.useFakeTimers();
+			const b = new CircuitBreaker('gate-test', {
+				failureThreshold: 1,
+				resetTimeout: 1000
+			});
+			b.recordFailure();
+			expect(b.state).toBe(CircuitBreakerStates.OPEN);
+
+			vi.advanceTimersByTime(2000);
+
+			expect(b.canRequest()).toBe(true);
+			expect(b.state).toBe(CircuitBreakerStates.HALF_OPEN); // gate transitions
+			vi.useRealTimers();
+		});
 	});
 });
 

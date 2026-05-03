@@ -14,6 +14,8 @@ All notable changes to Marin Monitor are documented here.
 - Weather fetch race fixed. Quick town switches or visibility-change + auto-refresh overlaps could let a slow earlier `fetchWeather()` overwrite a faster later one. Each call now captures a monotonic request ID via the new `createRequestGuard()` helper and only commits its result if it's still the latest.
 - Auto-refresh toggle/interval changes now reschedule against the post-update store state. `toggleAutoRefresh(callback)` and `setAutoRefreshInterval(ms, callback)` previously called `setupAutoRefresh()` from inside the `update()` closure, which observed the pre-update state — so toggling off could leave the timer running and changing the interval could keep the old cadence.
 - Main dashboard refresh now has an in-flight guard. Visibility-change + auto-refresh + manual refresh could overlap and double-fetch the same sources; only one cycle runs at a time now (matches TV mode's existing behavior).
+- `staleWhileRevalidate` no longer defeats the circuit breaker. Background revalidation is now gated on `breaker.canRequest()`; when an upstream is down, stale-cache hits stop firing fresh retrying requests behind the scenes.
+- `CircuitBreaker.getState()` is now a pure read. It previously called `canRequest()` internally, which transitions OPEN→HALF_OPEN once the reset timeout has elapsed — so a monitoring/debug read could silently consume the recovery window. Split into `peekCanRequest()` (status reads) and `canRequest()` (the real gate); only the latter still mutates.
 
 ---
 

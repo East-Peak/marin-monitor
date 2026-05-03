@@ -76,7 +76,10 @@ export class ServiceClient {
 				return { data: cached.data, fromCache: cached.fromCache, stale: false };
 			}
 			if (cached && cached.isStale && config.cache.staleWhileRevalidate) {
-				// Return stale data immediately, revalidate in background
+				// Return stale data immediately and try to revalidate in background.
+				// Background revalidation is itself gated on the circuit breaker
+				// (see revalidateInBackground); when an upstream is down, every
+				// stale-cache hit would otherwise hammer the failing service.
 				this.revalidateInBackground(serviceId, endpoint, options, cacheKey, config);
 				return { data: cached.data, fromCache: cached.fromCache, stale: true };
 			}
@@ -257,7 +260,12 @@ export class ServiceClient {
 	}
 
 	/**
-	 * Revalidate in background (fire and forget)
+	 * Revalidate in background (fire and forget).
+	 *
+	 * Gated on the circuit breaker so that a failing upstream isn't hammered
+	 * by every stale-cache request. Without this gate, staleWhileRevalidate
+	 * effectively defeats the breaker — each cached response triggers a fresh
+	 * (retrying) executeRequest behind the scenes.
 	 */
 	private revalidateInBackground(
 		serviceId: ServiceId | string,
@@ -267,6 +275,10 @@ export class ServiceClient {
 		config: ServiceConfig
 	): void {
 		const breaker = this.circuitBreakers.get(serviceId, config.circuitBreaker);
+		if (!breaker.canRequest()) {
+			this.log(`Background revalidation skipped (breaker open): ${serviceId}`);
+			return;
+		}
 		const url = this.buildUrl(config, endpoint, options.params);
 
 		this.executeRequest(serviceId, url, { ...options, useCache: false }, cacheKey, breaker, config)
