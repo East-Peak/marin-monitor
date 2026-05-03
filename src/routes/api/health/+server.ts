@@ -96,6 +96,8 @@ const DATA_SOURCES: DataSourceConfig[] = [
 	},
 	{ name: 'Police Logs', blobKey: 'marin-police-logs.json', expectedCadence: 'daily', maxAgeDays: 2 },
 	{ name: 'Activity', blobKey: 'marin-activity.json', expectedCadence: 'daily', maxAgeDays: 2 },
+	// /api/cron/sync-311 runs every 4h; allow 1 day before flagging stale.
+	{ name: '311 (SeeClickFix)', blobKey: 'marin-311.json', expectedCadence: 'daily', maxAgeDays: 1 },
 	{
 		name: 'EV Charging',
 		blobKey: 'marin-ev-charging.json',

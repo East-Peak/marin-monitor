@@ -154,8 +154,9 @@ export async function fetchSeeClickFixIssues(): Promise<NewsItem[]> {
 	const data = (await response.json()) as SeeClickFixBlobData;
 
 	if (!data.issues || !Array.isArray(data.issues)) {
-		logger.warn('SEECLICKFIX', 'Unexpected response shape — no issues array');
-		return [];
+		const message = 'Unexpected response shape — no issues array';
+		logger.warn('SEECLICKFIX', message);
+		throw new Error(message);
 	}
 
 	const items = data.issues

@@ -101,12 +101,18 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 		})
 	);
 
-	// 311 has no RSS feeds — set items directly from the blob adapter.
-	// On success: always rewrite (legitimate empty must clear stale items).
-	// On failure: leave the store alone unless it was empty to begin with
-	// (avoid blanking a panel that has previously-valid data during a
-	// transient outage).
-	const shouldWrite311 = seeClickFixSucceeded || news.getItems('311').length === 0;
+	// 311 has no live RSS source today, but if `fetchAllFeeds` ever returns a
+	// '311' category result, the per-category loop above already wrote it
+	// (merged with seeClickFixIssues + supplemental). In that case the direct
+	// rewrite below would clobber the merge — so skip it.
+	//
+	// When there's no RSS '311' result:
+	//   success → always rewrite (legitimate empty must clear stale items)
+	//   failure → leave the store alone unless it was empty (avoid blanking
+	//             a panel that had valid data during a transient outage)
+	const has311RssResult = rssResults.some((r) => r.category === '311');
+	const shouldWrite311 =
+		!has311RssResult && (seeClickFixSucceeded || news.getItems('311').length === 0);
 	if (shouldWrite311) {
 		const enriched311 = await enrichItemsForRelevance(seeClickFixIssues);
 		news.setItems('311', enriched311);

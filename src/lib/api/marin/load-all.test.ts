@@ -289,6 +289,27 @@ describe('loadAllNews orchestrator', () => {
 		expect(setItems311.length).toBe(0);
 	});
 
+	// R2 #7 — when the RSS pipeline returns a '311' category result, the
+	// per-category loop already writes the merged store; the direct rewrite
+	// must not run, otherwise it overwrites RSS-merged 311 items with
+	// SeeClickFix-only data.
+	it('does NOT do the direct 311 rewrite when fetchAllFeeds returned a 311 RSS result', async () => {
+		mockFetchAllFeeds.mockResolvedValue([
+			makeCategoryResult('311', [makeNewsItem({ id: 'rss-311-1', category: '311' })])
+		]);
+		mockFetchSeeClickFixIssues.mockResolvedValue([
+			makeNewsItem({ id: 'scf-1', category: '311' })
+		]);
+
+		const { loadAllNews } = await import('./load-all');
+		await loadAllNews();
+
+		// Exactly one setItems('311', ...) call — from the per-category merge
+		// loop, not the direct rewrite.
+		const setItems311 = mockSetItems.mock.calls.filter((c: unknown[]) => c[0] === '311');
+		expect(setItems311.length).toBe(1);
+	});
+
 	// ---------- Sorting ----------
 
 	it('sorts merged items by timestamp descending before enrichment', async () => {

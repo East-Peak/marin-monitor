@@ -309,13 +309,16 @@ describe('fetchSeeClickFixIssues', () => {
 		await expect(fetchSeeClickFixIssues()).rejects.toThrow(/Network error/);
 	});
 
-	it('returns empty array when response has no issues array', async () => {
+	// R2 #4 — malformed responses (no `issues` array) must NOT be treated as
+	// "succeeded with zero issues." A schema break upstream needs to reach
+	// the failure-preservation branch in load-all so the 311 store keeps its
+	// last known good state.
+	it('throws when response has no issues array', async () => {
 		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
 
 		mockFetchSuccess({ lastUpdated: '2026-03-15T12:00:00Z' });
 
-		const result = await fetchSeeClickFixIssues();
-		expect(result).toEqual([]);
+		await expect(fetchSeeClickFixIssues()).rejects.toThrow(/issues array/);
 	});
 
 	it('returns empty array for empty issues list', async () => {
