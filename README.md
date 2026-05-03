@@ -79,4 +79,4 @@ See `CLAUDE.md` for full architecture docs, `HANDOFF.md` for operational context
 
 ## License
 
-Private project — East Peak Advisors, LLC.
+MIT — see [LICENSE](LICENSE).

@@ -189,7 +189,7 @@ Unit tests alongside source as `*.test.ts`. E2E tests in `tests/e2e/*.spec.ts`.
 
 ## Workflow
 
-- Work in feature branches, not main
+- Push directly to main — Vercel auto-deploys from git
 - Leave clear commit messages (Tammy reads them for PR review)
 - Leave `TODO:` comments for uncertain items
 - **Update `CHANGELOG.md`** after every deploy with what was added, changed, or fixed
