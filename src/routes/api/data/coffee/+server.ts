@@ -101,7 +101,8 @@ export const GET: RequestHandler = async () => {
 		return new Response(JSON.stringify(buildCoffeeIndexDataFromLegacy(legacyData)), {
 			headers: {
 				'Content-Type': 'application/json',
-				'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+				'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+				'X-Data-Source': 'legacy'
 			}
 		});
 	}

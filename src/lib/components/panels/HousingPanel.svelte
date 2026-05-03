@@ -29,11 +29,13 @@
 	let inventorySvg = $state<SVGSVGElement>(undefined!);
 	let dataLoading = $state(false);
 	let dataError = $state<string | null>(null);
+	let dataSource = $state<'live' | 'static-fallback' | 'local-fallback' | 'legacy'>('live');
 	let hoverState = $state<HoverState>(null);
 
 	// Housing-data fetch error takes precedence over the housing-news RSS error
 	// — the panel's primary content is the data; news is a secondary list.
 	const panelError = $derived(dataError ?? $housingNews.error);
+	const isFallbackData = $derived(dataSource !== 'live');
 
 	const latestMetrics = $derived(
 		housingData.length > 0 ? housingData[housingData.length - 1] : null
@@ -298,6 +300,7 @@
 				const result = await fetchHousingDataWithStatus();
 				if (result.ok) {
 					housingData = result.data.slice(-12);
+					dataSource = result.dataSource;
 				} else {
 					dataError = `Live data unavailable (${result.error})`;
 				}
@@ -323,6 +326,11 @@
 </script>
 
 <Panel id="housing" title="Housing" loading={$housingNews.loading || dataLoading} error={panelError}>
+	{#if isFallbackData}
+		<div class="fallback-badge" title="Live blob unavailable; serving committed snapshot.">
+			Showing {dataSource === 'static-fallback' ? 'static snapshot' : dataSource} data — live source unavailable
+		</div>
+	{/if}
 	{#if $townFilter}
 		<div class="county-badge">Showing Marin County — no per-town data available</div>
 	{/if}
@@ -482,6 +490,20 @@
 		border: 1px solid var(--border);
 		border-radius: 3px;
 		text-align: center;
+	}
+
+	.fallback-badge {
+		font-size: 0.55rem;
+		color: #f59e0b;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		padding: 0.25rem 0.4rem;
+		margin-bottom: 0.4rem;
+		background: rgba(245, 158, 11, 0.08);
+		border: 1px solid rgba(245, 158, 11, 0.35);
+		border-radius: 3px;
+		text-align: center;
+		font-weight: 600;
 	}
 
 	.market-snapshot {

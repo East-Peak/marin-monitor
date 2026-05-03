@@ -9,7 +9,7 @@
  */
 
 import { logger } from '$lib/config/api';
-import type { FetchResult } from './data-fetcher';
+import type { DataSource, FetchResult } from './data-fetcher';
 import { fetchWithTimeout } from './fetch-helpers';
 
 export interface HousingMetric {
@@ -22,6 +22,19 @@ export interface HousingMetric {
 }
 
 const FALLBACK: HousingMetric[] = [];
+const KNOWN_DATA_SOURCES: ReadonlySet<DataSource> = new Set([
+	'live',
+	'static-fallback',
+	'local-fallback',
+	'legacy'
+]);
+
+function parseDataSource(headerValue: string | null): DataSource {
+	if (headerValue && (KNOWN_DATA_SOURCES as Set<string>).has(headerValue)) {
+		return headerValue as DataSource;
+	}
+	return 'live';
+}
 
 async function loadHousingResult(): Promise<FetchResult<HousingMetric[]>> {
 	try {
@@ -32,8 +45,12 @@ async function loadHousingResult(): Promise<FetchResult<HousingMetric[]>> {
 			logger.warn('Housing', `Housing data fetch failed: ${error}`);
 			return { ok: false, error, fallback: FALLBACK };
 		}
+		const dataSource = parseDataSource(response.headers?.get('X-Data-Source') ?? null);
+		if (dataSource !== 'live') {
+			logger.warn('Housing', `Served from ${dataSource} (live blob unavailable)`);
+		}
 		const data: HousingMetric[] = await response.json();
-		return { ok: true, data: data.slice(-12) };
+		return { ok: true, data: data.slice(-12), dataSource };
 	} catch (error) {
 		const message = (error as Error).message;
 		logger.warn('Housing', `Housing data fetch failed: ${message}`);

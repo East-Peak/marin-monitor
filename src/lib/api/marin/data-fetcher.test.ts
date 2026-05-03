@@ -193,7 +193,7 @@ describe('createDataFetcherWithStatus', () => {
 		vi.restoreAllMocks();
 	});
 
-	it('returns { ok: true, data } on success', async () => {
+	it('returns { ok: true, data, dataSource: "live" } on success without X-Data-Source header', async () => {
 		const payload = { current: 42, history: [1, 2, 3] };
 		mockFetchWithTimeout.mockResolvedValueOnce(jsonResponse(payload));
 
@@ -204,7 +204,61 @@ describe('createDataFetcherWithStatus', () => {
 		);
 		const result = await fetcher();
 
-		expect(result).toEqual({ ok: true, data: payload });
+		expect(result).toEqual({ ok: true, data: payload, dataSource: 'live' });
+	});
+
+	it('parses X-Data-Source header into the FetchResult dataSource field', async () => {
+		const payload = { current: 1, history: [] };
+		mockFetchWithTimeout.mockResolvedValueOnce(
+			new Response(JSON.stringify(payload), {
+				status: 200,
+				headers: { 'Content-Type': 'application/json', 'X-Data-Source': 'static-fallback' }
+			})
+		);
+
+		const fetcher = createDataFetcherWithStatus<{ current: number; history: number[] }>(
+			'/api/data/foo',
+			'FOO',
+			{ current: 0, history: [] }
+		);
+		const result = await fetcher();
+
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			expect(result.dataSource).toBe('static-fallback');
+		}
+	});
+
+	it('falls back to "live" when X-Data-Source header is missing or unknown', async () => {
+		const payload = { ok: true };
+		mockFetchWithTimeout.mockResolvedValueOnce(
+			new Response(JSON.stringify(payload), {
+				status: 200,
+				headers: { 'Content-Type': 'application/json', 'X-Data-Source': 'totally-bogus' }
+			})
+		);
+
+		const fetcher = createDataFetcherWithStatus('/api/data/foo', 'FOO', {});
+		const result = await fetcher();
+
+		expect(result.ok).toBe(true);
+		if (result.ok) {
+			expect(result.dataSource).toBe('live');
+		}
+	});
+
+	it('logs a warning when serving non-live data so operators see the degradation', async () => {
+		mockFetchWithTimeout.mockResolvedValueOnce(
+			new Response(JSON.stringify({ ok: true }), {
+				status: 200,
+				headers: { 'Content-Type': 'application/json', 'X-Data-Source': 'legacy' }
+			})
+		);
+
+		const fetcher = createDataFetcherWithStatus('/api/data/foo', 'FOO', {});
+		await fetcher();
+
+		expect(mockLoggerWarn).toHaveBeenCalledWith('FOO', expect.stringContaining('legacy'));
 	});
 
 	it('returns { ok: false, error, fallback } on HTTP error', async () => {
