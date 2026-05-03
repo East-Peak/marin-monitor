@@ -16,6 +16,7 @@ All notable changes to Marin Monitor are documented here.
 - Main dashboard refresh now has an in-flight guard. Visibility-change + auto-refresh + manual refresh could overlap and double-fetch the same sources; only one cycle runs at a time now (matches TV mode's existing behavior).
 - `staleWhileRevalidate` no longer defeats the circuit breaker. Background revalidation is now gated on `breaker.canRequest()`; when an upstream is down, stale-cache hits stop firing fresh retrying requests behind the scenes.
 - `CircuitBreaker.getState()` is now a pure read. It previously called `canRequest()` internally, which transitions OPEN→HALF_OPEN once the reset timeout has elapsed — so a monitoring/debug read could silently consume the recovery window. Split into `peekCanRequest()` (status reads) and `canRequest()` (the real gate); only the latter still mutates.
+- `CacheManager.invalidate(pattern)` actually honors the pattern now. Storage entries are written with their `originalKey` embedded; invalidation parses each entry and only removes those whose key matches. Previously the storage path ignored the pattern and flushed every prefix-matching entry — what looked like a targeted clear was a full cache wipe.
 
 ---
 

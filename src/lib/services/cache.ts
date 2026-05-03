@@ -7,6 +7,12 @@ export interface CacheEntry<T = unknown> {
 	timestamp: number;
 	ttl: number;
 	staleUntil: number;
+	/**
+	 * The original (unhashed) cache key. Persisted alongside data so that
+	 * `invalidate(pattern)` can match against meaningful identifiers — the
+	 * localStorage key is a hash and isn't pattern-matchable on its own.
+	 */
+	originalKey?: string;
 }
 
 export interface CacheResult<T = unknown> {
@@ -104,7 +110,8 @@ export class CacheManager {
 			data,
 			timestamp: now,
 			ttl,
-			staleUntil: staleWhileRevalidate ? now + ttl * 2 : now + ttl
+			staleUntil: staleWhileRevalidate ? now + ttl * 2 : now + ttl,
+			originalKey: key
 		};
 
 		this.setMemory(key, entry);
@@ -210,12 +217,17 @@ export class CacheManager {
 	}
 
 	/**
-	 * Invalidate cache entries matching a pattern
+	 * Invalidate cache entries whose original key contains the pattern.
+	 *
+	 * Storage keys are hashed and can't be matched directly, so we parse each
+	 * stored entry and check its embedded `originalKey`. Legacy entries
+	 * written before `originalKey` was tracked have no match field; we leave
+	 * them in place rather than risk a full flush, since `clear()` already
+	 * exists for that purpose.
 	 */
 	invalidate(pattern: string): void {
 		let count = 0;
 
-		// Clear from memory
 		for (const [key] of this.memoryCache) {
 			if (key.includes(pattern)) {
 				this.memoryCache.delete(key);
@@ -223,13 +235,20 @@ export class CacheManager {
 			}
 		}
 
-		// Clear from storage
 		if (typeof localStorage !== 'undefined') {
 			for (let i = localStorage.length - 1; i >= 0; i--) {
-				const key = localStorage.key(i);
-				if (key?.startsWith(this.storagePrefix)) {
-					localStorage.removeItem(key);
-					count++;
+				const storageKey = localStorage.key(i);
+				if (!storageKey?.startsWith(this.storagePrefix)) continue;
+				try {
+					const raw = localStorage.getItem(storageKey);
+					if (!raw) continue;
+					const parsed = JSON.parse(raw) as CacheEntry;
+					if (typeof parsed?.originalKey === 'string' && parsed.originalKey.includes(pattern)) {
+						localStorage.removeItem(storageKey);
+						count++;
+					}
+				} catch {
+					// Unparseable entry — leave it; `clear()` handles bulk cleanup.
 				}
 			}
 		}

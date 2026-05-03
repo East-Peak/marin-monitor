@@ -1,6 +1,35 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CacheManager } from './cache';
 
+// In-memory localStorage shim so we exercise the L2 (storage) path under test.
+// Without this, the storage branches in CacheManager are silently skipped.
+function installLocalStorageShim() {
+	const store: Record<string, string> = {};
+	const shim = {
+		getItem: (key: string) => (key in store ? store[key] : null),
+		setItem: (key: string, value: string) => {
+			store[key] = value;
+		},
+		removeItem: (key: string) => {
+			delete store[key];
+		},
+		clear: () => {
+			for (const k of Object.keys(store)) delete store[k];
+		},
+		key: (i: number) => Object.keys(store)[i] ?? null,
+		get length() {
+			return Object.keys(store).length;
+		}
+	};
+	Object.defineProperty(globalThis, 'localStorage', {
+		value: shim,
+		configurable: true,
+		writable: true
+	});
+}
+
+installLocalStorageShim();
+
 describe('CacheManager', () => {
 	let cache: CacheManager;
 
@@ -94,15 +123,43 @@ describe('CacheManager', () => {
 	});
 
 	describe('invalidate', () => {
-		it('should invalidate entries matching pattern', () => {
+		function countStorageEntries(prefix: string): number {
+			let count = 0;
+			for (let i = 0; i < localStorage.length; i++) {
+				if (localStorage.key(i)?.startsWith(prefix)) count++;
+			}
+			return count;
+		}
+
+		it('removes matching entries from memory and storage and leaves non-matching ones intact', () => {
 			cache.set('api/users/1', { id: 1 }, 60000);
 			cache.set('api/users/2', { id: 2 }, 60000);
 			cache.set('api/posts/1', { id: 1 }, 60000);
 
+			expect(countStorageEntries('test_')).toBe(3);
+
 			cache.invalidate('users');
 
-			// Note: invalidate clears all storage entries, not just matching ones
-			// This is by design for simplicity
+			// Memory: matching gone, non-matching still present
+			expect(cache.get('api/users/1')).toBeNull();
+			expect(cache.get('api/users/2')).toBeNull();
+			expect(cache.get('api/posts/1')).not.toBeNull();
+
+			// Storage: only api/posts/1 should remain (was 3, now 1)
+			expect(countStorageEntries('test_')).toBe(1);
+		});
+
+		it('clears nothing for a pattern that matches no entries', () => {
+			cache.set('api/users/1', { id: 1 }, 60000);
+			cache.set('api/posts/1', { id: 1 }, 60000);
+
+			expect(countStorageEntries('test_')).toBe(2);
+
+			cache.invalidate('does-not-match');
+
+			expect(cache.get('api/users/1')).not.toBeNull();
+			expect(cache.get('api/posts/1')).not.toBeNull();
+			expect(countStorageEntries('test_')).toBe(2);
 		});
 	});
 
