@@ -22,7 +22,8 @@
 		"sync:coffee-index": "node scripts/sync-coffee-index.mjs",
 		"sync:install": "bash scripts/manage-sync.sh install",
 		"sync:uninstall": "bash scripts/manage-sync.sh uninstall",
-		"sync:status": "bash scripts/manage-sync.sh status"
+		"sync:status": "bash scripts/manage-sync.sh status",
+		"coverage": "vitest run --coverage"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.49.0",
@@ -37,6 +38,7 @@
 		"@types/react-dom": "^19.2.3",
 		"@typescript-eslint/eslint-plugin": "^8.0.0",
 		"@typescript-eslint/parser": "^8.0.0",
+		"@vitest/coverage-v8": "^4.1.9",
 		"agentation": "^2.2.1",
 		"autoprefixer": "^10.4.0",
 		"eslint": "^9.0.0",
