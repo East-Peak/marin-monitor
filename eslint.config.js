@@ -29,6 +29,15 @@ export default tseslint.config(
 		}
 	},
 	{
+		rules: {
+			// Convention: _-prefixed names are intentionally unused (e.g. destructuring omits, each indices)
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{ varsIgnorePattern: '^_', argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }
+			]
+		}
+	},
+	{
 		ignores: [
 			'build/',
 			'.svelte-kit/',

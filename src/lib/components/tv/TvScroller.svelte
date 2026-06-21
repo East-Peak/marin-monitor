@@ -183,6 +183,7 @@
 	});
 
 	$effect(() => {
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions -- Svelte 5 reactive tracking: reading active registers it as a dependency
 		active;
 		scheduleOverflowCheck();
 	});
