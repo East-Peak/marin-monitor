@@ -6,6 +6,10 @@ pnpm-lock.yaml
 .svelte-kit
 build
 dist
+.vercel
+
+# Generated data output (sync scripts write these; not prettier-managed)
+static/data/
 
 # Legacy files (until migrated)
 js/
