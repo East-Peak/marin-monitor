@@ -33,6 +33,7 @@ export default tseslint.config(
 			'build/',
 			'.svelte-kit/',
 			'dist/',
+			'.vercel/**',
 			// Legacy files - not part of SvelteKit migration
 			'js/',
 			'workers/',
