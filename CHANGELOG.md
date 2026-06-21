@@ -6,14 +6,16 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-06-21
 
-### Internal — code-quality glow-up (phases 0–3 + phase-4 script decomposition, no behavior change)
+### Internal — code-quality glow-up (phases 0–5, no behavior change)
 
 - ESLint now ignores `.vercel/` build output; combined with type-error fixes and lint triage, `svelte-check` and `eslint` are both clean (0 errors) where lint previously reported 4,687 problems (4,626 of them noise from the unignored build dir).
 - Repo-wide Prettier formatting pass (220 files). `static/data/` (generated) and `tests/fixtures/` (whitespace-sensitive parser fixtures) are now excluded from formatting.
 - Fixed all 10 `svelte-check` type errors (test-file typing) and all 61 real ESLint issues; 1,170 unit tests green before and after.
 - Added Vitest coverage tooling (`@vitest/coverage-v8`, `npm run coverage`).
 - Removed dead code: two unused scripts (`build-boundaries`, `extract-housing` — its logic lives in the housing cron), the never-mounted `AgentationWidget` dev component + its orphaned `agentation`/`react-dom` deps; dropped dead exports/consts in map/nws/chart; declared the previously-undeclared `@eslint/js` + `playwright` deps. (Codex-verified — no production-reachable code removed.)
-- Decomposed the two oversized data scripts (`extract-activity-feeds.mjs` 1,455→1,314; `strava-explore.mjs` 1,305→1,072) — extracted 35 pure helpers into tested ES modules (`scripts/lib/*-helpers.mjs`), adding **+155 unit tests** to scripts that previously had 0% coverage. No behavior change. (`MapDataLayer.svelte` decomposition deferred — it needs runtime/visual verification.)
+- Decomposed the two oversized data scripts (`extract-activity-feeds.mjs` 1,455→1,314; `strava-explore.mjs` 1,305→1,072) — extracted 35 pure helpers into tested ES modules (`scripts/lib/*-helpers.mjs`), adding **+155 unit tests** to scripts that previously had 0% coverage. No behavior change.
+- Decomposed `MapDataLayer.svelte` (1,130→901) — extracted 16 pure feature-builder functions into `map-data.ts` with **+69 unit tests**; runtime-verified the map still renders every layer (news/activity/housing/311/gas/EV/coffee/fitness/earthquakes/segments/traffic). No reactive code touched.
+- **Locked in deterministic gates:** a `verify` script (typecheck + lint + format-check + unit tests), a CI workflow (`.github/workflows/ci.yml` — `npm ci → verify → build` on push/PR, fails on violations), and a tiered `husky` + `lint-staged` pre-commit (format/lint staged files only). Test count over the whole glow-up: **1,170 → 1,394 green**.
 
 ---
 
