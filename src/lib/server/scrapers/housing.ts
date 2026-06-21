@@ -1,6 +1,6 @@
 /**
  * Server-side housing data scraper.
- * Ported from scripts/extract-housing.mjs — fetches Redfin TSV via HTTP.
+ * Fetches Redfin TSV via HTTP and extracts Marin County housing metrics.
  * Uses streaming decompression to avoid loading the entire ~500MB file into memory.
  */
 import { createGunzip } from 'node:zlib';

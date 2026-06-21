@@ -5,7 +5,8 @@
  * The source data comes from Redfin's national county_market_tracker.tsv000.gz,
  * filtered to Marin County "All Residential" and saved to static/data/marin-housing.json.
  *
- * To refresh: curl -s "https://...county_market_tracker.tsv000.gz" | gunzip | node scripts/extract-housing.mjs
+ * To refresh: the housing cron triggers `scrapeHousing()` server-side, which
+ * streams and filters the Redfin TSV and stores the result as a blob.
  */
 
 import { logger } from '$lib/config/api';
