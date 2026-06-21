@@ -19,12 +19,7 @@
 	import { fetchAirportStatus } from '$lib/api/marin/airport-status';
 	import type { AirportStatus } from '$lib/types/airport';
 	import { findNearestTown } from '$lib/geo/proximity';
-	import {
-		formatCoffeeMenuSummary,
-		formatCoffeePrice,
-		getCoffeeHeadlinePrice,
-		getCoffeeStatusLabel
-	} from '$lib/utils/coffee-index';
+	// Coffee formatting now handled inside map-data.ts feature builders
 	import type { NewsItem, MapFeatureInspectorData } from '$lib/types';
 
 	// Extracted modules
@@ -32,8 +27,18 @@
 		buildTrafficEventFeatures,
 		filterTrafficByTown,
 		getStoryCountsByTown,
-		getDominantColor,
-		isWithinMarinView
+		isWithinMarinView,
+		buildTownFeatures,
+		buildNewsPinFeatures,
+		buildAlertPulseFeatures,
+		buildEarthquakeFeatures,
+		buildFireIncidentFeatures,
+		buildGasStationFeatures,
+		buildEvStationFeatures,
+		buildCoffeeShopFeatures,
+		buildFitnessStudioFeatures,
+		build311ReportFeatures,
+		buildAirportFeatures
 	} from './map-data';
 	import { setupSources } from './map-layers';
 	import {
@@ -449,41 +454,13 @@
 		const storyCounts = getStoryCountsByTown(activeItems, CATEGORY_TO_LAYER);
 
 		// Town dots GeoJSON
-		const townFeatures = MARIN_TOWNS.map((town) => {
-			const stats = storyCounts.get(town.slug);
-			const total = stats?.total || 0;
-			const hasData = total > 0;
-			const isSelected = currentTownFilter === town.slug;
-			const isDimmed = currentTownFilter && !isSelected;
-			const radius = isDimmed ? 2 : hasData ? Math.max(6, Math.min(16, 5 + total * 0.8)) : 3;
-			const color = isDimmed
-				? 'rgba(255, 255, 255, 0.1)'
-				: hasData
-					? getDominantColor(stats!.byLayer, LAYER_COLORS)
-					: 'rgba(255, 255, 255, 0.2)';
-			const opacity = isDimmed ? 0.08 : hasData ? 0.88 : 0.16;
-			const labelOpacity = isDimmed ? 0.08 : hasData ? 0.72 : 0.28;
-
-			return {
-				type: 'Feature' as const,
-				id: town.slug,
-				properties: {
-					name: town.name,
-					slug: town.slug,
-					total,
-					radius,
-					opacity,
-					labelOpacity,
-					color,
-					headline: stats?.topHeadline || '',
-					selected: mapState.selectedTown === town.slug
-				},
-				geometry: {
-					type: 'Point' as const,
-					coordinates: [town.lon, town.lat]
-				}
-			};
-		});
+		const townFeatures = buildTownFeatures(
+			MARIN_TOWNS,
+			storyCounts,
+			currentTownFilter,
+			mapState.selectedTown,
+			LAYER_COLORS
+		);
 
 		const townsSource = map.getSource('towns') as GeoJSONSource;
 		if (townsSource) {
@@ -491,31 +468,12 @@
 		}
 
 		// News pins — only show exact coordinates. Town-only items stay in town aggregates.
-		const pinFeatures: GeoJSON.Feature[] = [];
-		for (const item of activeItems) {
-			const layer = CATEGORY_TO_LAYER[item.category];
-			if (!layer) continue;
-			if (typeof item.lat !== 'number' || typeof item.lon !== 'number') continue;
-			if (currentTownFilter && item.townSlug !== currentTownFilter) continue;
-
-			pinFeatures.push({
-				type: 'Feature',
-				id: item.id,
-				properties: {
-					id: item.id,
-					title: item.title,
-					color: LAYER_COLORS[layer] || LAYER_COLORS.news,
-					layer,
-					source: item.source,
-					locationType: item.locationConfidence || 'exact',
-					timestamp: item.timestamp
-				},
-				geometry: {
-					type: 'Point',
-					coordinates: [item.lon, item.lat]
-				}
-			});
-		}
+		const pinFeatures = buildNewsPinFeatures(
+			activeItems,
+			CATEGORY_TO_LAYER,
+			currentTownFilter,
+			LAYER_COLORS
+		);
 
 		const pinsSource = map.getSource('news-pins') as GeoJSONSource;
 		if (pinsSource) {
@@ -523,22 +481,7 @@
 		}
 
 		// Alert pulses — items with isAlert at their town centroid
-		const alertFeatures: GeoJSON.Feature[] = [];
-		for (const item of activeItems) {
-			if (!item.isAlert || !item.townSlug) continue;
-			if (currentTownFilter && item.townSlug !== currentTownFilter) continue;
-			const town = TOWN_BY_SLUG[item.townSlug];
-			if (!town) continue;
-
-			alertFeatures.push({
-				type: 'Feature',
-				properties: { title: item.title, keyword: item.alertKeyword },
-				geometry: {
-					type: 'Point',
-					coordinates: [town.lon, town.lat]
-				}
-			});
-		}
+		const alertFeatures = buildAlertPulseFeatures(activeItems, currentTownFilter, TOWN_BY_SLUG);
 
 		const alertSource = map.getSource('alert-pulses') as GeoJSONSource;
 		if (alertSource) {
@@ -546,20 +489,7 @@
 		}
 
 		// Earthquakes — use lat/lon from the items if available
-		const quakeFeatures: GeoJSON.Feature[] = earthquakes
-			.filter((eq) => eq.lat && eq.lon)
-			.map((eq) => ({
-				type: 'Feature' as const,
-				id: eq.id,
-				properties: {
-					title: eq.title,
-					magnitude: parseFloat(eq.title?.match(/M ([\d.]+)/)?.[1] || '2')
-				},
-				geometry: {
-					type: 'Point' as const,
-					coordinates: [eq.lon!, eq.lat!]
-				}
-			}));
+		const quakeFeatures = buildEarthquakeFeatures(earthquakes);
 
 		const quakeSource = map.getSource('earthquakes') as GeoJSONSource;
 		if (quakeSource) {
@@ -567,22 +497,7 @@
 		}
 
 		// Fire incidents overlay
-		const fireFeatures: GeoJSON.Feature[] = fireIncidents.map((fire) => ({
-			type: 'Feature' as const,
-			id: fire.id,
-			properties: {
-				id: fire.id,
-				name: fire.name,
-				acres: fire.acres,
-				containment: fire.containment,
-				url: fire.url,
-				source: fire.source
-			},
-			geometry: {
-				type: 'Point' as const,
-				coordinates: [fire.lon, fire.lat]
-			}
-		}));
+		const fireFeatures = buildFireIncidentFeatures(fireIncidents);
 
 		const fireSource = map.getSource('fire-incidents') as GeoJSONSource;
 		if (fireSource) {
@@ -592,28 +507,8 @@
 		// Gas stations
 		const gasStations = get(currentGasStations);
 		const mapGasVisible = mapState.activeLayers['gas'];
-		const gasFeatures: GeoJSON.Feature[] = mapGasVisible
-			? gasStations
-					.filter((s) => !currentTownFilter || findNearestTown(s.lat, s.lon) === currentTownFilter)
-					.map((station) => {
-						const regularPrice = station.fuelPrices.find(
-							(fp) => fp.type === 'REGULAR_UNLEADED'
-						)?.price;
-						return {
-							type: 'Feature' as const,
-							id: station.placeId,
-							properties: {
-								placeId: station.placeId,
-								name: station.name,
-								address: station.address,
-								price: regularPrice !== undefined ? `$${regularPrice.toFixed(3)}` : ''
-							},
-							geometry: {
-								type: 'Point' as const,
-								coordinates: [station.lon, station.lat]
-							}
-						};
-					})
+		const gasFeatures = mapGasVisible
+			? buildGasStationFeatures(gasStations, currentTownFilter)
 			: [];
 
 		const gasSource = map.getSource('gas-stations') as GeoJSONSource;
@@ -640,28 +535,7 @@
 			.filter((s) => isWithinMarinView(s.lon, s.lat))
 			.filter((s) => !currentTownFilter || findNearestTown(s.lat, s.lon) === currentTownFilter);
 		const mapEvVisible = mapState.activeLayers['ev-charging'];
-		const evFeatures: GeoJSON.Feature[] = mapEvVisible
-			? evStations.map((station) => {
-					const level = station.chargingLevels.includes('DCFast') ? 'DC Fast' : 'Level 2';
-					const connectorTypes = station.connectors.map((c) => c.type).join(', ');
-					return {
-						type: 'Feature' as const,
-						id: station.stationId,
-						properties: {
-							stationId: station.stationId,
-							name: station.name,
-							network: station.network,
-							level,
-							connectors: connectorTypes,
-							pricing: station.pricingInfo ?? ''
-						},
-						geometry: {
-							type: 'Point' as const,
-							coordinates: [station.lon, station.lat]
-						}
-					};
-				})
-			: [];
+		const evFeatures = mapEvVisible ? buildEvStationFeatures(evStations) : [];
 
 		const evSource = map.getSource('ev-charging-stations') as GeoJSONSource;
 		if (evSource) {
@@ -693,37 +567,9 @@
 		// Coffee shops
 		const coffeeShops = get(currentCoffeeShops);
 		const mapCoffeeVisible = mapState.activeLayers['coffee'];
-		const coffeeFeatures: GeoJSON.Feature[] = [];
-		if (mapCoffeeVisible) {
-			for (const shop of coffeeShops) {
-				if (currentTownFilter && findNearestTown(shop.lat, shop.lon) !== currentTownFilter) {
-					continue;
-				}
-
-				const headline = getCoffeeHeadlinePrice(shop);
-				const menuSummary = formatCoffeeMenuSummary(shop);
-				const statusLabel = getCoffeeStatusLabel(shop);
-
-				coffeeFeatures.push({
-					type: 'Feature',
-					id: shop.id,
-					geometry: {
-						type: 'Point',
-						coordinates: [shop.lon, shop.lat]
-					},
-					properties: {
-						name: shop.name,
-						price: headline ? formatCoffeePrice(headline.price) : '',
-						headlineLabel: headline?.label ?? '',
-						address: shop.address,
-						town: shop.town,
-						menuSummary: menuSummary || statusLabel,
-						statusLabel,
-						hasPrice: headline ? 1 : 0
-					}
-				});
-			}
-		}
+		const coffeeFeatures = mapCoffeeVisible
+			? buildCoffeeShopFeatures(coffeeShops, currentTownFilter)
+			: [];
 
 		const coffeeSource = map.getSource('coffee-shops') as GeoJSONSource;
 		if (coffeeSource) {
@@ -755,24 +601,13 @@
 		// Fitness studios
 		const fitnessStudios = get(currentFitnessStudios);
 		const mapFitnessVisible = mapState.activeLayers['fitness'];
-		const fitnessFeatures: GeoJSON.Feature[] = mapFitnessVisible
-			? fitnessStudios
-					.filter((s) => !currentTownFilter || findNearestTown(s.lat, s.lon) === currentTownFilter)
-					.map((s) => ({
-						type: 'Feature' as const,
-						id: s.id,
-						geometry: {
-							type: 'Point' as const,
-							coordinates: [s.lon, s.lat]
-						},
-						properties: {
-							name: s.name,
-							price: `$${s.dropInPrice}`,
-							town: s.town,
-							typeName: FITNESS_TYPE_LABELS[s.type],
-							color: FITNESS_TYPE_COLORS[s.type]
-						}
-					}))
+		const fitnessFeatures = mapFitnessVisible
+			? buildFitnessStudioFeatures(
+					fitnessStudios,
+					currentTownFilter,
+					FITNESS_TYPE_LABELS,
+					FITNESS_TYPE_COLORS
+				)
 			: [];
 
 		const fitnessSource = map.getSource('fitness-studios') as GeoJSONSource;
@@ -805,34 +640,9 @@
 		// 311 reports (SeeClickFix / Fix It Marin)
 		const threeOneOneItems = get(threeOneOneNews).items ?? [];
 		const map311Visible = mapState.activeLayers['311'];
-		const threeOneOneFeatures: GeoJSON.Feature[] = [];
-		if (map311Visible) {
-			for (const item of threeOneOneItems) {
-				if (!item.lat || !item.lon) continue;
-				if (currentTownFilter && item.townSlug !== currentTownFilter) continue;
-
-				const category = item.title.includes(' \u00b7 ')
-					? item.title.split(' \u00b7 ')[0]
-					: item.title;
-				const street = item.title.includes(' \u00b7 ') ? item.title.split(' \u00b7 ')[1] : '';
-
-				threeOneOneFeatures.push({
-					type: 'Feature',
-					id: item.id.replace('seeclickfix-', ''),
-					geometry: {
-						type: 'Point',
-						coordinates: [item.lon, item.lat]
-					},
-					properties: {
-						category,
-						label: street ? `${category}\n${street}` : category,
-						address: item.locationEvidence ?? '',
-						description: item.description ?? '',
-						imageUrl: item.imageUrl ?? ''
-					}
-				});
-			}
-		}
+		const threeOneOneFeatures = map311Visible
+			? build311ReportFeatures(threeOneOneItems, currentTownFilter)
+			: [];
 
 		const threeOneOneSource = map.getSource('311-reports') as GeoJSONSource;
 		if (threeOneOneSource) {
@@ -860,46 +670,7 @@
 			const statusMap = new Map<string, AirportStatus>();
 			for (const ap of data.airports) statusMap.set(ap.code, ap);
 
-			const features: GeoJSON.Feature[] = AIRPORT_PINS.map((pin) => {
-				const info = statusMap.get(pin.code);
-				const status = info?.status ?? 'on-time';
-				const color = AIRPORT_STATUS_COLORS[status] ?? '#6b7280';
-
-				const statusLabel =
-					status === 'on-time'
-						? 'On Time'
-						: status === 'delays'
-							? 'Delays'
-							: status === 'ground-delay'
-								? 'Ground Delay'
-								: status === 'ground-stop'
-									? 'Ground Stop'
-									: status === 'closed'
-										? 'Closed'
-										: status;
-
-				let weatherSummary = '';
-				if (info?.weather) {
-					const w = info.weather;
-					const parts: string[] = [w.fltCat];
-					parts.push(`${w.visibility} vis`);
-					if (w.ceiling !== null) parts.push(`Ceiling ${w.ceiling} ft`);
-					parts.push(`${w.windDir}\u00b0 ${w.windSpeed}${w.windGust ? `g${w.windGust}` : ''} kt`);
-					if (w.fogRisk) parts.push('Fog Risk');
-					weatherSummary = parts.join(' \u00b7 ');
-				}
-
-				return {
-					type: 'Feature' as const,
-					id: pin.code,
-					properties: { code: pin.code, name: pin.name, color, statusLabel, weatherSummary },
-					geometry: {
-						type: 'Point' as const,
-						coordinates: [pin.lon, pin.lat]
-					}
-				};
-			});
-
+			const features = buildAirportFeatures(AIRPORT_PINS, statusMap, AIRPORT_STATUS_COLORS);
 			const source = map.getSource('airports') as GeoJSONSource;
 			source.setData({ type: 'FeatureCollection', features });
 		} catch {
