@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('./fetch-helpers', () => ({
 	fetchWithTimeout: vi.fn()
@@ -12,7 +12,7 @@ vi.mock('$lib/geo/proximity', () => ({
 	isNearMarin: vi.fn()
 }));
 
-import { fetchFireIncidents, type FireIncident } from './calfire';
+import { fetchFireIncidents } from './calfire';
 import { fetchWithTimeout } from './fetch-helpers';
 import { isNearMarin } from '$lib/geo/proximity';
 

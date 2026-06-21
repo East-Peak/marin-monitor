@@ -27,6 +27,7 @@ beforeEach(() => {
 
 describe('fetchEarthquakes', () => {
 	const validResponse = {
+		fromCache: false as const,
 		data: {
 			features: [
 				{
@@ -94,7 +95,7 @@ describe('fetchEarthquakes', () => {
 	});
 
 	it('returns empty array when features is empty', async () => {
-		mockRequest.mockResolvedValueOnce({ data: { features: [] } });
+		mockRequest.mockResolvedValueOnce({ fromCache: false as const, data: { features: [] } });
 
 		const result = await fetchEarthquakes();
 

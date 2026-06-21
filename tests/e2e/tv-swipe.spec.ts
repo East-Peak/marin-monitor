@@ -22,22 +22,21 @@ async function swipeLeft(page: Page, x: number, y: number) {
 					screenY: y
 				});
 
-			const fire = (type: string, clientX: number, list: Touch[]) => {
-				const tl = list as unknown as TouchList;
+			const fire = (type: string, list: Touch[]) => {
 				target.dispatchEvent(
 					new TouchEvent(type, {
 						bubbles: true,
 						cancelable: true,
-						touches: type === 'touchend' ? ([] as unknown as TouchList) : tl,
-						targetTouches: type === 'touchend' ? ([] as unknown as TouchList) : tl,
-						changedTouches: tl
+						touches: type === 'touchend' ? [] : list,
+						targetTouches: type === 'touchend' ? [] : list,
+						changedTouches: list
 					})
 				);
 			};
 
-			fire('touchstart', x, [mkTouch(x)]);
-			fire('touchmove', x - 60, [mkTouch(x - 60)]); // past 10px slop
-			fire('touchend', x - 120, [mkTouch(x - 120)]); // past 50px commit
+			fire('touchstart', [mkTouch(x)]);
+			fire('touchmove', [mkTouch(x - 60)]); // past 10px slop
+			fire('touchend', [mkTouch(x - 120)]); // past 50px commit
 		},
 		{ x, y }
 	);
