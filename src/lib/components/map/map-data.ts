@@ -151,8 +151,7 @@ export function buildTrafficEventFeatures(events: Record<string, unknown>[]): Ge
 			).trim() || 'Traffic event';
 		const type = String(event.event_type ?? event.eventType ?? event.type ?? 'incident');
 		const id =
-			String(event.id ?? event.Id ?? '').trim() ||
-			buildFallbackFeatureId('traffic', coords, title);
+			String(event.id ?? event.Id ?? '').trim() || buildFallbackFeatureId('traffic', coords, title);
 
 		features.push({
 			type: 'Feature',

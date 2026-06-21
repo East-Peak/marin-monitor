@@ -196,42 +196,53 @@ function addLayers(map: MapLibreMap): void {
 		'interpolate',
 		['linear'],
 		['get', 'magnitude'],
-		1, 4,
-		2, 6,
-		3, 10,
-		4, 14,
-		5, 20,
-		6, 28
+		1,
+		4,
+		2,
+		6,
+		3,
+		10,
+		4,
+		14,
+		5,
+		20,
+		6,
+		28
 	];
 	const earthquakeRingRadius = [
 		'interpolate',
 		['linear'],
 		['get', 'magnitude'],
-		1, 8,
-		2, 12,
-		3, 18,
-		4, 24,
-		5, 32,
-		6, 44
+		1,
+		8,
+		2,
+		12,
+		3,
+		18,
+		4,
+		24,
+		5,
+		32,
+		6,
+		44
 	];
 	const fireIncidentRadius = [
 		'interpolate',
 		['linear'],
 		['get', 'acres'],
-		0, 6,
-		100, 10,
-		1000, 16,
-		10000, 24
+		0,
+		6,
+		100,
+		10,
+		1000,
+		16,
+		10000,
+		24
 	];
 	const townRadius = ['coalesce', ['get', 'radius'], 3];
 	const townOpacity = ['coalesce', ['get', 'opacity'], 0.18];
 	const townLabelOpacity = ['coalesce', ['get', 'labelOpacity'], 0.25];
-	const townStrokeOpacity = [
-		'case',
-		['>', ['coalesce', ['get', 'total'], 0], 0],
-		0.5,
-		0.2
-	];
+	const townStrokeOpacity = ['case', ['>', ['coalesce', ['get', 'total'], 0], 0], 0.5, 0.2];
 
 	// --- Town boundary highlight (renders beneath everything) ---
 	map.addLayer({

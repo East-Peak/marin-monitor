@@ -14,7 +14,7 @@
 
 	const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 	const photoItems = $derived(
-		items.filter((i) => i.imageUrl && (Date.now() - i.timestamp) < SEVEN_DAYS_MS)
+		items.filter((i) => i.imageUrl && Date.now() - i.timestamp < SEVEN_DAYS_MS)
 	);
 
 	const colCount = $derived(
@@ -77,10 +77,7 @@
 
 		<div class="mt-3 flex-1 min-h-0">
 			<TvScroller screenId="311-photos" {active} speed={28}>
-				<div
-					class="grid gap-3"
-					style:grid-template-columns="repeat({colCount}, minmax(0, 1fr))"
-				>
+				<div class="grid gap-3" style:grid-template-columns="repeat({colCount}, minmax(0, 1fr))">
 					{#each photoItems as item, i (item.id + '-' + i)}
 						{@const parsed = parseTitle(item.title)}
 						<div
@@ -98,7 +95,10 @@
 										style="background: linear-gradient(135deg, rgba(255, 107, 53, 0.25) 0%, rgba(255, 107, 53, 0.08) 100%);"
 									></div>
 									<div class="relative z-10 text-center px-4">
-										<span class="text-sm font-bold uppercase tracking-widest" style="color: {ORANGE}">
+										<span
+											class="text-sm font-bold uppercase tracking-widest"
+											style="color: {ORANGE}"
+										>
 											{categoryIcon(parsed.category)}
 										</span>
 										<p class="mt-3 text-xl font-bold text-white leading-snug">

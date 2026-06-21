@@ -19,7 +19,12 @@
 			confidence?: 'high' | 'medium' | 'low';
 			trailIntel?: TrailIntelItem[];
 		} | null;
-		streams: Array<{ name: string; cfs: number; trend: 'rising' | 'falling' | 'stable'; gageHeight?: number | null }>;
+		streams: Array<{
+			name: string;
+			cfs: number;
+			trend: 'rising' | 'falling' | 'stable';
+			gageHeight?: number | null;
+		}>;
 	}
 	let { surf, dirt, streams }: Props = $props();
 
@@ -66,10 +71,10 @@
 	}
 
 	const primaryIntel = $derived(
-		(dirt?.trailIntel ?? []).filter(t => t.relevance === 'primary').slice(0, 3)
+		(dirt?.trailIntel ?? []).filter((t) => t.relevance === 'primary').slice(0, 3)
 	);
 	const secondaryIntel = $derived(
-		(dirt?.trailIntel ?? []).filter(t => t.relevance === 'secondary').slice(0, 2)
+		(dirt?.trailIntel ?? []).filter((t) => t.relevance === 'secondary').slice(0, 2)
 	);
 	const allIntel = $derived([...primaryIntel, ...secondaryIntel].slice(0, 4));
 </script>
@@ -83,9 +88,15 @@
 			<!-- Header with score -->
 			<div class="px-3 pt-3 pb-2 border-b border-gray-700/40">
 				<div class="flex items-baseline justify-between">
-					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Hero Dirt Tracker</span>
+					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400"
+						>Hero Dirt Tracker</span
+					>
 					{#if dirt?.confidence}
-						<span class="text-[8px] font-bold uppercase px-1.5 py-px rounded {confidenceColor(dirt.confidence)}">
+						<span
+							class="text-[8px] font-bold uppercase px-1.5 py-px rounded {confidenceColor(
+								dirt.confidence
+							)}"
+						>
 							{dirt.confidence}
 						</span>
 					{/if}
@@ -112,9 +123,14 @@
 					<div class="grid grid-cols-2 gap-2">
 						{#if dirt.moistureEstimate != null}
 							<div>
-								<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-0.5">Moisture</div>
+								<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-0.5">
+									Moisture
+								</div>
 								<div class="flex items-center gap-1.5">
-									<span class="text-lg font-bold tabular-nums" style="color: {moistureColor(dirt.moistureEstimate)}">
+									<span
+										class="text-lg font-bold tabular-nums"
+										style="color: {moistureColor(dirt.moistureEstimate)}"
+									>
 										{dirt.moistureEstimate.toFixed(0)}%
 									</span>
 								</div>
@@ -122,14 +138,19 @@
 								<div class="w-full h-1.5 rounded-full bg-zinc-700/40 mt-1 overflow-hidden">
 									<div
 										class="h-full rounded-full"
-										style="width: {Math.min(100, dirt.moistureEstimate)}%; background: {moistureColor(dirt.moistureEstimate)}; opacity: 0.7;"
+										style="width: {Math.min(
+											100,
+											dirt.moistureEstimate
+										)}%; background: {moistureColor(dirt.moistureEstimate)}; opacity: 0.7;"
 									></div>
 								</div>
 							</div>
 						{/if}
 						{#if dirt.dryingRate != null}
 							<div>
-								<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-0.5">Drying Rate</div>
+								<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-0.5">
+									Drying Rate
+								</div>
 								<span class="text-lg font-bold tabular-nums text-zinc-200">
 									{dirt.dryingRate.toFixed(1)}
 								</span>
@@ -140,7 +161,9 @@
 					{#if dirt.seasonalBaseline != null}
 						<div class="mt-1.5 flex items-center gap-1">
 							<span class="text-[9px] text-zinc-500">Seasonal baseline:</span>
-							<span class="text-[9px] font-semibold tabular-nums text-zinc-400">{dirt.seasonalBaseline.toFixed(0)}%</span>
+							<span class="text-[9px] font-semibold tabular-nums text-zinc-400"
+								>{dirt.seasonalBaseline.toFixed(0)}%</span
+							>
 						</div>
 					{/if}
 				</div>
@@ -153,7 +176,9 @@
 				<!-- Trail Intel -->
 				{#if allIntel.length > 0}
 					<div class="flex-1 px-3 py-2 overflow-hidden">
-						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Trail Intel</div>
+						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
+							Trail Intel
+						</div>
 						{#each allIntel as intel}
 							<div class="flex items-start gap-1.5 py-0.5">
 								<span class="text-xs shrink-0">{intel.icon}</span>
@@ -179,7 +204,9 @@
 			<!-- Header -->
 			<div class="px-3 pt-3 pb-2 border-b border-gray-700/40">
 				<div class="flex items-baseline justify-between">
-					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Stream Gauges</span>
+					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400"
+						>Stream Gauges</span
+					>
 					<span class="text-[10px] text-zinc-500">USGS</span>
 				</div>
 			</div>
@@ -200,10 +227,7 @@
 										{gauge.gageHeight.toFixed(2)}ft
 									</span>
 								{/if}
-								<span
-									class="text-xs font-bold"
-									style="color: {trendColor(gauge.trend)}"
-								>
+								<span class="text-xs font-bold" style="color: {trendColor(gauge.trend)}">
 									{trendArrow(gauge.trend)}
 								</span>
 							</div>
@@ -212,7 +236,9 @@
 						<div class="w-full h-2 rounded-full bg-zinc-700/30 overflow-hidden">
 							<div
 								class="h-full rounded-full transition-all"
-								style="width: {flowBarPct(gauge.cfs)}%; background: {flowColor(gauge.cfs)}; opacity: 0.7;"
+								style="width: {flowBarPct(gauge.cfs)}%; background: {flowColor(
+									gauge.cfs
+								)}; opacity: 0.7;"
 							></div>
 						</div>
 					</div>
@@ -225,7 +251,9 @@
 			<!-- Surf footer note -->
 			<div class="px-3 py-2 border-t border-gray-700/40">
 				{#if surf.length > 0}
-					<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">Surf Report</div>
+					<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">
+						Surf Report
+					</div>
 					{#each surf.slice(0, 2) as spot}
 						<div class="flex items-center justify-between py-0.5">
 							<span class="text-xs text-zinc-300">{spot.name}</span>
@@ -237,10 +265,23 @@
 					{/each}
 				{:else}
 					<div class="flex items-center gap-2">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="1.5" class="shrink-0">
-							<path d="M2 12c1.5-2 3.5-3 5.5-3s3.5 1 5 3c1.5 2 3.5 3 5.5 3s4-1 4-3" stroke-linecap="round" />
+						<svg
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="#0ea5e9"
+							stroke-width="1.5"
+							class="shrink-0"
+						>
+							<path
+								d="M2 12c1.5-2 3.5-3 5.5-3s3.5 1 5 3c1.5 2 3.5 3 5.5 3s4-1 4-3"
+								stroke-linecap="round"
+							/>
 						</svg>
-						<span class="text-[10px] text-zinc-500">Surf report: Surfline integration in development</span>
+						<span class="text-[10px] text-zinc-500"
+							>Surf report: Surfline integration in development</span
+						>
 					</div>
 				{/if}
 			</div>

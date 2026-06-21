@@ -14,8 +14,10 @@
 
 	function updateDateTime() {
 		const now = new Date();
-		dateTimeText = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-			+ '  ' + now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+		dateTimeText =
+			now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) +
+			'  ' +
+			now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 	}
 
 	onMount(() => {
@@ -55,8 +57,25 @@
 		<a href="/tv" class="header-btn tv-btn" title="TV Mode (M)">
 			<span class="btn-icon">
 				<svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-					<rect x="1" y="2" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
-					<line x1="5" y1="14" x2="11" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+					<rect
+						x="1"
+						y="2"
+						width="14"
+						height="10"
+						rx="1.5"
+						stroke="currentColor"
+						stroke-width="1.5"
+						fill="none"
+					/>
+					<line
+						x1="5"
+						y1="14"
+						x2="11"
+						y2="14"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+					/>
 				</svg>
 			</span>
 			<span class="btn-label">TV</span>

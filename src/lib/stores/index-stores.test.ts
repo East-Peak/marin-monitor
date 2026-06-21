@@ -13,7 +13,12 @@ import { cappuccinoStore, currentCoffeeShops as cappuccinoCoffeeShops } from './
 import { gasPriceStore, currentGasStations } from './gas-prices';
 import { evChargingStore, currentChargingStations } from './ev-charging';
 import { compositeStore, currentCompositeScore, currentMarinNumber } from './composite';
-import { wineIndexStore, currentWineCategories, currentStaffPicks, currentAllocatedWines } from './wine-index';
+import {
+	wineIndexStore,
+	currentWineCategories,
+	currentStaffPicks,
+	currentAllocatedWines
+} from './wine-index';
 import { fitnessStore, currentFitnessStudios } from './fitness';
 import { groceryBasketStore, currentBasketTotal, currentBasketItems } from './grocery-basket';
 import { schoolTuitionStore, currentSchoolTiers, currentSchools } from './school-tuition';
@@ -32,7 +37,10 @@ describe('cappuccinoStore', () => {
 	});
 
 	it('derived returns shops when data is set', () => {
-		const mockShops = [{ name: 'Equator', price: 5.5 }, { name: 'Peets', price: 5.0 }];
+		const mockShops = [
+			{ name: 'Equator', price: 5.5 },
+			{ name: 'Peets', price: 5.0 }
+		];
 		cappuccinoStore.set({ current: { shops: mockShops } as any, history: [] });
 		expect(get(cappuccinoCoffeeShops)).toEqual(mockShops);
 		// Reset
@@ -173,10 +181,10 @@ describe('groceryBasketStore', () => {
 	it('derived values update when data is set', () => {
 		const mockItems = [{ name: 'Eggs', cheapestPrice: 6.99 }];
 		groceryBasketStore.set({
-			current: { totalCheapest: 142.50, items: mockItems } as any,
+			current: { totalCheapest: 142.5, items: mockItems } as any,
 			history: []
 		});
-		expect(get(currentBasketTotal)).toBe(142.50);
+		expect(get(currentBasketTotal)).toBe(142.5);
 		expect(get(currentBasketItems)).toEqual(mockItems);
 		groceryBasketStore.set({ current: null, history: [] });
 	});

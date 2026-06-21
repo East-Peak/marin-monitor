@@ -14,40 +14,41 @@
 
 ### New Files
 
-| File | Responsibility |
-|------|---------------|
-| `src/lib/types/grocery.ts` | Type definitions for basket items, price results, snapshots |
-| `src/lib/config/grocery-basket.ts` | 12-item basket configuration with search terms and product matchers |
-| `src/lib/server/scrapers/grocery-basket.ts` | Instacart HTML scraper + price extraction |
-| `src/routes/api/cron/sync-grocery-basket/+server.ts` | Weekly cron: scrape all items, store to blob |
-| `src/routes/api/data/grocery-basket/+server.ts` | Serve grocery basket data from blob |
-| `src/lib/api/marin/grocery-basket.ts` | Client-side data adapter |
-| `src/lib/stores/grocery-basket.ts` | Reactive Svelte store |
-| `src/lib/components/panels/GroceryBasketPanel.svelte` | Dashboard panel with basket total + sparkline + drill-down |
+| File                                                  | Responsibility                                                      |
+| ----------------------------------------------------- | ------------------------------------------------------------------- |
+| `src/lib/types/grocery.ts`                            | Type definitions for basket items, price results, snapshots         |
+| `src/lib/config/grocery-basket.ts`                    | 12-item basket configuration with search terms and product matchers |
+| `src/lib/server/scrapers/grocery-basket.ts`           | Instacart HTML scraper + price extraction                           |
+| `src/routes/api/cron/sync-grocery-basket/+server.ts`  | Weekly cron: scrape all items, store to blob                        |
+| `src/routes/api/data/grocery-basket/+server.ts`       | Serve grocery basket data from blob                                 |
+| `src/lib/api/marin/grocery-basket.ts`                 | Client-side data adapter                                            |
+| `src/lib/stores/grocery-basket.ts`                    | Reactive Svelte store                                               |
+| `src/lib/components/panels/GroceryBasketPanel.svelte` | Dashboard panel with basket total + sparkline + drill-down          |
 
 ### Modified Files
 
-| File | Change |
-|------|--------|
-| `src/lib/types/index.ts` | Re-export grocery types |
-| `src/lib/config/panels.ts` | Add `grocery-basket` PanelId + config + panel order |
-| `src/lib/components/panels/index.ts` | Export GroceryBasketPanel |
-| `src/lib/components/dashboard/SignalDeck.svelte` | Add GroceryBasketPanel rendering |
-| `vercel.json` | Add weekly cron entry |
+| File                                             | Change                                              |
+| ------------------------------------------------ | --------------------------------------------------- |
+| `src/lib/types/index.ts`                         | Re-export grocery types                             |
+| `src/lib/config/panels.ts`                       | Add `grocery-basket` PanelId + config + panel order |
+| `src/lib/components/panels/index.ts`             | Export GroceryBasketPanel                           |
+| `src/lib/components/dashboard/SignalDeck.svelte` | Add GroceryBasketPanel rendering                    |
+| `vercel.json`                                    | Add weekly cron entry                               |
 
 ### Test Files
 
-| File | Tests |
-|------|-------|
-| `src/lib/config/grocery-basket.test.ts` | Basket config validation |
+| File                                             | Tests                           |
+| ------------------------------------------------ | ------------------------------- |
+| `src/lib/config/grocery-basket.test.ts`          | Basket config validation        |
 | `src/lib/server/scrapers/grocery-basket.test.ts` | HTML parsing + price extraction |
-| `src/lib/api/marin/grocery-basket.test.ts` | Client adapter fetch/fallback |
+| `src/lib/api/marin/grocery-basket.test.ts`       | Client adapter fetch/fallback   |
 
 ---
 
 ## Task 1: Type Definitions
 
 **Files:**
+
 - Create: `src/lib/types/grocery.ts`
 - Modify: `src/lib/types/index.ts`
 
@@ -145,6 +146,7 @@ Expected: no errors.
 ## Task 2: Basket Configuration
 
 **Files:**
+
 - Create: `src/lib/config/grocery-basket.ts`
 - Test: `src/lib/config/grocery-basket.test.ts`
 
@@ -179,7 +181,14 @@ describe('BASKET_ITEMS', () => {
 	});
 
 	it('every item has a valid category', () => {
-		const validCategories = ['produce', 'dairy-alt', 'protein', 'pantry', 'beverages', 'supplements'];
+		const validCategories = [
+			'produce',
+			'dairy-alt',
+			'protein',
+			'pantry',
+			'beverages',
+			'supplements'
+		];
 		for (const item of BASKET_ITEMS) {
 			expect(validCategories).toContain(item.category);
 		}
@@ -225,7 +234,7 @@ export const BASKET_ITEMS: BasketItem[] = [
 		name: 'Organic Large Hass Avocado, 1 each',
 		size: '1 each',
 		searchTerm: 'Organic Large Hass Avocado',
-		referencePrice: 3.50,
+		referencePrice: 3.5,
 		referenceStore: 'Sprouts',
 		category: 'produce'
 	},
@@ -352,6 +361,7 @@ Expected: all 6 tests pass.
 ## Task 3: Instacart Scraper
 
 **Files:**
+
 - Create: `src/lib/server/scrapers/grocery-basket.ts`
 - Test: `src/lib/server/scrapers/grocery-basket.test.ts`
 
@@ -366,9 +376,7 @@ import { parseInstacartResults, buildSearchUrl, scorePriceMatch } from './grocer
 describe('buildSearchUrl', () => {
 	it('encodes the search term into an Instacart URL', () => {
 		const url = buildSearchUrl('Vital Farms Eggs 12 ct');
-		expect(url).toBe(
-			'https://www.instacart.com/store/s?k=Vital%20Farms%20Eggs%2012%20ct'
-		);
+		expect(url).toBe('https://www.instacart.com/store/s?k=Vital%20Farms%20Eggs%2012%20ct');
 	});
 
 	it('handles special characters', () => {
@@ -469,11 +477,7 @@ describe('scorePriceMatch', () => {
 
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import { BASKET_ITEMS } from '$lib/config/grocery-basket';
-import type {
-	BasketItemPrices,
-	GrocerySnapshot,
-	ItemPriceResult
-} from '$lib/types/grocery';
+import type { BasketItemPrices, GrocerySnapshot, ItemPriceResult } from '$lib/types/grocery';
 
 const INSTACART_BASE = 'https://www.instacart.com/store/s';
 
@@ -557,7 +561,10 @@ export function parseInstacartResults(html: string): InstacartProduct[] {
 	while ((jsonLdMatch = jsonLdPattern.exec(html)) !== null) {
 		try {
 			const data = JSON.parse(jsonLdMatch[1]);
-			if (data['@type'] === 'Product' || (Array.isArray(data) && data[0]?.['@type'] === 'Product')) {
+			if (
+				data['@type'] === 'Product' ||
+				(Array.isArray(data) && data[0]?.['@type'] === 'Product')
+			) {
 				const items = Array.isArray(data) ? data : [data];
 				for (const item of items) {
 					if (item.name && item.offers) {
@@ -601,8 +608,7 @@ export function parseInstacartResults(html: string): InstacartProduct[] {
 
 	// Strategy 3: Generic price extraction from aria-labels or structured divs
 	// Look for patterns like "Product Name ... $X.XX ... Store Name"
-	const genericPattern =
-		/aria-label="([^"]+)"[\s\S]*?\$(\d+\.?\d*)/gi;
+	const genericPattern = /aria-label="([^"]+)"[\s\S]*?\$(\d+\.?\d*)/gi;
 
 	while ((match = genericPattern.exec(html)) !== null) {
 		const name = match[1].trim();
@@ -627,7 +633,7 @@ export function parseInstacartResults(html: string): InstacartProduct[] {
 	if (pricesFound.length > 0 && products.length === 0) {
 		console.warn(
 			`[grocery-basket] Found ${pricesFound.length} prices in HTML but could not match to products. ` +
-			'Instacart HTML structure may have changed. Manual inspection needed.'
+				'Instacart HTML structure may have changed. Manual inspection needed.'
 		);
 	}
 
@@ -745,7 +751,7 @@ export async function scrapeGroceryBasket(): Promise<GrocerySnapshot> {
 
 			console.log(
 				`[grocery-basket] ${basketItem.name}: ${storePrices.length} stores, ` +
-				`cheapest ${sorted[0]?.price ? '$' + sorted[0].price.toFixed(2) : 'N/A'} at ${sorted[0]?.store ?? 'N/A'}`
+					`cheapest ${sorted[0]?.price ? '$' + sorted[0].price.toFixed(2) : 'N/A'} at ${sorted[0]?.store ?? 'N/A'}`
 			);
 		} catch (err) {
 			console.warn(
@@ -768,12 +774,8 @@ export async function scrapeGroceryBasket(): Promise<GrocerySnapshot> {
 	}
 
 	// Compute basket totals
-	const cheapestPrices = items
-		.map((i) => i.cheapest)
-		.filter((p): p is number => p !== null);
-	const expensivePrices = items
-		.map((i) => i.mostExpensive)
-		.filter((p): p is number => p !== null);
+	const cheapestPrices = items.map((i) => i.cheapest).filter((p): p is number => p !== null);
+	const expensivePrices = items.map((i) => i.mostExpensive).filter((p): p is number => p !== null);
 
 	const totalCheapest =
 		cheapestPrices.length > 0
@@ -807,6 +809,7 @@ Expected: all tests pass.
 ## Task 4: Cron Job
 
 **Files:**
+
 - Create: `src/routes/api/cron/sync-grocery-basket/+server.ts`
 - Modify: `vercel.json`
 
@@ -828,9 +831,7 @@ const BLOB_KEY = 'marin-grocery-basket.json';
 const MAX_HISTORY_ENTRIES = 104; // ~2 years at weekly cadence
 
 /** Strip per-item storePrices from a snapshot to keep history entries small */
-function toHistoryEntry(
-	snapshot: GrocerySnapshot
-): GrocerySnapshot {
+function toHistoryEntry(snapshot: GrocerySnapshot): GrocerySnapshot {
 	return {
 		timestamp: snapshot.timestamp,
 		totalCheapest: snapshot.totalCheapest,
@@ -871,10 +872,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		}
 
 		// Append to history (capped), with stripped-down entries
-		const history = [toHistoryEntry(snapshot), ...existing.history].slice(
-			0,
-			MAX_HISTORY_ENTRIES
-		);
+		const history = [toHistoryEntry(snapshot), ...existing.history].slice(0, MAX_HISTORY_ENTRIES);
 
 		const data: GroceryBasketData = {
 			current: snapshot,
@@ -891,7 +889,7 @@ export const GET: RequestHandler = async ({ request }) => {
 
 		console.log(
 			`[sync-grocery-basket] OK: ${snapshot.itemsFound}/12 items priced, ` +
-			`total $${snapshot.totalCheapest?.toFixed(2) ?? 'N/A'} in ${Date.now() - start}ms`
+				`total $${snapshot.totalCheapest?.toFixed(2) ?? 'N/A'} in ${Date.now() - start}ms`
 		);
 		return new Response(
 			JSON.stringify({
@@ -903,10 +901,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		);
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);
-		console.error(
-			`[sync-grocery-basket] FAILED after ${Date.now() - start}ms:`,
-			message
-		);
+		console.error(`[sync-grocery-basket] FAILED after ${Date.now() - start}ms:`, message);
 		return new Response(JSON.stringify({ ok: false, error: message }), {
 			status: 500,
 			headers: { 'Content-Type': 'application/json' }
@@ -953,6 +948,7 @@ Expected: no TypeScript errors.
 ## Task 5: API Data Endpoint
 
 **Files:**
+
 - Create: `src/routes/api/data/grocery-basket/+server.ts`
 
 - [ ] **Step 1: Write the data endpoint**
@@ -1003,6 +999,7 @@ export const GET: RequestHandler = async () => {
 ## Task 6: Client Adapter + Store
 
 **Files:**
+
 - Create: `src/lib/api/marin/grocery-basket.ts`
 - Create: `src/lib/stores/grocery-basket.ts`
 - Test: `src/lib/api/marin/grocery-basket.test.ts`
@@ -1033,8 +1030,8 @@ describe('fetchGroceryBasketData', () => {
 		const mockData = {
 			current: {
 				timestamp: '2026-03-29T08:00:00Z',
-				totalCheapest: 185.50,
-				totalExpensive: 242.30,
+				totalCheapest: 185.5,
+				totalExpensive: 242.3,
 				itemsFound: 12,
 				items: []
 			},
@@ -1047,7 +1044,7 @@ describe('fetchGroceryBasketData', () => {
 		});
 
 		const result = await fetchGroceryBasketData();
-		expect(result.current?.totalCheapest).toBe(185.50);
+		expect(result.current?.totalCheapest).toBe(185.5);
 		expect(result.current?.itemsFound).toBe(12);
 	});
 
@@ -1124,10 +1121,7 @@ export const currentBasketTotal = derived(
 	($d) => $d.current?.totalCheapest ?? null
 );
 
-export const currentBasketItems = derived(
-	groceryBasketStore,
-	($d) => $d.current?.items ?? []
-);
+export const currentBasketItems = derived(groceryBasketStore, ($d) => $d.current?.items ?? []);
 ```
 
 - [ ] **Step 4: Run client adapter tests**
@@ -1143,6 +1137,7 @@ Expected: all 3 tests pass.
 ## Task 7: Panel Component
 
 **Files:**
+
 - Create: `src/lib/components/panels/GroceryBasketPanel.svelte`
 
 - [ ] **Step 1: Write the panel component**
@@ -1193,7 +1188,10 @@ Expected: all 3 tests pass.
 		const prevMap = new Map(prevSnapshot.items.map((i) => [i.itemId, i.cheapest]));
 
 		return [...current.items]
-			.filter((item) => item.cheapest !== null && prevMap.has(item.itemId) && prevMap.get(item.itemId) !== null)
+			.filter(
+				(item) =>
+					item.cheapest !== null && prevMap.has(item.itemId) && prevMap.get(item.itemId) !== null
+			)
 			.map((item) => ({
 				...item,
 				_delta: item.cheapest! - (prevMap.get(item.itemId) ?? 0)
@@ -1224,8 +1222,7 @@ Expected: all 3 tests pass.
 			0,
 			Math.min(history.length - 1, Math.round(ratio * (history.length - 1)))
 		);
-		const pointX =
-			CHART_LEFT + (innerWidth * index) / Math.max(history.length - 1, 1);
+		const pointX = CHART_LEFT + (innerWidth * index) / Math.max(history.length - 1, 1);
 		hoverState = { index, x: pointX };
 	}
 
@@ -1266,10 +1263,7 @@ Expected: all 3 tests pass.
 			.y1((d) => y(d.totalCheapest!))
 			.curve(curveMonotoneX);
 
-		g.append('path')
-			.datum(history)
-			.attr('d', areaGen)
-			.attr('fill', 'rgba(245, 158, 11, 0.1)');
+		g.append('path').datum(history).attr('d', areaGen).attr('fill', 'rgba(245, 158, 11, 0.1)');
 
 		const lineGen = line<GrocerySnapshot>()
 			.x((_d, i) => x(i))
@@ -1378,7 +1372,9 @@ Expected: all 3 tests pass.
 	{#if current}
 		<div class="headline-bar">
 			<div class="basket-total">
-				<span class="total-value">{current.totalCheapest !== null ? formatPrice(current.totalCheapest) : 'N/A'}</span>
+				<span class="total-value"
+					>{current.totalCheapest !== null ? formatPrice(current.totalCheapest) : 'N/A'}</span
+				>
 				<span class="total-label">12-item basket</span>
 			</div>
 			{#if weekOverWeekChange !== null}
@@ -1447,7 +1443,9 @@ Expected: all 3 tests pass.
 						<span class="item-store">{item.cheapestStore ?? ''}</span>
 					</div>
 					<div class="item-prices">
-						<span class="item-price">{item.cheapest !== null ? formatPrice(item.cheapest) : 'N/A'}</span>
+						<span class="item-price"
+							>{item.cheapest !== null ? formatPrice(item.cheapest) : 'N/A'}</span
+						>
 						<span class="item-delta {delta <= 0 ? 'positive' : 'warning'}">
 							{delta >= 0 ? '+' : ''}{formatPrice(delta)}
 						</span>
@@ -1810,6 +1808,7 @@ Expected: all 3 tests pass.
 ## Task 8: Config Registration + Dashboard Wiring
 
 **Files:**
+
 - Modify: `src/lib/config/panels.ts`
 - Modify: `src/lib/components/panels/index.ts`
 - Modify: `src/lib/components/dashboard/SignalDeck.svelte`
@@ -1952,6 +1951,7 @@ cd /Users/tammypais/projects/marin-monitor && npm run test:unit
 ```
 
 Expected: all existing tests still pass, plus the new tests:
+
 - `src/lib/config/grocery-basket.test.ts` (6 tests)
 - `src/lib/server/scrapers/grocery-basket.test.ts` (8 tests)
 - `src/lib/api/marin/grocery-basket.test.ts` (3 tests)
@@ -2025,6 +2025,7 @@ If the basic `fetch` approach gets blocked by Instacart (403/captcha), the scrap
 ### Sanity Bounds
 
 The scraper does not currently enforce sanity bounds on prices. A future enhancement should reject prices outside reasonable ranges:
+
 - Eggs: $4-$20
 - Wine: $30-$200
 - Avocado: $1-$8

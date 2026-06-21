@@ -46,14 +46,18 @@ export const GET: RequestHandler = async ({ request }) => {
 	results.push(await runScraper('police', scrapePolice));
 	results.push(await runScraper('activity', scrapeActivity));
 	results.push(await runScraper('housing', scrapeHousing));
-	results.push(await runScraper('gas-prices', async () => {
-		const snapshot = await scrapeGasPrices();
-		return { length: snapshot.stationCount };
-	}));
-	results.push(await runScraper('ev-charging', async () => {
-		const snapshot = await scrapeEvCharging();
-		return { length: snapshot.stationCount };
-	}));
+	results.push(
+		await runScraper('gas-prices', async () => {
+			const snapshot = await scrapeGasPrices();
+			return { length: snapshot.stationCount };
+		})
+	);
+	results.push(
+		await runScraper('ev-charging', async () => {
+			const snapshot = await scrapeEvCharging();
+			return { length: snapshot.stationCount };
+		})
+	);
 
 	const allOk = results.every((r) => r.ok);
 	const summary = {

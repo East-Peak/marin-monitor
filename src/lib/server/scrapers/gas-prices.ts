@@ -81,15 +81,19 @@ async function fetchTile(
 		}
 	};
 
-	const response = await fetchWithTimeout(PLACES_URL, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			'X-Goog-Api-Key': apiKey,
-			'X-Goog-FieldMask': FIELD_MASK
+	const response = await fetchWithTimeout(
+		PLACES_URL,
+		{
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-Goog-Api-Key': apiKey,
+				'X-Goog-FieldMask': FIELD_MASK
+			},
+			body: JSON.stringify(body)
 		},
-		body: JSON.stringify(body)
-	}, 10000);
+		10000
+	);
 
 	if (!response.ok) {
 		const text = await response.text().catch(() => '');

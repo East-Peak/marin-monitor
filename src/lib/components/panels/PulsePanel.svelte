@@ -70,7 +70,9 @@
 <Panel id="pulse" title="Pulse" variant="pulse" count={stories24h}>
 	<div class="pulse-grid">
 		<div class="stat-card">
-			<div class="label">{$selectedTownObj ? `${$selectedTownObj.name} (24h)` : 'Stories (24h)'}</div>
+			<div class="label">
+				{$selectedTownObj ? `${$selectedTownObj.name} (24h)` : 'Stories (24h)'}
+			</div>
 			<div class="value">{stories24h}</div>
 		</div>
 		<div class="stat-card">

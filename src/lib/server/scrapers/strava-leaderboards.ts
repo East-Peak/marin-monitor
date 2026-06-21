@@ -10,7 +10,11 @@
  * No authentication required — works with anonymous access to strava.com/segments/:id
  */
 
-import type { StravaLeaderboard, StravaRecordHolder, StravaLeaderboardRow } from '$lib/types/strava';
+import type {
+	StravaLeaderboard,
+	StravaRecordHolder,
+	StravaLeaderboardRow
+} from '$lib/types/strava';
 
 // ---------------------------------------------------------------------------
 // HTML entity decoding
@@ -97,9 +101,7 @@ function parseEffortId(raw: string | number | undefined): number {
 
 function extractReactProps(html: string): ReactProps | null {
 	// Match the data-react-props attribute on the SegmentDetailsSideBar div
-	const match = html.match(
-		/data-react-class='SegmentDetailsSideBar'\s+data-react-props='([^']+)'/
-	);
+	const match = html.match(/data-react-class='SegmentDetailsSideBar'\s+data-react-props='([^']+)'/);
 	if (!match) {
 		// Try double-quote variant
 		const match2 = html.match(
@@ -375,7 +377,9 @@ export async function scrapeSegmentLeaderboardResult(
 		});
 
 		if (response.status === 404 || response.status === 410) {
-			console.warn(`[strava-leaderboards] Segment ${segmentId} is no longer available (${response.status})`);
+			console.warn(
+				`[strava-leaderboards] Segment ${segmentId} is no longer available (${response.status})`
+			);
 			return { kind: 'not_found' };
 		}
 

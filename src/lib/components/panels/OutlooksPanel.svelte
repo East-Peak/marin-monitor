@@ -165,7 +165,9 @@
 			<section class="outlook-section">
 				<div class="section-header">
 					<div class="section-title">5-Day Weather</div>
-					<div class="section-meta">{$selectedTownObj ? $selectedTownObj.name : 'Central Marin'}</div>
+					<div class="section-meta">
+						{$selectedTownObj ? $selectedTownObj.name : 'Central Marin'}
+					</div>
 				</div>
 
 				{#if dailyForecast.length > 0}

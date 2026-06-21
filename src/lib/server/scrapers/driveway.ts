@@ -1,6 +1,12 @@
 // src/lib/server/scrapers/driveway.ts
 
-import type { DrivewaySnapshot, MakeCount, FuelBreakdown, DrivewayFunStats, FuelType } from '$lib/types/driveway';
+import type {
+	DrivewaySnapshot,
+	MakeCount,
+	FuelBreakdown,
+	DrivewayFunStats,
+	FuelType
+} from '$lib/types/driveway';
 import {
 	withPreservedSuccessfulScrapeMetadata,
 	withSuccessfulScrapeMetadata
@@ -125,17 +131,15 @@ async function fetchFuelCounts(year: number): Promise<FuelBreakdown[]> {
 		const total = rawCounts.reduce((sum, c) => sum + c.count, 0);
 
 		// Sort by FUEL_TYPE_ORDER, then build breakdowns with percentages
-		return FUEL_TYPE_ORDER
-			.map((ft) => {
-				const entry = rawCounts.find((c) => c.fuelType === ft);
-				if (!entry) return null;
-				return {
-					fuelType: ft,
-					count: entry.count,
-					pct: Math.round((entry.count / total) * 10000) / 100
-				};
-			})
-			.filter((f): f is FuelBreakdown => f !== null);
+		return FUEL_TYPE_ORDER.map((ft) => {
+			const entry = rawCounts.find((c) => c.fuelType === ft);
+			if (!entry) return null;
+			return {
+				fuelType: ft,
+				count: entry.count,
+				pct: Math.round((entry.count / total) * 10000) / 100
+			};
+		}).filter((f): f is FuelBreakdown => f !== null);
 	} finally {
 		clearTimeout(timeout);
 	}
@@ -147,8 +151,7 @@ async function fetchFuelCounts(year: number): Promise<FuelBreakdown[]> {
 function extractFunStats(makes: MakeCount[], fuel: FuelBreakdown[]): DrivewayFunStats {
 	const findMake = (name: string) =>
 		makes.find((m) => m.make.toLowerCase() === name.toLowerCase())?.count ?? 0;
-	const findFuel = (ft: FuelType) =>
-		fuel.find((f) => f.fuelType === ft)?.count ?? 0;
+	const findFuel = (ft: FuelType) => fuel.find((f) => f.fuelType === ft)?.count ?? 0;
 
 	return {
 		rivian: findMake('Rivian'),
@@ -163,10 +166,10 @@ function extractFunStats(makes: MakeCount[], fuel: FuelBreakdown[]): DrivewayFun
 function titleCase(s: string): string {
 	// Handle common brand names that shouldn't be naively title-cased
 	const brandMap: Record<string, string> = {
-		'BMW': 'BMW',
-		'GMC': 'GMC',
-		'MINI': 'MINI',
-		'RAM': 'RAM'
+		BMW: 'BMW',
+		GMC: 'GMC',
+		MINI: 'MINI',
+		RAM: 'RAM'
 	};
 	const upper = s.toUpperCase();
 	if (brandMap[upper]) return brandMap[upper];
@@ -227,21 +230,26 @@ export async function computeDrivewaySnapshot(
 	// Try live API first
 	const live = await fetchLiveDmvData();
 	if (live) {
-		console.log(`[driveway] Live data: ${live.totalVehicles.toLocaleString()} vehicles, year ${live.dataYear}`);
+		console.log(
+			`[driveway] Live data: ${live.totalVehicles.toLocaleString()} vehicles, year ${live.dataYear}`
+		);
 		return live;
 	}
 
 	// Fall back to hardcoded 2024 data
 	console.log('[driveway] Using hardcoded 2024 fallback data');
-	return withPreservedSuccessfulScrapeMetadata({
-		timestamp: new Date().toISOString(),
-		dataYear: FALLBACK_DATA_YEAR,
-		totalVehicles: FALLBACK_TOTAL_VEHICLES,
-		topMakes: FALLBACK_TOP_MAKES,
-		fuelBreakdown: FALLBACK_FUEL_BREAKDOWN,
-		funStats: FALLBACK_FUN_STATS
-	}, {
-		wasLive: false,
-		previous
-	});
+	return withPreservedSuccessfulScrapeMetadata(
+		{
+			timestamp: new Date().toISOString(),
+			dataYear: FALLBACK_DATA_YEAR,
+			totalVehicles: FALLBACK_TOTAL_VEHICLES,
+			topMakes: FALLBACK_TOP_MAKES,
+			fuelBreakdown: FALLBACK_FUEL_BREAKDOWN,
+			funStats: FALLBACK_FUN_STATS
+		},
+		{
+			wasLive: false,
+			previous
+		}
+	);
 }

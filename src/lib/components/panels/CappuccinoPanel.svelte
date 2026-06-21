@@ -20,9 +20,23 @@
 	} from '$lib/types/coffee';
 
 	type HoverState = { index: number; x: number } | null;
-	type SnapshotMetric = { label: string; value: string; detail: string; tone?: 'default' | 'positive' | 'warning' };
-	type DrinkCard = { label: string; value: string; detail: string; tone?: 'default' | 'positive' | 'warning' };
-	type ShopRow = { shop: CoffeeIndexShop; headline: CoffeeDrinkPrice | null; drinks: CoffeeDrinkPrice[] };
+	type SnapshotMetric = {
+		label: string;
+		value: string;
+		detail: string;
+		tone?: 'default' | 'positive' | 'warning';
+	};
+	type DrinkCard = {
+		label: string;
+		value: string;
+		detail: string;
+		tone?: 'default' | 'positive' | 'warning';
+	};
+	type ShopRow = {
+		shop: CoffeeIndexShop;
+		headline: CoffeeDrinkPrice | null;
+		drinks: CoffeeDrinkPrice[];
+	};
 
 	const ACCENT = '#a16207';
 	const CHART_HEIGHT = 200;
@@ -35,7 +49,9 @@
 	let hoverState = $state<HoverState>(null);
 
 	const current = $derived(data.current);
-	const currentPrimaryDrink = $derived<CoffeeDrinkId>(current?.primaryDrink ?? COFFEE_PRIMARY_DRINK);
+	const currentPrimaryDrink = $derived<CoffeeDrinkId>(
+		current?.primaryDrink ?? COFFEE_PRIMARY_DRINK
+	);
 	const currentPrimaryLabel = $derived(current?.primaryDrinkSummary.label ?? 'Coffee');
 	const historySeries = $derived(
 		data.history
@@ -65,15 +81,14 @@
 	});
 
 	const shopRows = $derived.by<ShopRow[]>(() =>
-		sortCoffeeShopsByHeadline(filteredShops, currentPrimaryDrink)
-			.map((shop) => {
-				const drinks = getOrderedCoffeeDrinkPrices(shop, currentPrimaryDrink);
-				return {
-					shop,
-					headline: drinks[0] ?? null,
-					drinks
-				};
-			})
+		sortCoffeeShopsByHeadline(filteredShops, currentPrimaryDrink).map((shop) => {
+			const drinks = getOrderedCoffeeDrinkPrices(shop, currentPrimaryDrink);
+			return {
+				shop,
+				headline: drinks[0] ?? null,
+				drinks
+			};
+		})
 	);
 
 	function computeMedian(values: number[]): number | null {
@@ -121,19 +136,13 @@
 						: priceDelta <= 0
 							? 'Stable or down'
 							: 'Trending up',
-				tone:
-					priceDelta === null
-						? 'default'
-						: priceDelta <= 0
-							? 'positive'
-							: 'warning'
+				tone: priceDelta === null ? 'default' : priceDelta <= 0 ? 'positive' : 'warning'
 			},
 			{
 				label: 'Live Sources',
 				value: `${current.liveMenuShopCount}/${liveEligibleCount}`,
 				detail: 'Freshly scraped priceable shops',
-				tone:
-					current.liveMenuShopCount >= Math.ceil(liveEligibleCount / 2) ? 'positive' : 'warning'
+				tone: current.liveMenuShopCount >= Math.ceil(liveEligibleCount / 2) ? 'positive' : 'warning'
 			},
 			{
 				label: 'Last Fresh',
@@ -184,7 +193,10 @@
 		const target = event.currentTarget as SVGSVGElement;
 		const rect = target.getBoundingClientRect();
 		const innerWidth = rect.width - CHART_MARGINS.left - CHART_MARGINS.right;
-		const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - CHART_MARGINS.left));
+		const relativeX = Math.max(
+			0,
+			Math.min(innerWidth, event.clientX - rect.left - CHART_MARGINS.left)
+		);
 		const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
 		const index = Math.max(
 			0,
@@ -292,11 +304,31 @@
 								/>
 							{/if}
 							<!-- Y axis labels -->
-							<text x="-4" y={chartPaths.yScale(chartPaths.yMax)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{formatCoffeePrice(chartPaths.yMax)}</text>
-							<text x="-4" y={chartPaths.yScale(chartPaths.yMin)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{formatCoffeePrice(chartPaths.yMin)}</text>
+							<text
+								x="-4"
+								y={chartPaths.yScale(chartPaths.yMax)}
+								text-anchor="end"
+								dominant-baseline="middle"
+								fill="#888"
+								font-size="7px">{formatCoffeePrice(chartPaths.yMax)}</text
+							>
+							<text
+								x="-4"
+								y={chartPaths.yScale(chartPaths.yMin)}
+								text-anchor="end"
+								dominant-baseline="middle"
+								fill="#888"
+								font-size="7px">{formatCoffeePrice(chartPaths.yMin)}</text
+							>
 							<!-- X axis labels -->
 							{#each chartPaths.axisLabels.x as lbl}
-								<text x={lbl.x} y={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom + 14} text-anchor="middle" fill="#666" font-size="7px">{lbl.label}</text>
+								<text
+									x={lbl.x}
+									y={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom + 14}
+									text-anchor="middle"
+									fill="#666"
+									font-size="7px">{lbl.label}</text
+								>
 							{/each}
 						</g>
 					</svg>
@@ -305,7 +337,9 @@
 					<div class="chart-tooltip" style={`left:${Math.max(20, hoverState.x - 80)}px`}>
 						<div class="tooltip-time">{formatDate(historySeries[hoverState.index].timestamp)}</div>
 						<div class="tooltip-line">
-							Median {formatCoffeePrice(historySeries[hoverState.index].primaryDrinkSummary.medianPrice!)}
+							Median {formatCoffeePrice(
+								historySeries[hoverState.index].primaryDrinkSummary.medianPrice!
+							)}
 						</div>
 						<div class="tooltip-line">
 							{historySeries[hoverState.index].primaryDrinkSummary.pricedShopCount} shops
@@ -347,7 +381,8 @@
 							{#if row.drinks.length > 0}
 								{#each row.drinks as drink}
 									<span class={`drink-chip ${drink.priceSource} ${drink.isStale ? 'stale' : ''}`}>
-										{drink.label} {formatCoffeePrice(drink.price)}
+										{drink.label}
+										{formatCoffeePrice(drink.price)}
 									</span>
 								{/each}
 							{:else}

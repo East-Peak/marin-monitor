@@ -9,9 +9,11 @@ The current TV carousel has duplication (cameras on two screens, Hero Dirt on tw
 ### 8 Carousel Screens
 
 #### Screen 1: Map Explorer (30s)
+
 The map with regional flyby sub-carousel (county overview -> Southern Marin -> Central Marin -> Novato & North -> West Marin, 6s per sub-view).
 
 **Contextual sidebar** -- as the map flies to each region:
+
 - Weather updates to that region's hourly forecast (current temp, wind, short forecast)
 - Top 3-4 pinned stories visible in the current viewport shown as headline cards
 - Active alerts for that area surface at the top
@@ -21,11 +23,13 @@ This is the hero/flagship screen. Gets 30s to complete the full flyby cycle.
 **Components:** Custom `TvMapScreen` composing MapContainer + MapDataLayer + MapControls + TvMapFlyer + new `TvMapSidebar` (replaces static WeatherPanel).
 
 #### Screen 2: News Wire (20s)
+
 Local headlines in a 2-column grid. Layout unchanged, but wrap in `TvAutoScroll` if content exceeds viewport.
 
 **Components:** `NewsWireScreen` (existing, minor modification to add auto-scroll wrapper).
 
 #### Screen 3: Safety & Alerts (20s, auto-scroll)
+
 Full-width, no camera sidebar. Alerts pinned at top in red banner cards. Crime/safety feed below.
 
 If the feed exceeds the viewport height, it **auto-scrolls vertically** -- slow CSS animation (similar to chyron but vertical), continuous, no scrollbar visible. Content duplicated and scrolls 50% for seamless loop.
@@ -33,9 +37,11 @@ If the feed exceeds the viewport height, it **auto-scrolls vertically** -- slow 
 **Components:** Rewrite `SafetyScreen` -- remove CamerasPanel import, full-width layout, wrap feed in `TvAutoScroll`.
 
 #### Screen 4: Tam & Coast Cameras (20s)
+
 Geographic cluster: cameras looking at the Mt Tamalpais and coastline corridor.
 
 **Cameras (8):**
+
 - Mt. Tam East (fire, ALERTCalifornia)
 - Mt. Tam West (fire, ALERTCalifornia)
 - Mt. Tamalpais Summit (scenic, ABC7)
@@ -50,9 +56,11 @@ Full-screen grid, 4 per row x 2 rows. Big thumbnails filling the viewport. Auto-
 **Components:** New `TvCameraClusterScreen` -- a reusable component that accepts a cluster ID and renders the matching cameras in a full-viewport grid.
 
 #### Screen 5: Central Marin & Highway (20s)
+
 Geographic cluster: cameras covering the populated 101 corridor and central ridgelines.
 
 **Cameras (8):**
+
 - 101 at Spencer Ave (traffic, Caltrans)
 - 101 at SR-1 (traffic, Caltrans)
 - 101 at I-580 (traffic, Caltrans)
@@ -67,9 +75,11 @@ Same full-screen grid layout as Screen 4. 4 per row x 2 rows.
 **Components:** Same `TvCameraClusterScreen` with different cluster ID.
 
 #### Screen 6: West Marin & North (20s)
+
 Geographic cluster: cameras covering rural West Marin, Point Reyes, and the Novato hills.
 
 **Cameras (8):**
+
 - Barnabe East (fire, ALERTCalifornia)
 - Barnabe West (fire, ALERTCalifornia)
 - Black Mountain (fire, ALERTCalifornia)
@@ -84,7 +94,9 @@ Same full-screen grid layout. 4 per row x 2 rows.
 **Components:** Same `TvCameraClusterScreen` with different cluster ID.
 
 #### Screen 7: Conditions & Trails (20s)
+
 Combined environment + trail conditions in one dense screen:
+
 - **Top row:** AQI card + UV card + Active Fires card (3 stat cards)
 - **Middle:** Tides chart (from TidesPanel)
 - **Bottom-left:** Stream gauges table
@@ -95,7 +107,9 @@ This is the "what are conditions like right now" screen.
 **Components:** New `TvConditionsScreen` composing EnvironmentPanel data (AQI/UV/fires/streams) + TidesPanel + ConditionsPanel (Hero Dirt). May need to extract sub-components or pass data as props rather than embedding full panels if they don't fit the layout.
 
 #### Screen 8: Outdoors & Community (20s)
+
 Two columns of headline cards:
+
 - **Left column:** Outdoors & Lifestyle news (from `outdoorsNews` store)
 - **Right column:** Civic news (from `civicNews` store)
 
@@ -118,11 +132,11 @@ tvCluster?: TvCameraCluster;
 
 Each camera gets assigned to exactly one TV cluster based on geography/view direction:
 
-| Cluster | Label | Cameras | Theme |
-|---------|-------|---------|-------|
-| `tam-coast` | Tam & Coast | Tam East/West, Tam Summit, Muir Beach x2, Wolfback, Bolinas, Golden Gate Bay | Mountain ridgeline + coastline |
-| `central-highway` | Central & Highway | Spencer, SR-1, I-580, Ignacio, San Pedro, SR Hill, Big Rock x2 | Populated corridor + central peaks |
-| `west-north` | West & North | Barnabe E/W, Black Mtn, Vision, Burdell x2, Burdell South, League 221 | Rural hills + pastoral views |
+| Cluster           | Label             | Cameras                                                                      | Theme                              |
+| ----------------- | ----------------- | ---------------------------------------------------------------------------- | ---------------------------------- |
+| `tam-coast`       | Tam & Coast       | Tam East/West, Tam Summit, Muir Beach x2, Wolfback, Bolinas, Golden Gate Bay | Mountain ridgeline + coastline     |
+| `central-highway` | Central & Highway | Spencer, SR-1, I-580, Ignacio, San Pedro, SR Hill, Big Rock x2               | Populated corridor + central peaks |
+| `west-north`      | West & North      | Barnabe E/W, Black Mtn, Vision, Burdell x2, Burdell South, League 221        | Rural hills + pastoral views       |
 
 The `TvCameraClusterScreen` component filters cameras by `tvCluster` and renders them in a responsive grid.
 
@@ -134,12 +148,13 @@ The `TvCameraClusterScreen` component filters cameras by `tvCluster` and renders
 
 ```typescript
 interface Props {
-  clusterId: TvCameraCluster;
-  title: string;
+	clusterId: TvCameraCluster;
+	title: string;
 }
 ```
 
 It:
+
 - Filters `CAMERAS` by `tvCluster === clusterId`
 - Renders a CSS grid filling the viewport (`grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))`)
 - Each cell: camera image (full cell width), name overlay top-left, location overlay top-right, source badge bottom-right
@@ -151,6 +166,7 @@ It:
 ### Cross-Cutting: Auto-Scroll for Overflow
 
 Any screen where content may exceed the viewport height (Safety, News Wire) uses **vertical auto-scroll**:
+
 - Slow continuous scroll (~30px/s)
 - Content duplicated (`[...items, ...items]`, scroll 50%) for seamless loop
 - No visible scrollbar (`overflow: hidden`)
@@ -163,6 +179,7 @@ This is the vertical equivalent of the chyron's horizontal scroll.
 ### Cross-Cutting: Windy Iframe Handling
 
 The 2 Windy cameras (Golden Gate Bay View, Muir Beach scenic) use `type: 'iframe'` and show "Click to load" on the main dashboard. For TV mode:
+
 - Render the iframe with `loading="eager"` so it auto-loads without interaction
 - If the iframe fails to load within 5s, show a fallback card: camera name, location, "Stream unavailable" in gray text
 - The Windy iframes are webcam streams, not static images, so they provide real-time video when loaded
@@ -175,24 +192,59 @@ Update `src/lib/config/tv.ts`:
 
 ```typescript
 export type TvScreenId =
-  | 'map-explorer'
-  | 'news-wire'
-  | 'safety'
-  | 'cameras-tam-coast'
-  | 'cameras-central-highway'
-  | 'cameras-west-north'
-  | 'conditions'
-  | 'community';
+	| 'map-explorer'
+	| 'news-wire'
+	| 'safety'
+	| 'cameras-tam-coast'
+	| 'cameras-central-highway'
+	| 'cameras-west-north'
+	| 'conditions'
+	| 'community';
 
 export const TV_SCREENS: TvScreenConfig[] = [
-  { id: 'map-explorer', name: 'Map Explorer', description: 'Live map with regional flyby and contextual sidebar', durationMs: 30_000 },
-  { id: 'news-wire', name: 'News Wire', description: 'Local headlines', durationMs: 20_000 },
-  { id: 'safety', name: 'Safety & Alerts', description: 'Crime and safety with auto-scroll', durationMs: 20_000 },
-  { id: 'cameras-tam-coast', name: 'Tam & Coast', description: 'Mt Tam ridgeline and coastal cameras', durationMs: 20_000 },
-  { id: 'cameras-central-highway', name: 'Central & Highway', description: '101 corridor and central Marin cameras', durationMs: 20_000 },
-  { id: 'cameras-west-north', name: 'West & North', description: 'West Marin and Novato hill cameras', durationMs: 20_000 },
-  { id: 'conditions', name: 'Conditions & Trails', description: 'AQI, tides, streams, Hero Dirt', durationMs: 20_000 },
-  { id: 'community', name: 'Outdoors & Community', description: 'Outdoor and civic news', durationMs: 20_000 }
+	{
+		id: 'map-explorer',
+		name: 'Map Explorer',
+		description: 'Live map with regional flyby and contextual sidebar',
+		durationMs: 30_000
+	},
+	{ id: 'news-wire', name: 'News Wire', description: 'Local headlines', durationMs: 20_000 },
+	{
+		id: 'safety',
+		name: 'Safety & Alerts',
+		description: 'Crime and safety with auto-scroll',
+		durationMs: 20_000
+	},
+	{
+		id: 'cameras-tam-coast',
+		name: 'Tam & Coast',
+		description: 'Mt Tam ridgeline and coastal cameras',
+		durationMs: 20_000
+	},
+	{
+		id: 'cameras-central-highway',
+		name: 'Central & Highway',
+		description: '101 corridor and central Marin cameras',
+		durationMs: 20_000
+	},
+	{
+		id: 'cameras-west-north',
+		name: 'West & North',
+		description: 'West Marin and Novato hill cameras',
+		durationMs: 20_000
+	},
+	{
+		id: 'conditions',
+		name: 'Conditions & Trails',
+		description: 'AQI, tides, streams, Hero Dirt',
+		durationMs: 20_000
+	},
+	{
+		id: 'community',
+		name: 'Outdoors & Community',
+		description: 'Outdoor and civic news',
+		durationMs: 20_000
+	}
 ];
 ```
 
@@ -207,6 +259,7 @@ Each `TvMapView` in the config gets extended with weather coordinates:
 The existing `TvMapView` interface is unchanged -- weather lat/lon derived from `center[1]`/`center[0]`.
 
 `TvMapFlyer` emits a callback (`onViewChange: (view: TvMapView) => void`) when the sub-view changes. The parent `TvMapScreen` receives it and:
+
 1. Fetches hourly weather for the new region's lat/lon (cached in a local `Map<string, { data, fetchedAt }>` keyed by view ID -- simple in-component cache, no external service needed)
 2. Filters `allNewsItems` to items whose lat/lon falls within the current viewport. Radius varies by zoom: ~0.15 degrees for county overview (zoom ~10), ~0.05 degrees for regional views (zoom ~13). Items without lat/lon are excluded from the sidebar.
 3. Renders the sidebar with region-specific weather + visible stories + any active alerts
@@ -215,11 +268,11 @@ The existing `TvMapView` interface is unchanged -- weather lat/lon derived from 
 
 ```typescript
 interface TvMapSidebarProps {
-  regionLabel: string;
-  weather: { temp: number; wind: string; shortForecast: string } | null;
-  stories: NewsItem[];  // filtered to current viewport
-  alerts: NewsItem[];   // items with isAlert === true in viewport
-  loading: boolean;     // true while weather is being fetched
+	regionLabel: string;
+	weather: { temp: number; wind: string; shortForecast: string } | null;
+	stories: NewsItem[]; // filtered to current viewport
+	alerts: NewsItem[]; // items with isAlert === true in viewport
+	loading: boolean; // true while weather is being fetched
 }
 ```
 

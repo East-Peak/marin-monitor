@@ -40,7 +40,7 @@ export default {
 				}
 			},
 			backdropBlur: {
-				xs: '2px',
+				xs: '2px'
 			}
 		}
 	},

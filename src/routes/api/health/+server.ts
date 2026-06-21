@@ -94,7 +94,12 @@ const DATA_SOURCES: DataSourceConfig[] = [
 		maxAgeDays: 10,
 		freshnessMode: 'content'
 	},
-	{ name: 'Police Logs', blobKey: 'marin-police-logs.json', expectedCadence: 'daily', maxAgeDays: 2 },
+	{
+		name: 'Police Logs',
+		blobKey: 'marin-police-logs.json',
+		expectedCadence: 'daily',
+		maxAgeDays: 2
+	},
 	{ name: 'Activity', blobKey: 'marin-activity.json', expectedCadence: 'daily', maxAgeDays: 2 },
 	// /api/cron/sync-311 runs every 4h; allow 1 day before flagging stale.
 	{ name: '311 (SeeClickFix)', blobKey: 'marin-311.json', expectedCadence: 'daily', maxAgeDays: 1 },
@@ -171,7 +176,10 @@ async function checkSource(
 }
 
 /** Optionally check the local proxy health */
-async function checkProxyHealth(proxyUrl: string, proxySecret: string): Promise<Record<string, unknown> | null> {
+async function checkProxyHealth(
+	proxyUrl: string,
+	proxySecret: string
+): Promise<Record<string, unknown> | null> {
 	try {
 		const healthUrl = new URL('/health', proxyUrl).toString();
 		const res = await fetchWithTimeout(
@@ -198,9 +206,7 @@ export const GET: RequestHandler = async ({ request }) => {
 	const includeInternal = hasValidCronAuth(request);
 
 	// Check all data sources in parallel
-	const sources = await Promise.all(
-		DATA_SOURCES.map((config) => checkSource(config, now, token))
-	);
+	const sources = await Promise.all(DATA_SOURCES.map((config) => checkSource(config, now, token)));
 
 	let internal: Record<string, unknown> | undefined;
 	if (includeInternal) {

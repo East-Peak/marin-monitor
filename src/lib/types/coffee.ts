@@ -1,12 +1,7 @@
 /** Source platform for scraping */
 export type CoffeeSource = 'toast' | 'html' | 'delivery';
 export type CoffeePriceSource = 'live' | 'hardcoded' | 'fallback' | 'unavailable';
-export type CoffeeDrinkId =
-	| 'cappuccino'
-	| 'latte'
-	| 'flat_white'
-	| 'house_coffee'
-	| 'pour_over';
+export type CoffeeDrinkId = 'cappuccino' | 'latte' | 'flat_white' | 'house_coffee' | 'pour_over';
 
 /** A single coffee shop with its current cappuccino price */
 export interface CoffeeShop {

@@ -152,9 +152,7 @@ async function fetchLiveCampData() {
 
 	// Fallback: try to find price data in the HTML
 	// Look for patterns like "$645/week" or "$695 per week"
-	const priceMatches = html.matchAll(
-		/\$(\d{2,4})\s*(?:\/|per\s+)(?:week|wk)/gi
-	);
+	const priceMatches = html.matchAll(/\$(\d{2,4})\s*(?:\/|per\s+)(?:week|wk)/gi);
 	const fallbackPrices = [];
 	for (const match of priceMatches) {
 		fallbackPrices.push({
@@ -167,9 +165,7 @@ async function fetchLiveCampData() {
 	}
 
 	if (fallbackPrices.length > 0) {
-		console.log(
-			`[sync-camp-prices] Extracted ${fallbackPrices.length} prices from HTML patterns`
-		);
+		console.log(`[sync-camp-prices] Extracted ${fallbackPrices.length} prices from HTML patterns`);
 		return fallbackPrices;
 	}
 
@@ -207,9 +203,7 @@ async function main() {
 				allPrices = extractSessionPrices(liveData);
 			}
 			source = 'marinfamilies.com';
-			console.log(
-				`[sync-camp-prices] Extracted ${allPrices.length} session prices from live site`
-			);
+			console.log(`[sync-camp-prices] Extracted ${allPrices.length} session prices from live site`);
 		} catch (err) {
 			console.error(`[sync-camp-prices] Live fetch failed: ${err.message}`);
 		}

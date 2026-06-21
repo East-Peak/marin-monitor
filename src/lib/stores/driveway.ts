@@ -7,12 +7,6 @@ import type { DrivewayData } from '$lib/types/driveway';
 
 export const drivewayStore = writable<DrivewayData>({ current: null, history: [] });
 
-export const currentDrivewaySnapshot = derived(
-	drivewayStore,
-	($d) => $d.current
-);
+export const currentDrivewaySnapshot = derived(drivewayStore, ($d) => $d.current);
 
-export const drivewayTopMakes = derived(
-	drivewayStore,
-	($d) => $d.current?.topMakes ?? []
-);
+export const drivewayTopMakes = derived(drivewayStore, ($d) => $d.current?.topMakes ?? []);

@@ -114,18 +114,25 @@ export const GET: RequestHandler = async () => {
 
 	let response: Response;
 	try {
-		response = await fetchWithTimeout(url, {
-			headers: { Accept: 'application/json' }
-		}, 15000);
+		response = await fetchWithTimeout(
+			url,
+			{
+				headers: { Accept: 'application/json' }
+			},
+			15000
+		);
 	} catch {
 		return json({ error: 'CDPH API timeout' }, { status: 502 });
 	}
 
 	if (!response.ok) {
-		return json({ error: 'CDPH API error' }, {
-			status: response.status,
-			headers: { 'Cache-Control': 'no-store' }
-		});
+		return json(
+			{ error: 'CDPH API error' },
+			{
+				status: response.status,
+				headers: { 'Cache-Control': 'no-store' }
+			}
+		);
 	}
 
 	const body = (await response.json()) as CkanResponse;
@@ -136,7 +143,10 @@ export const GET: RequestHandler = async () => {
 	const records = body.result.records;
 
 	// Group by target → date → population-weighted average across plants
-	const byTarget = new Map<string, Map<string, { weightedSum: number; popSum: number; belowLodCount: number; totalCount: number }>>();
+	const byTarget = new Map<
+		string,
+		Map<string, { weightedSum: number; popSum: number; belowLodCount: number; totalCount: number }>
+	>();
 
 	for (const rec of records) {
 		const targetKey = rec.pcr_target?.toLowerCase();
@@ -144,7 +154,8 @@ export const GET: RequestHandler = async () => {
 		if (!targetInfo) continue;
 
 		// Filter to preferred gene target to avoid double-counting subtargets
-		if (targetInfo.geneTarget && rec.pcr_gene_target?.toLowerCase() !== targetInfo.geneTarget) continue;
+		if (targetInfo.geneTarget && rec.pcr_gene_target?.toLowerCase() !== targetInfo.geneTarget)
+			continue;
 
 		const date = rec.sample_collect_date?.slice(0, 10);
 		if (!date) continue;

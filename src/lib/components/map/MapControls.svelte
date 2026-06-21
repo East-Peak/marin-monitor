@@ -20,8 +20,10 @@
 		const map = getMap();
 		if (map) {
 			const vis = earthquakesVisible ? 'visible' : 'none';
-			if (map.getLayer('earthquakes-layer')) map.setLayoutProperty('earthquakes-layer', 'visibility', vis);
-			if (map.getLayer('earthquakes-ring-layer')) map.setLayoutProperty('earthquakes-ring-layer', 'visibility', vis);
+			if (map.getLayer('earthquakes-layer'))
+				map.setLayoutProperty('earthquakes-layer', 'visibility', vis);
+			if (map.getLayer('earthquakes-ring-layer'))
+				map.setLayoutProperty('earthquakes-ring-layer', 'visibility', vis);
 		}
 	}
 
@@ -43,7 +45,19 @@
 		'311': '311 Reports'
 	};
 
-	const LAYER_ORDER: MapLayer[] = ['news', 'safety', 'civic', 'activity', 'housing', '311', 'gas', 'ev-charging', 'coffee', 'fitness', 'satire'];
+	const LAYER_ORDER: MapLayer[] = [
+		'news',
+		'safety',
+		'civic',
+		'activity',
+		'housing',
+		'311',
+		'gas',
+		'ev-charging',
+		'coffee',
+		'fitness',
+		'satire'
+	];
 
 	function toggleLayer(layer: MapLayer) {
 		mapStore.toggleLayer(layer);

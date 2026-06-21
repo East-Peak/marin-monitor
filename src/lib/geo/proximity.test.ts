@@ -3,7 +3,13 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { haversineDistance, findNearestTown, isInsideMarin, isNearMarin, getLocationForTown } from './proximity';
+import {
+	haversineDistance,
+	findNearestTown,
+	isInsideMarin,
+	isNearMarin,
+	getLocationForTown
+} from './proximity';
 
 describe('haversineDistance', () => {
 	it('returns 0 for identical points', () => {

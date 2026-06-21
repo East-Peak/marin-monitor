@@ -176,19 +176,35 @@
 			const target = event.currentTarget as SVGSVGElement;
 			const rect = target.getBoundingClientRect();
 			const innerWidth = rect.width - PRICE_MARGINS.left - PRICE_MARGINS.right;
-			const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - PRICE_MARGINS.left));
+			const relativeX = Math.max(
+				0,
+				Math.min(innerWidth, event.clientX - rect.left - PRICE_MARGINS.left)
+			);
 			const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
-			const index = Math.max(0, Math.min(priceChartPaths.dots.length - 1, Math.round(ratio * (priceChartPaths.dots.length - 1))));
+			const index = Math.max(
+				0,
+				Math.min(
+					priceChartPaths.dots.length - 1,
+					Math.round(ratio * (priceChartPaths.dots.length - 1))
+				)
+			);
 			hoverState = { chart, index, x: PRICE_MARGINS.left + priceChartPaths.dots[index].x };
 		} else {
 			if (inventoryData.length === 0) return;
 			const target = event.currentTarget as SVGSVGElement;
 			const rect = target.getBoundingClientRect();
 			const innerWidth = rect.width - INV_MARGINS.left - INV_MARGINS.right;
-			const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - INV_MARGINS.left));
+			const relativeX = Math.max(
+				0,
+				Math.min(innerWidth, event.clientX - rect.left - INV_MARGINS.left)
+			);
 			const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
-			const index = Math.max(0, Math.min(inventoryData.length - 1, Math.round(ratio * (inventoryData.length - 1))));
-			const pointX = INV_MARGINS.left + (innerWidth * index) / Math.max(inventoryData.length - 1, 1);
+			const index = Math.max(
+				0,
+				Math.min(inventoryData.length - 1, Math.round(ratio * (inventoryData.length - 1)))
+			);
+			const pointX =
+				INV_MARGINS.left + (innerWidth * index) / Math.max(inventoryData.length - 1, 1);
 			hoverState = { chart, index, x: pointX };
 		}
 	}
@@ -325,7 +341,12 @@
 	});
 </script>
 
-<Panel id="housing" title="Housing" loading={$housingNews.loading || dataLoading} error={panelError}>
+<Panel
+	id="housing"
+	title="Housing"
+	loading={$housingNews.loading || dataLoading}
+	error={panelError}
+>
 	{#if isFallbackData}
 		<div class="fallback-badge" title="Live blob unavailable; serving committed snapshot.">
 			Showing {dataSource === 'static-fallback' ? 'static snapshot' : dataSource} data — live source unavailable
@@ -379,7 +400,12 @@
 					>
 						<g transform={`translate(${PRICE_MARGINS.left},${PRICE_MARGINS.top})`}>
 							<path d={priceChartPaths.areaPath} fill="rgba(245, 158, 11, 0.1)" />
-							<path d={priceChartPaths.linePath} fill="none" stroke={PRICE_ACCENT} stroke-width="1.5" />
+							<path
+								d={priceChartPaths.linePath}
+								fill="none"
+								stroke={PRICE_ACCENT}
+								stroke-width="1.5"
+							/>
 							{#each priceChartPaths.dots as dot}
 								<circle cx={dot.x} cy={dot.y} r="2.2" fill={PRICE_ACCENT} />
 							{/each}
@@ -402,10 +428,30 @@
 									stroke-width="1"
 								/>
 							{/if}
-							<text x="-4" y={priceChartPaths.yScale(priceChartPaths.yMax)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{formatPrice(priceChartPaths.yMax)}</text>
-							<text x="-4" y={priceChartPaths.yScale(priceChartPaths.yMin)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{formatPrice(priceChartPaths.yMin)}</text>
+							<text
+								x="-4"
+								y={priceChartPaths.yScale(priceChartPaths.yMax)}
+								text-anchor="end"
+								dominant-baseline="middle"
+								fill="#888"
+								font-size="7px">{formatPrice(priceChartPaths.yMax)}</text
+							>
+							<text
+								x="-4"
+								y={priceChartPaths.yScale(priceChartPaths.yMin)}
+								text-anchor="end"
+								dominant-baseline="middle"
+								fill="#888"
+								font-size="7px">{formatPrice(priceChartPaths.yMin)}</text
+							>
 							{#each priceChartPaths.axisLabels.x as lbl}
-								<text x={lbl.x} y={PRICE_HEIGHT - PRICE_MARGINS.top - PRICE_MARGINS.bottom + 14} text-anchor="middle" fill="#666" font-size="7px">{lbl.label}</text>
+								<text
+									x={lbl.x}
+									y={PRICE_HEIGHT - PRICE_MARGINS.top - PRICE_MARGINS.bottom + 14}
+									text-anchor="middle"
+									fill="#666"
+									font-size="7px">{lbl.label}</text
+								>
 							{/each}
 						</g>
 					</svg>

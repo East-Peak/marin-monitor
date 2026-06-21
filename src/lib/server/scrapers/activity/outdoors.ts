@@ -58,9 +58,25 @@ export async function scrapeFishingFeeds(now: number): Promise<NewsItem[]> {
 				source: 'Point Reyes Light',
 				category: 'outdoors',
 				keywords: [
-					'fish', 'fishing', 'salmon', 'crab', 'oyster', 'dungeness', 'halibut',
-					'rockfish', 'herring', 'squid', 'mackerel', 'mussels', 'clam', 'abalone',
-					'striped bass', 'sturgeon', 'steelhead', 'trout', 'albacore'
+					'fish',
+					'fishing',
+					'salmon',
+					'crab',
+					'oyster',
+					'dungeness',
+					'halibut',
+					'rockfish',
+					'herring',
+					'squid',
+					'mackerel',
+					'mussels',
+					'clam',
+					'abalone',
+					'striped bass',
+					'sturgeon',
+					'steelhead',
+					'trout',
+					'albacore'
 				],
 				topics: ['fishing', 'west-marin']
 			},
@@ -76,8 +92,17 @@ export async function scrapeFishingFeeds(now: number): Promise<NewsItem[]> {
 				source: 'Marin Independent Journal',
 				category: 'outdoors',
 				keywords: [
-					'fishing', 'salmon', 'crab', 'dungeness', 'oyster', 'halibut',
-					'fish stock', 'trawl', 'commercial fishing', 'shellfish', 'aquaculture'
+					'fishing',
+					'salmon',
+					'crab',
+					'dungeness',
+					'oyster',
+					'halibut',
+					'fish stock',
+					'trawl',
+					'commercial fishing',
+					'shellfish',
+					'aquaculture'
 				],
 				topics: ['fishing', 'local-news']
 			},
@@ -93,8 +118,14 @@ export async function scrapeFishingFeeds(now: number): Promise<NewsItem[]> {
 				source: 'Marin Magazine',
 				category: 'farm',
 				keywords: [
-					'farmers market', 'market', 'cheese', 'creamery', 'produce', 'wine',
-					'beer', 'brewery'
+					'farmers market',
+					'market',
+					'cheese',
+					'creamery',
+					'produce',
+					'wine',
+					'beer',
+					'brewery'
 				],
 				topics: ['farmers-market', 'food-drink']
 			},

@@ -243,10 +243,7 @@
 	<button class="layout-reset" type="button" onclick={resetEditLayout}>Reset Layout</button>
 </div>
 
-<div
-	class="layout-edit-grid"
-	bind:this={editGridEl}
->
+<div class="layout-edit-grid" bind:this={editGridEl}>
 	{#each editableTiles as tile (tile.id)}
 		{#if tile.visible}
 			<div class="layout-edit-tile" style={tileStyle(tile.id)}>
@@ -267,11 +264,7 @@
 					{:else if tile.id === 'cameras'}
 						<CamerasPanel />
 					{:else if tile.id === 'pulse'}
-						<PulsePanel
-							forecast={weatherForecast}
-							{weatherAlerts}
-							earthquakes={earthquakesRaw}
-						/>
+						<PulsePanel forecast={weatherForecast} {weatherAlerts} earthquakes={earthquakesRaw} />
 					{:else if tile.id === 'narrative'}
 						<SignalsPanel news={allNewsItemsProp} />
 					{:else if tile.id === 'weather'}

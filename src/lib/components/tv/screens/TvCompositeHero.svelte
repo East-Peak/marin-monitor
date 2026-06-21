@@ -26,7 +26,11 @@
 
 	function fmtDollars(n: number | null | undefined): string {
 		if (n == null) return '—';
-		return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+		return n.toLocaleString('en-US', {
+			style: 'currency',
+			currency: 'USD',
+			maximumFractionDigits: 0
+		});
 	}
 
 	function fmtDollarsWhole(n: number | null | undefined): string {
@@ -34,7 +38,10 @@
 		return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
 	}
 
-	function fmtDelta(current: number | undefined, previous: number | undefined): { text: string; color: string } | null {
+	function fmtDelta(
+		current: number | undefined,
+		previous: number | undefined
+	): { text: string; color: string } | null {
 		if (current == null || previous == null) return null;
 		const diff = current - previous;
 		if (Math.abs(diff) < 0.5) return { text: '—', color: 'text-zinc-500' };
@@ -43,7 +50,10 @@
 		return { text: `${sign}$${Math.round(Math.abs(diff))}`, color };
 	}
 
-	function fmtScoreDelta(current: number | undefined, previous: number | undefined): { text: string; color: string } | null {
+	function fmtScoreDelta(
+		current: number | undefined,
+		previous: number | undefined
+	): { text: string; color: string } | null {
 		if (current == null || previous == null) return null;
 		const diff = current - previous;
 		if (Math.abs(diff) < 0.05) return { text: '—', color: 'text-zinc-500' };
@@ -58,8 +68,11 @@
 		if (!history || history.length < 2) return null;
 		const values = history.map((h) => h.compositeScore).filter((v) => v != null && v > 0);
 		if (values.length < 2) return null;
-		const w = 280, h = 60;
-		const x = scaleLinear().domain([0, values.length - 1]).range([0, w]);
+		const w = 280,
+			h = 60;
+		const x = scaleLinear()
+			.domain([0, values.length - 1])
+			.range([0, w]);
 		const y = scaleLinear()
 			.domain([Math.min(...values) * 0.97, Math.max(...values) * 1.03])
 			.range([h, 0]);
@@ -108,12 +121,18 @@
 
 		<div class="flex-1 grid grid-cols-3 gap-3 min-h-0">
 			<!-- LEFT COLUMN: Marin Number Hero -->
-			<div class="bg-gray-800/60 rounded-lg border border-gray-700/50 flex flex-col overflow-hidden">
+			<div
+				class="bg-gray-800/60 rounded-lg border border-gray-700/50 flex flex-col overflow-hidden"
+			>
 				<!-- Hero header -->
 				<div class="px-3 pt-3 pb-2 border-b border-gray-700/40">
 					<div class="flex items-baseline justify-between">
-						<span class="text-[10px] font-semibold uppercase tracking-wider" style="color: #dc2626">The Marin Number</span>
-						<span class="text-[10px] text-zinc-500">{fmtDollars(snapshot.marinNumber.annualized)}/yr</span>
+						<span class="text-[10px] font-semibold uppercase tracking-wider" style="color: #dc2626"
+							>The Marin Number</span
+						>
+						<span class="text-[10px] text-zinc-500"
+							>{fmtDollars(snapshot.marinNumber.annualized)}/yr</span
+						>
 					</div>
 					<div class="flex items-baseline gap-2 mt-1">
 						<span class="text-4xl font-bold tabular-nums text-white">
@@ -130,16 +149,24 @@
 
 				<!-- Marin Number line items (2 columns) -->
 				<div class="flex-1 px-3 py-2 overflow-hidden">
-					<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Breakdown</div>
+					<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
+						Breakdown
+					</div>
 					<div class="grid grid-cols-2 gap-x-3 gap-y-0.5">
 						{#each snapshot.marinNumber.items.slice(0, 8) as item}
 							<div class="flex items-center justify-between py-0.5">
 								<div class="flex items-center gap-1 min-w-0 flex-1 mr-1">
 									<span class="text-xs text-zinc-300 truncate">{item.label}</span>
 									{#if item.source === 'live'}
-										<span class="text-[7px] font-bold uppercase px-1 py-px rounded bg-emerald-500/15 text-emerald-400 shrink-0">live</span>
+										<span
+											class="text-[7px] font-bold uppercase px-1 py-px rounded bg-emerald-500/15 text-emerald-400 shrink-0"
+											>live</span
+										>
 									{:else}
-										<span class="text-[7px] font-bold uppercase px-1 py-px rounded bg-zinc-700/40 text-zinc-500 shrink-0">static</span>
+										<span
+											class="text-[7px] font-bold uppercase px-1 py-px rounded bg-zinc-700/40 text-zinc-500 shrink-0"
+											>static</span
+										>
 									{/if}
 								</div>
 								<span class="text-xs font-bold tabular-nums text-zinc-100 shrink-0">
@@ -157,11 +184,15 @@
 			</div>
 
 			<!-- CENTER COLUMN: Composite Score + Tier Bars -->
-			<div class="bg-gray-800/60 rounded-lg border border-gray-700/50 flex flex-col overflow-hidden">
+			<div
+				class="bg-gray-800/60 rounded-lg border border-gray-700/50 flex flex-col overflow-hidden"
+			>
 				<!-- Composite score header -->
 				<div class="px-3 pt-3 pb-2 border-b border-gray-700/40">
 					<div class="flex items-baseline justify-between">
-						<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Composite Index</span>
+						<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400"
+							>Composite Index</span
+						>
 						<span class="text-[10px] text-zinc-500">base 100</span>
 					</div>
 					<div class="flex items-baseline gap-2 mt-1">
@@ -178,7 +209,9 @@
 
 				<!-- Tier bars -->
 				<div class="flex-1 px-3 py-2 overflow-hidden">
-					<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">Tier Breakdown</div>
+					<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-2">
+						Tier Breakdown
+					</div>
 					{#each snapshot.tiers as tier}
 						{@const accent = tierAccents[tier.category]}
 						{@const delta = fmtDelta(tier.monthlyTotal, getPreviousTierTotal(tier.category))}
@@ -205,7 +238,9 @@
 									class="h-full rounded"
 									style="width: {tierBarWidth(tier.score)}%; background: {accent}; opacity: 0.6;"
 								></div>
-								<span class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] font-bold tabular-nums text-white drop-shadow-sm">
+								<span
+									class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] font-bold tabular-nums text-white drop-shadow-sm"
+								>
 									{tier.score.toFixed(1)}
 								</span>
 							</div>
@@ -215,11 +250,15 @@
 			</div>
 
 			<!-- RIGHT COLUMN: Trend Sparkline + Summary -->
-			<div class="bg-gray-800/60 rounded-lg border border-gray-700/50 flex flex-col overflow-hidden">
+			<div
+				class="bg-gray-800/60 rounded-lg border border-gray-700/50 flex flex-col overflow-hidden"
+			>
 				<!-- Trend header -->
 				<div class="px-3 pt-3 pb-2 border-b border-gray-700/40">
 					<div class="flex items-baseline justify-between">
-						<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Composite Trend</span>
+						<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400"
+							>Composite Trend</span
+						>
 						<span class="text-[10px] text-zinc-500">{data?.history?.length ?? 0} snapshots</span>
 					</div>
 				</div>
@@ -233,12 +272,7 @@
 							preserveAspectRatio="none"
 						>
 							<path d={heroSparkline.areaPath} fill="#dc2626" opacity="0.12" />
-							<path
-								d={heroSparkline.linePath}
-								fill="none"
-								stroke="#dc2626"
-								stroke-width="2"
-							/>
+							<path d={heroSparkline.linePath} fill="none" stroke="#dc2626" stroke-width="2" />
 						</svg>
 					{:else}
 						<div class="h-full flex items-center justify-center">
@@ -249,31 +283,42 @@
 
 				<!-- Summary stats grid -->
 				<div class="flex-1 px-3 py-2 overflow-hidden">
-					<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Quick Stats</div>
+					<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
+						Quick Stats
+					</div>
 					<div class="space-y-1">
 						<div class="flex items-center justify-between py-0.5 border-b border-gray-700/20">
 							<span class="text-xs text-zinc-400">Monthly Total</span>
-							<span class="text-xs font-bold tabular-nums text-white">{fmtDollars(snapshot.marinNumber.total)}</span>
+							<span class="text-xs font-bold tabular-nums text-white"
+								>{fmtDollars(snapshot.marinNumber.total)}</span
+							>
 						</div>
 						<div class="flex items-center justify-between py-0.5 border-b border-gray-700/20">
 							<span class="text-xs text-zinc-400">Annual Cost</span>
-							<span class="text-xs font-bold tabular-nums text-white">{fmtDollars(snapshot.marinNumber.annualized)}</span>
+							<span class="text-xs font-bold tabular-nums text-white"
+								>{fmtDollars(snapshot.marinNumber.annualized)}</span
+							>
 						</div>
 						<div class="flex items-center justify-between py-0.5 border-b border-gray-700/20">
 							<span class="text-xs text-zinc-400">Composite Score</span>
-							<span class="text-xs font-bold tabular-nums" style="color: #dc2626">{snapshot.compositeScore.toFixed(1)}</span>
+							<span class="text-xs font-bold tabular-nums" style="color: #dc2626"
+								>{snapshot.compositeScore.toFixed(1)}</span
+							>
 						</div>
 						<div class="flex items-center justify-between py-0.5 border-b border-gray-700/20">
 							<span class="text-xs text-zinc-400">Live Data Sources</span>
 							<span class="text-xs font-bold tabular-nums text-emerald-400">
-								{snapshot.marinNumber.items.filter(i => i.source === 'live').length} / {snapshot.marinNumber.items.length}
+								{snapshot.marinNumber.items.filter((i) => i.source === 'live').length} / {snapshot
+									.marinNumber.items.length}
 							</span>
 						</div>
 						{#each snapshot.tiers as tier}
 							{@const accent = tierAccents[tier.category]}
 							<div class="flex items-center justify-between py-0.5 border-b border-gray-700/20">
 								<span class="text-xs text-zinc-400">{categoryLabels[tier.category]}</span>
-								<span class="text-xs font-bold tabular-nums" style="color: {accent}">{tier.score.toFixed(1)}</span>
+								<span class="text-xs font-bold tabular-nums" style="color: {accent}"
+									>{tier.score.toFixed(1)}</span
+								>
 							</div>
 						{/each}
 					</div>

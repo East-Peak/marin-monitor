@@ -48,7 +48,9 @@ function mockBlobMissing() {
 
 function mockBlobFetchFail() {
 	mockHead.mockResolvedValueOnce({ downloadUrl: 'https://blob.test/data.json' });
-	mockFetchWithTimeout.mockResolvedValueOnce(new Response('Internal Server Error', { status: 500 }));
+	mockFetchWithTimeout.mockResolvedValueOnce(
+		new Response('Internal Server Error', { status: 500 })
+	);
 }
 
 async function expectStructured503(response: Response, expectedError: string) {

@@ -335,7 +335,7 @@ Other platforms:
 Data sources:
 
 - Resy API: public, no auth required for availability checks. API key embedded in client JS (VbWk7s3L4KiK5fzlO7JD3Q5EYolJI7n5, may rotate). Endpoint: GET api.resy.com/4/find with venue_id, day, party_size. Header: Authorization: ResyAPI api_key="...". Venue search: POST api.resy.com/3/venuesearch/search with geo coords. Response includes slot times, seating types, score.total (demand), and estimated turn time. Reference: github.com/Alkaar/resy-booking-bot. Existing Tock bots for French Laundry: github.com/ct-le/reserve-tfl (Selenium), github.com/azoff/tockstalk (Cypress + GitHub Actions)
-- OpenTable: requires Playwright for SSR page scraping or GraphQL with CSRF token extraction. More fragile, persisted query hashes change with deploys. GraphQL endpoint: POST opentable.com/dapi/fe/gql?optype=query&opname=RestaurantsAvailability. Needs x-csrf-token header extracted from page HTML (__CSRF_TOKEN__). Uses sha256Hash-based persisted queries that break on each OpenTable frontend deploy. SSR approach (loading profile page with date/time/covers params and parsing rendered DOM) is more robust. Reference implementation: github.com/nfmcclure/opentable_availability_check
+- OpenTable: requires Playwright for SSR page scraping or GraphQL with CSRF token extraction. More fragile, persisted query hashes change with deploys. GraphQL endpoint: POST opentable.com/dapi/fe/gql?optype=query&opname=RestaurantsAvailability. Needs x-csrf-token header extracted from page HTML (**CSRF_TOKEN**). Uses sha256Hash-based persisted queries that break on each OpenTable frontend deploy. SSR approach (loading profile page with date/time/covers params and parsing rendered DOM) is more robust. Reference implementation: github.com/nfmcclure/opentable_availability_check
 - SevenRooms: open-source scrapers exist on GitHub
 
 CRITICAL TIMING NOTE:
@@ -649,6 +649,7 @@ Headline card:
 Confirmed studios with pricing (18+):
 
 Yoga:
+
 - Love Story Yoga, Larkspur -- $27 drop-in (Mariana Tek)
 - Marin Iyengar Yoga, Corte Madera -- $29 drop-in
 - NOW Power Yoga, Corte Madera -- $30 drop-in (Zenrez)
@@ -661,6 +662,7 @@ Yoga:
 - Some Like It Hot, Novato -- $18 student / $189 monthly (Unknown)
 
 Pilates (reformer):
+
 - Pilates Tiburon (reformer), Tiburon -- $45 drop-in (MindBody)
 - The Studio Mill Valley (reformer) -- $45 drop-in (Momence)
 - Mighty Pilates, Larkspur -- $50 drop-in (MindBody)
@@ -668,17 +670,21 @@ Pilates (reformer):
 - Internal Fire Pilates, Mill Valley -- $55 drop-in (MindBody)
 
 Cycling:
+
 - SoulCycle, Larkspur -- $36-$42 per ride (Proprietary)
 
 HIIT:
+
 - Orangetheory, Greenbrae -- ~$29/class via pack, $119-$219/mo (Proprietary)
 - F45, Corte Madera -- ~$35 drop-in estimated (Proprietary)
 
 CrossFit:
+
 - Tamalpais CrossFit, San Rafael -- $25 drop-in (donated to animal shelter), $225/mo (custom site)
 - Ross Valley CrossFit, San Anselmo -- $235/mo, no drop-in listed (custom site)
 
 Full gyms (for reference/comparison):
+
 - Fitness SF, Corte Madera -- $79.95/mo unlimited classes (Proprietary)
 - Body Kinetics, Novato -- $99/mo unlimited classes (custom site)
 
@@ -729,6 +735,7 @@ This may require refactoring the current map layer system to accommodate price-d
 Not part of the indices spec but needed before or alongside shipping indices. Backlog item.
 
 Approach:
+
 - /api/health endpoint that returns status of every data source (last updated, record count, errors)
 - Each data source has an expected cadence; if data is older than expected, flag as stale
 - Daily freshness-check cron that emails stuart@eastpeak.cc when anything is stale or errored
@@ -758,6 +765,7 @@ Approach: Use the same `window.__OO_STATE__` / structured-data extraction patter
 Goal: Build a proper calendar destination for each sport/activity for the year or season, rather than just listing individual events in wire columns.
 
 Candidates for improvement:
+
 - Pacific games schedule
 - Rowing/regatta calendar
 - Other seasonal event sources that are currently scraped poorly
@@ -767,6 +775,7 @@ Candidates for improvement:
 HIGHLY VIABLE. Powered by SeeClickFix (CivicPlus). Free public JSON API, no auth needed.
 
 API: GET https://seeclickfix.com/api/v2/issues?place_url=marin-county&per_page=100
+
 - Returns: id, status, summary, description, lat/lng, address, category, photos, timestamps, comments, assignee
 - ~9 new reports/day, 853 total issues, 38 service categories
 - Top categories: Illegal Dumping (16%), Potholes (12%), Sidewalks (10%), Drainage (8%)
@@ -803,6 +812,7 @@ Framing: Four tiers of Marin costs, each tracked as a base-100 index over time. 
 What you spend every week just existing in Marin.
 
 Components:
+
 - Groceries: Bare Essentials basket total ($185/week → ~$796/mo)
 - Coffee: Cappuccino Index median ($5.25/day × 22 workdays → ~$116/mo)
 - Gas: already tracked, currently ~$6.02/gal in Marin (~$200/mo assuming 40 gal/mo)
@@ -816,6 +826,7 @@ This tier moves the most and is the most relatable. Egg spikes, gas surges, coff
 The discretionary spending that makes Marin, Marin.
 
 Components:
+
 - Wine: PlumpJack category medians (Napa Cab ~$78, Burgundy ~$52, Champagne ~$65)
 - Fitness: median yoga drop-in ($32), monthly unlimited (~$175)
 - Restaurants: Table Stakes booking difficulty (qualitative signal, post-merger summer 2026)
@@ -829,6 +840,7 @@ This tier captures the "luxury pulse" — are people spending on wine, yoga, and
 The elephant in every Marin room.
 
 Components (from Redfin data, already in the system):
+
 - Median home price: $1,357,250 (Feb 2026 Redfin)
 - Estimated monthly PITI on median home: $8,566 (20% down, 6.38% 30yr fixed, 1.1% property tax, insurance)
   - Principal & Interest: $6,991
@@ -840,11 +852,13 @@ Components (from Redfin data, already in the system):
 - Months of supply: 2.8 (seller's market, below 4-6 balanced threshold)
 
 Additional Redfin fields available but not currently extracted:
+
 - MONTHS_OF_SUPPLY, AVG_SALE_TO_LIST, SOLD_ABOVE_LIST, NEW_LISTINGS, PENDING_SALES, PRICE_DROPS
 - All with MOM and YOY variants
 - Could enrich the housing tier significantly by extracting more from the existing TSV
 
 Other available sources:
+
 - Zillow ZHVI: $1,429,486 (Feb 2026) — "typical home value" (35th-65th percentile)
 - FRED: All-Transactions HPI for Marin (FIPS 06041), quarterly, from 1975
 - Marin County Open Data: housing permits, parcel data
@@ -856,6 +870,7 @@ Monthly subtotal for composite: $8,566 (PITI) or $3,569 (rent) depending on whet
 The big, slow-moving costs that define Marin.
 
 Components:
+
 - Private school tuition: ~$47,000/yr average K-8 → ~$3,917/mo
 - Driveway: fleet composition (210,586 vehicles), estimated fleet value
 - Country club dues: ~$15,000/yr ongoing → ~$1,250/mo
@@ -869,6 +884,7 @@ This tier barely moves quarter to quarter. It anchors the composite and prevents
 Each tier starts at base 100 in the baseline period (e.g., first week of data collection). Weekly/monthly updates compute % change from baseline. Composite = weighted average of tier scores.
 
 Weights (initial, tunable):
+
 - Daily Life: 40% (most dynamic, most relatable)
 - Lifestyle: 25% (the Marin premium)
 - Housing: 25% (the biggest real cost, but moves slowly)
@@ -888,30 +904,31 @@ Persona: One household, two adults, one kid in private school, one dog, the work
 
 Monthly breakdown:
 
-| Category | Monthly | Source |
-|----------|---------|--------|
-| Housing (PITI on median home) | $8,566 | Redfin median + current mortgage rates |
-| Groceries (Bare Essentials × 4.3 wks) | $796 | Instacart scrape |
-| Coffee (daily cappuccino × 22 days) | $116 | Cappuccino Index |
-| Wine (2 bottles Napa Cab median) | $156 | PlumpJack API |
-| Fitness (monthly unlimited yoga) | $175 | Fitness Index |
-| Gas (~40 gal/mo) | $241 | Gas price cron (already tracked) |
-| Private school (1 kid, K-8 avg $47K/yr) | $3,917 | School tuition scrape |
-| The Dog (one golden retriever) | $1,000 | Vet, walker 3x/wk, premium food, grooming |
-| Therapist (weekly, 1 person) | $1,000 | $250/session × 4 |
-| Ski season (Ikon passes + gas + lodging, amortized) | $600 | $7,200/yr ÷ 12 |
-| Summer camp (2 kids, 8 weeks, amortized) | $933 | $11,200/yr ÷ 12 |
-| Country club dues (amortized) | $1,250 | $15,000/yr ÷ 12 |
-| Wine country trips (12-15x/yr, amortized) | $667 | ~$8,000/yr ÷ 12 |
-| Farmers market habit | $433 | $100/wk × 4.3 |
-| Marin Country Mart (2x/mo) | $1,000 | $500/visit × 2 |
-| Acupuncture (biweekly) | $260 | $120/session × 2.2 |
-| **THE MARIN NUMBER** | **$21,110/mo** | |
-| **Annual** | **$253,320/yr** | |
+| Category                                            | Monthly         | Source                                    |
+| --------------------------------------------------- | --------------- | ----------------------------------------- |
+| Housing (PITI on median home)                       | $8,566          | Redfin median + current mortgage rates    |
+| Groceries (Bare Essentials × 4.3 wks)               | $796            | Instacart scrape                          |
+| Coffee (daily cappuccino × 22 days)                 | $116            | Cappuccino Index                          |
+| Wine (2 bottles Napa Cab median)                    | $156            | PlumpJack API                             |
+| Fitness (monthly unlimited yoga)                    | $175            | Fitness Index                             |
+| Gas (~40 gal/mo)                                    | $241            | Gas price cron (already tracked)          |
+| Private school (1 kid, K-8 avg $47K/yr)             | $3,917          | School tuition scrape                     |
+| The Dog (one golden retriever)                      | $1,000          | Vet, walker 3x/wk, premium food, grooming |
+| Therapist (weekly, 1 person)                        | $1,000          | $250/session × 4                          |
+| Ski season (Ikon passes + gas + lodging, amortized) | $600            | $7,200/yr ÷ 12                            |
+| Summer camp (2 kids, 8 weeks, amortized)            | $933            | $11,200/yr ÷ 12                           |
+| Country club dues (amortized)                       | $1,250          | $15,000/yr ÷ 12                           |
+| Wine country trips (12-15x/yr, amortized)           | $667            | ~$8,000/yr ÷ 12                           |
+| Farmers market habit                                | $433            | $100/wk × 4.3                             |
+| Marin Country Mart (2x/mo)                          | $1,000          | $500/visit × 2                            |
+| Acupuncture (biweekly)                              | $260            | $120/session × 2.2                        |
+| **THE MARIN NUMBER**                                | **$21,110/mo**  |                                           |
+| **Annual**                                          | **$253,320/yr** |                                           |
 
 And that is BEFORE car payments, insurance, clothing, utilities, property maintenance, vacations beyond Tahoe, the second kid's school, the second dog, or the other parent's therapist. Scale accordingly.
 
 Context lines for the card:
+
 - "The Marin Number is $21,110 this month"
 - "That is $253,320/year to live the Marin lifestyle"
 - "This does not include your Rivian payment"
@@ -922,6 +939,7 @@ The number updates as the underlying indices change. When eggs spike, The Marin 
 Seasonal costs (ski, summer camp) are amortized monthly for a smooth number. An alternative: show them in the months they're incurred for a spikier, more honest chart.
 
 Data sources: All sourced from the other indices already defined in this spec, plus:
+
 - Dog costs: manual research, updated annually
 - Therapist rates: manual research, updated annually
 - Ski pass pricing: Ikon Pass website, updated annually each spring
@@ -932,6 +950,7 @@ Data sources: All sourced from the other indices already defined in this spec, p
 - Acupuncture: local studio rates, updated annually
 
 Design notes:
+
 - The static/annual items (ski, camp, club, dog, therapist, acupuncture) can be configured values in a JSON file, updated manually once a year
 - The dynamic items (housing, groceries, coffee, wine, fitness, gas) pull from the live indices
 - The Marin Number = sum of all, recomputed whenever any component updates
@@ -959,17 +978,17 @@ Cache: 300s max-age, 600s stale-while-revalidate (consistent with existing endpo
 
 ### Cron Schedule Summary
 
-| Index | Cadence | Method | Auth Required |
-|-------|---------|--------|---------------|
-| Bare Essentials (grocery) | Weekly | Instacart scrape | No |
-| Cappuccino Index | Weekly | Playwright → Toast pages | No |
-| Wine Index | Weekly | PlumpJack Shopify API | No |
-| Fitness Drop-in | Monthly | Playwright + studio websites | No |
-| Private School | Monthly (check), annual (changes) | HTML scrape of school sites | No |
-| Marin Driveway | Monthly (check), annual (changes) | CA DMV data.ca.gov API | No |
-| Gas Prices | 6x/day | Google Places API | Yes (API key) |
-| Housing | Monthly | Redfin TSV (already exists) | No |
-| Table Stakes | Every 15-60 min (post-merger) | Resy API | No |
+| Index                     | Cadence                           | Method                       | Auth Required |
+| ------------------------- | --------------------------------- | ---------------------------- | ------------- |
+| Bare Essentials (grocery) | Weekly                            | Instacart scrape             | No            |
+| Cappuccino Index          | Weekly                            | Playwright → Toast pages     | No            |
+| Wine Index                | Weekly                            | PlumpJack Shopify API        | No            |
+| Fitness Drop-in           | Monthly                           | Playwright + studio websites | No            |
+| Private School            | Monthly (check), annual (changes) | HTML scrape of school sites  | No            |
+| Marin Driveway            | Monthly (check), annual (changes) | CA DMV data.ca.gov API       | No            |
+| Gas Prices                | 6x/day                            | Google Places API            | Yes (API key) |
+| Housing                   | Monthly                           | Redfin TSV (already exists)  | No            |
+| Table Stakes              | Every 15-60 min (post-merger)     | Resy API                     | No            |
 
 ### Vercel Blob Keys
 

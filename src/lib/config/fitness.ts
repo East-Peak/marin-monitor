@@ -28,10 +28,10 @@ export const TYPE_LABELS: Record<FitnessType, string> = {
 
 /** Pin colors per fitness type (for map layer) */
 export const TYPE_COLORS: Record<FitnessType, string> = {
-	yoga: '#a78bfa',    // violet
+	yoga: '#a78bfa', // violet
 	pilates: '#f472b6', // pink
 	cycling: '#38bdf8', // sky
-	hiit: '#fb923c',    // orange
+	hiit: '#fb923c', // orange
 	crossfit: '#4ade80' // green
 };
 
@@ -152,7 +152,7 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		type: 'pilates',
 		dropInPrice: 50,
 		lat: 37.9475,
-		lon: -122.5090
+		lon: -122.509
 	},
 	{
 		id: 'studio-pilates-marin',
@@ -161,7 +161,7 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		type: 'pilates',
 		dropInPrice: 50,
 		lat: 37.9719,
-		lon: -122.5180
+		lon: -122.518
 	},
 	{
 		id: 'internal-fire-pilates',
@@ -180,8 +180,8 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		town: 'Larkspur',
 		type: 'cycling',
 		dropInPrice: 39,
-		lat: 37.9480,
-		lon: -122.5090
+		lat: 37.948,
+		lon: -122.509
 	},
 
 	// --- HIIT ---
@@ -192,7 +192,7 @@ export const FITNESS_STUDIOS: FitnessStudioConfig[] = [
 		type: 'hiit',
 		dropInPrice: 29,
 		lat: 37.9461,
-		lon: -122.5240
+		lon: -122.524
 	},
 
 	// --- CrossFit ---

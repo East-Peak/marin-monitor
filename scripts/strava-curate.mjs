@@ -165,7 +165,9 @@ function buildRejectionReasons(segment, activityType, rules, flags) {
 }
 
 function passesAutoFilter(segment, activityType, rules) {
-	return buildRejectionReasons(segment, activityType, rules, buildFlags(segment, rules)).length === 0;
+	return (
+		buildRejectionReasons(segment, activityType, rules, buildFlags(segment, rules)).length === 0
+	);
 }
 
 function sortSegments(segments) {
@@ -275,8 +277,12 @@ function buildActivityDraft(segments, activityType, options, overrides) {
 		toDraftEntry(segment, activityType, rules, { include, exclude })
 	);
 
-	const autoEligible = draftEntries.filter((segment) => !segment.forcedExclude && segment.autoEligible);
-	const forcedEntries = draftEntries.filter((segment) => !segment.forcedExclude && segment.forcedInclude);
+	const autoEligible = draftEntries.filter(
+		(segment) => !segment.forcedExclude && segment.autoEligible
+	);
+	const forcedEntries = draftEntries.filter(
+		(segment) => !segment.forcedExclude && segment.forcedInclude
+	);
 	const combined = dedupeById([...forcedEntries, ...autoEligible]);
 
 	const curatedLimit = activityType === 'ride' ? options.rideLimit : options.runLimit;
@@ -321,7 +327,10 @@ function main() {
 	const ride = buildActivityDraft(state.segments, 'ride', options, overrides);
 	const run = buildActivityDraft(state.segments, 'run', options, overrides);
 	const seedSegments = [...ride.seedSegments, ...run.seedSegments];
-	const catalogSegments = buildCatalogSegments([...ride.curated, ...run.curated], stateSegmentsById);
+	const catalogSegments = buildCatalogSegments(
+		[...ride.curated, ...run.curated],
+		stateSegmentsById
+	);
 
 	const payload = {
 		generatedAt: new Date().toISOString(),
@@ -369,15 +378,11 @@ function main() {
 	console.log(
 		`[strava-curate] wrote ${path.relative(ROOT, options.outputFile)} with ${ride.curated.length} ride + ${run.curated.length} run curated segments`
 	);
-	console.log(
-		`[strava-curate] generated ${path.relative(ROOT, options.configModuleFile)}`
-	);
+	console.log(`[strava-curate] generated ${path.relative(ROOT, options.configModuleFile)}`);
 	console.log(
 		`[strava-curate] review pool: ${ride.reviewPool.length} ride + ${run.reviewPool.length} run`
 	);
-	console.log(
-		`[strava-curate] overrides file: ${path.relative(ROOT, options.overridesFile)}`
-	);
+	console.log(`[strava-curate] overrides file: ${path.relative(ROOT, options.overridesFile)}`);
 }
 
 try {

@@ -5,205 +5,1154 @@ export const STRAVA_CURATED_RIDE_COUNT = 100;
 export const STRAVA_CURATED_RUN_COUNT = 100;
 
 export const CURATED_STRAVA_SEGMENTS: StravaSeedSegment[] = [
-	{ id: 14312666, name: "Bridgeway, Napa St to Gate 5 Rd", activityType: "ride", startLatlng: [37.861445, -122.489721] },
-	{ id: 99243, name: "Hawk Hill Saddle", activityType: "ride", startLatlng: [37.833172, -122.483441] },
-	{ id: 3460040, name: "C.A. North side drop", activityType: "ride", startLatlng: [37.916789492592216, -122.52558843232691] },
-	{ id: 7883032, name: "Camino Alto: Start to Vasco", activityType: "ride", startLatlng: [37.901518, -122.528203] },
-	{ id: 2451142, name: "Camino Alto (Mill Valley side)", activityType: "ride", startLatlng: [37.9021295, -122.5279554] },
-	{ id: 1320162, name: "Mountain home rollers", activityType: "ride", startLatlng: [37.909897807985544, -122.57702331058681] },
-	{ id: 617239, name: "Pantoll to 4 Corners", activityType: "ride", startLatlng: [37.9047287721187, -122.603724868968] },
-	{ id: 7805335, name: "Upper McCullough", activityType: "ride", startLatlng: [37.837605, -122.49609] },
-	{ id: 26066416, name: "405", activityType: "ride", startLatlng: [37.922162, -122.53026] },
-	{ id: 2371095, name: "McCullough Rd. (Headlands)", activityType: "ride", startLatlng: [37.836073, -122.5023015] },
-	{ id: 4173351, name: "Hwy1 Panoramic to Mill Valley descent", activityType: "ride", startLatlng: [37.884055, -122.553532] },
-	{ id: 5836703, name: "Camino Alto Climb (Corte Madera Side)", activityType: "ride", startLatlng: [37.925474, -122.529861] },
-	{ id: 765399, name: "Paradise Flat Mile TT Eastbound", activityType: "ride", startLatlng: [37.91934052482247, -122.50474356114864] },
-	{ id: 1587724, name: "Dipsea Trail Climb", activityType: "ride", startLatlng: [37.9014763, -122.5514921] },
-	{ id: 3354711, name: "Ridgecrest to bottom of Pantoll descent", activityType: "ride", startLatlng: [37.91003501974046, -122.61270239017904] },
-	{ id: 640981, name: "Marion to Four Corners", activityType: "ride", startLatlng: [37.9013328, -122.5520136] },
-	{ id: 5292307, name: "BHR Medow Club", activityType: "ride", startLatlng: [37.972752, -122.626625] },
-	{ id: 4119312, name: "Meadow Club to Pine Mt. Climb", activityType: "ride", startLatlng: [37.97259, -122.620689] },
-	{ id: 619764, name: "White's Hill Descent", activityType: "ride", startLatlng: [38.0111205, -122.6180686] },
-	{ id: 6317488, name: "White's Hill Good DH Only", activityType: "ride", startLatlng: [38.011313, -122.620468] },
-	{ id: 17657117, name: "White's hill, just the top", activityType: "ride", startLatlng: [38.007969, -122.616784] },
-	{ id: 5404192, name: "Sister 5 Tabitha", activityType: "ride", startLatlng: [37.923065, -122.636166] },
-	{ id: 5404167, name: "Sister 4 Teresa", activityType: "ride", startLatlng: [37.926124, -122.64114] },
-	{ id: 611363, name: "Sister 5 and 6", activityType: "ride", startLatlng: [37.9256978, -122.6409332] },
-	{ id: 627467, name: "White's Hill (SV Official)", activityType: "ride", startLatlng: [38.002496, -122.612511] },
-	{ id: 10477237, name: "BoFax Transistor Radio", activityType: "ride", startLatlng: [37.939214, -122.658268] },
-	{ id: 25360046, name: "The climby part", activityType: "ride", startLatlng: [37.935342, -122.652553] },
-	{ id: 6987724, name: "sister5steep", activityType: "ride", startLatlng: [37.922841, -122.635567] },
-	{ id: 635037, name: "Whites Summit to San Geronimo Golf Course", activityType: "ride", startLatlng: [38.0113735, -122.6207033] },
-	{ id: 39470008, name: "White's Hill (Eastbound)", activityType: "ride", startLatlng: [38.012601, -122.630041] },
-	{ id: 11430171, name: "BoFax Dip", activityType: "ride", startLatlng: [37.962886, -122.62523] },
-	{ id: 637196, name: "Pine Mtn. Pass", activityType: "ride", startLatlng: [37.9823178704828, -122.592867538333] },
-	{ id: 18055066, name: "Alpine Dam Hill Repeats", activityType: "ride", startLatlng: [37.936571, -122.638046] },
-	{ id: 563888, name: "Alpine Dam to Ridgecrest Climb", activityType: "ride", startLatlng: [37.936706, -122.638077] },
-	{ id: 6366843, name: "pantoll climb", activityType: "ride", startLatlng: [37.912471, -122.585205] },
-	{ id: 3274016, name: "Paradise TT flats to san clement", activityType: "ride", startLatlng: [37.919154949486256, -122.48452875763178] },
-	{ id: 4258825, name: "red line climb", activityType: "ride", startLatlng: [37.927149, -122.59307] },
-	{ id: 7043439, name: "Whites Hill Eastbound (Proper)", activityType: "ride", startLatlng: [38.013413, -122.631346] },
-	{ id: 862949, name: "Whites Hill ", activityType: "ride", startLatlng: [38.01467528566718, -122.65613112598658] },
-	{ id: 24522292, name: "Final hairpins", activityType: "ride", startLatlng: [37.939817, -122.655441] },
-	{ id: 624452, name: "Top 2/3 of Alpine Dam to Ridgecrest Climb", activityType: "ride", startLatlng: [37.9391855, -122.6459231] },
-	{ id: 4588294, name: "Marion Repeats", activityType: "ride", startLatlng: [37.907016, -122.55947] },
-	{ id: 8361666, name: "4 Corners to Pantoll", activityType: "ride", startLatlng: [37.893553, -122.557321] },
-	{ id: 5972604, name: "Marion Climb ", activityType: "ride", startLatlng: [37.906786, -122.557506] },
-	{ id: 7769993, name: "mtn theater to airforce base", activityType: "ride", startLatlng: [37.914624, -122.609351] },
-	{ id: 1173191, name: "Four Corners Climb", activityType: "ride", startLatlng: [37.90677270758782, -122.5567734132422] },
-	{ id: 2367606, name: "west peak push", activityType: "ride", startLatlng: [37.920137559995055, -122.60363317094743] },
-	{ id: 5988968, name: "Trollhättan Blvd", activityType: "ride", startLatlng: [38.004731, -122.708224] },
-	{ id: 1486699, name: "Beast Mode ", activityType: "ride", startLatlng: [37.906862050330176, -122.61362339381371] },
-	{ id: 687607, name: "Pantoll to Ridgecrest", activityType: "ride", startLatlng: [37.9042351618409, -122.604324365805] },
-	{ id: 4422770, name: "Lagunitas-Two Bird TT", activityType: "ride", startLatlng: [38.011717, -122.701819] },
-	{ id: 705614, name: "NVR climb", activityType: "ride", startLatlng: [38.020161, -122.661988] },
-	{ id: 623201, name: "Dixon Ridge Descent to Fernwood Lane", activityType: "ride", startLatlng: [38.0231813248247, -122.664340697229] },
-	{ id: 10335249, name: "Depot to Sequoia Valley Road via Cascade, Marion, Daffodil", activityType: "ride", startLatlng: [37.90613, -122.54845] },
-	{ id: 623196, name: "Nicasio Dam to Platform Bridge Rd", activityType: "ride", startLatlng: [38.0776105541736, -122.754978323355] },
-	{ id: 17125822, name: "Hoo Koo e Koo to big log benchs", activityType: "ride", startLatlng: [37.920418, -122.573205] },
-	{ id: 3305098, name: "Muir Descent", activityType: "ride", startLatlng: [37.864338057115674, -122.58603637106717] },
-	{ id: 5021680, name: "Waterfall to Westpoint", activityType: "ride", startLatlng: [37.921326, -122.585234] },
-	{ id: 7883627, name: "TAM: Hoo-Koo to West Point", activityType: "ride", startLatlng: [37.920411, -122.573311] },
-	{ id: 8360481, name: "Valley road TT", activityType: "ride", startLatlng: [38.022622, -122.664102] },
-	{ id: 4110695, name: "half fortify", activityType: "ride", startLatlng: [37.909223, -122.589729] },
-	{ id: 4793848, name: "Hwy 1 climb from Muir Beach ", activityType: "ride", startLatlng: [37.863399, -122.573366] },
-	{ id: 5158497, name: "Castro > Shafter Bridge", activityType: "ride", startLatlng: [38.015007, -122.689397] },
-	{ id: 6563620, name: "Summit to Double Bow Knot (inc. Shortcut)", activityType: "ride", startLatlng: [37.920037, -122.562528] },
-	{ id: 630181, name: "B17 DH (Clockwise)", activityType: "ride", startLatlng: [37.991103110835, -122.622325737029] },
-	{ id: 21007134, name: "CCW Part 3", activityType: "ride", startLatlng: [38.007049, -122.501462] },
-	{ id: 8283159, name: "Olema climb prologue", activityType: "ride", startLatlng: [38.041117, -122.787081] },
-	{ id: 154, name: "Olema Hill (Olema side)", activityType: "ride", startLatlng: [38.0405759, -122.7876307] },
-	{ id: 3895201, name: "Aroyo Creek to Summit Rd", activityType: "ride", startLatlng: [37.92872490361333, -122.5604893360287] },
-	{ id: 613234, name: "Strawberry Counter Clockwise", activityType: "ride", startLatlng: [37.8909388650209, -122.513562915847] },
-	{ id: 6366218, name: "Panoramic descent from the treeline", activityType: "ride", startLatlng: [37.893512, -122.62203] },
-	{ id: 27775012, name: "Arroyo to Lower Willow Camp", activityType: "ride", startLatlng: [37.900328, -122.644459] },
-	{ id: 626416, name: "Stinson to base of BoFax (Tam Hill Climb Course)", activityType: "ride", startLatlng: [37.8988445084542, -122.641194239259] },
-	{ id: 160, name: "Rodeo Beach Hill Loop", activityType: "ride", startLatlng: [37.8318572, -122.5302062] },
-	{ id: 217, name: "Back side of Pine Mt", activityType: "ride", startLatlng: [37.9635453, -122.6314863] },
-	{ id: 2858097, name: "Railroad to Gravity Car", activityType: "ride", startLatlng: [37.921111, -122.555332] },
-	{ id: 1208521, name: "Westbound Climb out of Muir Beach", activityType: "ride", startLatlng: [37.8656719149282, -122.578029632901] },
-	{ id: 39815383, name: "Tiki #3 Aug. 25", activityType: "ride", startLatlng: [37.955048, -122.634934] },
-	{ id: 12773396, name: "Crest of Olema Hill to Platform Bridge Rd.", activityType: "ride", startLatlng: [38.04656, -122.771903] },
-	{ id: 17906169, name: "From the middle to the end", activityType: "ride", startLatlng: [37.914132, -122.551293] },
-	{ id: 664721, name: "Steep Ravine to Stinson Descent", activityType: "ride", startLatlng: [37.88500187918544, -122.62248331680894] },
-	{ id: 5005772, name: "Steep Ravine Kicker ", activityType: "ride", startLatlng: [37.888423, -122.629269] },
-	{ id: 157, name: "Stinson Climb 1, south ", activityType: "ride", startLatlng: [37.8960039, -122.63654] },
-	{ id: 3374166, name: "Last Effort", activityType: "ride", startLatlng: [38.02518476732075, -122.56945663131773] },
-	{ id: 3631070, name: "Ranger to Miwok", activityType: "ride", startLatlng: [38.002912, -122.46851] },
-	{ id: 1400270, name: "Big Rock to Bottom", activityType: "ride", startLatlng: [38.038483209837565, -122.60257401922135] },
-	{ id: 1691193, name: "China Camp Descent East (Full)", activityType: "ride", startLatlng: [38.000492187346026, -122.4809357545794] },
-	{ id: 2206495, name: "big rock short drop", activityType: "ride", startLatlng: [38.04739, -122.6211293] },
-	{ id: 622149, name: "Mill Valley to Pantoll", activityType: "ride", startLatlng: [37.9068910265341, -122.558154531755] },
-	{ id: 611079, name: "Muir Woods Descent from 4 Corners", activityType: "ride", startLatlng: [37.893449, -122.55721] },
-	{ id: 6588105, name: "Julian Dirt Descent - Just The Fun Part", activityType: "ride", startLatlng: [37.833854, -122.494789] },
-	{ id: 8124525, name: "lucas twisties", activityType: "ride", startLatlng: [38.047992, -122.622292] },
-	{ id: 635307, name: "Seven Sisters in Reverse", activityType: "ride", startLatlng: [37.916024, -122.627294] },
-	{ id: 12645054, name: "Climb to Big Rock", activityType: "ride", startLatlng: [38.042778, -122.636101] },
-	{ id: 635306, name: "Bofax Rd at Ridgecrest to Alpine Dam", activityType: "ride", startLatlng: [37.9397037718445, -122.658167257905] },
-	{ id: 8139803, name: "RR Grade Climb-West Point to Gate", activityType: "ride", startLatlng: [37.916872, -122.594054] },
-	{ id: 1735, name: "Drake Road climb to Olema", activityType: "ride", startLatlng: [38.049958, -122.760096] },
-	{ id: 1556023, name: "Bofax Last Mile before Ridgecrest ", activityType: "ride", startLatlng: [37.9437885, -122.66732] },
-	{ id: 28238765, name: "DBPP (Dande beaucoup plus petit)", activityType: "ride", startLatlng: [38.044061, -122.634456] },
-	{ id: 2841397, name: "Lucas Valley Easbound, final mile to Rock", activityType: "ride", startLatlng: [38.04327157326043, -122.63826996088028] },
-	{ id: 652844, name: "Alta (Bobcat to Morning Sun)", activityType: "run", startLatlng: [37.85486583597958, -122.5045365281403] },
-	{ id: 14222670, name: "SCA to Coastal Trail", activityType: "run", startLatlng: [37.850245, -122.49531] },
-	{ id: 8920484, name: "Top of Insult to Panoramic (via Dipsea Trail)", activityType: "run", startLatlng: [37.891376, -122.623388] },
-	{ id: 825093, name: "Dipsea Trail Climb", activityType: "run", startLatlng: [37.8918735, -122.6277083] },
-	{ id: 12381920, name: "Cardiac to Swoop", activityType: "run", startLatlng: [37.89739, -122.601633] },
-	{ id: 8429776, name: "Marincello Trail (Tennessee Valley to Bobcat)", activityType: "run", startLatlng: [37.860661, -122.53503] },
-	{ id: 8315486, name: "Old Springs Trail Descent", activityType: "run", startLatlng: [37.850047, -122.526091] },
-	{ id: 5365874, name: "Mile 3 of GGB Parking Lot to Bunker Road", activityType: "run", startLatlng: [37.833447, -122.498514] },
-	{ id: 10167809, name: "Cardiac", activityType: "run", startLatlng: [37.89793, -122.598328] },
-	{ id: 11666833, name: "Enchanted Forest", activityType: "run", startLatlng: [37.893096, -122.583869] },
-	{ id: 3405017, name: "Steep Ravine Trail Climb", activityType: "run", startLatlng: [37.89583314672405, -122.58925542808494] },
-	{ id: 9222267, name: "Miwok 800m", activityType: "run", startLatlng: [37.835431, -122.518944] },
-	{ id: 3329561, name: "Coastal Downhill to Bunker", activityType: "run", startLatlng: [37.83396, -122.4953402] },
-	{ id: 1258037, name: "Dipsea Stairs", activityType: "run", startLatlng: [37.90485671190965, -122.55449358878997] },
-	{ id: 624032, name: "SCA to Alta", activityType: "run", startLatlng: [37.83922176808119, -122.48976686038077] },
-	{ id: 804398, name: "Deer Park Fire Rd Climb", activityType: "run", startLatlng: [37.8933284, -122.6079078] },
-	{ id: 17719374, name: "Swoop to Cardiac", activityType: "run", startLatlng: [37.892379, -122.613101] },
-	{ id: 8315420, name: "Pirates Cove Trail - North", activityType: "run", startLatlng: [37.849942, -122.55648] },
-	{ id: 3404330, name: "Down Miwok", activityType: "run", startLatlng: [37.8461078, -122.5261352] },
-	{ id: 17038624, name: "Pirates Cove South - Top to Bottom", activityType: "run", startLatlng: [37.856389, -122.56929] },
-	{ id: 834112, name: "Coastal Trail (Pirate's Cove to Coastal Fire Road)", activityType: "run", startLatlng: [37.85235758260738, -122.5607292885258] },
-	{ id: 7502541, name: "Miwok Grind to the Top", activityType: "run", startLatlng: [37.864283, -122.537526] },
-	{ id: 8315439, name: "Pirates Cove Trail - South", activityType: "run", startLatlng: [37.856335, -122.569248] },
-	{ id: 624035, name: "Miwok (Tennessee Valley to Miwok Cut-off)", activityType: "run", startLatlng: [37.8617584425956, -122.53528109751642] },
-	{ id: 18111495, name: "Bobcat Trail Climb", activityType: "run", startLatlng: [37.835612, -122.517771] },
-	{ id: 971233, name: "Muir Woods to Panoramic", activityType: "run", startLatlng: [37.891560383176326, -122.5685628690967] },
-	{ id: 14930877, name: "dmite", activityType: "run", startLatlng: [37.891167, -122.569388] },
-	{ id: 12225089, name: "Hill 88 @ Coastal Trail to Gate (Descent)", activityType: "run", startLatlng: [37.839703, -122.544146] },
-	{ id: 4341331, name: "Lagunitas and Glenwood to top of Phoenix Dam", activityType: "run", startLatlng: [37.961885, -122.568816] },
-	{ id: 3610498, name: "Old Springs Trail Climb", activityType: "run", startLatlng: [37.85738432094409, -122.53369491885809] },
-	{ id: 10328016, name: "Miwok Redline", activityType: "run", startLatlng: [37.85231, -122.52399] },
-	{ id: 667699, name: "Miwok to air traffic control", activityType: "run", startLatlng: [37.85018, -122.52579] },
-	{ id: 6208634, name: "Coastal - Bunker to SCA", activityType: "run", startLatlng: [37.830971, -122.509403] },
-	{ id: 3404399, name: "Coastal Crush", activityType: "run", startLatlng: [37.8414364, -122.5441009] },
-	{ id: 924070, name: "Matt Davis (Coastal to Stinson)", activityType: "run", startLatlng: [37.903496923921864, -122.62092474769985] },
-	{ id: 1201562, name: "Deer Park (Redwood to Dipsea)", activityType: "run", startLatlng: [37.88628816604614, -122.56832599639893] },
-	{ id: 15437721, name: "Rodeo to Hill 88", activityType: "run", startLatlng: [37.832525, -122.540825] },
-	{ id: 3282360, name: "Marincello -> VOR Climb", activityType: "run", startLatlng: [37.85686542280018, -122.51706688664854] },
-	{ id: 832121, name: "Heather Cutoff", activityType: "run", startLatlng: [37.874546, -122.584417] },
-	{ id: 624578, name: "Heather Cutoff and Half-way up Coastal View", activityType: "run", startLatlng: [37.87470303475857, -122.58409545756876] },
-	{ id: 1011562, name: "Haypress Trail Climb", activityType: "run", startLatlng: [37.8562691, -122.5393864] },
-	{ id: 17901323, name: "Fox Climb Part 1", activityType: "run", startLatlng: [37.856784, -122.541274] },
-	{ id: 844858, name: "The North Face Endurance Challenge mile 11", activityType: "run", startLatlng: [37.8749481, -122.5886757] },
-	{ id: 3883846, name: "Fox Tr Climb", activityType: "run", startLatlng: [37.85822667069372, -122.54989124426768] },
-	{ id: 644835, name: "Coastal Trail, Tennessee Valley - Wolf Ridge", activityType: "run", startLatlng: [37.84794741310179, -122.54478609189391] },
-	{ id: 9243730, name: "coastal - climb from tennessee valley to overlook", activityType: "run", startLatlng: [37.84822, -122.541473] },
-	{ id: 11141401, name: "Green Gulch Midway", activityType: "run", startLatlng: [37.862401, -122.560566] },
-	{ id: 631694, name: "Up Middle Green Gulch", activityType: "run", startLatlng: [37.8635313827544, -122.56576532498] },
-	{ id: 4738143, name: "Temelpa Switchback 1 & 2", activityType: "run", startLatlng: [37.92505, -122.574511] },
-	{ id: 4738154, name: "Temelpa Switchbacks 3-10", activityType: "run", startLatlng: [37.92583, -122.574032] },
-	{ id: 8519777, name: "Temelpa switchbacks to Verna Dunshee", activityType: "run", startLatlng: [37.92501, -122.574496] },
-	{ id: 967981, name: "Shoreline Hwy Climb", activityType: "run", startLatlng: [37.8772992, -122.5634319] },
-	{ id: 7186924, name: "Ben Johnson Descent (Stapleveldt to Hillside)", activityType: "run", startLatlng: [37.89965, -122.595459] },
-	{ id: 740697, name: "Coastal Trail", activityType: "run", startLatlng: [37.9171733, -122.6308666] },
-	{ id: 2426934, name: "Diaz Ridge (Descent)", activityType: "run", startLatlng: [37.873209631070495, -122.56742913275957] },
-	{ id: 8346973, name: "Heather Cutoff to Frank Valley", activityType: "run", startLatlng: [37.873254, -122.590768] },
-	{ id: 4157891, name: "Mt Tam Hill Climb - Segment 3", activityType: "run", startLatlng: [37.922329, -122.568481] },
-	{ id: 805072, name: "Miwok Trail Climb", activityType: "run", startLatlng: [37.83386521666667, -122.5217274166667] },
-	{ id: 6904825, name: "Heather Cutoff (Descent)", activityType: "run", startLatlng: [37.873451, -122.590609] },
-	{ id: 10491939, name: "Rut Running - Tamelpa Trail - Summit to Vic Haun", activityType: "run", startLatlng: [37.920158, -122.56413] },
-	{ id: 6306193, name: "Tam Scramble", activityType: "run", startLatlng: [37.928666, -122.576817] },
-	{ id: 645663, name: "Upper Summit", activityType: "run", startLatlng: [37.91316307294368, -122.5574799541227] },
-	{ id: 3420985, name: "Deer Park to Top of Cardiac", activityType: "run", startLatlng: [37.8866288, -122.5681741] },
-	{ id: 2395882, name: "Coastal Trail Climb", activityType: "run", startLatlng: [37.90858222220737, -122.625647184741] },
-	{ id: 4110094, name: "Ralston Avenue Climb", activityType: "run", startLatlng: [37.917239, -122.559948] },
-	{ id: 844860, name: "Deer Park Fire Rd Climb", activityType: "run", startLatlng: [37.89067056030035, -122.59837394580245] },
-	{ id: 2326076, name: "Miwok (Shoreline-Coyote cutoff)", activityType: "run", startLatlng: [37.8791264, -122.5538121] },
-	{ id: 1279804, name: "Andys Alta Trail Climb", activityType: "run", startLatlng: [37.8512044, -122.505029] },
-	{ id: 653619, name: "Miwok (Redwood to Dias Ridge)", activityType: "run", startLatlng: [37.883672676980495, -122.57089337334037] },
-	{ id: 659119, name: "Miwok (Dias Ridge to Redwood)", activityType: "run", startLatlng: [37.88113840855658, -122.55778592079878] },
-	{ id: 1079946, name: "Bon Tempe Singletrack", activityType: "run", startLatlng: [37.95464929193258, -122.61233593337238] },
-	{ id: 3784236, name: "Phoenix Lake Shady Side", activityType: "run", startLatlng: [37.950184, -122.573235] },
-	{ id: 2697666, name: "The North Face EC: Climb out of Muir Beach", activityType: "run", startLatlng: [37.862673411145806, -122.57157339714468] },
-	{ id: 767584, name: "Haypress Trail Climb", activityType: "run", startLatlng: [37.8685935, -122.5286518] },
-	{ id: 3603349, name: "Shoreline W", activityType: "run", startLatlng: [38.00282159820199, -122.46849476359785] },
-	{ id: 779369, name: "Alta Trail Climb", activityType: "run", startLatlng: [37.86755603738129, -122.51749662682414] },
-	{ id: 988324, name: "Cove to Blackie's", activityType: "run", startLatlng: [37.8984381, -122.5014684] },
-	{ id: 11135069, name: "One Mile Time Trial", activityType: "run", startLatlng: [38.005655, -122.484969] },
-	{ id: 693915, name: "Washington Park Ave Climb", activityType: "run", startLatlng: [37.8998609, -122.5700849] },
-	{ id: 1340045, name: "Bayhills Dr Climb", activityType: "run", startLatlng: [38.00292104951851, -122.50277406547451] },
-	{ id: 4043743, name: "Coastal Trail Climb", activityType: "run", startLatlng: [37.852166, -122.561334] },
-	{ id: 11228856, name: "Matt Davis Climb from trail junction", activityType: "run", startLatlng: [37.902285, -122.636513] },
-	{ id: 3463014, name: "TCC - Bridge to Troop 80", activityType: "run", startLatlng: [37.9017179, -122.6010588] },
-	{ id: 621052, name: "07/18/10 Point Reyes Run", activityType: "run", startLatlng: [37.940898, -122.7604463] },
-	{ id: 5099107, name: "Crown fire road - to falls trail", activityType: "run", startLatlng: [37.929549, -122.555881] },
-	{ id: 831933, name: "Matt Davis Hiking Trail Climb", activityType: "run", startLatlng: [37.9027216, -122.6286123] },
-	{ id: 5484044, name: "Miwok Meadows to Shoreline & Back Ranch", activityType: "run", startLatlng: [38.001826, -122.486684] },
-	{ id: 797901, name: "Coast Trail Climb", activityType: "run", startLatlng: [37.952586, -122.764293] },
-	{ id: 2495566, name: "Top-o-Diaz to Miwok Traverse", activityType: "run", startLatlng: [37.873732913285494, -122.56695438176394] },
-	{ id: 784741, name: "Old Railroad Grade Trail Climb", activityType: "run", startLatlng: [37.92015625163913, -122.5866963621229] },
-	{ id: 2588287, name: "McNear return", activityType: "run", startLatlng: [37.9969335, -122.4829245] },
-	{ id: 3333676, name: "Shady Side Northbound", activityType: "run", startLatlng: [37.949554, -122.59833] },
-	{ id: 13644296, name: "RR Blithedale gate to 1st bend", activityType: "run", startLatlng: [37.920942, -122.555417] },
-	{ id: 4577524, name: "Double Dipsea", activityType: "run", startLatlng: [37.896612, -122.635542] },
-	{ id: 11863848, name: "Ross to Bon Air Path", activityType: "run", startLatlng: [37.960863, -122.555371] },
-	{ id: 3056907, name: "Bootjack Descent  (Van Wyck Meadow to Muir Woods)", activityType: "run", startLatlng: [37.9078484, -122.5972194] },
-	{ id: 2176386, name: "Mount Tam Hill Climb", activityType: "run", startLatlng: [37.9062347, -122.5481695] },
-	{ id: 2494597, name: "Yolanda Descent", activityType: "run", startLatlng: [37.96523102559149, -122.58751787245274] },
-	{ id: 862855, name: "Coastal Trail Climb", activityType: "run", startLatlng: [37.92630094103515, -122.64221959747374] },
-	{ id: 2573208, name: "Dawn Falls Climb (Ladybug->SML)", activityType: "run", startLatlng: [37.933327155187726, -122.55687857978046] },
+	{
+		id: 14312666,
+		name: 'Bridgeway, Napa St to Gate 5 Rd',
+		activityType: 'ride',
+		startLatlng: [37.861445, -122.489721]
+	},
+	{
+		id: 99243,
+		name: 'Hawk Hill Saddle',
+		activityType: 'ride',
+		startLatlng: [37.833172, -122.483441]
+	},
+	{
+		id: 3460040,
+		name: 'C.A. North side drop',
+		activityType: 'ride',
+		startLatlng: [37.916789492592216, -122.52558843232691]
+	},
+	{
+		id: 7883032,
+		name: 'Camino Alto: Start to Vasco',
+		activityType: 'ride',
+		startLatlng: [37.901518, -122.528203]
+	},
+	{
+		id: 2451142,
+		name: 'Camino Alto (Mill Valley side)',
+		activityType: 'ride',
+		startLatlng: [37.9021295, -122.5279554]
+	},
+	{
+		id: 1320162,
+		name: 'Mountain home rollers',
+		activityType: 'ride',
+		startLatlng: [37.909897807985544, -122.57702331058681]
+	},
+	{
+		id: 617239,
+		name: 'Pantoll to 4 Corners',
+		activityType: 'ride',
+		startLatlng: [37.9047287721187, -122.603724868968]
+	},
+	{
+		id: 7805335,
+		name: 'Upper McCullough',
+		activityType: 'ride',
+		startLatlng: [37.837605, -122.49609]
+	},
+	{ id: 26066416, name: '405', activityType: 'ride', startLatlng: [37.922162, -122.53026] },
+	{
+		id: 2371095,
+		name: 'McCullough Rd. (Headlands)',
+		activityType: 'ride',
+		startLatlng: [37.836073, -122.5023015]
+	},
+	{
+		id: 4173351,
+		name: 'Hwy1 Panoramic to Mill Valley descent',
+		activityType: 'ride',
+		startLatlng: [37.884055, -122.553532]
+	},
+	{
+		id: 5836703,
+		name: 'Camino Alto Climb (Corte Madera Side)',
+		activityType: 'ride',
+		startLatlng: [37.925474, -122.529861]
+	},
+	{
+		id: 765399,
+		name: 'Paradise Flat Mile TT Eastbound',
+		activityType: 'ride',
+		startLatlng: [37.91934052482247, -122.50474356114864]
+	},
+	{
+		id: 1587724,
+		name: 'Dipsea Trail Climb',
+		activityType: 'ride',
+		startLatlng: [37.9014763, -122.5514921]
+	},
+	{
+		id: 3354711,
+		name: 'Ridgecrest to bottom of Pantoll descent',
+		activityType: 'ride',
+		startLatlng: [37.91003501974046, -122.61270239017904]
+	},
+	{
+		id: 640981,
+		name: 'Marion to Four Corners',
+		activityType: 'ride',
+		startLatlng: [37.9013328, -122.5520136]
+	},
+	{
+		id: 5292307,
+		name: 'BHR Medow Club',
+		activityType: 'ride',
+		startLatlng: [37.972752, -122.626625]
+	},
+	{
+		id: 4119312,
+		name: 'Meadow Club to Pine Mt. Climb',
+		activityType: 'ride',
+		startLatlng: [37.97259, -122.620689]
+	},
+	{
+		id: 619764,
+		name: "White's Hill Descent",
+		activityType: 'ride',
+		startLatlng: [38.0111205, -122.6180686]
+	},
+	{
+		id: 6317488,
+		name: "White's Hill Good DH Only",
+		activityType: 'ride',
+		startLatlng: [38.011313, -122.620468]
+	},
+	{
+		id: 17657117,
+		name: "White's hill, just the top",
+		activityType: 'ride',
+		startLatlng: [38.007969, -122.616784]
+	},
+	{
+		id: 5404192,
+		name: 'Sister 5 Tabitha',
+		activityType: 'ride',
+		startLatlng: [37.923065, -122.636166]
+	},
+	{
+		id: 5404167,
+		name: 'Sister 4 Teresa',
+		activityType: 'ride',
+		startLatlng: [37.926124, -122.64114]
+	},
+	{
+		id: 611363,
+		name: 'Sister 5 and 6',
+		activityType: 'ride',
+		startLatlng: [37.9256978, -122.6409332]
+	},
+	{
+		id: 627467,
+		name: "White's Hill (SV Official)",
+		activityType: 'ride',
+		startLatlng: [38.002496, -122.612511]
+	},
+	{
+		id: 10477237,
+		name: 'BoFax Transistor Radio',
+		activityType: 'ride',
+		startLatlng: [37.939214, -122.658268]
+	},
+	{
+		id: 25360046,
+		name: 'The climby part',
+		activityType: 'ride',
+		startLatlng: [37.935342, -122.652553]
+	},
+	{
+		id: 6987724,
+		name: 'sister5steep',
+		activityType: 'ride',
+		startLatlng: [37.922841, -122.635567]
+	},
+	{
+		id: 635037,
+		name: 'Whites Summit to San Geronimo Golf Course',
+		activityType: 'ride',
+		startLatlng: [38.0113735, -122.6207033]
+	},
+	{
+		id: 39470008,
+		name: "White's Hill (Eastbound)",
+		activityType: 'ride',
+		startLatlng: [38.012601, -122.630041]
+	},
+	{ id: 11430171, name: 'BoFax Dip', activityType: 'ride', startLatlng: [37.962886, -122.62523] },
+	{
+		id: 637196,
+		name: 'Pine Mtn. Pass',
+		activityType: 'ride',
+		startLatlng: [37.9823178704828, -122.592867538333]
+	},
+	{
+		id: 18055066,
+		name: 'Alpine Dam Hill Repeats',
+		activityType: 'ride',
+		startLatlng: [37.936571, -122.638046]
+	},
+	{
+		id: 563888,
+		name: 'Alpine Dam to Ridgecrest Climb',
+		activityType: 'ride',
+		startLatlng: [37.936706, -122.638077]
+	},
+	{
+		id: 6366843,
+		name: 'pantoll climb',
+		activityType: 'ride',
+		startLatlng: [37.912471, -122.585205]
+	},
+	{
+		id: 3274016,
+		name: 'Paradise TT flats to san clement',
+		activityType: 'ride',
+		startLatlng: [37.919154949486256, -122.48452875763178]
+	},
+	{
+		id: 4258825,
+		name: 'red line climb',
+		activityType: 'ride',
+		startLatlng: [37.927149, -122.59307]
+	},
+	{
+		id: 7043439,
+		name: 'Whites Hill Eastbound (Proper)',
+		activityType: 'ride',
+		startLatlng: [38.013413, -122.631346]
+	},
+	{
+		id: 862949,
+		name: 'Whites Hill ',
+		activityType: 'ride',
+		startLatlng: [38.01467528566718, -122.65613112598658]
+	},
+	{
+		id: 24522292,
+		name: 'Final hairpins',
+		activityType: 'ride',
+		startLatlng: [37.939817, -122.655441]
+	},
+	{
+		id: 624452,
+		name: 'Top 2/3 of Alpine Dam to Ridgecrest Climb',
+		activityType: 'ride',
+		startLatlng: [37.9391855, -122.6459231]
+	},
+	{
+		id: 4588294,
+		name: 'Marion Repeats',
+		activityType: 'ride',
+		startLatlng: [37.907016, -122.55947]
+	},
+	{
+		id: 8361666,
+		name: '4 Corners to Pantoll',
+		activityType: 'ride',
+		startLatlng: [37.893553, -122.557321]
+	},
+	{
+		id: 5972604,
+		name: 'Marion Climb ',
+		activityType: 'ride',
+		startLatlng: [37.906786, -122.557506]
+	},
+	{
+		id: 7769993,
+		name: 'mtn theater to airforce base',
+		activityType: 'ride',
+		startLatlng: [37.914624, -122.609351]
+	},
+	{
+		id: 1173191,
+		name: 'Four Corners Climb',
+		activityType: 'ride',
+		startLatlng: [37.90677270758782, -122.5567734132422]
+	},
+	{
+		id: 2367606,
+		name: 'west peak push',
+		activityType: 'ride',
+		startLatlng: [37.920137559995055, -122.60363317094743]
+	},
+	{
+		id: 5988968,
+		name: 'Trollhättan Blvd',
+		activityType: 'ride',
+		startLatlng: [38.004731, -122.708224]
+	},
+	{
+		id: 1486699,
+		name: 'Beast Mode ',
+		activityType: 'ride',
+		startLatlng: [37.906862050330176, -122.61362339381371]
+	},
+	{
+		id: 687607,
+		name: 'Pantoll to Ridgecrest',
+		activityType: 'ride',
+		startLatlng: [37.9042351618409, -122.604324365805]
+	},
+	{
+		id: 4422770,
+		name: 'Lagunitas-Two Bird TT',
+		activityType: 'ride',
+		startLatlng: [38.011717, -122.701819]
+	},
+	{ id: 705614, name: 'NVR climb', activityType: 'ride', startLatlng: [38.020161, -122.661988] },
+	{
+		id: 623201,
+		name: 'Dixon Ridge Descent to Fernwood Lane',
+		activityType: 'ride',
+		startLatlng: [38.0231813248247, -122.664340697229]
+	},
+	{
+		id: 10335249,
+		name: 'Depot to Sequoia Valley Road via Cascade, Marion, Daffodil',
+		activityType: 'ride',
+		startLatlng: [37.90613, -122.54845]
+	},
+	{
+		id: 623196,
+		name: 'Nicasio Dam to Platform Bridge Rd',
+		activityType: 'ride',
+		startLatlng: [38.0776105541736, -122.754978323355]
+	},
+	{
+		id: 17125822,
+		name: 'Hoo Koo e Koo to big log benchs',
+		activityType: 'ride',
+		startLatlng: [37.920418, -122.573205]
+	},
+	{
+		id: 3305098,
+		name: 'Muir Descent',
+		activityType: 'ride',
+		startLatlng: [37.864338057115674, -122.58603637106717]
+	},
+	{
+		id: 5021680,
+		name: 'Waterfall to Westpoint',
+		activityType: 'ride',
+		startLatlng: [37.921326, -122.585234]
+	},
+	{
+		id: 7883627,
+		name: 'TAM: Hoo-Koo to West Point',
+		activityType: 'ride',
+		startLatlng: [37.920411, -122.573311]
+	},
+	{
+		id: 8360481,
+		name: 'Valley road TT',
+		activityType: 'ride',
+		startLatlng: [38.022622, -122.664102]
+	},
+	{
+		id: 4110695,
+		name: 'half fortify',
+		activityType: 'ride',
+		startLatlng: [37.909223, -122.589729]
+	},
+	{
+		id: 4793848,
+		name: 'Hwy 1 climb from Muir Beach ',
+		activityType: 'ride',
+		startLatlng: [37.863399, -122.573366]
+	},
+	{
+		id: 5158497,
+		name: 'Castro > Shafter Bridge',
+		activityType: 'ride',
+		startLatlng: [38.015007, -122.689397]
+	},
+	{
+		id: 6563620,
+		name: 'Summit to Double Bow Knot (inc. Shortcut)',
+		activityType: 'ride',
+		startLatlng: [37.920037, -122.562528]
+	},
+	{
+		id: 630181,
+		name: 'B17 DH (Clockwise)',
+		activityType: 'ride',
+		startLatlng: [37.991103110835, -122.622325737029]
+	},
+	{ id: 21007134, name: 'CCW Part 3', activityType: 'ride', startLatlng: [38.007049, -122.501462] },
+	{
+		id: 8283159,
+		name: 'Olema climb prologue',
+		activityType: 'ride',
+		startLatlng: [38.041117, -122.787081]
+	},
+	{
+		id: 154,
+		name: 'Olema Hill (Olema side)',
+		activityType: 'ride',
+		startLatlng: [38.0405759, -122.7876307]
+	},
+	{
+		id: 3895201,
+		name: 'Aroyo Creek to Summit Rd',
+		activityType: 'ride',
+		startLatlng: [37.92872490361333, -122.5604893360287]
+	},
+	{
+		id: 613234,
+		name: 'Strawberry Counter Clockwise',
+		activityType: 'ride',
+		startLatlng: [37.8909388650209, -122.513562915847]
+	},
+	{
+		id: 6366218,
+		name: 'Panoramic descent from the treeline',
+		activityType: 'ride',
+		startLatlng: [37.893512, -122.62203]
+	},
+	{
+		id: 27775012,
+		name: 'Arroyo to Lower Willow Camp',
+		activityType: 'ride',
+		startLatlng: [37.900328, -122.644459]
+	},
+	{
+		id: 626416,
+		name: 'Stinson to base of BoFax (Tam Hill Climb Course)',
+		activityType: 'ride',
+		startLatlng: [37.8988445084542, -122.641194239259]
+	},
+	{
+		id: 160,
+		name: 'Rodeo Beach Hill Loop',
+		activityType: 'ride',
+		startLatlng: [37.8318572, -122.5302062]
+	},
+	{
+		id: 217,
+		name: 'Back side of Pine Mt',
+		activityType: 'ride',
+		startLatlng: [37.9635453, -122.6314863]
+	},
+	{
+		id: 2858097,
+		name: 'Railroad to Gravity Car',
+		activityType: 'ride',
+		startLatlng: [37.921111, -122.555332]
+	},
+	{
+		id: 1208521,
+		name: 'Westbound Climb out of Muir Beach',
+		activityType: 'ride',
+		startLatlng: [37.8656719149282, -122.578029632901]
+	},
+	{
+		id: 39815383,
+		name: 'Tiki #3 Aug. 25',
+		activityType: 'ride',
+		startLatlng: [37.955048, -122.634934]
+	},
+	{
+		id: 12773396,
+		name: 'Crest of Olema Hill to Platform Bridge Rd.',
+		activityType: 'ride',
+		startLatlng: [38.04656, -122.771903]
+	},
+	{
+		id: 17906169,
+		name: 'From the middle to the end',
+		activityType: 'ride',
+		startLatlng: [37.914132, -122.551293]
+	},
+	{
+		id: 664721,
+		name: 'Steep Ravine to Stinson Descent',
+		activityType: 'ride',
+		startLatlng: [37.88500187918544, -122.62248331680894]
+	},
+	{
+		id: 5005772,
+		name: 'Steep Ravine Kicker ',
+		activityType: 'ride',
+		startLatlng: [37.888423, -122.629269]
+	},
+	{
+		id: 157,
+		name: 'Stinson Climb 1, south ',
+		activityType: 'ride',
+		startLatlng: [37.8960039, -122.63654]
+	},
+	{
+		id: 3374166,
+		name: 'Last Effort',
+		activityType: 'ride',
+		startLatlng: [38.02518476732075, -122.56945663131773]
+	},
+	{
+		id: 3631070,
+		name: 'Ranger to Miwok',
+		activityType: 'ride',
+		startLatlng: [38.002912, -122.46851]
+	},
+	{
+		id: 1400270,
+		name: 'Big Rock to Bottom',
+		activityType: 'ride',
+		startLatlng: [38.038483209837565, -122.60257401922135]
+	},
+	{
+		id: 1691193,
+		name: 'China Camp Descent East (Full)',
+		activityType: 'ride',
+		startLatlng: [38.000492187346026, -122.4809357545794]
+	},
+	{
+		id: 2206495,
+		name: 'big rock short drop',
+		activityType: 'ride',
+		startLatlng: [38.04739, -122.6211293]
+	},
+	{
+		id: 622149,
+		name: 'Mill Valley to Pantoll',
+		activityType: 'ride',
+		startLatlng: [37.9068910265341, -122.558154531755]
+	},
+	{
+		id: 611079,
+		name: 'Muir Woods Descent from 4 Corners',
+		activityType: 'ride',
+		startLatlng: [37.893449, -122.55721]
+	},
+	{
+		id: 6588105,
+		name: 'Julian Dirt Descent - Just The Fun Part',
+		activityType: 'ride',
+		startLatlng: [37.833854, -122.494789]
+	},
+	{
+		id: 8124525,
+		name: 'lucas twisties',
+		activityType: 'ride',
+		startLatlng: [38.047992, -122.622292]
+	},
+	{
+		id: 635307,
+		name: 'Seven Sisters in Reverse',
+		activityType: 'ride',
+		startLatlng: [37.916024, -122.627294]
+	},
+	{
+		id: 12645054,
+		name: 'Climb to Big Rock',
+		activityType: 'ride',
+		startLatlng: [38.042778, -122.636101]
+	},
+	{
+		id: 635306,
+		name: 'Bofax Rd at Ridgecrest to Alpine Dam',
+		activityType: 'ride',
+		startLatlng: [37.9397037718445, -122.658167257905]
+	},
+	{
+		id: 8139803,
+		name: 'RR Grade Climb-West Point to Gate',
+		activityType: 'ride',
+		startLatlng: [37.916872, -122.594054]
+	},
+	{
+		id: 1735,
+		name: 'Drake Road climb to Olema',
+		activityType: 'ride',
+		startLatlng: [38.049958, -122.760096]
+	},
+	{
+		id: 1556023,
+		name: 'Bofax Last Mile before Ridgecrest ',
+		activityType: 'ride',
+		startLatlng: [37.9437885, -122.66732]
+	},
+	{
+		id: 28238765,
+		name: 'DBPP (Dande beaucoup plus petit)',
+		activityType: 'ride',
+		startLatlng: [38.044061, -122.634456]
+	},
+	{
+		id: 2841397,
+		name: 'Lucas Valley Easbound, final mile to Rock',
+		activityType: 'ride',
+		startLatlng: [38.04327157326043, -122.63826996088028]
+	},
+	{
+		id: 652844,
+		name: 'Alta (Bobcat to Morning Sun)',
+		activityType: 'run',
+		startLatlng: [37.85486583597958, -122.5045365281403]
+	},
+	{
+		id: 14222670,
+		name: 'SCA to Coastal Trail',
+		activityType: 'run',
+		startLatlng: [37.850245, -122.49531]
+	},
+	{
+		id: 8920484,
+		name: 'Top of Insult to Panoramic (via Dipsea Trail)',
+		activityType: 'run',
+		startLatlng: [37.891376, -122.623388]
+	},
+	{
+		id: 825093,
+		name: 'Dipsea Trail Climb',
+		activityType: 'run',
+		startLatlng: [37.8918735, -122.6277083]
+	},
+	{
+		id: 12381920,
+		name: 'Cardiac to Swoop',
+		activityType: 'run',
+		startLatlng: [37.89739, -122.601633]
+	},
+	{
+		id: 8429776,
+		name: 'Marincello Trail (Tennessee Valley to Bobcat)',
+		activityType: 'run',
+		startLatlng: [37.860661, -122.53503]
+	},
+	{
+		id: 8315486,
+		name: 'Old Springs Trail Descent',
+		activityType: 'run',
+		startLatlng: [37.850047, -122.526091]
+	},
+	{
+		id: 5365874,
+		name: 'Mile 3 of GGB Parking Lot to Bunker Road',
+		activityType: 'run',
+		startLatlng: [37.833447, -122.498514]
+	},
+	{ id: 10167809, name: 'Cardiac', activityType: 'run', startLatlng: [37.89793, -122.598328] },
+	{
+		id: 11666833,
+		name: 'Enchanted Forest',
+		activityType: 'run',
+		startLatlng: [37.893096, -122.583869]
+	},
+	{
+		id: 3405017,
+		name: 'Steep Ravine Trail Climb',
+		activityType: 'run',
+		startLatlng: [37.89583314672405, -122.58925542808494]
+	},
+	{ id: 9222267, name: 'Miwok 800m', activityType: 'run', startLatlng: [37.835431, -122.518944] },
+	{
+		id: 3329561,
+		name: 'Coastal Downhill to Bunker',
+		activityType: 'run',
+		startLatlng: [37.83396, -122.4953402]
+	},
+	{
+		id: 1258037,
+		name: 'Dipsea Stairs',
+		activityType: 'run',
+		startLatlng: [37.90485671190965, -122.55449358878997]
+	},
+	{
+		id: 624032,
+		name: 'SCA to Alta',
+		activityType: 'run',
+		startLatlng: [37.83922176808119, -122.48976686038077]
+	},
+	{
+		id: 804398,
+		name: 'Deer Park Fire Rd Climb',
+		activityType: 'run',
+		startLatlng: [37.8933284, -122.6079078]
+	},
+	{
+		id: 17719374,
+		name: 'Swoop to Cardiac',
+		activityType: 'run',
+		startLatlng: [37.892379, -122.613101]
+	},
+	{
+		id: 8315420,
+		name: 'Pirates Cove Trail - North',
+		activityType: 'run',
+		startLatlng: [37.849942, -122.55648]
+	},
+	{ id: 3404330, name: 'Down Miwok', activityType: 'run', startLatlng: [37.8461078, -122.5261352] },
+	{
+		id: 17038624,
+		name: 'Pirates Cove South - Top to Bottom',
+		activityType: 'run',
+		startLatlng: [37.856389, -122.56929]
+	},
+	{
+		id: 834112,
+		name: "Coastal Trail (Pirate's Cove to Coastal Fire Road)",
+		activityType: 'run',
+		startLatlng: [37.85235758260738, -122.5607292885258]
+	},
+	{
+		id: 7502541,
+		name: 'Miwok Grind to the Top',
+		activityType: 'run',
+		startLatlng: [37.864283, -122.537526]
+	},
+	{
+		id: 8315439,
+		name: 'Pirates Cove Trail - South',
+		activityType: 'run',
+		startLatlng: [37.856335, -122.569248]
+	},
+	{
+		id: 624035,
+		name: 'Miwok (Tennessee Valley to Miwok Cut-off)',
+		activityType: 'run',
+		startLatlng: [37.8617584425956, -122.53528109751642]
+	},
+	{
+		id: 18111495,
+		name: 'Bobcat Trail Climb',
+		activityType: 'run',
+		startLatlng: [37.835612, -122.517771]
+	},
+	{
+		id: 971233,
+		name: 'Muir Woods to Panoramic',
+		activityType: 'run',
+		startLatlng: [37.891560383176326, -122.5685628690967]
+	},
+	{ id: 14930877, name: 'dmite', activityType: 'run', startLatlng: [37.891167, -122.569388] },
+	{
+		id: 12225089,
+		name: 'Hill 88 @ Coastal Trail to Gate (Descent)',
+		activityType: 'run',
+		startLatlng: [37.839703, -122.544146]
+	},
+	{
+		id: 4341331,
+		name: 'Lagunitas and Glenwood to top of Phoenix Dam',
+		activityType: 'run',
+		startLatlng: [37.961885, -122.568816]
+	},
+	{
+		id: 3610498,
+		name: 'Old Springs Trail Climb',
+		activityType: 'run',
+		startLatlng: [37.85738432094409, -122.53369491885809]
+	},
+	{ id: 10328016, name: 'Miwok Redline', activityType: 'run', startLatlng: [37.85231, -122.52399] },
+	{
+		id: 667699,
+		name: 'Miwok to air traffic control',
+		activityType: 'run',
+		startLatlng: [37.85018, -122.52579]
+	},
+	{
+		id: 6208634,
+		name: 'Coastal - Bunker to SCA',
+		activityType: 'run',
+		startLatlng: [37.830971, -122.509403]
+	},
+	{
+		id: 3404399,
+		name: 'Coastal Crush',
+		activityType: 'run',
+		startLatlng: [37.8414364, -122.5441009]
+	},
+	{
+		id: 924070,
+		name: 'Matt Davis (Coastal to Stinson)',
+		activityType: 'run',
+		startLatlng: [37.903496923921864, -122.62092474769985]
+	},
+	{
+		id: 1201562,
+		name: 'Deer Park (Redwood to Dipsea)',
+		activityType: 'run',
+		startLatlng: [37.88628816604614, -122.56832599639893]
+	},
+	{
+		id: 15437721,
+		name: 'Rodeo to Hill 88',
+		activityType: 'run',
+		startLatlng: [37.832525, -122.540825]
+	},
+	{
+		id: 3282360,
+		name: 'Marincello -> VOR Climb',
+		activityType: 'run',
+		startLatlng: [37.85686542280018, -122.51706688664854]
+	},
+	{
+		id: 832121,
+		name: 'Heather Cutoff',
+		activityType: 'run',
+		startLatlng: [37.874546, -122.584417]
+	},
+	{
+		id: 624578,
+		name: 'Heather Cutoff and Half-way up Coastal View',
+		activityType: 'run',
+		startLatlng: [37.87470303475857, -122.58409545756876]
+	},
+	{
+		id: 1011562,
+		name: 'Haypress Trail Climb',
+		activityType: 'run',
+		startLatlng: [37.8562691, -122.5393864]
+	},
+	{
+		id: 17901323,
+		name: 'Fox Climb Part 1',
+		activityType: 'run',
+		startLatlng: [37.856784, -122.541274]
+	},
+	{
+		id: 844858,
+		name: 'The North Face Endurance Challenge mile 11',
+		activityType: 'run',
+		startLatlng: [37.8749481, -122.5886757]
+	},
+	{
+		id: 3883846,
+		name: 'Fox Tr Climb',
+		activityType: 'run',
+		startLatlng: [37.85822667069372, -122.54989124426768]
+	},
+	{
+		id: 644835,
+		name: 'Coastal Trail, Tennessee Valley - Wolf Ridge',
+		activityType: 'run',
+		startLatlng: [37.84794741310179, -122.54478609189391]
+	},
+	{
+		id: 9243730,
+		name: 'coastal - climb from tennessee valley to overlook',
+		activityType: 'run',
+		startLatlng: [37.84822, -122.541473]
+	},
+	{
+		id: 11141401,
+		name: 'Green Gulch Midway',
+		activityType: 'run',
+		startLatlng: [37.862401, -122.560566]
+	},
+	{
+		id: 631694,
+		name: 'Up Middle Green Gulch',
+		activityType: 'run',
+		startLatlng: [37.8635313827544, -122.56576532498]
+	},
+	{
+		id: 4738143,
+		name: 'Temelpa Switchback 1 & 2',
+		activityType: 'run',
+		startLatlng: [37.92505, -122.574511]
+	},
+	{
+		id: 4738154,
+		name: 'Temelpa Switchbacks 3-10',
+		activityType: 'run',
+		startLatlng: [37.92583, -122.574032]
+	},
+	{
+		id: 8519777,
+		name: 'Temelpa switchbacks to Verna Dunshee',
+		activityType: 'run',
+		startLatlng: [37.92501, -122.574496]
+	},
+	{
+		id: 967981,
+		name: 'Shoreline Hwy Climb',
+		activityType: 'run',
+		startLatlng: [37.8772992, -122.5634319]
+	},
+	{
+		id: 7186924,
+		name: 'Ben Johnson Descent (Stapleveldt to Hillside)',
+		activityType: 'run',
+		startLatlng: [37.89965, -122.595459]
+	},
+	{
+		id: 740697,
+		name: 'Coastal Trail',
+		activityType: 'run',
+		startLatlng: [37.9171733, -122.6308666]
+	},
+	{
+		id: 2426934,
+		name: 'Diaz Ridge (Descent)',
+		activityType: 'run',
+		startLatlng: [37.873209631070495, -122.56742913275957]
+	},
+	{
+		id: 8346973,
+		name: 'Heather Cutoff to Frank Valley',
+		activityType: 'run',
+		startLatlng: [37.873254, -122.590768]
+	},
+	{
+		id: 4157891,
+		name: 'Mt Tam Hill Climb - Segment 3',
+		activityType: 'run',
+		startLatlng: [37.922329, -122.568481]
+	},
+	{
+		id: 805072,
+		name: 'Miwok Trail Climb',
+		activityType: 'run',
+		startLatlng: [37.83386521666667, -122.5217274166667]
+	},
+	{
+		id: 6904825,
+		name: 'Heather Cutoff (Descent)',
+		activityType: 'run',
+		startLatlng: [37.873451, -122.590609]
+	},
+	{
+		id: 10491939,
+		name: 'Rut Running - Tamelpa Trail - Summit to Vic Haun',
+		activityType: 'run',
+		startLatlng: [37.920158, -122.56413]
+	},
+	{ id: 6306193, name: 'Tam Scramble', activityType: 'run', startLatlng: [37.928666, -122.576817] },
+	{
+		id: 645663,
+		name: 'Upper Summit',
+		activityType: 'run',
+		startLatlng: [37.91316307294368, -122.5574799541227]
+	},
+	{
+		id: 3420985,
+		name: 'Deer Park to Top of Cardiac',
+		activityType: 'run',
+		startLatlng: [37.8866288, -122.5681741]
+	},
+	{
+		id: 2395882,
+		name: 'Coastal Trail Climb',
+		activityType: 'run',
+		startLatlng: [37.90858222220737, -122.625647184741]
+	},
+	{
+		id: 4110094,
+		name: 'Ralston Avenue Climb',
+		activityType: 'run',
+		startLatlng: [37.917239, -122.559948]
+	},
+	{
+		id: 844860,
+		name: 'Deer Park Fire Rd Climb',
+		activityType: 'run',
+		startLatlng: [37.89067056030035, -122.59837394580245]
+	},
+	{
+		id: 2326076,
+		name: 'Miwok (Shoreline-Coyote cutoff)',
+		activityType: 'run',
+		startLatlng: [37.8791264, -122.5538121]
+	},
+	{
+		id: 1279804,
+		name: 'Andys Alta Trail Climb',
+		activityType: 'run',
+		startLatlng: [37.8512044, -122.505029]
+	},
+	{
+		id: 653619,
+		name: 'Miwok (Redwood to Dias Ridge)',
+		activityType: 'run',
+		startLatlng: [37.883672676980495, -122.57089337334037]
+	},
+	{
+		id: 659119,
+		name: 'Miwok (Dias Ridge to Redwood)',
+		activityType: 'run',
+		startLatlng: [37.88113840855658, -122.55778592079878]
+	},
+	{
+		id: 1079946,
+		name: 'Bon Tempe Singletrack',
+		activityType: 'run',
+		startLatlng: [37.95464929193258, -122.61233593337238]
+	},
+	{
+		id: 3784236,
+		name: 'Phoenix Lake Shady Side',
+		activityType: 'run',
+		startLatlng: [37.950184, -122.573235]
+	},
+	{
+		id: 2697666,
+		name: 'The North Face EC: Climb out of Muir Beach',
+		activityType: 'run',
+		startLatlng: [37.862673411145806, -122.57157339714468]
+	},
+	{
+		id: 767584,
+		name: 'Haypress Trail Climb',
+		activityType: 'run',
+		startLatlng: [37.8685935, -122.5286518]
+	},
+	{
+		id: 3603349,
+		name: 'Shoreline W',
+		activityType: 'run',
+		startLatlng: [38.00282159820199, -122.46849476359785]
+	},
+	{
+		id: 779369,
+		name: 'Alta Trail Climb',
+		activityType: 'run',
+		startLatlng: [37.86755603738129, -122.51749662682414]
+	},
+	{
+		id: 988324,
+		name: "Cove to Blackie's",
+		activityType: 'run',
+		startLatlng: [37.8984381, -122.5014684]
+	},
+	{
+		id: 11135069,
+		name: 'One Mile Time Trial',
+		activityType: 'run',
+		startLatlng: [38.005655, -122.484969]
+	},
+	{
+		id: 693915,
+		name: 'Washington Park Ave Climb',
+		activityType: 'run',
+		startLatlng: [37.8998609, -122.5700849]
+	},
+	{
+		id: 1340045,
+		name: 'Bayhills Dr Climb',
+		activityType: 'run',
+		startLatlng: [38.00292104951851, -122.50277406547451]
+	},
+	{
+		id: 4043743,
+		name: 'Coastal Trail Climb',
+		activityType: 'run',
+		startLatlng: [37.852166, -122.561334]
+	},
+	{
+		id: 11228856,
+		name: 'Matt Davis Climb from trail junction',
+		activityType: 'run',
+		startLatlng: [37.902285, -122.636513]
+	},
+	{
+		id: 3463014,
+		name: 'TCC - Bridge to Troop 80',
+		activityType: 'run',
+		startLatlng: [37.9017179, -122.6010588]
+	},
+	{
+		id: 621052,
+		name: '07/18/10 Point Reyes Run',
+		activityType: 'run',
+		startLatlng: [37.940898, -122.7604463]
+	},
+	{
+		id: 5099107,
+		name: 'Crown fire road - to falls trail',
+		activityType: 'run',
+		startLatlng: [37.929549, -122.555881]
+	},
+	{
+		id: 831933,
+		name: 'Matt Davis Hiking Trail Climb',
+		activityType: 'run',
+		startLatlng: [37.9027216, -122.6286123]
+	},
+	{
+		id: 5484044,
+		name: 'Miwok Meadows to Shoreline & Back Ranch',
+		activityType: 'run',
+		startLatlng: [38.001826, -122.486684]
+	},
+	{
+		id: 797901,
+		name: 'Coast Trail Climb',
+		activityType: 'run',
+		startLatlng: [37.952586, -122.764293]
+	},
+	{
+		id: 2495566,
+		name: 'Top-o-Diaz to Miwok Traverse',
+		activityType: 'run',
+		startLatlng: [37.873732913285494, -122.56695438176394]
+	},
+	{
+		id: 784741,
+		name: 'Old Railroad Grade Trail Climb',
+		activityType: 'run',
+		startLatlng: [37.92015625163913, -122.5866963621229]
+	},
+	{
+		id: 2588287,
+		name: 'McNear return',
+		activityType: 'run',
+		startLatlng: [37.9969335, -122.4829245]
+	},
+	{
+		id: 3333676,
+		name: 'Shady Side Northbound',
+		activityType: 'run',
+		startLatlng: [37.949554, -122.59833]
+	},
+	{
+		id: 13644296,
+		name: 'RR Blithedale gate to 1st bend',
+		activityType: 'run',
+		startLatlng: [37.920942, -122.555417]
+	},
+	{
+		id: 4577524,
+		name: 'Double Dipsea',
+		activityType: 'run',
+		startLatlng: [37.896612, -122.635542]
+	},
+	{
+		id: 11863848,
+		name: 'Ross to Bon Air Path',
+		activityType: 'run',
+		startLatlng: [37.960863, -122.555371]
+	},
+	{
+		id: 3056907,
+		name: 'Bootjack Descent  (Van Wyck Meadow to Muir Woods)',
+		activityType: 'run',
+		startLatlng: [37.9078484, -122.5972194]
+	},
+	{
+		id: 2176386,
+		name: 'Mount Tam Hill Climb',
+		activityType: 'run',
+		startLatlng: [37.9062347, -122.5481695]
+	},
+	{
+		id: 2494597,
+		name: 'Yolanda Descent',
+		activityType: 'run',
+		startLatlng: [37.96523102559149, -122.58751787245274]
+	},
+	{
+		id: 862855,
+		name: 'Coastal Trail Climb',
+		activityType: 'run',
+		startLatlng: [37.92630094103515, -122.64221959747374]
+	},
+	{
+		id: 2573208,
+		name: 'Dawn Falls Climb (Ladybug->SML)',
+		activityType: 'run',
+		startLatlng: [37.933327155187726, -122.55687857978046]
+	}
 ];
-

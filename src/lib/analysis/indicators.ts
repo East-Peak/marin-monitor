@@ -193,8 +193,7 @@ function getLatestConditions(observed: ObservedWeather): {
 			temperature = observed.temperature[i];
 		if (humidity === null && observed.humidity[i] != null) humidity = observed.humidity[i];
 		if (dewpoint === null && observed.dewpoint[i] != null) dewpoint = observed.dewpoint[i];
-		if (windSpeed === null && observed.windSpeed[i] != null)
-			windSpeed = observed.windSpeed[i];
+		if (windSpeed === null && observed.windSpeed[i] != null) windSpeed = observed.windSpeed[i];
 	}
 
 	return { temperature, humidity, dewpoint, windSpeed };
@@ -299,10 +298,7 @@ function moistureToScore(moisture: number): number {
 	return Math.round(Math.max(0, Math.min(100, raw)));
 }
 
-function scoreToLabel(
-	score: number,
-	moisture: number
-): { label: string; color: string } {
+function scoreToLabel(score: number, moisture: number): { label: string; color: string } {
 	if (score >= 90) return { label: 'Hero Dirt!', color: '#22c55e' };
 	if (score >= 70) return { label: 'Good', color: '#06b6d4' };
 	if (score >= 50) return { label: 'Drying Out', color: '#eab308' };
@@ -482,8 +478,7 @@ export function computeHeroDirt(
 	const temperature = latest.temperature ?? forecastNow?.temperature ?? null;
 	const humidity = latest.humidity ?? forecastNow?.relativeHumidity ?? null;
 	const dewpoint = latest.dewpoint ?? forecastNow?.dewpoint ?? null;
-	const windSpeed =
-		latest.windSpeed ?? (forecastNow ? parseFloat(forecastNow.windSpeed) : null);
+	const windSpeed = latest.windSpeed ?? (forecastNow ? parseFloat(forecastNow.windSpeed) : null);
 
 	// 2. Drying rate
 	const dryingRate = computeDryingRate(temperature, humidity, dewpoint, windSpeed);
@@ -494,19 +489,13 @@ export function computeHeroDirt(
 	// 4. Moisture events
 	const dewEvents = detectDewEvents(observed, nowMs);
 	const fogEvents = detectFogEvents(observed, nowMs);
-	const moistureEvents = [...dewEvents, ...fogEvents].sort(
-		(a, b) => a.hoursAgo - b.hoursAgo
-	);
+	const moistureEvents = [...dewEvents, ...fogEvents].sort((a, b) => a.hoursAgo - b.hoursAgo);
 
 	// 5. Primary moisture estimation
 	let moistureEstimate: number;
 	let moistureSource: 'soil-sensor' | 'rain-model';
 
-	const latestSoil = getLatestSoilMoisture(
-		observed.soilMoisture0to1cm,
-		observed.time,
-		nowMs
-	);
+	const latestSoil = getLatestSoilMoisture(observed.soilMoisture0to1cm, observed.time, nowMs);
 
 	if (latestSoil != null) {
 		moistureEstimate = soilMoistureToPercent(latestSoil);

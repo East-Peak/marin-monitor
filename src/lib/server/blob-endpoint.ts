@@ -16,9 +16,7 @@ export interface BlobErrorPayload {
 	upstreamStatus?: number;
 }
 
-export type BlobReadResult =
-	| { ok: true; text: string }
-	| { ok: false; error: BlobErrorPayload };
+export type BlobReadResult = { ok: true; text: string } | { ok: false; error: BlobErrorPayload };
 
 const ERROR_CACHE_CONTROL = 'public, s-maxage=10';
 

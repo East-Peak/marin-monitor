@@ -17,39 +17,42 @@
 ## File Structure
 
 ### New files
-| File | Responsibility |
-|------|---------------|
-| `src/lib/components/tv/TvScroller.svelte` | JS-driven scroll with rAF, position save/restore |
-| `src/lib/stores/tv-scroll.ts` | Scroll position store (Map keyed by screen ID) |
-| `src/lib/components/tv/screens/TvCompositeHero.svelte` | "The Marin Number" hero screen |
-| `src/lib/components/tv/screens/TvDailyLifeCard.svelte` | Coffee + Grocery + Gas card |
-| `src/lib/components/tv/screens/TvLifestyleCard.svelte` | Wine + Fitness card |
-| `src/lib/components/tv/screens/TvStructuralCard.svelte` | Tuition + Housing card |
-| `src/lib/components/tv/screens/TvDrivewayCard.svelte` | Vehicle registration card |
-| `src/lib/components/tv/screens/Tv311PhotoWall.svelte` | Scrolling 311 complaint photos |
-| `src/lib/components/tv/screens/TvConditionsCard.svelte` | Weather + AQI + Tides card |
-| `src/lib/components/tv/screens/TvOutdoorsCard.svelte` | Surf + Dirt + Streams card |
-| `src/lib/stores/tv-scroll.test.ts` | Tests for scroll position store |
-| `src/lib/config/tv.test.ts` | Tests for TV config validation |
-| `src/lib/stores/tv.test.ts` | Tests for IDX ticker items |
+
+| File                                                    | Responsibility                                   |
+| ------------------------------------------------------- | ------------------------------------------------ |
+| `src/lib/components/tv/TvScroller.svelte`               | JS-driven scroll with rAF, position save/restore |
+| `src/lib/stores/tv-scroll.ts`                           | Scroll position store (Map keyed by screen ID)   |
+| `src/lib/components/tv/screens/TvCompositeHero.svelte`  | "The Marin Number" hero screen                   |
+| `src/lib/components/tv/screens/TvDailyLifeCard.svelte`  | Coffee + Grocery + Gas card                      |
+| `src/lib/components/tv/screens/TvLifestyleCard.svelte`  | Wine + Fitness card                              |
+| `src/lib/components/tv/screens/TvStructuralCard.svelte` | Tuition + Housing card                           |
+| `src/lib/components/tv/screens/TvDrivewayCard.svelte`   | Vehicle registration card                        |
+| `src/lib/components/tv/screens/Tv311PhotoWall.svelte`   | Scrolling 311 complaint photos                   |
+| `src/lib/components/tv/screens/TvConditionsCard.svelte` | Weather + AQI + Tides card                       |
+| `src/lib/components/tv/screens/TvOutdoorsCard.svelte`   | Surf + Dirt + Streams card                       |
+| `src/lib/stores/tv-scroll.test.ts`                      | Tests for scroll position store                  |
+| `src/lib/config/tv.test.ts`                             | Tests for TV config validation                   |
+| `src/lib/stores/tv.test.ts`                             | Tests for IDX ticker items                       |
 
 ### Modified files
-| File | Changes |
-|------|---------|
-| `src/lib/config/tv.ts` | New screen entries, `ScreenType` type, variable durations, `IDX` ticker category |
-| `src/lib/stores/tv.ts` | Add IDX ticker items from index data |
-| `src/lib/components/tv/TvWallboard.svelte` | New screen list, index data loading, variable durations, render new screens |
-| `src/lib/components/tv/TvWallboardHeader.svelte` | Support 20 dots |
-| `src/lib/components/tv/screens/NewsWireScreen.svelte` | TvAutoScroll → TvScroller |
-| `src/lib/components/tv/screens/SafetyScreen.svelte` | TvAutoScroll → TvScroller |
-| `src/lib/components/tv/screens/TvCommunityScreen.svelte` | TvAutoScroll → TvScroller |
-| `src/lib/components/tv/screens/TvLeaderboardsScreen.svelte` | TvAutoScroll → TvScroller |
-| `src/lib/components/tv/screens/TvMapScreen.svelte` | Accept + render overlay data per region |
+
+| File                                                        | Changes                                                                          |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `src/lib/config/tv.ts`                                      | New screen entries, `ScreenType` type, variable durations, `IDX` ticker category |
+| `src/lib/stores/tv.ts`                                      | Add IDX ticker items from index data                                             |
+| `src/lib/components/tv/TvWallboard.svelte`                  | New screen list, index data loading, variable durations, render new screens      |
+| `src/lib/components/tv/TvWallboardHeader.svelte`            | Support 20 dots                                                                  |
+| `src/lib/components/tv/screens/NewsWireScreen.svelte`       | TvAutoScroll → TvScroller                                                        |
+| `src/lib/components/tv/screens/SafetyScreen.svelte`         | TvAutoScroll → TvScroller                                                        |
+| `src/lib/components/tv/screens/TvCommunityScreen.svelte`    | TvAutoScroll → TvScroller                                                        |
+| `src/lib/components/tv/screens/TvLeaderboardsScreen.svelte` | TvAutoScroll → TvScroller                                                        |
+| `src/lib/components/tv/screens/TvMapScreen.svelte`          | Accept + render overlay data per region                                          |
 
 ### Removed files
-| File | Reason |
-|------|--------|
-| `src/lib/components/tv/TvAutoScroll.svelte` | Replaced by TvScroller |
+
+| File                                                      | Reason                                       |
+| --------------------------------------------------------- | -------------------------------------------- |
+| `src/lib/components/tv/TvAutoScroll.svelte`               | Replaced by TvScroller                       |
 | `src/lib/components/tv/screens/TvConditionsScreen.svelte` | Split into TvConditionsCard + TvOutdoorsCard |
 
 ---
@@ -59,6 +62,7 @@
 Build the JS-driven scroll replacement for TvAutoScroll.
 
 **Files:**
+
 - Create: `src/lib/stores/tv-scroll.ts`
 - Create: `src/lib/stores/tv-scroll.test.ts`
 - Create: `src/lib/components/tv/TvScroller.svelte`
@@ -288,10 +292,7 @@ Expected: All 5 tests PASS
 	});
 </script>
 
-<div
-	bind:this={containerEl}
-	class="h-full w-full overflow-hidden"
->
+<div bind:this={containerEl} class="h-full w-full overflow-hidden">
 	<div bind:this={contentEl}>
 		{@render children()}
 	</div>
@@ -318,6 +319,7 @@ git commit -m "feat(tv): add TvScroller component with JS-driven scroll and posi
 Add new screen definitions, screen types, variable durations, and IDX ticker category.
 
 **Files:**
+
 - Modify: `src/lib/config/tv.ts`
 - Create: `src/lib/config/tv.test.ts`
 
@@ -382,13 +384,26 @@ Expected: FAIL — currently 13 screens, no `screenType` field, no IDX category
 Update `src/lib/config/tv.ts`:
 
 Add `ScreenType` and `IDX` to types:
+
 ```typescript
 export type ScreenType = 'map' | 'hero' | 'anchor' | 'card';
 
-export type TickerCategory = 'WX' | 'PD' | 'LW' | 'FI' | 'EQ' | 'TD' | 'GG' | 'CV' | 'KOM' | '311' | 'IDX';
+export type TickerCategory =
+	| 'WX'
+	| 'PD'
+	| 'LW'
+	| 'FI'
+	| 'EQ'
+	| 'TD'
+	| 'GG'
+	| 'CV'
+	| 'KOM'
+	| '311'
+	| 'IDX';
 ```
 
 Add `screenType` to `TvScreenConfig`:
+
 ```typescript
 export interface TvScreenConfig {
 	id: TvScreenId;
@@ -401,6 +416,7 @@ export interface TvScreenConfig {
 ```
 
 Update `TvScreenId` to include all 20 screens:
+
 ```typescript
 export type TvScreenId =
 	| 'map-county'
@@ -430,41 +446,167 @@ Replace the `TV_SCREENS` array with all 20 screens in thematic cluster order, ea
 ```typescript
 export const TV_SCREENS: TvScreenConfig[] = [
 	// Cluster: The Map
-	{ id: 'map-county', name: 'Marin County', description: 'County overview', durationMs: 15_000, screenType: 'map', mapViewId: 'county' },
-	{ id: 'map-south', name: 'South Marin', description: 'Mill Valley, Sausalito, Tiburon', durationMs: 15_000, screenType: 'map', mapViewId: 'south' },
-	{ id: 'map-central', name: 'Central Marin', description: 'San Rafael, San Anselmo, Larkspur', durationMs: 15_000, screenType: 'map', mapViewId: 'central' },
-	{ id: 'map-north', name: 'North Marin', description: 'Novato & North', durationMs: 15_000, screenType: 'map', mapViewId: 'north' },
-	{ id: 'map-west', name: 'West Marin', description: 'Point Reyes, Bolinas, Nicasio', durationMs: 15_000, screenType: 'map', mapViewId: 'west' },
+	{
+		id: 'map-county',
+		name: 'Marin County',
+		description: 'County overview',
+		durationMs: 15_000,
+		screenType: 'map',
+		mapViewId: 'county'
+	},
+	{
+		id: 'map-south',
+		name: 'South Marin',
+		description: 'Mill Valley, Sausalito, Tiburon',
+		durationMs: 15_000,
+		screenType: 'map',
+		mapViewId: 'south'
+	},
+	{
+		id: 'map-central',
+		name: 'Central Marin',
+		description: 'San Rafael, San Anselmo, Larkspur',
+		durationMs: 15_000,
+		screenType: 'map',
+		mapViewId: 'central'
+	},
+	{
+		id: 'map-north',
+		name: 'North Marin',
+		description: 'Novato & North',
+		durationMs: 15_000,
+		screenType: 'map',
+		mapViewId: 'north'
+	},
+	{
+		id: 'map-west',
+		name: 'West Marin',
+		description: 'Point Reyes, Bolinas, Nicasio',
+		durationMs: 15_000,
+		screenType: 'map',
+		mapViewId: 'west'
+	},
 	// Cluster: News & Safety
-	{ id: 'news-wire', name: 'Local News Wire', description: 'Latest local news', durationMs: 20_000, screenType: 'anchor' },
-	{ id: 'safety', name: 'Crime & Safety', description: 'Safety alerts and incidents', durationMs: 20_000, screenType: 'anchor' },
+	{
+		id: 'news-wire',
+		name: 'Local News Wire',
+		description: 'Latest local news',
+		durationMs: 20_000,
+		screenType: 'anchor'
+	},
+	{
+		id: 'safety',
+		name: 'Crime & Safety',
+		description: 'Safety alerts and incidents',
+		durationMs: 20_000,
+		screenType: 'anchor'
+	},
 	// Cluster: Eyes on Marin
-	{ id: 'cameras-tam-coast', name: 'Mt Tam & Coast', description: 'Coastal and mountain cameras', durationMs: 18_000, screenType: 'anchor' },
-	{ id: 'cameras-central-highway', name: 'Central & 101', description: 'Highway and central cameras', durationMs: 18_000, screenType: 'anchor' },
-	{ id: 'cameras-west-north', name: 'West & North', description: 'West Marin and Novato cameras', durationMs: 18_000, screenType: 'anchor' },
+	{
+		id: 'cameras-tam-coast',
+		name: 'Mt Tam & Coast',
+		description: 'Coastal and mountain cameras',
+		durationMs: 18_000,
+		screenType: 'anchor'
+	},
+	{
+		id: 'cameras-central-highway',
+		name: 'Central & 101',
+		description: 'Highway and central cameras',
+		durationMs: 18_000,
+		screenType: 'anchor'
+	},
+	{
+		id: 'cameras-west-north',
+		name: 'West & North',
+		description: 'West Marin and Novato cameras',
+		durationMs: 18_000,
+		screenType: 'anchor'
+	},
 	// Cluster: Cost of Living
-	{ id: 'composite', name: 'Cost of Being Marin', description: 'The Marin Number', durationMs: 22_000, screenType: 'hero' },
-	{ id: 'daily-life', name: 'Daily Life', description: 'Coffee, groceries, gas', durationMs: 12_000, screenType: 'card' },
-	{ id: 'lifestyle', name: 'Lifestyle', description: 'Wine and fitness', durationMs: 12_000, screenType: 'card' },
+	{
+		id: 'composite',
+		name: 'Cost of Being Marin',
+		description: 'The Marin Number',
+		durationMs: 22_000,
+		screenType: 'hero'
+	},
+	{
+		id: 'daily-life',
+		name: 'Daily Life',
+		description: 'Coffee, groceries, gas',
+		durationMs: 12_000,
+		screenType: 'card'
+	},
+	{
+		id: 'lifestyle',
+		name: 'Lifestyle',
+		description: 'Wine and fitness',
+		durationMs: 12_000,
+		screenType: 'card'
+	},
 	// Cluster: Structural Marin
-	{ id: 'structural', name: 'Structural Marin', description: 'Tuition and housing', durationMs: 12_000, screenType: 'card' },
-	{ id: 'driveway', name: 'The Marin Driveway', description: 'Vehicle registration', durationMs: 12_000, screenType: 'card' },
+	{
+		id: 'structural',
+		name: 'Structural Marin',
+		description: 'Tuition and housing',
+		durationMs: 12_000,
+		screenType: 'card'
+	},
+	{
+		id: 'driveway',
+		name: 'The Marin Driveway',
+		description: 'Vehicle registration',
+		durationMs: 12_000,
+		screenType: 'card'
+	},
 	// Cluster: Wall of Grievances
-	{ id: '311-photos', name: 'Fix It Marin', description: '311 complaints with photos', durationMs: 22_000, screenType: 'hero' },
+	{
+		id: '311-photos',
+		name: 'Fix It Marin',
+		description: '311 complaints with photos',
+		durationMs: 22_000,
+		screenType: 'hero'
+	},
 	// Cluster: Community & Sport
-	{ id: 'community', name: 'Community', description: 'Outdoors and civic', durationMs: 20_000, screenType: 'anchor' },
-	{ id: 'leaderboards', name: 'Strava Leaderboards', description: 'KOM and QOM records', durationMs: 20_000, screenType: 'anchor' },
+	{
+		id: 'community',
+		name: 'Community',
+		description: 'Outdoors and civic',
+		durationMs: 20_000,
+		screenType: 'anchor'
+	},
+	{
+		id: 'leaderboards',
+		name: 'Strava Leaderboards',
+		description: 'KOM and QOM records',
+		durationMs: 20_000,
+		screenType: 'anchor'
+	},
 	// Cluster: Conditions
-	{ id: 'conditions', name: 'Conditions', description: 'Weather, AQI, tides', durationMs: 12_000, screenType: 'card' },
-	{ id: 'outdoors', name: 'Outdoors', description: 'Surf, trails, streams', durationMs: 12_000, screenType: 'card' },
+	{
+		id: 'conditions',
+		name: 'Conditions',
+		description: 'Weather, AQI, tides',
+		durationMs: 12_000,
+		screenType: 'card'
+	},
+	{
+		id: 'outdoors',
+		name: 'Outdoors',
+		description: 'Surf, trails, streams',
+		durationMs: 12_000,
+		screenType: 'card'
+	}
 ];
 ```
 
 Add IDX to `CATEGORY_COLORS`:
+
 ```typescript
 export const CATEGORY_COLORS: Record<TickerCategory, string> = {
 	// ... existing colors ...
-	IDX: '#6366f1', // indigo — neutral, distinct from alert colors
+	IDX: '#6366f1' // indigo — neutral, distinct from alert colors
 };
 ```
 
@@ -493,6 +635,7 @@ git commit -m "feat(tv): update config with 20 screens, screen types, variable d
 Add index data headlines to the chyron ticker.
 
 **Files:**
+
 - Modify: `src/lib/stores/tv.ts`
 - Create: `src/lib/stores/tv.test.ts`
 
@@ -535,9 +678,9 @@ describe('buildIdxTickerItems', () => {
 				timestamp: '2026-04-01',
 				shopCount: 12,
 				medianPrice: 5.75,
-				avgPrice: 5.80,
-				minPrice: 4.50,
-				maxPrice: 7.00,
+				avgPrice: 5.8,
+				minPrice: 4.5,
+				maxPrice: 7.0,
 				shops: []
 			},
 			history: []
@@ -550,18 +693,41 @@ describe('buildIdxTickerItems', () => {
 
 	it('caps at 5 IDX items', () => {
 		const cappuccino: CoffeeData = {
-			current: { timestamp: '2026-04-01', shopCount: 12, medianPrice: 5.75, avgPrice: 5.80, minPrice: 4.50, maxPrice: 7.00, shops: [] },
+			current: {
+				timestamp: '2026-04-01',
+				shopCount: 12,
+				medianPrice: 5.75,
+				avgPrice: 5.8,
+				minPrice: 4.5,
+				maxPrice: 7.0,
+				shops: []
+			},
 			history: []
 		};
 		const grocery: GroceryBasketData = {
-			current: { timestamp: '2026-04-01', totalCheapest: 187, totalExpensive: 245, itemsFound: 12, items: [] },
+			current: {
+				timestamp: '2026-04-01',
+				totalCheapest: 187,
+				totalExpensive: 245,
+				itemsFound: 12,
+				items: []
+			},
 			history: []
 		};
 		// Even with many sources, should cap at 5
-		const items = buildIdxTickerItems({ cappuccino, grocery, composite: {
-			current: { timestamp: '2026-04-01', tiers: [], compositeScore: 100, marinNumber: { total: 21110, items: [], annualized: 253320 } },
-			history: []
-		}});
+		const items = buildIdxTickerItems({
+			cappuccino,
+			grocery,
+			composite: {
+				current: {
+					timestamp: '2026-04-01',
+					tiers: [],
+					compositeScore: 100,
+					marinNumber: { total: 21110, items: [], annualized: 253320 }
+				},
+				history: []
+			}
+		});
 		expect(items.length).toBeLessThanOrEqual(5);
 	});
 });
@@ -682,7 +848,9 @@ export function buildIdxTickerItems(sources: IndexDataSources): TickerItem[] {
 	}
 
 	if (sources.driveway?.current) {
-		const evEntry = sources.driveway.current.fuelBreakdown.find((f) => f.fuelType === 'battery-electric');
+		const evEntry = sources.driveway.current.fuelBreakdown.find(
+			(f) => f.fuelType === 'battery-electric'
+		);
 		if (evEntry) {
 			items.push({
 				id: `idx-driveway`,
@@ -755,6 +923,7 @@ git commit -m "feat(tv): add IDX ticker category with index data headlines in ch
 Swap all existing TvAutoScroll usage to TvScroller.
 
 **Files:**
+
 - Modify: `src/lib/components/tv/screens/NewsWireScreen.svelte`
 - Modify: `src/lib/components/tv/screens/SafetyScreen.svelte`
 - Modify: `src/lib/components/tv/screens/TvCommunityScreen.svelte`
@@ -840,6 +1009,7 @@ Add `active` prop to TvLeaderboardsScreen.
 In `src/lib/components/tv/TvWallboard.svelte`, where screens are rendered inside `<TvScreen>`, pass `active` to child screen components. This requires threading the active state. The cleanest approach: each screen component receives `active` directly.
 
 Look at the current rendering pattern:
+
 ```svelte
 <TvScreen active={carouselIdx === i}>
 	<NewsWireScreen />
@@ -847,6 +1017,7 @@ Look at the current rendering pattern:
 ```
 
 Change to:
+
 ```svelte
 <TvScreen active={carouselIdx === i}>
 	<NewsWireScreen active={carouselIdx === i} />
@@ -862,9 +1033,11 @@ rm src/lib/components/tv/TvAutoScroll.svelte
 ```
 
 Verify no remaining imports:
+
 ```bash
 grep -r "TvAutoScroll" src/ --include="*.svelte" --include="*.ts"
 ```
+
 Expected: No results
 
 - [ ] **Step 8: Run TypeScript check**
@@ -888,6 +1061,7 @@ Scroll position now persists across carousel cycles."
 ## Task 5: Cost of Being Marin Hero Screen
 
 **Files:**
+
 - Create: `src/lib/components/tv/screens/TvCompositeHero.svelte`
 
 - [ ] **Step 1: Create the composite hero screen**
@@ -926,15 +1100,11 @@ Scroll position now persists across carousel cycles."
 {#if snapshot && marinNumber}
 	<div class="flex h-full flex-col items-center justify-center gap-8 px-12 py-8">
 		<!-- Title -->
-		<h2 class="text-lg font-medium uppercase tracking-widest text-zinc-400">
-			Cost of Being Marin
-		</h2>
+		<h2 class="text-lg font-medium uppercase tracking-widest text-zinc-400">Cost of Being Marin</h2>
 
 		<!-- Hero Number -->
 		<div class="text-center">
-			<div class="text-sm font-medium uppercase tracking-wider text-zinc-500">
-				The Marin Number
-			</div>
+			<div class="text-sm font-medium uppercase tracking-wider text-zinc-500">The Marin Number</div>
 			<div class="mt-2 text-7xl font-bold tabular-nums text-white">
 				{fmtPrice(marinNumber.total)}
 			</div>
@@ -969,9 +1139,7 @@ Scroll position now persists across carousel cycles."
 		</div>
 	</div>
 {:else}
-	<div class="flex h-full items-center justify-center text-zinc-600">
-		Loading cost data...
-	</div>
+	<div class="flex h-full items-center justify-center text-zinc-600">Loading cost data...</div>
 {/if}
 ```
 
@@ -995,6 +1163,7 @@ git commit -m "feat(tv): add Cost of Being Marin composite hero screen"
 Build the four index data card screens.
 
 **Files:**
+
 - Create: `src/lib/components/tv/screens/TvDailyLifeCard.svelte`
 - Create: `src/lib/components/tv/screens/TvLifestyleCard.svelte`
 - Create: `src/lib/components/tv/screens/TvStructuralCard.svelte`
@@ -1124,9 +1293,7 @@ Build the four index data card screens.
 
 		<!-- Fitness Drop-in -->
 		<div class="flex flex-col rounded-xl bg-zinc-800/60 p-6">
-			<div class="text-sm font-medium uppercase tracking-wider text-zinc-500">
-				Fitness Drop-in
-			</div>
+			<div class="text-sm font-medium uppercase tracking-wider text-zinc-500">Fitness Drop-in</div>
 			<div class="mt-4 flex flex-1 flex-col justify-center gap-4">
 				{#each fitnessTypes as type}
 					{@const median = fitness?.current?.medianByType?.[type]}
@@ -1200,9 +1367,7 @@ Build the four index data card screens.
 		<div class="flex flex-col items-center justify-center rounded-xl bg-zinc-800/60 p-6">
 			<div class="text-sm font-medium uppercase tracking-wider text-zinc-500">Housing</div>
 			<div class="mt-3 text-lg text-zinc-500">County-level data</div>
-			<div class="mt-1 text-sm text-zinc-600">
-				Redfin county tracker — no per-town breakdown
-			</div>
+			<div class="mt-1 text-sm text-zinc-600">Redfin county tracker — no per-town breakdown</div>
 		</div>
 	</div>
 </div>
@@ -1233,9 +1398,7 @@ Build the four index data card screens.
 
 {#if snapshot}
 	<div class="flex h-full flex-col px-12 py-8">
-		<h2 class="text-lg font-medium uppercase tracking-widest text-zinc-400">
-			The Marin Driveway
-		</h2>
+		<h2 class="text-lg font-medium uppercase tracking-widest text-zinc-400">The Marin Driveway</h2>
 
 		<div class="mt-6 grid flex-1 grid-cols-2 gap-6">
 			<!-- Top Makes -->
@@ -1256,9 +1419,7 @@ Build the four index data card screens.
 
 			<!-- Fuel & Fun Stats -->
 			<div class="flex flex-col rounded-xl bg-zinc-800/60 p-6">
-				<div class="text-sm font-medium uppercase tracking-wider text-zinc-500">
-					Fuel Breakdown
-				</div>
+				<div class="text-sm font-medium uppercase tracking-wider text-zinc-500">Fuel Breakdown</div>
 				<div class="mt-4 flex flex-1 flex-col justify-center gap-3">
 					{#each fuelBreakdown.filter((f) => f.pct >= 1.0) as fuel}
 						<div class="flex items-baseline justify-between">
@@ -1279,9 +1440,7 @@ Build the four index data card screens.
 		</div>
 	</div>
 {:else}
-	<div class="flex h-full items-center justify-center text-zinc-600">
-		Loading driveway data...
-	</div>
+	<div class="flex h-full items-center justify-center text-zinc-600">Loading driveway data...</div>
 {/if}
 ```
 
@@ -1303,6 +1462,7 @@ git commit -m "feat(tv): add index card screens (daily life, lifestyle, structur
 ## Task 7: 311 Photo Wall Hero Screen
 
 **Files:**
+
 - Create: `src/lib/components/tv/screens/Tv311PhotoWall.svelte`
 
 - [ ] **Step 1: Create the photo wall screen**
@@ -1326,9 +1486,11 @@ git commit -m "feat(tv): add index card screens (daily life, lifestyle, structur
 
 	// Responsive columns based on photo count
 	const colClass = $derived(
-		photoCount < 3 ? 'grid-cols-1 max-w-lg mx-auto' :
-		photoCount < 6 ? 'grid-cols-2 max-w-3xl mx-auto' :
-		'grid-cols-3'
+		photoCount < 3
+			? 'grid-cols-1 max-w-lg mx-auto'
+			: photoCount < 6
+				? 'grid-cols-2 max-w-3xl mx-auto'
+				: 'grid-cols-3'
 	);
 
 	function timeAgo(ts: number): string {
@@ -1343,7 +1505,7 @@ git commit -m "feat(tv): add index card screens (daily life, lifestyle, structur
 	function extractStreet(item: NewsItem): string {
 		// Title format is typically "Category · Street Name"
 		const parts = item.title.split('·');
-		return parts.length > 1 ? parts[1].trim() : item.town ?? '';
+		return parts.length > 1 ? parts[1].trim() : (item.town ?? '');
 	}
 
 	function extractCategory(item: NewsItem): string {
@@ -1354,9 +1516,7 @@ git commit -m "feat(tv): add index card screens (daily life, lifestyle, structur
 
 {#if photoCount === 0}
 	<!-- Skip: no photos available. TvWallboard should skip this screen. -->
-	<div class="flex h-full items-center justify-center text-zinc-600">
-		No 311 photos available
-	</div>
+	<div class="flex h-full items-center justify-center text-zinc-600">No 311 photos available</div>
 {:else}
 	<div class="flex h-full flex-col px-8 py-6">
 		<!-- Header -->
@@ -1420,6 +1580,7 @@ git commit -m "feat(tv): add 311 Photo Wall hero screen (Wall of Grievances)"
 Split the old grab-bag TvConditionsScreen into two focused cards.
 
 **Files:**
+
 - Create: `src/lib/components/tv/screens/TvConditionsCard.svelte`
 - Create: `src/lib/components/tv/screens/TvOutdoorsCard.svelte`
 - Delete: `src/lib/components/tv/screens/TvConditionsScreen.svelte`
@@ -1643,6 +1804,7 @@ git commit -m "feat(tv): split conditions screen into focused Conditions + Outdo
 Add data overlay pins to each map region screen.
 
 **Files:**
+
 - Modify: `src/lib/components/tv/screens/TvMapScreen.svelte`
 
 - [ ] **Step 1: Read current TvMapScreen implementation**
@@ -1694,6 +1856,7 @@ The implementation will depend on the patterns already used by MapDataLayer. Fol
 **Note to implementer:** Read MapDataLayer's implementation to understand the exact pattern (source + layer add/remove lifecycle). The overlay implementation should follow this pattern exactly. Each overlay type gets its own source ID and layer ID, added/removed based on the active `viewId` and `REGION_OVERLAYS` config.
 
 For TV readability, markers should be large and legible:
+
 - 311 photos: Circle markers with photo thumbnails (if MapLibre supports image icons) or colored dots
 - Price pins: Symbol layer with text labels ("$5.75") — use large font size for TV
 - Status dots: Simple circle layers with color coding
@@ -1718,12 +1881,14 @@ git commit -m "feat(tv): add data overlay layers to map screens per region"
 Wire all new screens, index data loading, and variable durations into the carousel controller.
 
 **Files:**
+
 - Modify: `src/lib/components/tv/TvWallboard.svelte`
 - Modify: `src/lib/components/tv/TvWallboardHeader.svelte`
 
 - [ ] **Step 1: Read current TvWallboard implementation**
 
 Read `src/lib/components/tv/TvWallboard.svelte` fully. Note:
+
 - How screens are currently rendered (the `{#each TV_SCREENS}` block)
 - How data is loaded in `handleRefresh()`
 - How persistent vs ephemeral screens are handled
@@ -1769,8 +1934,8 @@ In the existing `handleRefresh()` function, add index data fetches to the `Promi
 
 ```typescript
 async function loadIndexData(): Promise<void> {
-	const [composite, cappuccino, grocery, wine, fitness, tuition, driveway, gas] =
-		await Promise.all([
+	const [composite, cappuccino, grocery, wine, fitness, tuition, driveway, gas] = await Promise.all(
+		[
 			fetchCompositeData().catch(() => null),
 			fetchCappuccinoData().catch(() => null),
 			fetchGroceryBasketData().catch(() => null),
@@ -1779,7 +1944,8 @@ async function loadIndexData(): Promise<void> {
 			fetchSchoolTuitionData().catch(() => null),
 			fetchDrivewayData().catch(() => null),
 			fetchGasPriceData().catch(() => null)
-		]);
+		]
+	);
 
 	compositeData = composite;
 	cappuccinoData = cappuccino;
@@ -1897,10 +2063,13 @@ carouselIdx = nextIdx;
 The header renders carousel dots. With 20 screens, the dots need to scale. In `src/lib/components/tv/TvWallboardHeader.svelte`, the dots are rendered from `TV_SCREENS`. Since `TV_SCREENS` is the source of truth and the header already iterates over it, the dot count will update automatically. However, verify the dots don't overflow — 20 dots at the current size might need slightly smaller sizing.
 
 If dots are too wide, reduce their size:
+
 ```svelte
 <!-- In TvWallboardHeader.svelte, the dot buttons -->
 <button
-	class="h-1.5 w-1.5 rounded-full transition-colors {carouselIdx === i ? 'bg-blue-400' : 'bg-zinc-600'}"
+	class="h-1.5 w-1.5 rounded-full transition-colors {carouselIdx === i
+		? 'bg-blue-400'
+		: 'bg-zinc-600'}"
 	...
 />
 ```
@@ -2022,6 +2191,7 @@ Add entry to `CHANGELOG.md`:
 ## 2026-04-01
 
 ### Added
+
 - **TV Mode Refresh v2** — 20-screen carousel (up from 13) with hero/anchor/card screen types
   - Cost of Being Marin hero screen with The Marin Number ($21,110/mo)
   - 311 Photo Wall ("Wall of Grievances") — scrolling grid of complaint photos
@@ -2035,6 +2205,7 @@ Add entry to `CHANGELOG.md`:
 - **IDX chyron category** — Index data headlines scroll in the ticker (cappuccino prices, grocery basket, Marin Number, etc.)
 
 ### Changed
+
 - **Scroll system replaced** — CSS animation (TvAutoScroll) replaced with JS rAF-driven scroll (TvScroller) that preserves position across carousel cycles
 - **Variable screen durations** — Hero screens (22s), anchor screens (18-20s), card screens (12s), map screens (15s)
 - **Conditions screen split** — Old grab-bag environmental screen split into focused Conditions + Outdoors cards

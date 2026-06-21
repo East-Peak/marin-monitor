@@ -54,7 +54,9 @@
 	const categoryStore = $derived(resolveCategoryStore());
 	const categoryVariant = $derived(category === 'local' ? 'local' : category);
 	const allItems = $derived($categoryStore.items);
-	const items = $derived($townFilter ? allItems.filter((i) => i.townSlug === $townFilter) : allItems);
+	const items = $derived(
+		$townFilter ? allItems.filter((i) => i.townSlug === $townFilter) : allItems
+	);
 	const loading = $derived($categoryStore.loading);
 	const error = $derived($categoryStore.error);
 	const count = $derived(items.length);

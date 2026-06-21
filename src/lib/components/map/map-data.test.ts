@@ -73,14 +73,28 @@ describe('extractCoordinates', () => {
 
 	it('extracts from nested geometry (LineString first coord)', () => {
 		const event = {
-			geometry: { type: 'LineString', coordinates: [[-122.5, 37.9], [-122.6, 38.0]] }
+			geometry: {
+				type: 'LineString',
+				coordinates: [
+					[-122.5, 37.9],
+					[-122.6, 38.0]
+				]
+			}
 		};
 		expect(extractCoordinates(event)).toEqual([-122.5, 37.9]);
 	});
 
 	it('extracts from deeply nested geometry (Polygon)', () => {
 		const event = {
-			geometry: { type: 'Polygon', coordinates: [[[-122.5, 37.9], [-122.6, 38.0]]] }
+			geometry: {
+				type: 'Polygon',
+				coordinates: [
+					[
+						[-122.5, 37.9],
+						[-122.6, 38.0]
+					]
+				]
+			}
 		};
 		expect(extractCoordinates(event)).toEqual([-122.5, 37.9]);
 	});
@@ -162,9 +176,7 @@ describe('buildTrafficEventFeatures', () => {
 	});
 
 	it('filters out UNKNOWN severity events', () => {
-		const result = buildTrafficEventFeatures([
-			{ lat: 37.97, lon: -122.53, severity: 'minor' }
-		]);
+		const result = buildTrafficEventFeatures([{ lat: 37.97, lon: -122.53, severity: 'minor' }]);
 		expect(result).toHaveLength(0);
 	});
 
@@ -193,9 +205,7 @@ describe('buildTrafficEventFeatures', () => {
 	});
 
 	it('generates fallback id when event has no id', () => {
-		const result = buildTrafficEventFeatures([
-			{ lat: 37.97, lon: -122.53, severity: 'severe' }
-		]);
+		const result = buildTrafficEventFeatures([{ lat: 37.97, lon: -122.53, severity: 'severe' }]);
 		expect(result).toHaveLength(1);
 		expect(result[0].id).toMatch(/^traffic:/);
 	});
@@ -208,14 +218,22 @@ describe('buildTrafficEventFeatures', () => {
 describe('filterTrafficByTown', () => {
 	it('returns all features when townSlug is null', () => {
 		const features = [
-			{ type: 'Feature', geometry: { type: 'Point', coordinates: [-122.53, 37.97] }, properties: {} }
+			{
+				type: 'Feature',
+				geometry: { type: 'Point', coordinates: [-122.53, 37.97] },
+				properties: {}
+			}
 		] as GeoJSON.Feature[];
 		expect(filterTrafficByTown(features, null)).toHaveLength(1);
 	});
 
 	it('returns empty array when no features match town', () => {
 		const features = [
-			{ type: 'Feature', geometry: { type: 'Point', coordinates: [-122.53, 37.97] }, properties: {} }
+			{
+				type: 'Feature',
+				geometry: { type: 'Point', coordinates: [-122.53, 37.97] },
+				properties: {}
+			}
 		] as GeoJSON.Feature[];
 		// This town slug is unlikely to match the coordinates
 		expect(filterTrafficByTown(features, 'point-reyes-station')).toHaveLength(0);

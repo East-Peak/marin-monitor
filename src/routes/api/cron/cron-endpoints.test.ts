@@ -242,9 +242,7 @@ describe('/api/cron/sync-311', () => {
 	});
 
 	it('handles non-OK API response gracefully', async () => {
-		mockFetchWithTimeout.mockResolvedValue(
-			new Response('Service Unavailable', { status: 503 })
-		);
+		mockFetchWithTimeout.mockResolvedValue(new Response('Service Unavailable', { status: 503 }));
 
 		const response = await get311(authedEvent());
 		expect(response.status).toBe(500);

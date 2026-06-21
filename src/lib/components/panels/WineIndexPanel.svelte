@@ -37,9 +37,7 @@
 			}
 
 			// Sort oldest first
-			catHistory.sort(
-				(a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-			);
+			catHistory.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
 			histories.set(cat, catHistory);
 		}
@@ -148,14 +146,15 @@
 						</div>
 						{#if sparklinePaths.has(cat.category)}
 							{@const paths = sparklinePaths.get(cat.category)!}
-							<svg
-								class="sparkline-svg"
-								width={SPARKLINE_W}
-								height={SPARKLINE_H}
-							>
+							<svg class="sparkline-svg" width={SPARKLINE_W} height={SPARKLINE_H}>
 								<g transform={`translate(${SPARKLINE_MARGINS.left},${SPARKLINE_MARGINS.top})`}>
 									<path d={paths.linePath} fill="none" stroke={WINE_ACCENT} stroke-width="1.5" />
-									<circle cx={paths.dots[paths.dots.length - 1].x} cy={paths.dots[paths.dots.length - 1].y} r="2" fill={WINE_ACCENT} />
+									<circle
+										cx={paths.dots[paths.dots.length - 1].x}
+										cy={paths.dots[paths.dots.length - 1].y}
+										r="2"
+										fill={WINE_ACCENT}
+									/>
 								</g>
 							</svg>
 						{/if}
@@ -188,10 +187,7 @@
 					</div>
 				{/each}
 				{#if staffPicks.length > 8}
-					<button
-						class="show-more-btn"
-						onclick={() => (showAllStaffPicks = !showAllStaffPicks)}
-					>
+					<button class="show-more-btn" onclick={() => (showAllStaffPicks = !showAllStaffPicks)}>
 						{showAllStaffPicks ? 'Show fewer' : `Show all ${staffPicks.length}`}
 					</button>
 				{/if}
@@ -222,10 +218,7 @@
 					</div>
 				{/each}
 				{#if allocatedWines.length > 6}
-					<button
-						class="show-more-btn"
-						onclick={() => (showAllAllocated = !showAllAllocated)}
-					>
+					<button class="show-more-btn" onclick={() => (showAllAllocated = !showAllAllocated)}>
 						{showAllAllocated ? 'Show fewer' : `Show all ${allocatedWines.length}`}
 					</button>
 				{/if}
@@ -233,9 +226,7 @@
 		{/if}
 
 		<!-- Attribution -->
-		<div class="attribution">
-			Data via PlumpJack Wine & Spirits
-		</div>
+		<div class="attribution">Data via PlumpJack Wine & Spirits</div>
 	{:else if dataLoading}
 		<div class="empty-state">Loading wine index data...</div>
 	{:else}
@@ -420,7 +411,9 @@
 		font-size: 0.5rem;
 		cursor: pointer;
 		text-align: center;
-		transition: color 0.15s, border-color 0.15s;
+		transition:
+			color 0.15s,
+			border-color 0.15s;
 	}
 
 	.show-more-btn:hover {

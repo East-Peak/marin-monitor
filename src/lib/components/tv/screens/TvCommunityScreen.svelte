@@ -24,10 +24,13 @@
 					<div>
 						{#if outdoorItems[i]}
 							<div class="rounded-lg border border-gray-700/50 bg-gray-800/60 p-2">
-								<h3 class="line-clamp-2 text-[0.95rem] font-semibold text-gray-100">{outdoorItems[i].title}</h3>
+								<h3 class="line-clamp-2 text-[0.95rem] font-semibold text-gray-100">
+									{outdoorItems[i].title}
+								</h3>
 								<div class="mt-0.5 flex items-center gap-2">
 									<span class="text-[11px] text-gray-400">{outdoorItems[i].source}</span>
-									<span class="text-[11px] text-gray-500">{timeAgo(outdoorItems[i].timestamp)}</span>
+									<span class="text-[11px] text-gray-500">{timeAgo(outdoorItems[i].timestamp)}</span
+									>
 								</div>
 							</div>
 						{/if}
@@ -35,7 +38,9 @@
 					<div>
 						{#if civicItems[i]}
 							<div class="rounded-lg border border-gray-700/50 bg-gray-800/60 p-2">
-								<h3 class="line-clamp-2 text-[0.95rem] font-semibold text-gray-100">{civicItems[i].title}</h3>
+								<h3 class="line-clamp-2 text-[0.95rem] font-semibold text-gray-100">
+									{civicItems[i].title}
+								</h3>
 								<div class="mt-0.5 flex items-center gap-2">
 									<span class="text-[11px] text-gray-400">{civicItems[i].source}</span>
 									<span class="text-[11px] text-gray-500">{timeAgo(civicItems[i].timestamp)}</span>

@@ -91,8 +91,7 @@ export async function fetchHourlyForecast(lat?: number, lon?: number): Promise<H
 			windDirection: p.windDirection,
 			shortForecast: p.shortForecast,
 			isDaytime: p.isDaytime,
-			dewpoint:
-				p.dewpoint?.value != null ? Math.round(p.dewpoint.value * (9 / 5) + 32) : null,
+			dewpoint: p.dewpoint?.value != null ? Math.round(p.dewpoint.value * (9 / 5) + 32) : null,
 			relativeHumidity: p.relativeHumidity?.value ?? null
 		}));
 	} catch (error) {

@@ -21,7 +21,7 @@ export const BASKET_ITEMS: BasketItem[] = [
 		name: 'Organic Large Hass Avocado, 1 each',
 		size: '1 each',
 		searchTerm: 'Organic Large Hass Avocado',
-		referencePrice: 3.50,
+		referencePrice: 3.5,
 		referenceStore: 'Sprouts',
 		category: 'produce'
 	},

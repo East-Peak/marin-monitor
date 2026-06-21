@@ -117,7 +117,6 @@
 			.slice(0, 6);
 	});
 
-
 	function categoryLabel(cat: string): string {
 		const labels: Record<string, string> = {
 			local: 'Local',
@@ -202,26 +201,26 @@
 
 			<!-- Town activity (hidden when single town is filtered) -->
 			{#if !$townFilter}
-			<section class="section">
-				<div class="section-title">Town Activity</div>
-				{#each townActivity as town}
-					<div class="town-row">
-						<div class="town-info">
-							<span class="town-name">{town.name}</span>
-							{#if town.alerts > 0}
-								<span class="town-alerts">{town.alerts} alert{town.alerts > 1 ? 's' : ''}</span>
-							{/if}
+				<section class="section">
+					<div class="section-title">Town Activity</div>
+					{#each townActivity as town}
+						<div class="town-row">
+							<div class="town-info">
+								<span class="town-name">{town.name}</span>
+								{#if town.alerts > 0}
+									<span class="town-alerts">{town.alerts} alert{town.alerts > 1 ? 's' : ''}</span>
+								{/if}
+							</div>
+							<div class="town-bar-wrap">
+								<div
+									class="town-bar"
+									style="width: {Math.max(8, (town.count / (townActivity[0]?.count || 1)) * 100)}%"
+								></div>
+								<span class="town-count">{town.count}</span>
+							</div>
 						</div>
-						<div class="town-bar-wrap">
-							<div
-								class="town-bar"
-								style="width: {Math.max(8, (town.count / (townActivity[0]?.count || 1)) * 100)}%"
-							></div>
-							<span class="town-count">{town.count}</span>
-						</div>
-					</div>
-				{/each}
-			</section>
+					{/each}
+				</section>
 			{/if}
 
 			<!-- Fresh stories -->

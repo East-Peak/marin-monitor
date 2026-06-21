@@ -171,9 +171,39 @@ describe('extractProducts', () => {
 describe('buildCategorySnapshot', () => {
 	it('builds a snapshot from products', () => {
 		const products: WineProduct[] = [
-			{ id: 1, title: 'A', handle: 'a', vendor: 'V', product_type: 'Red', price: 50, compareAtPrice: null, available: true, tags: [] },
-			{ id: 2, title: 'B', handle: 'b', vendor: 'V', product_type: 'Red', price: 100, compareAtPrice: null, available: true, tags: [] },
-			{ id: 3, title: 'C', handle: 'c', vendor: 'V', product_type: 'Red', price: 75, compareAtPrice: null, available: true, tags: [] }
+			{
+				id: 1,
+				title: 'A',
+				handle: 'a',
+				vendor: 'V',
+				product_type: 'Red',
+				price: 50,
+				compareAtPrice: null,
+				available: true,
+				tags: []
+			},
+			{
+				id: 2,
+				title: 'B',
+				handle: 'b',
+				vendor: 'V',
+				product_type: 'Red',
+				price: 100,
+				compareAtPrice: null,
+				available: true,
+				tags: []
+			},
+			{
+				id: 3,
+				title: 'C',
+				handle: 'c',
+				vendor: 'V',
+				product_type: 'Red',
+				price: 75,
+				compareAtPrice: null,
+				available: true,
+				tags: []
+			}
 		];
 
 		const snapshot = buildCategorySnapshot('napa-sonoma', 'Napa/Sonoma Cab', products);

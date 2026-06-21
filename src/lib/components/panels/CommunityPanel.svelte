@@ -17,9 +17,7 @@
 <Panel id="community" title="Community" variant="community">
 	{#snippet children()}
 		<div class="community-content">
-			<p class="intro">
-				Marin Monitor is a community project. Help us make it better.
-			</p>
+			<p class="intro">Marin Monitor is a community project. Help us make it better.</p>
 
 			<button class="cta" onclick={() => onFeedback('feed-request')}>
 				<span class="cta-icon">+</span>
@@ -101,7 +99,9 @@
 		cursor: pointer;
 		text-align: left;
 		color: var(--text-primary);
-		transition: background 0.15s, border-color 0.15s;
+		transition:
+			background 0.15s,
+			border-color 0.15s;
 	}
 
 	.cta:hover {

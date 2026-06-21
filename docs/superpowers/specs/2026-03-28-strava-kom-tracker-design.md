@@ -53,6 +53,7 @@ Stuart provides a Strava athlete account. The app registers as a Strava API appl
 Each entry: segment ID, name, activity type (ride/run), and optionally a manually sourced polyline.
 
 Seed segments:
+
 - **Cycling:** Hawk Hill (229781), Mt. Tam Hill Climb (678363), Camino Alto (765125), Paradise Dr (582500), Bolinas-Fairfax Rd (2312682), plus ~10 more TBD during implementation.
 - **Running:** Dipsea/Steep Ravine (907022), Dipsea Panoramic-Muir Woods (15160205), Tennessee Valley, Miwok Trail, Coastal Trail, plus ~5 more TBD.
 - Target: 20-30 segments total.
@@ -71,12 +72,14 @@ Seed segments:
 Daily cron fetches `https://www.strava.com/segments/{id}` for each tracked segment. Unauthenticated server-side fetch.
 
 **From React props (`SegmentDetailsSideBar`):**
+
 - CR holder (overall): athlete ID, name, time, date, activity ID, effort ID
 - CR holder (men): same fields
 - QOM holder (women): same fields
 - Segment stats: total attempts, unique athletes
 
 **From HTML leaderboard table:**
+
 - ~7 visible rows with: rank, athlete name, speed/pace, power (cycling), VAM, time, activity link
 - Ranks are non-contiguous (privacy-hidden athletes create gaps)
 - Activity IDs extracted from time links (stable identifiers for change detection)
@@ -96,6 +99,7 @@ Follows existing Blob naming convention (flat namespace, prefixed). All blobs pr
 ### 1e. Change Detection
 
 **CR/QOM changes (high confidence):** Compare current CR/QOM effort IDs against previous snapshot. Effort ID is stable -- immune to name changes, privacy toggles, display name mutations. Generate event:
+
 ```typescript
 {
   type: 'new_kom' | 'new_qom',
@@ -116,22 +120,22 @@ Events pruned to 30-day rolling window.
 
 ### 1f. Cron Schedule
 
-| Job | Frequency | Cron (UTC) | maxDuration | Pattern |
-|-----|-----------|------------|-------------|---------|
-| Segment catalog + polylines | Weekly | `0 10 * * 0` (Sun 2am PT) | 60s | Explore API (authed) |
-| Leaderboard scrape | Daily | `0 12 * * *` (5am PT) | 60s | Public page fetch (unauthed) |
+| Job                         | Frequency | Cron (UTC)                | maxDuration | Pattern                      |
+| --------------------------- | --------- | ------------------------- | ----------- | ---------------------------- |
+| Segment catalog + polylines | Weekly    | `0 10 * * 0` (Sun 2am PT) | 60s         | Explore API (authed)         |
+| Leaderboard scrape          | Daily     | `0 12 * * *` (5am PT)     | 60s         | Public page fetch (unauthed) |
 
 Add to `vercel.json` crons array. Both handlers export `const config = { maxDuration: 60 }`.
 
 ### 1g. API Routes
 
-| Route | Method | Returns |
-|-------|--------|---------|
-| `/api/data/strava-segments` | GET | Segment catalog (polylines, metadata) |
-| `/api/data/strava-leaderboard/[id]` | GET | CR/QOM + visible leaderboard for one segment |
-| `/api/data/strava-events` | GET | Recent change events |
-| `/api/cron/sync-strava-segments` | GET | Cron: refresh catalog via Explore API |
-| `/api/cron/sync-strava-leaderboards` | GET | Cron: scrape all leaderboards |
+| Route                                | Method | Returns                                      |
+| ------------------------------------ | ------ | -------------------------------------------- |
+| `/api/data/strava-segments`          | GET    | Segment catalog (polylines, metadata)        |
+| `/api/data/strava-leaderboard/[id]`  | GET    | CR/QOM + visible leaderboard for one segment |
+| `/api/data/strava-events`            | GET    | Recent change events                         |
+| `/api/cron/sync-strava-segments`     | GET    | Cron: refresh catalog via Explore API        |
+| `/api/cron/sync-strava-leaderboards` | GET    | Cron: scrape all leaderboards                |
 
 Data routes follow existing pattern: private Blob read with `BLOB_READ_WRITE_TOKEN`, CDN cache headers, static fallback.
 
@@ -147,11 +151,11 @@ Sub-toggles for cycling vs. running segments.
 
 ### Zoom-Dependent Rendering
 
-| Zoom Level | Display |
-|------------|---------|
+| Zoom Level    | Display                                                                                |
+| ------------- | -------------------------------------------------------------------------------------- |
 | z11 and below | Pin markers at segment start points. Icon indicates cycling (bike) vs. running (shoe). |
-| z12-13 | Transition to polylines. Pins fade, route lines appear. |
-| z14+ | Full polylines with directional arrows (start to finish). |
+| z12-13        | Transition to polylines. Pins fade, route lines appear.                                |
+| z14+          | Full polylines with directional arrows (start to finish).                              |
 
 MapLibre `minzoom`/`maxzoom` on layers handles transitions natively.
 

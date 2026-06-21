@@ -95,9 +95,7 @@ describe('fetchNpsAlerts', () => {
 		const result = await fetchNpsAlerts();
 
 		// alert-003 has empty url
-		expect(result[2].link).toBe(
-			'https://www.nps.gov/muwo/planyourvisit/conditions.htm'
-		);
+		expect(result[2].link).toBe('https://www.nps.gov/muwo/planyourvisit/conditions.htm');
 	});
 
 	it('truncates description to 300 characters', async () => {

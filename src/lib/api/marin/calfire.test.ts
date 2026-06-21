@@ -27,15 +27,17 @@ function makeResponse(data: unknown, ok = true, status = 200): Response {
 	} as Response;
 }
 
-function makeCalFireFeature(overrides: Partial<{
-	id: string;
-	name: string;
-	lat: number;
-	lon: number;
-	acres: number;
-	containment: number;
-	isActive: string;
-}> = {}): object {
+function makeCalFireFeature(
+	overrides: Partial<{
+		id: string;
+		name: string;
+		lat: number;
+		lon: number;
+		acres: number;
+		containment: number;
+		isActive: string;
+	}> = {}
+): object {
 	return {
 		type: 'Feature',
 		properties: {
@@ -52,18 +54,20 @@ function makeCalFireFeature(overrides: Partial<{
 		},
 		geometry: {
 			type: 'Point',
-			coordinates: [overrides.lon ?? -122.55, overrides.lat ?? 37.90]
+			coordinates: [overrides.lon ?? -122.55, overrides.lat ?? 37.9]
 		}
 	};
 }
 
-function makeNifcFeature(overrides: Partial<{
-	id: string;
-	name: string;
-	lat: number;
-	lon: number;
-	acres: number;
-}> = {}): object {
+function makeNifcFeature(
+	overrides: Partial<{
+		id: string;
+		name: string;
+		lat: number;
+		lon: number;
+		acres: number;
+	}> = {}
+): object {
 	return {
 		attributes: {
 			IrwinID: overrides.id ?? 'nifc-001',
@@ -75,7 +79,7 @@ function makeNifcFeature(overrides: Partial<{
 			FireDiscoveryDateTime: 1711900000000,
 			ModifiedOnDateTime_dt: 1711950000000,
 			POOLatitude: overrides.lat ?? 38.05,
-			POOLongitude: overrides.lon ?? -122.60
+			POOLongitude: overrides.lon ?? -122.6
 		}
 	};
 }
@@ -102,7 +106,7 @@ describe('fetchFireIncidents', () => {
 			county: 'Marin',
 			acres: 500,
 			containment: 25,
-			lat: 37.90,
+			lat: 37.9,
 			lon: -122.55,
 			source: 'CAL FIRE',
 			isActive: true
@@ -132,7 +136,7 @@ describe('fetchFireIncidents', () => {
 		const far = makeCalFireFeature({ id: 'far', lat: 35.0, lon: -119.0 });
 
 		mockIsNearMarin
-			.mockReturnValueOnce(true)  // near
+			.mockReturnValueOnce(true) // near
 			.mockReturnValueOnce(false); // far
 
 		mockFetch

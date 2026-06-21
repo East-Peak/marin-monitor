@@ -491,9 +491,7 @@ describe('USGS Stream Gauge Adapter (fetchStreamGauges)', () => {
 					variable: { variableCode: [{ value: '00060' }] },
 					values: [
 						{
-							value: [
-								{ value: '10', dateTime: '2026-03-15T10:00:00.000-08:00' }
-							]
+							value: [{ value: '10', dateTime: '2026-03-15T10:00:00.000-08:00' }]
 						}
 					]
 				}
@@ -539,9 +537,7 @@ describe('USGS Stream Gauge Adapter (fetchStreamGauges)', () => {
 		});
 
 		it('returns empty array when value.timeSeries is undefined', async () => {
-			mockFetchWithTimeout.mockResolvedValue(
-				mockResponse({ value: {} })
-			);
+			mockFetchWithTimeout.mockResolvedValue(mockResponse({ value: {} }));
 
 			const gauges = await fetchStreamGauges();
 
@@ -561,9 +557,7 @@ describe('USGS Stream Gauge Adapter (fetchStreamGauges)', () => {
 
 	describe('error handling', () => {
 		it('returns empty array on HTTP error response', async () => {
-			mockFetchWithTimeout.mockResolvedValue(
-				mockResponse(null, false, 503)
-			);
+			mockFetchWithTimeout.mockResolvedValue(mockResponse(null, false, 503));
 
 			const gauges = await fetchStreamGauges();
 
@@ -596,24 +590,16 @@ describe('USGS Stream Gauge Adapter (fetchStreamGauges)', () => {
 
 			await fetchStreamGauges();
 
-			expect(logger.warn).toHaveBeenCalledWith(
-				'USGS-Water',
-				expect.stringContaining('timeout')
-			);
+			expect(logger.warn).toHaveBeenCalledWith('USGS-Water', expect.stringContaining('timeout'));
 		});
 
 		it('logs warning on HTTP error status', async () => {
 			const { logger } = await import('$lib/config/api');
-			mockFetchWithTimeout.mockResolvedValue(
-				mockResponse(null, false, 429)
-			);
+			mockFetchWithTimeout.mockResolvedValue(mockResponse(null, false, 429));
 
 			await fetchStreamGauges();
 
-			expect(logger.warn).toHaveBeenCalledWith(
-				'USGS-Water',
-				expect.stringContaining('429')
-			);
+			expect(logger.warn).toHaveBeenCalledWith('USGS-Water', expect.stringContaining('429'));
 		});
 	});
 
@@ -649,8 +635,8 @@ describe('USGS Stream Gauge Adapter (fetchStreamGauges)', () => {
 					paramCode: '00060',
 					value: '42.0',
 					dateTime: '2026-03-15T14:15:00.000-08:00',
-					lat: 38.0200,
-					lon: -122.7300
+					lat: 38.02,
+					lon: -122.73
 				}),
 				// Walker Creek - gage height only
 				makeTimeSeries({
@@ -659,8 +645,8 @@ describe('USGS Stream Gauge Adapter (fetchStreamGauges)', () => {
 					paramCode: '00065',
 					value: '1.85',
 					dateTime: '2026-03-15T14:10:00.000-08:00',
-					lat: 38.2000,
-					lon: -122.8800
+					lat: 38.2,
+					lon: -122.88
 				})
 			]);
 			mockFetchWithTimeout.mockResolvedValue(mockResponse(data));

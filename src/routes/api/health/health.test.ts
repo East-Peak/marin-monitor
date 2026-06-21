@@ -219,9 +219,7 @@ describe('/api/health', () => {
 		);
 		expect(gpKey?.set).toBe(true);
 
-		const nrelKey = data.internal.apiKeys.find(
-			(k: { name: string }) => k.name === 'NREL_API_KEY'
-		);
+		const nrelKey = data.internal.apiKeys.find((k: { name: string }) => k.name === 'NREL_API_KEY');
 		expect(nrelKey?.set).toBe(false);
 	});
 });

@@ -1,5 +1,10 @@
 import { writable, derived, get } from 'svelte/store';
-import { fetchStravaSegments, fetchStravaLeaderboard, fetchAllStravaLeaderboards, fetchStravaEvents } from '$lib/api/marin/strava';
+import {
+	fetchStravaSegments,
+	fetchStravaLeaderboard,
+	fetchAllStravaLeaderboards,
+	fetchStravaEvents
+} from '$lib/api/marin/strava';
 import { STRAVA_ENABLED } from '$lib/config/strava';
 import type { StravaSegmentCatalog, StravaLeaderboard, StravaEventLog } from '$lib/types/strava';
 
@@ -25,11 +30,7 @@ function clearLeaderboardCache(): void {
 
 function shouldCacheLeaderboard(data: StravaLeaderboard): boolean {
 	return Boolean(
-		data.cr ||
-			data.qom ||
-			data.rows.length > 0 ||
-			data.totalAttempts > 0 ||
-			data.totalAthletes > 0
+		data.cr || data.qom || data.rows.length > 0 || data.totalAttempts > 0 || data.totalAthletes > 0
 	);
 }
 

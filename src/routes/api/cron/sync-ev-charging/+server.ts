@@ -49,10 +49,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		}
 
 		// Append to history (capped), omitting stations[] from history entries
-		const history = [toHistoryEntry(snapshot), ...existing.history].slice(
-			0,
-			MAX_HISTORY_ENTRIES
-		);
+		const history = [toHistoryEntry(snapshot), ...existing.history].slice(0, MAX_HISTORY_ENTRIES);
 
 		const data: EvChargingData = {
 			current: snapshot,
@@ -67,7 +64,9 @@ export const GET: RequestHandler = async ({ request }) => {
 			token: env.BLOB_READ_WRITE_TOKEN
 		});
 
-		console.log(`[sync-ev-charging] OK: ${snapshot.stationCount} stations in ${Date.now() - start}ms`);
+		console.log(
+			`[sync-ev-charging] OK: ${snapshot.stationCount} stations in ${Date.now() - start}ms`
+		);
 		return new Response(
 			JSON.stringify({
 				ok: true,

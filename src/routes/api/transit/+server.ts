@@ -32,7 +32,11 @@ export const GET: RequestHandler = async ({ url }) => {
 	const cached = transitCache.get(agency);
 	if (cached && Date.now() - cached.fetchedAt < TRANSIT_CACHE_TTL) {
 		return new Response(cached.data, {
-			headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=120', 'X-Cache': 'HIT' }
+			headers: {
+				'Content-Type': 'application/json',
+				'Cache-Control': 'public, max-age=120',
+				'X-Cache': 'HIT'
+			}
 		});
 	}
 

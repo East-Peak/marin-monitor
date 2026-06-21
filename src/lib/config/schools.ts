@@ -38,8 +38,8 @@ export const LEVEL_LABELS: Record<SchoolLevel, string> = {
 export const YEARS_PER_LEVEL: Record<SchoolLevel, number> = {
 	preschool: 0, // Not included in K-12 cumulative
 	elementary: 6, // K through 5
-	middle: 3,     // 6 through 8
-	high: 4        // 9 through 12
+	middle: 3, // 6 through 8
+	high: 4 // 9 through 12
 };
 
 export interface SchoolConfig {
@@ -84,8 +84,8 @@ export const SCHOOLS: SchoolConfig[] = [
 		tuition: 66_950,
 		boardingTuition: 83_450,
 		url: 'https://www.sandomenico.org/admission/tuition-and-financial-aid',
-		lat: 37.9830,
-		lon: -122.5700
+		lat: 37.983,
+		lon: -122.57
 	},
 	{
 		id: 'marin-academy',
@@ -94,8 +94,8 @@ export const SCHOOLS: SchoolConfig[] = [
 		level: 'high',
 		tuition: 64_750,
 		url: 'https://www.ma.org/admission/tuition-financial-aid',
-		lat: 37.9780,
-		lon: -122.5210
+		lat: 37.978,
+		lon: -122.521
 	},
 	{
 		id: 'marin-country-day',
@@ -104,8 +104,8 @@ export const SCHOOLS: SchoolConfig[] = [
 		level: 'elementary',
 		tuition: 49_535,
 		url: 'https://www.mcds.org/admission/tuition-financial-aid',
-		lat: 37.9260,
-		lon: -122.5170
+		lat: 37.926,
+		lon: -122.517
 	},
 	{
 		id: 'marin-primary-middle',
@@ -114,8 +114,8 @@ export const SCHOOLS: SchoolConfig[] = [
 		level: 'middle',
 		tuition: 49_900,
 		url: 'https://www.mpms.org/admission/tuition-financial-aid',
-		lat: 37.9350,
-		lon: -122.5350
+		lat: 37.935,
+		lon: -122.535
 	},
 	{
 		id: 'marin-horizon',
@@ -124,8 +124,8 @@ export const SCHOOLS: SchoolConfig[] = [
 		level: 'elementary',
 		tuition: 47_590,
 		url: 'https://www.marinhorizon.org/admission/tuition',
-		lat: 37.9060,
-		lon: -122.5450
+		lat: 37.906,
+		lon: -122.545
 	},
 	{
 		id: 'marin-montessori',
@@ -134,8 +134,8 @@ export const SCHOOLS: SchoolConfig[] = [
 		level: 'preschool',
 		tuition: 42_690,
 		url: 'https://www.marinmontessori.org/admissions/tuition',
-		lat: 37.9250,
-		lon: -122.5230
+		lat: 37.925,
+		lon: -122.523
 	}
 ];
 
@@ -143,31 +143,24 @@ export const SCHOOLS: SchoolConfig[] = [
  * Compute tier averages from school configs.
  * Groups schools by level and calculates average tuition and % of median income.
  */
-export function computeTiers(
-	schools: SchoolConfig[],
-	medianIncome: number
-): TuitionTier[] {
-	return LEVEL_ORDER
-		.map((level) => {
-			const levelSchools = schools.filter((s) => s.level === level);
-			if (levelSchools.length === 0) return null;
+export function computeTiers(schools: SchoolConfig[], medianIncome: number): TuitionTier[] {
+	return LEVEL_ORDER.map((level) => {
+		const levelSchools = schools.filter((s) => s.level === level);
+		if (levelSchools.length === 0) return null;
 
-			const avgTuition =
-				Math.round(
-					levelSchools.reduce((sum, s) => sum + s.tuition, 0) / levelSchools.length
-				);
+		const avgTuition = Math.round(
+			levelSchools.reduce((sum, s) => sum + s.tuition, 0) / levelSchools.length
+		);
 
-			const pctOfMedianIncome =
-				Math.round((avgTuition / medianIncome) * 1000) / 10;
+		const pctOfMedianIncome = Math.round((avgTuition / medianIncome) * 1000) / 10;
 
-			return {
-				level,
-				label: LEVEL_LABELS[level],
-				avgTuition,
-				pctOfMedianIncome
-			};
-		})
-		.filter((t): t is TuitionTier => t !== null);
+		return {
+			level,
+			label: LEVEL_LABELS[level],
+			avgTuition,
+			pctOfMedianIncome
+		};
+	}).filter((t): t is TuitionTier => t !== null);
 }
 
 /**

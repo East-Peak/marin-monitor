@@ -6,7 +6,10 @@ import {
 	COFFEE_PRIMARY_DRINK
 } from '$lib/config/coffee';
 import { blobErrorResponse, tryReadBlobText } from '$lib/server/blob-endpoint';
-import { summarizeDrinks, summarizeMenuCoverage } from '$lib/server/scrapers/coffee-index.shared.js';
+import {
+	summarizeDrinks,
+	summarizeMenuCoverage
+} from '$lib/server/scrapers/coffee-index.shared.js';
 import type {
 	CoffeeData,
 	CoffeeDrinkPrice,
@@ -34,7 +37,10 @@ function toLegacyDrinkPrice(
 	};
 }
 
-function normalizeLegacyShop(snapshot: CoffeeSnapshot, shop: CoffeeSnapshot['shops'][number]): CoffeeIndexShop {
+function normalizeLegacyShop(
+	snapshot: CoffeeSnapshot,
+	shop: CoffeeSnapshot['shops'][number]
+): CoffeeIndexShop {
 	return {
 		id: shop.id,
 		name: shop.name,

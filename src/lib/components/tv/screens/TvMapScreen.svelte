@@ -50,11 +50,13 @@
 	const lon = $derived(view.center[0]);
 	const radius = $derived(view.zoom < 11 ? 0.15 : 0.05);
 
-	const nearbyTownSlugs = $derived(new Set(
-		MARIN_TOWNS
-			.filter((t) => Math.abs(t.lat - lat) < radius && Math.abs(t.lon - lon) < radius)
-			.map((t) => t.slug)
-	));
+	const nearbyTownSlugs = $derived(
+		new Set(
+			MARIN_TOWNS.filter(
+				(t) => Math.abs(t.lat - lat) < radius && Math.abs(t.lon - lon) < radius
+			).map((t) => t.slug)
+		)
+	);
 
 	const nearby = $derived.by(() => {
 		const maxAge = 7 * 24 * 60 * 60 * 1000;
@@ -80,16 +82,12 @@
 			{#if STRAVA_ENABLED}
 				<SegmentLayer />
 			{/if}
-			<TvMapOverlay
-				{viewId}
-				{threeOneOneItems}
-				{coffeeShops}
-				{gasStations}
-				{fitnessStudios}
-			/>
+			<TvMapOverlay {viewId} {threeOneOneItems} {coffeeShops} {gasStations} {fitnessStudios} />
 			<TvMapPosition center={view.center} zoom={view.zoom} />
 		</MapContainer>
-		<div class="absolute top-16 left-3 z-10 px-3 py-1.5 rounded bg-gray-900/80 backdrop-blur-sm border border-gray-700/50">
+		<div
+			class="absolute top-16 left-3 z-10 px-3 py-1.5 rounded bg-gray-900/80 backdrop-blur-sm border border-gray-700/50"
+		>
 			<span class="text-sm font-medium text-gray-200">{view.label}</span>
 		</div>
 	</div>

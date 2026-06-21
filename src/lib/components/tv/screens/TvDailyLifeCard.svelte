@@ -44,11 +44,7 @@
 	);
 
 	const cappuccinoSparkline = $derived.by(() =>
-		buildTvSparkline(
-			cappuccino?.history?.map((h) => h.medianPrice) ?? [],
-			80,
-			24
-		)
+		buildTvSparkline(cappuccino?.history?.map((h) => h.medianPrice) ?? [], 80, 24)
 	);
 
 	// --- Grocery derived data ---
@@ -58,11 +54,7 @@
 	);
 
 	const grocerySparkline = $derived.by(() =>
-		buildTvSparkline(
-			grocery?.history?.map((h) => h.totalCheapest) ?? [],
-			80,
-			24
-		)
+		buildTvSparkline(grocery?.history?.map((h) => h.totalCheapest) ?? [], 80, 24)
 	);
 
 	const biggestMovers = $derived.by<(BasketItemPrices & { _delta: number })[]>(() => {
@@ -74,9 +66,7 @@
 		return [...grocery.current.items]
 			.filter(
 				(item) =>
-					item.cheapest !== null &&
-					prevMap.has(item.itemId) &&
-					prevMap.get(item.itemId) !== null
+					item.cheapest !== null && prevMap.has(item.itemId) && prevMap.get(item.itemId) !== null
 			)
 			.map((item) => ({
 				...item,
@@ -88,16 +78,10 @@
 
 	// --- Gas derived data ---
 
-	const gasDelta = $derived(
-		fmtDelta(gas?.current?.avgRegular, gas?.history?.[1]?.avgRegular)
-	);
+	const gasDelta = $derived(fmtDelta(gas?.current?.avgRegular, gas?.history?.[1]?.avgRegular));
 
 	const gasSparkline = $derived.by(() =>
-		buildTvSparkline(
-			gas?.history?.map((h) => h.avgRegular) ?? [],
-			80,
-			24
-		)
+		buildTvSparkline(gas?.history?.map((h) => h.avgRegular) ?? [], 80, 24)
 	);
 
 	const cheapestStations = $derived.by<GasStation[]>(() => {
@@ -105,10 +89,8 @@
 		return [...gas.current.stations]
 			.filter((s) => s.fuelPrices.some((fp) => fp.type === 'REGULAR_UNLEADED'))
 			.sort((a, b) => {
-				const pa =
-					a.fuelPrices.find((fp) => fp.type === 'REGULAR_UNLEADED')?.price ?? Infinity;
-				const pb =
-					b.fuelPrices.find((fp) => fp.type === 'REGULAR_UNLEADED')?.price ?? Infinity;
+				const pa = a.fuelPrices.find((fp) => fp.type === 'REGULAR_UNLEADED')?.price ?? Infinity;
+				const pb = b.fuelPrices.find((fp) => fp.type === 'REGULAR_UNLEADED')?.price ?? Infinity;
 				return pa - pb;
 			});
 	});
@@ -137,8 +119,12 @@
 			<!-- Header -->
 			<div class="px-3 pt-3 pb-2 border-b border-gray-700/40">
 				<div class="flex items-baseline justify-between">
-					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Cappuccino</span>
-					<span class="text-[10px] text-zinc-500">{cappuccino?.current?.pricedShopCount ?? 0} shops</span>
+					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400"
+						>Cappuccino</span
+					>
+					<span class="text-[10px] text-zinc-500"
+						>{cappuccino?.current?.pricedShopCount ?? 0} shops</span
+					>
 				</div>
 				<div class="flex items-center gap-2 mt-1">
 					<span class="text-2xl font-bold tabular-nums" style="color: #a16207">
@@ -151,9 +137,18 @@
 						</span>
 					{/if}
 					{#if cappuccinoSparkline}
-						<svg viewBox="0 0 {cappuccinoSparkline.w} {cappuccinoSparkline.h}" class="w-20 h-6 shrink-0 ml-auto">
+						<svg
+							viewBox="0 0 {cappuccinoSparkline.w} {cappuccinoSparkline.h}"
+							class="w-20 h-6 shrink-0 ml-auto"
+						>
 							<path d={cappuccinoSparkline.areaPath} fill="#a16207" opacity="0.15" />
-							<path d={cappuccinoSparkline.linePath} fill="none" stroke="#a16207" stroke-width="1.5" stroke-linecap="round" />
+							<path
+								d={cappuccinoSparkline.linePath}
+								fill="none"
+								stroke="#a16207"
+								stroke-width="1.5"
+								stroke-linecap="round"
+							/>
 						</svg>
 					{/if}
 				</div>
@@ -161,7 +156,9 @@
 
 			<!-- Shop list -->
 			<div class="flex-1 px-3 py-2 overflow-hidden">
-				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Shop Prices</div>
+				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
+					Shop Prices
+				</div>
 				{#each cappuccinoShops.slice(0, 6) as shop}
 					<div class="flex items-center justify-between py-0.5">
 						<div class="flex flex-col min-w-0 flex-1 mr-2">
@@ -177,7 +174,6 @@
 					<p class="text-[10px] text-zinc-600">No shop data</p>
 				{/if}
 			</div>
-
 		</div>
 
 		<!-- GROCERY BASKET COLUMN -->
@@ -185,7 +181,9 @@
 			<!-- Header -->
 			<div class="px-3 pt-3 pb-2 border-b border-gray-700/40">
 				<div class="flex items-baseline justify-between">
-					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Grocery Basket</span>
+					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400"
+						>Grocery Basket</span
+					>
 					<span class="text-[10px] text-zinc-500">{grocery?.current?.itemsFound ?? 0} items</span>
 				</div>
 				<div class="flex items-center gap-2 mt-1">
@@ -199,9 +197,18 @@
 						</span>
 					{/if}
 					{#if grocerySparkline}
-						<svg viewBox="0 0 {grocerySparkline.w} {grocerySparkline.h}" class="w-20 h-6 shrink-0 ml-auto">
+						<svg
+							viewBox="0 0 {grocerySparkline.w} {grocerySparkline.h}"
+							class="w-20 h-6 shrink-0 ml-auto"
+						>
 							<path d={grocerySparkline.areaPath} fill="#f59e0b" opacity="0.15" />
-							<path d={grocerySparkline.linePath} fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" />
+							<path
+								d={grocerySparkline.linePath}
+								fill="none"
+								stroke="#f59e0b"
+								stroke-width="1.5"
+								stroke-linecap="round"
+							/>
 						</svg>
 					{/if}
 				</div>
@@ -211,9 +218,13 @@
 			<div class="px-3 py-1.5 border-b border-gray-700/30">
 				{#if grocery?.current?.totalCheapest != null && grocery?.current?.totalExpensive != null}
 					<div class="flex items-center gap-1 text-[10px]">
-						<span class="text-emerald-400 font-medium">{fmtPrice(grocery.current.totalCheapest)}</span>
+						<span class="text-emerald-400 font-medium"
+							>{fmtPrice(grocery.current.totalCheapest)}</span
+						>
 						<span class="text-zinc-600">&rarr;</span>
-						<span class="text-amber-400 font-medium">{fmtPrice(grocery.current.totalExpensive)}</span>
+						<span class="text-amber-400 font-medium"
+							>{fmtPrice(grocery.current.totalExpensive)}</span
+						>
 						<span class="text-zinc-600 ml-1">spread</span>
 					</div>
 				{/if}
@@ -221,7 +232,9 @@
 
 			<!-- Biggest Movers -->
 			<div class="flex-1 px-3 py-2 overflow-hidden">
-				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Biggest Movers</div>
+				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
+					Biggest Movers
+				</div>
 				{#each biggestMovers as item}
 					<div class="flex items-center justify-between py-0.5">
 						<div class="flex flex-col min-w-0 flex-1 mr-2">
@@ -232,7 +245,11 @@
 							<span class="text-xs font-bold tabular-nums text-zinc-100">
 								{fmtPrice(item.cheapest)}
 							</span>
-							<span class="text-[10px] font-semibold tabular-nums {item._delta <= 0 ? 'text-emerald-400' : 'text-red-400'}">
+							<span
+								class="text-[10px] font-semibold tabular-nums {item._delta <= 0
+									? 'text-emerald-400'
+									: 'text-red-400'}"
+							>
 								{item._delta >= 0 ? '+' : ''}{item._delta.toFixed(2)}
 							</span>
 						</div>
@@ -242,7 +259,6 @@
 					<p class="text-[10px] text-zinc-600">No movement data yet</p>
 				{/if}
 			</div>
-
 		</div>
 
 		<!-- GAS COLUMN -->
@@ -250,7 +266,9 @@
 			<!-- Header -->
 			<div class="px-3 pt-3 pb-2 border-b border-gray-700/40">
 				<div class="flex items-baseline justify-between">
-					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Gas (Regular)</span>
+					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400"
+						>Gas (Regular)</span
+					>
 					<span class="text-[10px] text-zinc-500">{gas?.current?.stationCount ?? 0} stations</span>
 				</div>
 				<div class="flex items-center gap-2 mt-1">
@@ -266,7 +284,13 @@
 					{#if gasSparkline}
 						<svg viewBox="0 0 {gasSparkline.w} {gasSparkline.h}" class="w-20 h-6 shrink-0 ml-auto">
 							<path d={gasSparkline.areaPath} fill="#10b981" opacity="0.15" />
-							<path d={gasSparkline.linePath} fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" />
+							<path
+								d={gasSparkline.linePath}
+								fill="none"
+								stroke="#10b981"
+								stroke-width="1.5"
+								stroke-linecap="round"
+							/>
 						</svg>
 					{/if}
 				</div>
@@ -274,7 +298,9 @@
 
 			<!-- Cheapest stations -->
 			<div class="flex-1 px-3 py-2 overflow-hidden">
-				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Cheapest</div>
+				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
+					Cheapest
+				</div>
 				{#each cheapestStations.slice(0, 3) as station}
 					<div class="flex items-center justify-between py-0.5">
 						<span class="text-xs font-medium text-zinc-200 truncate flex-1 mr-2">
@@ -286,7 +312,9 @@
 					</div>
 				{/each}
 
-				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mt-2 mb-1.5">Priciest</div>
+				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mt-2 mb-1.5">
+					Priciest
+				</div>
 				{#each priciestStations.slice(0, 3) as station}
 					<div class="flex items-center justify-between py-0.5">
 						<span class="text-xs font-medium text-zinc-200 truncate flex-1 mr-2">
@@ -302,7 +330,6 @@
 					<p class="text-[10px] text-zinc-600">No station data</p>
 				{/if}
 			</div>
-
 		</div>
 	</div>
 </div>

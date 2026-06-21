@@ -12,15 +12,21 @@ vi.mock('$lib/config/api', () => ({
 }));
 
 // We'll set feed config per test via the mock
-let mockFeeds: Record<string, Array<{ name: string; url: string; verification: VerificationLevel; broken?: boolean }>> = {};
+let mockFeeds: Record<
+	string,
+	Array<{ name: string; url: string; verification: VerificationLevel; broken?: boolean }>
+> = {};
 
 vi.mock('$lib/config/feeds', () => ({
 	get FEEDS() {
-		return new Proxy({}, {
-			get(_target, prop) {
-				return mockFeeds[prop as string] || [];
+		return new Proxy(
+			{},
+			{
+				get(_target, prop) {
+					return mockFeeds[prop as string] || [];
+				}
 			}
-		});
+		);
 	}
 }));
 
@@ -29,24 +35,29 @@ vi.mock('$lib/config/feeds', () => ({
 // ────────────────────────────────────────────
 
 /** Build a minimal RSS 2.0 XML string from items */
-function rssXml(items: Array<{
-	title?: string;
-	link?: string;
-	description?: string;
-	pubDate?: string;
-	guid?: string;
-	contentEncoded?: string;
-}>): string {
-	const itemsXml = items.map(i => {
-		const parts: string[] = [];
-		if (i.title !== undefined) parts.push(`<title>${i.title}</title>`);
-		if (i.link !== undefined) parts.push(`<link>${i.link}</link>`);
-		if (i.description !== undefined) parts.push(`<description>${i.description}</description>`);
-		if (i.pubDate !== undefined) parts.push(`<pubDate>${i.pubDate}</pubDate>`);
-		if (i.guid !== undefined) parts.push(`<guid>${i.guid}</guid>`);
-		if (i.contentEncoded !== undefined) parts.push(`<content:encoded>${i.contentEncoded}</content:encoded>`);
-		return `<item>${parts.join('')}</item>`;
-	}).join('\n');
+function rssXml(
+	items: Array<{
+		title?: string;
+		link?: string;
+		description?: string;
+		pubDate?: string;
+		guid?: string;
+		contentEncoded?: string;
+	}>
+): string {
+	const itemsXml = items
+		.map((i) => {
+			const parts: string[] = [];
+			if (i.title !== undefined) parts.push(`<title>${i.title}</title>`);
+			if (i.link !== undefined) parts.push(`<link>${i.link}</link>`);
+			if (i.description !== undefined) parts.push(`<description>${i.description}</description>`);
+			if (i.pubDate !== undefined) parts.push(`<pubDate>${i.pubDate}</pubDate>`);
+			if (i.guid !== undefined) parts.push(`<guid>${i.guid}</guid>`);
+			if (i.contentEncoded !== undefined)
+				parts.push(`<content:encoded>${i.contentEncoded}</content:encoded>`);
+			return `<item>${parts.join('')}</item>`;
+		})
+		.join('\n');
 
 	return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
@@ -58,26 +69,30 @@ function rssXml(items: Array<{
 }
 
 /** Build a minimal Atom XML string from entries */
-function atomXml(entries: Array<{
-	title?: string;
-	linkHref?: string;
-	summary?: string;
-	content?: string;
-	published?: string;
-	updated?: string;
-	id?: string;
-}>): string {
-	const entriesXml = entries.map(e => {
-		const parts: string[] = [];
-		if (e.title !== undefined) parts.push(`<title>${e.title}</title>`);
-		if (e.linkHref !== undefined) parts.push(`<link rel="alternate" href="${e.linkHref}" />`);
-		if (e.summary !== undefined) parts.push(`<summary>${e.summary}</summary>`);
-		if (e.content !== undefined) parts.push(`<content>${e.content}</content>`);
-		if (e.published !== undefined) parts.push(`<published>${e.published}</published>`);
-		if (e.updated !== undefined) parts.push(`<updated>${e.updated}</updated>`);
-		if (e.id !== undefined) parts.push(`<id>${e.id}</id>`);
-		return `<entry>${parts.join('')}</entry>`;
-	}).join('\n');
+function atomXml(
+	entries: Array<{
+		title?: string;
+		linkHref?: string;
+		summary?: string;
+		content?: string;
+		published?: string;
+		updated?: string;
+		id?: string;
+	}>
+): string {
+	const entriesXml = entries
+		.map((e) => {
+			const parts: string[] = [];
+			if (e.title !== undefined) parts.push(`<title>${e.title}</title>`);
+			if (e.linkHref !== undefined) parts.push(`<link rel="alternate" href="${e.linkHref}" />`);
+			if (e.summary !== undefined) parts.push(`<summary>${e.summary}</summary>`);
+			if (e.content !== undefined) parts.push(`<content>${e.content}</content>`);
+			if (e.published !== undefined) parts.push(`<published>${e.published}</published>`);
+			if (e.updated !== undefined) parts.push(`<updated>${e.updated}</updated>`);
+			if (e.id !== undefined) parts.push(`<id>${e.id}</id>`);
+			return `<entry>${parts.join('')}</entry>`;
+		})
+		.join('\n');
 
 	return `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
@@ -117,13 +132,15 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 
 	describe('parsing valid RSS 2.0 XML', () => {
 		it('extracts title, link, pubDate, source, category, and verification', async () => {
-			const xml = rssXml([{
-				title: 'Mill Valley Fire Contained',
-				link: 'https://example.com/article/1',
-				description: 'A small brush fire was quickly contained.',
-				pubDate: 'Mon, 01 Apr 2026 10:30:00 GMT',
-				guid: 'article-1'
-			}]);
+			const xml = rssXml([
+				{
+					title: 'Mill Valley Fire Contained',
+					link: 'https://example.com/article/1',
+					description: 'A small brush fire was quickly contained.',
+					pubDate: 'Mon, 01 Apr 2026 10:30:00 GMT',
+					guid: 'article-1'
+				}
+			]);
 
 			setupSingleFeed('safety', 'Test News', 'local_media', xml);
 			const result = await fetchCategory('safety');
@@ -142,12 +159,14 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 
 		it('extracts description and truncates it to 300 chars', async () => {
 			const longDesc = 'A'.repeat(500);
-			const xml = rssXml([{
-				title: 'Long Article',
-				link: 'https://example.com/long',
-				description: longDesc,
-				pubDate: 'Mon, 01 Apr 2026 12:00:00 GMT'
-			}]);
+			const xml = rssXml([
+				{
+					title: 'Long Article',
+					link: 'https://example.com/long',
+					description: longDesc,
+					pubDate: 'Mon, 01 Apr 2026 12:00:00 GMT'
+				}
+			]);
 
 			setupSingleFeed('local', 'Test Source', 'local_media', xml);
 			const result = await fetchCategory('local');
@@ -157,12 +176,14 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 		});
 
 		it('extracts content:encoded field', async () => {
-			const xml = rssXml([{
-				title: 'Rich Content Article',
-				link: 'https://example.com/rich',
-				pubDate: 'Mon, 01 Apr 2026 12:00:00 GMT',
-				contentEncoded: '<p>Full article body with <strong>HTML</strong></p>'
-			}]);
+			const xml = rssXml([
+				{
+					title: 'Rich Content Article',
+					link: 'https://example.com/rich',
+					pubDate: 'Mon, 01 Apr 2026 12:00:00 GMT',
+					contentEncoded: '<p>Full article body with <strong>HTML</strong></p>'
+				}
+			]);
 
 			setupSingleFeed('local', 'Test Source', 'local_media', xml);
 			const result = await fetchCategory('local');
@@ -194,11 +215,13 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 		});
 
 		it('uses link as id when guid is absent', async () => {
-			const xml = rssXml([{
-				title: 'No GUID',
-				link: 'https://example.com/no-guid',
-				pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
-			}]);
+			const xml = rssXml([
+				{
+					title: 'No GUID',
+					link: 'https://example.com/no-guid',
+					pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
+				}
+			]);
 
 			setupSingleFeed('local', 'Test Source', 'local_media', xml);
 			const result = await fetchCategory('local');
@@ -207,10 +230,12 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 		});
 
 		it('generates a stable hash id when both guid and link are absent', async () => {
-			const xml = rssXml([{
-				title: 'No Identifiers',
-				pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
-			}]);
+			const xml = rssXml([
+				{
+					title: 'No Identifiers',
+					pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
+				}
+			]);
 
 			setupSingleFeed('local', 'Test Source', 'local_media', xml);
 			const result = await fetchCategory('local');
@@ -228,13 +253,15 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 
 	describe('parsing Atom XML', () => {
 		it('extracts title, link, published date from Atom entries', async () => {
-			const xml = atomXml([{
-				title: 'Atom Article',
-				linkHref: 'https://example.com/atom/1',
-				summary: 'An atom summary',
-				published: '2026-04-01T12:00:00Z',
-				id: 'urn:atom:1'
-			}]);
+			const xml = atomXml([
+				{
+					title: 'Atom Article',
+					linkHref: 'https://example.com/atom/1',
+					summary: 'An atom summary',
+					published: '2026-04-01T12:00:00Z',
+					id: 'urn:atom:1'
+				}
+			]);
 
 			setupSingleFeed('civic', 'Atom Source', 'official', xml);
 			const result = await fetchCategory('civic');
@@ -251,11 +278,13 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 		});
 
 		it('falls back to updated when published is absent', async () => {
-			const xml = atomXml([{
-				title: 'Updated Only',
-				linkHref: 'https://example.com/atom/2',
-				updated: '2026-03-31T08:00:00Z'
-			}]);
+			const xml = atomXml([
+				{
+					title: 'Updated Only',
+					linkHref: 'https://example.com/atom/2',
+					updated: '2026-03-31T08:00:00Z'
+				}
+			]);
 
 			setupSingleFeed('civic', 'Atom Source', 'official', xml);
 			const result = await fetchCategory('civic');
@@ -272,7 +301,11 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 		it('skips items with no title', async () => {
 			const xml = rssXml([
 				{ link: 'https://example.com/no-title', pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT' },
-				{ title: 'Has Title', link: 'https://example.com/has-title', pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT' }
+				{
+					title: 'Has Title',
+					link: 'https://example.com/has-title',
+					pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
+				}
 			]);
 
 			setupSingleFeed('local', 'Test Source', 'local_media', xml);
@@ -283,10 +316,12 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 		});
 
 		it('uses empty string for link when missing', async () => {
-			const xml = rssXml([{
-				title: 'No Link',
-				pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
-			}]);
+			const xml = rssXml([
+				{
+					title: 'No Link',
+					pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
+				}
+			]);
 
 			setupSingleFeed('local', 'Test Source', 'local_media', xml);
 			const result = await fetchCategory('local');
@@ -296,10 +331,12 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 
 		it('uses Date.now() for timestamp when pubDate is missing', async () => {
 			const before = Date.now();
-			const xml = rssXml([{
-				title: 'No Date',
-				link: 'https://example.com/no-date'
-			}]);
+			const xml = rssXml([
+				{
+					title: 'No Date',
+					link: 'https://example.com/no-date'
+				}
+			]);
 
 			setupSingleFeed('local', 'Test Source', 'local_media', xml);
 			const result = await fetchCategory('local');
@@ -312,11 +349,13 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 
 		it('uses Date.now() for timestamp when pubDate is invalid', async () => {
 			const before = Date.now();
-			const xml = rssXml([{
-				title: 'Bad Date',
-				link: 'https://example.com/bad-date',
-				pubDate: 'not-a-real-date'
-			}]);
+			const xml = rssXml([
+				{
+					title: 'Bad Date',
+					link: 'https://example.com/bad-date',
+					pubDate: 'not-a-real-date'
+				}
+			]);
 
 			setupSingleFeed('local', 'Test Source', 'local_media', xml);
 			const result = await fetchCategory('local');
@@ -328,11 +367,13 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 		});
 
 		it('omits description and content when absent', async () => {
-			const xml = rssXml([{
-				title: 'Bare Bones',
-				link: 'https://example.com/bare',
-				pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
-			}]);
+			const xml = rssXml([
+				{
+					title: 'Bare Bones',
+					link: 'https://example.com/bare',
+					pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
+				}
+			]);
 
 			setupSingleFeed('local', 'Test Source', 'local_media', xml);
 			const result = await fetchCategory('local');
@@ -346,12 +387,14 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 
 	describe('HTML cleaning', () => {
 		it('strips HTML tags from title and description', async () => {
-			const xml = rssXml([{
-				title: '<b>Bold</b> &amp; <em>Italic</em> Title',
-				link: 'https://example.com/html',
-				description: '<p>Paragraph with <a href="#">link</a> and <strong>bold</strong></p>',
-				pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
-			}]);
+			const xml = rssXml([
+				{
+					title: '<b>Bold</b> &amp; <em>Italic</em> Title',
+					link: 'https://example.com/html',
+					description: '<p>Paragraph with <a href="#">link</a> and <strong>bold</strong></p>',
+					pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
+				}
+			]);
 
 			setupSingleFeed('local', 'Test Source', 'local_media', xml);
 			const result = await fetchCategory('local');
@@ -361,12 +404,14 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 		});
 
 		it('strips CDATA wrappers', async () => {
-			const xml = rssXml([{
-				title: 'CDATA Test',
-				link: 'https://example.com/cdata',
-				description: '<![CDATA[Some content here]]>',
-				pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
-			}]);
+			const xml = rssXml([
+				{
+					title: 'CDATA Test',
+					link: 'https://example.com/cdata',
+					description: '<![CDATA[Some content here]]>',
+					pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
+				}
+			]);
 
 			setupSingleFeed('local', 'Test Source', 'local_media', xml);
 			const result = await fetchCategory('local');
@@ -375,11 +420,13 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 		});
 
 		it('collapses whitespace', async () => {
-			const xml = rssXml([{
-				title: '  Multiple   spaces   and\n\nnewlines  ',
-				link: 'https://example.com/spaces',
-				pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
-			}]);
+			const xml = rssXml([
+				{
+					title: '  Multiple   spaces   and\n\nnewlines  ',
+					link: 'https://example.com/spaces',
+					pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
+				}
+			]);
 
 			setupSingleFeed('local', 'Test Source', 'local_media', xml);
 			const result = await fetchCategory('local');
@@ -390,12 +437,14 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 		it('decodes HTML entities in text processed by cleanHtml', async () => {
 			// Use &amp;amp; so that after DOMParser decodes &amp; to &, cleanHtml sees &amp; and decodes to &
 			// Similarly &amp;quot; -> DOMParser -> &quot; -> cleanHtml -> "
-			const xml = rssXml([{
-				title: 'Fire &amp; Ice',
-				link: 'https://example.com/entities',
-				description: 'Quotes &amp;quot;here&amp;quot; and &amp;#039;there&amp;#039;',
-				pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
-			}]);
+			const xml = rssXml([
+				{
+					title: 'Fire &amp; Ice',
+					link: 'https://example.com/entities',
+					description: 'Quotes &amp;quot;here&amp;quot; and &amp;#039;there&amp;#039;',
+					pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
+				}
+			]);
 
 			setupSingleFeed('local', 'Test Source', 'local_media', xml);
 			const result = await fetchCategory('local');
@@ -431,7 +480,13 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 
 		it('returns empty items when fetch fails with HTTP error', async () => {
 			mockFeeds = {
-				local: [{ name: 'Down Feed', url: 'https://example.com/down.xml', verification: 'local_media' as VerificationLevel }]
+				local: [
+					{
+						name: 'Down Feed',
+						url: 'https://example.com/down.xml',
+						verification: 'local_media' as VerificationLevel
+					}
+				]
 			};
 			global.fetch = vi.fn().mockResolvedValue({
 				ok: false,
@@ -446,7 +501,13 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 
 		it('returns empty items when fetch throws a network error', async () => {
 			mockFeeds = {
-				local: [{ name: 'Net Error Feed', url: 'https://example.com/error.xml', verification: 'local_media' as VerificationLevel }]
+				local: [
+					{
+						name: 'Net Error Feed',
+						url: 'https://example.com/error.xml',
+						verification: 'local_media' as VerificationLevel
+					}
+				]
 			};
 			global.fetch = vi.fn().mockRejectedValue(new Error('net::ERR_CONNECTION_REFUSED'));
 
@@ -494,11 +555,13 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 
 	describe('category and verification assignment from feed config', () => {
 		it('assigns category and verification from feed config, not from XML', async () => {
-			const xml = rssXml([{
-				title: 'Test Article',
-				link: 'https://example.com/a',
-				pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
-			}]);
+			const xml = rssXml([
+				{
+					title: 'Test Article',
+					link: 'https://example.com/a',
+					pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
+				}
+			]);
 
 			setupSingleFeed('safety', 'Official Source', 'official', xml);
 			const result = await fetchCategory('safety');
@@ -510,42 +573,57 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 		it('assigns different verification levels for different feeds in same category', async () => {
 			mockFeeds = {
 				local: [
-					{ name: 'Media Outlet', url: 'https://example.com/media.xml', verification: 'local_media' as VerificationLevel },
-					{ name: 'Community Org', url: 'https://example.com/community.xml', verification: 'community' as VerificationLevel }
+					{
+						name: 'Media Outlet',
+						url: 'https://example.com/media.xml',
+						verification: 'local_media' as VerificationLevel
+					},
+					{
+						name: 'Community Org',
+						url: 'https://example.com/community.xml',
+						verification: 'community' as VerificationLevel
+					}
 				]
 			};
 
-			const mediaXml = rssXml([{
-				title: 'Media Story',
-				link: 'https://example.com/media/1',
-				pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
-			}]);
+			const mediaXml = rssXml([
+				{
+					title: 'Media Story',
+					link: 'https://example.com/media/1',
+					pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
+				}
+			]);
 
-			const communityXml = rssXml([{
-				title: 'Community Post',
-				link: 'https://example.com/community/1',
-				pubDate: 'Tue, 01 Apr 2026 09:00:00 GMT'
-			}]);
+			const communityXml = rssXml([
+				{
+					title: 'Community Post',
+					link: 'https://example.com/community/1',
+					pubDate: 'Tue, 01 Apr 2026 09:00:00 GMT'
+				}
+			]);
 
-			global.fetch = vi.fn()
+			global.fetch = vi
+				.fn()
 				.mockResolvedValueOnce({ ok: true, text: () => Promise.resolve(mediaXml) })
 				.mockResolvedValueOnce({ ok: true, text: () => Promise.resolve(communityXml) });
 
 			const result = await fetchCategory('local');
 
 			expect(result.items).toHaveLength(2);
-			const mediaItem = result.items.find(i => i.title === 'Media Story');
-			const communityItem = result.items.find(i => i.title === 'Community Post');
+			const mediaItem = result.items.find((i) => i.title === 'Media Story');
+			const communityItem = result.items.find((i) => i.title === 'Community Post');
 			expect(mediaItem?.verification).toBe('local_media');
 			expect(communityItem?.verification).toBe('community');
 		});
 
 		it('applies satire verification level correctly', async () => {
-			const xml = rssXml([{
-				title: 'Satirical Report',
-				link: 'https://example.com/satire/1',
-				pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
-			}]);
+			const xml = rssXml([
+				{
+					title: 'Satirical Report',
+					link: 'https://example.com/satire/1',
+					pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
+				}
+			]);
 
 			setupSingleFeed('satire', 'Marin Lately', 'satire', xml);
 			const result = await fetchCategory('satire');
@@ -561,16 +639,27 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 		it('skips feeds marked as broken', async () => {
 			mockFeeds = {
 				local: [
-					{ name: 'Working Feed', url: 'https://example.com/working.xml', verification: 'local_media' as VerificationLevel },
-					{ name: 'Broken Feed', url: 'https://example.com/broken.xml', verification: 'local_media' as VerificationLevel, broken: true }
+					{
+						name: 'Working Feed',
+						url: 'https://example.com/working.xml',
+						verification: 'local_media' as VerificationLevel
+					},
+					{
+						name: 'Broken Feed',
+						url: 'https://example.com/broken.xml',
+						verification: 'local_media' as VerificationLevel,
+						broken: true
+					}
 				]
 			};
 
-			const xml = rssXml([{
-				title: 'Working Article',
-				link: 'https://example.com/working/1',
-				pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
-			}]);
+			const xml = rssXml([
+				{
+					title: 'Working Article',
+					link: 'https://example.com/working/1',
+					pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
+				}
+			]);
 
 			global.fetch = vi.fn().mockResolvedValue({
 				ok: true,
@@ -592,24 +681,37 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 		it('combines items from multiple feeds in the same category', async () => {
 			mockFeeds = {
 				local: [
-					{ name: 'Source A', url: 'https://example.com/a.xml', verification: 'local_media' as VerificationLevel },
-					{ name: 'Source B', url: 'https://example.com/b.xml', verification: 'local_media' as VerificationLevel }
+					{
+						name: 'Source A',
+						url: 'https://example.com/a.xml',
+						verification: 'local_media' as VerificationLevel
+					},
+					{
+						name: 'Source B',
+						url: 'https://example.com/b.xml',
+						verification: 'local_media' as VerificationLevel
+					}
 				]
 			};
 
-			const xmlA = rssXml([{
-				title: 'Article from A',
-				link: 'https://example.com/a/1',
-				pubDate: 'Tue, 01 Apr 2026 08:00:00 GMT'
-			}]);
+			const xmlA = rssXml([
+				{
+					title: 'Article from A',
+					link: 'https://example.com/a/1',
+					pubDate: 'Tue, 01 Apr 2026 08:00:00 GMT'
+				}
+			]);
 
-			const xmlB = rssXml([{
-				title: 'Article from B',
-				link: 'https://example.com/b/1',
-				pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
-			}]);
+			const xmlB = rssXml([
+				{
+					title: 'Article from B',
+					link: 'https://example.com/b/1',
+					pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
+				}
+			]);
 
-			global.fetch = vi.fn()
+			global.fetch = vi
+				.fn()
 				.mockResolvedValueOnce({ ok: true, text: () => Promise.resolve(xmlA) })
 				.mockResolvedValueOnce({ ok: true, text: () => Promise.resolve(xmlB) });
 
@@ -625,18 +727,29 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 		it('reports errors from individual feeds while returning items from others', async () => {
 			mockFeeds = {
 				local: [
-					{ name: 'Good Feed', url: 'https://example.com/good.xml', verification: 'local_media' as VerificationLevel },
-					{ name: 'Bad Feed', url: 'https://example.com/bad.xml', verification: 'local_media' as VerificationLevel }
+					{
+						name: 'Good Feed',
+						url: 'https://example.com/good.xml',
+						verification: 'local_media' as VerificationLevel
+					},
+					{
+						name: 'Bad Feed',
+						url: 'https://example.com/bad.xml',
+						verification: 'local_media' as VerificationLevel
+					}
 				]
 			};
 
-			const goodXml = rssXml([{
-				title: 'Good Article',
-				link: 'https://example.com/good/1',
-				pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
-			}]);
+			const goodXml = rssXml([
+				{
+					title: 'Good Article',
+					link: 'https://example.com/good/1',
+					pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
+				}
+			]);
 
-			global.fetch = vi.fn()
+			global.fetch = vi
+				.fn()
 				.mockResolvedValueOnce({ ok: true, text: () => Promise.resolve(goodXml) })
 				.mockResolvedValueOnce({ ok: false, status: 500 });
 
@@ -653,7 +766,12 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 
 	describe('feed proxy validation', () => {
 		it('rejects responses that contain no XML (no < character)', async () => {
-			setupSingleFeed('local', 'Non-XML Feed', 'local_media', 'plain text response with no angle brackets');
+			setupSingleFeed(
+				'local',
+				'Non-XML Feed',
+				'local_media',
+				'plain text response with no angle brackets'
+			);
 			const result = await fetchCategory('local');
 
 			expect(result.items).toEqual([]);
@@ -663,7 +781,13 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 
 		it('rejects empty responses', async () => {
 			mockFeeds = {
-				local: [{ name: 'Empty Response', url: 'https://example.com/empty.xml', verification: 'local_media' as VerificationLevel }]
+				local: [
+					{
+						name: 'Empty Response',
+						url: 'https://example.com/empty.xml',
+						verification: 'local_media' as VerificationLevel
+					}
+				]
 			};
 			global.fetch = vi.fn().mockResolvedValue({
 				ok: true,

@@ -49,10 +49,7 @@ export function resolveAnnualMonthDay(
 	return Number.isFinite(resolved.getTime()) ? resolved : null;
 }
 
-export function buildItem(
-	params: BuildItemParams,
-	now: number
-): NewsItem | null {
+export function buildItem(params: BuildItemParams, now: number): NewsItem | null {
 	const {
 		category,
 		source,
@@ -115,7 +112,11 @@ export function flattenJsonLdEvents(node: unknown): Record<string, unknown>[] {
 	return [];
 }
 
-export function buildEventTitle(eventName: string, dateInput: unknown, hasRegistration: boolean): string {
+export function buildEventTitle(
+	eventName: string,
+	dateInput: unknown,
+	hasRegistration: boolean
+): string {
 	const parts = [eventName];
 	if (dateInput) {
 		const d = new Date(dateInput as string);

@@ -9,7 +9,9 @@
 <footer class="footer">
 	<div class="footer-inner">
 		<span class="built-by">
-			Built by <a href="https://eastpeak.cc" target="_blank" rel="noopener noreferrer">East Peak Advisors</a>
+			Built by <a href="https://eastpeak.cc" target="_blank" rel="noopener noreferrer"
+				>East Peak Advisors</a
+			>
 		</span>
 		<span class="sep">&middot;</span>
 		<a href="mailto:stuart@eastpeak.cc" class="contact">stuart@eastpeak.cc</a>

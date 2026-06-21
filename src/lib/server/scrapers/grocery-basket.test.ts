@@ -6,9 +6,7 @@ import { parseInstacartResults, buildSearchUrl, scorePriceMatch } from './grocer
 describe('buildSearchUrl', () => {
 	it('encodes the search term into an Instacart URL', () => {
 		const url = buildSearchUrl('Vital Farms Eggs 12 ct');
-		expect(url).toBe(
-			'https://www.instacart.com/store/s?k=Vital%20Farms%20Eggs%2012%20ct'
-		);
+		expect(url).toBe('https://www.instacart.com/store/s?k=Vital%20Farms%20Eggs%2012%20ct');
 	});
 
 	it('handles special characters', () => {

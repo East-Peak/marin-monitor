@@ -273,7 +273,12 @@
 						>
 							<g transform={`translate(${TEMP_MARGINS.left},${TEMP_MARGINS.top})`}>
 								<path d={tempChartPaths.areaPath} fill="rgba(68, 136, 255, 0.1)" />
-								<path d={tempChartPaths.linePath} fill="none" stroke={TEMP_ACCENT} stroke-width="1.5" />
+								<path
+									d={tempChartPaths.linePath}
+									fill="none"
+									stroke={TEMP_ACCENT}
+									stroke-width="1.5"
+								/>
 								{#if hoverState?.chart === 'temp'}
 									<line
 										x1={tempChartPaths.dots[hoverState.index].x}
@@ -293,10 +298,30 @@
 										stroke-width="1"
 									/>
 								{/if}
-								<text x="-4" y={tempChartPaths.yScale(tempChartPaths.yMax)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="8px">{Math.round(tempChartPaths.yMax)}°</text>
-								<text x="-4" y={tempChartPaths.yScale(tempChartPaths.yMin)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="8px">{Math.round(tempChartPaths.yMin)}°</text>
+								<text
+									x="-4"
+									y={tempChartPaths.yScale(tempChartPaths.yMax)}
+									text-anchor="end"
+									dominant-baseline="middle"
+									fill="#888"
+									font-size="8px">{Math.round(tempChartPaths.yMax)}°</text
+								>
+								<text
+									x="-4"
+									y={tempChartPaths.yScale(tempChartPaths.yMin)}
+									text-anchor="end"
+									dominant-baseline="middle"
+									fill="#888"
+									font-size="8px">{Math.round(tempChartPaths.yMin)}°</text
+								>
 								{#each tempChartPaths.axisLabels.x as lbl}
-									<text x={lbl.x} y={TEMP_HEIGHT - TEMP_MARGINS.top - TEMP_MARGINS.bottom + 12} text-anchor="middle" fill="#666" font-size="7px">{lbl.label}</text>
+									<text
+										x={lbl.x}
+										y={TEMP_HEIGHT - TEMP_MARGINS.top - TEMP_MARGINS.bottom + 12}
+										text-anchor="middle"
+										fill="#666"
+										font-size="7px">{lbl.label}</text
+									>
 								{/each}
 							</g>
 						</svg>
@@ -336,7 +361,12 @@
 						>
 							<g transform={`translate(${PRECIP_MARGINS.left},${PRECIP_MARGINS.top})`}>
 								<path d={precipChartPaths.areaPath} fill="rgba(34, 197, 94, 0.14)" />
-								<path d={precipChartPaths.linePath} fill="none" stroke={PRECIP_ACCENT} stroke-width="1.4" />
+								<path
+									d={precipChartPaths.linePath}
+									fill="none"
+									stroke={PRECIP_ACCENT}
+									stroke-width="1.4"
+								/>
 								{#if hoverState?.chart === 'precip'}
 									<line
 										x1={precipChartPaths.dots[hoverState.index].x}
@@ -356,10 +386,30 @@
 										stroke-width="1"
 									/>
 								{/if}
-								<text x="-4" y={precipChartPaths.yScale(precipChartPaths.yMax)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="8px">{Math.round(precipChartPaths.yMax)}%</text>
-								<text x="-4" y={precipChartPaths.yScale(precipChartPaths.yMin)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="8px">{Math.round(precipChartPaths.yMin)}%</text>
+								<text
+									x="-4"
+									y={precipChartPaths.yScale(precipChartPaths.yMax)}
+									text-anchor="end"
+									dominant-baseline="middle"
+									fill="#888"
+									font-size="8px">{Math.round(precipChartPaths.yMax)}%</text
+								>
+								<text
+									x="-4"
+									y={precipChartPaths.yScale(precipChartPaths.yMin)}
+									text-anchor="end"
+									dominant-baseline="middle"
+									fill="#888"
+									font-size="8px">{Math.round(precipChartPaths.yMin)}%</text
+								>
 								{#each precipChartPaths.axisLabels.x as lbl}
-									<text x={lbl.x} y={PRECIP_HEIGHT - PRECIP_MARGINS.top - PRECIP_MARGINS.bottom + 12} text-anchor="middle" fill="#666" font-size="7px">{lbl.label}</text>
+									<text
+										x={lbl.x}
+										y={PRECIP_HEIGHT - PRECIP_MARGINS.top - PRECIP_MARGINS.bottom + 12}
+										text-anchor="middle"
+										fill="#666"
+										font-size="7px">{lbl.label}</text
+									>
 								{/each}
 							</g>
 						</svg>

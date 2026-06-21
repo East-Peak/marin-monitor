@@ -28,20 +28,20 @@ function makeGtfsResponse(entities: unknown[] = []): object {
 	};
 }
 
-function makeAlertEntity(overrides: {
-	id?: string;
-	header?: string;
-	description?: string;
-	url?: string;
-	routes?: string[];
-	startTime?: number;
-} = {}): object {
+function makeAlertEntity(
+	overrides: {
+		id?: string;
+		header?: string;
+		description?: string;
+		url?: string;
+		routes?: string[];
+		startTime?: number;
+	} = {}
+): object {
 	return {
 		Id: overrides.id ?? 'alert-1',
 		Alert: {
-			ActivePeriods: overrides.startTime
-				? [{ Start: overrides.startTime }]
-				: [],
+			ActivePeriods: overrides.startTime ? [{ Start: overrides.startTime }] : [],
 			InformedEntities: (overrides.routes ?? []).map((r) => ({
 				AgencyId: 'GG',
 				RouteId: r
@@ -52,9 +52,7 @@ function makeAlertEntity(overrides: {
 			DescriptionText: overrides.description
 				? { Translations: [{ Text: overrides.description, Language: 'en' }] }
 				: undefined,
-			Url: overrides.url
-				? { Translations: [{ Text: overrides.url, Language: 'en' }] }
-				: undefined
+			Url: overrides.url ? { Translations: [{ Text: overrides.url, Language: 'en' }] } : undefined
 		}
 	};
 }

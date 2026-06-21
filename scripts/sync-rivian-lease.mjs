@@ -87,11 +87,7 @@ async function scrapeRivianLease() {
 			const ld = JSON.parse(match[1]);
 			const items = Array.isArray(ld) ? ld : [ld];
 			for (const item of items) {
-				if (
-					item['@type'] === 'Product' ||
-					item['@type'] === 'Vehicle' ||
-					item['@type'] === 'Car'
-				) {
+				if (item['@type'] === 'Product' || item['@type'] === 'Vehicle' || item['@type'] === 'Car') {
 					const offer = item.offers?.[0] || item.offers || {};
 					if (offer.price && !result.msrp) {
 						const price = parseFloat(String(offer.price).replace(/,/g, ''));
@@ -154,17 +150,20 @@ async function main() {
 	const leaseMonthly = scraped.leaseMonthly || 899;
 	const msrp = scraped.msrp || 79900;
 	const nowIso = new Date().toISOString();
-	const snapshot = withPreservedSuccessfulScrapeMetadata({
-		timestamp: nowIso,
-		leaseMonthly,
-		msrp,
-		scraped: hasLiveData,
-		source: hasLiveData ? 'rivian.com' : 'fallback'
-	}, {
-		wasLive: hasLiveData,
-		previous: existing.current,
-		includeLegacyLastLive: true
-	});
+	const snapshot = withPreservedSuccessfulScrapeMetadata(
+		{
+			timestamp: nowIso,
+			leaseMonthly,
+			msrp,
+			scraped: hasLiveData,
+			source: hasLiveData ? 'rivian.com' : 'fallback'
+		},
+		{
+			wasLive: hasLiveData,
+			previous: existing.current,
+			includeLegacyLastLive: true
+		}
+	);
 
 	// Append history
 	const history = [snapshot, ...existing.history].slice(0, MAX_HISTORY);

@@ -37,7 +37,9 @@ export function computeMedian(values) {
  * @param {CoffeeDrinkConfig} drink
  */
 function isExcludedDrinkMatch(normalizedName, drink) {
-	return (drink.excludeTerms ?? []).some((term) => normalizedName.includes(normalizeMenuText(term)));
+	return (drink.excludeTerms ?? []).some((term) =>
+		normalizedName.includes(normalizeMenuText(term))
+	);
 }
 
 /**
@@ -112,7 +114,9 @@ function buildDrinkPrice(drink, price, updateTime, priceSource, matchedName, isS
  * @returns {CoffeeDrinkPrice | null}
  */
 function extractDrinkPriceFromItems(items, drink, updateTime) {
-	let bestMatch = /** @type {{ score: number; price: number; matchedName: string } | null} */ (null);
+	let bestMatch = /** @type {{ score: number; price: number; matchedName: string } | null} */ (
+		null
+	);
 	const normalizedAliases = drink.aliases.map((alias) => normalizeMenuText(alias));
 
 	for (const item of items) {
@@ -207,7 +211,9 @@ export function extractDrinkPricesFromText(text, drinks, updateTime) {
 
 	for (const drink of drinks) {
 		const normalizedAliases = drink.aliases.map((alias) => normalizeMenuText(alias));
-		let bestMatch = /** @type {{ score: number; price: number; matchedName: string } | null} */ (null);
+		let bestMatch = /** @type {{ score: number; price: number; matchedName: string } | null} */ (
+			null
+		);
 
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i];
@@ -219,9 +225,7 @@ export function extractDrinkPricesFromText(text, drinks, updateTime) {
 
 			const sameLinePrice = extractFirstPrice(line);
 			const nextLinePrice =
-				!sameLinePrice && i + 1 < lines.length
-					? extractFirstPrice(lines[i + 1])
-					: null;
+				!sameLinePrice && i + 1 < lines.length ? extractFirstPrice(lines[i + 1]) : null;
 
 			const priceMatch = sameLinePrice ?? nextLinePrice;
 			if (!priceMatch) continue;
@@ -376,7 +380,9 @@ function summarizeDrink(drink, shops) {
 		medianPrice: computeMedian(numericPrices),
 		avgPrice:
 			numericPrices.length > 0
-				? Math.round((numericPrices.reduce((sum, value) => sum + value, 0) / numericPrices.length) * 100) / 100
+				? Math.round(
+						(numericPrices.reduce((sum, value) => sum + value, 0) / numericPrices.length) * 100
+					) / 100
 				: null,
 		minPrice: numericPrices.length > 0 ? Math.min(...numericPrices) : null,
 		maxPrice: numericPrices.length > 0 ? Math.max(...numericPrices) : null
@@ -402,11 +408,7 @@ export function summarizeDrinks(drinks, shops) {
  * @param {number} shopCount
  * @param {number} [minRatio]
  */
-export function hasFreshCoffeeIndexCoverage(
-	liveMenuShopCount,
-	shopCount,
-	minRatio = 0.5
-) {
+export function hasFreshCoffeeIndexCoverage(liveMenuShopCount, shopCount, minRatio = 0.5) {
 	if (shopCount <= 0) return false;
 	return liveMenuShopCount / shopCount >= minRatio;
 }

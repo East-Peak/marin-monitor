@@ -7,7 +7,4 @@ import type { FitnessData } from '$lib/types/fitness';
 
 export const fitnessStore = writable<FitnessData>({ current: null, history: [] });
 
-export const currentFitnessStudios = derived(
-	fitnessStore,
-	($d) => $d.current?.studios ?? []
-);
+export const currentFitnessStudios = derived(fitnessStore, ($d) => $d.current?.studios ?? []);

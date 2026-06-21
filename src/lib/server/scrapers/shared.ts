@@ -111,9 +111,7 @@ export function normalizeWhitespace(raw = ''): string {
 
 export function decodeEntities(raw: string): string {
 	return raw
-		.replace(/&#x([0-9a-f]+);/gi, (_, value) =>
-			String.fromCodePoint(Number.parseInt(value, 16))
-		)
+		.replace(/&#x([0-9a-f]+);/gi, (_, value) => String.fromCodePoint(Number.parseInt(value, 16)))
 		.replace(/&#(\d+);/g, (_, value) => String.fromCodePoint(Number.parseInt(value, 10)))
 		.replace(/&nbsp;/gi, ' ')
 		.replace(/&amp;/gi, '&')

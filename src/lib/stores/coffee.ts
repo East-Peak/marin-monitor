@@ -7,7 +7,4 @@ import type { CoffeeIndexData } from '$lib/types/coffee';
 
 export const coffeeIndexStore = writable<CoffeeIndexData>({ current: null, history: [] });
 
-export const currentCoffeeShops = derived(
-	coffeeIndexStore,
-	($data) => $data.current?.shops ?? []
-);
+export const currentCoffeeShops = derived(coffeeIndexStore, ($data) => $data.current?.shops ?? []);

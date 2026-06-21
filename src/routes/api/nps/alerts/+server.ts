@@ -12,9 +12,12 @@ export const GET: RequestHandler = async () => {
 		return json({ error: 'Service unavailable' }, { status: 503 });
 	}
 
-	const response = await fetchWithTimeout(`${NPS_BASE}/alerts?parkCode=${MARIN_PARKS}&api_key=${apiKey}`, {
-		headers: { Accept: 'application/json' }
-	});
+	const response = await fetchWithTimeout(
+		`${NPS_BASE}/alerts?parkCode=${MARIN_PARKS}&api_key=${apiKey}`,
+		{
+			headers: { Accept: 'application/json' }
+		}
+	);
 
 	if (response.status === 429) {
 		return json([], {

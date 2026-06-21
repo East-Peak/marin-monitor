@@ -14,37 +14,38 @@
 
 ### New Files
 
-| File | Responsibility |
-|------|---------------|
-| `src/lib/types/coffee.ts` | CoffeeShop, CoffeeSnapshot, CoffeeData type definitions |
-| `src/lib/config/coffee.ts` | Shop locations, Toast URLs, coordinates, scraping config |
-| `src/lib/server/scrapers/cappuccino.ts` | Playwright scraper for Toast + HTML + delivery pages |
-| `src/lib/server/scrapers/cappuccino.test.ts` | Unit tests for price parsing and aggregation helpers |
-| `src/routes/api/cron/sync-cappuccino/+server.ts` | Weekly cron job: scrape + store to Blob |
-| `src/routes/api/data/cappuccino/+server.ts` | Serve cappuccino data from Blob |
-| `src/lib/api/marin/cappuccino.ts` | Client-side data adapter |
-| `src/lib/stores/cappuccino.ts` | Svelte store for cappuccino data |
-| `src/lib/components/panels/CappuccinoPanel.svelte` | Dashboard panel with map pins, sparkline, shop list |
+| File                                               | Responsibility                                           |
+| -------------------------------------------------- | -------------------------------------------------------- |
+| `src/lib/types/coffee.ts`                          | CoffeeShop, CoffeeSnapshot, CoffeeData type definitions  |
+| `src/lib/config/coffee.ts`                         | Shop locations, Toast URLs, coordinates, scraping config |
+| `src/lib/server/scrapers/cappuccino.ts`            | Playwright scraper for Toast + HTML + delivery pages     |
+| `src/lib/server/scrapers/cappuccino.test.ts`       | Unit tests for price parsing and aggregation helpers     |
+| `src/routes/api/cron/sync-cappuccino/+server.ts`   | Weekly cron job: scrape + store to Blob                  |
+| `src/routes/api/data/cappuccino/+server.ts`        | Serve cappuccino data from Blob                          |
+| `src/lib/api/marin/cappuccino.ts`                  | Client-side data adapter                                 |
+| `src/lib/stores/cappuccino.ts`                     | Svelte store for cappuccino data                         |
+| `src/lib/components/panels/CappuccinoPanel.svelte` | Dashboard panel with map pins, sparkline, shop list      |
 
 ### Modified Files
 
-| File | Change |
-|------|--------|
-| `src/lib/types/index.ts` | Re-export coffee types |
-| `src/lib/config/panels.ts` | Add `cappuccino` PanelId + config |
-| `src/lib/components/panels/index.ts` | Export CappuccinoPanel |
-| `src/lib/components/dashboard/SignalDeck.svelte` | Render CappuccinoPanel |
-| `src/lib/components/map/MapDataLayer.svelte` | Add coffee shop source, layers, click handler |
-| `src/lib/components/map/MapControls.svelte` | Add coffee toggle to layer list |
-| `src/lib/types/index.ts` | Add `'coffee'` to MapLayer union |
-| `src/lib/stores/refresh.ts` | Add `cappuccino` to tertiary stage |
-| `vercel.json` | Add sync-cappuccino cron entry |
+| File                                             | Change                                        |
+| ------------------------------------------------ | --------------------------------------------- |
+| `src/lib/types/index.ts`                         | Re-export coffee types                        |
+| `src/lib/config/panels.ts`                       | Add `cappuccino` PanelId + config             |
+| `src/lib/components/panels/index.ts`             | Export CappuccinoPanel                        |
+| `src/lib/components/dashboard/SignalDeck.svelte` | Render CappuccinoPanel                        |
+| `src/lib/components/map/MapDataLayer.svelte`     | Add coffee shop source, layers, click handler |
+| `src/lib/components/map/MapControls.svelte`      | Add coffee toggle to layer list               |
+| `src/lib/types/index.ts`                         | Add `'coffee'` to MapLayer union              |
+| `src/lib/stores/refresh.ts`                      | Add `cappuccino` to tertiary stage            |
+| `vercel.json`                                    | Add sync-cappuccino cron entry                |
 
 ---
 
 ## Task 1: Type Definitions
 
 **Files:**
+
 - Create: `src/lib/types/coffee.ts`
 - Modify: `src/lib/types/index.ts`
 
@@ -97,12 +98,7 @@ Add the following to the bottom of `src/lib/types/index.ts`, after the existing 
 ```typescript
 // In src/lib/types/index.ts — add at end of file:
 
-export type {
-	CoffeeSource,
-	CoffeeShop,
-	CoffeeSnapshot,
-	CoffeeData
-} from './coffee';
+export type { CoffeeSource, CoffeeShop, CoffeeSnapshot, CoffeeData } from './coffee';
 ```
 
 - [ ] **Step 3: Add `'coffee'` to the MapLayer union**
@@ -111,10 +107,27 @@ In `src/lib/types/index.ts`, find the existing MapLayer type:
 
 ```typescript
 // FIND this line:
-export type MapLayer = 'civic' | 'news' | 'safety' | 'housing' | 'activity' | 'satire' | 'gas' | 'ev-charging';
+export type MapLayer =
+	| 'civic'
+	| 'news'
+	| 'safety'
+	| 'housing'
+	| 'activity'
+	| 'satire'
+	| 'gas'
+	| 'ev-charging';
 
 // REPLACE with:
-export type MapLayer = 'civic' | 'news' | 'safety' | 'housing' | 'activity' | 'satire' | 'gas' | 'ev-charging' | 'coffee';
+export type MapLayer =
+	| 'civic'
+	| 'news'
+	| 'safety'
+	| 'housing'
+	| 'activity'
+	| 'satire'
+	| 'gas'
+	| 'ev-charging'
+	| 'coffee';
 ```
 
 - [ ] **Step 4: Verify types compile**
@@ -129,6 +142,7 @@ cd /Users/tammypais/projects/marin-monitor && npx tsc --noEmit --pretty 2>&1 | h
 ## Task 2: Coffee Shop Configuration
 
 **Files:**
+
 - Create: `src/lib/config/coffee.ts`
 - Test: `src/lib/config/coffee.test.ts` (inline validation test)
 
@@ -174,8 +188,8 @@ export const COFFEE_SHOPS: CoffeeShopConfig[] = [
 		name: 'Equator Coffees',
 		address: '2 Miller Ave, Mill Valley',
 		town: 'Mill Valley',
-		lat: 37.9060,
-		lon: -122.5480,
+		lat: 37.906,
+		lon: -122.548,
 		source: 'toast',
 		url: 'https://order.toasttab.com/online/equator-coffees-miller-ave',
 		hasCappuccino: true
@@ -185,8 +199,8 @@ export const COFFEE_SHOPS: CoffeeShopConfig[] = [
 		name: 'Equator Coffees (Proof Lab)',
 		address: '244 Shoreline Hwy, Mill Valley',
 		town: 'Mill Valley',
-		lat: 37.8720,
-		lon: -122.5270,
+		lat: 37.872,
+		lon: -122.527,
 		source: 'toast',
 		url: 'https://order.toasttab.com/online/equator-coffees-proof-lab',
 		hasCappuccino: true
@@ -196,8 +210,8 @@ export const COFFEE_SHOPS: CoffeeShopConfig[] = [
 		name: 'Equator Coffees',
 		address: 'Marin Country Mart, Larkspur',
 		town: 'Larkspur',
-		lat: 37.9410,
-		lon: -122.5350,
+		lat: 37.941,
+		lon: -122.535,
 		source: 'toast',
 		url: 'https://order.toasttab.com/online/equator-coffees-larkspur',
 		hasCappuccino: true
@@ -207,8 +221,8 @@ export const COFFEE_SHOPS: CoffeeShopConfig[] = [
 		name: 'Equator Coffees',
 		address: '1201 Bridgeway, Sausalito',
 		town: 'Sausalito',
-		lat: 37.8590,
-		lon: -122.4850,
+		lat: 37.859,
+		lon: -122.485,
 		source: 'toast',
 		url: 'https://order.toasttab.com/online/sausalito-equator',
 		hasCappuccino: true
@@ -240,8 +254,8 @@ export const COFFEE_SHOPS: CoffeeShopConfig[] = [
 		name: 'Marin Coffee Roasters',
 		address: '466 Ignacio Blvd, Novato',
 		town: 'Novato',
-		lat: 38.0660,
-		lon: -122.5330,
+		lat: 38.066,
+		lon: -122.533,
 		source: 'toast',
 		url: 'https://order.toasttab.com/online/marin-coffee-roasters-ignacio-466-ignacio-blvd',
 		hasCappuccino: true
@@ -251,8 +265,8 @@ export const COFFEE_SHOPS: CoffeeShopConfig[] = [
 		name: 'Marin Coffee Roasters (Drive-Thru)',
 		address: '1551 S Novato Blvd, Novato',
 		town: 'Novato',
-		lat: 38.0860,
-		lon: -122.5700,
+		lat: 38.086,
+		lon: -122.57,
 		source: 'toast',
 		url: 'https://order.toasttab.com/online/marin-coffee-roasters-drive-through-1551-s-novato-blvd',
 		hasCappuccino: true
@@ -262,8 +276,8 @@ export const COFFEE_SHOPS: CoffeeShopConfig[] = [
 		name: 'Firehouse Coffee & Tea',
 		address: '44 Caledonia St, Sausalito',
 		town: 'Sausalito',
-		lat: 37.8590,
-		lon: -122.4870,
+		lat: 37.859,
+		lon: -122.487,
 		source: 'html',
 		url: 'https://www.firehousecoffeeandtea.com/menu',
 		hasCappuccino: true
@@ -274,7 +288,7 @@ export const COFFEE_SHOPS: CoffeeShopConfig[] = [
 		address: '917 4th St, San Rafael',
 		town: 'San Rafael',
 		lat: 37.9735,
-		lon: -122.5150,
+		lon: -122.515,
 		source: 'delivery',
 		url: 'https://www.doordash.com/store/fox-kit-san-rafael-27819798/',
 		hasCappuccino: true
@@ -284,8 +298,8 @@ export const COFFEE_SHOPS: CoffeeShopConfig[] = [
 		name: 'Philz Coffee',
 		address: 'Town Center, Corte Madera',
 		town: 'Corte Madera',
-		lat: 37.9250,
-		lon: -122.5240,
+		lat: 37.925,
+		lon: -122.524,
 		source: 'html',
 		url: 'https://philzcoffee.order.online/',
 		hasCappuccino: false,
@@ -362,6 +376,7 @@ cd /Users/tammypais/projects/marin-monitor && npx vitest run src/lib/config/coff
 ## Task 3: Toast Scraper (Playwright)
 
 **Files:**
+
 - Create: `src/lib/server/scrapers/cappuccino.ts`
 - Create: `src/lib/server/scrapers/cappuccino.test.ts`
 
@@ -387,13 +402,13 @@ Drip Coffee$3.50`;
 	it('extracts price with space before dollar sign', () => {
 		const text = `Cappuccino $5.10
 Latte $5.60`;
-		expect(extractCappuccinoPrice(text)).toBe(5.10);
+		expect(extractCappuccinoPrice(text)).toBe(5.1);
 	});
 
 	it('extracts price case-insensitively', () => {
 		const text = `CAPPUCCINO$5.00
 LATTE$6.00`;
-		expect(extractCappuccinoPrice(text)).toBe(5.00);
+		expect(extractCappuccinoPrice(text)).toBe(5.0);
 	});
 
 	it('returns null when no cappuccino found', () => {
@@ -432,11 +447,11 @@ $5.75`;
 
 describe('computeMedian', () => {
 	it('returns median of odd-length array', () => {
-		expect(computeMedian([5.00, 5.10, 5.25])).toBe(5.10);
+		expect(computeMedian([5.0, 5.1, 5.25])).toBe(5.1);
 	});
 
 	it('returns median of even-length array', () => {
-		expect(computeMedian([4.50, 5.00, 5.10, 5.25])).toBe(5.05);
+		expect(computeMedian([4.5, 5.0, 5.1, 5.25])).toBe(5.05);
 	});
 
 	it('returns single value for single-element array', () => {
@@ -448,7 +463,7 @@ describe('computeMedian', () => {
 	});
 
 	it('handles unsorted input', () => {
-		expect(computeMedian([5.25, 4.50, 5.10, 6.00, 5.00])).toBe(5.10);
+		expect(computeMedian([5.25, 4.5, 5.1, 6.0, 5.0])).toBe(5.1);
 	});
 });
 
@@ -462,7 +477,7 @@ describe('buildSnapshot', () => {
 				town: 'Mill Valley',
 				lat: 37.9,
 				lon: -122.5,
-				price: 5.00,
+				price: 5.0,
 				source: 'toast',
 				updateTime: '2026-03-29T10:00:00Z'
 			},
@@ -473,7 +488,7 @@ describe('buildSnapshot', () => {
 				town: 'San Rafael',
 				lat: 37.97,
 				lon: -122.52,
-				price: 5.50,
+				price: 5.5,
 				source: 'toast',
 				updateTime: '2026-03-29T10:00:00Z'
 			},
@@ -494,8 +509,8 @@ describe('buildSnapshot', () => {
 		expect(snapshot.shopCount).toBe(3);
 		expect(snapshot.medianPrice).toBe(5.25);
 		expect(snapshot.avgPrice).toBe(5.25);
-		expect(snapshot.minPrice).toBe(5.00);
-		expect(snapshot.maxPrice).toBe(5.50);
+		expect(snapshot.minPrice).toBe(5.0);
+		expect(snapshot.maxPrice).toBe(5.5);
 		expect(snapshot.shops).toHaveLength(3);
 		expect(snapshot.timestamp).toBeDefined();
 	});
@@ -537,11 +552,7 @@ describe('buildSnapshot', () => {
  */
 
 import type { CoffeeShop, CoffeeSnapshot } from '$lib/types/coffee';
-import {
-	COFFEE_SHOPS,
-	TOAST_PAGE_TIMEOUT,
-	type CoffeeShopConfig
-} from '$lib/config/coffee';
+import { COFFEE_SHOPS, TOAST_PAGE_TIMEOUT, type CoffeeShopConfig } from '$lib/config/coffee';
 
 /**
  * Extract cappuccino price from page text content.
@@ -556,7 +567,10 @@ import {
 export function extractCappuccinoPrice(text: string): number | null {
 	if (!text) return null;
 
-	const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+	const lines = text
+		.split('\n')
+		.map((l) => l.trim())
+		.filter(Boolean);
 
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i];
@@ -593,9 +607,7 @@ export function computeMedian(values: number[]): number | null {
 
 /** Build a CoffeeSnapshot from a list of scraped shops */
 export function buildSnapshot(shops: CoffeeShop[]): CoffeeSnapshot {
-	const prices = shops
-		.filter((s) => s.price !== null)
-		.map((s) => s.price!);
+	const prices = shops.filter((s) => s.price !== null).map((s) => s.price!);
 
 	return {
 		timestamp: new Date().toISOString(),
@@ -845,6 +857,7 @@ cd /Users/tammypais/projects/marin-monitor && npx vitest run src/lib/server/scra
 ## Task 4: Cron Job
 
 **Files:**
+
 - Create: `src/routes/api/cron/sync-cappuccino/+server.ts`
 - Modify: `vercel.json`
 
@@ -864,9 +877,7 @@ import type { CoffeeData, CoffeeSnapshot } from '$lib/types/coffee';
 export const config = { maxDuration: 120 };
 
 /** Strip shops[] from a snapshot to keep history entries small */
-function toHistoryEntry(
-	snapshot: CoffeeSnapshot
-): Omit<CoffeeSnapshot, 'shops'> & { shops: [] } {
+function toHistoryEntry(snapshot: CoffeeSnapshot): Omit<CoffeeSnapshot, 'shops'> & { shops: [] } {
 	return {
 		timestamp: snapshot.timestamp,
 		shopCount: snapshot.shopCount,
@@ -971,6 +982,7 @@ cd /Users/tammypais/projects/marin-monitor && node -e "JSON.parse(require('fs').
 ## Task 5: API Data Endpoint
 
 **Files:**
+
 - Create: `src/routes/api/data/cappuccino/+server.ts`
 
 - [ ] **Step 1: Write the data endpoint**
@@ -1024,6 +1036,7 @@ Note: Cache TTL is longer than gas prices (1 hour s-maxage vs 5 min) since cappu
 ## Task 6: Client Adapter + Store
 
 **Files:**
+
 - Create: `src/lib/api/marin/cappuccino.ts`
 - Create: `src/lib/stores/cappuccino.ts`
 - Modify: `src/lib/stores/refresh.ts`
@@ -1072,10 +1085,7 @@ import type { CoffeeData } from '$lib/types/coffee';
 
 export const cappuccinoStore = writable<CoffeeData>({ current: null, history: [] });
 
-export const currentCoffeeShops = derived(
-	cappuccinoStore,
-	($d) => $d.current?.shops ?? []
-);
+export const currentCoffeeShops = derived(cappuccinoStore, ($d) => $d.current?.shops ?? []);
 ```
 
 - [ ] **Step 3: Add cappuccino to refresh stages**
@@ -1095,6 +1105,7 @@ In `src/lib/stores/refresh.ts`, find the tertiary stage and add `'cappuccino'` t
 ## Task 7: Panel Config Registration
 
 **Files:**
+
 - Modify: `src/lib/config/panels.ts`
 - Modify: `src/lib/components/panels/index.ts`
 
@@ -1167,6 +1178,7 @@ export { default as CappuccinoPanel } from './CappuccinoPanel.svelte';
 ## Task 8: Panel Component
 
 **Files:**
+
 - Create: `src/lib/components/panels/CappuccinoPanel.svelte`
 
 - [ ] **Step 1: Write the CappuccinoPanel**
@@ -1213,22 +1225,16 @@ export { default as CappuccinoPanel } from './CappuccinoPanel.svelte';
 	const filteredShops = $derived.by<CoffeeShop[]>(() => {
 		if (!current?.shops) return [];
 		if (!$townFilter) return current.shops;
-		return current.shops.filter(
-			(s) => findNearestTown(s.lat, s.lon) === $townFilter
-		);
+		return current.shops.filter((s) => findNearestTown(s.lat, s.lon) === $townFilter);
 	});
 
 	// Only shops with a cappuccino price (excludes Philz)
 	const pricedShops = $derived(
-		filteredShops
-			.filter((s) => s.price !== null)
-			.sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
+		filteredShops.filter((s) => s.price !== null).sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
 	);
 
 	// Philz and other alt-drink shops
-	const altDrinkShops = $derived(
-		filteredShops.filter((s) => s.price === null && s.altDrink)
-	);
+	const altDrinkShops = $derived(filteredShops.filter((s) => s.price === null && s.altDrink));
 
 	const summaryCards = $derived.by<SummaryCard[]>(() => {
 		if (!current) return [];
@@ -1241,7 +1247,12 @@ export { default as CappuccinoPanel } from './CappuccinoPanel.svelte';
 		const filteredMedian =
 			sortedPrices.length > 0
 				? sortedPrices.length % 2 === 0
-					? Math.round(((sortedPrices[Math.floor(sortedPrices.length / 2) - 1] + sortedPrices[Math.floor(sortedPrices.length / 2)]) / 2) * 100) / 100
+					? Math.round(
+							((sortedPrices[Math.floor(sortedPrices.length / 2) - 1] +
+								sortedPrices[Math.floor(sortedPrices.length / 2)]) /
+								2) *
+								100
+						) / 100
 					: sortedPrices[Math.floor(sortedPrices.length / 2)]
 				: null;
 
@@ -1320,8 +1331,7 @@ export { default as CappuccinoPanel } from './CappuccinoPanel.svelte';
 			0,
 			Math.min(history.length - 1, Math.round(ratio * (history.length - 1)))
 		);
-		const pointX =
-			CHART_LEFT + (innerWidth * index) / Math.max(history.length - 1, 1);
+		const pointX = CHART_LEFT + (innerWidth * index) / Math.max(history.length - 1, 1);
 		hoverState = { index, x: pointX };
 	}
 
@@ -1362,10 +1372,7 @@ export { default as CappuccinoPanel } from './CappuccinoPanel.svelte';
 			.y1((d) => y(d.medianPrice!))
 			.curve(curveMonotoneX);
 
-		g.append('path')
-			.datum(history)
-			.attr('d', areaGen)
-			.attr('fill', 'rgba(161, 98, 7, 0.1)');
+		g.append('path').datum(history).attr('d', areaGen).attr('fill', 'rgba(161, 98, 7, 0.1)');
 
 		const lineGen = line<CoffeeSnapshot>()
 			.x((_d, i) => x(i))
@@ -1548,7 +1555,9 @@ export { default as CappuccinoPanel } from './CappuccinoPanel.svelte';
 						<span class="shop-name">{shop.name}</span>
 						<span class="shop-address">{shop.address}</span>
 					</div>
-					<span class={`shop-price ${shop.price === current?.minPrice ? 'positive' : shop.price === current?.maxPrice ? 'warning' : ''}`}>
+					<span
+						class={`shop-price ${shop.price === current?.minPrice ? 'positive' : shop.price === current?.maxPrice ? 'warning' : ''}`}
+					>
 						${shop.price!.toFixed(2)}
 					</span>
 				</div>
@@ -1563,7 +1572,9 @@ export { default as CappuccinoPanel } from './CappuccinoPanel.svelte';
 				<div class="shop-row">
 					<div class="shop-info">
 						<span class="shop-name">{shop.name}</span>
-						<span class="shop-address">{shop.altDrink} {shop.altPrice ? `$${shop.altPrice.toFixed(2)}` : ''}</span>
+						<span class="shop-address"
+							>{shop.altDrink} {shop.altPrice ? `$${shop.altPrice.toFixed(2)}` : ''}</span
+						>
 					</div>
 					<span class="shop-price muted">N/A</span>
 				</div>
@@ -1782,6 +1793,7 @@ export { default as CappuccinoPanel } from './CappuccinoPanel.svelte';
 ## Task 9: SignalDeck Integration
 
 **Files:**
+
 - Modify: `src/lib/components/dashboard/SignalDeck.svelte`
 
 - [ ] **Step 1: Import CappuccinoPanel**
@@ -1790,11 +1802,10 @@ In `src/lib/components/dashboard/SignalDeck.svelte`, add `CappuccinoPanel` to th
 
 ```typescript
 // FIND this line:
-		AirportStatusPanel
+AirportStatusPanel;
 
 // REPLACE with:
-		AirportStatusPanel,
-		CappuccinoPanel
+(AirportStatusPanel, CappuccinoPanel);
 ```
 
 (This is inside the existing import block from `'$lib/components/panels'`.)
@@ -1805,18 +1816,18 @@ Find the gas-prices panel block in SignalDeck.svelte and add the cappuccino bloc
 
 ```svelte
 <!-- FIND this block: -->
-	{#if isPanelVisible('gas-prices')}
-		<div class="signal-card signal-gas-prices animate-enter-up stagger-3 hover-lift">
-			<GasPricesPanel />
-		</div>
-	{/if}
+{#if isPanelVisible('gas-prices')}
+	<div class="signal-card signal-gas-prices animate-enter-up stagger-3 hover-lift">
+		<GasPricesPanel />
+	</div>
+{/if}
 
 <!-- ADD this block immediately after: -->
-	{#if isPanelVisible('cappuccino')}
-		<div class="signal-card signal-cappuccino animate-enter-up stagger-3 hover-lift">
-			<CappuccinoPanel />
-		</div>
-	{/if}
+{#if isPanelVisible('cappuccino')}
+	<div class="signal-card signal-cappuccino animate-enter-up stagger-3 hover-lift">
+		<CappuccinoPanel />
+	</div>
+{/if}
 ```
 
 ---
@@ -1824,6 +1835,7 @@ Find the gas-prices panel block in SignalDeck.svelte and add the cappuccino bloc
 ## Task 10: Map Layer Integration
 
 **Files:**
+
 - Modify: `src/lib/components/map/MapControls.svelte`
 - Modify: `src/lib/components/map/MapDataLayer.svelte`
 
@@ -1842,10 +1854,29 @@ In `src/lib/components/map/MapControls.svelte`, add the coffee layer to the labe
 
 ```typescript
 // FIND this line:
-	const LAYER_ORDER: MapLayer[] = ['news', 'safety', 'civic', 'activity', 'housing', 'gas', 'ev-charging', 'satire'];
+const LAYER_ORDER: MapLayer[] = [
+	'news',
+	'safety',
+	'civic',
+	'activity',
+	'housing',
+	'gas',
+	'ev-charging',
+	'satire'
+];
 
 // REPLACE with:
-	const LAYER_ORDER: MapLayer[] = ['news', 'safety', 'civic', 'activity', 'housing', 'gas', 'ev-charging', 'coffee', 'satire'];
+const LAYER_ORDER: MapLayer[] = [
+	'news',
+	'safety',
+	'civic',
+	'activity',
+	'housing',
+	'gas',
+	'ev-charging',
+	'coffee',
+	'satire'
+];
 ```
 
 - [ ] **Step 2: Add coffee shop data to MapDataLayer**
@@ -1856,21 +1887,36 @@ In `src/lib/components/map/MapDataLayer.svelte`, make the following changes:
 
 ```typescript
 // FIND this line:
-	import { currentGasStations } from '$lib/stores/gas-prices';
+import { currentGasStations } from '$lib/stores/gas-prices';
 
 // REPLACE with:
-	import { currentGasStations } from '$lib/stores/gas-prices';
-	import { currentCoffeeShops } from '$lib/stores/cappuccino';
+import { currentGasStations } from '$lib/stores/gas-prices';
+import { currentCoffeeShops } from '$lib/stores/cappuccino';
 ```
 
 **Add `'coffee-shop'` to the onFeatureClick kind union type:**
 
 ```typescript
 // FIND this line:
-			kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station' | 'ev-charging-station' | 'airport';
+kind: 'landmark' |
+	'fire-zone' |
+	'traffic-event' |
+	'earthquake' |
+	'fire-incident' |
+	'gas-station' |
+	'ev-charging-station' |
+	'airport';
 
 // REPLACE with:
-			kind: 'landmark' | 'fire-zone' | 'traffic-event' | 'earthquake' | 'fire-incident' | 'gas-station' | 'ev-charging-station' | 'coffee-shop' | 'airport';
+kind: 'landmark' |
+	'fire-zone' |
+	'traffic-event' |
+	'earthquake' |
+	'fire-incident' |
+	'gas-station' |
+	'ev-charging-station' |
+	'coffee-shop' |
+	'airport';
 ```
 
 **Add the GeoJSON source (after the `gas-stations` source creation block):**
@@ -1878,11 +1924,11 @@ In `src/lib/components/map/MapDataLayer.svelte`, make the following changes:
 Find where `map.addSource('gas-stations', ...)` ends and add after it:
 
 ```typescript
-		// Coffee shops source
-		map.addSource('coffee-shops', {
-			type: 'geojson',
-			data: { type: 'FeatureCollection', features: [] }
-		});
+// Coffee shops source
+map.addSource('coffee-shops', {
+	type: 'geojson',
+	data: { type: 'FeatureCollection', features: [] }
+});
 ```
 
 **Add the map layers (after the `gas-stations-label` layer):**
@@ -1890,142 +1936,131 @@ Find where `map.addSource('gas-stations', ...)` ends and add after it:
 Find where the gas station label layer ends and add after it:
 
 ```typescript
-		// Coffee shop dots (warm brown)
-		map.addLayer({
-			id: 'coffee-shops-layer',
-			type: 'circle',
-			source: 'coffee-shops',
-			paint: {
-				'circle-radius': 5,
-				'circle-color': '#a16207',
-				'circle-stroke-width': 1,
-				'circle-stroke-color': '#1a1a1a'
-			}
-		});
+// Coffee shop dots (warm brown)
+map.addLayer({
+	id: 'coffee-shops-layer',
+	type: 'circle',
+	source: 'coffee-shops',
+	paint: {
+		'circle-radius': 5,
+		'circle-color': '#a16207',
+		'circle-stroke-width': 1,
+		'circle-stroke-color': '#1a1a1a'
+	}
+});
 
-		// Coffee shop labels (visible at higher zoom)
-		map.addLayer({
-			id: 'coffee-shops-label',
-			type: 'symbol',
-			source: 'coffee-shops',
-			minzoom: 12,
-			layout: {
-				'text-field': ['concat', ['get', 'name'], '\n', ['get', 'price']],
-				'text-size': 10,
-				'text-offset': [0, 1.5],
-				'text-anchor': 'top',
-				'text-allow-overlap': false
-			},
-			paint: {
-				'text-color': '#a16207',
-				'text-halo-color': '#111',
-				'text-halo-width': 1
-			}
-		});
+// Coffee shop labels (visible at higher zoom)
+map.addLayer({
+	id: 'coffee-shops-label',
+	type: 'symbol',
+	source: 'coffee-shops',
+	minzoom: 12,
+	layout: {
+		'text-field': ['concat', ['get', 'name'], '\n', ['get', 'price']],
+		'text-size': 10,
+		'text-offset': [0, 1.5],
+		'text-anchor': 'top',
+		'text-allow-overlap': false
+	},
+	paint: {
+		'text-color': '#a16207',
+		'text-halo-color': '#111',
+		'text-halo-width': 1
+	}
+});
 ```
 
 **Add the click handler (after the gas station click handler):**
 
 ```typescript
-		map.on('click', 'coffee-shops-layer', (e: MapLayerMouseEvent) => {
-			const feature = e.features?.[0];
-			const name = String(feature?.properties?.name ?? 'Coffee Shop');
-			const price = String(feature?.properties?.price ?? '');
-			const address = String(feature?.properties?.address ?? '');
-			onFeatureClick?.({
-				kind: 'coffee-shop',
-				title: name,
-				subtitle: price ? `Cappuccino: ${price}` : 'Price unavailable',
-				description: address,
-				lat: e.lngLat.lat,
-				lon: e.lngLat.lng
-			});
-		});
+map.on('click', 'coffee-shops-layer', (e: MapLayerMouseEvent) => {
+	const feature = e.features?.[0];
+	const name = String(feature?.properties?.name ?? 'Coffee Shop');
+	const price = String(feature?.properties?.price ?? '');
+	const address = String(feature?.properties?.address ?? '');
+	onFeatureClick?.({
+		kind: 'coffee-shop',
+		title: name,
+		subtitle: price ? `Cappuccino: ${price}` : 'Price unavailable',
+		description: address,
+		lat: e.lngLat.lat,
+		lon: e.lngLat.lng
+	});
+});
 
-		map.on('mouseenter', 'coffee-shops-layer', () => {
-			map.getCanvas().style.cursor = 'pointer';
-		});
+map.on('mouseenter', 'coffee-shops-layer', () => {
+	map.getCanvas().style.cursor = 'pointer';
+});
 
-		map.on('mouseleave', 'coffee-shops-layer', () => {
-			map.getCanvas().style.cursor = '';
-		});
+map.on('mouseleave', 'coffee-shops-layer', () => {
+	map.getCanvas().style.cursor = '';
+});
 ```
 
 **Add the subscription (after the gas station subscription):**
 
 ```typescript
-	// Declare at the top with other subscription variables:
-	let unsubscribeCoffee: (() => void) | null = null;
+// Declare at the top with other subscription variables:
+let unsubscribeCoffee: (() => void) | null = null;
 ```
 
 In the subscription setup block (after the gas station subscription):
 
 ```typescript
-		if (!unsubscribeCoffee) {
-			unsubscribeCoffee = currentCoffeeShops.subscribe(() => {
-				if (updateDataTimer) clearTimeout(updateDataTimer);
-				updateDataTimer = setTimeout(() => {
-					const m = getMap();
-					if (!m || !m.getSource('coffee-shops')) return;
-					updateData(m);
-				}, 100);
-			});
-		}
+if (!unsubscribeCoffee) {
+	unsubscribeCoffee = currentCoffeeShops.subscribe(() => {
+		if (updateDataTimer) clearTimeout(updateDataTimer);
+		updateDataTimer = setTimeout(() => {
+			const m = getMap();
+			if (!m || !m.getSource('coffee-shops')) return;
+			updateData(m);
+		}, 100);
+	});
+}
 ```
 
 In the cleanup block, after `unsubscribeGas?.();`:
 
 ```typescript
-		unsubscribeCoffee?.();
+unsubscribeCoffee?.();
 ```
 
 **Add the data update logic in the `updateData` function (after the gas station data update):**
 
 ```typescript
-		// Coffee shops
-		const coffeeShops = get(currentCoffeeShops);
-		const mapCoffeeVisible = mapState.activeLayers['coffee'];
-		const coffeeFeatures: GeoJSON.Feature[] = mapCoffeeVisible
-			? coffeeShops
-					.filter(
-						(s) =>
-							!currentTownFilter || findNearestTown(s.lat, s.lon) === currentTownFilter
-					)
-					.filter((s) => s.price !== null)
-					.map((s) => ({
-						type: 'Feature' as const,
-						geometry: {
-							type: 'Point' as const,
-							coordinates: [s.lon, s.lat]
-						},
-						properties: {
-							name: s.name,
-							price: `$${s.price!.toFixed(2)}`,
-							address: s.address,
-							town: s.town
-						}
-					}))
-			: [];
+// Coffee shops
+const coffeeShops = get(currentCoffeeShops);
+const mapCoffeeVisible = mapState.activeLayers['coffee'];
+const coffeeFeatures: GeoJSON.Feature[] = mapCoffeeVisible
+	? coffeeShops
+			.filter((s) => !currentTownFilter || findNearestTown(s.lat, s.lon) === currentTownFilter)
+			.filter((s) => s.price !== null)
+			.map((s) => ({
+				type: 'Feature' as const,
+				geometry: {
+					type: 'Point' as const,
+					coordinates: [s.lon, s.lat]
+				},
+				properties: {
+					name: s.name,
+					price: `$${s.price!.toFixed(2)}`,
+					address: s.address,
+					town: s.town
+				}
+			}))
+	: [];
 
-		const coffeeSource = map.getSource('coffee-shops') as GeoJSONSource;
-		if (coffeeSource) {
-			coffeeSource.setData({ type: 'FeatureCollection', features: coffeeFeatures });
-		}
+const coffeeSource = map.getSource('coffee-shops') as GeoJSONSource;
+if (coffeeSource) {
+	coffeeSource.setData({ type: 'FeatureCollection', features: coffeeFeatures });
+}
 
-		if (map.getLayer('coffee-shops-layer')) {
-			map.setLayoutProperty(
-				'coffee-shops-layer',
-				'visibility',
-				mapCoffeeVisible ? 'visible' : 'none'
-			);
-		}
-		if (map.getLayer('coffee-shops-label')) {
-			map.setLayoutProperty(
-				'coffee-shops-label',
-				'visibility',
-				mapCoffeeVisible ? 'visible' : 'none'
-			);
-		}
+if (map.getLayer('coffee-shops-layer')) {
+	map.setLayoutProperty('coffee-shops-layer', 'visibility', mapCoffeeVisible ? 'visible' : 'none');
+}
+if (map.getLayer('coffee-shops-label')) {
+	map.setLayoutProperty('coffee-shops-label', 'visibility', mapCoffeeVisible ? 'visible' : 'none');
+}
 ```
 
 ---

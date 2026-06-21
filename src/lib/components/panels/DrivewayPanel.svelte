@@ -1,3 +1,46 @@
+<script module lang="ts">
+	/** Convert a small number to a word for playful display */
+	function numberToWord(n: number): string {
+		const words: Record<number, string> = {
+			1: 'one',
+			2: 'two',
+			3: 'three',
+			4: 'four',
+			5: 'five',
+			6: 'six',
+			7: 'seven',
+			8: 'eight',
+			9: 'nine',
+			10: 'ten',
+			11: 'eleven',
+			12: 'twelve',
+			13: 'thirteen',
+			14: 'fourteen',
+			15: 'fifteen',
+			16: 'sixteen',
+			17: 'seventeen',
+			18: 'eighteen',
+			19: 'nineteen',
+			20: 'twenty',
+			30: 'thirty',
+			40: 'forty',
+			50: 'fifty',
+			60: 'sixty',
+			68: 'sixty-eight',
+			70: 'seventy',
+			80: 'eighty',
+			90: 'ninety'
+		};
+		if (words[n]) return words[n];
+		if (n < 100) {
+			const tens = Math.floor(n / 10) * 10;
+			const ones = n % 10;
+			return `${words[tens] ?? tens}-${words[ones] ?? ones}`;
+		}
+		return String(n);
+	}
+</script>
+
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Panel } from '$lib/components/common';
@@ -28,9 +71,7 @@
 	const maxMakeCount = $derived(current?.topMakes[0]?.count ?? 1);
 
 	// Gasoline percentage for headline stat
-	const gasPct = $derived(
-		current?.fuelBreakdown.find((f) => f.fuelType === 'gasoline')?.pct ?? 0
-	);
+	const gasPct = $derived(current?.fuelBreakdown.find((f) => f.fuelType === 'gasoline')?.pct ?? 0);
 
 	// EV share (BEV + PHEV)
 	const evShare = $derived.by(() => {
@@ -68,7 +109,9 @@
 		<!-- Headline stats -->
 		<div class="stats-grid">
 			<div class="stat-card">
-				<div class="stat-value" style:color={DRIVEWAY_ACCENT}>{formatNumber(current.totalVehicles)}</div>
+				<div class="stat-value" style:color={DRIVEWAY_ACCENT}>
+					{formatNumber(current.totalVehicles)}
+				</div>
 				<div class="stat-label">Registered Vehicles</div>
 			</div>
 			<div class="stat-card">
@@ -131,7 +174,9 @@
 				</div>
 				<div class="fun-card hydrogen">
 					<span class="fun-value">{formatNumber(current.funStats.hydrogen)}</span>
-					<span class="fun-label">Hydrogen vehicles (yes, {numberToWord(current.funStats.hydrogen)})</span>
+					<span class="fun-label"
+						>Hydrogen vehicles (yes, {numberToWord(current.funStats.hydrogen)})</span
+					>
 				</div>
 			</div>
 		</div>
@@ -163,7 +208,8 @@
 
 		<!-- Attribution -->
 		<div class="attribution">
-			Source: California DMV Vehicle Fuel Type Count by Zip Code ({current.dataYear}) via data.ca.gov
+			Source: California DMV Vehicle Fuel Type Count by Zip Code ({current.dataYear}) via
+			data.ca.gov
 		</div>
 	{:else if dataLoading}
 		<div class="empty-state">Loading vehicle registration data...</div>
@@ -171,28 +217,6 @@
 		<div class="empty-state">Driveway data will appear after the first sync cycle.</div>
 	{/if}
 </Panel>
-
-<script module lang="ts">
-	/** Convert a small number to a word for playful display */
-	function numberToWord(n: number): string {
-		const words: Record<number, string> = {
-			1: 'one', 2: 'two', 3: 'three', 4: 'four', 5: 'five',
-			6: 'six', 7: 'seven', 8: 'eight', 9: 'nine', 10: 'ten',
-			11: 'eleven', 12: 'twelve', 13: 'thirteen', 14: 'fourteen',
-			15: 'fifteen', 16: 'sixteen', 17: 'seventeen', 18: 'eighteen',
-			19: 'nineteen', 20: 'twenty', 30: 'thirty', 40: 'forty',
-			50: 'fifty', 60: 'sixty', 68: 'sixty-eight', 70: 'seventy',
-			80: 'eighty', 90: 'ninety'
-		};
-		if (words[n]) return words[n];
-		if (n < 100) {
-			const tens = Math.floor(n / 10) * 10;
-			const ones = n % 10;
-			return `${words[tens] ?? tens}-${words[ones] ?? ones}`;
-		}
-		return String(n);
-	}
-</script>
 
 <style>
 	.stats-grid {
@@ -402,7 +426,9 @@
 		font-size: 0.5rem;
 		cursor: pointer;
 		text-align: center;
-		transition: background 0.15s, color 0.15s;
+		transition:
+			background 0.15s,
+			color 0.15s;
 	}
 
 	.show-more:hover {

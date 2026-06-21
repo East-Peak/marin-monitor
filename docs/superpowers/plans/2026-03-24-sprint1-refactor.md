@@ -38,6 +38,7 @@ NOT MODIFIED:
 ## Task 1: Extract Config Files
 
 **Files:**
+
 - Create: `src/lib/config/wire-columns.ts`
 - Create: `src/lib/config/edit-grid.ts`
 
@@ -53,15 +54,15 @@ import type { PanelId } from '$lib/config';
 import type { NewsCategory } from '$lib/types';
 
 export const WIRE_COLUMNS: { panelId: PanelId; category: NewsCategory; title: string }[] = [
-  { panelId: 'local-wire', category: 'local', title: 'Local Wire' },
-  { panelId: 'safety', category: 'safety', title: 'Crime & Safety' },
-  { panelId: 'civic', category: 'civic', title: 'Civic' },
-  { panelId: 'outdoors', category: 'outdoors', title: 'Outdoors & Lifestyle' },
-  { panelId: 'satire', category: 'satire', title: 'Marin Lately (satire)' },
-  { panelId: 'cycling', category: 'cycling', title: 'Cycling & Endurance' },
-  { panelId: 'shows', category: 'shows', title: 'Shows & Events' },
-  { panelId: 'prep', category: 'prep', title: 'Sports & Prep' },
-  { panelId: 'farm', category: 'farm', title: 'Farm & Market' }
+	{ panelId: 'local-wire', category: 'local', title: 'Local Wire' },
+	{ panelId: 'safety', category: 'safety', title: 'Crime & Safety' },
+	{ panelId: 'civic', category: 'civic', title: 'Civic' },
+	{ panelId: 'outdoors', category: 'outdoors', title: 'Outdoors & Lifestyle' },
+	{ panelId: 'satire', category: 'satire', title: 'Marin Lately (satire)' },
+	{ panelId: 'cycling', category: 'cycling', title: 'Cycling & Endurance' },
+	{ panelId: 'shows', category: 'shows', title: 'Shows & Events' },
+	{ panelId: 'prep', category: 'prep', title: 'Sports & Prep' },
+	{ panelId: 'farm', category: 'farm', title: 'Farm & Market' }
 ];
 ```
 
@@ -72,9 +73,17 @@ Extract types, constants, and default layout from +page.svelte lines 73-117:
 ```typescript
 // src/lib/config/edit-grid.ts
 export type EditableTileId =
-  | 'map' | 'cameras' | 'pulse' | 'narrative'
-  | 'weather' | 'tides' | 'housing' | 'forecast'
-  | 'pattern' | 'surf' | 'marine';
+	| 'map'
+	| 'cameras'
+	| 'pulse'
+	| 'narrative'
+	| 'weather'
+	| 'tides'
+	| 'housing'
+	| 'forecast'
+	| 'pattern'
+	| 'surf'
+	| 'marine';
 
 export type TileLayout = { x: number; y: number; w: number; h: number };
 export type TileDefinition = { id: EditableTileId; title: string; visible: boolean };
@@ -86,17 +95,17 @@ export const EDIT_ROW_HEIGHT = 72;
 export const EDIT_GAP = 8;
 
 export const DEFAULT_EDIT_LAYOUT: Record<EditableTileId, TileLayout> = {
-  map: { x: 1, y: 1, w: 9, h: 4 },
-  cameras: { x: 10, y: 1, w: 3, h: 4 },
-  pulse: { x: 1, y: 5, w: 3, h: 3 },
-  narrative: { x: 1, y: 8, w: 3, h: 5 },
-  weather: { x: 4, y: 5, w: 5, h: 4 },
-  housing: { x: 9, y: 5, w: 4, h: 4 },
-  tides: { x: 9, y: 9, w: 4, h: 4 },
-  pattern: { x: 1, y: 13, w: 3, h: 3 },
-  forecast: { x: 4, y: 9, w: 5, h: 4 },
-  surf: { x: 4, y: 13, w: 2, h: 3 },
-  marine: { x: 9, y: 13, w: 4, h: 3 }
+	map: { x: 1, y: 1, w: 9, h: 4 },
+	cameras: { x: 10, y: 1, w: 3, h: 4 },
+	pulse: { x: 1, y: 5, w: 3, h: 3 },
+	narrative: { x: 1, y: 8, w: 3, h: 5 },
+	weather: { x: 4, y: 5, w: 5, h: 4 },
+	housing: { x: 9, y: 5, w: 4, h: 4 },
+	tides: { x: 9, y: 9, w: 4, h: 4 },
+	pattern: { x: 1, y: 13, w: 3, h: 3 },
+	forecast: { x: 4, y: 9, w: 5, h: 4 },
+	surf: { x: 4, y: 13, w: 2, h: 3 },
+	marine: { x: 9, y: 13, w: 4, h: 3 }
 };
 ```
 
@@ -107,9 +116,15 @@ Replace inline definitions with imports. Remove the `wireColumns` const, the typ
 ```typescript
 import { WIRE_COLUMNS } from '$lib/config/wire-columns';
 import {
-  type EditableTileId, type TileLayout, type TileDefinition,
-  EDIT_LAYOUT_KEY, EDIT_GRID_COLUMNS, EDIT_GRID_ROWS, EDIT_ROW_HEIGHT, EDIT_GAP,
-  DEFAULT_EDIT_LAYOUT
+	type EditableTileId,
+	type TileLayout,
+	type TileDefinition,
+	EDIT_LAYOUT_KEY,
+	EDIT_GRID_COLUMNS,
+	EDIT_GRID_ROWS,
+	EDIT_ROW_HEIGHT,
+	EDIT_GAP,
+	DEFAULT_EDIT_LAYOUT
 } from '$lib/config/edit-grid';
 ```
 
@@ -130,6 +145,7 @@ git push origin main
 ## Task 2: Extract WireGrid Component
 
 **Files:**
+
 - Create: `src/lib/components/dashboard/WireGrid.svelte`
 - Modify: `src/routes/+page.svelte`
 
@@ -155,6 +171,7 @@ git push origin main
 ## Task 3: Extract MapStage Component
 
 **Files:**
+
 - Create: `src/lib/components/dashboard/MapStage.svelte`
 - Modify: `src/routes/+page.svelte`
 
@@ -182,6 +199,7 @@ git push origin main
 ## Task 4: Extract SignalDeck Component
 
 **Files:**
+
 - Create: `src/lib/components/dashboard/SignalDeck.svelte`
 - Modify: `src/routes/+page.svelte`
 
@@ -209,6 +227,7 @@ git push origin main
 ## Task 5: Extract LayoutEditMode Component
 
 **Files:**
+
 - Create: `src/lib/components/dashboard/LayoutEditMode.svelte`
 - Modify: `src/routes/+page.svelte`
 
@@ -217,6 +236,7 @@ The largest extraction (~250 lines). Move all layout-edit state, handlers, and t
 - [ ] **Step 1: Create LayoutEditMode.svelte**
 
 Read +page.svelte carefully. Extract:
+
 - Edit state: `editMode`, `editLayout`, `dragState`, `editGridEl` (lines 131-140)
 - All edit functions: `cloneDefaultLayout`, `loadSavedEditLayout`, `persistEditLayout`, `resetEditLayout`, `clampTile`, `updateTileLayout`, `beginDrag`, `handleDragMove`, `endDrag`, `tileStyle`
 - The editable tiles derived computation
@@ -230,11 +250,21 @@ Import config from `$lib/config/edit-grid`.
 - [ ] **Step 2: Replace the edit mode branch in +page.svelte**
 
 Replace the entire `{#if editMode}...{:else}` conditional with:
+
 ```svelte
 {#if editMode}
-  <LayoutEditMode {weatherForecast} {weatherAlerts} {weatherLoading} {weatherError} {userLocation} {earthquakeItems} {earthquakesRaw} allNewsItems={$allNewsItems} />
+	<LayoutEditMode
+		{weatherForecast}
+		{weatherAlerts}
+		{weatherLoading}
+		{weatherError}
+		{userLocation}
+		{earthquakeItems}
+		{earthquakesRaw}
+		allNewsItems={$allNewsItems}
+	/>
 {:else}
-  <!-- normal dashboard view -->
+	<!-- normal dashboard view -->
 {/if}
 ```
 
@@ -258,6 +288,7 @@ git push origin main
 ## Task 6: Server-Side Bootstrap
 
 **Files:**
+
 - Create: `src/routes/+page.server.ts`
 - Modify: `src/routes/+layout.ts`
 - Modify: `src/routes/+page.svelte`
@@ -267,6 +298,7 @@ Enable SSR and add server-side weather/earthquake pre-fetch with CDN caching.
 - [ ] **Step 1: Modify +layout.ts — remove `ssr = false`**
 
 Change to:
+
 ```typescript
 export const prerender = false;
 ```
@@ -279,34 +311,34 @@ Remove the `export const ssr = false;` line entirely.
 import type { ServerLoadEvent } from '@sveltejs/kit';
 
 export async function load({ setHeaders }: ServerLoadEvent) {
-  setHeaders({
-    'Cache-Control': 's-maxage=120, stale-while-revalidate=300'
-  });
+	setHeaders({
+		'Cache-Control': 's-maxage=120, stale-while-revalidate=300'
+	});
 
-  try {
-    const [{ fetchWeather }, { fetchEarthquakes }, { fetchHourlyForecast }] = await Promise.all([
-      import('$lib/api/marin'),
-      import('$lib/api/marin'),
-      import('$lib/api/marin/nws-hourly')
-    ]);
+	try {
+		const [{ fetchWeather }, { fetchEarthquakes }, { fetchHourlyForecast }] = await Promise.all([
+			import('$lib/api/marin'),
+			import('$lib/api/marin'),
+			import('$lib/api/marin/nws-hourly')
+		]);
 
-    const [weather, earthquakes, hourly] = await Promise.allSettled([
-      fetchWeather(37.9735, -122.5311),
-      fetchEarthquakes(),
-      fetchHourlyForecast()
-    ]);
+		const [weather, earthquakes, hourly] = await Promise.allSettled([
+			fetchWeather(37.9735, -122.5311),
+			fetchEarthquakes(),
+			fetchHourlyForecast()
+		]);
 
-    return {
-      bootstrap: {
-        weather: weather.status === 'fulfilled' ? weather.value : null,
-        earthquakes: earthquakes.status === 'fulfilled' ? earthquakes.value : [],
-        hourly: hourly.status === 'fulfilled' ? hourly.value : [],
-        timestamp: Date.now()
-      }
-    };
-  } catch {
-    return { bootstrap: null };
-  }
+		return {
+			bootstrap: {
+				weather: weather.status === 'fulfilled' ? weather.value : null,
+				earthquakes: earthquakes.status === 'fulfilled' ? earthquakes.value : [],
+				hourly: hourly.status === 'fulfilled' ? hourly.value : [],
+				timestamp: Date.now()
+			}
+		};
+	} catch {
+		return { bootstrap: null };
+	}
 }
 ```
 
@@ -325,17 +357,16 @@ let weatherAlerts = $state(data?.bootstrap?.weather?.alerts ?? []);
 let weatherLoading = $state(!data?.bootstrap?.weather);
 let weatherError = $state<string | null>(null);
 let earthquakeItems = $state(
-  data?.bootstrap?.earthquakes?.length
-    ? earthquakesToNewsItems(data.bootstrap.earthquakes)
-    : []
+	data?.bootstrap?.earthquakes?.length ? earthquakesToNewsItems(data.bootstrap.earthquakes) : []
 );
 let earthquakesRaw = $state(data?.bootstrap?.earthquakes ?? []);
 ```
 
 In `onMount`, skip the initial weather fetch if we already have server data:
+
 ```typescript
 if (!data?.bootstrap?.weather) {
-  await loadWeather();
+	await loadWeather();
 }
 ```
 
@@ -389,6 +420,7 @@ npm run test:unit 2>&1 | tail -5
 - [ ] **Step 3: Visual verification**
 
 Start dev server and verify:
+
 - Main dashboard looks identical
 - Weather data appears immediately (not loading spinner) on first load
 - Layout edit mode works (drag, resize, persist)

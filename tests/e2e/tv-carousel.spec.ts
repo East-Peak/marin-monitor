@@ -42,7 +42,7 @@ async function navigateToScreen(page: Page, locator: Locator, maxAttempts = 30):
 /** Check that no .tv-screen content overflows below the chyron */
 async function assertFitsViewport(page: Page) {
 	const content = page.locator('.tv-screen');
-	if (await content.count() > 0) {
+	if ((await content.count()) > 0) {
 		const box = await content.first().boundingBox();
 		if (box) {
 			expect(box.y + box.height).toBeLessThanOrEqual(USABLE_CONTENT_BOTTOM + 2);
@@ -74,7 +74,9 @@ test.describe('TV Carousel', () => {
 
 	test('can navigate screens with arrow keys', async ({ page }) => {
 		// First screen: county map with sidebar heading "Marin County"
-		await expect(page.getByRole('heading', { name: 'Marin County' })).toBeVisible({ timeout: 10000 });
+		await expect(page.getByRole('heading', { name: 'Marin County' })).toBeVisible({
+			timeout: 10000
+		});
 
 		await page.keyboard.press('ArrowRight');
 		await page.waitForTimeout(700);
@@ -83,7 +85,9 @@ test.describe('TV Carousel', () => {
 	});
 
 	test('map screens render with sidebar', async ({ page }) => {
-		await expect(page.getByRole('heading', { name: 'Marin County' })).toBeVisible({ timeout: 10000 });
+		await expect(page.getByRole('heading', { name: 'Marin County' })).toBeVisible({
+			timeout: 10000
+		});
 		await expect(page.locator('text=/\\d+°F/').first()).toBeVisible({ timeout: 10000 });
 	});
 });
@@ -150,7 +154,9 @@ test.describe('TV Screen Content', () => {
 		await page.waitForTimeout(1000);
 		await page.screenshot({ path: 'tests/e2e/screenshots/tv-structural.png' });
 
-		await expect(page.locator('text=Private School Tuition').first()).toBeVisible({ timeout: 10000 });
+		await expect(page.locator('text=Private School Tuition').first()).toBeVisible({
+			timeout: 10000
+		});
 		await expect(page.locator('text=Housing Market').first()).toBeVisible({ timeout: 10000 });
 
 		// Housing should show real data: median price like $1.36M
@@ -209,7 +215,9 @@ test.describe('TV Screen Content', () => {
 		await expect(page.locator('text=Hero Dirt Tracker').first()).toBeVisible({ timeout: 10000 });
 		// "Stream Gauges" appears in both the map sidebar context and outdoors card
 		// Use the outdoors-specific heading which uses uppercase CSS class
-		await expect(page.getByText('Stream Gauges', { exact: true }).first()).toBeVisible({ timeout: 10000 });
+		await expect(page.getByText('Stream Gauges', { exact: true }).first()).toBeVisible({
+			timeout: 10000
+		});
 	});
 
 	test('Camera cluster screens show images', async ({ page }) => {
@@ -248,11 +256,14 @@ test.describe('TV Screen Content Density', () => {
 
 		// Should show individual shop names
 		const shopNames = page.locator('text=/Coffee Roasters|Equator|Philz/');
-		const hasShops = await shopNames.count() > 0;
+		const hasShops = (await shopNames.count()) > 0;
 
 		// Should show CHEAPEST / PRICIEST sections for gas
 		const cheapest = page.locator('text=CHEAPEST');
-		const hasCheapest = await cheapest.first().isVisible().catch(() => false);
+		const hasCheapest = await cheapest
+			.first()
+			.isVisible()
+			.catch(() => false);
 
 		// At least one of these density indicators should be present
 		expect(hasShops || hasCheapest).toBe(true);
@@ -271,7 +282,7 @@ test.describe('TV Screen Content Density', () => {
 
 		// Housing metrics: $/sq ft, Active Listings, Days on Market, Homes Sold
 		const housingMetrics = page.locator('text=/sq ft|Active Listings|Days on Market|Homes Sold/i');
-		const hasMetrics = await housingMetrics.count() > 0;
+		const hasMetrics = (await housingMetrics.count()) > 0;
 		expect(hasMetrics).toBe(true);
 	});
 });

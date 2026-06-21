@@ -88,10 +88,7 @@ async function scrapeDogWalkerRates() {
 			const ld = JSON.parse(match[1]);
 			const items = Array.isArray(ld) ? ld : [ld];
 			for (const item of items) {
-				if (
-					item['@type'] === 'LocalBusiness' ||
-					item['@type'] === 'ProfessionalService'
-				) {
+				if (item['@type'] === 'LocalBusiness' || item['@type'] === 'ProfessionalService') {
 					const range = parsePriceRange(item.priceRange);
 					if (range) {
 						walkerPrices.push({
@@ -115,8 +112,7 @@ async function scrapeDogWalkerRates() {
 									name: graphItem.name || 'Unknown',
 									min: range.min,
 									max: range.max,
-									midpoint:
-										Math.round(((range.min + range.max) / 2) * 100) / 100
+									midpoint: Math.round(((range.min + range.max) / 2) * 100) / 100
 								});
 							}
 						}
@@ -151,9 +147,7 @@ async function scrapeDogWalkerRates() {
 
 	// Strategy 3: Look for individual price mentions
 	if (walkerPrices.length === 0) {
-		const singlePrices = html.matchAll(
-			/\$(\d+(?:\.\d+)?)\s*(?:\/|per\s+)?(?:walk|visit)/gi
-		);
+		const singlePrices = html.matchAll(/\$(\d+(?:\.\d+)?)\s*(?:\/|per\s+)?(?:walk|visit)/gi);
 		for (const match of singlePrices) {
 			const price = parseFloat(match[1]);
 			if (price >= 10 && price <= 100) {
@@ -190,9 +184,10 @@ async function main() {
 
 	// Use scraped data or known fallbacks
 	const medianWalkPrice = computeMedian(midpoints) ?? 30;
-	const avgWalkPrice = midpoints.length > 0
-		? Math.round((midpoints.reduce((a, b) => a + b, 0) / midpoints.length) * 100) / 100
-		: 30;
+	const avgWalkPrice =
+		midpoints.length > 0
+			? Math.round((midpoints.reduce((a, b) => a + b, 0) / midpoints.length) * 100) / 100
+			: 30;
 	const minWalkPrice = allMins.length > 0 ? Math.min(...allMins) : 15;
 	const maxWalkPrice = allMaxes.length > 0 ? Math.max(...allMaxes) : 45;
 
@@ -219,22 +214,25 @@ async function main() {
 	// Dog walker component only — the static item covers the full dog cost
 	const monthlyWalkerOnly = monthlyAt3xWeek;
 	const nowIso = new Date().toISOString();
-	const snapshot = withPreservedSuccessfulScrapeMetadata({
-		timestamp: nowIso,
-		walkerCount: walkerPrices.length,
-		medianWalkPrice,
-		avgWalkPrice,
-		minWalkPrice,
-		maxWalkPrice,
-		monthlyAt3xWeek,
-		monthlyWalkerOnly,
-		scraped,
-		source: scraped ? 'thumbtack.com' : 'fallback'
-	}, {
-		wasLive: scraped,
-		previous: existing.current,
-		includeLegacyLastLive: true
-	});
+	const snapshot = withPreservedSuccessfulScrapeMetadata(
+		{
+			timestamp: nowIso,
+			walkerCount: walkerPrices.length,
+			medianWalkPrice,
+			avgWalkPrice,
+			minWalkPrice,
+			maxWalkPrice,
+			monthlyAt3xWeek,
+			monthlyWalkerOnly,
+			scraped,
+			source: scraped ? 'thumbtack.com' : 'fallback'
+		},
+		{
+			wasLive: scraped,
+			previous: existing.current,
+			includeLegacyLastLive: true
+		}
+	);
 
 	// Append history
 	const history = [snapshot, ...existing.history].slice(0, MAX_HISTORY);

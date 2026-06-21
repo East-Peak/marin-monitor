@@ -7,12 +7,6 @@ import type { SchoolIndexData } from '$lib/types/school';
 
 export const schoolTuitionStore = writable<SchoolIndexData>({ current: null, history: [] });
 
-export const currentSchoolTiers = derived(
-	schoolTuitionStore,
-	($d) => $d.current?.tiers ?? []
-);
+export const currentSchoolTiers = derived(schoolTuitionStore, ($d) => $d.current?.tiers ?? []);
 
-export const currentSchools = derived(
-	schoolTuitionStore,
-	($d) => $d.current?.schools ?? []
-);
+export const currentSchools = derived(schoolTuitionStore, ($d) => $d.current?.schools ?? []);

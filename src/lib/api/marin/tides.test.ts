@@ -78,10 +78,7 @@ describe('NOAA Tides adapter', () => {
 		it('maps type "H" to high and "L" to low', async () => {
 			mockRequest.mockResolvedValueOnce(
 				wrapResult({
-					predictions: [
-						makeNoaaPrediction({ type: 'H' }),
-						makeNoaaPrediction({ type: 'L' })
-					]
+					predictions: [makeNoaaPrediction({ type: 'H' }), makeNoaaPrediction({ type: 'L' })]
 				})
 			);
 
@@ -94,10 +91,7 @@ describe('NOAA Tides adapter', () => {
 		it('defaults non-H type values to "L"', async () => {
 			mockRequest.mockResolvedValueOnce(
 				wrapResult({
-					predictions: [
-						makeNoaaPrediction({ type: undefined }),
-						makeNoaaPrediction({ type: 'X' })
-					]
+					predictions: [makeNoaaPrediction({ type: undefined }), makeNoaaPrediction({ type: 'X' })]
 				})
 			);
 
@@ -110,10 +104,7 @@ describe('NOAA Tides adapter', () => {
 		it('parses height string to float', async () => {
 			mockRequest.mockResolvedValueOnce(
 				wrapResult({
-					predictions: [
-						makeNoaaPrediction({ v: '3.140' }),
-						makeNoaaPrediction({ v: '-1.250' })
-					]
+					predictions: [makeNoaaPrediction({ v: '3.140' }), makeNoaaPrediction({ v: '-1.250' })]
 				})
 			);
 

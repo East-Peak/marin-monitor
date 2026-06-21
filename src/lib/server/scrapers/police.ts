@@ -19,8 +19,7 @@ const FAIRFAX_DOCS_URL =
 const MILL_VALLEY_DOC_ENDPOINT =
 	'https://www.cityofmillvalley.gov/Admin/DocumentCenter/Home/Document_AjaxBinding?renderMode=0&loadSource=7';
 const ROSS_STATS_URL = 'https://www.townofrossca.gov/police/page/monthly-statistics';
-const TIBURON_POLICE_FEED_URL =
-	'https://www.townoftiburon.org/m/newsflash?cat=8&sortBy=Category';
+const TIBURON_POLICE_FEED_URL = 'https://www.townoftiburon.org/m/newsflash?cat=8&sortBy=Category';
 const TIBURON_BASE_URL = 'https://www.townoftiburon.org';
 const BELVEDERE_POSTS_URL =
 	'https://www.cityofbelvedere.org/wp-json/wp/v2/posts?per_page=40&_fields=id,date,link,title,excerpt,content';
@@ -63,8 +62,7 @@ const TIBURON_TITLE_HINTS =
 	/(police|arrest|burglary|robbery|theft|dui|checkpoint|scam|traffic|safety|siren|preparedness)/i;
 const TIBURON_BODY_HINTS =
 	/(tiburon police|police department|calls for service|traffic citations|burglary|theft|robbery|dui|checkpoint|preparedness|public safety|traffic advisory|scam)/i;
-const BELVEDERE_TITLE_HINTS =
-	/(officer|police|emergency|alert|public safety|wellbeing|camera)/i;
+const BELVEDERE_TITLE_HINTS = /(officer|police|emergency|alert|public safety|wellbeing|camera)/i;
 const BELVEDERE_CONTENT_HINTS =
 	/(alertmarin|nixle|emergency notification|security camera|wellbeing checks|firearm safety|police transparency)/i;
 
@@ -106,11 +104,7 @@ async function resolveDocumentDate(
 	return fallback;
 }
 
-function appendLocation(
-	item: NewsItem,
-	town?: string,
-	townSlug?: string
-): NewsItem {
+function appendLocation(item: NewsItem, town?: string, townSlug?: string): NewsItem {
 	if (!town || !townSlug) return item;
 	return {
 		...item,
@@ -215,9 +209,13 @@ function buildHtmlItem(params: {
 }
 
 async function fetchFairfaxLogs(): Promise<NewsItem[]> {
-	const response = await fetchWithTimeout(FAIRFAX_DOCS_URL, {
-		headers: { Accept: 'application/json' }
-	}, 8000);
+	const response = await fetchWithTimeout(
+		FAIRFAX_DOCS_URL,
+		{
+			headers: { Accept: 'application/json' }
+		},
+		8000
+	);
 	if (!response.ok) throw new Error(`Fairfax fetch failed: ${response.status}`);
 
 	const docs = (await response.json()) as Array<{
@@ -263,11 +261,15 @@ async function fetchMillValleyLogs(): Promise<NewsItem[]> {
 		sortOrder: 0
 	};
 
-	const response = await fetchWithTimeout(MILL_VALLEY_DOC_ENDPOINT, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json;charset=UTF-8' },
-		body: JSON.stringify(payload)
-	}, 8000);
+	const response = await fetchWithTimeout(
+		MILL_VALLEY_DOC_ENDPOINT,
+		{
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json;charset=UTF-8' },
+			body: JSON.stringify(payload)
+		},
+		8000
+	);
 	if (!response.ok) {
 		throw new Error(`Mill Valley document fetch failed: ${response.status}`);
 	}
@@ -284,9 +286,7 @@ async function fetchMillValleyLogs(): Promise<NewsItem[]> {
 	return (docs.Documents || [])
 		.filter((doc) => /calls for service/i.test(doc.DisplayName || ''))
 		.map((doc) => {
-			const pubDate = new Date(
-				`${doc.LastModifiedDateString} 12:00:00 PST`
-			).toISOString();
+			const pubDate = new Date(`${doc.LastModifiedDateString} 12:00:00 PST`).toISOString();
 			return buildDocumentItem({
 				id: `mill-valley-police-log-${doc.ID}`,
 				title: `Weekly calls for service · ${formatPeriod(doc.DisplayName || 'Mill Valley')}`,
@@ -304,9 +304,13 @@ async function fetchMillValleyLogs(): Promise<NewsItem[]> {
 }
 
 async function fetchRossStats(): Promise<NewsItem[]> {
-	const response = await fetchWithTimeout(ROSS_STATS_URL, {
-		headers: { Accept: 'text/html' }
-	}, 8000);
+	const response = await fetchWithTimeout(
+		ROSS_STATS_URL,
+		{
+			headers: { Accept: 'text/html' }
+		},
+		8000
+	);
 	if (!response.ok) throw new Error(`Ross fetch failed: ${response.status}`);
 
 	const html = await response.text();
@@ -342,9 +346,13 @@ async function fetchRossStats(): Promise<NewsItem[]> {
 }
 
 async function fetchTiburonPoliceNews(): Promise<NewsItem[]> {
-	const response = await fetchWithTimeout(TIBURON_POLICE_FEED_URL, {
-		headers: { Accept: 'text/html' }
-	}, 8000);
+	const response = await fetchWithTimeout(
+		TIBURON_POLICE_FEED_URL,
+		{
+			headers: { Accept: 'text/html' }
+		},
+		8000
+	);
 	if (!response.ok) throw new Error(`Tiburon news flash fetch failed: ${response.status}`);
 
 	const feedHtml = await response.text();
@@ -357,10 +365,7 @@ async function fetchTiburonPoliceNews(): Promise<NewsItem[]> {
 			href,
 			title: decodeEntities(rawTitle).trim()
 		}))
-		.filter(
-			(item, index, list) =>
-				list.findIndex((c) => c.href === item.href) === index
-		)
+		.filter((item, index, list) => list.findIndex((c) => c.href === item.href) === index)
 		.filter((item) => TIBURON_TITLE_HINTS.test(item.title));
 
 	const items = await Promise.all(
@@ -368,9 +373,13 @@ async function fetchTiburonPoliceNews(): Promise<NewsItem[]> {
 			const articleId = href.match(/(\d+)(?!.*\d)/)?.[1];
 			if (!articleId) return null;
 			const detailUrl = `${TIBURON_BASE_URL}/CivicAlerts.aspx?AID=${articleId}`;
-			const detailResponse = await fetchWithTimeout(detailUrl, {
-				headers: { Accept: 'text/html' }
-			}, 8000);
+			const detailResponse = await fetchWithTimeout(
+				detailUrl,
+				{
+					headers: { Accept: 'text/html' }
+				},
+				8000
+			);
 			if (!detailResponse.ok) return null;
 
 			const detailHtml = await detailResponse.text();
@@ -379,9 +388,7 @@ async function fetchTiburonPoliceNews(): Promise<NewsItem[]> {
 				/<div class="article-content fr-view">([\s\S]*?)<!-- Article Footer \/ Related News -->/i
 			);
 
-			const pubDate = dateMatch
-				? new Date(`${dateMatch[1]} 12:00:00 PST`).toISOString()
-				: null;
+			const pubDate = dateMatch ? new Date(`${dateMatch[1]} 12:00:00 PST`).toISOString() : null;
 			const content = stripHtml(contentMatch?.[1] || '');
 			if (!pubDate || !TIBURON_BODY_HINTS.test(`${title} ${content}`)) return null;
 
@@ -409,9 +416,13 @@ async function fetchTiburonPoliceNews(): Promise<NewsItem[]> {
 }
 
 async function fetchBelvedereSafetyPosts(): Promise<NewsItem[]> {
-	const response = await fetchWithTimeout(BELVEDERE_POSTS_URL, {
-		headers: { Accept: 'application/json' }
-	}, 8000);
+	const response = await fetchWithTimeout(
+		BELVEDERE_POSTS_URL,
+		{
+			headers: { Accept: 'application/json' }
+		},
+		8000
+	);
 	if (!response.ok) throw new Error(`Belvedere posts fetch failed: ${response.status}`);
 
 	const posts = (await response.json()) as Array<{
@@ -430,10 +441,7 @@ async function fetchBelvedereSafetyPosts(): Promise<NewsItem[]> {
 			const description = excerpt(post.excerpt?.rendered || content);
 			const haystack = `${title} ${content}`;
 
-			if (
-				!BELVEDERE_TITLE_HINTS.test(title) &&
-				!BELVEDERE_CONTENT_HINTS.test(haystack)
-			) {
+			if (!BELVEDERE_TITLE_HINTS.test(title) && !BELVEDERE_CONTENT_HINTS.test(haystack)) {
 				return null;
 			}
 
@@ -454,9 +462,7 @@ async function fetchBelvedereSafetyPosts(): Promise<NewsItem[]> {
 }
 
 function extractNixleDate(doc: Document): string | null {
-	const headerText = normalizeWhitespace(
-		doc.querySelector('.hd.clearfix')?.textContent || ''
-	);
+	const headerText = normalizeWhitespace(doc.querySelector('.hd.clearfix')?.textContent || '');
 	const match = headerText.match(
 		/[A-Za-z]+\s+[A-Za-z]+\s+\d{1,2}(?:st|nd|rd|th)?,\s+\d{4}\s+::\s+\d{1,2}:\d{2}\s+[ap]\.m\.\s+(?:PST|PDT)/i
 	);
@@ -512,15 +518,17 @@ async function fetchNixleAgencyAlerts(agency: {
 	townHints?: { name: string; slug: string; patterns?: string[] }[];
 }): Promise<NewsItem[]> {
 	const results: NewsItem[] = [];
-	const baseUrl = agency.listingUrl.endsWith('/')
-		? agency.listingUrl
-		: `${agency.listingUrl}/`;
+	const baseUrl = agency.listingUrl.endsWith('/') ? agency.listingUrl : `${agency.listingUrl}/`;
 
 	for (let pageNumber = 1; pageNumber <= NIXLE_MAX_PAGES; pageNumber += 1) {
 		const pageUrl = pageNumber === 1 ? baseUrl : `${baseUrl}?page=${pageNumber}`;
-		const response = await fetchWithTimeout(pageUrl, {
-			headers: { Accept: 'text/html' }
-		}, 8000);
+		const response = await fetchWithTimeout(
+			pageUrl,
+			{
+				headers: { Accept: 'text/html' }
+			},
+			8000
+		);
 		if (!response.ok) {
 			throw new Error(`${agency.source} Nixle fetch failed: ${response.status}`);
 		}
@@ -545,9 +553,7 @@ async function fetchNixleAgencyAlerts(agency: {
 
 				const townMatch =
 					inferTown(`${detail.title} ${detail.content}`, agency.townHints || []) ||
-					(agency.town && agency.townSlug
-						? { name: agency.town, slug: agency.townSlug }
-						: null);
+					(agency.town && agency.townSlug ? { name: agency.town, slug: agency.townSlug } : null);
 
 				return buildHtmlItem({
 					id: `nixle-${slugify(agency.source)}-${detailLink.split('/').filter(Boolean).pop()?.toLowerCase()}`,
@@ -559,20 +565,13 @@ async function fetchNixleAgencyAlerts(agency: {
 					townSlug: townMatch?.slug,
 					description: detail.description,
 					content: detail.content,
-					topics: [
-						'public-safety',
-						'police-alert',
-						priorityTopic,
-						'official-update'
-					],
+					topics: ['public-safety', 'police-alert', priorityTopic, 'official-update'],
 					isAlert: priorityTopic !== 'community'
 				});
 			})
 		);
 
-		const recentItems = pageItems.filter(
-			(item): item is NewsItem => item !== null
-		);
+		const recentItems = pageItems.filter((item): item is NewsItem => item !== null);
 		results.push(...recentItems);
 		if (recentItems.length === 0) break;
 	}
@@ -598,9 +597,7 @@ export async function scrapePolice(): Promise<NewsItem[]> {
 
 	for (const result of sources) {
 		if (result.status === 'rejected') {
-			console.warn(
-				`[police-logs] ${(result.reason as Error)?.message || result.reason}`
-			);
+			console.warn(`[police-logs] ${(result.reason as Error)?.message || result.reason}`);
 		}
 	}
 

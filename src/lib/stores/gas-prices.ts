@@ -7,7 +7,4 @@ import type { GasPriceData } from '$lib/types/gas';
 
 export const gasPriceStore = writable<GasPriceData>({ current: null, history: [] });
 
-export const currentGasStations = derived(
-	gasPriceStore,
-	($d) => $d.current?.stations ?? []
-);
+export const currentGasStations = derived(gasPriceStore, ($d) => $d.current?.stations ?? []);

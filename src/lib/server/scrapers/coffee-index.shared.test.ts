@@ -31,17 +31,19 @@ describe('extractDrinkPricesFromState', () => {
 	it('extracts tracked drinks and avoids noisy coffee matches', () => {
 		const state = {
 			'Menu:abc123': {
-				groups: [{
-					name: 'Hot Drinks',
-					items: [
-						{ name: 'Cappuccino', prices: [5.25] },
-						{ name: 'Caffe Latte', prices: [5.95] },
-						{ name: 'Flat White Latte', prices: [5.75] },
-						{ name: '10oz Coffee', prices: [3.5] },
-						{ name: 'Pour-Over', prices: [4.75] },
-						{ name: 'Coffee Cake', prices: [5] }
-					]
-				}]
+				groups: [
+					{
+						name: 'Hot Drinks',
+						items: [
+							{ name: 'Cappuccino', prices: [5.25] },
+							{ name: 'Caffe Latte', prices: [5.95] },
+							{ name: 'Flat White Latte', prices: [5.75] },
+							{ name: '10oz Coffee', prices: [3.5] },
+							{ name: 'Pour-Over', prices: [4.75] },
+							{ name: 'Coffee Cake', prices: [5] }
+						]
+					}
+				]
 			}
 		};
 

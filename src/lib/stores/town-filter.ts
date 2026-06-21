@@ -51,7 +51,7 @@ export const townFilter = createTownFilterStore();
 
 /** The full Town object for the selected town, or null for county-wide */
 export const selectedTownObj = derived(townFilter, ($slug): Town | null =>
-	$slug ? TOWN_BY_SLUG[$slug] ?? null : null
+	$slug ? (TOWN_BY_SLUG[$slug] ?? null) : null
 );
 
 /**

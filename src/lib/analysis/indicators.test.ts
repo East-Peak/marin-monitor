@@ -402,9 +402,7 @@ describe('computeHeroDirt', () => {
 		const result = computeHeroDirt(observed, makeForecast());
 
 		// Check the recent events — should be no dew in the last 24h at noon
-		const recentDew = result.moistureEvents.filter(
-			(e) => e.type === 'dew' && e.hoursAgo <= 24
-		);
+		const recentDew = result.moistureEvents.filter((e) => e.type === 'dew' && e.hoursAgo <= 24);
 		expect(recentDew.length).toBe(0);
 	});
 

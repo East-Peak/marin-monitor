@@ -112,9 +112,7 @@ export async function scrapePacificsSchedule(now: number): Promise<NewsItem[]> {
 			const small = cell.querySelector('small');
 			if (!small) continue;
 			const dateText = (small.textContent || '').replace(/\s+/g, ' ').trim();
-			const dateMatch = dateText.match(
-				/(\d{1,2}\/\d{1,2}\/\d{4})\s*(\d{1,2}:\d{2}\s*(?:AM|PM))/i
-			);
+			const dateMatch = dateText.match(/(\d{1,2}\/\d{1,2}\/\d{4})\s*(\d{1,2}:\d{2}\s*(?:AM|PM))/i);
 			if (!dateMatch) continue;
 
 			const gameDate = new Date(`${dateMatch[1]} ${dateMatch[2]}`);
@@ -164,9 +162,7 @@ export async function scrapePacificsSchedule(now: number): Promise<NewsItem[]> {
 		}
 
 		if (items.length > 0) {
-			return items
-				.sort((a, b) => a.timestamp - b.timestamp)
-				.slice(0, 20);
+			return items.sort((a, b) => a.timestamp - b.timestamp).slice(0, 20);
 		}
 	} catch {
 		// Fall through to hub fallback
@@ -180,8 +176,7 @@ export async function scrapePacificsSchedule(now: number): Promise<NewsItem[]> {
 			category: 'prep',
 			title: pacificsHub.title || 'San Rafael Pacifics schedule',
 			url: pacificsHub.url,
-			description:
-				'Local sports hub for schedules, fixtures, club updates, or season information.',
+			description: 'Local sports hub for schedules, fixtures, club updates, or season information.',
 			verification: 'community',
 			town: pacificsHub.town,
 			townSlug: pacificsHub.townSlug,
@@ -238,9 +233,7 @@ export async function scrapeMarinRowingCalendar(now: number): Promise<NewsItem[]
 			if (item) items.push(item);
 		}
 
-		return items
-			.sort((a, b) => a.timestamp - b.timestamp)
-			.slice(0, 15);
+		return items.sort((a, b) => a.timestamp - b.timestamp).slice(0, 15);
 	} catch {
 		return [];
 	}
@@ -287,8 +280,7 @@ export async function scrapePrepHubs(now: number): Promise<NewsItem[]> {
 					category: 'prep',
 					title: hub.title || `${hub.source} hub`,
 					url: hub.url,
-					description:
-						'Official athletics or team hub for a Marin-area school or league program.',
+					description: 'Official athletics or team hub for a Marin-area school or league program.',
 					verification: 'official',
 					town: hub.town,
 					townSlug: hub.townSlug,

@@ -36,10 +36,10 @@ describe('buildSegmentCatalog', () => {
 			if (isLocalCuratedFile(filePath)) return false;
 			return actualExistsSync(filePath);
 		});
-		vi.spyOn(fs, 'readFileSync').mockImplementation(
-			((filePath: fs.PathOrFileDescriptor, options?: Parameters<typeof fs.readFileSync>[1]) =>
-				actualReadFileSync(filePath, options as never)) as typeof fs.readFileSync
-		);
+		vi.spyOn(fs, 'readFileSync').mockImplementation(((
+			filePath: fs.PathOrFileDescriptor,
+			options?: Parameters<typeof fs.readFileSync>[1]
+		) => actualReadFileSync(filePath, options as never)) as typeof fs.readFileSync);
 	});
 
 	afterEach(() => {
@@ -216,14 +216,15 @@ describe('buildSegmentCatalog', () => {
 				if (isLocalCuratedFile(filePath)) return true;
 				return actualExistsSync(filePath);
 			});
-			vi.mocked(fs.readFileSync).mockImplementation(
-				((filePath: fs.PathOrFileDescriptor, options?: Parameters<typeof fs.readFileSync>[1]) => {
-					if (isLocalCuratedFile(filePath)) {
-						return JSON.stringify({ catalog: localCatalog });
-					}
-					return actualReadFileSync(filePath, options as never);
-				}) as typeof fs.readFileSync
-			);
+			vi.mocked(fs.readFileSync).mockImplementation(((
+				filePath: fs.PathOrFileDescriptor,
+				options?: Parameters<typeof fs.readFileSync>[1]
+			) => {
+				if (isLocalCuratedFile(filePath)) {
+					return JSON.stringify({ catalog: localCatalog });
+				}
+				return actualReadFileSync(filePath, options as never);
+			}) as typeof fs.readFileSync);
 
 			const catalog = await buildSegmentCatalog(null);
 			const segment = catalog.segments.find((entry) => entry.id === seed.id);
@@ -262,14 +263,15 @@ describe('buildSegmentCatalog', () => {
 		it('keeps the seed ID and curated name stable in the catalog', async () => {
 			const auth = await import('./strava-auth');
 			vi.spyOn(auth, 'getStravaAccessToken').mockResolvedValue('token');
-			vi.spyOn(globalThis, 'setTimeout').mockImplementation(
-				(((callback: Parameters<typeof setTimeout>[0]) => {
-					if (typeof callback === 'function') callback();
-					return 0 as unknown as ReturnType<typeof setTimeout>;
-				}) as unknown) as typeof setTimeout
-			);
+			vi.spyOn(globalThis, 'setTimeout').mockImplementation(((
+				callback: Parameters<typeof setTimeout>[0]
+			) => {
+				if (typeof callback === 'function') callback();
+				return 0 as unknown as ReturnType<typeof setTimeout>;
+			}) as unknown as typeof setTimeout);
 
-			const seed = SEED_SEGMENTS.find((segment) => segment.activityType === 'run') ?? SEED_SEGMENTS[0];
+			const seed =
+				SEED_SEGMENTS.find((segment) => segment.activityType === 'run') ?? SEED_SEGMENTS[0];
 			const fetchMock = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
 				const url = String(input);
 				if (!url.includes(`/segments/${seed.id}`)) {

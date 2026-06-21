@@ -40,7 +40,7 @@ const FARM_MARKETS = [
 		url: 'https://www.agriculturalinstitute.org/san-rafael-summer-1',
 		town: 'San Rafael',
 		townSlug: 'san-rafael',
-		lat: 37.9720,
+		lat: 37.972,
 		lon: -122.5227
 	}
 ] as const;
@@ -72,7 +72,7 @@ export async function scrapeFarmMarketSchedule(
 		if (seasonMatch) parts.push(seasonMatch[1]);
 		else if (yearRoundMatch) parts.push('Year-round');
 
-		let location = 'town' in market ? (market.town || '') : '';
+		let location = 'town' in market ? market.town || '' : '';
 		if (locationMatch) location = locationMatch[1].trim();
 
 		const title =
@@ -141,8 +141,7 @@ export async function scrapePointReyesCheese(now: number): Promise<NewsItem[]> {
 			category: 'farm',
 			title: 'Point Reyes Farmstead Cheese journal',
 			url: 'https://www.pointreyescheese.com/blogs/news',
-			description:
-				'Official Point Reyes Farmstead Cheese news and seasonal product updates.',
+			description: 'Official Point Reyes Farmstead Cheese news and seasonal product updates.',
 			verification: 'official',
 			town: 'Point Reyes Station',
 			townSlug: 'point-reyes',

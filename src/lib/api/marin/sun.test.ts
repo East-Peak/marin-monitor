@@ -89,9 +89,7 @@ describe('fetchSunTimes', () => {
 	});
 
 	it('returns null when API status is not OK', async () => {
-		mockFetch.mockResolvedValueOnce(
-			makeResponse({ status: 'INVALID_REQUEST', results: {} })
-		);
+		mockFetch.mockResolvedValueOnce(makeResponse({ status: 'INVALID_REQUEST', results: {} }));
 
 		const result = await fetchSunTimes();
 
@@ -103,9 +101,7 @@ describe('fetchSunTimes', () => {
 
 		await fetchSunTimes(38.0, -122.6);
 
-		expect(mockFetch).toHaveBeenCalledWith(
-			expect.stringContaining('lat=38&lng=-122.6')
-		);
+		expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('lat=38&lng=-122.6'));
 	});
 
 	it('uses default Marin coordinates when no arguments provided', async () => {
@@ -113,9 +109,7 @@ describe('fetchSunTimes', () => {
 
 		await fetchSunTimes();
 
-		expect(mockFetch).toHaveBeenCalledWith(
-			expect.stringContaining('lat=37.9735&lng=-122.5311')
-		);
+		expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('lat=37.9735&lng=-122.5311'));
 	});
 
 	it('handles edge case of exactly 0 seconds day length', async () => {

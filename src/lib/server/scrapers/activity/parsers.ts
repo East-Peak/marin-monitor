@@ -3,30 +3,23 @@
  * These handle RSS, Atom, JSON-LD, single-page, and event-page patterns.
  */
 import type { NewsItem } from '$lib/types';
-import {
-	stripHtml,
-	safeFetch,
-	fetchLastModified,
-	parseXml
-} from '../shared';
+import { stripHtml, safeFetch, fetchLastModified, parseXml } from '../shared';
 import type { EventPageConfig } from './types';
-import {
-	buildItem,
-	getTagText,
-	flattenJsonLdEvents,
-	buildEventTitle
-} from './helpers';
+import { buildItem, getTagText, flattenJsonLdEvents, buildEventTitle } from './helpers';
 
-export async function parseRssFeed(config: {
-	source: string;
-	url: string;
-	town?: string;
-	townSlug?: string;
-	lat?: number;
-	lon?: number;
-	category: string;
-	topics?: string[];
-}, now: number): Promise<NewsItem[]> {
+export async function parseRssFeed(
+	config: {
+		source: string;
+		url: string;
+		town?: string;
+		townSlug?: string;
+		lat?: number;
+		lon?: number;
+		category: string;
+		topics?: string[];
+	},
+	now: number
+): Promise<NewsItem[]> {
 	const xml = await safeFetch(config.url);
 	const doc = parseXml(xml);
 	const items: NewsItem[] = [];
@@ -59,16 +52,19 @@ export async function parseRssFeed(config: {
 	return items;
 }
 
-export async function parseAtomFeed(config: {
-	source: string;
-	url: string;
-	category: string;
-	town?: string;
-	townSlug?: string;
-	lat?: number;
-	lon?: number;
-	topics?: string[];
-}, now: number): Promise<NewsItem[]> {
+export async function parseAtomFeed(
+	config: {
+		source: string;
+		url: string;
+		category: string;
+		town?: string;
+		townSlug?: string;
+		lat?: number;
+		lon?: number;
+		topics?: string[];
+	},
+	now: number
+): Promise<NewsItem[]> {
 	const xml = await safeFetch(config.url);
 	const doc = parseXml(xml);
 	const items: NewsItem[] = [];
@@ -79,8 +75,7 @@ export async function parseAtomFeed(config: {
 			entry.querySelector('link')?.getAttribute('href') ||
 			'';
 		const pubDate =
-			entry.querySelector('published')?.textContent ||
-			entry.querySelector('updated')?.textContent;
+			entry.querySelector('published')?.textContent || entry.querySelector('updated')?.textContent;
 		const description =
 			entry.querySelector('summary')?.textContent ||
 			entry.querySelector('content')?.textContent ||
@@ -148,9 +143,7 @@ export async function parseJsonLdEventPage(
 					title: stripHtml((event.name as string) || 'Upcoming event'),
 					link: (event.url as string) || config.url,
 					pubDate:
-						(event.startDate as string) ||
-						(event.endDate as string) ||
-						new Date().toISOString(),
+						(event.startDate as string) || (event.endDate as string) || new Date().toISOString(),
 					description: stripHtml((event.description as string) || ''),
 					content: stripHtml(
 						[
@@ -362,8 +355,7 @@ export async function parseFilteredFeedCategory(
 		now
 	);
 	return items.filter((item) => {
-		const haystack =
-			`${item.title} ${item.description || ''} ${item.content || ''}`.toLowerCase();
+		const haystack = `${item.title} ${item.description || ''} ${item.content || ''}`.toLowerCase();
 		return config.keywords.some((keyword) => haystack.includes(keyword));
 	});
 }

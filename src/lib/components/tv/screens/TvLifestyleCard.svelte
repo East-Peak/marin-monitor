@@ -1,8 +1,19 @@
 <script lang="ts">
-	import type { WineIndexData, WineCategory, WineCategorySnapshot, WineStaffPick } from '$lib/types/wine';
+	import type {
+		WineIndexData,
+		WineCategory,
+		WineCategorySnapshot,
+		WineStaffPick
+	} from '$lib/types/wine';
 	import type { FitnessData, FitnessStudio, FitnessType } from '$lib/types/fitness';
 	import { WINE_ACCENT, WINE_CATEGORY_ORDER } from '$lib/config/wine';
-	import { FITNESS_ACCENT, TYPE_ORDER, TYPE_LABELS, TYPE_COLORS, computeMedian } from '$lib/config/fitness';
+	import {
+		FITNESS_ACCENT,
+		TYPE_ORDER,
+		TYPE_LABELS,
+		TYPE_COLORS,
+		computeMedian
+	} from '$lib/config/fitness';
 	import { scaleLinear } from 'd3-scale';
 	import { line, curveMonotoneX } from 'd3-shape';
 
@@ -40,7 +51,8 @@
 		const previous = sorted[sorted.length - 2].categories.find((c) => c.category === category);
 		if (!latest?.medianPrice || !previous?.medianPrice) return null;
 		const diff = Math.round((latest.medianPrice - previous.medianPrice) * 100) / 100;
-		const pct = previous.medianPrice !== 0 ? Math.round((diff / previous.medianPrice) * 1000) / 10 : 0;
+		const pct =
+			previous.medianPrice !== 0 ? Math.round((diff / previous.medianPrice) * 1000) / 10 : 0;
 		return { value: diff, label: `${diff >= 0 ? '+' : ''}${pct.toFixed(1)}%` };
 	}
 
@@ -56,8 +68,11 @@
 			.map((h) => h.categories.find((c) => c.category === category)?.medianPrice)
 			.filter((v): v is number => v != null);
 		if (values.length < 2) return null;
-		const w = 100, h = 28;
-		const x = scaleLinear().domain([0, values.length - 1]).range([2, w - 2]);
+		const w = 100,
+			h = 28;
+		const x = scaleLinear()
+			.domain([0, values.length - 1])
+			.range([2, w - 2]);
 		const y = scaleLinear()
 			.domain([Math.min(...values) * 0.9, Math.max(...values) * 1.1])
 			.range([h - 2, 2]);
@@ -121,7 +136,9 @@
 			<!-- Header -->
 			<div class="px-3 pt-3 pb-2 border-b border-gray-700/40">
 				<div class="flex items-baseline justify-between">
-					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Wine Index</span>
+					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400"
+						>Wine Index</span
+					>
 					<span class="text-[10px] text-zinc-500">{totalWineProducts} bottles tracked</span>
 				</div>
 			</div>
@@ -131,7 +148,9 @@
 				{#each orderedCategories as cat}
 					{@const sparkline = makeWineSparkline(cat.category)}
 					{@const change = computeWeeklyChange(cat.category)}
-					<div class="flex items-center gap-2 bg-zinc-800/40 rounded px-2.5 py-1.5 border border-zinc-700/30">
+					<div
+						class="flex items-center gap-2 bg-zinc-800/40 rounded px-2.5 py-1.5 border border-zinc-700/30"
+					>
 						<div class="flex-1 min-w-0">
 							<div class="flex items-baseline gap-1.5">
 								<span class="text-xs font-semibold text-zinc-200">
@@ -145,7 +164,11 @@
 								</span>
 								<span class="text-[9px] text-zinc-500">median</span>
 								{#if change}
-									<span class="text-[10px] font-semibold {change.value > 0 ? 'text-amber-400' : 'text-emerald-400'}">
+									<span
+										class="text-[10px] font-semibold {change.value > 0
+											? 'text-amber-400'
+											: 'text-emerald-400'}"
+									>
 										{change.label}
 									</span>
 								{/if}
@@ -176,7 +199,9 @@
 
 			<!-- Staff Picks -->
 			<div class="flex-1 px-3 py-2 overflow-hidden">
-				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Staff Picks</div>
+				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
+					Staff Picks
+				</div>
 				{#each staffPicks.slice(0, 4) as pick}
 					<div class="flex items-center justify-between py-0.5">
 						<div class="flex flex-col min-w-0 flex-1 mr-2">
@@ -185,13 +210,22 @@
 						</div>
 						<div class="flex items-center gap-1 shrink-0">
 							{#if pick.compareAtPrice}
-								<span class="text-[9px] text-zinc-600 line-through">${pick.compareAtPrice.toFixed(0)}</span>
+								<span class="text-[9px] text-zinc-600 line-through"
+									>${pick.compareAtPrice.toFixed(0)}</span
+								>
 							{/if}
-							<span class="text-xs font-bold tabular-nums {pick.compareAtPrice ? 'text-emerald-400' : 'text-zinc-100'}">
+							<span
+								class="text-xs font-bold tabular-nums {pick.compareAtPrice
+									? 'text-emerald-400'
+									: 'text-zinc-100'}"
+							>
 								${pick.price.toFixed(0)}
 							</span>
 							{#if !pick.available}
-								<span class="text-[8px] font-semibold uppercase px-1 py-0.5 rounded bg-amber-500/15 text-amber-400">Out</span>
+								<span
+									class="text-[8px] font-semibold uppercase px-1 py-0.5 rounded bg-amber-500/15 text-amber-400"
+									>Out</span
+								>
 							{/if}
 						</div>
 					</div>
@@ -212,7 +246,9 @@
 			<!-- Header -->
 			<div class="px-3 pt-3 pb-2 border-b border-gray-700/40">
 				<div class="flex items-baseline justify-between">
-					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Fitness Drop-in</span>
+					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400"
+						>Fitness Drop-in</span
+					>
 					<span class="text-[10px] text-zinc-500">{studioCount} studios</span>
 				</div>
 				{#if fitness?.current}
@@ -245,14 +281,17 @@
 
 			<!-- Type summary -->
 			<div class="px-3 py-2 border-b border-gray-700/30">
-				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">By Type</div>
+				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
+					By Type
+				</div>
 				<div class="space-y-1">
 					{#each TYPE_ORDER as type}
 						{@const median = filteredMedianByType[type]}
 						{@const count = studioCountByType[type]}
 						{#if median != null}
 							<div class="flex items-center gap-2">
-								<span class="w-2 h-2 rounded-full shrink-0" style="background: {TYPE_COLORS[type]}"></span>
+								<span class="w-2 h-2 rounded-full shrink-0" style="background: {TYPE_COLORS[type]}"
+								></span>
 								<span class="text-xs text-zinc-300 flex-1">{TYPE_LABELS[type]}</span>
 								<span class="text-[9px] text-zinc-500 mr-1">{count ?? 0}</span>
 								<span class="text-sm font-bold tabular-nums text-zinc-100">{fmtPrice(median)}</span>
@@ -264,11 +303,16 @@
 
 			<!-- Individual studios -->
 			<div class="flex-1 px-3 py-2 overflow-hidden">
-				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Studios (cheapest first)</div>
+				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
+					Studios (cheapest first)
+				</div>
 				{#each fitnessStudios.slice(0, 6) as studio}
 					<div class="flex items-center justify-between py-0.5">
 						<div class="flex items-center gap-1.5 min-w-0 flex-1 mr-2">
-							<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background: {TYPE_COLORS[studio.type]}"></span>
+							<span
+								class="w-1.5 h-1.5 rounded-full shrink-0"
+								style="background: {TYPE_COLORS[studio.type]}"
+							></span>
 							<div class="flex flex-col min-w-0 flex-1">
 								<span class="text-xs font-medium text-zinc-200 truncate">{studio.name}</span>
 								<span class="text-[9px] text-zinc-500 truncate">{studio.town}</span>

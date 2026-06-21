@@ -25,7 +25,18 @@ export type VerificationLevel = 'official' | 'local_media' | 'community' | 'sati
 /**
  * Map layer toggles
  */
-export type MapLayer = 'civic' | 'news' | 'safety' | 'housing' | 'activity' | 'satire' | 'gas' | 'ev-charging' | 'coffee' | 'fitness' | '311';
+export type MapLayer =
+	| 'civic'
+	| 'news'
+	| 'safety'
+	| 'housing'
+	| 'activity'
+	| 'satire'
+	| 'gas'
+	| 'ev-charging'
+	| 'coffee'
+	| 'fitness'
+	| '311';
 
 export type { MapFeatureKind, MapFeatureInspectorData } from './map';
 
@@ -160,7 +171,6 @@ export interface EarthquakeData {
 	url: string;
 }
 
-
 /**
  * Custom monitor created by user
  */
@@ -271,17 +281,6 @@ export type {
 	WineIndexData
 } from './wine';
 
-export type {
-	SchoolLevel,
-	School,
-	TuitionTier,
-	SchoolSnapshot,
-	SchoolIndexData
-} from './school';
+export type { SchoolLevel, School, TuitionTier, SchoolSnapshot, SchoolIndexData } from './school';
 
-export type {
-	FitnessType,
-	FitnessStudio,
-	FitnessSnapshot,
-	FitnessData
-} from './fitness';
+export type { FitnessType, FitnessStudio, FitnessSnapshot, FitnessData } from './fitness';

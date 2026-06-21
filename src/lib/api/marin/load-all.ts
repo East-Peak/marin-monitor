@@ -20,8 +20,18 @@ import {
 } from '$lib/api/marin';
 
 const RSS_CATEGORIES: NewsCategory[] = [
-	'local', 'civic', '311', 'safety', 'outdoors', 'housing',
-	'cycling', 'endurance', 'shows', 'prep', 'farm', 'satire'
+	'local',
+	'civic',
+	'311',
+	'safety',
+	'outdoors',
+	'housing',
+	'cycling',
+	'endurance',
+	'shows',
+	'prep',
+	'farm',
+	'satire'
 ];
 
 export interface LoadAllResult {
@@ -78,17 +88,25 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 		}
 	});
 
-	const [rssResults, npsAlerts, earthquakes, transitAlerts, sheriffBlotter, policeLogs, supplementalActivity, seeClickFixIssues] =
-		settled.map((r) => (r.status === 'fulfilled' ? r.value : [])) as [
-			Awaited<ReturnType<typeof fetchAllFeeds>>,
-			NewsItem[],
-			EarthquakeData[],
-			NewsItem[],
-			NewsItem[],
-			NewsItem[],
-			NewsItem[],
-			NewsItem[]
-		];
+	const [
+		rssResults,
+		npsAlerts,
+		earthquakes,
+		transitAlerts,
+		sheriffBlotter,
+		policeLogs,
+		supplementalActivity,
+		seeClickFixIssues
+	] = settled.map((r) => (r.status === 'fulfilled' ? r.value : [])) as [
+		Awaited<ReturnType<typeof fetchAllFeeds>>,
+		NewsItem[],
+		EarthquakeData[],
+		NewsItem[],
+		NewsItem[],
+		NewsItem[],
+		NewsItem[],
+		NewsItem[]
+	];
 
 	// Per-feed errors inside fetchAllFeeds (HTTP failures on individual RSS
 	// sources) are reported in each CategoryFetchResult.errors — surface them
@@ -110,19 +128,28 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 
 	const supplementalByCategory = new Map<NewsCategory, NewsItem[]>();
 	for (const category of RSS_CATEGORIES) {
-		supplementalByCategory.set(category, supplementalActivity.filter((item) => item.category === category));
+		supplementalByCategory.set(
+			category,
+			supplementalActivity.filter((item) => item.category === category)
+		);
 	}
 
 	await Promise.all(
 		rssResults.map(async (result) => {
 			const extraItems =
 				result.category === 'safety'
-					? [...earthquakeNews, ...transitAlerts, ...sheriffBlotter, ...policeLogs, ...(supplementalByCategory.get(result.category) ?? [])]
+					? [
+							...earthquakeNews,
+							...transitAlerts,
+							...sheriffBlotter,
+							...policeLogs,
+							...(supplementalByCategory.get(result.category) ?? [])
+						]
 					: result.category === 'outdoors'
-							? [...npsAlerts, ...(supplementalByCategory.get(result.category) ?? [])]
-							: result.category === '311'
-									? [...seeClickFixIssues, ...(supplementalByCategory.get(result.category) ?? [])]
-									: (supplementalByCategory.get(result.category) ?? []);
+						? [...npsAlerts, ...(supplementalByCategory.get(result.category) ?? [])]
+						: result.category === '311'
+							? [...seeClickFixIssues, ...(supplementalByCategory.get(result.category) ?? [])]
+							: (supplementalByCategory.get(result.category) ?? []);
 
 			const allItems = [...result.items, ...extraItems].sort((a, b) => b.timestamp - a.timestamp);
 

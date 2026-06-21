@@ -59,7 +59,9 @@ export function readLocalCuratedCatalog(): StravaSegmentCatalog | null {
 	if (!fs.existsSync(LOCAL_CURATED_FILE)) return null;
 
 	try {
-		const payload = JSON.parse(fs.readFileSync(LOCAL_CURATED_FILE, 'utf8')) as LocalCuratedCatalogFile;
+		const payload = JSON.parse(
+			fs.readFileSync(LOCAL_CURATED_FILE, 'utf8')
+		) as LocalCuratedCatalogFile;
 		if (!payload?.catalog || !Array.isArray(payload.catalog.segments)) return null;
 		return payload.catalog;
 	} catch (err) {
@@ -68,7 +70,10 @@ export function readLocalCuratedCatalog(): StravaSegmentCatalog | null {
 	}
 }
 
-function mergeCatalogSegment(base: StravaSegment, existing: StravaSegment | undefined): StravaSegment {
+function mergeCatalogSegment(
+	base: StravaSegment,
+	existing: StravaSegment | undefined
+): StravaSegment {
 	if (!existing) return base;
 
 	return {
@@ -161,10 +166,7 @@ interface SegmentDetail {
  * Fetch individual segment details via GET /segments/{id}.
  * This returns the full polyline, stats, and metadata for a specific segment.
  */
-async function fetchSegmentDetail(
-	token: string,
-	segmentId: number
-): Promise<SegmentDetail | null> {
+async function fetchSegmentDetail(token: string, segmentId: number): Promise<SegmentDetail | null> {
 	try {
 		const response = await fetch(`https://www.strava.com/api/v3/segments/${segmentId}`, {
 			headers: {
@@ -175,7 +177,9 @@ async function fetchSegmentDetail(
 
 		if (!response.ok) {
 			const body = await response.text();
-			console.warn(`[strava-segments] Segment ${segmentId} detail API: ${response.status} — ${body.slice(0, 200)}`);
+			console.warn(
+				`[strava-segments] Segment ${segmentId} detail API: ${response.status} — ${body.slice(0, 200)}`
+			);
 			return null;
 		}
 

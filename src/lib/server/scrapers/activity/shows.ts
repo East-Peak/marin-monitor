@@ -105,7 +105,7 @@ const SHOW_HUBS: SourceConfig[] = [
 		url: 'https://kwmr.org/events',
 		town: 'Point Reyes Station',
 		townSlug: 'point-reyes',
-		lat: 38.0690,
+		lat: 38.069,
 		lon: -122.8067,
 		topics: ['music', 'community-events', 'west-marin']
 	},
@@ -143,7 +143,7 @@ const SHOW_HUBS: SourceConfig[] = [
 		source: 'Marin County Free Library',
 		title: 'Marin County Free Library events',
 		url: 'https://marinlibrary.bibliocommons.com/v2/events',
-		lat: 37.9980,
+		lat: 37.998,
 		lon: -122.5307,
 		topics: ['community-events', 'library']
 	},
@@ -154,7 +154,7 @@ const SHOW_HUBS: SourceConfig[] = [
 		town: 'San Rafael',
 		townSlug: 'san-rafael',
 		lat: 37.9752,
-		lon: -122.5290,
+		lon: -122.529,
 		topics: ['community-events', 'fraternal']
 	}
 ];
@@ -176,7 +176,7 @@ export async function parseMacsEvents(now: number): Promise<NewsItem[]> {
 					title: stripHtml(match[2]),
 					link: stripHtml(match[3]),
 					pubDate: stripHtml(match[1]),
-					description: 'Upcoming Fairfax show at Mac\'s at 19 Broadway.',
+					description: "Upcoming Fairfax show at Mac's at 19 Broadway.",
 					content: 'Fairfax live music, comedy, and nightlife calendar.',
 					verification: 'community',
 					town: 'Fairfax',
@@ -197,10 +197,7 @@ export async function scrapeShowRssFeeds(now: number): Promise<NewsItem[]> {
 	const items: NewsItem[] = [];
 	for (const source of SHOW_SOURCES) {
 		items.push(
-			...(await parseRssFeed(
-				{ ...source, category: 'shows', topics: ['music', 'shows'] },
-				now
-			))
+			...(await parseRssFeed({ ...source, category: 'shows', topics: ['music', 'shows'] }, now))
 		);
 	}
 	return items;
@@ -238,8 +235,7 @@ export async function scrapeShowsHubs(now: number): Promise<NewsItem[]> {
 					category: 'shows',
 					title: hub.title || `${hub.source} calendar`,
 					url: hub.url,
-					description:
-						'Curated Marin venue or community calendar worth checking directly.',
+					description: 'Curated Marin venue or community calendar worth checking directly.',
 					verification: 'community',
 					town: hub.town,
 					townSlug: hub.townSlug,

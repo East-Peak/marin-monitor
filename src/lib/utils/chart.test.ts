@@ -72,11 +72,7 @@ describe('buildChart — path output', () => {
 
 describe('buildChart — dots', () => {
 	it('dots array length matches data length', () => {
-		const data = [
-			{ value: 1 },
-			{ value: 2 },
-			{ value: 3 }
-		];
+		const data = [{ value: 1 }, { value: 2 }, { value: 3 }];
 		const result = buildChart(makeConfig({ data }))!;
 		expect(result.dots).toHaveLength(3);
 	});

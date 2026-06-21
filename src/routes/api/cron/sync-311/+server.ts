@@ -21,14 +21,22 @@ interface SeeClickFixIssue {
 }
 
 /** Download an image from SeeClickFix (follows redirects) and store in Vercel Blob. */
-async function storeImage(issueId: number, imageUrl: string, size: 'full' | 'thumb'): Promise<string | null> {
+async function storeImage(
+	issueId: number,
+	imageUrl: string,
+	size: 'full' | 'thumb'
+): Promise<string | null> {
 	const blobKey = `311-images/${issueId}-${size}.jpg`;
 
 	try {
-		const response = await fetchWithTimeout(imageUrl, {
-			headers: { 'User-Agent': 'MarinMonitor/1.0' },
-			redirect: 'follow'
-		}, 10000);
+		const response = await fetchWithTimeout(
+			imageUrl,
+			{
+				headers: { 'User-Agent': 'MarinMonitor/1.0' },
+				redirect: 'follow'
+			},
+			10000
+		);
 
 		if (!response.ok) {
 			console.warn(`[sync-311] Image fetch failed for ${issueId}: HTTP ${response.status}`);
@@ -52,7 +60,9 @@ async function storeImage(issueId: number, imageUrl: string, size: 'full' | 'thu
 
 		return `/api/data/311-image?id=${issueId}&size=${size}`;
 	} catch (err) {
-		console.warn(`[sync-311] Image store error for ${issueId}: ${err instanceof Error ? err.message : String(err)}`);
+		console.warn(
+			`[sync-311] Image store error for ${issueId}: ${err instanceof Error ? err.message : String(err)}`
+		);
 		return null;
 	}
 }
@@ -123,17 +133,18 @@ export const GET: RequestHandler = async ({ request }) => {
 			token: env.BLOB_READ_WRITE_TOKEN
 		});
 
-		console.log(`[sync-311] OK: ${issues.length} issues, ${photosStored} photos stored in ${Date.now() - start}ms`);
-		return new Response(
-			JSON.stringify({ ok: true, count: issues.length, photosStored }),
-			{ headers: { 'Content-Type': 'application/json' } }
+		console.log(
+			`[sync-311] OK: ${issues.length} issues, ${photosStored} photos stored in ${Date.now() - start}ms`
 		);
+		return new Response(JSON.stringify({ ok: true, count: issues.length, photosStored }), {
+			headers: { 'Content-Type': 'application/json' }
+		});
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);
 		console.error(`[sync-311] FAILED after ${Date.now() - start}ms:`, message);
-		return new Response(
-			JSON.stringify({ ok: false, error: message }),
-			{ status: 500, headers: { 'Content-Type': 'application/json' } }
-		);
+		return new Response(JSON.stringify({ ok: false, error: message }), {
+			status: 500,
+			headers: { 'Content-Type': 'application/json' }
+		});
 	}
 };

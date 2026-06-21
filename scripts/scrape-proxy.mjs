@@ -138,7 +138,10 @@ const server = createServer(async (req, res) => {
 		return;
 	}
 
-	if (!['http:', 'https:'].includes(targetUrl.protocol) || !ALLOWED_PROXY_HOSTS.has(targetUrl.hostname)) {
+	if (
+		!['http:', 'https:'].includes(targetUrl.protocol) ||
+		!ALLOWED_PROXY_HOSTS.has(targetUrl.hostname)
+	) {
 		res.writeHead(403, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
 		res.end(JSON.stringify({ error: 'Target URL not allowed' }));
 		return;
@@ -165,7 +168,7 @@ const server = createServer(async (req, res) => {
 			headers: {
 				'User-Agent':
 					'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-				'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+				Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
 				'Accept-Language': 'en-US,en;q=0.9',
 				...sanitizeForwardHeaders(headers)
 			},
@@ -202,5 +205,7 @@ const server = createServer(async (req, res) => {
 server.listen(PORT, '0.0.0.0', () => {
 	console.log(`[scrape-proxy] Listening on 0.0.0.0:${PORT}`);
 	console.log(`[scrape-proxy] Health: http://127.0.0.1:${PORT}/health`);
-	console.log(`[scrape-proxy] Proxy: POST http://127.0.0.1:${PORT}/proxy (also via Tailscale at 100.67.183.14:${PORT})`);
+	console.log(
+		`[scrape-proxy] Proxy: POST http://127.0.0.1:${PORT}/proxy (also via Tailscale at 100.67.183.14:${PORT})`
+	);
 });

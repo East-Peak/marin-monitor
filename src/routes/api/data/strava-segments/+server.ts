@@ -41,7 +41,7 @@ export const GET: RequestHandler = async () => {
 						message: 'Strava segments blob parse failed and no local catalog available',
 						timestamp: new Date().toISOString(),
 						blobKey: STRAVA_SEGMENTS_BLOB
-				  }
+					}
 				: blob.error
 		);
 	}

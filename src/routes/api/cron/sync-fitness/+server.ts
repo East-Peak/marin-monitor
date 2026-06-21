@@ -46,10 +46,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		}
 
 		// Append to history (capped), omitting studios[] from history entries
-		const history = [toHistoryEntry(snapshot), ...existing.history].slice(
-			0,
-			MAX_FITNESS_HISTORY
-		);
+		const history = [toHistoryEntry(snapshot), ...existing.history].slice(0, MAX_FITNESS_HISTORY);
 
 		const data: FitnessData = {
 			current: snapshot,

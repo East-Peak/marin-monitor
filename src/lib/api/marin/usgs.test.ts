@@ -128,7 +128,7 @@ describe('earthquakesToNewsItems', () => {
 			place: '8km W of Mill Valley, CA',
 			time: 1711800000000,
 			lat: 37.91,
-			lon: -122.60,
+			lon: -122.6,
 			depth: 10.0,
 			url: 'https://earthquake.usgs.gov/earthquakes/eventpage/nc22222'
 		}

@@ -58,12 +58,7 @@
 		<div class="feature-severity">{feature.severity}</div>
 	{/if}
 	{#if feature.imageUrl}
-		<img
-			class="feature-image"
-			src={feature.imageUrl}
-			alt={feature.title}
-			loading="lazy"
-		/>
+		<img class="feature-image" src={feature.imageUrl} alt={feature.title} loading="lazy" />
 	{/if}
 	{#if feature.description}
 		<div class="feature-description">{feature.description}</div>

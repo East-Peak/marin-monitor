@@ -254,13 +254,14 @@ describe('fetchAirQuality (client adapter)', () => {
 
 		await fetchAirQuality();
 
-		expect(logger.warn).toHaveBeenCalledWith('AirNow', expect.stringContaining('connection refused'));
+		expect(logger.warn).toHaveBeenCalledWith(
+			'AirNow',
+			expect.stringContaining('connection refused')
+		);
 	});
 
 	it('logs a warning for non-ok HTTP responses', async () => {
-		globalThis.fetch = vi
-			.fn()
-			.mockResolvedValue(new Response('Bad Gateway', { status: 502 }));
+		globalThis.fetch = vi.fn().mockResolvedValue(new Response('Bad Gateway', { status: 502 }));
 
 		const { logger } = await import('$lib/config/api');
 

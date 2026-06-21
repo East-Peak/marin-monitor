@@ -191,12 +191,7 @@
 			},
 			paint: {
 				'line-color': '#f59e0b',
-				'line-width': [
-					'case',
-					['boolean', ['feature-state', 'hover'], false],
-					5,
-					3
-				],
+				'line-width': ['case', ['boolean', ['feature-state', 'hover'], false], 5, 3],
 				'line-opacity': 0.85
 			}
 		});
@@ -217,12 +212,7 @@
 			},
 			paint: {
 				'line-color': '#22d3ee',
-				'line-width': [
-					'case',
-					['boolean', ['feature-state', 'hover'], false],
-					5,
-					3
-				],
+				'line-width': ['case', ['boolean', ['feature-state', 'hover'], false], 5, 3],
 				'line-opacity': 0.85
 			}
 		});
@@ -237,30 +227,10 @@
 				visibility: 'none'
 			},
 			paint: {
-				'circle-color': [
-					'case',
-					['==', ['get', 'activityType'], 'ride'],
-					'#f59e0b',
-					'#22d3ee'
-				],
-				'circle-opacity': [
-					'case',
-					['boolean', ['feature-state', 'hover'], false],
-					0.98,
-					0.8
-				],
-				'circle-radius': [
-					'case',
-					['boolean', ['feature-state', 'hover'], false],
-					6.75,
-					5
-				],
-				'circle-stroke-width': [
-					'case',
-					['boolean', ['feature-state', 'hover'], false],
-					2,
-					1
-				],
+				'circle-color': ['case', ['==', ['get', 'activityType'], 'ride'], '#f59e0b', '#22d3ee'],
+				'circle-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.98, 0.8],
+				'circle-radius': ['case', ['boolean', ['feature-state', 'hover'], false], 6.75, 5],
+				'circle-stroke-width': ['case', ['boolean', ['feature-state', 'hover'], false], 2, 1],
 				'circle-stroke-color': [
 					'case',
 					['boolean', ['feature-state', 'hover'], false],
@@ -293,12 +263,7 @@
 					'#fc4c02'
 				],
 				'text-halo-color': 'rgba(10, 10, 10, 0.9)',
-				'text-halo-width': [
-					'case',
-					['boolean', ['feature-state', 'hover'], false],
-					2,
-					1.5
-				]
+				'text-halo-width': ['case', ['boolean', ['feature-state', 'hover'], false], 2, 1.5]
 			}
 		});
 	}
@@ -390,15 +355,17 @@
 				root: content,
 				statsEl: content.querySelector('[data-popup-role="stats"]') as HTMLDivElement,
 				attemptsEl: content.querySelector('[data-popup-role="attempts"]') as HTMLDivElement,
-				leaderboardEl: content.querySelector(
-					'[data-popup-role="leaderboard"]'
-				) as HTMLDivElement
+				leaderboardEl: content.querySelector('[data-popup-role="leaderboard"]') as HTMLDivElement
 			},
 			segmentId: segId
 		};
 	}
 
-	async function populateLeaderboard(segId: number, refs: PopupRefs, currentToken: number): Promise<void> {
+	async function populateLeaderboard(
+		segId: number,
+		refs: PopupRefs,
+		currentToken: number
+	): Promise<void> {
 		const lb = await loadLeaderboard(segId);
 		if (currentToken !== popupToken || !refs.root.isConnected) return;
 
@@ -453,7 +420,8 @@
 	}
 
 	function getFeaturePriority(feature: MapGeoJSONFeature): number {
-		if (feature.layer.id === 'strava-lines-ride' || feature.layer.id === 'strava-lines-run') return 0;
+		if (feature.layer.id === 'strava-lines-ride' || feature.layer.id === 'strava-lines-run')
+			return 0;
 		if (feature.layer.id === 'strava-pins') return 1;
 		if (feature.layer.id === 'strava-pins-labels') return 2;
 		return 3;

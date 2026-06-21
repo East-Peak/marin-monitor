@@ -16,9 +16,7 @@ export function withPreservedSuccessfulScrapeMetadata(
 	snapshot,
 	{ wasLive, previous, includeLegacyLastLive = false }
 ) {
-	const lastSuccessfulScrapeAt = wasLive
-		? snapshot.timestamp
-		: readSuccessfulScrapeAt(previous);
+	const lastSuccessfulScrapeAt = wasLive ? snapshot.timestamp : readSuccessfulScrapeAt(previous);
 
 	if (includeLegacyLastLive) {
 		return {

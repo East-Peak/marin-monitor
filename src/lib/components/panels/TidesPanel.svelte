@@ -165,11 +165,17 @@
 			const target = event.currentTarget as SVGSVGElement;
 			const rect = target.getBoundingClientRect();
 			const innerWidth = rect.width - TIDE_MARGINS.left - TIDE_MARGINS.right;
-			const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - TIDE_MARGINS.left));
+			const relativeX = Math.max(
+				0,
+				Math.min(innerWidth, event.clientX - rect.left - TIDE_MARGINS.left)
+			);
 			const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
 			const index = Math.max(
 				0,
-				Math.min(tideChartPaths.dots.length - 1, Math.round(ratio * (tideChartPaths.dots.length - 1)))
+				Math.min(
+					tideChartPaths.dots.length - 1,
+					Math.round(ratio * (tideChartPaths.dots.length - 1))
+				)
 			);
 			hoverState = { chart, index, x: TIDE_MARGINS.left + tideChartPaths.dots[index].x };
 		} else {
@@ -531,7 +537,12 @@
 								/>
 							{/if}
 							<path d={tideChartPaths.areaPath} fill="rgba(16, 185, 129, 0.1)" />
-							<path d={tideChartPaths.linePath} fill="none" stroke={TIDE_ACCENT} stroke-width="1.5" />
+							<path
+								d={tideChartPaths.linePath}
+								fill="none"
+								stroke={TIDE_ACCENT}
+								stroke-width="1.5"
+							/>
 							{#if hoverState?.chart === 'tide'}
 								<line
 									x1={tideChartPaths.dots[hoverState.index].x}
@@ -551,10 +562,30 @@
 									stroke-width="1"
 								/>
 							{/if}
-							<text x="-4" y={tideChartPaths.yScale(tideChartPaths.yMax)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="8px">{tideChartPaths.yMax.toFixed(1)}'</text>
-							<text x="-4" y={tideChartPaths.yScale(tideChartPaths.yMin)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="8px">{tideChartPaths.yMin.toFixed(1)}'</text>
+							<text
+								x="-4"
+								y={tideChartPaths.yScale(tideChartPaths.yMax)}
+								text-anchor="end"
+								dominant-baseline="middle"
+								fill="#888"
+								font-size="8px">{tideChartPaths.yMax.toFixed(1)}'</text
+							>
+							<text
+								x="-4"
+								y={tideChartPaths.yScale(tideChartPaths.yMin)}
+								text-anchor="end"
+								dominant-baseline="middle"
+								fill="#888"
+								font-size="8px">{tideChartPaths.yMin.toFixed(1)}'</text
+							>
 							{#each tideChartPaths.axisLabels.x as lbl}
-								<text x={lbl.x} y={TIDE_HEIGHT - TIDE_MARGINS.top - TIDE_MARGINS.bottom + 12} text-anchor="middle" fill="#666" font-size="7px">{lbl.label}</text>
+								<text
+									x={lbl.x}
+									y={TIDE_HEIGHT - TIDE_MARGINS.top - TIDE_MARGINS.bottom + 12}
+									text-anchor="middle"
+									fill="#666"
+									font-size="7px">{lbl.label}</text
+								>
 							{/each}
 						</g>
 					</svg>

@@ -67,7 +67,6 @@ interface NifcFeature {
 	};
 }
 
-
 /**
  * Fetch active fire incidents near Marin County from CAL FIRE.
  */

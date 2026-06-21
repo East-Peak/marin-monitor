@@ -35,7 +35,6 @@
 		return '#f59e0b';
 	}
 
-
 	onMount(async () => {
 		try {
 			const [aqiResult, streamResult, fireResult, uvResult] = await Promise.allSettled([
@@ -305,8 +304,8 @@
 		.stream-row {
 			grid-template-columns: 2fr 1fr;
 		}
-		.stream-header > span:nth-child(n+3),
-		.stream-row > span:nth-child(n+3) {
+		.stream-header > span:nth-child(n + 3),
+		.stream-row > span:nth-child(n + 3) {
 			display: none;
 		}
 	}

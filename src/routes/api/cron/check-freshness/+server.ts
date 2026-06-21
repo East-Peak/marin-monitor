@@ -19,7 +19,12 @@ export const GET: RequestHandler = async ({ request }) => {
 
 	const now = Date.now();
 	const token = env.BLOB_READ_WRITE_TOKEN ?? '';
-	const staleEntries: { name: string; blobKey: string; ageDays: number | null; maxAgeDays: number }[] = [];
+	const staleEntries: {
+		name: string;
+		blobKey: string;
+		ageDays: number | null;
+		maxAgeDays: number;
+	}[] = [];
 	const errors: { name: string; blobKey: string; error: string }[] = [];
 
 	for (const config of _DATA_SOURCES) {

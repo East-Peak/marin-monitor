@@ -34,20 +34,22 @@ const mockGetGridPoint = vi.mocked(getGridPoint);
 
 // ── Fixtures ───────────────────────────────────────────────────────────────
 
-function makePeriod(overrides: Partial<{
-	number: number;
-	name: string;
-	startTime: string;
-	endTime: string;
-	isDaytime: boolean;
-	temperature: number;
-	temperatureUnit: string;
-	windSpeed: string;
-	windDirection: string;
-	shortForecast: string;
-	detailedForecast: string;
-	icon: string;
-}> = {}) {
+function makePeriod(
+	overrides: Partial<{
+		number: number;
+		name: string;
+		startTime: string;
+		endTime: string;
+		isDaytime: boolean;
+		temperature: number;
+		temperatureUnit: string;
+		windSpeed: string;
+		windDirection: string;
+		shortForecast: string;
+		detailedForecast: string;
+		icon: string;
+	}> = {}
+) {
 	return {
 		number: 1,
 		name: 'This Afternoon',
@@ -65,17 +67,19 @@ function makePeriod(overrides: Partial<{
 	};
 }
 
-function makeAlertFeature(overrides: Partial<{
-	id: string;
-	event: string;
-	headline: string;
-	description: string;
-	severity: string;
-	urgency: string;
-	onset: string;
-	expires: string;
-	areaDesc: string;
-}> = {}) {
+function makeAlertFeature(
+	overrides: Partial<{
+		id: string;
+		event: string;
+		headline: string;
+		description: string;
+		severity: string;
+		urgency: string;
+		onset: string;
+		expires: string;
+		areaDesc: string;
+	}> = {}
+) {
 	return {
 		properties: {
 			id: 'urn:oid:2.49.0.1.840.0.abc123',
@@ -120,9 +124,7 @@ describe('NWS adapter', () => {
 				name: 'This Afternoon'
 			});
 
-			mockRequest.mockResolvedValueOnce(
-				wrapResult({ properties: { periods: [period] } })
-			);
+			mockRequest.mockResolvedValueOnce(wrapResult({ properties: { periods: [period] } }));
 
 			const result = await fetchForecast();
 
@@ -159,9 +161,7 @@ describe('NWS adapter', () => {
 				})
 			);
 
-			mockRequest.mockResolvedValueOnce(
-				wrapResult({ properties: { periods } })
-			);
+			mockRequest.mockResolvedValueOnce(wrapResult({ properties: { periods } }));
 
 			const result = await fetchForecast();
 			expect(result).toHaveLength(14);
@@ -169,9 +169,7 @@ describe('NWS adapter', () => {
 
 		it('returns fewer than 14 if API provides fewer periods', async () => {
 			const periods = [makePeriod(), makePeriod({ number: 2, name: 'Tonight' })];
-			mockRequest.mockResolvedValueOnce(
-				wrapResult({ properties: { periods } })
-			);
+			mockRequest.mockResolvedValueOnce(wrapResult({ properties: { periods } }));
 
 			const result = await fetchForecast();
 			expect(result).toHaveLength(2);
@@ -185,9 +183,7 @@ describe('NWS adapter', () => {
 		});
 
 		it('returns empty array when periods is empty', async () => {
-			mockRequest.mockResolvedValueOnce(
-				wrapResult({ properties: { periods: [] } })
-			);
+			mockRequest.mockResolvedValueOnce(wrapResult({ properties: { periods: [] } }));
 
 			const result = await fetchForecast();
 			expect(result).toEqual([]);
@@ -208,9 +204,7 @@ describe('NWS adapter', () => {
 		});
 
 		it('passes custom lat/lon to getGridPoint', async () => {
-			mockRequest.mockResolvedValueOnce(
-				wrapResult({ properties: { periods: [makePeriod()] } })
-			);
+			mockRequest.mockResolvedValueOnce(wrapResult({ properties: { periods: [makePeriod()] } }));
 
 			await fetchForecast(37.95, -122.55);
 			expect(mockGetGridPoint).toHaveBeenCalledWith(37.95, -122.55);
@@ -218,9 +212,7 @@ describe('NWS adapter', () => {
 
 		it('builds the correct endpoint from grid point data', async () => {
 			mockGetGridPoint.mockResolvedValueOnce({ office: 'MTR', gridX: 85, gridY: 105 });
-			mockRequest.mockResolvedValueOnce(
-				wrapResult({ properties: { periods: [makePeriod()] } })
-			);
+			mockRequest.mockResolvedValueOnce(wrapResult({ properties: { periods: [makePeriod()] } }));
 
 			await fetchForecast();
 
@@ -234,9 +226,7 @@ describe('NWS adapter', () => {
 		});
 
 		it('does not include icon field in output (only maps specified fields)', async () => {
-			mockRequest.mockResolvedValueOnce(
-				wrapResult({ properties: { periods: [makePeriod()] } })
-			);
+			mockRequest.mockResolvedValueOnce(wrapResult({ properties: { periods: [makePeriod()] } }));
 
 			const result = await fetchForecast();
 			expect(result[0]).not.toHaveProperty('icon');
@@ -258,9 +248,7 @@ describe('NWS adapter', () => {
 				temperature: 52,
 				shortForecast: 'Clear'
 			});
-			mockRequest.mockResolvedValueOnce(
-				wrapResult({ properties: { periods: [nightPeriod] } })
-			);
+			mockRequest.mockResolvedValueOnce(wrapResult({ properties: { periods: [nightPeriod] } }));
 
 			const result = await fetchForecast();
 			expect(result[0].isDaytime).toBe(false);

@@ -52,12 +52,18 @@
 
 	function delayTypeLabel(type: string): string {
 		switch (type) {
-			case 'ground-stop': return 'Ground Stop';
-			case 'ground-delay': return 'Ground Delay';
-			case 'arrival-delay': return 'Arrival Delay';
-			case 'departure-delay': return 'Departure Delay';
-			case 'closure': return 'Closed';
-			default: return type;
+			case 'ground-stop':
+				return 'Ground Stop';
+			case 'ground-delay':
+				return 'Ground Delay';
+			case 'arrival-delay':
+				return 'Arrival Delay';
+			case 'departure-delay':
+				return 'Departure Delay';
+			case 'closure':
+				return 'Closed';
+			default:
+				return type;
 		}
 	}
 
@@ -115,7 +121,9 @@
 						</div>
 						<span
 							class="status-chip"
-							style="color: {STATUS_COLORS[airport.status]}; background: {STATUS_BG[airport.status]}"
+							style="color: {STATUS_COLORS[airport.status]}; background: {STATUS_BG[
+								airport.status
+							]}"
 						>
 							{STATUS_LABELS[airport.status]}
 						</span>
@@ -148,7 +156,9 @@
 						<div class="weather-row">
 							<span
 								class="flt-cat-badge"
-								style="color: {FLT_CAT_COLORS[airport.weather.fltCat]}; background: {FLT_CAT_BG[airport.weather.fltCat]}"
+								style="color: {FLT_CAT_COLORS[airport.weather.fltCat]}; background: {FLT_CAT_BG[
+									airport.weather.fltCat
+								]}"
 							>
 								{airport.weather.fltCat}
 							</span>
@@ -165,10 +175,7 @@
 					{#if airport.forecastNotes.length > 0}
 						<div class="forecast-notes">
 							{#each airport.forecastNotes as note}
-								<div
-									class="forecast-note"
-									style="color: {FLT_CAT_COLORS[note.fltCat]}"
-								>
+								<div class="forecast-note" style="color: {FLT_CAT_COLORS[note.fltCat]}">
 									{note.text}
 								</div>
 							{/each}

@@ -186,7 +186,12 @@ const tuitionData: SchoolIndexData = {
 		incomeSource: 'ACS',
 		incomeYear: '2024',
 		tiers: [
-			{ level: 'elementary', label: 'Elementary (K-5)', avgTuition: 49535, pctOfMedianIncome: 33.0 },
+			{
+				level: 'elementary',
+				label: 'Elementary (K-5)',
+				avgTuition: 49535,
+				pctOfMedianIncome: 33.0
+			},
 			{ level: 'high', label: 'High School (9-12)', avgTuition: 64750, pctOfMedianIncome: 43.2 }
 		],
 		schools: [

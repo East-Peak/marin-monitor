@@ -16,49 +16,50 @@
 
 ### New Files
 
-| File | Responsibility |
-|------|---------------|
-| `src/lib/types/strava.ts` | All Strava type definitions |
-| `src/lib/config/strava.ts` | Seed segment list, feature flag, constants |
-| `src/lib/server/scrapers/strava-leaderboards.ts` | Parse public segment pages for CR/QOM + leaderboard |
-| `src/lib/server/scrapers/strava-segments.ts` | Fetch segment catalog + polylines via Explore API |
-| `src/lib/server/scrapers/strava-auth.ts` | OAuth token refresh helper |
-| `src/routes/api/cron/sync-strava-segments/+server.ts` | Weekly cron: catalog refresh |
-| `src/routes/api/cron/sync-strava-leaderboards/+server.ts` | Daily cron: leaderboard scrape |
-| `src/routes/api/data/strava-segments/+server.ts` | Serve segment catalog from Blob |
-| `src/routes/api/data/strava-leaderboard/[id]/+server.ts` | Serve per-segment leaderboard from Blob |
-| `src/routes/api/data/strava-events/+server.ts` | Serve change events from Blob |
-| `src/lib/api/marin/strava.ts` | Client-side data adapter |
-| `src/lib/components/panels/LeaderboardsPanel.svelte` | Dedicated Wire Grid panel |
-| `src/lib/components/panels/leaderboards/SegmentCard.svelte` | Expandable segment card |
-| `src/lib/components/panels/leaderboards/RecentActivity.svelte` | Events feed tab |
-| `src/lib/components/map/SegmentLayer.svelte` | Map polylines + pins + click popup |
-| `src/lib/components/tv/screens/TvLeaderboardsScreen.svelte` | TV carousel screen |
-| `src/lib/stores/strava.ts` | Reactive Strava data store |
-| `static/data/strava-segments.json` | Static fallback (empty catalog) |
-| `static/data/strava-events.json` | Static fallback (empty events) |
-| `tests/fixtures/strava-hawk-hill.html` | Saved HTML fixture for parser tests |
-| `tests/fixtures/strava-dipsea.html` | Saved HTML fixture for parser tests |
+| File                                                           | Responsibility                                      |
+| -------------------------------------------------------------- | --------------------------------------------------- |
+| `src/lib/types/strava.ts`                                      | All Strava type definitions                         |
+| `src/lib/config/strava.ts`                                     | Seed segment list, feature flag, constants          |
+| `src/lib/server/scrapers/strava-leaderboards.ts`               | Parse public segment pages for CR/QOM + leaderboard |
+| `src/lib/server/scrapers/strava-segments.ts`                   | Fetch segment catalog + polylines via Explore API   |
+| `src/lib/server/scrapers/strava-auth.ts`                       | OAuth token refresh helper                          |
+| `src/routes/api/cron/sync-strava-segments/+server.ts`          | Weekly cron: catalog refresh                        |
+| `src/routes/api/cron/sync-strava-leaderboards/+server.ts`      | Daily cron: leaderboard scrape                      |
+| `src/routes/api/data/strava-segments/+server.ts`               | Serve segment catalog from Blob                     |
+| `src/routes/api/data/strava-leaderboard/[id]/+server.ts`       | Serve per-segment leaderboard from Blob             |
+| `src/routes/api/data/strava-events/+server.ts`                 | Serve change events from Blob                       |
+| `src/lib/api/marin/strava.ts`                                  | Client-side data adapter                            |
+| `src/lib/components/panels/LeaderboardsPanel.svelte`           | Dedicated Wire Grid panel                           |
+| `src/lib/components/panels/leaderboards/SegmentCard.svelte`    | Expandable segment card                             |
+| `src/lib/components/panels/leaderboards/RecentActivity.svelte` | Events feed tab                                     |
+| `src/lib/components/map/SegmentLayer.svelte`                   | Map polylines + pins + click popup                  |
+| `src/lib/components/tv/screens/TvLeaderboardsScreen.svelte`    | TV carousel screen                                  |
+| `src/lib/stores/strava.ts`                                     | Reactive Strava data store                          |
+| `static/data/strava-segments.json`                             | Static fallback (empty catalog)                     |
+| `static/data/strava-events.json`                               | Static fallback (empty events)                      |
+| `tests/fixtures/strava-hawk-hill.html`                         | Saved HTML fixture for parser tests                 |
+| `tests/fixtures/strava-dipsea.html`                            | Saved HTML fixture for parser tests                 |
 
 ### Modified Files
 
-| File | Change |
-|------|--------|
-| `src/lib/types/index.ts` | Re-export strava types |
-| `src/lib/config/panels.ts` | Add `leaderboards` PanelId + config |
-| `src/lib/config/tv.ts` | Add `leaderboards` screen + `KOM` ticker category |
-| `src/lib/components/dashboard/WireGrid.svelte` | Add LeaderboardsPanel routing |
-| `src/lib/components/map/MapControls.svelte` | Add Segments toggle |
-| `src/lib/components/map/MapDataLayer.svelte` | Render segment polylines/pins |
-| `src/lib/stores/tv.ts` | Add strava events to chyron ticker |
-| `src/lib/stores/refresh.ts` | Add `strava` to tertiary stage |
-| `vercel.json` | Add two cron entries |
+| File                                           | Change                                            |
+| ---------------------------------------------- | ------------------------------------------------- |
+| `src/lib/types/index.ts`                       | Re-export strava types                            |
+| `src/lib/config/panels.ts`                     | Add `leaderboards` PanelId + config               |
+| `src/lib/config/tv.ts`                         | Add `leaderboards` screen + `KOM` ticker category |
+| `src/lib/components/dashboard/WireGrid.svelte` | Add LeaderboardsPanel routing                     |
+| `src/lib/components/map/MapControls.svelte`    | Add Segments toggle                               |
+| `src/lib/components/map/MapDataLayer.svelte`   | Render segment polylines/pins                     |
+| `src/lib/stores/tv.ts`                         | Add strava events to chyron ticker                |
+| `src/lib/stores/refresh.ts`                    | Add `strava` to tertiary stage                    |
+| `vercel.json`                                  | Add two cron entries                              |
 
 ---
 
 ## Task 1: Types + Config Foundation
 
 **Files:**
+
 - Create: `src/lib/types/strava.ts`
 - Create: `src/lib/config/strava.ts`
 - Modify: `src/lib/types/index.ts`
@@ -187,11 +188,11 @@ export const STRAVA_CHYRON_MAX_AGE_MS = 48 * 60 * 60 * 1000;
 /** Explore API bounding boxes to tile Marin County */
 export const MARIN_BOUNDING_BOXES: [number, number, number, number][] = [
 	// [south_lat, west_lon, north_lat, east_lon]
-	[37.830, -122.750, 37.940, -122.480], // Southern Marin (Sausalito, Mill Valley, Tam)
-	[37.920, -122.680, 38.020, -122.450], // Central Marin (San Rafael, Larkspur, Corte Madera)
-	[38.000, -122.700, 38.080, -122.450], // Northern Marin (Novato, Petaluma border)
-	[37.880, -122.800, 37.980, -122.620], // West Marin coast (Stinson, Bolinas, Pt Reyes Station)
-	[37.960, -122.800, 38.080, -122.620], // Northwest (Inverness, Tomales)
+	[37.83, -122.75, 37.94, -122.48], // Southern Marin (Sausalito, Mill Valley, Tam)
+	[37.92, -122.68, 38.02, -122.45], // Central Marin (San Rafael, Larkspur, Corte Madera)
+	[38.0, -122.7, 38.08, -122.45], // Northern Marin (Novato, Petaluma border)
+	[37.88, -122.8, 37.98, -122.62], // West Marin coast (Stinson, Bolinas, Pt Reyes Station)
+	[37.96, -122.8, 38.08, -122.62] // Northwest (Inverness, Tomales)
 ];
 
 /**
@@ -200,18 +201,43 @@ export const MARIN_BOUNDING_BOXES: [number, number, number, number][] = [
  */
 export const SEED_SEGMENTS: StravaSeedSegment[] = [
 	// === CYCLING ===
-	{ id: 229781, name: 'Hawk Hill', activityType: 'ride', startLatlng: [37.8324, -122.4990] },
-	{ id: 678363, name: 'Mt. Tam via Alpine Dam', activityType: 'ride', startLatlng: [37.9200, -122.5900] },
-	{ id: 765125, name: 'Camino Alto', activityType: 'ride', startLatlng: [37.8900, -122.5280] },
-	{ id: 582500, name: 'Paradise Dr (Clockwise)', activityType: 'ride', startLatlng: [37.8840, -122.4570] },
-	{ id: 2312682, name: 'Bolinas-Fairfax Rd Climb', activityType: 'ride', startLatlng: [37.9380, -122.6200] },
+	{ id: 229781, name: 'Hawk Hill', activityType: 'ride', startLatlng: [37.8324, -122.499] },
+	{
+		id: 678363,
+		name: 'Mt. Tam via Alpine Dam',
+		activityType: 'ride',
+		startLatlng: [37.92, -122.59]
+	},
+	{ id: 765125, name: 'Camino Alto', activityType: 'ride', startLatlng: [37.89, -122.528] },
+	{
+		id: 582500,
+		name: 'Paradise Dr (Clockwise)',
+		activityType: 'ride',
+		startLatlng: [37.884, -122.457]
+	},
+	{
+		id: 2312682,
+		name: 'Bolinas-Fairfax Rd Climb',
+		activityType: 'ride',
+		startLatlng: [37.938, -122.62]
+	},
 	// TODO: Add more cycling segments during implementation — aim for 15-20 total
 	// Candidates: Panoramic Hwy, Ridgecrest Blvd, Fairfax-Bolinas full, White's Hill,
 	// Marshall Wall, Lucas Valley Rd, Paradise Loop (full)
 
 	// === RUNNING ===
-	{ id: 907022, name: 'Dipsea / Steep Ravine', activityType: 'run', startLatlng: [37.8990, -122.6360] },
-	{ id: 15160205, name: 'Dipsea (Panoramic to Muir Woods)', activityType: 'run', startLatlng: [37.8830, -122.5810] },
+	{
+		id: 907022,
+		name: 'Dipsea / Steep Ravine',
+		activityType: 'run',
+		startLatlng: [37.899, -122.636]
+	},
+	{
+		id: 15160205,
+		name: 'Dipsea (Panoramic to Muir Woods)',
+		activityType: 'run',
+		startLatlng: [37.883, -122.581]
+	}
 	// TODO: Add more running segments — aim for 8-10 total
 	// Candidates: Tennessee Valley Trail, Miwok Trail, Coastal Trail,
 	// Matt Davis Trail, Old Railroad Grade (running)
@@ -221,6 +247,7 @@ export const SEED_SEGMENTS: StravaSeedSegment[] = [
 - [ ] **Step 3: Re-export types from index**
 
 Add to `src/lib/types/index.ts`:
+
 ```typescript
 // At the end of the file, add:
 export type {
@@ -241,7 +268,12 @@ export type {
 ```typescript
 // src/lib/config/strava.test.ts
 import { describe, it, expect } from 'vitest';
-import { SEED_SEGMENTS, MARIN_BOUNDING_BOXES, stravaLeaderboardBlob, STRAVA_ENABLED } from './strava';
+import {
+	SEED_SEGMENTS,
+	MARIN_BOUNDING_BOXES,
+	stravaLeaderboardBlob,
+	STRAVA_ENABLED
+} from './strava';
 
 describe('strava config', () => {
 	it('has unique segment IDs in seed list', () => {
@@ -298,6 +330,7 @@ git commit -m "feat(strava): add types and seed segment config"
 ## Task 2: Public Page Parser (Leaderboard Scraper)
 
 **Files:**
+
 - Create: `src/lib/server/scrapers/strava-leaderboards.ts`
 - Create: `tests/fixtures/strava-hawk-hill.html`
 - Create: `tests/fixtures/strava-dipsea.html`
@@ -325,8 +358,14 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { parseSegmentPage, scrapeSegmentLeaderboard } from './strava-leaderboards';
 
-const hawkHillHtml = readFileSync(join(__dirname, '../../../../tests/fixtures/strava-hawk-hill.html'), 'utf-8');
-const dipseaHtml = readFileSync(join(__dirname, '../../../../tests/fixtures/strava-dipsea.html'), 'utf-8');
+const hawkHillHtml = readFileSync(
+	join(__dirname, '../../../../tests/fixtures/strava-hawk-hill.html'),
+	'utf-8'
+);
+const dipseaHtml = readFileSync(
+	join(__dirname, '../../../../tests/fixtures/strava-dipsea.html'),
+	'utf-8'
+);
 
 describe('parseSegmentPage', () => {
 	it('extracts CR from Hawk Hill React props', () => {
@@ -388,7 +427,11 @@ Expected: FAIL — module not found.
 ```typescript
 // src/lib/server/scrapers/strava-leaderboards.ts
 
-import type { StravaLeaderboard, StravaRecordHolder, StravaLeaderboardRow } from '$lib/types/strava';
+import type {
+	StravaLeaderboard,
+	StravaRecordHolder,
+	StravaLeaderboardRow
+} from '$lib/types/strava';
 
 const SEGMENT_URL = 'https://www.strava.com/segments';
 
@@ -396,12 +439,14 @@ const SEGMENT_URL = 'https://www.strava.com/segments';
  * Fetch and parse a public Strava segment page (unauthenticated).
  * Returns leaderboard data or null on failure.
  */
-export async function scrapeSegmentLeaderboard(segmentId: number): Promise<StravaLeaderboard | null> {
+export async function scrapeSegmentLeaderboard(
+	segmentId: number
+): Promise<StravaLeaderboard | null> {
 	try {
 		const response = await fetch(`${SEGMENT_URL}/${segmentId}`, {
 			headers: {
 				'User-Agent': 'Mozilla/5.0 (compatible; MarinMonitor/1.0)',
-				'Accept': 'text/html'
+				Accept: 'text/html'
 			}
 		});
 		if (!response.ok) {
@@ -422,7 +467,9 @@ export async function scrapeSegmentLeaderboard(segmentId: number): Promise<Strav
  */
 export function parseSegmentPage(segmentId: number, html: string): StravaLeaderboard | null {
 	// Extract React props from SegmentDetailsSideBar
-	const propsMatch = html.match(/data-react-class="SegmentDetailsSideBar"[^>]*data-react-props="([^"]*)"/);
+	const propsMatch = html.match(
+		/data-react-class="SegmentDetailsSideBar"[^>]*data-react-props="([^"]*)"/
+	);
 	if (!propsMatch) return null;
 
 	let props: Record<string, unknown>;
@@ -453,9 +500,12 @@ export function parseSegmentPage(segmentId: number, html: string): StravaLeaderb
 	const totalAthletes = attemptsMatch ? parseInt(attemptsMatch[2].replace(/,/g, ''), 10) : 0;
 
 	// Extract segment name from page title or heading
-	const nameMatch = html.match(/<h1[^>]*class="[^"]*mb-0[^"]*"[^>]*>([^<]+)<\/h1>/)
-		?? html.match(/<title>([^|<]+)/);
-	const segmentName = nameMatch ? nameMatch[1].trim().replace(/ \| Strava.*/, '') : `Segment ${segmentId}`;
+	const nameMatch =
+		html.match(/<h1[^>]*class="[^"]*mb-0[^"]*"[^>]*>([^<]+)<\/h1>/) ??
+		html.match(/<title>([^|<]+)/);
+	const segmentName = nameMatch
+		? nameMatch[1].trim().replace(/ \| Strava.*/, '')
+		: `Segment ${segmentId}`;
 
 	return {
 		segmentId,
@@ -474,12 +524,20 @@ function parseRecordHolder(data: unknown): StravaRecordHolder | null {
 	const d = data as Record<string, unknown>;
 
 	const athleteId = typeof d.athlete_id === 'number' ? d.athlete_id : 0;
-	const effortId = typeof d.segment_effort_id === 'number' ? d.segment_effort_id
-		: typeof d.id === 'number' ? d.id : 0;
+	const effortId =
+		typeof d.segment_effort_id === 'number'
+			? d.segment_effort_id
+			: typeof d.id === 'number'
+				? d.id
+				: 0;
 	const activityId = typeof d.activity_id === 'number' ? d.activity_id : 0;
 	const athleteName = typeof d.athlete_name === 'string' ? d.athlete_name : '';
-	const time = typeof d.elapsed_time === 'string' ? d.elapsed_time
-		: typeof d.start_date === 'string' ? '' : '';
+	const time =
+		typeof d.elapsed_time === 'string'
+			? d.elapsed_time
+			: typeof d.start_date === 'string'
+				? ''
+				: '';
 	const date = typeof d.start_date === 'string' ? d.start_date : '';
 
 	if (!athleteId || !effortId) return null;
@@ -491,7 +549,9 @@ function parseLeaderboardTable(html: string): StravaLeaderboardRow[] {
 	const rows: StravaLeaderboardRow[] = [];
 
 	// Match the leaderboard table
-	const tableMatch = html.match(/<table[^>]*class="[^"]*table-leaderboard[^"]*"[^>]*>([\s\S]*?)<\/table>/);
+	const tableMatch = html.match(
+		/<table[^>]*class="[^"]*table-leaderboard[^"]*"[^>]*>([\s\S]*?)<\/table>/
+	);
 	if (!tableMatch) return rows;
 
 	// Extract each data row (skip header)
@@ -501,7 +561,10 @@ function parseLeaderboardTable(html: string): StravaLeaderboardRow[] {
 	let isFirst = true;
 
 	while ((match = rowRegex.exec(tableBody)) !== null) {
-		if (isFirst) { isFirst = false; continue; } // skip header row
+		if (isFirst) {
+			isFirst = false;
+			continue;
+		} // skip header row
 
 		const rowHtml = match[0];
 
@@ -511,9 +574,7 @@ function parseLeaderboardTable(html: string): StravaLeaderboardRow[] {
 
 		// Athlete name: text content of the athlete cell
 		const nameMatch = rowHtml.match(/<td[^>]*class="[^"]*athlete[^"]*"[^>]*>([\s\S]*?)<\/td>/);
-		const athleteName = nameMatch
-			? nameMatch[1].replace(/<[^>]+>/g, '').trim()
-			: '';
+		const athleteName = nameMatch ? nameMatch[1].replace(/<[^>]+>/g, '').trim() : '';
 
 		// Time + activity ID: <a href="/activities/12345">5:27</a>
 		const timeMatch = rowHtml.match(/<a\s+href="\/activities\/(\d+)"[^>]*>([^<]+)<\/a>/);
@@ -559,6 +620,7 @@ git commit -m "feat(strava): add public page parser with HTML fixtures"
 ## Task 3: OAuth Helper + Explore API Client
 
 **Files:**
+
 - Create: `src/lib/server/scrapers/strava-auth.ts`
 - Create: `src/lib/server/scrapers/strava-segments.ts`
 - Test: `src/lib/server/scrapers/strava-segments.test.ts`
@@ -597,7 +659,9 @@ export async function getStravaAccessToken(): Promise<string> {
 	const refreshToken = env.STRAVA_REFRESH_TOKEN;
 
 	if (!clientId || !clientSecret || !refreshToken) {
-		throw new Error('[strava-auth] Missing STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, or STRAVA_REFRESH_TOKEN');
+		throw new Error(
+			'[strava-auth] Missing STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, or STRAVA_REFRESH_TOKEN'
+		);
 	}
 
 	const response = await fetch('https://www.strava.com/oauth/token', {
@@ -620,7 +684,9 @@ export async function getStravaAccessToken(): Promise<string> {
 
 	// Log if refresh token rotated (operator must update env var)
 	if (data.refresh_token !== refreshToken) {
-		console.warn(`[strava-auth] REFRESH TOKEN ROTATED. New token: ${data.refresh_token.slice(0, 8)}...`);
+		console.warn(
+			`[strava-auth] REFRESH TOKEN ROTATED. New token: ${data.refresh_token.slice(0, 8)}...`
+		);
 		console.warn('[strava-auth] Update STRAVA_REFRESH_TOKEN in Vercel dashboard.');
 	}
 
@@ -715,7 +781,10 @@ export async function buildSegmentCatalog(
 			}
 		}
 	} catch (err) {
-		console.warn('[strava-segments] Explore API unavailable, using seed list only:', (err as Error).message);
+		console.warn(
+			'[strava-segments] Explore API unavailable, using seed list only:',
+			(err as Error).message
+		);
 	}
 
 	return {
@@ -801,20 +870,22 @@ describe('buildSegmentCatalog', () => {
 
 	it('preserves existing polylines when rebuilding', async () => {
 		const existing = {
-			segments: [{
-				id: 229781,
-				name: 'Hawk Hill',
-				activityType: 'ride' as const,
-				polyline: 'existing_encoded_polyline',
-				startLatlng: [37.8324, -122.4990] as [number, number],
-				endLatlng: [37.8300, -122.4970] as [number, number],
-				distance: 2650,
-				elevationGain: 156,
-				avgGrade: 5.9,
-				climbCategory: 4,
-				totalAttempts: 944951,
-				totalAthletes: 72448
-			}],
+			segments: [
+				{
+					id: 229781,
+					name: 'Hawk Hill',
+					activityType: 'ride' as const,
+					polyline: 'existing_encoded_polyline',
+					startLatlng: [37.8324, -122.499] as [number, number],
+					endLatlng: [37.83, -122.497] as [number, number],
+					distance: 2650,
+					elevationGain: 156,
+					avgGrade: 5.9,
+					climbCategory: 4,
+					totalAttempts: 944951,
+					totalAthletes: 72448
+				}
+			],
 			lastUpdated: '2026-03-27T00:00:00Z'
 		};
 
@@ -852,6 +923,7 @@ git commit -m "feat(strava): add OAuth helper and Explore API segment catalog bu
 ## Task 4: Cron Handlers
 
 **Files:**
+
 - Create: `src/routes/api/cron/sync-strava-segments/+server.ts`
 - Create: `src/routes/api/cron/sync-strava-leaderboards/+server.ts`
 - Modify: `vercel.json`
@@ -908,7 +980,9 @@ export const GET: RequestHandler = async ({ request }) => {
 		});
 
 		const withPolylines = catalog.segments.filter((s) => s.polyline).length;
-		console.log(`[sync-strava-segments] OK: ${catalog.segments.length} segments (${withPolylines} with polylines) in ${Date.now() - start}ms`);
+		console.log(
+			`[sync-strava-segments] OK: ${catalog.segments.length} segments (${withPolylines} with polylines) in ${Date.now() - start}ms`
+		);
 
 		return new Response(
 			JSON.stringify({ ok: true, segmentCount: catalog.segments.length, withPolylines }),
@@ -968,10 +1042,13 @@ export const GET: RequestHandler = async ({ request }) => {
 		// Load segment catalog to know which segments to scrape
 		const catalog = await readBlob<StravaSegmentCatalog>(STRAVA_SEGMENTS_BLOB);
 		if (!catalog || catalog.segments.length === 0) {
-			return new Response(JSON.stringify({ ok: false, error: 'No segment catalog — run sync-strava-segments first' }), {
-				status: 400,
-				headers: { 'Content-Type': 'application/json' }
-			});
+			return new Response(
+				JSON.stringify({ ok: false, error: 'No segment catalog — run sync-strava-segments first' }),
+				{
+					status: 400,
+					headers: { 'Content-Type': 'application/json' }
+				}
+			);
 		}
 
 		// Load existing events
@@ -1017,16 +1094,21 @@ export const GET: RequestHandler = async ({ request }) => {
 
 		// Update events: add new, prune old
 		const now = Date.now();
-		const allEvents = [...newEvents, ...events]
-			.filter((e) => now - new Date(e.detectedAt).getTime() < STRAVA_EVENT_MAX_AGE_MS);
+		const allEvents = [...newEvents, ...events].filter(
+			(e) => now - new Date(e.detectedAt).getTime() < STRAVA_EVENT_MAX_AGE_MS
+		);
 
-		await put(STRAVA_EVENTS_BLOB, JSON.stringify({ events: allEvents, lastUpdated: new Date().toISOString() }), {
-			access: 'private',
-			contentType: 'application/json',
-			addRandomSuffix: false,
-			allowOverwrite: true,
-			token: env.BLOB_READ_WRITE_TOKEN
-		});
+		await put(
+			STRAVA_EVENTS_BLOB,
+			JSON.stringify({ events: allEvents, lastUpdated: new Date().toISOString() }),
+			{
+				access: 'private',
+				contentType: 'application/json',
+				addRandomSuffix: false,
+				allowOverwrite: true,
+				token: env.BLOB_READ_WRITE_TOKEN
+			}
+		);
 
 		// Update catalog with fresh attempt counts from leaderboards
 		const updatedSegments = catalog.segments.map((seg) => {
@@ -1054,7 +1136,10 @@ export const GET: RequestHandler = async ({ request }) => {
 };
 
 /** Detect CR/QOM changes between current and previous leaderboard snapshots */
-function detectChanges(current: StravaLeaderboard, previous: StravaLeaderboard | null): StravaEvent[] {
+function detectChanges(
+	current: StravaLeaderboard,
+	previous: StravaLeaderboard | null
+): StravaEvent[] {
 	const events: StravaEvent[] = [];
 	const now = new Date().toISOString();
 
@@ -1119,6 +1204,7 @@ async function readBlob<T>(key: string): Promise<T | null> {
 - [ ] **Step 3: Add cron entries to vercel.json**
 
 Add to the `crons` array in `vercel.json`:
+
 ```json
 { "path": "/api/cron/sync-strava-segments", "schedule": "0 10 * * 0" },
 { "path": "/api/cron/sync-strava-leaderboards", "schedule": "0 12 * * *" }
@@ -1136,6 +1222,7 @@ git commit -m "feat(strava): add cron handlers for segment catalog and leaderboa
 ## Task 5: Data API Routes + Static Fallbacks
 
 **Files:**
+
 - Create: `src/routes/api/data/strava-segments/+server.ts`
 - Create: `src/routes/api/data/strava-leaderboard/[id]/+server.ts`
 - Create: `src/routes/api/data/strava-events/+server.ts`
@@ -1158,9 +1245,13 @@ const EMPTY = JSON.stringify({ segments: [], lastUpdated: '' });
 export const GET: RequestHandler = async () => {
 	try {
 		const blob = await head(STRAVA_SEGMENTS_BLOB, { token: env.BLOB_READ_WRITE_TOKEN });
-		const response = await fetchWithTimeout(blob.downloadUrl, {
-			headers: { Authorization: `Bearer ${env.BLOB_READ_WRITE_TOKEN}` }
-		}, 8000);
+		const response = await fetchWithTimeout(
+			blob.downloadUrl,
+			{
+				headers: { Authorization: `Bearer ${env.BLOB_READ_WRITE_TOKEN}` }
+			},
+			8000
+		);
 		if (response.ok) {
 			return new Response(await response.text(), {
 				headers: {
@@ -1193,7 +1284,16 @@ import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import { stravaLeaderboardBlob } from '$lib/config/strava';
 import type { RequestHandler } from './$types';
 
-const EMPTY = JSON.stringify({ segmentId: 0, segmentName: '', cr: null, qom: null, rows: [], totalAttempts: 0, totalAthletes: 0, scrapedAt: '' });
+const EMPTY = JSON.stringify({
+	segmentId: 0,
+	segmentName: '',
+	cr: null,
+	qom: null,
+	rows: [],
+	totalAttempts: 0,
+	totalAthletes: 0,
+	scrapedAt: ''
+});
 
 export const GET: RequestHandler = async ({ params }) => {
 	const segmentId = parseInt(params.id, 10);
@@ -1206,9 +1306,13 @@ export const GET: RequestHandler = async ({ params }) => {
 
 	try {
 		const blob = await head(stravaLeaderboardBlob(segmentId), { token: env.BLOB_READ_WRITE_TOKEN });
-		const response = await fetchWithTimeout(blob.downloadUrl, {
-			headers: { Authorization: `Bearer ${env.BLOB_READ_WRITE_TOKEN}` }
-		}, 8000);
+		const response = await fetchWithTimeout(
+			blob.downloadUrl,
+			{
+				headers: { Authorization: `Bearer ${env.BLOB_READ_WRITE_TOKEN}` }
+			},
+			8000
+		);
 		if (response.ok) {
 			return new Response(await response.text(), {
 				headers: {
@@ -1246,9 +1350,13 @@ const EMPTY = JSON.stringify({ events: [], lastUpdated: '' });
 export const GET: RequestHandler = async () => {
 	try {
 		const blob = await head(STRAVA_EVENTS_BLOB, { token: env.BLOB_READ_WRITE_TOKEN });
-		const response = await fetchWithTimeout(blob.downloadUrl, {
-			headers: { Authorization: `Bearer ${env.BLOB_READ_WRITE_TOKEN}` }
-		}, 8000);
+		const response = await fetchWithTimeout(
+			blob.downloadUrl,
+			{
+				headers: { Authorization: `Bearer ${env.BLOB_READ_WRITE_TOKEN}` }
+			},
+			8000
+		);
 		if (response.ok) {
 			return new Response(await response.text(), {
 				headers: {
@@ -1289,6 +1397,7 @@ git commit -m "feat(strava): add data API routes and static fallbacks"
 ## Task 6: Client-Side Adapter + Store
 
 **Files:**
+
 - Create: `src/lib/api/marin/strava.ts`
 - Create: `src/lib/stores/strava.ts`
 - Test: `src/lib/api/marin/strava.test.ts`
@@ -1406,7 +1515,11 @@ export async function fetchStravaEvents(): Promise<StravaEventLog> {
 // src/lib/stores/strava.ts
 
 import { writable, derived } from 'svelte/store';
-import { fetchStravaSegments, fetchStravaLeaderboard, fetchStravaEvents } from '$lib/api/marin/strava';
+import {
+	fetchStravaSegments,
+	fetchStravaLeaderboard,
+	fetchStravaEvents
+} from '$lib/api/marin/strava';
 import { STRAVA_ENABLED } from '$lib/config/strava';
 import type { StravaSegmentCatalog, StravaLeaderboard, StravaEventLog } from '$lib/types/strava';
 
@@ -1421,10 +1534,7 @@ export const stravaLeaderboards = derived(leaderboardCache, ($cache) => $cache);
 export async function loadStravaData(): Promise<void> {
 	if (!STRAVA_ENABLED) return;
 
-	const [catalog, events] = await Promise.all([
-		fetchStravaSegments(),
-		fetchStravaEvents()
-	]);
+	const [catalog, events] = await Promise.all([fetchStravaSegments(), fetchStravaEvents()]);
 
 	stravaSegments.set(catalog);
 	stravaEvents.set(events);
@@ -1433,7 +1543,9 @@ export async function loadStravaData(): Promise<void> {
 export async function loadLeaderboard(segmentId: number): Promise<StravaLeaderboard | null> {
 	// Check cache first
 	let cached: StravaLeaderboard | undefined;
-	leaderboardCache.subscribe(($cache) => { cached = $cache.get(segmentId); })();
+	leaderboardCache.subscribe(($cache) => {
+		cached = $cache.get(segmentId);
+	})();
 	if (cached) return cached;
 
 	const data = await fetchStravaLeaderboard(segmentId);
@@ -1465,6 +1577,7 @@ git commit -m "feat(strava): add client adapter and reactive store"
 ## Task 7: Leaderboards Panel
 
 **Files:**
+
 - Create: `src/lib/components/panels/LeaderboardsPanel.svelte`
 - Create: `src/lib/components/panels/leaderboards/SegmentCard.svelte`
 - Create: `src/lib/components/panels/leaderboards/RecentActivity.svelte`
@@ -1478,6 +1591,7 @@ In `src/lib/config/panels.ts`:
 Add `'leaderboards'` to the `PanelId` type union.
 
 Add to the `PANELS` object:
+
 ```typescript
 leaderboards: {
 	name: 'Leaderboards',
@@ -1506,9 +1620,11 @@ Add `'leaderboards'` to `DEFAULT_PANEL_ORDER` array after `'cycling'`.
 	let loading = $state(false);
 
 	const categoryLabel = $derived(
-		segment.climbCategory === 5 ? 'HC'
-		: segment.climbCategory > 0 ? `Cat ${5 - segment.climbCategory}`
-		: ''
+		segment.climbCategory === 5
+			? 'HC'
+			: segment.climbCategory > 0
+				? `Cat ${5 - segment.climbCategory}`
+				: ''
 	);
 
 	async function toggle() {
@@ -1563,7 +1679,11 @@ Add `'leaderboards'` to `DEFAULT_PANEL_ORDER` array after `'cycling'`.
 								<td class="rank">{row.rank}</td>
 								<td class="athlete">{row.athleteName}</td>
 								<td class="time">
-									<a href="https://www.strava.com/activities/{row.activityId}" target="_blank" rel="noopener">
+									<a
+										href="https://www.strava.com/activities/{row.activityId}"
+										target="_blank"
+										rel="noopener"
+									>
 										{row.time}
 									</a>
 								</td>
@@ -1577,8 +1697,15 @@ Add `'leaderboards'` to `DEFAULT_PANEL_ORDER` array after `'cycling'`.
 			{/if}
 			<div class="card-footer">
 				<span class="attempts">{leaderboard.totalAttempts.toLocaleString()} attempts</span>
-				<span class="stats">{(segment.distance / 1000).toFixed(1)}km · {segment.elevationGain}m ↑</span>
-				<a href="https://www.strava.com/segments/{segment.id}" target="_blank" rel="noopener" class="strava-link">
+				<span class="stats"
+					>{(segment.distance / 1000).toFixed(1)}km · {segment.elevationGain}m ↑</span
+				>
+				<a
+					href="https://www.strava.com/segments/{segment.id}"
+					target="_blank"
+					rel="noopener"
+					class="strava-link"
+				>
 					View on Strava ↗
 				</a>
 			</div>
@@ -1601,13 +1728,27 @@ Add `'leaderboards'` to `DEFAULT_PANEL_ORDER` array after `'cycling'`.
 		color: inherit;
 	}
 
-	.segment-card:hover { border-color: var(--text-dim); }
+	.segment-card:hover {
+		border-color: var(--text-dim);
+	}
 
-	.card-header { display: flex; flex-direction: column; gap: 0.2rem; }
+	.card-header {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+	}
 
-	.card-title { display: flex; align-items: center; gap: 0.4rem; }
+	.card-title {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
 
-	.segment-name { font-size: 0.75rem; font-weight: 600; color: var(--text); }
+	.segment-name {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--text);
+	}
 
 	.category-badge {
 		font-size: 0.55rem;
@@ -1619,20 +1760,55 @@ Add `'leaderboards'` to `DEFAULT_PANEL_ORDER` array after `'cycling'`.
 		text-transform: uppercase;
 	}
 
-	.card-meta { font-size: 0.65rem; color: var(--text-dim); }
+	.card-meta {
+		font-size: 0.65rem;
+		color: var(--text-dim);
+	}
 
-	.cr-line { color: #f59e0b; }
-	.qom-line { color: #ec4899; margin-left: 0.5rem; }
-	.placeholder { color: var(--text-muted); font-style: italic; }
+	.cr-line {
+		color: #f59e0b;
+	}
+	.qom-line {
+		color: #ec4899;
+		margin-left: 0.5rem;
+	}
+	.placeholder {
+		color: var(--text-muted);
+		font-style: italic;
+	}
 
-	.card-body { margin-top: 0.4rem; padding-top: 0.4rem; border-top: 1px solid var(--border); }
+	.card-body {
+		margin-top: 0.4rem;
+		padding-top: 0.4rem;
+		border-top: 1px solid var(--border);
+	}
 
-	.leaderboard-table { width: 100%; font-size: 0.6rem; border-collapse: collapse; }
-	.leaderboard-table th { text-align: left; color: var(--text-muted); padding: 0.15rem 0.3rem; font-weight: 500; }
-	.leaderboard-table td { padding: 0.15rem 0.3rem; color: var(--text-dim); }
-	.leaderboard-table .rank { color: var(--text-muted); width: 1.5rem; }
-	.leaderboard-table .time a { color: #60a5fa; text-decoration: none; }
-	.leaderboard-table .time a:hover { text-decoration: underline; }
+	.leaderboard-table {
+		width: 100%;
+		font-size: 0.6rem;
+		border-collapse: collapse;
+	}
+	.leaderboard-table th {
+		text-align: left;
+		color: var(--text-muted);
+		padding: 0.15rem 0.3rem;
+		font-weight: 500;
+	}
+	.leaderboard-table td {
+		padding: 0.15rem 0.3rem;
+		color: var(--text-dim);
+	}
+	.leaderboard-table .rank {
+		color: var(--text-muted);
+		width: 1.5rem;
+	}
+	.leaderboard-table .time a {
+		color: #60a5fa;
+		text-decoration: none;
+	}
+	.leaderboard-table .time a:hover {
+		text-decoration: underline;
+	}
 
 	.card-footer {
 		display: flex;
@@ -1643,8 +1819,14 @@ Add `'leaderboards'` to `DEFAULT_PANEL_ORDER` array after `'cycling'`.
 		color: var(--text-muted);
 	}
 
-	.strava-link { color: #fc4c02; margin-left: auto; text-decoration: none; }
-	.strava-link:hover { text-decoration: underline; }
+	.strava-link {
+		color: #fc4c02;
+		margin-left: auto;
+		text-decoration: none;
+	}
+	.strava-link:hover {
+		text-decoration: underline;
+	}
 </style>
 ```
 
@@ -1660,7 +1842,9 @@ Add `'leaderboards'` to `DEFAULT_PANEL_ORDER` array after `'cycling'`.
 
 	function eventLabel(event: StravaEvent): string {
 		const prefix = event.type === 'new_kom' ? 'NEW KOM' : 'NEW QOM';
-		const prev = event.previous ? ` (prev: ${event.previous.time} by ${event.previous.athlete})` : '';
+		const prev = event.previous
+			? ` (prev: ${event.previous.time} by ${event.previous.athlete})`
+			: '';
 		return `${prefix}: ${event.segmentName} — ${event.time} by ${event.athlete}${prev}`;
 	}
 
@@ -1680,7 +1864,11 @@ Add `'leaderboards'` to `DEFAULT_PANEL_ORDER` array after `'cycling'`.
 	<div class="events-list">
 		{#each events as event (event.effortId)}
 			<div class="event-item">
-				<span class="event-badge" class:kom={event.type === 'new_kom'} class:qom={event.type === 'new_qom'}>
+				<span
+					class="event-badge"
+					class:kom={event.type === 'new_kom'}
+					class:qom={event.type === 'new_qom'}
+				>
 					{event.type === 'new_kom' ? 'KOM' : 'QOM'}
 				</span>
 				<div class="event-content">
@@ -1693,11 +1881,25 @@ Add `'leaderboards'` to `DEFAULT_PANEL_ORDER` array after `'cycling'`.
 {/if}
 
 <style>
-	.empty { font-size: 0.65rem; color: var(--text-muted); padding: 1rem; text-align: center; }
+	.empty {
+		font-size: 0.65rem;
+		color: var(--text-muted);
+		padding: 1rem;
+		text-align: center;
+	}
 
-	.events-list { display: flex; flex-direction: column; gap: 0.3rem; }
+	.events-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
 
-	.event-item { display: flex; gap: 0.4rem; align-items: flex-start; padding: 0.3rem 0; }
+	.event-item {
+		display: flex;
+		gap: 0.4rem;
+		align-items: flex-start;
+		padding: 0.3rem 0;
+	}
 
 	.event-badge {
 		font-size: 0.5rem;
@@ -1708,11 +1910,23 @@ Add `'leaderboards'` to `DEFAULT_PANEL_ORDER` array after `'cycling'`.
 		margin-top: 0.1rem;
 	}
 
-	.event-badge.kom { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
-	.event-badge.qom { background: rgba(236, 72, 153, 0.15); color: #ec4899; }
+	.event-badge.kom {
+		background: rgba(245, 158, 11, 0.15);
+		color: #f59e0b;
+	}
+	.event-badge.qom {
+		background: rgba(236, 72, 153, 0.15);
+		color: #ec4899;
+	}
 
-	.event-text { font-size: 0.65rem; color: var(--text-dim); }
-	.event-time { font-size: 0.55rem; color: var(--text-muted); }
+	.event-text {
+		font-size: 0.65rem;
+		color: var(--text-dim);
+	}
+	.event-time {
+		font-size: 0.55rem;
+		color: var(--text-muted);
+	}
 </style>
 ```
 
@@ -1753,9 +1967,21 @@ Add `'leaderboards'` to `DEFAULT_PANEL_ORDER` array after `'cycling'`.
 	</div>
 
 	<div class="tab-bar">
-		<button class="tab" class:active={activeTab === 'cycling'} onclick={() => activeTab = 'cycling'}>Cycling</button>
-		<button class="tab" class:active={activeTab === 'running'} onclick={() => activeTab = 'running'}>Running</button>
-		<button class="tab" class:active={activeTab === 'activity'} onclick={() => activeTab = 'activity'}>Recent Activity</button>
+		<button
+			class="tab"
+			class:active={activeTab === 'cycling'}
+			onclick={() => (activeTab = 'cycling')}>Cycling</button
+		>
+		<button
+			class="tab"
+			class:active={activeTab === 'running'}
+			onclick={() => (activeTab = 'running')}>Running</button
+		>
+		<button
+			class="tab"
+			class:active={activeTab === 'activity'}
+			onclick={() => (activeTab = 'activity')}>Recent Activity</button
+		>
 	</div>
 
 	<div class="tab-content">
@@ -1824,14 +2050,32 @@ Add `'leaderboards'` to `DEFAULT_PANEL_ORDER` array after `'cycling'`.
 		transition: all 0.15s;
 	}
 
-	.tab:hover { color: var(--text-dim); }
-	.tab.active { color: var(--text); border-bottom-color: #fc4c02; }
+	.tab:hover {
+		color: var(--text-dim);
+	}
+	.tab.active {
+		color: var(--text);
+		border-bottom-color: #fc4c02;
+	}
 
-	.tab-content { padding: 0.4rem; max-height: 600px; overflow-y: auto; }
+	.tab-content {
+		padding: 0.4rem;
+		max-height: 600px;
+		overflow-y: auto;
+	}
 
-	.segment-list { display: flex; flex-direction: column; gap: 0.3rem; }
+	.segment-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+	}
 
-	.empty { font-size: 0.65rem; color: var(--text-muted); padding: 1rem; text-align: center; }
+	.empty {
+		font-size: 0.65rem;
+		color: var(--text-muted);
+		padding: 1rem;
+		text-align: center;
+	}
 </style>
 ```
 
@@ -1840,12 +2084,14 @@ Add `'leaderboards'` to `DEFAULT_PANEL_ORDER` array after `'cycling'`.
 In `src/lib/components/dashboard/WireGrid.svelte`:
 
 Add import:
+
 ```typescript
 import LeaderboardsPanel from '$lib/components/panels/LeaderboardsPanel.svelte';
 import { STRAVA_ENABLED } from '$lib/config/strava';
 ```
 
 Add after the CommunityPanel `<div class="wire-slot">` block:
+
 ```svelte
 {#if STRAVA_ENABLED && isPanelVisible('leaderboards')}
 	<div class="wire-slot">
@@ -1866,6 +2112,7 @@ git commit -m "feat(strava): add Leaderboards panel with segment cards and WireG
 ## Task 8: Map Integration (Polylines + Pins + Toggle)
 
 **Files:**
+
 - Create: `src/lib/components/map/SegmentLayer.svelte`
 - Modify: `src/lib/components/map/MapControls.svelte`
 - Modify: `src/lib/components/map/MapDataLayer.svelte` (or equivalent map composition file)
@@ -1876,6 +2123,7 @@ This task requires reading the existing map component structure to determine exa
 - [ ] **Step 1: Read existing map components**
 
 Read these files to understand the current map composition:
+
 - `src/lib/components/map/MapContainer.svelte`
 - `src/lib/components/map/MapDataLayer.svelte`
 - `src/lib/components/map/MapControls.svelte`
@@ -1987,6 +2235,7 @@ git commit -m "feat(strava): add map segment layer with polylines, pins, and tog
 ## Task 9: Chyron Integration
 
 **Files:**
+
 - Modify: `src/lib/config/tv.ts`
 - Modify: `src/lib/stores/tv.ts`
 
@@ -1995,11 +2244,13 @@ git commit -m "feat(strava): add map segment layer with polylines, pins, and tog
 In `src/lib/config/tv.ts`:
 
 Add `'KOM'` to the `TickerCategory` type:
+
 ```typescript
 export type TickerCategory = 'WX' | 'PD' | 'LW' | 'FI' | 'EQ' | 'TD' | 'GG' | 'CV' | 'KOM';
 ```
 
 Add to `CATEGORY_COLORS`:
+
 ```typescript
 KOM: '#fc4c02',  // Strava orange
 ```
@@ -2009,12 +2260,14 @@ KOM: '#fc4c02',  // Strava orange
 In `src/lib/stores/tv.ts`:
 
 Add import:
+
 ```typescript
 import { stravaEvents } from '$lib/stores/strava';
 import { STRAVA_CHYRON_MAX_AGE_MS } from '$lib/config/strava';
 ```
 
 Add `stravaEvents` to the `derived()` inputs array:
+
 ```typescript
 export const tvTickerItems = derived(
 	[safetyNews, localNews, civicNews, alerts, stravaEvents],
@@ -2022,6 +2275,7 @@ export const tvTickerItems = derived(
 ```
 
 Add Strava event processing inside the try block, before the dedup step:
+
 ```typescript
 // Strava KOM/QOM events (max 3-4, within 48h)
 const now = Date.now();
@@ -2060,6 +2314,7 @@ git commit -m "feat(strava): integrate KOM/QOM events into TV chyron ticker"
 ## Task 10: TV Carousel Screen
 
 **Files:**
+
 - Create: `src/lib/components/tv/screens/TvLeaderboardsScreen.svelte`
 - Modify: `src/lib/config/tv.ts`
 - Modify: TV screen router (wherever `TvScreen` dispatches to screen components)
@@ -2069,11 +2324,13 @@ git commit -m "feat(strava): integrate KOM/QOM events into TV chyron ticker"
 In `src/lib/config/tv.ts`:
 
 Add `'leaderboards'` to `TvScreenId`:
+
 ```typescript
-export type TvScreenId = /* existing */ | 'leaderboards';
+export type TvScreenId /* existing */ = 'leaderboards';
 ```
 
 Add to `TV_SCREENS` array:
+
 ```typescript
 { id: 'leaderboards', name: 'Marin Leaderboards', description: 'Strava KOMs and course records', durationMs: 20_000 },
 ```
@@ -2084,7 +2341,12 @@ Add to `TV_SCREENS` array:
 <!-- src/lib/components/tv/screens/TvLeaderboardsScreen.svelte -->
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { stravaSegments, stravaEvents, loadStravaData, loadLeaderboard } from '$lib/stores/strava';
+	import {
+		stravaSegments,
+		stravaEvents,
+		loadStravaData,
+		loadLeaderboard
+	} from '$lib/stores/strava';
 	import type { StravaSegment, StravaLeaderboard } from '$lib/types/strava';
 
 	let leftEl = $state<HTMLDivElement | null>(null);
@@ -2148,7 +2410,9 @@ Add to `TV_SCREENS` array:
 					<div class="segment-header">
 						<span class="seg-name">{segment.name}</span>
 						{#if segment.climbCategory > 0}
-							<span class="cat">{segment.climbCategory === 5 ? 'HC' : `Cat ${5 - segment.climbCategory}`}</span>
+							<span class="cat"
+								>{segment.climbCategory === 5 ? 'HC' : `Cat ${5 - segment.climbCategory}`}</span
+							>
 						{/if}
 					</div>
 					{#if lb?.cr}
@@ -2156,7 +2420,10 @@ Add to `TV_SCREENS` array:
 					{/if}
 					{#if lb}
 						{#each lb.rows.slice(0, 3) as row}
-							<div class="row"><span class="rank">{row.rank}.</span> {row.athleteName} <span class="time">{row.time}</span></div>
+							<div class="row">
+								<span class="rank">{row.rank}.</span>
+								{row.athleteName} <span class="time">{row.time}</span>
+							</div>
 						{/each}
 					{/if}
 				</div>
@@ -2176,7 +2443,10 @@ Add to `TV_SCREENS` array:
 					{/if}
 					{#if lb}
 						{#each lb.rows.slice(0, 3) as row}
-							<div class="row"><span class="rank">{row.rank}.</span> {row.athleteName} <span class="time">{row.time}</span></div>
+							<div class="row">
+								<span class="rank">{row.rank}.</span>
+								{row.athleteName} <span class="time">{row.time}</span>
+							</div>
 						{/each}
 					{/if}
 				</div>
@@ -2188,7 +2458,8 @@ Add to `TV_SCREENS` array:
 		<div class="events-strip">
 			{#each recentEvents as event}
 				<span class="event">
-					{event.type === 'new_kom' ? '🔥 NEW KOM' : '🔥 NEW QOM'}: {event.segmentName} — {event.time} by {event.athlete}
+					{event.type === 'new_kom' ? '🔥 NEW KOM' : '🔥 NEW QOM'}: {event.segmentName} — {event.time}
+					by {event.athlete}
 				</span>
 			{/each}
 		</div>
@@ -2196,28 +2467,93 @@ Add to `TV_SCREENS` array:
 </div>
 
 <style>
-	.tv-leaderboards { display: flex; flex-direction: column; height: 100%; background: #0a0a0a; color: #e5e5e5; }
+	.tv-leaderboards {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		background: #0a0a0a;
+		color: #e5e5e5;
+	}
 
-	.header { padding: 0.75rem 1rem; border-bottom: 1px solid #333; }
-	.header h2 { font-size: 1rem; font-weight: 700; letter-spacing: 0.08em; color: #fc4c02; margin: 0; }
+	.header {
+		padding: 0.75rem 1rem;
+		border-bottom: 1px solid #333;
+	}
+	.header h2 {
+		font-size: 1rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		color: #fc4c02;
+		margin: 0;
+	}
 
-	.columns { display: flex; gap: 1rem; flex: 1; overflow: hidden; padding: 0.75rem 1rem; }
-	.column { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+	.columns {
+		display: flex;
+		gap: 1rem;
+		flex: 1;
+		overflow: hidden;
+		padding: 0.75rem 1rem;
+	}
+	.column {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
 
-	.column-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; margin: 0 0 0.25rem; }
-	.column-title.cycling { color: #f59e0b; }
-	.column-title.running { color: #22d3ee; }
+	.column-title {
+		font-size: 0.7rem;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		margin: 0 0 0.25rem;
+	}
+	.column-title.cycling {
+		color: #f59e0b;
+	}
+	.column-title.running {
+		color: #22d3ee;
+	}
 
-	.segment-block { padding: 0.4rem; background: rgba(255,255,255,0.03); border-radius: 4px; border: 1px solid #222; }
-	.segment-header { display: flex; align-items: center; gap: 0.3rem; }
-	.seg-name { font-size: 0.75rem; font-weight: 600; }
-	.cat { font-size: 0.5rem; color: #fbbf24; background: rgba(251,191,36,0.15); padding: 0.05rem 0.2rem; border-radius: 2px; }
+	.segment-block {
+		padding: 0.4rem;
+		background: rgba(255, 255, 255, 0.03);
+		border-radius: 4px;
+		border: 1px solid #222;
+	}
+	.segment-header {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+	}
+	.seg-name {
+		font-size: 0.75rem;
+		font-weight: 600;
+	}
+	.cat {
+		font-size: 0.5rem;
+		color: #fbbf24;
+		background: rgba(251, 191, 36, 0.15);
+		padding: 0.05rem 0.2rem;
+		border-radius: 2px;
+	}
 
-	.cr { font-size: 0.6rem; color: #f59e0b; margin-top: 0.15rem; }
+	.cr {
+		font-size: 0.6rem;
+		color: #f59e0b;
+		margin-top: 0.15rem;
+	}
 
-	.row { font-size: 0.6rem; color: #a3a3a3; }
-	.rank { color: #737373; }
-	.time { color: #60a5fa; margin-left: auto; }
+	.row {
+		font-size: 0.6rem;
+		color: #a3a3a3;
+	}
+	.rank {
+		color: #737373;
+	}
+	.time {
+		color: #60a5fa;
+		margin-left: auto;
+	}
 
 	.events-strip {
 		display: flex;
@@ -2248,6 +2584,7 @@ git commit -m "feat(strava): add Leaderboards TV carousel screen"
 ## Task 11: Refresh Integration + Health Check
 
 **Files:**
+
 - Modify: `src/lib/stores/refresh.ts`
 - Modify: `src/routes/api/health/+server.ts` (if exists)
 
@@ -2309,6 +2646,7 @@ npm run dev
 ```
 
 Verify in browser:
+
 - Leaderboards panel appears in the Wire Grid
 - Panel shows Cycling/Running/Recent Activity tabs
 - Segment cards load (will show "No segments loaded" until cron runs — expected)
@@ -2329,11 +2667,13 @@ git push origin main
 ```
 
 Vercel auto-deploys. After deploy, manually trigger the segment catalog cron first:
+
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" "https://marinmonitor.com/api/cron/sync-strava-segments"
 ```
 
 Then trigger the leaderboard scrape:
+
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" "https://marinmonitor.com/api/cron/sync-strava-leaderboards"
 ```
@@ -2344,10 +2684,10 @@ Verify the panel populates with real data.
 
 ## Env Vars Required (Vercel Dashboard)
 
-| Variable | Purpose | Required For |
-|----------|---------|-------------|
-| `STRAVA_CLIENT_ID` | Strava API app client ID | Explore API (weekly catalog cron) |
-| `STRAVA_CLIENT_SECRET` | Strava API app client secret | Explore API (weekly catalog cron) |
+| Variable               | Purpose                                   | Required For                      |
+| ---------------------- | ----------------------------------------- | --------------------------------- |
+| `STRAVA_CLIENT_ID`     | Strava API app client ID                  | Explore API (weekly catalog cron) |
+| `STRAVA_CLIENT_SECRET` | Strava API app client secret              | Explore API (weekly catalog cron) |
 | `STRAVA_REFRESH_TOKEN` | OAuth refresh token from Stuart's account | Explore API (weekly catalog cron) |
 
 The leaderboard scrape cron does NOT need these — it's unauthenticated. The Explore API cron needs them for polylines and supplemental segment discovery.

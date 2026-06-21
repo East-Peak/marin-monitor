@@ -16,11 +16,7 @@ import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import { BASKET_ITEMS } from '$lib/config/grocery-basket';
 import { withSuccessfulScrapeMetadata } from '$lib/server/scrape-metadata';
 import { scoreGroceryPriceMatch } from '$lib/shared/grocery-basket-matching.js';
-import type {
-	BasketItemPrices,
-	GrocerySnapshot,
-	ItemPriceResult
-} from '$lib/types/grocery';
+import type { BasketItemPrices, GrocerySnapshot, ItemPriceResult } from '$lib/types/grocery';
 
 const INSTACART_BASE = 'https://www.instacart.com/store/s';
 
@@ -86,7 +82,10 @@ export function parseInstacartResults(html: string): InstacartProduct[] {
 	while ((jsonLdMatch = jsonLdPattern.exec(html)) !== null) {
 		try {
 			const data = JSON.parse(jsonLdMatch[1]);
-			if (data['@type'] === 'Product' || (Array.isArray(data) && data[0]?.['@type'] === 'Product')) {
+			if (
+				data['@type'] === 'Product' ||
+				(Array.isArray(data) && data[0]?.['@type'] === 'Product')
+			) {
 				const items = Array.isArray(data) ? data : [data];
 				for (const item of items) {
 					if (item.name && item.offers) {
@@ -130,8 +129,7 @@ export function parseInstacartResults(html: string): InstacartProduct[] {
 
 	// Strategy 3: Generic price extraction from aria-labels or structured divs
 	// Look for patterns like "Product Name ... $X.XX ... Store Name"
-	const genericPattern =
-		/aria-label="([^"]+)"[\s\S]*?\$(\d+\.?\d*)/gi;
+	const genericPattern = /aria-label="([^"]+)"[\s\S]*?\$(\d+\.?\d*)/gi;
 
 	while ((match = genericPattern.exec(html)) !== null) {
 		const name = match[1].trim();
@@ -156,7 +154,7 @@ export function parseInstacartResults(html: string): InstacartProduct[] {
 	if (pricesFound.length > 0 && products.length === 0) {
 		console.warn(
 			`[grocery-basket] Found ${pricesFound.length} prices in HTML but could not match to products. ` +
-			'Instacart HTML structure may have changed. Manual inspection needed.'
+				'Instacart HTML structure may have changed. Manual inspection needed.'
 		);
 	}
 
@@ -179,13 +177,14 @@ async function fetchInstacartSearch(searchTerm: string): Promise<string> {
 			method: 'GET',
 			headers: {
 				'User-Agent': USER_AGENT,
-				'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+				Accept:
+					'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
 				'Accept-Language': 'en-US,en;q=0.9',
 				'Accept-Encoding': 'gzip, deflate, br',
 				'Cache-Control': 'no-cache',
-				'Pragma': 'no-cache',
-				'Cookie': `zipcode=${MARIN_ZIP}`,
-				'Referer': 'https://www.instacart.com/',
+				Pragma: 'no-cache',
+				Cookie: `zipcode=${MARIN_ZIP}`,
+				Referer: 'https://www.instacart.com/',
 				'Sec-Fetch-Dest': 'document',
 				'Sec-Fetch-Mode': 'navigate',
 				'Sec-Fetch-Site': 'same-origin',
@@ -212,7 +211,12 @@ async function fetchInstacartSearch(searchTerm: string): Promise<string> {
 	const html = await response.text();
 
 	// Log diagnostic info if we got a response but it looks like a block/challenge page
-	if (html.length < 1000 || html.includes('captcha') || html.includes('challenge') || html.includes('blocked')) {
+	if (
+		html.length < 1000 ||
+		html.includes('captcha') ||
+		html.includes('challenge') ||
+		html.includes('blocked')
+	) {
 		console.warn(
 			`[grocery-basket] Instacart may be blocking: response ${html.length} chars for "${searchTerm}"`,
 			`| Body preview: ${html.substring(0, 300)}`
@@ -241,10 +245,10 @@ async function scrapeItemPrices(
 
 	// Score and filter to matching products
 	const scored = allProducts
-			.map((product) => ({
-				product,
-				score: scoreGroceryPriceMatch(product.name, itemName, itemId)
-			}))
+		.map((product) => ({
+			product,
+			score: scoreGroceryPriceMatch(product.name, itemName, itemId)
+		}))
 		.filter((s) => s.score >= MIN_MATCH_SCORE)
 		.sort((a, b) => b.score - a.score);
 
@@ -290,11 +294,7 @@ export async function scrapeGroceryBasket(): Promise<GrocerySnapshot> {
 	// Try scraping the first item to detect if Instacart is blocking us
 	const firstItem = BASKET_ITEMS[0];
 	try {
-		const testPrices = await scrapeItemPrices(
-			firstItem.id,
-			firstItem.name,
-			firstItem.searchTerm
-		);
+		const testPrices = await scrapeItemPrices(firstItem.id, firstItem.name, firstItem.searchTerm);
 		if (testPrices.length > 0) {
 			liveItemsFound++;
 			const sorted = [...testPrices].sort((a, b) => a.price - b.price);
@@ -309,7 +309,7 @@ export async function scrapeGroceryBasket(): Promise<GrocerySnapshot> {
 			});
 			console.log(
 				`[grocery-basket] ${firstItem.name}: ${testPrices.length} stores, ` +
-				`cheapest $${sorted[0].price.toFixed(2)} at ${sorted[0].store}`
+					`cheapest $${sorted[0].price.toFixed(2)} at ${sorted[0].store}`
 			);
 		} else {
 			console.warn(
@@ -378,7 +378,7 @@ export async function scrapeGroceryBasket(): Promise<GrocerySnapshot> {
 
 					console.log(
 						`[grocery-basket] ${basketItem.name}: ${storePrices.length} stores, ` +
-						`cheapest $${sorted[0].price.toFixed(2)} at ${sorted[0].store}`
+							`cheapest $${sorted[0].price.toFixed(2)} at ${sorted[0].store}`
 					);
 				} else {
 					// No live data — fall back to reference price for this item
@@ -431,12 +431,8 @@ export async function scrapeGroceryBasket(): Promise<GrocerySnapshot> {
 	}
 
 	// Compute basket totals
-	const cheapestPrices = items
-		.map((i) => i.cheapest)
-		.filter((p): p is number => p !== null);
-	const expensivePrices = items
-		.map((i) => i.mostExpensive)
-		.filter((p): p is number => p !== null);
+	const cheapestPrices = items.map((i) => i.cheapest).filter((p): p is number => p !== null);
+	const expensivePrices = items.map((i) => i.mostExpensive).filter((p): p is number => p !== null);
 
 	const totalCheapest =
 		cheapestPrices.length > 0
@@ -447,18 +443,23 @@ export async function scrapeGroceryBasket(): Promise<GrocerySnapshot> {
 			? Math.round(expensivePrices.reduce((a, b) => a + b, 0) * 100) / 100
 			: null;
 
-	const source = instacartBlocked ? 'reference' : `instacart (${liveItemsFound}/${BASKET_ITEMS.length} live)`;
+	const source = instacartBlocked
+		? 'reference'
+		: `instacart (${liveItemsFound}/${BASKET_ITEMS.length} live)`;
 	console.log(
 		`[grocery-basket] Source: ${source}, total cheapest: $${totalCheapest?.toFixed(2) ?? 'N/A'}`
 	);
 
 	const timestamp = new Date().toISOString();
 
-	return withSuccessfulScrapeMetadata({
-		timestamp,
-		totalCheapest,
-		totalExpensive,
-		itemsFound: cheapestPrices.length,
-		items
-	}, instacartBlocked ? null : timestamp);
+	return withSuccessfulScrapeMetadata(
+		{
+			timestamp,
+			totalCheapest,
+			totalExpensive,
+			itemsFound: cheapestPrices.length,
+			items
+		},
+		instacartBlocked ? null : timestamp
+	);
 }

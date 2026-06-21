@@ -65,8 +65,7 @@ async function scrapeIkonPrices() {
 			for (const item of items) {
 				if (item['@type'] === 'Product' || item['@type'] === 'Offer') {
 					const name = (item.name || '').toLowerCase();
-					const price =
-						item.offers?.price || item.price || item.offers?.[0]?.price;
+					const price = item.offers?.price || item.price || item.offers?.[0]?.price;
 					if (price) {
 						if (name.includes('ikon pass') && !name.includes('base')) {
 							prices.adult = parseFloat(price);
@@ -87,9 +86,7 @@ async function scrapeIkonPrices() {
 	// Ikon Pass typically shows prices like "$1,399" or "$399"
 	if (!prices.adult) {
 		// Look for "Ikon Pass" followed by a price
-		const ikonPassMatch = html.match(
-			/Ikon\s+Pass(?:\s*<[^>]*>)*\s*(?:<[^>]*>)*\s*\$([0-9,]+)/i
-		);
+		const ikonPassMatch = html.match(/Ikon\s+Pass(?:\s*<[^>]*>)*\s*(?:<[^>]*>)*\s*\$([0-9,]+)/i);
 		if (ikonPassMatch) {
 			prices.adult = parseFloat(ikonPassMatch[1].replace(/,/g, ''));
 		}
@@ -170,20 +167,23 @@ async function main() {
 	const monthlyAmortized = Math.round(familyOf4 / 12);
 	const nowIso = new Date().toISOString();
 	const scrapedLive = !!(prices.adult || prices.child);
-	const snapshot = withPreservedSuccessfulScrapeMetadata({
-		timestamp: nowIso,
-		adultPrice,
-		childPrice,
-		basePrice,
-		familyOf4,
-		monthlyAmortized,
-		scraped: scrapedLive,
-		source: scrapedLive ? 'ikonpass.com' : 'fallback'
-	}, {
-		wasLive: scrapedLive,
-		previous: existing.current,
-		includeLegacyLastLive: true
-	});
+	const snapshot = withPreservedSuccessfulScrapeMetadata(
+		{
+			timestamp: nowIso,
+			adultPrice,
+			childPrice,
+			basePrice,
+			familyOf4,
+			monthlyAmortized,
+			scraped: scrapedLive,
+			source: scrapedLive ? 'ikonpass.com' : 'fallback'
+		},
+		{
+			wasLive: scrapedLive,
+			previous: existing.current,
+			includeLegacyLastLive: true
+		}
+	);
 
 	// Append history
 	const history = [snapshot, ...existing.history].slice(0, MAX_HISTORY);

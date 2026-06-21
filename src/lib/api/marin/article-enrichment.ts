@@ -137,7 +137,6 @@ function isLikelyIntersection(candidate: string): boolean {
 	return /\s(?:and|&|at)\s/i.test(candidate);
 }
 
-
 async function geocodeCandidate(
 	candidate: string,
 	townHint?: string

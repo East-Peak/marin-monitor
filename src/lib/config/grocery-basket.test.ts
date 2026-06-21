@@ -26,7 +26,14 @@ describe('BASKET_ITEMS', () => {
 	});
 
 	it('every item has a valid category', () => {
-		const validCategories = ['produce', 'dairy-alt', 'protein', 'pantry', 'beverages', 'supplements'];
+		const validCategories = [
+			'produce',
+			'dairy-alt',
+			'protein',
+			'pantry',
+			'beverages',
+			'supplements'
+		];
 		for (const item of BASKET_ITEMS) {
 			expect(validCategories).toContain(item.category);
 		}

@@ -169,7 +169,8 @@ export const COFFEE_SHOPS_DATA = [
 		url: 'https://www.redwhalecoffee.com/',
 		hasCappuccino: true,
 		supportsLivePriceScrape: false,
-		fallbackReason: 'Official site highlights the roastery but does not publish current cafe drink prices.'
+		fallbackReason:
+			'Official site highlights the roastery but does not publish current cafe drink prices.'
 	}
 ];
 

@@ -14,16 +14,27 @@
 	{#if events.length === 0}
 		<div class="empty">
 			<span class="empty-title">No recent leaderboard changes</span>
-			<span class="empty-detail">New KOM and QOM swaps from the last 30 days will show up here.</span>
+			<span class="empty-detail"
+				>New KOM and QOM swaps from the last 30 days will show up here.</span
+			>
 		</div>
 	{:else}
 		{#each events as event (event.effortId)}
 			<div class="event-row">
-				<span class="event-badge" class:kom={event.type === 'new_kom'} class:qom={event.type === 'new_qom'}>
+				<span
+					class="event-badge"
+					class:kom={event.type === 'new_kom'}
+					class:qom={event.type === 'new_qom'}
+				>
 					{event.type === 'new_kom' ? 'KOM' : 'QOM'}
 				</span>
 				<div class="event-info">
-					<a class="event-segment" href="https://www.strava.com/segments/{event.segmentId}" target="_blank" rel="noopener noreferrer">{event.segmentName}</a>
+					<a
+						class="event-segment"
+						href="https://www.strava.com/segments/{event.segmentId}"
+						target="_blank"
+						rel="noopener noreferrer">{event.segmentName}</a
+					>
 					<span class="event-detail">
 						<span class="event-athlete">{event.athlete}</span>
 						<span class="event-time">{event.time}</span>

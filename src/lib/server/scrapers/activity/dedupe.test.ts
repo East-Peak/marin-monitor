@@ -122,9 +122,24 @@ describe('dedupeItems', () => {
 		const t3 = NOW;
 
 		const items = [
-			makeItem({ title: 'A', link: 'https://a.com/1', timestamp: t1, pubDate: new Date(t1).toISOString() }),
-			makeItem({ title: 'C', link: 'https://a.com/3', timestamp: t3, pubDate: new Date(t3).toISOString() }),
-			makeItem({ title: 'B', link: 'https://a.com/2', timestamp: t2, pubDate: new Date(t2).toISOString() })
+			makeItem({
+				title: 'A',
+				link: 'https://a.com/1',
+				timestamp: t1,
+				pubDate: new Date(t1).toISOString()
+			}),
+			makeItem({
+				title: 'C',
+				link: 'https://a.com/3',
+				timestamp: t3,
+				pubDate: new Date(t3).toISOString()
+			}),
+			makeItem({
+				title: 'B',
+				link: 'https://a.com/2',
+				timestamp: t2,
+				pubDate: new Date(t2).toISOString()
+			})
 		];
 
 		const result = dedupeItems(items, NOW);

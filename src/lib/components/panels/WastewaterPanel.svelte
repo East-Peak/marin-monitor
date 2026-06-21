@@ -83,7 +83,9 @@
 						<span class="pathogen-name">{pathogen.label}</span>
 						<span
 							class="pathogen-status"
-							style="color: {STATUS_COLORS[pathogen.status]}; background: {STATUS_BG[pathogen.status]}"
+							style="color: {STATUS_COLORS[pathogen.status]}; background: {STATUS_BG[
+								pathogen.status
+							]}"
 						>
 							{statusLabel(pathogen.status)}
 						</span>

@@ -14,34 +14,35 @@
 
 ### New Files
 
-| File | Responsibility |
-|------|---------------|
-| `src/lib/types/wine.ts` | WineProduct, WineCategory, WineCategorySnapshot, WineStaffPick, WineSnapshot, WineIndexData type definitions |
-| `src/lib/config/wine.ts` | PlumpJack base URL, collection handles, blob key, history cap, accent color |
-| `src/lib/server/scrapers/wine-index.ts` | Shopify collection fetcher, median computation, staff pick extraction |
-| `src/lib/server/scrapers/wine-index.test.ts` | Unit tests for price parsing, median computation, pagination logic |
-| `src/routes/api/cron/sync-wine-index/+server.ts` | Weekly cron job: fetch collections + compute + store to Blob |
-| `src/routes/api/data/wine-index/+server.ts` | Serve wine index data from Blob |
-| `src/lib/api/marin/wine-index.ts` | Client-side data adapter |
-| `src/lib/stores/wine-index.ts` | Svelte store for wine index data |
-| `src/lib/components/panels/WineIndexPanel.svelte` | Dashboard panel with category sparklines + bottle listing |
+| File                                              | Responsibility                                                                                               |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `src/lib/types/wine.ts`                           | WineProduct, WineCategory, WineCategorySnapshot, WineStaffPick, WineSnapshot, WineIndexData type definitions |
+| `src/lib/config/wine.ts`                          | PlumpJack base URL, collection handles, blob key, history cap, accent color                                  |
+| `src/lib/server/scrapers/wine-index.ts`           | Shopify collection fetcher, median computation, staff pick extraction                                        |
+| `src/lib/server/scrapers/wine-index.test.ts`      | Unit tests for price parsing, median computation, pagination logic                                           |
+| `src/routes/api/cron/sync-wine-index/+server.ts`  | Weekly cron job: fetch collections + compute + store to Blob                                                 |
+| `src/routes/api/data/wine-index/+server.ts`       | Serve wine index data from Blob                                                                              |
+| `src/lib/api/marin/wine-index.ts`                 | Client-side data adapter                                                                                     |
+| `src/lib/stores/wine-index.ts`                    | Svelte store for wine index data                                                                             |
+| `src/lib/components/panels/WineIndexPanel.svelte` | Dashboard panel with category sparklines + bottle listing                                                    |
 
 ### Modified Files
 
-| File | Change |
-|------|--------|
-| `src/lib/types/index.ts` | Re-export wine types |
-| `src/lib/config/panels.ts` | Add `wine-index` PanelId + config |
-| `src/lib/components/panels/index.ts` | Export WineIndexPanel |
-| `src/lib/components/dashboard/SignalDeck.svelte` | Render WineIndexPanel in right column |
-| `src/lib/stores/refresh.ts` | Add `wine-index` to tertiary refresh stage |
-| `vercel.json` | Add sync-wine-index cron entry |
+| File                                             | Change                                     |
+| ------------------------------------------------ | ------------------------------------------ |
+| `src/lib/types/index.ts`                         | Re-export wine types                       |
+| `src/lib/config/panels.ts`                       | Add `wine-index` PanelId + config          |
+| `src/lib/components/panels/index.ts`             | Export WineIndexPanel                      |
+| `src/lib/components/dashboard/SignalDeck.svelte` | Render WineIndexPanel in right column      |
+| `src/lib/stores/refresh.ts`                      | Add `wine-index` to tertiary refresh stage |
+| `vercel.json`                                    | Add sync-wine-index cron entry             |
 
 ---
 
 ## Task 1: Type Definitions
 
 **Files:**
+
 - Create: `src/lib/types/wine.ts`
 - Modify: `src/lib/types/index.ts`
 
@@ -149,6 +150,7 @@ cd /Users/tammypais/projects/marin-monitor && npx tsc --noEmit --pretty 2>&1 | h
 ## Task 2: Wine Index Configuration
 
 **Files:**
+
 - Create: `src/lib/config/wine.ts`
 - Create: `src/lib/config/wine.test.ts`
 
@@ -292,6 +294,7 @@ cd /Users/tammypais/projects/marin-monitor && npx vitest run src/lib/config/wine
 ## Task 3: Shopify Scraper
 
 **Files:**
+
 - Create: `src/lib/server/scrapers/wine-index.ts`
 - Create: `src/lib/server/scrapers/wine-index.test.ts`
 
@@ -471,9 +474,39 @@ describe('extractProducts', () => {
 describe('buildCategorySnapshot', () => {
 	it('builds a snapshot from products', () => {
 		const products: WineProduct[] = [
-			{ id: 1, title: 'A', handle: 'a', vendor: 'V', product_type: 'Red', price: 50, compareAtPrice: null, available: true, tags: [] },
-			{ id: 2, title: 'B', handle: 'b', vendor: 'V', product_type: 'Red', price: 100, compareAtPrice: null, available: true, tags: [] },
-			{ id: 3, title: 'C', handle: 'c', vendor: 'V', product_type: 'Red', price: 75, compareAtPrice: null, available: true, tags: [] }
+			{
+				id: 1,
+				title: 'A',
+				handle: 'a',
+				vendor: 'V',
+				product_type: 'Red',
+				price: 50,
+				compareAtPrice: null,
+				available: true,
+				tags: []
+			},
+			{
+				id: 2,
+				title: 'B',
+				handle: 'b',
+				vendor: 'V',
+				product_type: 'Red',
+				price: 100,
+				compareAtPrice: null,
+				available: true,
+				tags: []
+			},
+			{
+				id: 3,
+				title: 'C',
+				handle: 'c',
+				vendor: 'V',
+				product_type: 'Red',
+				price: 75,
+				compareAtPrice: null,
+				available: true,
+				tags: []
+			}
 		];
 
 		const snapshot = buildCategorySnapshot('napa-sonoma', 'Napa/Sonoma Cab', products);
@@ -634,7 +667,10 @@ export function extractProducts(shopifyResponse: {
 			compareAtPrice,
 			available: variant.available,
 			tags: product.tags
-				? product.tags.split(',').map((t) => t.trim()).filter(Boolean)
+				? product.tags
+						.split(',')
+						.map((t) => t.trim())
+						.filter(Boolean)
 				: []
 		});
 	}
@@ -698,7 +734,7 @@ async function fetchCollectionProducts(collectionHandle: string): Promise<WinePr
 			const response = await fetch(url, {
 				signal: controller.signal,
 				headers: {
-					'Accept': 'application/json',
+					Accept: 'application/json',
 					'User-Agent': 'MarinMonitor/1.0'
 				}
 			});
@@ -766,11 +802,7 @@ export async function scrapeWineIndex(): Promise<WineSnapshot> {
 		const products = await fetchCollectionProducts(collection.handle);
 		console.log(`[wine-index] ${collection.handle}: ${products.length} products`);
 
-		const snapshot = buildCategorySnapshot(
-			collection.category,
-			collection.label,
-			products
-		);
+		const snapshot = buildCategorySnapshot(collection.category, collection.label, products);
 		categorySnapshots.push(snapshot);
 
 		// Polite delay between collections (1s)
@@ -779,9 +811,7 @@ export async function scrapeWineIndex(): Promise<WineSnapshot> {
 
 	// 2. Fetch staff picks
 	console.log(`[wine-index] Fetching ${WINE_LISTING_COLLECTIONS.staffPicks}...`);
-	const staffPickProducts = await fetchCollectionProducts(
-		WINE_LISTING_COLLECTIONS.staffPicks
-	);
+	const staffPickProducts = await fetchCollectionProducts(WINE_LISTING_COLLECTIONS.staffPicks);
 	const staffPicks = staffPickProducts.map((p) => buildStaffPick(p, 'staff-pick'));
 	console.log(`[wine-index] Staff picks: ${staffPicks.length} wines`);
 
@@ -790,9 +820,7 @@ export async function scrapeWineIndex(): Promise<WineSnapshot> {
 
 	// 3. Fetch allocated wines
 	console.log(`[wine-index] Fetching ${WINE_LISTING_COLLECTIONS.allocated}...`);
-	const allocatedProducts = await fetchCollectionProducts(
-		WINE_LISTING_COLLECTIONS.allocated
-	);
+	const allocatedProducts = await fetchCollectionProducts(WINE_LISTING_COLLECTIONS.allocated);
 	const allocatedWines = allocatedProducts.map((p) => buildStaffPick(p, 'allocated'));
 	console.log(`[wine-index] Allocated wines: ${allocatedWines.length} wines`);
 
@@ -817,6 +845,7 @@ cd /Users/tammypais/projects/marin-monitor && npx vitest run src/lib/server/scra
 ## Task 4: Cron Job
 
 **Files:**
+
 - Create: `src/routes/api/cron/sync-wine-index/+server.ts`
 - Modify: `vercel.json`
 
@@ -836,9 +865,10 @@ import type { WineIndexData, WineSnapshot } from '$lib/types/wine';
 export const config = { maxDuration: 120 };
 
 /** Strip bottle listings from a snapshot to keep history entries small */
-function toHistoryEntry(
-	snapshot: WineSnapshot
-): { timestamp: string; categories: WineSnapshot['categories'] } {
+function toHistoryEntry(snapshot: WineSnapshot): {
+	timestamp: string;
+	categories: WineSnapshot['categories'];
+} {
 	return {
 		timestamp: snapshot.timestamp,
 		categories: snapshot.categories
@@ -868,10 +898,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		}
 
 		// Append to history (capped), omitting bottle listings from history entries
-		const history = [toHistoryEntry(snapshot), ...existing.history].slice(
-			0,
-			MAX_WINE_HISTORY
-		);
+		const history = [toHistoryEntry(snapshot), ...existing.history].slice(0, MAX_WINE_HISTORY);
 
 		const data: WineIndexData = {
 			current: snapshot,
@@ -945,6 +972,7 @@ cd /Users/tammypais/projects/marin-monitor && node -e "JSON.parse(require('fs').
 ## Task 5: API Data Endpoint
 
 **Files:**
+
 - Create: `src/routes/api/data/wine-index/+server.ts`
 
 - [ ] **Step 1: Write the data endpoint**
@@ -998,6 +1026,7 @@ Note: Cache TTL matches Cappuccino (1 hour s-maxage) since wine prices change we
 ## Task 6: Client Adapter + Store
 
 **Files:**
+
 - Create: `src/lib/api/marin/wine-index.ts`
 - Create: `src/lib/stores/wine-index.ts`
 - Modify: `src/lib/stores/refresh.ts`
@@ -1046,15 +1075,9 @@ import type { WineIndexData } from '$lib/types/wine';
 
 export const wineIndexStore = writable<WineIndexData>({ current: null, history: [] });
 
-export const currentWineCategories = derived(
-	wineIndexStore,
-	($d) => $d.current?.categories ?? []
-);
+export const currentWineCategories = derived(wineIndexStore, ($d) => $d.current?.categories ?? []);
 
-export const currentStaffPicks = derived(
-	wineIndexStore,
-	($d) => $d.current?.staffPicks ?? []
-);
+export const currentStaffPicks = derived(wineIndexStore, ($d) => $d.current?.staffPicks ?? []);
 
 export const currentAllocatedWines = derived(
 	wineIndexStore,
@@ -1079,6 +1102,7 @@ In `src/lib/stores/refresh.ts`, find the tertiary stage and add `'wine-index'` t
 ## Task 7: Panel Component
 
 **Files:**
+
 - Create: `src/lib/components/panels/WineIndexPanel.svelte`
 
 - [ ] **Step 1: Write the WineIndexPanel**
@@ -1093,7 +1117,12 @@ In `src/lib/stores/refresh.ts`, find the tertiary stage and add `'wine-index'` t
 	import { select } from 'd3-selection';
 	import { scaleLinear } from 'd3-scale';
 	import { line, curveMonotoneX } from 'd3-shape';
-	import type { WineIndexData, WineCategory, WineCategorySnapshot, WineStaffPick } from '$lib/types/wine';
+	import type {
+		WineIndexData,
+		WineCategory,
+		WineCategorySnapshot,
+		WineStaffPick
+	} from '$lib/types/wine';
 	import { WINE_ACCENT, WINE_ACCENT_FILL, WINE_CATEGORY_ORDER } from '$lib/config/wine';
 
 	const SPARKLINE_W = 80;
@@ -1124,9 +1153,7 @@ In `src/lib/stores/refresh.ts`, find the tertiary stage and add `'wine-index'` t
 			}
 
 			// Sort oldest first
-			catHistory.sort(
-				(a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-			);
+			catHistory.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
 			histories.set(cat, catHistory);
 		}
@@ -1183,7 +1210,9 @@ In `src/lib/stores/refresh.ts`, find the tertiary stage and add `'wine-index'` t
 		const x = scaleLinear()
 			.domain([0, prices.length - 1])
 			.range([2, SPARKLINE_W - 2]);
-		const y = scaleLinear().domain([yMin, yMax]).range([SPARKLINE_H - 2, 2]);
+		const y = scaleLinear()
+			.domain([yMin, yMax])
+			.range([SPARKLINE_H - 2, 2]);
 
 		const lineGen = line<number>()
 			.x((_d, i) => x(i))
@@ -1293,10 +1322,7 @@ In `src/lib/stores/refresh.ts`, find the tertiary stage and add `'wine-index'` t
 					</div>
 				{/each}
 				{#if staffPicks.length > 8}
-					<button
-						class="show-more-btn"
-						onclick={() => (showAllStaffPicks = !showAllStaffPicks)}
-					>
+					<button class="show-more-btn" onclick={() => (showAllStaffPicks = !showAllStaffPicks)}>
 						{showAllStaffPicks ? 'Show fewer' : `Show all ${staffPicks.length}`}
 					</button>
 				{/if}
@@ -1327,10 +1353,7 @@ In `src/lib/stores/refresh.ts`, find the tertiary stage and add `'wine-index'` t
 					</div>
 				{/each}
 				{#if allocatedWines.length > 6}
-					<button
-						class="show-more-btn"
-						onclick={() => (showAllAllocated = !showAllAllocated)}
-					>
+					<button class="show-more-btn" onclick={() => (showAllAllocated = !showAllAllocated)}>
 						{showAllAllocated ? 'Show fewer' : `Show all ${allocatedWines.length}`}
 					</button>
 				{/if}
@@ -1338,9 +1361,7 @@ In `src/lib/stores/refresh.ts`, find the tertiary stage and add `'wine-index'` t
 		{/if}
 
 		<!-- Attribution -->
-		<div class="attribution">
-			Data via PlumpJack Wine & Spirits
-		</div>
+		<div class="attribution">Data via PlumpJack Wine & Spirits</div>
 	{:else if dataLoading}
 		<div class="empty-state">Loading wine index data...</div>
 	{:else}
@@ -1525,7 +1546,9 @@ In `src/lib/stores/refresh.ts`, find the tertiary stage and add `'wine-index'` t
 		font-size: 0.5rem;
 		cursor: pointer;
 		text-align: center;
-		transition: color 0.15s, border-color 0.15s;
+		transition:
+			color 0.15s,
+			border-color 0.15s;
 	}
 
 	.show-more-btn:hover {
@@ -1591,6 +1614,7 @@ Either approach works. The implementer should verify which compiles cleanly.
 ## Task 8: Config Registration + SignalDeck Wiring
 
 **Files:**
+
 - Modify: `src/lib/config/panels.ts`
 - Modify: `src/lib/components/panels/index.ts`
 - Modify: `src/lib/components/dashboard/SignalDeck.svelte`
@@ -1667,41 +1691,41 @@ First, add to the import statement:
 
 ```typescript
 // FIND this line:
-	import {
-		WeatherPanel,
-		TidesPanel,
-		PulsePanel,
-		OutlooksPanel,
-		SignalsPanel,
-		HousingPanel,
-		GasPricesPanel,
-		EvChargingPanel,
-		EnvironmentPanel,
-		ConditionsPanel,
-		WastewaterPanel,
-		AirportStatusPanel,
-		CappuccinoPanel,
-		GroceryBasketPanel
-	} from '$lib/components/panels';
+import {
+	WeatherPanel,
+	TidesPanel,
+	PulsePanel,
+	OutlooksPanel,
+	SignalsPanel,
+	HousingPanel,
+	GasPricesPanel,
+	EvChargingPanel,
+	EnvironmentPanel,
+	ConditionsPanel,
+	WastewaterPanel,
+	AirportStatusPanel,
+	CappuccinoPanel,
+	GroceryBasketPanel
+} from '$lib/components/panels';
 
 // REPLACE with:
-	import {
-		WeatherPanel,
-		TidesPanel,
-		PulsePanel,
-		OutlooksPanel,
-		SignalsPanel,
-		HousingPanel,
-		GasPricesPanel,
-		EvChargingPanel,
-		EnvironmentPanel,
-		ConditionsPanel,
-		WastewaterPanel,
-		AirportStatusPanel,
-		CappuccinoPanel,
-		GroceryBasketPanel,
-		WineIndexPanel
-	} from '$lib/components/panels';
+import {
+	WeatherPanel,
+	TidesPanel,
+	PulsePanel,
+	OutlooksPanel,
+	SignalsPanel,
+	HousingPanel,
+	GasPricesPanel,
+	EvChargingPanel,
+	EnvironmentPanel,
+	ConditionsPanel,
+	WastewaterPanel,
+	AirportStatusPanel,
+	CappuccinoPanel,
+	GroceryBasketPanel,
+	WineIndexPanel
+} from '$lib/components/panels';
 ```
 
 Then, add the render block in the right column, after the CappuccinoPanel block:

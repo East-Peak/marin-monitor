@@ -21,12 +21,15 @@ export const GET: RequestHandler = async ({ url }) => {
 		viewbox: `${MARIN_BOUNDS.west - 0.08},${MARIN_BOUNDS.north + 0.06},${MARIN_BOUNDS.east + 0.08},${MARIN_BOUNDS.south - 0.06}`
 	});
 
-	const response = await fetchWithTimeout(`https://nominatim.openstreetmap.org/search?${params.toString()}`, {
-		headers: {
-			Accept: 'application/json',
-			'User-Agent': 'MarinMonitor/1.0'
+	const response = await fetchWithTimeout(
+		`https://nominatim.openstreetmap.org/search?${params.toString()}`,
+		{
+			headers: {
+				Accept: 'application/json',
+				'User-Agent': 'MarinMonitor/1.0'
+			}
 		}
-	});
+	);
 
 	if (!response.ok) {
 		return json(null, {

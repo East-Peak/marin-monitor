@@ -2,10 +2,7 @@ import { put, head } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
 import { buildSegmentCatalog } from '$lib/server/scrapers/strava-segments';
 import { verifyCronAuth } from '$lib/server/cron-auth';
-import {
-	STRAVA_ENABLED,
-	STRAVA_SEGMENTS_BLOB
-} from '$lib/config/strava';
+import { STRAVA_ENABLED, STRAVA_SEGMENTS_BLOB } from '$lib/config/strava';
 import type { RequestHandler } from './$types';
 import type { StravaSegmentCatalog } from '$lib/types/strava';
 

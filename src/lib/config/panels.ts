@@ -166,7 +166,8 @@ export const PANELS: Record<PanelId, PanelConfig> = {
 	composite: {
 		name: 'Cost of Being Marin',
 		priority: 1,
-		description: 'Composite cost index and The Marin Number: the all-in monthly price of the Marin lifestyle'
+		description:
+			'Composite cost index and The Marin Number: the all-in monthly price of the Marin lifestyle'
 	},
 	'311': {
 		name: '311',

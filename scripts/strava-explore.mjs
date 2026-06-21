@@ -430,7 +430,10 @@ class StravaClient {
 				}
 
 				const bodyText = await response.text();
-				if (isTransientHttpStatus(response.status) || looksLikeHtmlResponse(response.headers.get('content-type'), bodyText)) {
+				if (
+					isTransientHttpStatus(response.status) ||
+					looksLikeHtmlResponse(response.headers.get('content-type'), bodyText)
+				) {
 					attempt = await this.retryTransient(
 						'OAuth token exchange',
 						attempt,

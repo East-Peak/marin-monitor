@@ -81,7 +81,11 @@ function addressSnippet(address: string): string {
  * so we rewrite them to the proxy format. If the blob doesn't have the image,
  * the proxy returns 404, which triggers the fallback card via onerror.
  */
-function ensureProxyUrl(url: string | null | undefined, issueId: number, size: 'full' | 'thumb'): string | undefined {
+function ensureProxyUrl(
+	url: string | null | undefined,
+	issueId: number,
+	size: 'full' | 'thumb'
+): string | undefined {
 	if (!url) return undefined;
 	// Already a proxy URL — keep as-is
 	if (url.startsWith('/api/data/311-image')) return url;

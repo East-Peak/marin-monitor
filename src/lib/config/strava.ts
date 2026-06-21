@@ -24,11 +24,11 @@ export const STRAVA_CHYRON_MAX_AGE_MS = 48 * 60 * 60 * 1000;
 
 /** Explore API bounding boxes to tile Marin County */
 export const MARIN_BOUNDING_BOXES: [number, number, number, number][] = [
-	[37.830, -122.750, 37.940, -122.480],
-	[37.920, -122.680, 38.020, -122.450],
-	[38.000, -122.700, 38.080, -122.450],
-	[37.880, -122.800, 37.980, -122.620],
-	[37.960, -122.800, 38.080, -122.620],
+	[37.83, -122.75, 37.94, -122.48],
+	[37.92, -122.68, 38.02, -122.45],
+	[38.0, -122.7, 38.08, -122.45],
+	[37.88, -122.8, 37.98, -122.62],
+	[37.96, -122.8, 38.08, -122.62]
 ];
 
 export const SEED_SEGMENTS: StravaSeedSegment[] = CURATED_STRAVA_SEGMENTS;

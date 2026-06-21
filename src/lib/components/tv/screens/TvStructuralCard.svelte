@@ -71,7 +71,9 @@
 		return { text: `${sign}${pct.toFixed(1)}%`, color };
 	}
 
-	const priceDelta = $derived(housingDelta(latestHousing?.medianPrice, previousHousing?.medianPrice));
+	const priceDelta = $derived(
+		housingDelta(latestHousing?.medianPrice, previousHousing?.medianPrice)
+	);
 
 	/** Sparkline of median price over 12 months */
 	const housingSparkline = $derived.by(() => {
@@ -100,14 +102,18 @@
 			<!-- Header -->
 			<div class="px-3 pt-3 pb-2 border-b border-gray-700/40">
 				<div class="flex items-baseline justify-between">
-					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Private School Tuition</span>
+					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400"
+						>Private School Tuition</span
+					>
 					<span class="text-[10px] text-zinc-500">{schoolCount} schools</span>
 				</div>
 			</div>
 
 			<!-- Tier summary -->
 			<div class="px-3 py-2 border-b border-gray-700/30">
-				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Tier Averages</div>
+				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
+					Tier Averages
+				</div>
 				{#each tuition?.current?.tiers ?? [] as tier}
 					{@const barPct = (tier.avgTuition / maxTuition) * 100}
 					<div class="mb-1.5">
@@ -136,7 +142,9 @@
 			{#if tuition?.current?.cumulativeK12 != null}
 				<div class="px-3 py-2 border-b border-gray-700/30 bg-cyan-900/10">
 					<div class="flex items-center justify-between">
-						<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">K-12 Cumulative</span>
+						<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400"
+							>K-12 Cumulative</span
+						>
 						<div class="flex items-center gap-3">
 							<span class="text-xl font-bold tabular-nums" style="color: {CYAN}">
 								{fmtCurrency(tuition.current.cumulativeK12)}
@@ -144,7 +152,13 @@
 							{#if k12Sparkline}
 								<svg viewBox="0 0 {k12Sparkline.w} {k12Sparkline.h}" class="w-20 h-6 shrink-0">
 									<path d={k12Sparkline.areaPath} fill={CYAN} opacity="0.15" />
-									<path d={k12Sparkline.linePath} fill="none" stroke={CYAN} stroke-width="1.5" stroke-linecap="round" />
+									<path
+										d={k12Sparkline.linePath}
+										fill="none"
+										stroke={CYAN}
+										stroke-width="1.5"
+										stroke-linecap="round"
+									/>
 								</svg>
 							{/if}
 						</div>
@@ -154,14 +168,18 @@
 
 			<!-- Individual schools -->
 			<div class="flex-1 px-3 py-2 overflow-hidden">
-				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Top Schools</div>
+				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
+					Top Schools
+				</div>
 				{#each topSchools as school}
 					<div class="flex items-center justify-between py-0.5">
 						<div class="flex flex-col min-w-0 flex-1 mr-2">
 							<span class="text-xs font-medium text-zinc-200 truncate">{school.name}</span>
 							<div class="flex items-center gap-1">
 								<span class="text-[9px] text-zinc-500">{school.town}</span>
-								<span class="text-[8px] px-1 py-0 rounded bg-zinc-700/60 text-zinc-400">{LEVEL_LABELS[school.level]}</span>
+								<span class="text-[8px] px-1 py-0 rounded bg-zinc-700/60 text-zinc-400"
+									>{LEVEL_LABELS[school.level]}</span
+								>
 							</div>
 						</div>
 						<span class="text-sm font-bold tabular-nums text-zinc-100 shrink-0">
@@ -170,7 +188,6 @@
 					</div>
 				{/each}
 			</div>
-
 		</div>
 
 		<!-- HOUSING COLUMN -->
@@ -178,7 +195,9 @@
 			<!-- Header -->
 			<div class="px-3 pt-3 pb-2 border-b border-gray-700/40">
 				<div class="flex items-baseline justify-between">
-					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Housing Market</span>
+					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400"
+						>Housing Market</span
+					>
 					<span class="text-[10px] text-zinc-500">Marin County</span>
 				</div>
 			</div>
@@ -197,9 +216,18 @@
 							</span>
 						{/if}
 						{#if housingSparkline}
-							<svg viewBox="0 0 {housingSparkline.w} {housingSparkline.h}" class="w-20 h-6 shrink-0 ml-auto">
+							<svg
+								viewBox="0 0 {housingSparkline.w} {housingSparkline.h}"
+								class="w-20 h-6 shrink-0 ml-auto"
+							>
 								<path d={housingSparkline.areaPath} fill={HOUSING_BLUE} opacity="0.15" />
-								<path d={housingSparkline.linePath} fill="none" stroke={HOUSING_BLUE} stroke-width="1.5" stroke-linecap="round" />
+								<path
+									d={housingSparkline.linePath}
+									fill="none"
+									stroke={HOUSING_BLUE}
+									stroke-width="1.5"
+									stroke-linecap="round"
+								/>
 							</svg>
 						{/if}
 					</div>
@@ -209,25 +237,35 @@
 				<div class="px-3 py-2 border-b border-gray-700/30">
 					<div class="grid grid-cols-2 gap-2">
 						<div class="bg-zinc-800/40 rounded px-2.5 py-1.5 border border-zinc-700/30">
-							<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500">$/sq ft</div>
+							<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500">
+								$/sq ft
+							</div>
 							<div class="text-lg font-bold tabular-nums text-zinc-100 mt-0.5">
-								{latestHousing.medianPpsf != null ? '$' + latestHousing.medianPpsf.toFixed(0) : '--'}
+								{latestHousing.medianPpsf != null
+									? '$' + latestHousing.medianPpsf.toFixed(0)
+									: '--'}
 							</div>
 						</div>
 						<div class="bg-zinc-800/40 rounded px-2.5 py-1.5 border border-zinc-700/30">
-							<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500">Active Listings</div>
+							<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500">
+								Active Listings
+							</div>
 							<div class="text-lg font-bold tabular-nums text-zinc-100 mt-0.5">
 								{latestHousing.inventory ?? '--'}
 							</div>
 						</div>
 						<div class="bg-zinc-800/40 rounded px-2.5 py-1.5 border border-zinc-700/30">
-							<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500">Days on Market</div>
+							<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500">
+								Days on Market
+							</div>
 							<div class="text-lg font-bold tabular-nums text-zinc-100 mt-0.5">
 								{latestHousing.daysOnMarket ?? '--'}
 							</div>
 						</div>
 						<div class="bg-zinc-800/40 rounded px-2.5 py-1.5 border border-zinc-700/30">
-							<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500">Homes Sold</div>
+							<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500">
+								Homes Sold
+							</div>
 							<div class="text-lg font-bold tabular-nums text-zinc-100 mt-0.5">
 								{latestHousing.homesSold ?? '--'}
 								<span class="text-[9px] text-zinc-500 font-normal">/mo</span>
@@ -238,7 +276,9 @@
 
 				<!-- Monthly history table -->
 				<div class="flex-1 px-3 py-2 overflow-hidden">
-					<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Recent History</div>
+					<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
+						Recent History
+					</div>
 					<div class="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 gap-y-0.5">
 						<!-- Header row -->
 						<span class="text-[8px] font-semibold uppercase text-zinc-600">Month</span>
@@ -259,7 +299,6 @@
 						{/each}
 					</div>
 				</div>
-
 			{:else}
 				<div class="flex-1 flex items-center justify-center">
 					<p class="text-[10px] text-zinc-600">Housing data loading...</p>

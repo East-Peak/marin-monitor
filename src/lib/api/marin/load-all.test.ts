@@ -38,7 +38,11 @@ function makeEarthquake(overrides: Partial<EarthquakeData> = {}): EarthquakeData
 	};
 }
 
-function makeCategoryResult(category: NewsCategory, items: NewsItem[] = [], errors: string[] = []): CategoryFetchResult {
+function makeCategoryResult(
+	category: NewsCategory,
+	items: NewsItem[] = [],
+	errors: string[] = []
+): CategoryFetchResult {
 	return { category, items, errors };
 }
 
@@ -79,7 +83,8 @@ vi.mock('$lib/api/marin', () => ({
 	fetchTransitAlerts: (...args: unknown[]) => mockFetchTransitAlerts(...args),
 	fetchSheriffCrimeBlotter: (...args: unknown[]) => mockFetchSheriffCrimeBlotter(...args),
 	fetchSupplementalPoliceLogs: (...args: unknown[]) => mockFetchSupplementalPoliceLogs(...args),
-	fetchSupplementalActivityFeeds: (...args: unknown[]) => mockFetchSupplementalActivityFeeds(...args),
+	fetchSupplementalActivityFeeds: (...args: unknown[]) =>
+		mockFetchSupplementalActivityFeeds(...args),
 	fetchSeeClickFixIssues: (...args: unknown[]) => mockFetchSeeClickFixIssues(...args),
 	enrichItemsForRelevance: (...args: unknown[]) => mockEnrichItemsForRelevance(...args)
 }));
@@ -98,9 +103,16 @@ function setupHappyPath() {
 	mockEarthquakesToNewsItems.mockImplementation((eqs: EarthquakeData[]) =>
 		eqs.length > 0 ? [makeNewsItem({ id: 'eq-news-1', category: 'safety' })] : []
 	);
-	mockFetchTransitAlerts.mockResolvedValue({ items: [makeNewsItem({ id: 'transit-1', category: 'safety' })], errors: [] });
-	mockFetchSheriffCrimeBlotter.mockResolvedValue([makeNewsItem({ id: 'blotter-1', category: 'safety' })]);
-	mockFetchSupplementalPoliceLogs.mockResolvedValue([makeNewsItem({ id: 'police-1', category: 'safety' })]);
+	mockFetchTransitAlerts.mockResolvedValue({
+		items: [makeNewsItem({ id: 'transit-1', category: 'safety' })],
+		errors: []
+	});
+	mockFetchSheriffCrimeBlotter.mockResolvedValue([
+		makeNewsItem({ id: 'blotter-1', category: 'safety' })
+	]);
+	mockFetchSupplementalPoliceLogs.mockResolvedValue([
+		makeNewsItem({ id: 'police-1', category: 'safety' })
+	]);
 	mockFetchSupplementalActivityFeeds.mockResolvedValue([]);
 	mockFetchSeeClickFixIssues.mockResolvedValue([makeNewsItem({ id: 'scf-1', category: '311' })]);
 	mockEnrichItemsForRelevance.mockImplementation((items: NewsItem[]) => Promise.resolve(items));
@@ -169,11 +181,11 @@ describe('loadAllNews orchestrator', () => {
 
 		const safetyItems = safetyCalls[0][0] as NewsItem[];
 		const ids = safetyItems.map((i: NewsItem) => i.id);
-		expect(ids).toContain('safety-1');      // RSS item
-		expect(ids).toContain('eq-news-1');      // earthquake
-		expect(ids).toContain('transit-1');       // transit
-		expect(ids).toContain('blotter-1');       // blotter
-		expect(ids).toContain('police-1');        // police logs
+		expect(ids).toContain('safety-1'); // RSS item
+		expect(ids).toContain('eq-news-1'); // earthquake
+		expect(ids).toContain('transit-1'); // transit
+		expect(ids).toContain('blotter-1'); // blotter
+		expect(ids).toContain('police-1'); // police logs
 	});
 
 	it('merges NPS alerts into outdoors category', async () => {
@@ -188,8 +200,8 @@ describe('loadAllNews orchestrator', () => {
 
 		const outdoorsItems = outdoorsCalls[0][0] as NewsItem[];
 		const ids = outdoorsItems.map((i: NewsItem) => i.id);
-		expect(ids).toContain('outdoors-1');  // RSS item
-		expect(ids).toContain('nps-1');       // NPS alert
+		expect(ids).toContain('outdoors-1'); // RSS item
+		expect(ids).toContain('nps-1'); // NPS alert
 	});
 
 	it('does not merge extra sources into plain categories like local', async () => {
@@ -278,9 +290,7 @@ describe('loadAllNews orchestrator', () => {
 			makeCategoryResult('local', [makeNewsItem({ id: 'local-1', category: 'local' })])
 		]);
 		mockFetchSeeClickFixIssues.mockRejectedValue(new Error('upstream 503'));
-		mockGetItems.mockReturnValue([
-			makeNewsItem({ id: 'previous-311-1', category: '311' })
-		]);
+		mockGetItems.mockReturnValue([makeNewsItem({ id: 'previous-311-1', category: '311' })]);
 
 		const { loadAllNews } = await import('./load-all');
 		await loadAllNews();
@@ -297,9 +307,7 @@ describe('loadAllNews orchestrator', () => {
 		mockFetchAllFeeds.mockResolvedValue([
 			makeCategoryResult('311', [makeNewsItem({ id: 'rss-311-1', category: '311' })])
 		]);
-		mockFetchSeeClickFixIssues.mockResolvedValue([
-			makeNewsItem({ id: 'scf-1', category: '311' })
-		]);
+		mockFetchSeeClickFixIssues.mockResolvedValue([makeNewsItem({ id: 'scf-1', category: '311' })]);
 
 		const { loadAllNews } = await import('./load-all');
 		await loadAllNews();
@@ -345,10 +353,7 @@ describe('loadAllNews orchestrator', () => {
 		const result = await loadAllNews();
 
 		expect(result.errors).toEqual(
-			expect.arrayContaining([
-				'rss:local: feed-1: timeout',
-				'rss:local: feed-2: 502'
-			])
+			expect.arrayContaining(['rss:local: feed-1: timeout', 'rss:local: feed-2: 502'])
 		);
 	});
 
@@ -491,7 +496,11 @@ describe('loadAllNews orchestrator', () => {
 		const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
 		mockFetchAllFeeds.mockResolvedValue([
-			makeCategoryResult('local', [makeNewsItem({ id: 'l-1', category: 'local' })], ['Feed X timed out', 'Feed Y 404'])
+			makeCategoryResult(
+				'local',
+				[makeNewsItem({ id: 'l-1', category: 'local' })],
+				['Feed X timed out', 'Feed Y 404']
+			)
 		]);
 
 		const { loadAllNews } = await import('./load-all');
@@ -593,7 +602,11 @@ describe('loadAllNews orchestrator', () => {
 		const outdoorsActivity = makeNewsItem({ id: 'supp-outdoors', category: 'outdoors' });
 		const localActivity = makeNewsItem({ id: 'supp-local', category: 'local' });
 
-		mockFetchSupplementalActivityFeeds.mockResolvedValue([safetyActivity, outdoorsActivity, localActivity]);
+		mockFetchSupplementalActivityFeeds.mockResolvedValue([
+			safetyActivity,
+			outdoorsActivity,
+			localActivity
+		]);
 		mockFetchAllFeeds.mockResolvedValue([
 			makeCategoryResult('safety', [makeNewsItem({ id: 's-1', category: 'safety' })]),
 			makeCategoryResult('outdoors', [makeNewsItem({ id: 'o-1', category: 'outdoors' })]),

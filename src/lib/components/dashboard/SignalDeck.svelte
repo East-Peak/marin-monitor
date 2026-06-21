@@ -30,12 +30,26 @@
 		weatherAlerts: FireWeatherAlert[];
 		weatherLoading: boolean;
 		weatherError: string | null;
-		userLocation: { lat: number; lon: number; name: string; tideStation?: string; tideStationName?: string };
+		userLocation: {
+			lat: number;
+			lon: number;
+			name: string;
+			tideStation?: string;
+			tideStationName?: string;
+		};
 		earthquakesRaw: EarthquakeData[];
 		isPanelVisible: (id: PanelId) => boolean;
 	}
 
-	let { weatherForecast, weatherAlerts, weatherLoading, weatherError, userLocation, earthquakesRaw, isPanelVisible }: Props = $props();
+	let {
+		weatherForecast,
+		weatherAlerts,
+		weatherLoading,
+		weatherError,
+		userLocation,
+		earthquakesRaw,
+		isPanelVisible
+	}: Props = $props();
 </script>
 
 <!-- Dashboard collapse toggle -->
@@ -254,10 +268,18 @@
 	.animate-enter-up {
 		animation: enter-up 0.3s ease-out both;
 	}
-	.stagger-1 { animation-delay: 0ms; }
-	.stagger-2 { animation-delay: 50ms; }
-	.stagger-3 { animation-delay: 100ms; }
-	.stagger-4 { animation-delay: 150ms; }
+	.stagger-1 {
+		animation-delay: 0ms;
+	}
+	.stagger-2 {
+		animation-delay: 50ms;
+	}
+	.stagger-3 {
+		animation-delay: 100ms;
+	}
+	.stagger-4 {
+		animation-delay: 150ms;
+	}
 	@keyframes enter-up {
 		from {
 			opacity: 0;

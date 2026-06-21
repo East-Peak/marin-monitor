@@ -9,12 +9,7 @@
 	import { AdBanner } from '$lib/components/common';
 	import { pickAds } from '$lib/config/ads';
 	import { loadStravaData } from '$lib/stores/strava';
-	import type {
-		NewsItem,
-		WeatherData,
-		FireWeatherAlert,
-		EarthquakeData
-	} from '$lib/types';
+	import type { NewsItem, WeatherData, FireWeatherAlert, EarthquakeData } from '$lib/types';
 	import type { PanelId } from '$lib/config';
 	import { fetchWeather } from '$lib/api/marin';
 	import { loadAllNews } from '$lib/api/marin/load-all';
@@ -319,7 +314,15 @@
 		{:else}
 			<MapStage {earthquakeItems} {isPanelVisible} />
 
-			<SignalDeck {weatherForecast} {weatherAlerts} {weatherLoading} {weatherError} {userLocation} {earthquakesRaw} {isPanelVisible} />
+			<SignalDeck
+				{weatherForecast}
+				{weatherAlerts}
+				{weatherLoading}
+				{weatherError}
+				{userLocation}
+				{earthquakesRaw}
+				{isPanelVisible}
+			/>
 		{/if}
 
 		{#if bannerAd}

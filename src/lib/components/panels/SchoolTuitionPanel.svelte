@@ -56,7 +56,12 @@
 	});
 </script>
 
-<Panel id="school-tuition" title="Private School Tuition Index" loading={dataLoading} error={dataError}>
+<Panel
+	id="school-tuition"
+	title="Private School Tuition Index"
+	loading={dataLoading}
+	error={dataError}
+>
 	{#if current}
 		<!-- Tier averages -->
 		<div class="tiers-grid">
@@ -92,7 +97,9 @@
 							<div class="school-price-col">
 								<span class="school-price">{formatCurrency(school.tuition)}</span>
 								{#if school.boardingTuition}
-									<span class="school-boarding">{formatCurrency(school.boardingTuition)} boarding</span>
+									<span class="school-boarding"
+										>{formatCurrency(school.boardingTuition)} boarding</span
+									>
 								{/if}
 								{#if school.totalCost}
 									<span class="school-total">{formatCurrency(school.totalCost)} total</span>
@@ -106,7 +113,8 @@
 
 		<!-- Attribution -->
 		<div class="attribution">
-			Median Marin County household income: {formatCurrency(current.medianHouseholdIncome)} ({current.incomeSource}, {current.incomeYear})
+			Median Marin County household income: {formatCurrency(current.medianHouseholdIncome)} ({current.incomeSource},
+			{current.incomeYear})
 		</div>
 	{:else if dataLoading}
 		<div class="empty-state">Loading school tuition data...</div>

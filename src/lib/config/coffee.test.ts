@@ -54,9 +54,9 @@ describe('coffee shop config', () => {
 	});
 
 	it('marks fallback-only shops that do not publish live drink prices', () => {
-		const fallbackOnlyIds = COFFEE_SHOPS.filter((shop) => shop.supportsLivePriceScrape === false).map(
-			(shop) => shop.id
-		);
+		const fallbackOnlyIds = COFFEE_SHOPS.filter(
+			(shop) => shop.supportsLivePriceScrape === false
+		).map((shop) => shop.id);
 		expect(fallbackOnlyIds).toEqual([
 			'fox-kit-san-rafael',
 			'philz-corte-madera',

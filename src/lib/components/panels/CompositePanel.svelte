@@ -71,11 +71,16 @@
 
 	function tierColor(category: string): string {
 		switch (category) {
-			case 'daily-life': return '#f59e0b';
-			case 'lifestyle': return '#8b5cf6';
-			case 'housing': return '#3b82f6';
-			case 'structural': return '#6b7280';
-			default: return '#888';
+			case 'daily-life':
+				return '#f59e0b';
+			case 'lifestyle':
+				return '#8b5cf6';
+			case 'housing':
+				return '#3b82f6';
+			case 'structural':
+				return '#6b7280';
+			default:
+				return '#888';
 		}
 	}
 
@@ -84,7 +89,10 @@
 		const target = event.currentTarget as SVGSVGElement;
 		const rect = target.getBoundingClientRect();
 		const innerWidth = rect.width - CHART_MARGINS.left - CHART_MARGINS.right;
-		const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - CHART_MARGINS.left));
+		const relativeX = Math.max(
+			0,
+			Math.min(innerWidth, event.clientX - rect.left - CHART_MARGINS.left)
+		);
 		const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
 		const index = Math.max(
 			0,
@@ -204,7 +212,13 @@
 										stroke-width="1"
 										stroke-dasharray="4,4"
 									/>
-									<text x={chartWidth - CHART_MARGINS.left - CHART_MARGINS.right + 4} y={chartPaths.yScale(100)} dominant-baseline="middle" fill="#555" font-size="6px">100</text>
+									<text
+										x={chartWidth - CHART_MARGINS.left - CHART_MARGINS.right + 4}
+										y={chartPaths.yScale(100)}
+										dominant-baseline="middle"
+										fill="#555"
+										font-size="6px">100</text
+									>
 								{/if}
 								<!-- Filled area -->
 								<path d={chartPaths.areaPath} fill="rgba(220, 38, 38, 0.08)" />
@@ -235,11 +249,31 @@
 									/>
 								{/if}
 								<!-- Y axis labels -->
-								<text x="-4" y={chartPaths.yScale(chartPaths.yMax)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{chartPaths.yMax.toFixed(1)}</text>
-								<text x="-4" y={chartPaths.yScale(chartPaths.yMin)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{chartPaths.yMin.toFixed(1)}</text>
+								<text
+									x="-4"
+									y={chartPaths.yScale(chartPaths.yMax)}
+									text-anchor="end"
+									dominant-baseline="middle"
+									fill="#888"
+									font-size="7px">{chartPaths.yMax.toFixed(1)}</text
+								>
+								<text
+									x="-4"
+									y={chartPaths.yScale(chartPaths.yMin)}
+									text-anchor="end"
+									dominant-baseline="middle"
+									fill="#888"
+									font-size="7px">{chartPaths.yMin.toFixed(1)}</text
+								>
 								<!-- X axis labels -->
 								{#each chartPaths.axisLabels.x as lbl}
-									<text x={lbl.x} y={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom + 14} text-anchor="middle" fill="#666" font-size="7px">{lbl.label}</text>
+									<text
+										x={lbl.x}
+										y={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom + 14}
+										text-anchor="middle"
+										fill="#666"
+										font-size="7px">{lbl.label}</text
+									>
 								{/each}
 							</g>
 						</svg>
@@ -264,10 +298,16 @@
 			<div class="marin-number-section">
 				<div class="marin-number-hero">
 					<div class="marin-number-label">The Marin Number</div>
-					<div class="marin-number-value">{formatMoney(marinNumber.total)}<span class="marin-number-per">/mo</span></div>
+					<div class="marin-number-value">
+						{formatMoney(marinNumber.total)}<span class="marin-number-per">/mo</span>
+					</div>
 					<div class="marin-number-annual">{formatMoney(marinNumber.annualized)}/yr</div>
 					{#if marinNumberDelta !== null && marinNumberDelta !== 0}
-						<div class="marin-number-delta" class:up={marinNumberDelta > 0} class:down={marinNumberDelta < 0}>
+						<div
+							class="marin-number-delta"
+							class:up={marinNumberDelta > 0}
+							class:down={marinNumberDelta < 0}
+						>
 							{marinNumberDelta > 0 ? '+' : ''}{formatMoney(Math.abs(marinNumberDelta))} from last week
 						</div>
 					{/if}
@@ -275,7 +315,7 @@
 				</div>
 
 				<!-- Expandable Breakdown -->
-				<button class="breakdown-toggle" onclick={() => breakdownExpanded = !breakdownExpanded}>
+				<button class="breakdown-toggle" onclick={() => (breakdownExpanded = !breakdownExpanded)}>
 					<span>{breakdownExpanded ? 'Hide' : 'Show'} breakdown</span>
 					<span class="toggle-chevron">{breakdownExpanded ? '\u25B4' : '\u25BE'}</span>
 				</button>

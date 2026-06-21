@@ -176,7 +176,11 @@ function parseInstacartResults(html) {
 		// Store name is in <span ... role="heading" aria-level="3">StoreName</span>
 		const nameMatch = section.match(/aria-level="3">([^<]+)</);
 		if (!nameMatch) continue;
-		const storeName = nameMatch[1].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
+		const storeName = nameMatch[1]
+			.replace(/&amp;/g, '&')
+			.replace(/&lt;/g, '<')
+			.replace(/&gt;/g, '>')
+			.trim();
 		// Extract the numeric store ID from item cards within this section
 		const idPattern = /item_list_item_items_(\d+)-/g;
 		let idMatch;
@@ -206,7 +210,8 @@ function parseInstacartResults(html) {
 		const onSale = !!originalPriceMatch;
 
 		// Extract product name: find substantial text spans that aren't prices/ratings/labels
-		const skipPatterns = /^(Current price|Original Price|Great price|Out of stock|Request|\d+% off|About |\$|★|per package|\d+ sizes?|\(\d)/i;
+		const skipPatterns =
+			/^(Current price|Original Price|Great price|Out of stock|Request|\d+% off|About |\$|★|per package|\d+ sizes?|\(\d)/i;
 		const spanPattern = />([^<]{5,200})</g;
 		let s;
 		let productName = '';
@@ -225,7 +230,9 @@ function parseInstacartResults(html) {
 	}
 
 	if (products.length > 0) {
-		console.log(`[grocery-basket] Parsed ${products.length} products from ${storeMap.size} stores (Playwright DOM)`);
+		console.log(
+			`[grocery-basket] Parsed ${products.length} products from ${storeMap.size} stores (Playwright DOM)`
+		);
 		return products;
 	}
 
@@ -391,12 +398,17 @@ async function fetchInstacartPlaywright(searchTerm) {
 
 		// Wait for product cards to render (Instacart is a React SPA)
 		// Cross-retailer results use item_list_item_items_{storeId}-{productId} testids
-		await page.waitForFunction(
-			() => document.querySelectorAll('[data-testid^="item_list_item_items_"], [data-testid="CrossRetailerResultRowWrapper"]').length > 0,
-			{ timeout: 15000 }
-		).catch(() => {
-			// If product cards never appear, continue with whatever rendered
-		});
+		await page
+			.waitForFunction(
+				() =>
+					document.querySelectorAll(
+						'[data-testid^="item_list_item_items_"], [data-testid="CrossRetailerResultRowWrapper"]'
+					).length > 0,
+				{ timeout: 15000 }
+			)
+			.catch(() => {
+				// If product cards never appear, continue with whatever rendered
+			});
 
 		// Extra settle time for prices to populate
 		await page.waitForTimeout(2000);
@@ -411,7 +423,13 @@ async function fetchInstacartPlaywright(searchTerm) {
 	}
 }
 
-async function scrapeItemPrices(itemId, itemName, searchTerm, usePlaywright, referencePrice = null) {
+async function scrapeItemPrices(
+	itemId,
+	itemName,
+	searchTerm,
+	usePlaywright,
+	referencePrice = null
+) {
 	let html;
 
 	if (usePlaywright) {
@@ -431,7 +449,7 @@ async function scrapeItemPrices(itemId, itemName, searchTerm, usePlaywright, ref
 	// Price sanity bounds: reject matches where price is wildly off from reference
 	// Allow wider range for cheap items, tighter for expensive ones
 	const PRICE_FLOOR_RATIO = 0.25; // reject if < 25% of reference
-	const PRICE_CEIL_RATIO = 3.5;   // reject if > 350% of reference
+	const PRICE_CEIL_RATIO = 3.5; // reject if > 350% of reference
 
 	// For expensive items ($50+), use tighter bounds and require higher match score
 	const isExpensive = referencePrice && referencePrice >= 50;
@@ -451,7 +469,7 @@ async function scrapeItemPrices(itemId, itemName, searchTerm, usePlaywright, ref
 			if (ratio < PRICE_FLOOR_RATIO || ratio > PRICE_CEIL_RATIO) {
 				console.log(
 					`[grocery-basket] Rejected "${s.product.name}" at $${s.product.price.toFixed(2)} ` +
-					`(${Math.round(ratio * 100)}% of reference $${referencePrice.toFixed(2)}) — out of bounds`
+						`(${Math.round(ratio * 100)}% of reference $${referencePrice.toFixed(2)}) — out of bounds`
 				);
 				return false;
 			}
@@ -577,10 +595,7 @@ async function main() {
 			}
 		}
 	} catch (err) {
-		console.warn(
-			'[grocery-basket] First item fetch failed. Trying Playwright...',
-			err.message
-		);
+		console.warn('[grocery-basket] First item fetch failed. Trying Playwright...', err.message);
 		try {
 			const pwPrices = await scrapeItemPrices(
 				firstItem.id,

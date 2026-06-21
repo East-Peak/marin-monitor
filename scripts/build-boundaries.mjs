@@ -16,33 +16,33 @@ import { execSync } from 'child_process';
 // Our town definitions — Census NAME → slug mapping
 const CENSUS_TO_SLUG = {
 	'San Rafael': 'san-rafael',
-	'Novato': 'novato',
+	Novato: 'novato',
 	'Mill Valley': 'mill-valley',
 	'San Anselmo': 'san-anselmo',
-	'Larkspur': 'larkspur',
+	Larkspur: 'larkspur',
 	'Corte Madera': 'corte-madera',
-	'Fairfax': 'fairfax',
-	'Tiburon': 'tiburon',
-	'Belvedere': 'belvedere',
-	'Ross': 'ross',
-	'Sausalito': 'sausalito',
+	Fairfax: 'fairfax',
+	Tiburon: 'tiburon',
+	Belvedere: 'belvedere',
+	Ross: 'ross',
+	Sausalito: 'sausalito',
 	'Stinson Beach': 'stinson-beach',
-	'Bolinas': 'bolinas',
+	Bolinas: 'bolinas',
 	'Point Reyes Station': 'point-reyes',
-	'Inverness': 'inverness',
-	'Woodacre': 'woodacre',
+	Inverness: 'inverness',
+	Woodacre: 'woodacre',
 	'San Geronimo': 'san-geronimo',
-	'Kentfield': 'kentfield',
-	'Strawberry': 'strawberry',
+	Kentfield: 'kentfield',
+	Strawberry: 'strawberry',
 	'Muir Beach': 'muir-beach',
-	'Tomales': 'tomales',
-	'Nicasio': 'nicasio',
+	Tomales: 'tomales',
+	Nicasio: 'nicasio'
 };
 
 // Combined CDPs that map to two of our slugs
 const COMBINED_CDPS = {
 	'Lagunitas-Forest Knolls': ['lagunitas', 'forest-knolls'],
-	'Lucas Valley-Marinwood': ['lucas-valley', 'marinwood'],
+	'Lucas Valley-Marinwood': ['lucas-valley', 'marinwood']
 };
 
 // Towns without Census boundaries — generate circle polygons
@@ -50,7 +50,7 @@ const CIRCLE_FALLBACKS = [
 	{ slug: 'greenbrae', name: 'Greenbrae', lat: 37.946, lon: -122.5364, radiusKm: 1.8 },
 	{ slug: 'tam-valley', name: 'Tam Valley', lat: 37.883, lon: -122.5375, radiusKm: 2.5 },
 	{ slug: 'marshall', name: 'Marshall', lat: 38.1571, lon: -122.887, radiusKm: 1.2 },
-	{ slug: 'terra-linda', name: 'Terra Linda', lat: 38.005, lon: -122.545, radiusKm: 2.0 },
+	{ slug: 'terra-linda', name: 'Terra Linda', lat: 38.005, lon: -122.545, radiusKm: 2.0 }
 ];
 
 // Marin County bounding box for deduplication
@@ -94,10 +94,7 @@ function featureCenterInMarin(feature) {
 const SHP_PATH = '/tmp/cb_places/cb_2023_06_place_500k.shp';
 const TEMP_GEOJSON = '/tmp/marin_all_candidates.geojson';
 
-const allNames = [
-	...Object.keys(CENSUS_TO_SLUG),
-	...Object.keys(COMBINED_CDPS),
-];
+const allNames = [...Object.keys(CENSUS_TO_SLUG), ...Object.keys(COMBINED_CDPS)];
 const nameFilter = allNames.map((n) => `NAME === '${n}'`).join(' || ');
 
 console.log('Filtering and simplifying Census data...');
@@ -129,7 +126,7 @@ for (const feature of raw.features) {
 		outputFeatures.push({
 			type: 'Feature',
 			properties: { slug: CENSUS_TO_SLUG[name], name },
-			geometry: feature.geometry,
+			geometry: feature.geometry
 		});
 	} else if (COMBINED_CDPS[name]) {
 		// Combined CDP → create a feature for each of our slugs
@@ -137,7 +134,7 @@ for (const feature of raw.features) {
 			outputFeatures.push({
 				type: 'Feature',
 				properties: { slug, name },
-				geometry: feature.geometry,
+				geometry: feature.geometry
 			});
 		}
 	}
@@ -148,13 +145,13 @@ for (const town of CIRCLE_FALLBACKS) {
 	outputFeatures.push({
 		type: 'Feature',
 		properties: { slug: town.slug, name: town.name },
-		geometry: generateCirclePolygon(town.lat, town.lon, town.radiusKm),
+		geometry: generateCirclePolygon(town.lat, town.lon, town.radiusKm)
 	});
 }
 
 const output = {
 	type: 'FeatureCollection',
-	features: outputFeatures,
+	features: outputFeatures
 };
 
 const outPath = 'static/data/marin-boundaries.geojson';

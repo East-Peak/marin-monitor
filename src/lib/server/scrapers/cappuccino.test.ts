@@ -23,13 +23,13 @@ Drip Coffee$3.50`;
 	it('extracts price with space before dollar sign', () => {
 		const text = `Cappuccino $5.10
 Latte $5.60`;
-		expect(extractCappuccinoPrice(text)).toBe(5.10);
+		expect(extractCappuccinoPrice(text)).toBe(5.1);
 	});
 
 	it('extracts price case-insensitively', () => {
 		const text = `CAPPUCCINO$5.00
 LATTE$6.00`;
-		expect(extractCappuccinoPrice(text)).toBe(5.00);
+		expect(extractCappuccinoPrice(text)).toBe(5.0);
 	});
 
 	it('returns null when no cappuccino found', () => {
@@ -70,13 +70,15 @@ describe('extractPriceFromState', () => {
 	it('extracts cappuccino price from OO_STATE structure', () => {
 		const state = {
 			'Menu:abc123': {
-				groups: [{
-					name: 'Hot Drinks',
-					items: [
-						{ name: 'Cappuccino', prices: [5.25], description: '8oz', outOfStock: false },
-						{ name: 'Latte', prices: [5.75], description: '12oz', outOfStock: false }
-					]
-				}]
+				groups: [
+					{
+						name: 'Hot Drinks',
+						items: [
+							{ name: 'Cappuccino', prices: [5.25], description: '8oz', outOfStock: false },
+							{ name: 'Latte', prices: [5.75], description: '12oz', outOfStock: false }
+						]
+					}
+				]
 			}
 		};
 		expect(extractPriceFromState(state, 'cappuccino')).toBe(5.25);
@@ -85,12 +87,12 @@ describe('extractPriceFromState', () => {
 	it('returns null when item not found', () => {
 		const state = {
 			'Menu:abc123': {
-				groups: [{
-					name: 'Hot Drinks',
-					items: [
-						{ name: 'Latte', prices: [5.75] }
-					]
-				}]
+				groups: [
+					{
+						name: 'Hot Drinks',
+						items: [{ name: 'Latte', prices: [5.75] }]
+					}
+				]
 			}
 		};
 		expect(extractPriceFromState(state, 'cappuccino')).toBeNull();
@@ -104,41 +106,47 @@ describe('extractPriceFromState', () => {
 	it('handles multiple menu keys', () => {
 		const state = {
 			'Menu:first': {
-				groups: [{
-					name: 'Food',
-					items: [{ name: 'Sandwich', prices: [12] }]
-				}]
+				groups: [
+					{
+						name: 'Food',
+						items: [{ name: 'Sandwich', prices: [12] }]
+					}
+				]
 			},
 			'Menu:second': {
-				groups: [{
-					name: 'Drinks',
-					items: [{ name: 'Cappuccino', prices: [5.10] }]
-				}]
+				groups: [
+					{
+						name: 'Drinks',
+						items: [{ name: 'Cappuccino', prices: [5.1] }]
+					}
+				]
 			}
 		};
-		expect(extractPriceFromState(state, 'cappuccino')).toBe(5.10);
+		expect(extractPriceFromState(state, 'cappuccino')).toBe(5.1);
 	});
 
 	it('matches case-insensitively', () => {
 		const state = {
 			'Menu:abc': {
-				groups: [{
-					name: 'Drinks',
-					items: [{ name: 'CAPPUCCINO', prices: [5.00] }]
-				}]
+				groups: [
+					{
+						name: 'Drinks',
+						items: [{ name: 'CAPPUCCINO', prices: [5.0] }]
+					}
+				]
 			}
 		};
-		expect(extractPriceFromState(state, 'cappuccino')).toBe(5.00);
+		expect(extractPriceFromState(state, 'cappuccino')).toBe(5.0);
 	});
 });
 
 describe('computeMedian', () => {
 	it('returns median of odd-length array', () => {
-		expect(computeMedian([5.00, 5.10, 5.25])).toBe(5.10);
+		expect(computeMedian([5.0, 5.1, 5.25])).toBe(5.1);
 	});
 
 	it('returns median of even-length array', () => {
-		expect(computeMedian([4.50, 5.00, 5.10, 5.25])).toBe(5.05);
+		expect(computeMedian([4.5, 5.0, 5.1, 5.25])).toBe(5.05);
 	});
 
 	it('returns single value for single-element array', () => {
@@ -150,7 +158,7 @@ describe('computeMedian', () => {
 	});
 
 	it('handles unsorted input', () => {
-		expect(computeMedian([5.25, 4.50, 5.10, 6.00, 5.00])).toBe(5.10);
+		expect(computeMedian([5.25, 4.5, 5.1, 6.0, 5.0])).toBe(5.1);
 	});
 });
 
@@ -164,7 +172,7 @@ describe('buildSnapshot', () => {
 				town: 'Mill Valley',
 				lat: 37.9,
 				lon: -122.5,
-				price: 5.00,
+				price: 5.0,
 				source: 'toast',
 				priceSource: 'live',
 				updateTime: '2026-03-29T10:00:00Z'
@@ -176,7 +184,7 @@ describe('buildSnapshot', () => {
 				town: 'San Rafael',
 				lat: 37.97,
 				lon: -122.52,
-				price: 5.50,
+				price: 5.5,
 				source: 'toast',
 				priceSource: 'fallback',
 				updateTime: '2026-03-29T10:00:00Z'
@@ -199,8 +207,8 @@ describe('buildSnapshot', () => {
 		expect(snapshot.shopCount).toBe(3);
 		expect(snapshot.medianPrice).toBe(5.25);
 		expect(snapshot.avgPrice).toBe(5.25);
-		expect(snapshot.minPrice).toBe(5.00);
-		expect(snapshot.maxPrice).toBe(5.50);
+		expect(snapshot.minPrice).toBe(5.0);
+		expect(snapshot.maxPrice).toBe(5.5);
 		expect(snapshot.pricedShopCount).toBe(2);
 		expect(snapshot.liveShopCount).toBe(1);
 		expect(snapshot.fallbackShopCount).toBe(1);

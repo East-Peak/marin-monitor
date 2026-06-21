@@ -37,9 +37,9 @@
 
 	const typePlaceholders = {
 		'feed-request':
-			"What source or topic would you like tracked? Include a URL if you have one.\n\nExample: \"Sausalito city council meeting agendas — they post at sausalito.gov/agendas\"",
+			'What source or topic would you like tracked? Include a URL if you have one.\n\nExample: "Sausalito city council meeting agendas — they post at sausalito.gov/agendas"',
 		'bug-report':
-			"What's broken or inaccurate? Which panel or section is affected?\n\nExample: \"The Mill Valley police log hasn't updated since last Tuesday\"",
+			'What\'s broken or inaccurate? Which panel or section is affected?\n\nExample: "The Mill Valley police log hasn\'t updated since last Tuesday"',
 		general:
 			"What's on your mind? We'd love to hear from you.\n\nSuggestions, kudos, complaints — all welcome."
 	} as const;
@@ -81,7 +81,12 @@
 			<button class="btn btn-close" onclick={onClose}>Close</button>
 		</div>
 	{:else}
-		<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+		<form
+			onsubmit={(e) => {
+				e.preventDefault();
+				handleSubmit();
+			}}
+		>
 			<div class="field">
 				<label class="label" for="feedback-type">Type</label>
 				<select id="feedback-type" class="select" bind:value={feedbackType}>
@@ -103,7 +108,9 @@
 			</div>
 
 			<div class="field">
-				<label class="label" for="feedback-email">Email <span class="optional">(optional, for follow-up)</span></label>
+				<label class="label" for="feedback-email"
+					>Email <span class="optional">(optional, for follow-up)</span></label
+				>
 				<input
 					id="feedback-email"
 					class="input"
@@ -115,7 +122,13 @@
 
 			<div class="honeypot" aria-hidden="true">
 				<label for="feedback-website">Website</label>
-				<input id="feedback-website" type="text" bind:value={website} tabindex="-1" autocomplete="off" />
+				<input
+					id="feedback-website"
+					type="text"
+					bind:value={website}
+					tabindex="-1"
+					autocomplete="off"
+				/>
 			</div>
 
 			{#if error}

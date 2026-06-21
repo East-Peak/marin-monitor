@@ -15,7 +15,7 @@ Codex returned 10 items rather than padding to the 15 cap, with the explicit not
 
 ## Theme
 
-The findings cluster strongly around **silent-failure modes** — places where the app *looks* healthy when an upstream is broken. None are security, privacy, or embarrassment-on-public-README issues. All are operational correctness. None block flipping the repo public.
+The findings cluster strongly around **silent-failure modes** — places where the app _looks_ healthy when an upstream is broken. None are security, privacy, or embarrassment-on-public-README issues. All are operational correctness. None block flipping the repo public.
 
 ## Punch list
 
@@ -51,4 +51,4 @@ None of these block the public-repo flip. They're a quality punch list for the d
 
 Codex's option-3 plan called for a second focused pass on the scariest area. The clear cluster is the **silent-failure family** (items 1–4 + 7 + 10). A round-2 prompt would target the freshness/outage/error-surfacing pipeline end-to-end — health check, blob-freshness, TV/dashboard refresh, ServiceClient stale-while-revalidate — and ask Codex to design a unified "operational-state" model rather than spot-fixing each leak.
 
-Recommend running round 2 *after* fixing items 1–4 (which are the easiest to land fast), so round 2 critiques the new design rather than the gaps.
+Recommend running round 2 _after_ fixing items 1–4 (which are the easiest to land fast), so round 2 critiques the new design rather than the gaps.

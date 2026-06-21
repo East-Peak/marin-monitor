@@ -37,11 +37,7 @@ describe('fetchMarineSnapshot', () => {
 		vi.setSystemTime(nowMs);
 
 		// Provide 3 hourly times, middle one matching "now" exactly
-		const times = [
-			'2024-03-15T11:00:00Z',
-			'2024-03-15T12:00:00Z',
-			'2024-03-15T13:00:00Z'
-		];
+		const times = ['2024-03-15T11:00:00Z', '2024-03-15T12:00:00Z', '2024-03-15T13:00:00Z'];
 
 		mockFetch.mockResolvedValueOnce(
 			makeResponse({
@@ -99,9 +95,7 @@ describe('fetchMarineSnapshot', () => {
 		const nowMs = new Date('2024-03-15T00:00:00Z').getTime();
 		vi.setSystemTime(nowMs);
 
-		const times = Array.from({ length: 6 }, (_, i) =>
-			new Date(nowMs + i * 3600000).toISOString()
-		);
+		const times = Array.from({ length: 6 }, (_, i) => new Date(nowMs + i * 3600000).toISOString());
 
 		mockFetch.mockResolvedValueOnce(
 			makeResponse({
@@ -122,9 +116,7 @@ describe('fetchMarineSnapshot', () => {
 	});
 
 	it('returns null when hourly times array is empty', async () => {
-		mockFetch.mockResolvedValueOnce(
-			makeResponse({ hourly: { time: [] } })
-		);
+		mockFetch.mockResolvedValueOnce(makeResponse({ hourly: { time: [] } }));
 
 		const result = await fetchMarineSnapshot();
 
@@ -287,9 +279,7 @@ describe('fetchMarineHourly', () => {
 	});
 
 	it('returns empty array when times are empty', async () => {
-		mockFetch.mockResolvedValueOnce(
-			makeResponse({ hourly: { time: [] } })
-		);
+		mockFetch.mockResolvedValueOnce(makeResponse({ hourly: { time: [] } }));
 
 		const result = await fetchMarineHourly();
 

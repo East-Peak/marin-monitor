@@ -95,11 +95,11 @@
 	function hasRenderableLeaderboardData(data: StravaLeaderboard | null): boolean {
 		return Boolean(
 			data &&
-				(data.cr ||
-					data.qom ||
-					data.rows.length > 0 ||
-					data.totalAttempts > 0 ||
-					data.totalAthletes > 0)
+			(data.cr ||
+				data.qom ||
+				data.rows.length > 0 ||
+				data.totalAttempts > 0 ||
+				data.totalAthletes > 0)
 		);
 	}
 
@@ -188,71 +188,70 @@
 							class:ride={segment.activityType === 'ride'}
 							class:run={segment.activityType === 'run'}
 						>
-								<div class="record-card-top">
-									<span class="record-label">{primaryRecordLabel}</span>
-									{#if leaderboard?.cr}
-										<span class="record-time">{leaderboard.cr.time}</span>
-									{/if}
-								</div>
+							<div class="record-card-top">
+								<span class="record-label">{primaryRecordLabel}</span>
 								{#if leaderboard?.cr}
-									<span class="record-holder">{leaderboard.cr.athleteName}</span>
-								{:else if loading}
-									<span class="record-empty">Loading…</span>
-								{:else if loadError}
-									<span class="record-empty error">{loadError}</span>
-								{:else if leaderboard}
-									<span class="record-empty">No record yet</span>
-								{:else}
-									<span class="record-empty">Waiting to load…</span>
+									<span class="record-time">{leaderboard.cr.time}</span>
 								{/if}
 							</div>
+							{#if leaderboard?.cr}
+								<span class="record-holder">{leaderboard.cr.athleteName}</span>
+							{:else if loading}
+								<span class="record-empty">Loading…</span>
+							{:else if loadError}
+								<span class="record-empty error">{loadError}</span>
+							{:else if leaderboard}
+								<span class="record-empty">No record yet</span>
+							{:else}
+								<span class="record-empty">Waiting to load…</span>
+							{/if}
+						</div>
 
 						<div class="record-card secondary">
-								<div class="record-card-top">
-									<span class="record-label">QOM</span>
-									{#if leaderboard?.qom}
-										<span class="record-time">{leaderboard.qom.time}</span>
-									{/if}
-								</div>
+							<div class="record-card-top">
+								<span class="record-label">QOM</span>
 								{#if leaderboard?.qom}
-									<span class="record-holder">{leaderboard.qom.athleteName}</span>
-								{:else if loading}
-									<span class="record-empty">Loading…</span>
-								{:else if loadError}
-									<span class="record-empty error">{loadError}</span>
-								{:else if leaderboard}
-									<span class="record-empty">No record yet</span>
-								{:else}
-									<span class="record-empty">Waiting to load…</span>
+									<span class="record-time">{leaderboard.qom.time}</span>
 								{/if}
 							</div>
+							{#if leaderboard?.qom}
+								<span class="record-holder">{leaderboard.qom.athleteName}</span>
+							{:else if loading}
+								<span class="record-empty">Loading…</span>
+							{:else if loadError}
+								<span class="record-empty error">{loadError}</span>
+							{:else if leaderboard}
+								<span class="record-empty">No record yet</span>
+							{:else}
+								<span class="record-empty">Waiting to load…</span>
+							{/if}
 						</div>
 					</div>
+				</div>
 
-					<div class="segment-section top-three-section">
-						<span class="section-label">Visible Top 3</span>
-						{#if topRows.length > 0}
-							<div class="top-rows">
-								{#each topRows as row}
-									<div class="top-row">
-										<span class="top-rank">#{row.displayRank}</span>
-										<span class="top-athlete">{row.athleteName}</span>
-										<span class="top-time">{row.time}</span>
-									</div>
-								{/each}
-							</div>
-						{:else if loading}
-							<span class="top-empty">Loading…</span>
-						{:else if loadError}
-							<span class="top-empty error">{loadError}</span>
-						{:else if leaderboard}
-							<span class="top-empty">No public leaderboard rows right now.</span>
-						{:else}
-							<span class="top-empty">Waiting to load…</span>
-						{/if}
-					</div>
+				<div class="segment-section top-three-section">
+					<span class="section-label">Visible Top 3</span>
+					{#if topRows.length > 0}
+						<div class="top-rows">
+							{#each topRows as row}
+								<div class="top-row">
+									<span class="top-rank">#{row.displayRank}</span>
+									<span class="top-athlete">{row.athleteName}</span>
+									<span class="top-time">{row.time}</span>
+								</div>
+							{/each}
+						</div>
+					{:else if loading}
+						<span class="top-empty">Loading…</span>
+					{:else if loadError}
+						<span class="top-empty error">{loadError}</span>
+					{:else if leaderboard}
+						<span class="top-empty">No public leaderboard rows right now.</span>
+					{:else}
+						<span class="top-empty">Waiting to load…</span>
+					{/if}
+				</div>
 			</div>
-
 		</div>
 	</button>
 
@@ -262,28 +261,29 @@
 				<div class="loading">Loading leaderboard...</div>
 			{:else if loadError}
 				<div class="error">{loadError}</div>
-				{:else if leaderboard}
-					<div class="segment-meta">
-						{#if detailItems.length > 0}
-							{#each detailItems as item, index (`${item}-${index}`)}
-								{#if index > 0}
-									<span class="meta-sep">/</span>
-								{/if}
-								<span class="meta-item">{item}</span>
-							{/each}
-						{:else}
-							<span class="meta-empty">Stats pending next sync</span>
-						{/if}
-					</div>
+			{:else if leaderboard}
+				<div class="segment-meta">
+					{#if detailItems.length > 0}
+						{#each detailItems as item, index (`${item}-${index}`)}
+							{#if index > 0}
+								<span class="meta-sep">/</span>
+							{/if}
+							<span class="meta-item">{item}</span>
+						{/each}
+					{:else}
+						<span class="meta-empty">Stats pending next sync</span>
+					{/if}
+				</div>
 
-					{#if leaderboard.rows.length > 0}
-						{#if hasVisibleRankGaps}
-							<div class="rank-note">
-								Visible rows can skip official ranks when Strava hides efforts or multiple athletes tie.
-							</div>
-						{/if}
-						<div class="leaderboard-table-wrap">
-							<table class="leaderboard-table">
+				{#if leaderboard.rows.length > 0}
+					{#if hasVisibleRankGaps}
+						<div class="rank-note">
+							Visible rows can skip official ranks when Strava hides efforts or multiple athletes
+							tie.
+						</div>
+					{/if}
+					<div class="leaderboard-table-wrap">
+						<table class="leaderboard-table">
 							<thead>
 								<tr>
 									<th class="col-rank">#</th>
@@ -305,12 +305,12 @@
 										{/if}
 									</tr>
 								{/each}
-								</tbody>
-							</table>
-						</div>
-					{:else}
-						<div class="empty-table">No public leaderboard rows available right now.</div>
-					{/if}
+							</tbody>
+						</table>
+					</div>
+				{:else}
+					<div class="empty-table">No public leaderboard rows available right now.</div>
+				{/if}
 
 				<a
 					class="strava-link"

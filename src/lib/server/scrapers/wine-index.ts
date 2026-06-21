@@ -87,7 +87,10 @@ export function extractProducts(shopifyResponse: {
 			compareAtPrice,
 			available: variant.available,
 			tags: product.tags
-				? product.tags.split(',').map((t) => t.trim()).filter(Boolean)
+				? product.tags
+						.split(',')
+						.map((t) => t.trim())
+						.filter(Boolean)
 				: []
 		});
 	}
@@ -151,12 +154,12 @@ async function fetchCollectionProducts(collectionHandle: string): Promise<WinePr
 			const response = await fetch(url, {
 				signal: controller.signal,
 				headers: {
-					'Accept': 'application/json, text/plain, */*',
+					Accept: 'application/json, text/plain, */*',
 					'Accept-Language': 'en-US,en;q=0.9',
 					'Accept-Encoding': 'gzip, deflate, br',
 					'User-Agent':
 						'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-					'Referer': 'https://plumpjackwines.com/',
+					Referer: 'https://plumpjackwines.com/',
 					'Sec-Fetch-Dest': 'empty',
 					'Sec-Fetch-Mode': 'cors',
 					'Sec-Fetch-Site': 'same-origin'
@@ -230,11 +233,7 @@ export async function scrapeWineIndex(): Promise<WineSnapshot> {
 		const products = await fetchCollectionProducts(collection.handle);
 		console.log(`[wine-index] ${collection.handle}: ${products.length} products`);
 
-		const snapshot = buildCategorySnapshot(
-			collection.category,
-			collection.label,
-			products
-		);
+		const snapshot = buildCategorySnapshot(collection.category, collection.label, products);
 		categorySnapshots.push(snapshot);
 
 		// Polite delay between collections (1s)
@@ -243,9 +242,7 @@ export async function scrapeWineIndex(): Promise<WineSnapshot> {
 
 	// 2. Fetch staff picks
 	console.log(`[wine-index] Fetching ${WINE_LISTING_COLLECTIONS.staffPicks}...`);
-	const staffPickProducts = await fetchCollectionProducts(
-		WINE_LISTING_COLLECTIONS.staffPicks
-	);
+	const staffPickProducts = await fetchCollectionProducts(WINE_LISTING_COLLECTIONS.staffPicks);
 	const staffPicks = staffPickProducts.map((p) => buildStaffPick(p, 'staff-pick'));
 	console.log(`[wine-index] Staff picks: ${staffPicks.length} wines`);
 
@@ -254,9 +251,7 @@ export async function scrapeWineIndex(): Promise<WineSnapshot> {
 
 	// 3. Fetch allocated wines
 	console.log(`[wine-index] Fetching ${WINE_LISTING_COLLECTIONS.allocated}...`);
-	const allocatedProducts = await fetchCollectionProducts(
-		WINE_LISTING_COLLECTIONS.allocated
-	);
+	const allocatedProducts = await fetchCollectionProducts(WINE_LISTING_COLLECTIONS.allocated);
 	const allocatedWines = allocatedProducts.map((p) => buildStaffPick(p, 'allocated'));
 	console.log(`[wine-index] Allocated wines: ${allocatedWines.length} wines`);
 

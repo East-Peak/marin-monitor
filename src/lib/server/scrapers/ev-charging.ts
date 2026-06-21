@@ -116,7 +116,11 @@ async function fetchOcmStations(apiKey: string): Promise<OcmStation[]> {
 	});
 
 	try {
-		const response = await fetchWithTimeout(`https://api.openchargemap.io/v3/poi?${params}`, undefined, 10000);
+		const response = await fetchWithTimeout(
+			`https://api.openchargemap.io/v3/poi?${params}`,
+			undefined,
+			10000
+		);
 		if (!response.ok) return [];
 		return (await response.json()) as OcmStation[];
 	} catch {
@@ -214,7 +218,8 @@ export async function scrapeEvCharging(): Promise<EvChargingSnapshot> {
 				station.lat > MARIN_BOUNDS.north ||
 				station.lon < MARIN_BOUNDS.west ||
 				station.lon > MARIN_BOUNDS.east
-			) continue;
+			)
+				continue;
 			seenIds.add(station.stationId);
 			stations.push(station);
 		}

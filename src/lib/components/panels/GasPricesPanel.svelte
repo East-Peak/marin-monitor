@@ -53,9 +53,7 @@
 	const filteredStations = $derived.by<GasStation[]>(() => {
 		if (!current?.stations) return [];
 		if (!$townFilter) return current.stations;
-		return current.stations.filter(
-			(s) => findNearestTown(s.lat, s.lon) === $townFilter
-		);
+		return current.stations.filter((s) => findNearestTown(s.lat, s.lon) === $townFilter);
 	});
 
 	const cheapestStations = $derived.by<GasStation[]>(() => {
@@ -92,9 +90,7 @@
 				: null;
 
 		const cheapest = cheapestStations[0];
-		const cheapestPrice = cheapest?.fuelPrices.find(
-			(fp) => fp.type === 'REGULAR_UNLEADED'
-		)?.price;
+		const cheapestPrice = cheapest?.fuelPrices.find((fp) => fp.type === 'REGULAR_UNLEADED')?.price;
 
 		return [
 			{
@@ -106,9 +102,7 @@
 			{
 				label: '7-Day Change',
 				value:
-					priceDelta !== null
-						? `${priceDelta >= 0 ? '+' : ''}${priceDelta.toFixed(3)}`
-						: 'N/A',
+					priceDelta !== null ? `${priceDelta >= 0 ? '+' : ''}${priceDelta.toFixed(3)}` : 'N/A',
 				detail:
 					priceDelta !== null
 						? priceDelta <= 0
@@ -153,7 +147,10 @@
 		const target = event.currentTarget as SVGSVGElement;
 		const rect = target.getBoundingClientRect();
 		const innerWidth = rect.width - CHART_MARGINS.left - CHART_MARGINS.right;
-		const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - CHART_MARGINS.left));
+		const relativeX = Math.max(
+			0,
+			Math.min(innerWidth, event.clientX - rect.left - CHART_MARGINS.left)
+		);
 		const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
 		const index = Math.max(
 			0,
@@ -283,11 +280,31 @@
 								/>
 							{/if}
 							<!-- Y axis labels -->
-							<text x="-4" y={chartPaths.yScale(chartPaths.yMax)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{formatPrice(chartPaths.yMax)}</text>
-							<text x="-4" y={chartPaths.yScale(chartPaths.yMin)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{formatPrice(chartPaths.yMin)}</text>
+							<text
+								x="-4"
+								y={chartPaths.yScale(chartPaths.yMax)}
+								text-anchor="end"
+								dominant-baseline="middle"
+								fill="#888"
+								font-size="7px">{formatPrice(chartPaths.yMax)}</text
+							>
+							<text
+								x="-4"
+								y={chartPaths.yScale(chartPaths.yMin)}
+								text-anchor="end"
+								dominant-baseline="middle"
+								fill="#888"
+								font-size="7px">{formatPrice(chartPaths.yMin)}</text
+							>
 							<!-- X axis labels -->
 							{#each chartPaths.axisLabels.x as lbl}
-								<text x={lbl.x} y={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom + 14} text-anchor="middle" fill="#666" font-size="7px">{lbl.label}</text>
+								<text
+									x={lbl.x}
+									y={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom + 14}
+									text-anchor="middle"
+									fill="#666"
+									font-size="7px">{lbl.label}</text
+								>
 							{/each}
 						</g>
 					</svg>

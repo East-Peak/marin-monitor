@@ -12,7 +12,4 @@ export const currentCompositeScore = derived(
 	($d) => $d.current?.compositeScore ?? null
 );
 
-export const currentMarinNumber = derived(
-	compositeStore,
-	($d) => $d.current?.marinNumber ?? null
-);
+export const currentMarinNumber = derived(compositeStore, ($d) => $d.current?.marinNumber ?? null);

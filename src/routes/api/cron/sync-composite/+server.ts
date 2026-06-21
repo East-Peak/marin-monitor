@@ -54,9 +54,7 @@ async function readBlob<T>(blobKey: string): Promise<T | null> {
 }
 
 /** Strip marinNumber.items from a snapshot to keep history entries small */
-function toHistoryEntry(
-	snapshot: CompositeSnapshot
-): CompositeSnapshot {
+function toHistoryEntry(snapshot: CompositeSnapshot): CompositeSnapshot {
 	return {
 		timestamp: snapshot.timestamp,
 		tiers: snapshot.tiers,
@@ -137,10 +135,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		}
 
 		// Append to history (capped), stripping items from history entries
-		const history = [toHistoryEntry(snapshot), ...existing.history].slice(
-			0,
-			MAX_COMPOSITE_HISTORY
-		);
+		const history = [toHistoryEntry(snapshot), ...existing.history].slice(0, MAX_COMPOSITE_HISTORY);
 
 		const data: CompositeData = {
 			current: snapshot,

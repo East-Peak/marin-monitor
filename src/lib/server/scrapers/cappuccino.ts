@@ -44,9 +44,7 @@ export {
  * Prices are in dollars (not cents).
 /** Build a CoffeeSnapshot from a list of scraped shops */
 export function buildSnapshot(shops: CoffeeShop[]): CoffeeSnapshot {
-	const prices = shops
-		.filter((s) => s.price !== null)
-		.map((s) => s.price!);
+	const prices = shops.filter((s) => s.price !== null).map((s) => s.price!);
 	const metrics = summarizeCoffeeShops(shops);
 	const timestamp = new Date().toISOString();
 	const hasFreshCoverage = hasFreshCoffeeCoverage(
@@ -55,22 +53,25 @@ export function buildSnapshot(shops: CoffeeShop[]): CoffeeSnapshot {
 		CAPPUCCINO_MIN_FRESH_LIVE_RATIO
 	);
 
-	return withSuccessfulScrapeMetadata({
-		timestamp,
-		shopCount: shops.length,
-		pricedShopCount: metrics.pricedShopCount,
-		liveShopCount: metrics.liveShopCount,
-		fallbackShopCount: metrics.fallbackShopCount,
-		hardcodedShopCount: metrics.hardcodedShopCount,
-		medianPrice: computeMedian(prices),
-		avgPrice:
-			prices.length > 0
-				? Math.round((prices.reduce((a, b) => a + b, 0) / prices.length) * 100) / 100
-				: null,
-		minPrice: prices.length > 0 ? Math.min(...prices) : null,
-		maxPrice: prices.length > 0 ? Math.max(...prices) : null,
-		shops
-	}, hasFreshCoverage ? timestamp : null);
+	return withSuccessfulScrapeMetadata(
+		{
+			timestamp,
+			shopCount: shops.length,
+			pricedShopCount: metrics.pricedShopCount,
+			liveShopCount: metrics.liveShopCount,
+			fallbackShopCount: metrics.fallbackShopCount,
+			hardcodedShopCount: metrics.hardcodedShopCount,
+			medianPrice: computeMedian(prices),
+			avgPrice:
+				prices.length > 0
+					? Math.round((prices.reduce((a, b) => a + b, 0) / prices.length) * 100) / 100
+					: null,
+			minPrice: prices.length > 0 ? Math.min(...prices) : null,
+			maxPrice: prices.length > 0 ? Math.max(...prices) : null,
+			shops
+		},
+		hasFreshCoverage ? timestamp : null
+	);
 }
 
 function buildUnavailableResult(shop: CoffeeShopConfig): CoffeeShop {
@@ -103,10 +104,7 @@ async function launchBrowser(): Promise<Browser> {
 }
 
 /** Scrape a single Toast page — extract __OO_STATE__ for structured price data */
-async function scrapeToastShop(
-	browser: Browser,
-	shop: CoffeeShopConfig
-): Promise<CoffeeShop> {
+async function scrapeToastShop(browser: Browser, shop: CoffeeShopConfig): Promise<CoffeeShop> {
 	const page = await browser.newPage();
 	let price: number | null = null;
 
@@ -119,11 +117,14 @@ async function scrapeToastShop(
 		});
 
 		await page
-			.waitForFunction(() => {
-				const w = window as Window & { __OO_STATE__?: Record<string, unknown> };
-				const state = w.__OO_STATE__;
-				return state && Object.keys(state).length > 1;
-			}, { timeout: TOAST_PAGE_TIMEOUT })
+			.waitForFunction(
+				() => {
+					const w = window as Window & { __OO_STATE__?: Record<string, unknown> };
+					const state = w.__OO_STATE__;
+					return state && Object.keys(state).length > 1;
+				},
+				{ timeout: TOAST_PAGE_TIMEOUT }
+			)
 			.catch(() => {
 				// Continue with text fallback if the structured state never hydrates.
 			});
@@ -226,10 +227,7 @@ export async function scrapeCappuccino(): Promise<CoffeeSnapshot> {
 					const result = await scrapeToastShop(browser, shop);
 					results.push(result);
 				} catch (err) {
-					console.error(
-						`[cappuccino] Shop ${shop.id} failed (isolated):`,
-						(err as Error).message
-					);
+					console.error(`[cappuccino] Shop ${shop.id} failed (isolated):`, (err as Error).message);
 					// Push a null-price result so the shop still appears in output
 					results.push(buildUnavailableResult(shop));
 				}

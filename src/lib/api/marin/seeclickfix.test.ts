@@ -3,8 +3,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Mock $lib/config (detectTown)
 vi.mock('$lib/config', () => ({
 	detectTown: vi.fn((text: string) => {
-		if (text.toLowerCase().includes('san rafael')) return { name: 'San Rafael', slug: 'san-rafael' };
-		if (text.toLowerCase().includes('mill valley')) return { name: 'Mill Valley', slug: 'mill-valley' };
+		if (text.toLowerCase().includes('san rafael'))
+			return { name: 'San Rafael', slug: 'san-rafael' };
+		if (text.toLowerCase().includes('mill valley'))
+			return { name: 'Mill Valley', slug: 'mill-valley' };
 		if (text.toLowerCase().includes('novato')) return { name: 'Novato', slug: 'novato' };
 		return null;
 	})
@@ -159,9 +161,9 @@ describe('fetchSeeClickFixIssues', () => {
 		const issues = [
 			makeIssue({ id: 1, lat: 37.97, lng: -122.53 }), // Inside Marin
 			makeIssue({ id: 2, lat: 37.78, lng: -122.42 }), // San Francisco (south of bounds)
-			makeIssue({ id: 3, lat: 38.50, lng: -122.53 }), // North of bounds
-			makeIssue({ id: 4, lat: 37.97, lng: -122.20 }), // East of bounds
-			makeIssue({ id: 5, lat: 37.97, lng: -122.80 })  // West of bounds
+			makeIssue({ id: 3, lat: 38.5, lng: -122.53 }), // North of bounds
+			makeIssue({ id: 4, lat: 37.97, lng: -122.2 }), // East of bounds
+			makeIssue({ id: 5, lat: 37.97, lng: -122.8 }) // West of bounds
 		];
 		mockFetchSuccess(makeBlobResponse(issues));
 
@@ -220,9 +222,7 @@ describe('fetchSeeClickFixIssues', () => {
 	it('handles address with no house number', async () => {
 		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
 
-		const issues = [
-			makeIssue({ address: 'Bolinas Rd, Fairfax, CA' })
-		];
+		const issues = [makeIssue({ address: 'Bolinas Rd, Fairfax, CA' })];
 		mockFetchSuccess(makeBlobResponse(issues));
 
 		const result = await fetchSeeClickFixIssues();
@@ -259,9 +259,7 @@ describe('fetchSeeClickFixIssues', () => {
 	it('handles unknown town (no match)', async () => {
 		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
 
-		const issues = [
-			makeIssue({ address: '123 Somewhere, Unincorporated, CA' })
-		];
+		const issues = [makeIssue({ address: '123 Somewhere, Unincorporated, CA' })];
 		mockFetchSuccess(makeBlobResponse(issues));
 
 		const result = await fetchSeeClickFixIssues();
@@ -280,11 +278,7 @@ describe('fetchSeeClickFixIssues', () => {
 		mockFetchSuccess(makeBlobResponse(issues));
 
 		const result = await fetchSeeClickFixIssues();
-		expect(result.map((r) => r.id)).toEqual([
-			'seeclickfix-2',
-			'seeclickfix-3',
-			'seeclickfix-1'
-		]);
+		expect(result.map((r) => r.id)).toEqual(['seeclickfix-2', 'seeclickfix-3', 'seeclickfix-1']);
 		expect(result[0].timestamp).toBeGreaterThan(result[1].timestamp);
 		expect(result[1].timestamp).toBeGreaterThan(result[2].timestamp);
 	});
@@ -407,10 +401,10 @@ describe('fetchSeeClickFixIssues', () => {
 		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [
-			makeIssue({ id: 1, lat: 37.83, lng: -122.75 }),  // SW corner (min lat, min lng)
-			makeIssue({ id: 2, lat: 38.08, lng: -122.45 }),  // NE corner (max lat, max lng)
-			makeIssue({ id: 3, lat: 37.83, lng: -122.45 }),  // SE corner
-			makeIssue({ id: 4, lat: 38.08, lng: -122.75 })   // NW corner
+			makeIssue({ id: 1, lat: 37.83, lng: -122.75 }), // SW corner (min lat, min lng)
+			makeIssue({ id: 2, lat: 38.08, lng: -122.45 }), // NE corner (max lat, max lng)
+			makeIssue({ id: 3, lat: 37.83, lng: -122.45 }), // SE corner
+			makeIssue({ id: 4, lat: 38.08, lng: -122.75 }) // NW corner
 		];
 		mockFetchSuccess(makeBlobResponse(issues));
 

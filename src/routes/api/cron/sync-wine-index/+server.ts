@@ -9,9 +9,10 @@ import type { WineIndexData, WineSnapshot } from '$lib/types/wine';
 export const config = { maxDuration: 300 };
 
 /** Strip bottle listings from a snapshot to keep history entries small */
-function toHistoryEntry(
-	snapshot: WineSnapshot
-): { timestamp: string; categories: WineSnapshot['categories'] } {
+function toHistoryEntry(snapshot: WineSnapshot): {
+	timestamp: string;
+	categories: WineSnapshot['categories'];
+} {
 	return {
 		timestamp: snapshot.timestamp,
 		categories: snapshot.categories
@@ -41,10 +42,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		}
 
 		// Append to history (capped), omitting bottle listings from history entries
-		const history = [toHistoryEntry(snapshot), ...existing.history].slice(
-			0,
-			MAX_WINE_HISTORY
-		);
+		const history = [toHistoryEntry(snapshot), ...existing.history].slice(0, MAX_WINE_HISTORY);
 
 		const data: WineIndexData = {
 			current: snapshot,

@@ -143,10 +143,13 @@ async function scrapeShop(browser, shop) {
 
 		if (shop.source === 'toast') {
 			await page
-				.waitForFunction(() => {
-					const state = window.__OO_STATE__;
-					return state && Object.keys(state).length > 1;
-				}, { timeout: PAGE_TIMEOUT })
+				.waitForFunction(
+					() => {
+						const state = window.__OO_STATE__;
+						return state && Object.keys(state).length > 1;
+					},
+					{ timeout: PAGE_TIMEOUT }
+				)
 				.catch(() => {
 					// Continue with text fallback if Toast never hydrates fully.
 				});
@@ -170,8 +173,7 @@ async function scrapeShop(browser, shop) {
 				? await page.evaluate(() =>
 						Array.from(document.querySelectorAll('.menu-item'))
 							.map((item) => {
-								const name =
-									item.querySelector('.menu-item-title')?.textContent?.trim() ?? null;
+								const name = item.querySelector('.menu-item-title')?.textContent?.trim() ?? null;
 								const priceText =
 									item
 										.querySelector('.menu-item-price-top, .menu-item-price-bottom')
@@ -221,11 +223,10 @@ async function main() {
 	const start = Date.now();
 	console.log('[sync-coffee-index] Starting...');
 
-	const existing =
-		(await readBlobJson(BLOB_KEY)) ?? {
-			current: null,
-			history: []
-		};
+	const existing = (await readBlobJson(BLOB_KEY)) ?? {
+		current: null,
+		history: []
+	};
 	const legacyCappuccino =
 		existing.current === null ? await readBlobJson(LEGACY_CAPPUCCINO_BLOB_KEY) : null;
 	const previousShops = existing.current?.shops?.length
@@ -240,7 +241,9 @@ async function main() {
 			const previousShop = previousShopsById.get(shop.id) ?? null;
 			if (shop.supportsLivePriceScrape === false) {
 				if (shop.fallbackReason) {
-					console.log(`[coffee-index] Using curated fallback for ${shop.id}: ${shop.fallbackReason}`);
+					console.log(
+						`[coffee-index] Using curated fallback for ${shop.id}: ${shop.fallbackReason}`
+					);
 				}
 				const mergedShop = mergeLiveAndFallbackPrices(
 					shop,
@@ -278,7 +281,9 @@ async function main() {
 					new Date().toISOString()
 				);
 				if (Object.keys(mergedShop.prices).length === 0) {
-					console.warn(`[coffee-index] ${shop.id} still has no fallback prices after scrape failure`);
+					console.warn(
+						`[coffee-index] ${shop.id} still has no fallback prices after scrape failure`
+					);
 				}
 				results.push(mergedShop);
 			}
@@ -311,9 +316,10 @@ async function main() {
 		: readSuccessfulScrapeAt(existing.current);
 
 	const shouldAppendHistory = freshCoverage || (!existing.current && snapshot.pricedShopCount > 0);
-	const history = (shouldAppendHistory
-		? [toCoffeeIndexHistoryEntry(snapshot), ...(existing.history ?? [])]
-		: (existing.history ?? [])
+	const history = (
+		shouldAppendHistory
+			? [toCoffeeIndexHistoryEntry(snapshot), ...(existing.history ?? [])]
+			: (existing.history ?? [])
 	).slice(0, MAX_HISTORY);
 	const data = {
 		current: snapshot,

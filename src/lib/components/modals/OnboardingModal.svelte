@@ -52,9 +52,7 @@
 
 			<div class="modal-footer">
 				{#if onCustomize}
-					<button class="customize-btn" onclick={onCustomize}>
-						Configure Myself
-					</button>
+					<button class="customize-btn" onclick={onCustomize}> Configure Myself </button>
 					<p class="hint">Pick exactly which panels you want</p>
 				{:else}
 					<p class="hint">You can change this later in Settings</p>

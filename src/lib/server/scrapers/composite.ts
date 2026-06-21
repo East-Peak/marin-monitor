@@ -339,24 +339,24 @@ export function buildCompositeSnapshot(inputs: CompositeInputs): CompositeSnapsh
 	// Build upgraded static items — replace values with live data when available
 	const upgradedStaticItems: MarinNumberItem[] = STATIC_MARIN_NUMBER_ITEMS.map((item) => {
 		switch (item.sourceIndex) {
-				case 'rivian-lease':
-					return {
-						...item,
-						monthly: rivianLease,
-						source: hasLiveRivianData(inputs.rivianLease) ? 'live' : 'static'
-					};
-				case 'dog-walker':
-					return {
-						...item,
-						monthly: dogMonthly,
-						source: hasLiveDogWalkerData(inputs.dogWalker) ? 'live' : 'static'
-					};
-				case 'ikon-pass':
-					return {
-						...item,
-						monthly: skiSeason,
-						source: hasLiveIkonData(inputs.ikonPass) ? 'live' : 'static'
-					};
+			case 'rivian-lease':
+				return {
+					...item,
+					monthly: rivianLease,
+					source: hasLiveRivianData(inputs.rivianLease) ? 'live' : 'static'
+				};
+			case 'dog-walker':
+				return {
+					...item,
+					monthly: dogMonthly,
+					source: hasLiveDogWalkerData(inputs.dogWalker) ? 'live' : 'static'
+				};
+			case 'ikon-pass':
+				return {
+					...item,
+					monthly: skiSeason,
+					source: hasLiveIkonData(inputs.ikonPass) ? 'live' : 'static'
+				};
 			case 'camp-prices':
 				return {
 					...item,

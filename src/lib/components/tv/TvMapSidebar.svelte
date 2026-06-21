@@ -50,7 +50,9 @@
 			{#each regionContext as ctx}
 				<div class="flex items-baseline justify-between gap-2">
 					<span class="text-[10px] text-zinc-400 shrink-0">{ctx.label}</span>
-					<span class="text-xs font-semibold text-zinc-200 text-right tabular-nums">{ctx.value}</span>
+					<span class="text-xs font-semibold text-zinc-200 text-right tabular-nums"
+						>{ctx.value}</span
+					>
 				</div>
 			{/each}
 		</div>

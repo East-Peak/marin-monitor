@@ -35,8 +35,12 @@ export function buildTvSparkline(
 		max += pad;
 	}
 
-	const x = scaleLinear().domain([0, points.length - 1]).range([1, svgW - 1]);
-	const y = scaleLinear().domain([min, max]).range([svgH - 1, 1]);
+	const x = scaleLinear()
+		.domain([0, points.length - 1])
+		.range([1, svgW - 1]);
+	const y = scaleLinear()
+		.domain([min, max])
+		.range([svgH - 1, 1]);
 
 	const linePath = line<number>()
 		.x((_, i) => x(i))

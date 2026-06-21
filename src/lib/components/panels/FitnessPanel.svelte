@@ -54,9 +54,7 @@
 	const filteredStudios = $derived.by<FitnessStudio[]>(() => {
 		if (!current?.studios) return [];
 		if (!$townFilter) return current.studios;
-		return current.studios.filter(
-			(s) => findNearestTown(s.lat, s.lon) === $townFilter
-		);
+		return current.studios.filter((s) => findNearestTown(s.lat, s.lon) === $townFilter);
 	});
 
 	// Sort by price ascending
@@ -79,9 +77,7 @@
 	const filteredMedianByType = $derived.by<Partial<Record<FitnessType, number>>>(() => {
 		const result: Partial<Record<FitnessType, number>> = {};
 		for (const type of TYPE_ORDER) {
-			const prices = filteredStudios
-				.filter((s) => s.type === type)
-				.map((s) => s.dropInPrice);
+			const prices = filteredStudios.filter((s) => s.type === type).map((s) => s.dropInPrice);
 			const median = computeMedian(prices);
 			if (median !== null) {
 				result[type] = median;
@@ -91,9 +87,7 @@
 	});
 
 	// Overall filtered median
-	const filteredMedian = $derived(
-		computeMedian(filteredStudios.map((s) => s.dropInPrice))
-	);
+	const filteredMedian = $derived(computeMedian(filteredStudios.map((s) => s.dropInPrice)));
 
 	function formatPrice(price: number): string {
 		return `$${price.toFixed(0)}`;
@@ -111,7 +105,10 @@
 		const target = event.currentTarget as SVGSVGElement;
 		const rect = target.getBoundingClientRect();
 		const innerWidth = rect.width - CHART_MARGINS.left - CHART_MARGINS.right;
-		const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - CHART_MARGINS.left));
+		const relativeX = Math.max(
+			0,
+			Math.min(innerWidth, event.clientX - rect.left - CHART_MARGINS.left)
+		);
 		const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
 		const index = Math.max(
 			0,
@@ -173,7 +170,9 @@
 		<!-- Overall snapshot bar -->
 		<div class="snapshot-bar">
 			<div class="metric">
-				<span class="metric-value">${filteredMedian !== null ? filteredMedian.toFixed(0) : 'N/A'}</span>
+				<span class="metric-value"
+					>${filteredMedian !== null ? filteredMedian.toFixed(0) : 'N/A'}</span
+				>
 				<span class="metric-label">Median Drop-in</span>
 			</div>
 			{#if current.minPrice !== null}
@@ -225,7 +224,12 @@
 							<!-- Filled area -->
 							<path d={chartPaths.areaPath} fill={FITNESS_ACCENT_FILL} />
 							<!-- Line -->
-							<path d={chartPaths.linePath} fill="none" stroke={FITNESS_ACCENT} stroke-width="1.5" />
+							<path
+								d={chartPaths.linePath}
+								fill="none"
+								stroke={FITNESS_ACCENT}
+								stroke-width="1.5"
+							/>
 							<!-- Dots -->
 							{#each chartPaths.dots as dot}
 								<circle cx={dot.x} cy={dot.y} r="2.2" fill={FITNESS_ACCENT} />
@@ -251,11 +255,31 @@
 								/>
 							{/if}
 							<!-- Y axis labels -->
-							<text x="-4" y={chartPaths.yScale(chartPaths.yMax)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{formatPrice(chartPaths.yMax)}</text>
-							<text x="-4" y={chartPaths.yScale(chartPaths.yMin)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{formatPrice(chartPaths.yMin)}</text>
+							<text
+								x="-4"
+								y={chartPaths.yScale(chartPaths.yMax)}
+								text-anchor="end"
+								dominant-baseline="middle"
+								fill="#888"
+								font-size="7px">{formatPrice(chartPaths.yMax)}</text
+							>
+							<text
+								x="-4"
+								y={chartPaths.yScale(chartPaths.yMin)}
+								text-anchor="end"
+								dominant-baseline="middle"
+								fill="#888"
+								font-size="7px">{formatPrice(chartPaths.yMin)}</text
+							>
 							<!-- X axis labels -->
 							{#each chartPaths.axisLabels.x as lbl}
-								<text x={lbl.x} y={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom + 14} text-anchor="middle" fill="#666" font-size="7px">{lbl.label}</text>
+								<text
+									x={lbl.x}
+									y={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom + 14}
+									text-anchor="middle"
+									fill="#666"
+									font-size="7px">{lbl.label}</text
+								>
 							{/each}
 						</g>
 					</svg>
@@ -298,7 +322,9 @@
 								<span class="studio-name">{studio.name}</span>
 								<span class="studio-town">{studio.town}</span>
 							</div>
-							<span class={`studio-price ${studio.dropInPrice === current?.minPrice ? 'positive' : studio.dropInPrice === current?.maxPrice ? 'warning' : ''}`}>
+							<span
+								class={`studio-price ${studio.dropInPrice === current?.minPrice ? 'positive' : studio.dropInPrice === current?.maxPrice ? 'warning' : ''}`}
+							>
 								${studio.dropInPrice}
 							</span>
 						</div>

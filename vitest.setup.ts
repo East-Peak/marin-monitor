@@ -2,11 +2,7 @@ const originalEmitWarning = process.emitWarning.bind(process);
 
 process.emitWarning = ((warning: string | Error, ...args: unknown[]) => {
 	const message =
-		typeof warning === 'string'
-			? warning
-			: warning instanceof Error
-				? warning.message
-				: '';
+		typeof warning === 'string' ? warning : warning instanceof Error ? warning.message : '';
 
 	if (message.includes('--localstorage-file')) {
 		return;

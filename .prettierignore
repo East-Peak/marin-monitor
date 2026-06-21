@@ -23,5 +23,8 @@ workers/
 test-modules.html
 test-node.mjs
 
+# Test fixtures — exact-content; parsers depend on whitespace, never reformat
+tests/fixtures/
+
 # IDE settings
 .claude/

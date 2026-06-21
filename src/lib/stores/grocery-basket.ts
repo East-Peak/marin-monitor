@@ -15,7 +15,4 @@ export const currentBasketTotal = derived(
 	($d) => $d.current?.totalCheapest ?? null
 );
 
-export const currentBasketItems = derived(
-	groceryBasketStore,
-	($d) => $d.current?.items ?? []
-);
+export const currentBasketItems = derived(groceryBasketStore, ($d) => $d.current?.items ?? []);

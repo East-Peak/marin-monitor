@@ -12,9 +12,7 @@ const BLOB_KEY = 'marin-grocery-basket.json';
 const MAX_HISTORY_ENTRIES = 104; // ~2 years at weekly cadence
 
 /** Strip per-item storePrices from a snapshot to keep history entries small */
-function toHistoryEntry(
-	snapshot: GrocerySnapshot
-): GrocerySnapshot {
+function toHistoryEntry(snapshot: GrocerySnapshot): GrocerySnapshot {
 	return {
 		timestamp: snapshot.timestamp,
 		totalCheapest: snapshot.totalCheapest,
@@ -60,10 +58,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		});
 
 		// Append to history (capped), with stripped-down entries
-		const history = [toHistoryEntry(snapshot), ...existing.history].slice(
-			0,
-			MAX_HISTORY_ENTRIES
-		);
+		const history = [toHistoryEntry(snapshot), ...existing.history].slice(0, MAX_HISTORY_ENTRIES);
 
 		const data: GroceryBasketData = {
 			current: snapshot,
@@ -80,7 +75,7 @@ export const GET: RequestHandler = async ({ request }) => {
 
 		console.log(
 			`[sync-grocery-basket] OK: ${snapshot.itemsFound}/12 items priced, ` +
-			`total $${snapshot.totalCheapest?.toFixed(2) ?? 'N/A'} in ${Date.now() - start}ms`
+				`total $${snapshot.totalCheapest?.toFixed(2) ?? 'N/A'} in ${Date.now() - start}ms`
 		);
 		return new Response(
 			JSON.stringify({
@@ -92,10 +87,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		);
 	} catch (err) {
 		const message = err instanceof Error ? err.message : String(err);
-		console.error(
-			`[sync-grocery-basket] FAILED after ${Date.now() - start}ms:`,
-			message
-		);
+		console.error(`[sync-grocery-basket] FAILED after ${Date.now() - start}ms:`, message);
 		return new Response(JSON.stringify({ ok: false, error: message }), {
 			status: 500,
 			headers: { 'Content-Type': 'application/json' }

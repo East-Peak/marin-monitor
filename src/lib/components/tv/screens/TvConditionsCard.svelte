@@ -16,7 +16,7 @@
 
 	/** Extract high/low from the next 12 hours of hourly data */
 	const forecastHiLo = $derived.by(() => {
-		const temps = hourlyForecast.slice(0, 12).map(h => h.temperature);
+		const temps = hourlyForecast.slice(0, 12).map((h) => h.temperature);
 		if (temps.length === 0) return null;
 		return { hi: Math.max(...temps), lo: Math.min(...temps) };
 	});
@@ -36,8 +36,10 @@
 	/** Short health guidance based on AQI range */
 	function aqiGuidance(value: number): string {
 		if (value <= 50) return 'Air quality is satisfactory. No health concern.';
-		if (value <= 100) return 'Acceptable. Sensitive individuals should limit prolonged outdoor exertion.';
-		if (value <= 150) return 'Sensitive groups may experience effects. Limit prolonged outdoor exertion.';
+		if (value <= 100)
+			return 'Acceptable. Sensitive individuals should limit prolonged outdoor exertion.';
+		if (value <= 150)
+			return 'Sensitive groups may experience effects. Limit prolonged outdoor exertion.';
 		return 'Everyone may experience health effects. Avoid prolonged outdoor exertion.';
 	}
 
@@ -94,18 +96,18 @@
 		if (!pollutant) return '';
 		const map: Record<string, string> = {
 			'PM2.5': 'Fine Particles (PM2.5)',
-			'PM10': 'Coarse Particles (PM10)',
-			'O3': 'Ozone (O3)',
-			'NO2': 'Nitrogen Dioxide',
-			'SO2': 'Sulfur Dioxide',
-			'CO': 'Carbon Monoxide'
+			PM10: 'Coarse Particles (PM10)',
+			O3: 'Ozone (O3)',
+			NO2: 'Nitrogen Dioxide',
+			SO2: 'Sulfur Dioxide',
+			CO: 'Carbon Monoxide'
 		};
 		return map[pollutant] ?? pollutant;
 	}
 
 	/** Get next high and low tide for a compact summary */
-	const nextHigh = $derived(tides.find(t => t.type === 'H'));
-	const nextLow = $derived(tides.find(t => t.type === 'L'));
+	const nextHigh = $derived(tides.find((t) => t.type === 'H'));
+	const nextLow = $derived(tides.find((t) => t.type === 'L'));
 </script>
 
 <div class="h-full flex flex-col overflow-hidden px-6 py-3">
@@ -117,11 +119,16 @@
 			<!-- Header -->
 			<div class="px-3 pt-3 pb-2 border-b border-gray-700/40">
 				<div class="flex items-baseline justify-between">
-					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Weather</span>
+					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400"
+						>Weather</span
+					>
 					<span class="text-[10px] text-zinc-500">NWS</span>
 				</div>
 				<div class="flex items-baseline gap-2 mt-1">
-					<span class="text-4xl font-bold tabular-nums leading-none" style="color: {tempColor(weather?.temp)}">
+					<span
+						class="text-4xl font-bold tabular-nums leading-none"
+						style="color: {tempColor(weather?.temp)}"
+					>
 						{weather?.temp != null ? `${weather.temp}\u00b0` : '\u2014'}
 					</span>
 					<span class="text-[10px] text-zinc-500">F</span>
@@ -132,14 +139,18 @@
 			<div class="flex-1 px-3 py-2 overflow-hidden">
 				{#if weather?.shortForecast}
 					<div class="mb-2">
-						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">Forecast</div>
+						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">
+							Forecast
+						</div>
 						<p class="text-sm text-zinc-200 leading-snug">{weather.shortForecast}</p>
 					</div>
 				{/if}
 
 				{#if windParsed}
 					<div class="mb-2">
-						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">Wind</div>
+						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">
+							Wind
+						</div>
 						<div class="flex items-baseline gap-2">
 							<span class="text-lg font-bold tabular-nums text-zinc-200">{windParsed.speed}</span>
 							{#if windParsed.direction}
@@ -152,10 +163,22 @@
 				<!-- Hi/Lo from hourly forecast -->
 				{#if forecastHiLo}
 					<div class="mb-2">
-						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">12h Range</div>
+						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">
+							12h Range
+						</div>
 						<div class="flex items-baseline gap-3">
-							<span class="text-xs text-zinc-400">Lo <span class="text-sm font-bold tabular-nums" style="color: {tempColor(forecastHiLo.lo)}">{forecastHiLo.lo}&deg;</span></span>
-							<span class="text-xs text-zinc-400">Hi <span class="text-sm font-bold tabular-nums" style="color: {tempColor(forecastHiLo.hi)}">{forecastHiLo.hi}&deg;</span></span>
+							<span class="text-xs text-zinc-400"
+								>Lo <span
+									class="text-sm font-bold tabular-nums"
+									style="color: {tempColor(forecastHiLo.lo)}">{forecastHiLo.lo}&deg;</span
+								></span
+							>
+							<span class="text-xs text-zinc-400"
+								>Hi <span
+									class="text-sm font-bold tabular-nums"
+									style="color: {tempColor(forecastHiLo.hi)}">{forecastHiLo.hi}&deg;</span
+								></span
+							>
 						</div>
 					</div>
 				{/if}
@@ -163,14 +186,23 @@
 				<!-- Mini hourly forecast strip -->
 				{#if nextHours.length > 0}
 					<div class="mb-2 pt-2 border-t border-gray-700/30">
-						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Next Hours</div>
+						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
+							Next Hours
+						</div>
 						<div class="grid grid-cols-4 gap-1">
 							{#each nextHours as hour}
 								<div class="text-center">
 									<div class="text-[9px] text-zinc-500">{formatHour(hour.startTime)}</div>
-									<div class="text-sm font-bold tabular-nums" style="color: {tempColor(hour.temperature)}">{hour.temperature}&deg;</div>
+									<div
+										class="text-sm font-bold tabular-nums"
+										style="color: {tempColor(hour.temperature)}"
+									>
+										{hour.temperature}&deg;
+									</div>
 									{#if hour.shortForecast}
-										<div class="text-[8px] text-zinc-500 leading-tight line-clamp-1">{hour.shortForecast}</div>
+										<div class="text-[8px] text-zinc-500 leading-tight line-clamp-1">
+											{hour.shortForecast}
+										</div>
 									{/if}
 								</div>
 							{/each}
@@ -181,23 +213,38 @@
 				<!-- Quick tide summary -->
 				{#if nextHigh || nextLow}
 					<div class="mt-auto pt-2 border-t border-gray-700/30">
-						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">Next Tides</div>
+						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">
+							Next Tides
+						</div>
 						<div class="grid grid-cols-2 gap-2">
 							{#if nextHigh}
 								<div class="flex items-center gap-1.5">
-									<span class="text-[9px] font-bold px-1 py-px rounded text-white" style="background: #3b82f6">H</span>
+									<span
+										class="text-[9px] font-bold px-1 py-px rounded text-white"
+										style="background: #3b82f6">H</span
+									>
 									<div>
-										<span class="text-xs font-bold tabular-nums text-white">{nextHigh.height.toFixed(1)}ft</span>
-										<span class="text-[9px] text-zinc-500 ml-1">{formatTideTime(nextHigh.time)}</span>
+										<span class="text-xs font-bold tabular-nums text-white"
+											>{nextHigh.height.toFixed(1)}ft</span
+										>
+										<span class="text-[9px] text-zinc-500 ml-1"
+											>{formatTideTime(nextHigh.time)}</span
+										>
 									</div>
 								</div>
 							{/if}
 							{#if nextLow}
 								<div class="flex items-center gap-1.5">
-									<span class="text-[9px] font-bold px-1 py-px rounded text-white" style="background: #14b8a6">L</span>
+									<span
+										class="text-[9px] font-bold px-1 py-px rounded text-white"
+										style="background: #14b8a6">L</span
+									>
 									<div>
-										<span class="text-xs font-bold tabular-nums text-white">{nextLow.height.toFixed(1)}ft</span>
-										<span class="text-[9px] text-zinc-500 ml-1">{formatTideTime(nextLow.time)}</span>
+										<span class="text-xs font-bold tabular-nums text-white"
+											>{nextLow.height.toFixed(1)}ft</span
+										>
+										<span class="text-[9px] text-zinc-500 ml-1">{formatTideTime(nextLow.time)}</span
+										>
 									</div>
 								</div>
 							{/if}
@@ -212,7 +259,9 @@
 			<!-- Header -->
 			<div class="px-3 pt-3 pb-2 border-b border-gray-700/40">
 				<div class="flex items-baseline justify-between">
-					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Air Quality</span>
+					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400"
+						>Air Quality</span
+					>
 					<span class="text-[10px] text-zinc-500">EPA AQI</span>
 				</div>
 			</div>
@@ -236,21 +285,20 @@
 					<!-- Pollutant details -->
 					{#if aqi.pollutant}
 						<div class="mt-3 w-full border-t border-gray-700/30 pt-2">
-							<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">Primary Pollutant</div>
+							<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">
+								Primary Pollutant
+							</div>
 							<p class="text-xs text-zinc-300">{pollutantLabel(aqi.pollutant)}</p>
 						</div>
 					{/if}
 
 					<!-- AQI scale reference -->
 					<div class="mt-3 w-full border-t border-gray-700/30 pt-2">
-						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">AQI Scale</div>
+						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
+							AQI Scale
+						</div>
 						<div class="space-y-1">
-							{#each [
-								{ min: 0, max: 50, label: 'Good', color: '#22c55e' },
-								{ min: 51, max: 100, label: 'Moderate', color: '#eab308' },
-								{ min: 101, max: 150, label: 'Unhealthy (Sensitive)', color: '#f97316' },
-								{ min: 151, max: 300, label: 'Unhealthy', color: '#ef4444' }
-							] as range}
+							{#each [{ min: 0, max: 50, label: 'Good', color: '#22c55e' }, { min: 51, max: 100, label: 'Moderate', color: '#eab308' }, { min: 101, max: 150, label: 'Unhealthy (Sensitive)', color: '#f97316' }, { min: 151, max: 300, label: 'Unhealthy', color: '#ef4444' }] as range}
 								{@const isActive = aqi.value >= range.min && aqi.value <= range.max}
 								<div class="flex items-center gap-1.5 {isActive ? 'opacity-100' : 'opacity-40'}">
 									<div class="w-2 h-2 rounded-sm shrink-0" style="background: {range.color}"></div>
@@ -263,7 +311,9 @@
 
 					<!-- Health guidance -->
 					<div class="mt-3 w-full border-t border-gray-700/30 pt-2">
-						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">Guidance</div>
+						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">
+							Guidance
+						</div>
 						<p class="text-[10px] text-zinc-400 leading-snug">{aqiGuidance(aqi.value)}</p>
 					</div>
 				{:else}
@@ -279,13 +329,16 @@
 			<!-- Header -->
 			<div class="px-3 pt-3 pb-2 border-b border-gray-700/40">
 				<div class="flex items-baseline justify-between">
-					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Tides</span>
+					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Tides</span
+					>
 					<span class="text-[10px] text-zinc-500">Pt Reyes / SF Bar</span>
 				</div>
 			</div>
 
 			<div class="flex-1 px-3 py-2 overflow-hidden">
-				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">Today's Predictions</div>
+				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
+					Today's Predictions
+				</div>
 				{#each tides.slice(0, 6) as tide}
 					<div class="flex items-center gap-2 py-1 border-b border-gray-700/20">
 						<!-- H/L badge -->
@@ -311,17 +364,26 @@
 
 				<!-- Tide range summary -->
 				{#if tides.length > 0}
-					{@const heights = tides.slice(0, 6).map(t => t.height)}
+					{@const heights = tides.slice(0, 6).map((t) => t.height)}
 					{@const maxHeight = Math.max(...heights)}
 					{@const minHeight = Math.min(...heights)}
 					<div class="mt-2 pt-2 border-t border-gray-700/30">
-						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">Range</div>
+						<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">
+							Range
+						</div>
 						<div class="flex items-center gap-2">
-							<span class="text-xs text-emerald-400 tabular-nums font-medium">{minHeight.toFixed(1)}ft</span>
+							<span class="text-xs text-emerald-400 tabular-nums font-medium"
+								>{minHeight.toFixed(1)}ft</span
+							>
 							<div class="flex-1 h-1 rounded-full bg-zinc-700/50 relative">
-								<div class="absolute inset-y-0 rounded-full" style="left: 0; right: 0; background: linear-gradient(to right, #14b8a6, #3b82f6);"></div>
+								<div
+									class="absolute inset-y-0 rounded-full"
+									style="left: 0; right: 0; background: linear-gradient(to right, #14b8a6, #3b82f6);"
+								></div>
 							</div>
-							<span class="text-xs text-blue-400 tabular-nums font-medium">{maxHeight.toFixed(1)}ft</span>
+							<span class="text-xs text-blue-400 tabular-nums font-medium"
+								>{maxHeight.toFixed(1)}ft</span
+							>
 						</div>
 						<p class="text-[9px] text-zinc-500 mt-0.5 tabular-nums">
 							{(maxHeight - minHeight).toFixed(1)}ft swing

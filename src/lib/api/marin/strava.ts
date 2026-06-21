@@ -51,7 +51,10 @@ export async function fetchAllStravaLeaderboards(): Promise<Map<number, StravaLe
 			throw new Error(`Strava leaderboards bulk fetch failed: ${response.status}`);
 		}
 
-		const data = (await response.json()) as { leaderboards: Record<string, StravaLeaderboard>; lastUpdated: string };
+		const data = (await response.json()) as {
+			leaderboards: Record<string, StravaLeaderboard>;
+			lastUpdated: string;
+		};
 		const map = new Map<number, StravaLeaderboard>();
 		for (const [id, lb] of Object.entries(data.leaderboards)) {
 			map.set(Number(id), lb);

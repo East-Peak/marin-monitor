@@ -4,6 +4,7 @@ See ~/.openclaw/workspace/projects/marin-monitor.md for full project state.
 See ~/.codex/AGENTS.md for global machine conventions.
 
 ## Project-Specific
+
 - Stack: SvelteKit 2 + Svelte 5 runes, TypeScript (strict), Tailwind CSS, D3, MapLibre GL, Vitest + Playwright
 - Branch strategy: push directly to main (no branches, no PRs)
 - Deploy: Vercel auto-deploys from git push. Adapter: @sveltejs/adapter-vercel

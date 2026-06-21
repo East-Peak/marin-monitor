@@ -27,7 +27,10 @@ function getRateLimitStore(): Map<string, RateLimitBucket> {
 	return globalState[RATE_LIMITS_KEY];
 }
 
-export function safeEquals(expected: string | null | undefined, actual: string | null | undefined): boolean {
+export function safeEquals(
+	expected: string | null | undefined,
+	actual: string | null | undefined
+): boolean {
 	if (!expected || !actual) return false;
 	const expectedBuf = toBuffer(expected);
 	const actualBuf = toBuffer(actual);

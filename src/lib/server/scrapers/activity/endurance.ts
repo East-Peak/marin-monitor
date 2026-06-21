@@ -62,13 +62,10 @@ const EVENT_PAGES: EventPageConfig[] = [
 		town: 'Mill Valley',
 		townSlug: 'mill-valley',
 		lat: 37.9051,
-		lon: -122.5530,
+		lon: -122.553,
 		topics: ['running', 'dipsea'],
 		verification: 'official',
-		datePatterns: [
-			/(\w+day,?\s+\w+\s+\d{1,2},?\s*\d{4})/i,
-			/(\w+\s+\d{1,2},?\s*\d{4})/i
-		],
+		datePatterns: [/(\w+day,?\s+\w+\s+\d{1,2},?\s*\d{4})/i, /(\w+\s+\d{1,2},?\s*\d{4})/i],
 		regPatterns: [/ultrasignup\.com/i, /registration/i, /sign.?up/i]
 	}
 ];
@@ -84,15 +81,9 @@ export async function scrapeWebscorer(now: number): Promise<NewsItem[]> {
 			stripHtml(titleLink.textContent || '') ||
 			stripHtml(titleLink.querySelector('img')?.getAttribute('alt') || '');
 		const raceType = stripHtml(row.querySelector('.racetype')?.textContent || '');
-		const date = stripHtml(
-			row.querySelector('[id*="lbRaceDate"]')?.textContent || ''
-		);
-		const location = stripHtml(
-			row.querySelector('[id*="lbRaceLocation"]')?.textContent || ''
-		);
-		const sport = stripHtml(
-			row.querySelector('[id*="lbRaceSport"]')?.textContent || ''
-		);
+		const date = stripHtml(row.querySelector('[id*="lbRaceDate"]')?.textContent || '');
+		const location = stripHtml(row.querySelector('[id*="lbRaceLocation"]')?.textContent || '');
+		const sport = stripHtml(row.querySelector('[id*="lbRaceSport"]')?.textContent || '');
 		const haystack = `${title} ${location} ${sport}`.toLowerCase();
 		if (!/(stafford|novato|tam|mill valley|marin|fairfax|larkspur)/i.test(haystack)) continue;
 		const link = new URL(
@@ -114,10 +105,7 @@ export async function scrapeWebscorer(now: number): Promise<NewsItem[]> {
 				verification: 'community',
 				town: townData.town,
 				townSlug: townData.townSlug,
-				topics:
-					category === 'cycling'
-						? ['cycling', 'race-results']
-						: ['running', 'hill-climb']
+				topics: category === 'cycling' ? ['cycling', 'race-results'] : ['running', 'hill-climb']
 			},
 			now
 		);
@@ -248,8 +236,7 @@ export async function scrapeB17Racing(now: number): Promise<NewsItem[]> {
 						title: `Summit Shorty Series · ${dayStr}`,
 						link: 'https://b17racing.com',
 						pubDate: raceDate.toISOString(),
-						description:
-							'Wednesday evening XC race at Camp Tamarancho, Fairfax.',
+						description: 'Wednesday evening XC race at Camp Tamarancho, Fairfax.',
 						verification: 'community',
 						town: 'Fairfax',
 						townSlug: 'fairfax',
@@ -302,9 +289,7 @@ export async function scrapeB17Racing(now: number): Promise<NewsItem[]> {
 			}
 		}
 
-		return items
-			.sort((a, b) => a.timestamp - b.timestamp)
-			.slice(0, 15);
+		return items.sort((a, b) => a.timestamp - b.timestamp).slice(0, 15);
 	} catch {
 		return [];
 	}
@@ -322,9 +307,7 @@ export async function scrapeNorcalRaces(now: number): Promise<NewsItem[]> {
 		if (cells.length < 2) continue;
 
 		const rowText = stripHtml(row.textContent || '');
-		const raceMatch = rowText.match(
-			/Race\s+(\d+)[:\s]*([^0-9]*?)(\d{1,2}\/\d{1,2})/i
-		);
+		const raceMatch = rowText.match(/Race\s+(\d+)[:\s]*([^0-9]*?)(\d{1,2}\/\d{1,2})/i);
 		if (!raceMatch) continue;
 
 		const raceNum = raceMatch[1];

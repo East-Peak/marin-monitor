@@ -38,7 +38,9 @@ describe('fetchJson', () => {
 		const payload = { temperature: 72, unit: 'F' };
 		mockFetch.mockResolvedValueOnce(jsonResponse(payload));
 
-		const result = await fetchJson<{ temperature: number; unit: string }>('https://api.example.com/weather');
+		const result = await fetchJson<{ temperature: number; unit: string }>(
+			'https://api.example.com/weather'
+		);
 
 		expect(result).toEqual(payload);
 		expect(mockFetch).toHaveBeenCalledOnce();
@@ -256,9 +258,7 @@ describe('fetchWithTimeout', () => {
 		const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
 		mockFetch.mockRejectedValueOnce(new TypeError('Network error'));
 
-		await expect(fetchWithTimeout('https://api.example.com/down')).rejects.toThrow(
-			'Network error'
-		);
+		await expect(fetchWithTimeout('https://api.example.com/down')).rejects.toThrow('Network error');
 
 		expect(clearTimeoutSpy).toHaveBeenCalled();
 	});

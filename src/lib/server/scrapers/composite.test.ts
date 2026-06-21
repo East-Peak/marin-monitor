@@ -33,14 +33,28 @@ import type { HousingMetric } from '$lib/api/marin/housing';
 
 function makeGroceryData(weeklyTotal: number): GroceryBasketData {
 	return {
-		current: { timestamp: '2026-03-29T00:00:00Z', totalCheapest: weeklyTotal, totalExpensive: weeklyTotal + 50, itemsFound: 12, items: [] },
+		current: {
+			timestamp: '2026-03-29T00:00:00Z',
+			totalCheapest: weeklyTotal,
+			totalExpensive: weeklyTotal + 50,
+			itemsFound: 12,
+			items: []
+		},
 		history: []
 	};
 }
 
 function makeCoffeeData(median: number): CoffeeData {
 	return {
-		current: { timestamp: '2026-03-29T00:00:00Z', shopCount: 10, medianPrice: median, avgPrice: median, minPrice: median - 1, maxPrice: median + 1, shops: [] },
+		current: {
+			timestamp: '2026-03-29T00:00:00Z',
+			shopCount: 10,
+			medianPrice: median,
+			avgPrice: median,
+			minPrice: median - 1,
+			maxPrice: median + 1,
+			shops: []
+		},
 		history: []
 	};
 }
@@ -50,8 +64,22 @@ function makeWineData(napaMedian: number): WineIndexData {
 		current: {
 			timestamp: '2026-03-29T00:00:00Z',
 			categories: [
-				{ category: 'napa-sonoma', label: 'Napa & Sonoma', productCount: 50, medianPrice: napaMedian, minPrice: 20, maxPrice: 200 },
-				{ category: 'burgundy', label: 'Burgundy', productCount: 30, medianPrice: 52, minPrice: 25, maxPrice: 150 }
+				{
+					category: 'napa-sonoma',
+					label: 'Napa & Sonoma',
+					productCount: 50,
+					medianPrice: napaMedian,
+					minPrice: 20,
+					maxPrice: 200
+				},
+				{
+					category: 'burgundy',
+					label: 'Burgundy',
+					productCount: 30,
+					medianPrice: 52,
+					minPrice: 25,
+					maxPrice: 150
+				}
 			],
 			staffPicks: [],
 			allocatedWines: []
@@ -62,7 +90,16 @@ function makeWineData(napaMedian: number): WineIndexData {
 
 function makeFitnessData(yogaMedian: number): FitnessData {
 	return {
-		current: { timestamp: '2026-03-29T00:00:00Z', studioCount: 8, medianPrice: yogaMedian, avgPrice: yogaMedian, minPrice: yogaMedian - 5, maxPrice: yogaMedian + 10, medianByType: { yoga: yogaMedian }, studios: [] },
+		current: {
+			timestamp: '2026-03-29T00:00:00Z',
+			studioCount: 8,
+			medianPrice: yogaMedian,
+			avgPrice: yogaMedian,
+			minPrice: yogaMedian - 5,
+			maxPrice: yogaMedian + 10,
+			medianByType: { yoga: yogaMedian },
+			studios: []
+		},
 		history: []
 	};
 }
@@ -75,8 +112,18 @@ function makeSchoolData(elemAvg: number, middleAvg: number): SchoolIndexData {
 			incomeSource: 'Census ACS',
 			incomeYear: '2024',
 			tiers: [
-				{ level: 'elementary', label: 'Elementary (K-5)', avgTuition: elemAvg, pctOfMedianIncome: (elemAvg / 145000) * 100 },
-				{ level: 'middle', label: 'Middle (6-8)', avgTuition: middleAvg, pctOfMedianIncome: (middleAvg / 145000) * 100 }
+				{
+					level: 'elementary',
+					label: 'Elementary (K-5)',
+					avgTuition: elemAvg,
+					pctOfMedianIncome: (elemAvg / 145000) * 100
+				},
+				{
+					level: 'middle',
+					label: 'Middle (6-8)',
+					avgTuition: middleAvg,
+					pctOfMedianIncome: (middleAvg / 145000) * 100
+				}
 			],
 			schools: [],
 			cumulativeK12: 0
@@ -87,14 +134,31 @@ function makeSchoolData(elemAvg: number, middleAvg: number): SchoolIndexData {
 
 function makeGasData(avgRegular: number): GasPriceData {
 	return {
-		current: { timestamp: '2026-03-29T00:00:00Z', stationCount: 20, avgRegular, avgMidgrade: avgRegular + 0.3, avgPremium: avgRegular + 0.6, avgDiesel: avgRegular + 0.5, minRegular: avgRegular - 0.2, maxRegular: avgRegular + 0.4, stations: [] },
+		current: {
+			timestamp: '2026-03-29T00:00:00Z',
+			stationCount: 20,
+			avgRegular,
+			avgMidgrade: avgRegular + 0.3,
+			avgPremium: avgRegular + 0.6,
+			avgDiesel: avgRegular + 0.5,
+			minRegular: avgRegular - 0.2,
+			maxRegular: avgRegular + 0.4,
+			stations: []
+		},
 		history: []
 	};
 }
 
 function makeHousingData(medianPrice: number): HousingMetric[] {
 	return [
-		{ month: '2026-02', medianPrice, medianPpsf: 800, inventory: 300, daysOnMarket: 45, homesSold: 120 }
+		{
+			month: '2026-02',
+			medianPrice,
+			medianPpsf: 800,
+			inventory: 300,
+			daysOnMarket: 45,
+			homesSold: 120
+		}
 	];
 }
 
@@ -307,15 +371,11 @@ describe('buildCompositeSnapshot', () => {
 		};
 		const snapshot = buildCompositeSnapshot(inputs);
 
-		const rivianItem = snapshot.marinNumber.items.find((i) =>
-			i.label.includes('Rivian')
-		);
+		const rivianItem = snapshot.marinNumber.items.find((i) => i.label.includes('Rivian'));
 		expect(rivianItem?.source).toBe('live');
 		expect(rivianItem?.monthly).toBe(950);
 
-		const skiItem = snapshot.marinNumber.items.find((i) =>
-			i.label.includes('Ski season')
-		);
+		const skiItem = snapshot.marinNumber.items.find((i) => i.label.includes('Ski season'));
 		expect(skiItem?.source).toBe('live');
 		expect(skiItem?.monthly).toBe(300);
 	});

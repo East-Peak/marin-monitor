@@ -55,10 +55,7 @@ export function progressSwipe(
  * @param state - final swipe state
  * @returns 'next', 'prev', or null (if below commit threshold or not locked)
  */
-export function commitSwipe(
-	endX: number,
-	state: SwipeState
-): 'next' | 'prev' | null {
+export function commitSwipe(endX: number, state: SwipeState): 'next' | 'prev' | null {
 	if (!state.axisLocked) return null;
 	const dx = endX - state.startX;
 	if (Math.abs(dx) < COMMIT_PX) return null;

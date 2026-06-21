@@ -63,9 +63,7 @@ describe('fetchUvIndex', () => {
 	});
 
 	it('categorizes Low UV (0-2)', async () => {
-		mockFetch.mockResolvedValueOnce(
-			makeResponse({ ok: true, now: { uvi: 1 }, forecast: [] })
-		);
+		mockFetch.mockResolvedValueOnce(makeResponse({ ok: true, now: { uvi: 1 }, forecast: [] }));
 
 		const result = await fetchUvIndex();
 
@@ -74,9 +72,7 @@ describe('fetchUvIndex', () => {
 	});
 
 	it('categorizes Moderate UV (3-5)', async () => {
-		mockFetch.mockResolvedValueOnce(
-			makeResponse({ ok: true, now: { uvi: 4 }, forecast: [] })
-		);
+		mockFetch.mockResolvedValueOnce(makeResponse({ ok: true, now: { uvi: 4 }, forecast: [] }));
 
 		const result = await fetchUvIndex();
 
@@ -85,9 +81,7 @@ describe('fetchUvIndex', () => {
 	});
 
 	it('categorizes Very High UV (8-10)', async () => {
-		mockFetch.mockResolvedValueOnce(
-			makeResponse({ ok: true, now: { uvi: 9 }, forecast: [] })
-		);
+		mockFetch.mockResolvedValueOnce(makeResponse({ ok: true, now: { uvi: 9 }, forecast: [] }));
 
 		const result = await fetchUvIndex();
 
@@ -96,9 +90,7 @@ describe('fetchUvIndex', () => {
 	});
 
 	it('categorizes Extreme UV (11+)', async () => {
-		mockFetch.mockResolvedValueOnce(
-			makeResponse({ ok: true, now: { uvi: 12 }, forecast: [] })
-		);
+		mockFetch.mockResolvedValueOnce(makeResponse({ ok: true, now: { uvi: 12 }, forecast: [] }));
 
 		const result = await fetchUvIndex();
 
@@ -130,9 +122,7 @@ describe('fetchUvIndex', () => {
 	});
 
 	it('defaults current UVI to 0 when null', async () => {
-		mockFetch.mockResolvedValueOnce(
-			makeResponse({ ok: true, now: { uvi: null }, forecast: [] })
-		);
+		mockFetch.mockResolvedValueOnce(makeResponse({ ok: true, now: { uvi: null }, forecast: [] }));
 
 		const result = await fetchUvIndex();
 
@@ -141,9 +131,7 @@ describe('fetchUvIndex', () => {
 	});
 
 	it('returns null when response.ok is false', async () => {
-		mockFetch.mockResolvedValueOnce(
-			makeResponse({ ok: false, now: null })
-		);
+		mockFetch.mockResolvedValueOnce(makeResponse({ ok: false, now: null }));
 
 		const result = await fetchUvIndex();
 
@@ -151,9 +139,7 @@ describe('fetchUvIndex', () => {
 	});
 
 	it('returns null when now field is missing', async () => {
-		mockFetch.mockResolvedValueOnce(
-			makeResponse({ ok: true })
-		);
+		mockFetch.mockResolvedValueOnce(makeResponse({ ok: true }));
 
 		const result = await fetchUvIndex();
 
@@ -177,9 +163,7 @@ describe('fetchUvIndex', () => {
 	});
 
 	it('handles empty forecast array', async () => {
-		mockFetch.mockResolvedValueOnce(
-			makeResponse({ ok: true, now: { uvi: 3 }, forecast: [] })
-		);
+		mockFetch.mockResolvedValueOnce(makeResponse({ ok: true, now: { uvi: 3 }, forecast: [] }));
 
 		const result = await fetchUvIndex();
 

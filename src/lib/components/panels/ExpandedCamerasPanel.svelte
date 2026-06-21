@@ -98,10 +98,7 @@
 			const interval = (cam.refreshInterval || 30) * 1000;
 			const timer = setInterval(() => {
 				if (!isVisible) return;
-				if (
-					activeFilter === 'all' ||
-					activeFilter === cam.category
-				) {
+				if (activeFilter === 'all' || activeFilter === cam.category) {
 					imageTimestamps = { ...imageTimestamps, [cam.id]: Date.now() };
 				}
 			}, interval);
@@ -157,9 +154,7 @@
 		<div class="filter-tabs">
 			{#each filterTabs as tab (tab.id)}
 				{@const count =
-					tab.id === 'all'
-						? CAMERAS.length
-						: CAMERAS.filter((c) => c.category === tab.id).length}
+					tab.id === 'all' ? CAMERAS.length : CAMERAS.filter((c) => c.category === tab.id).length}
 				<button
 					class="filter-tab"
 					class:active={activeFilter === tab.id}

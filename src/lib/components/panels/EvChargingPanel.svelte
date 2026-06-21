@@ -5,11 +5,7 @@
 	import { evChargingStore } from '$lib/stores/ev-charging';
 	import { townFilter, selectedTownObj } from '$lib/stores/town-filter';
 	import { findNearestTown } from '$lib/geo';
-	import type {
-		EvChargingData,
-		ChargingStation,
-		ConnectorType
-	} from '$lib/types/ev-charging';
+	import type { EvChargingData, ChargingStation, ConnectorType } from '$lib/types/ev-charging';
 
 	type SummaryCard = {
 		label: string;
@@ -27,9 +23,7 @@
 	const filteredStations = $derived.by<ChargingStation[]>(() => {
 		if (!current?.stations) return [];
 		if (!$townFilter) return current.stations;
-		return current.stations.filter(
-			(s) => findNearestTown(s.lat, s.lon) === $townFilter
-		);
+		return current.stations.filter((s) => findNearestTown(s.lat, s.lon) === $townFilter);
 	});
 
 	const topNetworks = $derived.by<[string, number][]>(() => {

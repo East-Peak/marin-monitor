@@ -72,11 +72,7 @@ export function setHoveredFeatureState(
 	}
 }
 
-export function clearHoveredFeatureState(
-	map: MapLibreMap,
-	hoverKey: string,
-	sourceId: string
-) {
+export function clearHoveredFeatureState(map: MapLibreMap, hoverKey: string, sourceId: string) {
 	setHoveredFeatureState(map, hoverKey, sourceId, null);
 }
 
@@ -169,10 +165,7 @@ const STRAVA_CLICK_LAYERS = [
  * Returns true when the click point overlaps a visible Strava feature,
  * so that other click handlers can yield priority to SegmentLayer.
  */
-export function clickHitsVisibleStravaFeature(
-	map: MapLibreMap,
-	e: MapLayerMouseEvent
-): boolean {
+export function clickHitsVisibleStravaFeature(map: MapLibreMap, e: MapLayerMouseEvent): boolean {
 	const interactiveLayers = STRAVA_CLICK_LAYERS.filter((layerId) => {
 		if (!map.getLayer(layerId)) return false;
 		return map.getLayoutProperty(layerId, 'visibility') !== 'none';

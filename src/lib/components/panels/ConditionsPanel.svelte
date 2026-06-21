@@ -78,10 +78,7 @@
 						<span class="hero-label" style="color: {score.color}">
 							{score.label}
 						</span>
-						<span
-							class="source-badge"
-							class:source-soil={score.moistureSource === 'soil-sensor'}
-						>
+						<span class="source-badge" class:source-soil={score.moistureSource === 'soil-sensor'}>
 							{score.moistureSource === 'soil-sensor' ? 'Soil Data' : 'Rain Model'}
 						</span>
 					</div>
@@ -95,10 +92,7 @@
 					<div class="spectrum-zone spectrum-dry"></div>
 					<div class="spectrum-zone spectrum-sweet"></div>
 					<div class="spectrum-zone spectrum-wet"></div>
-					<div
-						class="spectrum-indicator"
-						style="left: {moisturePosition(score.moistureEstimate)}%"
-					>
+					<div class="spectrum-indicator" style="left: {moisturePosition(score.moistureEstimate)}%">
 						<div class="indicator-dot" style="background: {score.color}"></div>
 					</div>
 				</div>

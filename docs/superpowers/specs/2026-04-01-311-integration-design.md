@@ -45,21 +45,21 @@ SeeClickFix API v2 (direct fetch on refresh, no cron/blob)
 
 ## Files to Modify
 
-| File | Change |
-|------|--------|
-| `src/lib/types/index.ts` | Add `'311'` to `NewsCategory` and `MapLayer` |
-| `src/lib/types/map.ts` | Add `'311-report'` to `MapFeatureKind` |
-| `src/lib/config/panels.ts` | Add `'311'` to `PanelId`, `PANELS`, `CURATED_PANEL_ORDER` |
-| `src/lib/config/wire-columns.ts` | Add `{ panelId: '311', category: '311', title: '311' }` |
-| `src/lib/config/map.ts` | Add `'311': '#ff6b35'` to `LAYER_COLORS` |
-| `src/lib/config/tv.ts` | Add `'311'` to `TickerCategory`, add color to `CATEGORY_COLORS` |
-| `src/lib/stores/map.ts` | Add `'311'` to `ALL_LAYERS`, add `'311': '311'` to `CATEGORY_TO_LAYER` |
-| `src/lib/stores/tv.ts` | Add 311 filter to `tvTickerItems` derived store |
-| `src/lib/api/marin/load-all.ts` | Wire `fetchSeeClickFixIssues()` into `'311'` category |
-| `src/lib/api/marin/seeclickfix.ts` | Change `category: 'civic'` to `category: '311'` |
-| `src/lib/components/map/MapDataLayer.svelte` | Add GeoJSON source, circle/hit/label layers, click/hover handlers, data subscription |
-| `src/lib/components/map/MapControls.svelte` | Add `'311'` to `LAYER_LABELS` and `LAYER_ORDER` |
-| `src/lib/components/map/MapFeatureInspector.svelte` | Add `'311-report'` case with photo rendering |
+| File                                                | Change                                                                               |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `src/lib/types/index.ts`                            | Add `'311'` to `NewsCategory` and `MapLayer`                                         |
+| `src/lib/types/map.ts`                              | Add `'311-report'` to `MapFeatureKind`                                               |
+| `src/lib/config/panels.ts`                          | Add `'311'` to `PanelId`, `PANELS`, `CURATED_PANEL_ORDER`                            |
+| `src/lib/config/wire-columns.ts`                    | Add `{ panelId: '311', category: '311', title: '311' }`                              |
+| `src/lib/config/map.ts`                             | Add `'311': '#ff6b35'` to `LAYER_COLORS`                                             |
+| `src/lib/config/tv.ts`                              | Add `'311'` to `TickerCategory`, add color to `CATEGORY_COLORS`                      |
+| `src/lib/stores/map.ts`                             | Add `'311'` to `ALL_LAYERS`, add `'311': '311'` to `CATEGORY_TO_LAYER`               |
+| `src/lib/stores/tv.ts`                              | Add 311 filter to `tvTickerItems` derived store                                      |
+| `src/lib/api/marin/load-all.ts`                     | Wire `fetchSeeClickFixIssues()` into `'311'` category                                |
+| `src/lib/api/marin/seeclickfix.ts`                  | Change `category: 'civic'` to `category: '311'`                                      |
+| `src/lib/components/map/MapDataLayer.svelte`        | Add GeoJSON source, circle/hit/label layers, click/hover handlers, data subscription |
+| `src/lib/components/map/MapControls.svelte`         | Add `'311'` to `LAYER_LABELS` and `LAYER_ORDER`                                      |
+| `src/lib/components/map/MapFeatureInspector.svelte` | Add `'311-report'` case with photo rendering                                         |
 
 ## Existing Code to Reuse
 

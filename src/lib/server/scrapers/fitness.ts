@@ -1,10 +1,6 @@
 // src/lib/server/scrapers/fitness.ts
 
-import {
-	FITNESS_STUDIOS,
-	computeMedian,
-	computeMedianByType
-} from '$lib/config/fitness';
+import { FITNESS_STUDIOS, computeMedian, computeMedianByType } from '$lib/config/fitness';
 import { withSuccessfulScrapeMetadata } from '$lib/server/scrape-metadata';
 import type { FitnessStudio, FitnessSnapshot } from '$lib/types/fitness';
 
@@ -36,9 +32,10 @@ export function computeFitnessSnapshot(): FitnessSnapshot {
 	const medianByType = computeMedianByType(FITNESS_STUDIOS);
 
 	const sorted = [...prices].sort((a, b) => a - b);
-	const avg = prices.length > 0
-		? Math.round((prices.reduce((sum, p) => sum + p, 0) / prices.length) * 100) / 100
-		: null;
+	const avg =
+		prices.length > 0
+			? Math.round((prices.reduce((sum, p) => sum + p, 0) / prices.length) * 100) / 100
+			: null;
 
 	return withSuccessfulScrapeMetadata({
 		timestamp: new Date().toISOString(),

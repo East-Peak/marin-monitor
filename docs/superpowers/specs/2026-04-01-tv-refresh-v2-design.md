@@ -33,75 +33,75 @@ Smart Carousel with Hero Moments (Approach C with thematic ordering from B). Thr
 
 ### Cluster: The Map (~75s)
 
-| # | ID | Type | Duration | Content |
-|---|-----|------|----------|---------|
-| 1 | map-county | MAP | 15s | County overview with 311 pins + alert badges + AQI |
-| 2 | map-south | MAP | 15s | South Marin with gas/coffee price pins |
-| 3 | map-central | MAP | 15s | Central Marin with fitness/EV pins |
-| 4 | map-north | MAP | 15s | Novato & North with local story pins |
-| 5 | map-west | MAP | 15s | West Marin with trail/surf conditions |
+| #   | ID          | Type | Duration | Content                                            |
+| --- | ----------- | ---- | -------- | -------------------------------------------------- |
+| 1   | map-county  | MAP  | 15s      | County overview with 311 pins + alert badges + AQI |
+| 2   | map-south   | MAP  | 15s      | South Marin with gas/coffee price pins             |
+| 3   | map-central | MAP  | 15s      | Central Marin with fitness/EV pins                 |
+| 4   | map-north   | MAP  | 15s      | Novato & North with local story pins               |
+| 5   | map-west    | MAP  | 15s      | West Marin with trail/surf conditions              |
 
 Max 2-3 overlay types per map to avoid clutter. Overlays drawn from already-loaded data. Sidebar remains (weather + nearby stories).
 
 ### Cluster: News & Safety (~40s)
 
-| # | ID | Type | Duration | Content |
-|---|-----|------|----------|---------|
-| 6 | news-wire | ANCHOR | 20s | Local News Wire, 2-column grid |
-| 7 | safety | ANCHOR | 20s | Crime & Safety + active alerts |
+| #   | ID        | Type   | Duration | Content                        |
+| --- | --------- | ------ | -------- | ------------------------------ |
+| 6   | news-wire | ANCHOR | 20s      | Local News Wire, 2-column grid |
+| 7   | safety    | ANCHOR | 20s      | Crime & Safety + active alerts |
 
 ### Cluster: Eyes on Marin (~54s)
 
-| # | ID | Type | Duration | Content |
-|---|-----|------|----------|---------|
-| 8 | cameras-tam | ANCHOR | 18s | Mt Tam & coastal cameras |
-| 9 | cameras-central | ANCHOR | 18s | 101 corridor cameras |
-| 10 | cameras-west | ANCHOR | 18s | West Marin & Novato cameras |
+| #   | ID              | Type   | Duration | Content                     |
+| --- | --------------- | ------ | -------- | --------------------------- |
+| 8   | cameras-tam     | ANCHOR | 18s      | Mt Tam & coastal cameras    |
+| 9   | cameras-central | ANCHOR | 18s      | 101 corridor cameras        |
+| 10  | cameras-west    | ANCHOR | 18s      | West Marin & Novato cameras |
 
 ### Cluster: Cost of Living (~46s)
 
-| # | ID | Type | Duration | Content |
-|---|-----|------|----------|---------|
-| 11 | composite | HERO | 22s | "The Marin Number" $21,110/mo hero stat, 4 tier cards with sparklines, sub-index summary strip |
-| 12 | daily-life | CARD | 12s | Cappuccino ($5.75) + Grocery Basket ($187) + Gas ($5.89) |
-| 13 | lifestyle | CARD | 12s | Wine Index (category medians) + Fitness (drop-in range by type) |
+| #   | ID         | Type | Duration | Content                                                                                        |
+| --- | ---------- | ---- | -------- | ---------------------------------------------------------------------------------------------- |
+| 11  | composite  | HERO | 22s      | "The Marin Number" $21,110/mo hero stat, 4 tier cards with sparklines, sub-index summary strip |
+| 12  | daily-life | CARD | 12s      | Cappuccino ($5.75) + Grocery Basket ($187) + Gas ($5.89)                                       |
+| 13  | lifestyle  | CARD | 12s      | Wine Index (category medians) + Fitness (drop-in range by type)                                |
 
 ### Cluster: Structural Marin (~24s)
 
-| # | ID | Type | Duration | Content |
-|---|-----|------|----------|---------|
-| 14 | structural | CARD | 12s | School Tuition (4 tiers + K-12 cumulative) + Housing |
-| 15 | driveway | CARD | 12s | Top makes, EV %, fuel breakdown, notable stats |
+| #   | ID         | Type | Duration | Content                                              |
+| --- | ---------- | ---- | -------- | ---------------------------------------------------- |
+| 14  | structural | CARD | 12s      | School Tuition (4 tiers + K-12 cumulative) + Housing |
+| 15  | driveway   | CARD | 12s      | Top makes, EV %, fuel breakdown, notable stats       |
 
 ### Cluster: The Wall of Grievances (~22s)
 
-| # | ID | Type | Duration | Content |
-|---|-----|------|----------|---------|
-| 16 | 311-photos | HERO | 22s | 3-column scrolling grid of 311 complaint photos with captions (type, street, time ago). Photos only (skip no-photo complaints). Loads all photo-bearing complaints from last 7 days. TvScroller continues from saved position across carousel cycles. Fallback: if fewer than 6 photos, use 2-column layout; if fewer than 3, use single-column. If zero photos, skip this screen in the carousel. |
+| #   | ID         | Type | Duration | Content                                                                                                                                                                                                                                                                                                                                                                                            |
+| --- | ---------- | ---- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 16  | 311-photos | HERO | 22s      | 3-column scrolling grid of 311 complaint photos with captions (type, street, time ago). Photos only (skip no-photo complaints). Loads all photo-bearing complaints from last 7 days. TvScroller continues from saved position across carousel cycles. Fallback: if fewer than 6 photos, use 2-column layout; if fewer than 3, use single-column. If zero photos, skip this screen in the carousel. |
 
 ### Cluster: Community & Sport (~40s)
 
-| # | ID | Type | Duration | Content |
-|---|-----|------|----------|---------|
-| 17 | community | ANCHOR | 20s | Outdoors + Civic dual-column |
-| 18 | leaderboards | ANCHOR | 20s | Strava KOM/QOM cycling + running columns |
+| #   | ID           | Type   | Duration | Content                                  |
+| --- | ------------ | ------ | -------- | ---------------------------------------- |
+| 17  | community    | ANCHOR | 20s      | Outdoors + Civic dual-column             |
+| 18  | leaderboards | ANCHOR | 20s      | Strava KOM/QOM cycling + running columns |
 
 ### Cluster: Conditions (~24s)
 
-| # | ID | Type | Duration | Content |
-|---|-----|------|----------|---------|
-| 19 | conditions | CARD | 12s | Weather (temp, hi/lo, wind) + AQI (PM2.5, ozone) + Tides (next high/low) |
-| 20 | outdoors | CARD | 12s | Surf report (Bolinas/Stinson) + Hero Dirt tracker + Stream gauges (3 creeks with bar sparklines) |
+| #   | ID         | Type | Duration | Content                                                                                          |
+| --- | ---------- | ---- | -------- | ------------------------------------------------------------------------------------------------ |
+| 19  | conditions | CARD | 12s      | Weather (temp, hi/lo, wind) + AQI (PM2.5, ozone) + Tides (next high/low)                         |
+| 20  | outdoors   | CARD | 12s      | Surf report (Bolinas/Stinson) + Hero Dirt tracker + Stream gauges (3 creeks with bar sparklines) |
 
 ## Map Overlays
 
-| Map Screen | Overlay Data | Visual Treatment |
-|------------|-------------|-----------------|
-| map-county | 311 complaint pins, active alerts, AQI | Photo thumbnails, pulsing alert badges, corner AQI badge |
-| map-south | Coffee shop price pins, cheapest gas, safety incidents | "$5.75" label pins, green/red price labels, dot pins |
-| map-central | Fitness studio pins, EV charging, 311 complaints | Color-coded by activity type, connector icons, photo thumbnails |
-| map-north | Local news story pins, gas stations, community events | Headline tooltips, price labels, calendar dots |
-| map-west | Surf conditions, trail status, stream gauge levels | Wave height badge, green/yellow/red dots, water level badges |
+| Map Screen  | Overlay Data                                           | Visual Treatment                                                |
+| ----------- | ------------------------------------------------------ | --------------------------------------------------------------- |
+| map-county  | 311 complaint pins, active alerts, AQI                 | Photo thumbnails, pulsing alert badges, corner AQI badge        |
+| map-south   | Coffee shop price pins, cheapest gas, safety incidents | "$5.75" label pins, green/red price labels, dot pins            |
+| map-central | Fitness studio pins, EV charging, 311 complaints       | Color-coded by activity type, connector icons, photo thumbnails |
+| map-north   | Local news story pins, gas stations, community events  | Headline tooltips, price labels, calendar dots                  |
+| map-west    | Surf conditions, trail status, stream gauge levels     | Wave height badge, green/yellow/red dots, water level badges    |
 
 ## Scroll System: TvScroller
 
@@ -124,12 +124,13 @@ Replace `TvAutoScroll` (CSS animation) and the conditions custom `setInterval` t
 
 ```typescript
 // In-memory store (resets on page reload, which happens every 6 hours)
-Map<screenId, { scrollTop: number, timestamp: number }>
+Map<screenId, { scrollTop: number; timestamp: number }>;
 ```
 
 ### Components affected
 
 All scrolling screens migrate from TvAutoScroll to TvScroller:
+
 - NewsWireScreen, SafetyScreen, TvCommunityScreen, TvLeaderboardsScreen
 - New: Tv311PhotoWall
 - TvConditionsScreen custom timer also replaced
@@ -141,6 +142,7 @@ All scrolling screens migrate from TvAutoScroll to TvScroller:
 Added alongside existing WX, FI, EQ, GG, PD, LW, CV, 311, KOM categories.
 
 Example items:
+
 - `IDX  Cappuccino Index: $5.75 avg -- up $0.15 this week`
 - `IDX  Grocery Basket: $187.42 for 12 items -- down 1.1%`
 - `IDX  Napa Cab median: $89 -- Wine Index up 3.2%`
@@ -149,6 +151,7 @@ Example items:
 - `IDX  Marin EV share: 8.3% -- 68 hydrogen fuel cells registered`
 
 Rules:
+
 - Max 4-5 IDX items per ticker rotation (rotate which indices appear each refresh)
 - Prefer items with notable delta over static values
 - Normal status (not elevated/critical) -- informational, not urgent
@@ -158,6 +161,7 @@ Rules:
 ## Component Changes
 
 ### New components
+
 - `TvScroller.svelte` — Replaces TvAutoScroll + conditions timer
 - `Tv311PhotoWall.svelte` — Hero screen, scrolling photo grid
 - `TvCompositeHero.svelte` — Hero screen, The Marin Number
@@ -168,6 +172,7 @@ Rules:
 - `TvOutdoorsCard.svelte` — Card, surf + dirt + streams
 
 ### Modified components
+
 - `TvWallboard.svelte` — New screen list, variable durations, scroll state store, index data loading
 - `TvMapScreen.svelte` — Data overlay layers per region
 - `TvMapSidebar.svelte` — Overlay legend/badges
@@ -175,10 +180,12 @@ Rules:
 - `tv.ts` (store) — Index ticker items, scroll position store
 
 ### Removed components
+
 - `TvAutoScroll.svelte` — Replaced by TvScroller
 - `TvConditionsScreen.svelte` — Split into TvConditionsCard + TvOutdoorsCard
 
 ### Unchanged components
+
 - `TvChyron.svelte` — Same marquee, more items
 - `TvScreen.svelte` — Same wrapper
 - `TvWallboardHeader.svelte` — Same header (dot count increases to 20)

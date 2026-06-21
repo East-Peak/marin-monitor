@@ -21,7 +21,10 @@ describe('serveBlobJson — happy path', () => {
 	it('returns blob body with success cache headers when blob exists and fetch succeeds', async () => {
 		mockHead.mockResolvedValueOnce({ downloadUrl: 'https://blob.test/data.json' });
 		mockFetchWithTimeout.mockResolvedValueOnce(
-			new Response('{"hello":"world"}', { status: 200, headers: { 'Content-Type': 'application/json' } })
+			new Response('{"hello":"world"}', {
+				status: 200,
+				headers: { 'Content-Type': 'application/json' }
+			})
 		);
 
 		const response = await serveBlobJson({
@@ -31,7 +34,9 @@ describe('serveBlobJson — happy path', () => {
 
 		expect(response.status).toBe(200);
 		expect(response.headers.get('Content-Type')).toBe('application/json');
-		expect(response.headers.get('Cache-Control')).toBe('public, s-maxage=3600, stale-while-revalidate=7200');
+		expect(response.headers.get('Cache-Control')).toBe(
+			'public, s-maxage=3600, stale-while-revalidate=7200'
+		);
 		expect(await response.text()).toBe('{"hello":"world"}');
 	});
 
@@ -52,7 +57,11 @@ describe('serveBlobJson — happy path', () => {
 		mockHead.mockResolvedValueOnce({ downloadUrl: 'https://blob.test/data.json' });
 		mockFetchWithTimeout.mockResolvedValueOnce(new Response('{}', { status: 200 }));
 
-		await serveBlobJson({ blobKey: 'marin-test.json', successCacheControl: 'public, s-maxage=60', timeoutMs: 15000 });
+		await serveBlobJson({
+			blobKey: 'marin-test.json',
+			successCacheControl: 'public, s-maxage=60',
+			timeoutMs: 15000
+		});
 
 		expect(mockFetchWithTimeout).toHaveBeenCalledWith(expect.anything(), expect.anything(), 15000);
 	});
@@ -104,7 +113,9 @@ describe('serveBlobJson — failure modes return 503 with structured error body'
 
 	it('returns 503 when fetch returns a non-OK response', async () => {
 		mockHead.mockResolvedValueOnce({ downloadUrl: 'https://blob.test/data.json' });
-		mockFetchWithTimeout.mockResolvedValueOnce(new Response('Internal Server Error', { status: 500 }));
+		mockFetchWithTimeout.mockResolvedValueOnce(
+			new Response('Internal Server Error', { status: 500 })
+		);
 
 		const response = await serveBlobJson({
 			blobKey: 'marin-test.json',

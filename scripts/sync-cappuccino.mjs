@@ -102,15 +102,17 @@ async function scrapeToastShop(browser, shop) {
 		});
 
 		// Wait for Toast React SPA to hydrate and populate __OO_STATE__
-		await page.waitForFunction(
-			() => {
-				const state = window.__OO_STATE__;
-				return state && Object.keys(state).length > 1;
-			},
-			{ timeout: TOAST_PAGE_TIMEOUT }
-		).catch(() => {
-			// If state never populates, continue with what we have
-		});
+		await page
+			.waitForFunction(
+				() => {
+					const state = window.__OO_STATE__;
+					return state && Object.keys(state).length > 1;
+				},
+				{ timeout: TOAST_PAGE_TIMEOUT }
+			)
+			.catch(() => {
+				// If state never populates, continue with what we have
+			});
 
 		// Extract __OO_STATE__ from the window
 		const ooState = await page.evaluate(() => {
@@ -211,9 +213,7 @@ async function main() {
 			for (const shop of TOAST_SHOPS) {
 				try {
 					const result = await scrapeToastShop(browser, shop);
-					results.push(
-						mergeCoffeeShopWithFallback(result, previousShopsById.get(shop.id) ?? null)
-					);
+					results.push(mergeCoffeeShopWithFallback(result, previousShopsById.get(shop.id) ?? null));
 				} catch (err) {
 					console.error(`[cappuccino] Shop ${shop.id} failed (isolated):`, err.message);
 					results.push(
@@ -247,9 +247,10 @@ async function main() {
 
 	// 4. Write updated blob. Only advance chart history when live coverage is
 	// meaningfully fresh, otherwise retain the previous history verbatim.
-	const history = (freshCoverage || !existing.current
-		? [toCoffeeHistoryEntry(snapshot), ...existing.history]
-		: existing.history
+	const history = (
+		freshCoverage || !existing.current
+			? [toCoffeeHistoryEntry(snapshot), ...existing.history]
+			: existing.history
 	).slice(0, MAX_HISTORY);
 	const data = { current: snapshot, history };
 

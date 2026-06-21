@@ -87,24 +87,36 @@ describe('redactIp', () => {
 
 describe('checkRateLimit', () => {
 	it('allows requests under the configured limit', () => {
-		expect(checkRateLimit({ bucket: 'feedback', key: 'ip-1', limit: 2, windowMs: 60000 }).allowed).toBe(
-			true
-		);
-		expect(checkRateLimit({ bucket: 'feedback', key: 'ip-1', limit: 2, windowMs: 60000 }).allowed).toBe(
-			true
-		);
+		expect(
+			checkRateLimit({ bucket: 'feedback', key: 'ip-1', limit: 2, windowMs: 60000 }).allowed
+		).toBe(true);
+		expect(
+			checkRateLimit({ bucket: 'feedback', key: 'ip-1', limit: 2, windowMs: 60000 }).allowed
+		).toBe(true);
 	});
 
 	it('blocks requests that exceed the configured limit', () => {
 		checkRateLimit({ bucket: 'feedback', key: 'ip-1', limit: 1, windowMs: 60000, now: 0 });
-		const result = checkRateLimit({ bucket: 'feedback', key: 'ip-1', limit: 1, windowMs: 60000, now: 1 });
+		const result = checkRateLimit({
+			bucket: 'feedback',
+			key: 'ip-1',
+			limit: 1,
+			windowMs: 60000,
+			now: 1
+		});
 		expect(result.allowed).toBe(false);
 		expect(result.retryAfterSec).toBeGreaterThan(0);
 	});
 
 	it('resets after the window expires', () => {
 		checkRateLimit({ bucket: 'feedback', key: 'ip-1', limit: 1, windowMs: 1000, now: 0 });
-		const result = checkRateLimit({ bucket: 'feedback', key: 'ip-1', limit: 1, windowMs: 1000, now: 1001 });
+		const result = checkRateLimit({
+			bucket: 'feedback',
+			key: 'ip-1',
+			limit: 1,
+			windowMs: 1000,
+			now: 1001
+		});
 		expect(result.allowed).toBe(true);
 	});
 });

@@ -11,7 +11,10 @@
 	import { currentFitnessStudios } from '$lib/stores/fitness';
 	import { currentChargingStations } from '$lib/stores/ev-charging';
 	import { MARIN_TOWNS, LAYER_COLORS, MARIN_BOUNDS } from '$lib/config';
-	import { TYPE_COLORS as FITNESS_TYPE_COLORS, TYPE_LABELS as FITNESS_TYPE_LABELS } from '$lib/config/fitness';
+	import {
+		TYPE_COLORS as FITNESS_TYPE_COLORS,
+		TYPE_LABELS as FITNESS_TYPE_LABELS
+	} from '$lib/config/fitness';
 	import { AIRPORT_PINS, AIRPORT_STATUS_COLORS } from '$lib/config/map';
 	import { fetchAirportStatus } from '$lib/api/marin/airport-status';
 	import type { AirportStatus } from '$lib/types/airport';
@@ -289,11 +292,7 @@
 				kind: 'coffee-shop',
 				title: name,
 				subtitle:
-					price && headlineLabel
-						? `${headlineLabel}: ${price}`
-						: price
-							? price
-							: statusLabel,
+					price && headlineLabel ? `${headlineLabel}: ${price}` : price ? price : statusLabel,
 				description: [address, menuSummary].filter(Boolean).join('\n'),
 				source: 'Marin Coffee Index'
 			});
@@ -595,29 +594,26 @@
 		const mapGasVisible = mapState.activeLayers['gas'];
 		const gasFeatures: GeoJSON.Feature[] = mapGasVisible
 			? gasStations
-					.filter(
-						(s) =>
-							!currentTownFilter || findNearestTown(s.lat, s.lon) === currentTownFilter
-					)
+					.filter((s) => !currentTownFilter || findNearestTown(s.lat, s.lon) === currentTownFilter)
 					.map((station) => {
-					const regularPrice = station.fuelPrices.find(
-						(fp) => fp.type === 'REGULAR_UNLEADED'
-					)?.price;
-					return {
-						type: 'Feature' as const,
-						id: station.placeId,
-						properties: {
-							placeId: station.placeId,
-							name: station.name,
-							address: station.address,
-							price: regularPrice !== undefined ? `$${regularPrice.toFixed(3)}` : ''
-						},
-						geometry: {
-							type: 'Point' as const,
-							coordinates: [station.lon, station.lat]
-						}
-					};
-				})
+						const regularPrice = station.fuelPrices.find(
+							(fp) => fp.type === 'REGULAR_UNLEADED'
+						)?.price;
+						return {
+							type: 'Feature' as const,
+							id: station.placeId,
+							properties: {
+								placeId: station.placeId,
+								name: station.name,
+								address: station.address,
+								price: regularPrice !== undefined ? `$${regularPrice.toFixed(3)}` : ''
+							},
+							geometry: {
+								type: 'Point' as const,
+								coordinates: [station.lon, station.lat]
+							}
+						};
+					})
 			: [];
 
 		const gasSource = map.getSource('gas-stations') as GeoJSONSource;
@@ -626,11 +622,7 @@
 		}
 
 		if (map.getLayer('gas-stations-layer')) {
-			map.setLayoutProperty(
-				'gas-stations-layer',
-				'visibility',
-				mapGasVisible ? 'visible' : 'none'
-			);
+			map.setLayoutProperty('gas-stations-layer', 'visibility', mapGasVisible ? 'visible' : 'none');
 		}
 		if (map.getLayer('gas-stations-hit-layer')) {
 			map.setLayoutProperty(
@@ -640,11 +632,7 @@
 			);
 		}
 		if (map.getLayer('gas-stations-label')) {
-			map.setLayoutProperty(
-				'gas-stations-label',
-				'visibility',
-				mapGasVisible ? 'visible' : 'none'
-			);
+			map.setLayoutProperty('gas-stations-label', 'visibility', mapGasVisible ? 'visible' : 'none');
 		}
 
 		// EV charging stations (filter to Marin bounds for cached data that may include out-of-county)
@@ -769,10 +757,7 @@
 		const mapFitnessVisible = mapState.activeLayers['fitness'];
 		const fitnessFeatures: GeoJSON.Feature[] = mapFitnessVisible
 			? fitnessStudios
-					.filter(
-						(s) =>
-							!currentTownFilter || findNearestTown(s.lat, s.lon) === currentTownFilter
-					)
+					.filter((s) => !currentTownFilter || findNearestTown(s.lat, s.lon) === currentTownFilter)
 					.map((s) => ({
 						type: 'Feature' as const,
 						id: s.id,
@@ -829,9 +814,7 @@
 				const category = item.title.includes(' \u00b7 ')
 					? item.title.split(' \u00b7 ')[0]
 					: item.title;
-				const street = item.title.includes(' \u00b7 ')
-					? item.title.split(' \u00b7 ')[1]
-					: '';
+				const street = item.title.includes(' \u00b7 ') ? item.title.split(' \u00b7 ')[1] : '';
 
 				threeOneOneFeatures.push({
 					type: 'Feature',
@@ -1081,9 +1064,7 @@
 			const boundarySource = map.getSource('town-boundary') as GeoJSONSource;
 			if (boundarySource) {
 				if (slug && boundaryData) {
-					const matchingFeatures = boundaryData.features.filter(
-						(f) => f.properties?.slug === slug
-					);
+					const matchingFeatures = boundaryData.features.filter((f) => f.properties?.slug === slug);
 					boundarySource.setData({
 						type: 'FeatureCollection',
 						features: matchingFeatures

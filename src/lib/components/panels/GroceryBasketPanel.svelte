@@ -57,7 +57,10 @@
 		const prevMap = new Map(prevSnapshot.items.map((i) => [i.itemId, i.cheapest]));
 
 		return [...current.items]
-			.filter((item) => item.cheapest !== null && prevMap.has(item.itemId) && prevMap.get(item.itemId) !== null)
+			.filter(
+				(item) =>
+					item.cheapest !== null && prevMap.has(item.itemId) && prevMap.get(item.itemId) !== null
+			)
 			.map((item) => ({
 				...item,
 				_delta: item.cheapest! - (prevMap.get(item.itemId) ?? 0)
@@ -82,7 +85,10 @@
 		const target = event.currentTarget as SVGSVGElement;
 		const rect = target.getBoundingClientRect();
 		const innerWidth = rect.width - CHART_MARGINS.left - CHART_MARGINS.right;
-		const relativeX = Math.max(0, Math.min(innerWidth, event.clientX - rect.left - CHART_MARGINS.left));
+		const relativeX = Math.max(
+			0,
+			Math.min(innerWidth, event.clientX - rect.left - CHART_MARGINS.left)
+		);
 		const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
 		const index = Math.max(
 			0,
@@ -143,7 +149,9 @@
 	{#if current}
 		<div class="headline-bar">
 			<div class="basket-total">
-				<span class="total-value">{current.totalCheapest !== null ? formatPrice(current.totalCheapest) : 'N/A'}</span>
+				<span class="total-value"
+					>{current.totalCheapest !== null ? formatPrice(current.totalCheapest) : 'N/A'}</span
+				>
 				<span class="total-label">12-item basket</span>
 			</div>
 			{#if weekOverWeekChange !== null}
@@ -214,11 +222,31 @@
 								/>
 							{/if}
 							<!-- Y axis labels -->
-							<text x="-4" y={chartPaths.yScale(chartPaths.yMax)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{formatPrice(chartPaths.yMax)}</text>
-							<text x="-4" y={chartPaths.yScale(chartPaths.yMin)} text-anchor="end" dominant-baseline="middle" fill="#888" font-size="7px">{formatPrice(chartPaths.yMin)}</text>
+							<text
+								x="-4"
+								y={chartPaths.yScale(chartPaths.yMax)}
+								text-anchor="end"
+								dominant-baseline="middle"
+								fill="#888"
+								font-size="7px">{formatPrice(chartPaths.yMax)}</text
+							>
+							<text
+								x="-4"
+								y={chartPaths.yScale(chartPaths.yMin)}
+								text-anchor="end"
+								dominant-baseline="middle"
+								fill="#888"
+								font-size="7px">{formatPrice(chartPaths.yMin)}</text
+							>
 							<!-- X axis labels -->
 							{#each chartPaths.axisLabels.x as lbl}
-								<text x={lbl.x} y={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom + 14} text-anchor="middle" fill="#666" font-size="7px">{lbl.label}</text>
+								<text
+									x={lbl.x}
+									y={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom + 14}
+									text-anchor="middle"
+									fill="#666"
+									font-size="7px">{lbl.label}</text
+								>
 							{/each}
 						</g>
 					</svg>
@@ -254,7 +282,9 @@
 						<span class="item-store">{item.cheapestStore ?? ''}</span>
 					</div>
 					<div class="item-prices">
-						<span class="item-price">{item.cheapest !== null ? formatPrice(item.cheapest) : 'N/A'}</span>
+						<span class="item-price"
+							>{item.cheapest !== null ? formatPrice(item.cheapest) : 'N/A'}</span
+						>
 						<span class="item-delta {item._delta <= 0 ? 'positive' : 'warning'}">
 							{item._delta >= 0 ? '+' : ''}{formatPrice(item._delta)}
 						</span>

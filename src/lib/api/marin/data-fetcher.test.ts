@@ -9,7 +9,8 @@ const mockLoggerLog = vi.fn();
 const mockLoggerWarn = vi.fn();
 
 vi.mock('./fetch-helpers', () => ({
-	fetchWithTimeout: (...args: unknown[]) => mockFetchWithTimeout(...(args as [string, RequestInit?]))
+	fetchWithTimeout: (...args: unknown[]) =>
+		mockFetchWithTimeout(...(args as [string, RequestInit?]))
 }));
 
 vi.mock('$lib/config/api', () => ({
@@ -112,17 +113,12 @@ describe('createDataFetcher', () => {
 	});
 
 	it('logs warning on HTTP error with service ID', async () => {
-		mockFetchWithTimeout.mockResolvedValueOnce(
-			new Response('Not Found', { status: 404 })
-		);
+		mockFetchWithTimeout.mockResolvedValueOnce(new Response('Not Found', { status: 404 }));
 
 		const fetcher = createDataFetcher('/api/data/foo', 'FOO', {});
 		await fetcher();
 
-		expect(mockLoggerWarn).toHaveBeenCalledWith(
-			'FOO',
-			expect.stringContaining('HTTP 404')
-		);
+		expect(mockLoggerWarn).toHaveBeenCalledWith('FOO', expect.stringContaining('HTTP 404'));
 	});
 
 	it('logs warning on network error with service ID', async () => {
@@ -297,7 +293,10 @@ describe('createDataFetcherWithStatus', () => {
 		const fetcher = createDataFetcherWithStatus('/api/data/foo', 'FOO', {});
 		await fetcher();
 
-		expect(mockLoggerWarn).toHaveBeenCalledWith('FOO', expect.stringContaining('Connection refused'));
+		expect(mockLoggerWarn).toHaveBeenCalledWith(
+			'FOO',
+			expect.stringContaining('Connection refused')
+		);
 	});
 
 	it('still logs success on success', async () => {

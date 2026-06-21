@@ -130,8 +130,7 @@ async function processSegment(
 		return { segmentId: segment.id, leaderboard: null, events: [] };
 	}
 
-	const current =
-		scrapeResult.kind === 'ok' ? scrapeResult.leaderboard : emptyLeaderboard(segment);
+	const current = scrapeResult.kind === 'ok' ? scrapeResult.leaderboard : emptyLeaderboard(segment);
 
 	// Write new leaderboard to blob
 	await put(blobKey, JSON.stringify(current), {
@@ -264,8 +263,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		const eventLog: StravaEventLog = {
 			events: allEvents,
 			lastUpdated: nowIso,
-			lastSuccessfulScrapeAt:
-				scraped > 0 ? nowIso : readSuccessfulScrapeAt(existingEventLog)
+			lastSuccessfulScrapeAt: scraped > 0 ? nowIso : readSuccessfulScrapeAt(existingEventLog)
 		};
 
 		await put(STRAVA_EVENTS_BLOB, JSON.stringify(eventLog), {
@@ -281,13 +279,17 @@ export const GET: RequestHandler = async ({ request }) => {
 		for (const [id, lb] of leaderboardResults) {
 			combinedLeaderboards[String(id)] = lb;
 		}
-		await put(STRAVA_LEADERBOARDS_BLOB, JSON.stringify({ leaderboards: combinedLeaderboards, lastUpdated: nowIso }), {
-			access: 'private',
-			contentType: 'application/json',
-			addRandomSuffix: false,
-			allowOverwrite: true,
-			token: env.BLOB_READ_WRITE_TOKEN
-		});
+		await put(
+			STRAVA_LEADERBOARDS_BLOB,
+			JSON.stringify({ leaderboards: combinedLeaderboards, lastUpdated: nowIso }),
+			{
+				access: 'private',
+				contentType: 'application/json',
+				addRandomSuffix: false,
+				allowOverwrite: true,
+				token: env.BLOB_READ_WRITE_TOKEN
+			}
+		);
 
 		console.log(
 			`[sync-strava-leaderboards] OK: ${scraped} scraped, ${failed} failed, ${newEvents.length} new events in ${Date.now() - start}ms`

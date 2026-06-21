@@ -27,6 +27,7 @@ Triage of findings before flipping `East-Peak/marin-monitor` (or a fork) to publ
 The repo openly scrapes Strava's public segment HTML with a custom `User-Agent: Mozilla/5.0 (compatible; MarinMonitor/1.0)`, parses leaderboards out of React props, and ships HTML fixtures captured from strava.com. Strava's ToS (Section 4) explicitly prohibits "scraping" and "automated extraction." Going public puts this behavior in front of Strava's anti-abuse team with the project name baked in.
 
 **Options:**
+
 1. **Recommended:** Remove Strava scraping entirely from the public repo. Strip the scraper, fixtures, KOM Tracker UI, the `src/lib/config/strava.ts` kill switch path, and the `STRAVA_*` env entries. Keep KOM Tracker as a private feature on the deployed site (data lives in env-gated cron output, not source) — or accept that KOM Tracker dies with the public release.
 2. Replace with the official Strava API (OAuth) — but the API does not expose segment leaderboards, which was the point. Workspace doc confirms: "leaderboard scraping works unauthenticated."
 3. Accept the risk and publish anyway. (Not recommended — Strava has gone after far smaller projects.)
@@ -35,9 +36,10 @@ The repo openly scrapes Strava's public segment HTML with a custom `User-Agent: 
 
 **Files:** `.github/workflows/sync-cappuccino.yml`, `sync-coffee-index.yml`, `sync-dog-walker.yml`, `sync-grocery-basket.yml`, `sync-ikon-pass.yml` (5 of 7 workflows)
 
-The workflows step through `tailscale/github-action` with `${{ secrets.TAILSCALE_AUTHKEY }}`, then run scrapers with `SCRAPE_PROXY_URL` / `SCRAPE_PROXY_SECRET` env vars. Commit message `fix(scrapers): add Tailscale proxy to Ikon Pass and dog walker workflows for residential IP routing` is in public history. The secrets themselves are GitHub-encrypted and won't leak — but the *workflow files* clearly document IP-evasion infrastructure and name the targets (Ikon Pass, dog walker rates, grocery, coffee shops, cappuccino vendors).
+The workflows step through `tailscale/github-action` with `${{ secrets.TAILSCALE_AUTHKEY }}`, then run scrapers with `SCRAPE_PROXY_URL` / `SCRAPE_PROXY_SECRET` env vars. Commit message `fix(scrapers): add Tailscale proxy to Ikon Pass and dog walker workflows for residential IP routing` is in public history. The secrets themselves are GitHub-encrypted and won't leak — but the _workflow files_ clearly document IP-evasion infrastructure and name the targets (Ikon Pass, dog walker rates, grocery, coffee shops, cappuccino vendors).
 
 **Options:**
+
 1. **Recommended:** Delete the five proxy-routed workflows from the public repo. Move Marin-Number-composite scraping out of CI — run it locally or on a private mirror; commit only the resulting JSON artifacts to the public repo. The dashboard still works; the harvest pipeline just isn't visible.
 2. Keep workflows but rename/reframe so the residential-IP intent isn't named in commit history (revisionist; doesn't fix the existing commit `fix(scrapers): add Tailscale proxy ... for residential IP routing`).
 3. `git filter-repo` the offending commits — but that rewrites public history before publication, which is reasonable here. Combine with #1 for a clean cut.
@@ -46,7 +48,7 @@ The workflows step through `tailscale/github-action` with `${{ secrets.TAILSCALE
 
 **Files:** `tests/fixtures/strava-dipsea.html:1310`, `tests/fixtures/strava-hawk-hill.html:1338`
 
-`window._maps_api = "pk.eyJ1Ijoic3RyYXZhIi..."` — a Mapbox publishable token belonging to **Strava's** account (decoded JWT username = "strava"). It is technically already public on every strava.com segment page, so it is not a leak of *our* secret. But baking another copy into a public repo is impolite to Strava and will trigger every secret scanner that runs against the public mirror.
+`window._maps_api = "pk.eyJ1Ijoic3RyYXZhIi..."` — a Mapbox publishable token belonging to **Strava's** account (decoded JWT username = "strava"). It is technically already public on every strava.com segment page, so it is not a leak of _our_ secret. But baking another copy into a public repo is impolite to Strava and will trigger every secret scanner that runs against the public mirror.
 
 **Fix:** Sanitize the fixtures — replace the token with `pk.SANITIZED_FOR_PUBLIC_REPO` or similar. Tests should still pass because parsers don't validate the token.
 
@@ -73,6 +75,7 @@ The repo has no `LICENSE` / `COPYING` file. GitHub's default for unlicensed publ
 **Files:** `wine-index.ts` (PlumpJack Shopify), `grocery-basket.ts` (Instacart), `school-tuition.ts` (private school sites), `coffee-index.shared.js` / `cappuccino.ts` (local shop sites), `fitness.ts` (yoga/pilates studios), `gas-prices.ts`, `housing.ts` (Redfin S3 public bucket), `driveway.ts` (data.ca.gov, public OK), plus `scripts/sync-*.mjs` (camp-prices, dog-walker, ikon-pass, rivian-lease).
 
 Mixed bag:
+
 - **Likely OK:** Redfin (uses their public S3 dump), data.ca.gov, openchargemap, NREL, Marin Open Data, town civic pages, NPS/NWS/NOAA/USGS/AirNow/511.
 - **ToS-fragile:** Instacart, Ikon Pass, Rivian, dog-walker site (Rover?), camp-price aggregators, private-school admissions pages, gas-prices source (depending on whether it's GasBuddy or a public alternative).
 - **Probably fine but worth checking:** PlumpJack Shopify (most Shopify storefronts allow product-API consumption), local coffee/fitness sites (low-volume, public menus).
@@ -82,6 +85,7 @@ Mixed bag:
 ### F4. Stuart's home-directory path leaks in tracked docs
 
 12 tracked files contain `/Users/tammypais/...`:
+
 - `HANDOFF.md` (line 4, 316)
 - `docs/marin-indices.md` (line 743 — also exposes a LaunchAgent plist path: `/Users/tammypais/Library/LaunchAgents/com.marinmonitor.scrape-proxy.plist`)
 - `docs/superpowers/plans/*.md` (10 plans, peppered throughout — mostly `cd /Users/tammypais/projects/marin-monitor && npm run ...`)
@@ -101,7 +105,7 @@ Stuart's email already appears intentionally in `Footer.svelte`, `FeedbackModal.
 **Decision needed:** These are internal AI-assisted planning logs and past security audits. They show the build process — which can be a brag — but they also document past mistakes and the remediation path.
 
 - **Plans dir** (10 files) — implementation plans with `cd /Users/tammypais/...` paths, occasional internal tone. Glamorous to a "look how I built this" reader; cluttered to a normal user.
-- **`audit-remediation-2026-03-30.md`** — past Codex audit findings and how they were fixed. Could read as "look, I take security seriously" or as "here's the list of things that *were* wrong" depending on framing. (I have not read its full content; flagged for Stuart to review.)
+- **`audit-remediation-2026-03-30.md`** — past Codex audit findings and how they were fixed. Could read as "look, I take security seriously" or as "here's the list of things that _were_ wrong" depending on framing. (I have not read its full content; flagged for Stuart to review.)
 - **`security-posture-2026-03-30.md`** — same caveat. Worth reading before deciding.
 
 **Recommendation:** Keep the plans dir (it's a brag artifact for a public personal project), but sanitize the absolute paths (F4). For the two `*-2026-03-30.md` audit docs, read them and decide per-doc — if they enumerate known unfixed issues, exclude.
@@ -129,6 +133,7 @@ The data-source table in README is genuinely impressive (26 RSS + 18 REST adapte
 ### N2. Architecture in CLAUDE.md > README
 
 `CLAUDE.md` has the better architecture writeup (service layer, multi-stage refresh, verification levels, alert-keyword discipline). For a public repo, `CLAUDE.md` is an unusual filename — it telegraphs "AI-assisted." Two paths:
+
 - Keep `CLAUDE.md` as-is (transparency about how it was built; a brag in 2026).
 - Mirror or move the architecture content to `docs/architecture.md` and keep `CLAUDE.md` smaller.
 
@@ -160,6 +165,7 @@ The dry "Cost of Being Marin" framing is the soul of the project. Lean into it i
 ## Open question (not Claude's call)
 
 **Org vs. personal repo.** Current remote is `East-Peak/marin-monitor` (East Peak Advisors org, presumably your sole-owner LLC). Workspace doc lists `tammy-pais/marin-monitor` (out of date or aspirational). "Make public" can mean:
+
 1. Flip visibility on `East-Peak/marin-monitor` (publishes under the LLC).
 2. Transfer or fork to a personal account (publishes under `tammy-pais` or `stuart-watson` or whatever).
 3. Create a new public repo and push a sanitized branch (cleanest if you want B2/B3 history-rewrite without touching the private origin).

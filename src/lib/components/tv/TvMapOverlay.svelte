@@ -2,7 +2,10 @@
 	import { getContext, onMount, onDestroy } from 'svelte';
 	import { get, type Writable } from 'svelte/store';
 	import type { Map as MapLibreMap, GeoJSONSource } from 'maplibre-gl';
-	import { TYPE_COLORS as FITNESS_TYPE_COLORS, TYPE_LABELS as FITNESS_TYPE_LABELS } from '$lib/config/fitness';
+	import {
+		TYPE_COLORS as FITNESS_TYPE_COLORS,
+		TYPE_LABELS as FITNESS_TYPE_LABELS
+	} from '$lib/config/fitness';
 	import type { NewsItem } from '$lib/types';
 	import type { GasStation } from '$lib/types/gas';
 	import type { CoffeeShop } from '$lib/types/coffee';
@@ -253,9 +256,7 @@
 					.filter((shop) => typeof shop.lat === 'number' && typeof shop.lon === 'number')
 					.map((shop) => {
 						const priceLabel =
-							shop.price !== null && shop.price !== undefined
-								? `$${shop.price.toFixed(2)}`
-								: '';
+							shop.price !== null && shop.price !== undefined ? `$${shop.price.toFixed(2)}` : '';
 						return {
 							type: 'Feature' as const,
 							id: shop.id,
@@ -264,9 +265,7 @@
 								coordinates: [shop.lon, shop.lat]
 							},
 							properties: {
-								label: priceLabel
-									? `${shop.name}\n${priceLabel}`
-									: shop.name,
+								label: priceLabel ? `${shop.name}\n${priceLabel}` : shop.name,
 								name: shop.name,
 								price: priceLabel
 							}
@@ -288,8 +287,7 @@
 						const regularPrice = station.fuelPrices.find(
 							(fp) => fp.type === 'REGULAR_UNLEADED'
 						)?.price;
-						const priceLabel =
-							regularPrice !== undefined ? `$${regularPrice.toFixed(3)}` : '';
+						const priceLabel = regularPrice !== undefined ? `$${regularPrice.toFixed(3)}` : '';
 						return {
 							type: 'Feature' as const,
 							id: station.placeId,
@@ -298,9 +296,7 @@
 								coordinates: [station.lon, station.lat]
 							},
 							properties: {
-								label: priceLabel
-									? `${station.name}\n${priceLabel}`
-									: station.name,
+								label: priceLabel ? `${station.name}\n${priceLabel}` : station.name,
 								name: station.name,
 								price: priceLabel
 							}

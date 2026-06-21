@@ -9,9 +9,12 @@ import type { SchoolIndexData, SchoolSnapshot } from '$lib/types/school';
 export const config = { maxDuration: 60 };
 
 /** Strip schools[] from a snapshot to keep history entries small */
-function toHistoryEntry(
-	snapshot: SchoolSnapshot
-): { timestamp: string; medianHouseholdIncome: number; tiers: SchoolSnapshot['tiers']; cumulativeK12: number } {
+function toHistoryEntry(snapshot: SchoolSnapshot): {
+	timestamp: string;
+	medianHouseholdIncome: number;
+	tiers: SchoolSnapshot['tiers'];
+	cumulativeK12: number;
+} {
 	return {
 		timestamp: snapshot.timestamp,
 		medianHouseholdIncome: snapshot.medianHouseholdIncome,
@@ -43,10 +46,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		}
 
 		// Append to history (capped), omitting schools[] from history entries
-		const history = [toHistoryEntry(snapshot), ...existing.history].slice(
-			0,
-			MAX_SCHOOL_HISTORY
-		);
+		const history = [toHistoryEntry(snapshot), ...existing.history].slice(0, MAX_SCHOOL_HISTORY);
 
 		const data: SchoolIndexData = {
 			current: snapshot,

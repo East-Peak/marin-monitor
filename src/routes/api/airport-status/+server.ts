@@ -91,7 +91,12 @@ interface TafPeriod {
 function parseFaaEvents(
 	events: FaaEvent[],
 	airportCode: string
-): { status: AirportOperationalStatus; delays: DelayInfo[]; runwayConfig?: string; arrivalRate?: number } {
+): {
+	status: AirportOperationalStatus;
+	delays: DelayInfo[];
+	runwayConfig?: string;
+	arrivalRate?: number;
+} {
 	const entry = events.find(
 		(e) => (e.airportCode || e.airport || '').toUpperCase() === airportCode
 	);
@@ -153,12 +158,10 @@ function parseFaaEvents(
 	else if (delays.some((d) => d.type === 'ground-delay')) status = 'ground-delay';
 	else if (delays.length > 0) status = 'delays';
 
-	const runwayConfig = [
-		entry.airportConfig?.arrivalRunwayConfig,
-		entry.airportConfig?.departureRunwayConfig
-	]
-		.filter(Boolean)
-		.join(' / ') || undefined;
+	const runwayConfig =
+		[entry.airportConfig?.arrivalRunwayConfig, entry.airportConfig?.departureRunwayConfig]
+			.filter(Boolean)
+			.join(' / ') || undefined;
 
 	return {
 		status,
@@ -175,10 +178,11 @@ function parseMetar(observations: MetarObs[], icao: string): AirportWeather | nu
 	const fltCat = (obs.fltCat || 'VFR') as FlightCategory;
 	const rawVisib = obs.visib;
 	const visib = typeof rawVisib === 'string' ? parseFloat(rawVisib) || 10 : (rawVisib ?? 10);
-	const ceiling = obs.clouds
-		?.filter((c) => c.cover === 'BKN' || c.cover === 'OVC')
-		.map((c) => c.base ?? Infinity)
-		.sort((a, b) => a - b)[0] ?? null;
+	const ceiling =
+		obs.clouds
+			?.filter((c) => c.cover === 'BKN' || c.cover === 'OVC')
+			.map((c) => c.base ?? Infinity)
+			.sort((a, b) => a - b)[0] ?? null;
 
 	const temp = obs.temp ?? 0;
 	const dewp = obs.dewp ?? 0;
@@ -260,11 +264,13 @@ async function fetchTsa(airportCode: string): Promise<TsaWaitTime[] | null> {
 		const body = await resp.json();
 		if (!Array.isArray(body?.WaitTimes)) return null;
 
-		return body.WaitTimes.map((wt: { CheckpointName?: string; WaitTime?: number; Created_Datetime?: string }) => ({
-			checkpoint: wt.CheckpointName ?? 'Unknown',
-			waitMinutes: wt.WaitTime ?? 0,
-			updatedAt: wt.Created_Datetime ?? ''
-		}));
+		return body.WaitTimes.map(
+			(wt: { CheckpointName?: string; WaitTime?: number; Created_Datetime?: string }) => ({
+				checkpoint: wt.CheckpointName ?? 'Unknown',
+				waitMinutes: wt.WaitTime ?? 0,
+				updatedAt: wt.Created_Datetime ?? ''
+			})
+		);
 	} catch {
 		return null;
 	}
@@ -273,22 +279,29 @@ async function fetchTsa(airportCode: string): Promise<TsaWaitTime[] | null> {
 // --- Main handler ---
 
 export const GET: RequestHandler = async () => {
-	const [faaResult, metarResult, tafResult, tsaSfoResult, tsaOakResult, tsaStsResult, tsaSjcResult] =
-		await Promise.allSettled([
-			fetchWithTimeout(FAA_NAS_URL, { headers: { Accept: 'application/json' } }, 10000)
-				.then((r) => (r.ok ? r.json() : []))
-				.catch(() => []),
-			fetchWithTimeout(METAR_URL, { headers: { Accept: 'application/json' } }, 10000)
-				.then((r) => (r.ok ? r.json() : []))
-				.catch(() => []),
-			fetchWithTimeout(TAF_URL, { headers: { Accept: 'application/json' } }, 10000)
-				.then((r) => (r.ok ? r.json() : []))
-				.catch(() => []),
-			fetchTsa('SFO'),
-			fetchTsa('OAK'),
-			fetchTsa('STS'),
-			fetchTsa('SJC')
-		]);
+	const [
+		faaResult,
+		metarResult,
+		tafResult,
+		tsaSfoResult,
+		tsaOakResult,
+		tsaStsResult,
+		tsaSjcResult
+	] = await Promise.allSettled([
+		fetchWithTimeout(FAA_NAS_URL, { headers: { Accept: 'application/json' } }, 10000)
+			.then((r) => (r.ok ? r.json() : []))
+			.catch(() => []),
+		fetchWithTimeout(METAR_URL, { headers: { Accept: 'application/json' } }, 10000)
+			.then((r) => (r.ok ? r.json() : []))
+			.catch(() => []),
+		fetchWithTimeout(TAF_URL, { headers: { Accept: 'application/json' } }, 10000)
+			.then((r) => (r.ok ? r.json() : []))
+			.catch(() => []),
+		fetchTsa('SFO'),
+		fetchTsa('OAK'),
+		fetchTsa('STS'),
+		fetchTsa('SJC')
+	]);
 
 	const faaEvents = (faaResult.status === 'fulfilled' ? faaResult.value : []) as FaaEvent[];
 	const metarObs = (metarResult.status === 'fulfilled' ? metarResult.value : []) as MetarObs[];
@@ -298,7 +311,12 @@ export const GET: RequestHandler = async () => {
 	const tsaSts = tsaStsResult.status === 'fulfilled' ? tsaStsResult.value : null;
 	const tsaSjc = tsaSjcResult.status === 'fulfilled' ? tsaSjcResult.value : null;
 
-	const tsaByCode: Record<string, TsaWaitTime[] | null> = { SFO: tsaSfo, OAK: tsaOak, STS: tsaSts, SJC: tsaSjc };
+	const tsaByCode: Record<string, TsaWaitTime[] | null> = {
+		SFO: tsaSfo,
+		OAK: tsaOak,
+		STS: tsaSts,
+		SJC: tsaSjc
+	};
 
 	const airports: AirportStatus[] = AIRPORTS.map((apt) => {
 		const faa = parseFaaEvents(faaEvents, apt.code);

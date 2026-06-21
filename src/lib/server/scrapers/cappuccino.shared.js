@@ -116,8 +116,7 @@ export function mergeCoffeeShopWithFallback(scrapedShop, previousShop) {
 	if (scrapedShop.price !== null || scrapedShop.source !== 'toast') {
 		return {
 			...scrapedShop,
-			priceSource:
-				scrapedShop.priceSource ?? (scrapedShop.price !== null ? 'live' : 'unavailable'),
+			priceSource: scrapedShop.priceSource ?? (scrapedShop.price !== null ? 'live' : 'unavailable'),
 			isStale: scrapedShop.price === null ? true : (scrapedShop.isStale ?? false)
 		};
 	}

@@ -13,9 +13,13 @@ const REDFIN_URL =
 	'https://redfin-public-data.s3-us-west-2.amazonaws.com/redfin_market_tracker/county_market_tracker.tsv000.gz';
 
 export async function scrapeHousing(): Promise<HousingMetric[]> {
-	const response = await fetchWithTimeout(REDFIN_URL, {
-		headers: { 'User-Agent': 'Mozilla/5.0' }
-	}, 30000);
+	const response = await fetchWithTimeout(
+		REDFIN_URL,
+		{
+			headers: { 'User-Agent': 'Mozilla/5.0' }
+		},
+		30000
+	);
 	if (!response.ok) {
 		throw new Error(`Redfin fetch failed: ${response.status}`);
 	}

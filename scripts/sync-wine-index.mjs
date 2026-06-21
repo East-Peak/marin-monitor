@@ -78,7 +78,10 @@ function extractProducts(shopifyResponse) {
 			tags: Array.isArray(product.tags)
 				? product.tags
 				: typeof product.tags === 'string'
-					? product.tags.split(',').map((t) => t.trim()).filter(Boolean)
+					? product.tags
+							.split(',')
+							.map((t) => t.trim())
+							.filter(Boolean)
 					: []
 		});
 	}
@@ -124,12 +127,12 @@ async function fetchCollectionProducts(collectionHandle) {
 			const response = await proxyFetch(url, {
 				signal: controller.signal,
 				headers: {
-					'Accept': 'application/json, text/plain, */*',
+					Accept: 'application/json, text/plain, */*',
 					'Accept-Language': 'en-US,en;q=0.9',
 					'Accept-Encoding': 'gzip, deflate, br',
 					'User-Agent':
 						'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-					'Referer': 'https://plumpjackwines.com/',
+					Referer: 'https://plumpjackwines.com/',
 					'Sec-Fetch-Dest': 'empty',
 					'Sec-Fetch-Mode': 'cors',
 					'Sec-Fetch-Site': 'same-origin'

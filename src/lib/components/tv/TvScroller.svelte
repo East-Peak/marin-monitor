@@ -51,7 +51,8 @@
 		const saved = getScrollPosition(screenId);
 		if (containerEl && saved) {
 			const currentHeight = contentEl?.scrollHeight ?? 0;
-			const heightChanged = saved.contentHeight > 0 &&
+			const heightChanged =
+				saved.contentHeight > 0 &&
 				Math.abs(currentHeight - saved.contentHeight) / saved.contentHeight > 0.2;
 
 			if (heightChanged) {
@@ -185,13 +186,9 @@
 		active;
 		scheduleOverflowCheck();
 	});
-
 </script>
 
-<div
-	bind:this={containerEl}
-	class="h-full w-full overflow-hidden"
->
+<div bind:this={containerEl} class="h-full w-full overflow-hidden">
 	<div bind:this={contentEl}>
 		{@render children()}
 	</div>

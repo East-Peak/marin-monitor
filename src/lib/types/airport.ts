@@ -8,12 +8,7 @@ export type AirportOperationalStatus =
 export type FlightCategory = 'VFR' | 'MVFR' | 'IFR' | 'LIFR';
 
 export interface DelayInfo {
-	type:
-		| 'ground-stop'
-		| 'ground-delay'
-		| 'arrival-delay'
-		| 'departure-delay'
-		| 'closure';
+	type: 'ground-stop' | 'ground-delay' | 'arrival-delay' | 'departure-delay' | 'closure';
 	reason?: string;
 	avgDelay?: string;
 	maxDelay?: string;

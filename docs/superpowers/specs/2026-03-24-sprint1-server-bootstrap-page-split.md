@@ -13,6 +13,7 @@ The main dashboard is fully client-rendered with 20+ API fanout on first load. T
 ## Constraints
 
 **`loadAllNews` CANNOT run server-side** because:
+
 - `parseRssXml` in `rss.ts` uses `DOMParser` (browser-only API)
 - All RSS/transit/police fetches use relative URLs (`/api/feeds?url=...`) which don't resolve in `+page.server.ts`
 - `enrichItemsForRelevance` uses `DOMParser` for article text extraction
@@ -20,6 +21,7 @@ The main dashboard is fully client-rendered with 20+ API fanout on first load. T
 News data stays client-side for Sprint 1. Replacing `DOMParser` with a Node-compatible XML parser (e.g., `fast-xml-parser`) is a Sprint 2 prerequisite for full server-side news rendering.
 
 **What CAN run server-side:**
+
 - `fetchWeather` — NWS API uses absolute URLs (`https://api.weather.gov/...`) via `serviceClient`
 - `fetchEarthquakes` — USGS API uses absolute URLs (`https://earthquake.usgs.gov/...`)
 - `fetchHourlyForecast` — NWS hourly API, same absolute URL pattern
@@ -34,29 +36,29 @@ News data stays client-side for Sprint 1. Replacing `DOMParser` with a Node-comp
 import type { ServerLoadEvent } from '@sveltejs/kit';
 
 export async function load({ setHeaders }: ServerLoadEvent) {
-  // Only fetch data that uses external absolute URLs (no DOMParser, no relative fetches)
-  const { fetchWeather } = await import('$lib/api/marin');
-  const { fetchEarthquakes } = await import('$lib/api/marin');
-  const { fetchHourlyForecast } = await import('$lib/api/marin/nws-hourly');
+	// Only fetch data that uses external absolute URLs (no DOMParser, no relative fetches)
+	const { fetchWeather } = await import('$lib/api/marin');
+	const { fetchEarthquakes } = await import('$lib/api/marin');
+	const { fetchHourlyForecast } = await import('$lib/api/marin/nws-hourly');
 
-  setHeaders({
-    'Cache-Control': 's-maxage=120, stale-while-revalidate=300'
-  });
+	setHeaders({
+		'Cache-Control': 's-maxage=120, stale-while-revalidate=300'
+	});
 
-  const [weather, earthquakes, hourly] = await Promise.allSettled([
-    fetchWeather(37.9735, -122.5311),  // Central Marin default
-    fetchEarthquakes(),
-    fetchHourlyForecast()
-  ]);
+	const [weather, earthquakes, hourly] = await Promise.allSettled([
+		fetchWeather(37.9735, -122.5311), // Central Marin default
+		fetchEarthquakes(),
+		fetchHourlyForecast()
+	]);
 
-  return {
-    bootstrap: {
-      weather: weather.status === 'fulfilled' ? weather.value : null,
-      earthquakes: earthquakes.status === 'fulfilled' ? earthquakes.value : [],
-      hourly: hourly.status === 'fulfilled' ? hourly.value : [],
-      timestamp: Date.now()
-    }
-  };
+	return {
+		bootstrap: {
+			weather: weather.status === 'fulfilled' ? weather.value : null,
+			earthquakes: earthquakes.status === 'fulfilled' ? earthquakes.value : [],
+			hourly: hourly.status === 'fulfilled' ? hourly.value : [],
+			timestamp: Date.now()
+		}
+	};
 }
 ```
 
@@ -71,16 +73,14 @@ Remove `export const ssr = false`. The app becomes SSR-capable. Routes that need
 Receive server data via props and hydrate on mount:
 
 ```typescript
-let { data } = $props();  // from +page.server.ts
+let { data } = $props(); // from +page.server.ts
 
 // Weather state — hydrate from server bootstrap, then auto-refresh
 let weatherForecast = $state(data.bootstrap?.weather?.forecast ?? []);
 let weatherAlerts = $state(data.bootstrap?.weather?.alerts ?? []);
 let earthquakesRaw = $state(data.bootstrap?.earthquakes ?? []);
 let earthquakeItems = $state(
-  data.bootstrap?.earthquakes
-    ? earthquakesToNewsItems(data.bootstrap.earthquakes)
-    : []
+	data.bootstrap?.earthquakes ? earthquakesToNewsItems(data.bootstrap.earthquakes) : []
 );
 ```
 
@@ -97,16 +97,17 @@ Extract components into `src/lib/components/dashboard/` (conventional SvelteKit 
 **What:** The entire drag-and-drop grid editor: types, constants, state, handlers, and template.
 
 **Props:**
+
 ```typescript
 interface Props {
-  weatherForecast: (WeatherData & { name: string })[];
-  weatherAlerts: FireWeatherAlert[];
-  weatherLoading: boolean;
-  weatherError: string | null;
-  userLocation: LocationPreset;
-  earthquakeItems: NewsItem[];
-  earthquakesRaw: EarthquakeData[];
-  allNewsItems: NewsItem[];
+	weatherForecast: (WeatherData & { name: string })[];
+	weatherAlerts: FireWeatherAlert[];
+	weatherLoading: boolean;
+	weatherError: string | null;
+	userLocation: LocationPreset;
+	earthquakeItems: NewsItem[];
+	earthquakesRaw: EarthquakeData[];
+	allNewsItems: NewsItem[];
 }
 ```
 
@@ -119,15 +120,16 @@ interface Props {
 **What:** The 3-column signal deck panel layout (left: pulse/conditions/airport/wastewater/signals; middle: weather/outlooks/tides/environment; right: housing/gas/ev).
 
 **Props:**
+
 ```typescript
 interface Props {
-  weatherForecast: (WeatherData & { name: string })[];
-  weatherAlerts: FireWeatherAlert[];
-  weatherLoading: boolean;
-  weatherError: string | null;
-  userLocation: LocationPreset;
-  earthquakesRaw: EarthquakeData[];
-  allNewsItems: NewsItem[];
+	weatherForecast: (WeatherData & { name: string })[];
+	weatherAlerts: FireWeatherAlert[];
+	weatherLoading: boolean;
+	weatherError: string | null;
+	userLocation: LocationPreset;
+	earthquakesRaw: EarthquakeData[];
+	allNewsItems: NewsItem[];
 }
 ```
 
@@ -142,9 +144,10 @@ The component imports `settings` store directly for `dashboardExpanded` and `isP
 **What:** The map + cameras top section with expand/collapse toggle.
 
 **Props:**
+
 ```typescript
 interface Props {
-  earthquakeItems: NewsItem[];
+	earthquakeItems: NewsItem[];
 }
 ```
 
@@ -159,9 +162,10 @@ The component imports `settings` store directly for `camerasExpanded`, `camerasH
 **What:** The 9-column news wire grid + community panel.
 
 **Props:**
+
 ```typescript
 interface Props {
-  onFeedback: (type: string) => void;
+	onFeedback: (type: string) => void;
 }
 ```
 
