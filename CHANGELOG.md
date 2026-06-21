@@ -6,12 +6,13 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-06-21
 
-### Internal — code-quality glow-up (phases 0–2, no behavior change)
+### Internal — code-quality glow-up (phases 0–3, no behavior change)
 
 - ESLint now ignores `.vercel/` build output; combined with type-error fixes and lint triage, `svelte-check` and `eslint` are both clean (0 errors) where lint previously reported 4,687 problems (4,626 of them noise from the unignored build dir).
 - Repo-wide Prettier formatting pass (220 files). `static/data/` (generated) and `tests/fixtures/` (whitespace-sensitive parser fixtures) are now excluded from formatting.
 - Fixed all 10 `svelte-check` type errors (test-file typing) and all 61 real ESLint issues; 1,170 unit tests green before and after.
 - Added Vitest coverage tooling (`@vitest/coverage-v8`, `npm run coverage`).
+- Removed dead code: two unused scripts (`build-boundaries`, `extract-housing` — its logic lives in the housing cron), the never-mounted `AgentationWidget` dev component + its orphaned `agentation`/`react-dom` deps; dropped dead exports/consts in map/nws/chart; declared the previously-undeclared `@eslint/js` + `playwright` deps. (Codex-verified — no production-reachable code removed.)
 
 ---
 
