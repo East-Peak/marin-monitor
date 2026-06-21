@@ -3,6 +3,32 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+	ACTIVITY_TYPES,
+	TRANSIENT_RETRY_LIMIT,
+	applyCandidateDerivedFields,
+	buildCandidateRecord,
+	buildDiscoveryState,
+	buildSummary,
+	clonePendingQueues,
+	computeTransientRetryDelayMs,
+	defaultProgressFile,
+	defaultTrancheDir,
+	discoveryComplete,
+	formatBox,
+	isTransientFetchError,
+	isTransientHttpStatus,
+	looksLikeHtmlResponse,
+	normalizeBox,
+	normalizeLatlng,
+	normalizeMode,
+	qualityReasons,
+	qualityScore,
+	serializeOptions,
+	sortCandidates,
+	splitBoundingBox,
+	summarizeText
+} from './lib/strava-explore-helpers.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,8 +37,6 @@ const ENV_FILE = path.join(ROOT, '.env.strava-explore.local');
 const OUTPUT_FILE = path.join(ROOT, 'data', 'strava-explore.generated.json');
 const PROGRESS_FILE = path.join(ROOT, 'data', 'strava-explore.progress.json');
 const TRANCHE_DIR = path.join(ROOT, 'data', 'strava-explore.tranches');
-const ACTIVITY_TYPES = ['ride', 'run'];
-
 // Keep in sync with src/lib/config/strava.ts.
 const MARIN_BOUNDING_BOXES = [
 	[37.83, -122.75, 37.94, -122.48],
@@ -52,10 +76,6 @@ const DEFAULTS = {
 	trancheDir: TRANCHE_DIR,
 	inputFile: null
 };
-
-const TRANSIENT_RETRY_LIMIT = 6;
-const TRANSIENT_RETRY_BASE_MS = 15_000;
-const TRANSIENT_RETRY_MAX_MS = 180_000;
 
 function printUsage() {
 	console.log(`Usage: npm run strava:explore -- [options]
@@ -172,23 +192,6 @@ function parseArgs(argv) {
 	return options;
 }
 
-function normalizeMode(value) {
-	if (value === 'discover' || value === 'hybrid' || value === 'enrich') {
-		return value;
-	}
-	throw new Error(`Unsupported mode: ${value}`);
-}
-
-function defaultProgressFile(outputFile) {
-	const parsed = path.parse(outputFile);
-	return path.join(parsed.dir, `${parsed.name}.progress.json`);
-}
-
-function defaultTrancheDir(outputFile) {
-	const parsed = path.parse(outputFile);
-	return path.join(parsed.dir, `${parsed.name}.tranches`);
-}
-
 function parseEnvFile(filename) {
 	const env = {};
 	const raw = fs.readFileSync(filename, 'utf8');
@@ -233,119 +236,6 @@ function ensureCredentials() {
 
 function wait(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function computeTransientRetryDelayMs(attempt) {
-	const backoff = Math.min(
-		TRANSIENT_RETRY_MAX_MS,
-		TRANSIENT_RETRY_BASE_MS * 2 ** Math.max(attempt - 1, 0)
-	);
-	const jitter = Math.floor(Math.random() * 2_500);
-	return backoff + jitter;
-}
-
-function isTransientHttpStatus(status) {
-	return status === 408 || status === 425 || status >= 500;
-}
-
-function isTransientFetchError(error) {
-	const message = `${error?.name ?? ''} ${error?.message ?? String(error ?? '')}`.toLowerCase();
-	return (
-		error?.name === 'AbortError' ||
-		/fetch failed|econnreset|etimedout|eai_again|enotfound|socket hang up|und_err_|timeout/.test(
-			message
-		)
-	);
-}
-
-function summarizeText(text, maxLength = 180) {
-	const collapsed = String(text ?? '')
-		.replace(/\s+/g, ' ')
-		.trim();
-	if (collapsed.length <= maxLength) return collapsed;
-	return `${collapsed.slice(0, maxLength - 3)}...`;
-}
-
-function looksLikeHtmlResponse(contentType, bodyText) {
-	const normalizedType = String(contentType ?? '').toLowerCase();
-	if (normalizedType.includes('text/html')) return true;
-
-	const preview = String(bodyText ?? '').slice(0, 600);
-	return /<!doctype html|<html[\s>]|<body[\s>]|<\/html>/i.test(preview);
-}
-
-function splitBoundingBox([south, west, north, east]) {
-	const midLat = (south + north) / 2;
-	const midLng = (west + east) / 2;
-
-	return [
-		[south, west, midLat, midLng],
-		[south, midLng, midLat, east],
-		[midLat, west, north, midLng],
-		[midLat, midLng, north, east]
-	];
-}
-
-function formatBox(box) {
-	return box.map((value) => value.toFixed(5)).join(',');
-}
-
-function qualityReasons(segment, rules) {
-	const reasons = [];
-	if (segment.distance >= rules.minDistance) reasons.push('distance');
-	if (segment.elevationGain >= rules.minElevationGain) reasons.push('elevation');
-	if (segment.totalAttempts >= rules.minAttempts) reasons.push('attempts');
-	if (segment.totalAthletes >= rules.minAthletes) reasons.push('athletes');
-	return reasons;
-}
-
-function qualityScore(segment) {
-	const distanceKm = segment.distance / 1000;
-	return Math.round(
-		distanceKm * 14 +
-			segment.elevationGain * 0.18 +
-			segment.totalAttempts * 0.03 +
-			segment.totalAthletes * 0.75 +
-			segment.climbCategory * 10
-	);
-}
-
-function previewReasons(candidate) {
-	const reasons = [];
-	if (candidate.distance >= 1200) reasons.push('distance');
-	if (candidate.elevDifference >= 40) reasons.push('elevation');
-	if (candidate.discoveryHits >= 2) reasons.push('repeat-discovery');
-	if (candidate.climbCategory >= 1) reasons.push('climb');
-	return reasons;
-}
-
-function previewScore(candidate) {
-	const distanceKm = candidate.distance / 1000;
-	return Math.round(
-		distanceKm * 12 +
-			candidate.elevDifference * 0.2 +
-			Math.abs(candidate.avgGrade) * 2.5 +
-			candidate.climbCategory * 12 +
-			candidate.discoveryHits * 6
-	);
-}
-
-function serializeLimit(value) {
-	return Number.isFinite(value) ? value : null;
-}
-
-function serializeOptions(options) {
-	return {
-		mode: options.mode,
-		maxDepth: options.maxDepth,
-		minRequestGapMs: options.minRequestGapMs,
-		tileLimit: serializeLimit(options.tileLimit),
-		segmentLimit: serializeLimit(options.segmentLimit),
-		maxRequests: serializeLimit(options.maxRequests),
-		dailyHeadroom: options.dailyHeadroom,
-		tileCheckpointEvery: options.tileCheckpointEvery,
-		segmentCheckpointEvery: options.segmentCheckpointEvery
-	};
 }
 
 function computeWaitToNextWindowMs() {
@@ -708,129 +598,6 @@ function initPendingDiscoveryQueues() {
 			MARIN_BOUNDING_BOXES.map((box) => ({ box, depth: 0 }))
 		])
 	);
-}
-
-function clonePendingQueues(pendingQueues) {
-	return Object.fromEntries(
-		ACTIVITY_TYPES.map((activityType) => [
-			activityType,
-			Array.isArray(pendingQueues?.[activityType])
-				? pendingQueues[activityType].map((entry) => ({
-						box: normalizeBox(entry.box),
-						depth: Number.parseInt(entry.depth ?? 0, 10) || 0
-					}))
-				: []
-		])
-	);
-}
-
-function discoveryComplete(pendingQueues) {
-	return ACTIVITY_TYPES.every((activityType) => (pendingQueues[activityType] ?? []).length === 0);
-}
-
-function pendingDiscoveryTileCount(pendingQueues) {
-	return ACTIVITY_TYPES.reduce(
-		(total, activityType) => total + (pendingQueues[activityType] ?? []).length,
-		0
-	);
-}
-
-function normalizeBox(box) {
-	return Array.isArray(box) && box.length === 4 ? box.map((value) => Number(value)) : [0, 0, 0, 0];
-}
-
-function buildCandidateRecord(segment, activityType, box, depth) {
-	return applyCandidateDerivedFields({
-		id: segment.id,
-		name: segment.name,
-		activityType,
-		startLatlng: normalizeLatlng(segment.start_latlng),
-		endLatlng: normalizeLatlng(segment.end_latlng),
-		distance: Number(segment.distance ?? 0),
-		elevDifference: Number(segment.elev_difference ?? 0),
-		avgGrade: Number(segment.avg_grade ?? 0),
-		climbCategory: Number(segment.climb_category ?? 0),
-		polyline: segment.points ?? null,
-		discoveryHits: 1,
-		discoveredFrom: [
-			{
-				activityType,
-				bounds: normalizeBox(box),
-				depth
-			}
-		]
-	});
-}
-
-function normalizeLatlng(value) {
-	if (!Array.isArray(value) || value.length !== 2) return [0, 0];
-	return value.map((part) => Number(part ?? 0));
-}
-
-function applyCandidateDerivedFields(candidate) {
-	const normalized = {
-		id: Number(candidate.id),
-		name: candidate.name ?? 'Unnamed segment',
-		activityType: candidate.activityType === 'run' ? 'run' : 'ride',
-		startLatlng: normalizeLatlng(candidate.startLatlng ?? candidate.start_latlng),
-		endLatlng: normalizeLatlng(candidate.endLatlng ?? candidate.end_latlng),
-		distance: Number(candidate.distance ?? 0),
-		elevDifference: Number(candidate.elevDifference ?? candidate.elev_difference ?? 0),
-		avgGrade: Number(candidate.avgGrade ?? candidate.avg_grade ?? 0),
-		climbCategory: Number(candidate.climbCategory ?? candidate.climb_category ?? 0),
-		polyline: candidate.polyline ?? candidate.points ?? null,
-		discoveryHits: Number(candidate.discoveryHits ?? 1),
-		discoveredFrom: Array.isArray(candidate.discoveredFrom)
-			? candidate.discoveredFrom.map((entry) => ({
-					activityType: entry.activityType === 'run' ? 'run' : 'ride',
-					bounds: normalizeBox(entry.bounds),
-					depth: Number.parseInt(entry.depth ?? 0, 10) || 0
-				}))
-			: []
-	};
-
-	return {
-		...normalized,
-		previewReasons: previewReasons(normalized),
-		previewScore: previewScore(normalized)
-	};
-}
-
-function sortCandidates(candidates) {
-	return [...candidates]
-		.map((candidate) => applyCandidateDerivedFields(candidate))
-		.sort(
-			(a, b) =>
-				b.previewScore - a.previewScore ||
-				b.discoveryHits - a.discoveryHits ||
-				b.distance - a.distance
-		);
-}
-
-function buildDiscoveryState(pendingQueues) {
-	return {
-		complete: discoveryComplete(pendingQueues),
-		pendingTileCount: pendingDiscoveryTileCount(pendingQueues),
-		pendingQueues: clonePendingQueues(pendingQueues)
-	};
-}
-
-function buildSummary(candidates, segments, exploredTiles, pendingQueues, runStats) {
-	return {
-		discoveredIds: candidates.length,
-		exploredTiles,
-		enrichedSegments: segments.length,
-		remainingCandidates: Math.max(candidates.length - segments.length, 0),
-		pendingDiscoveryTiles: pendingDiscoveryTileCount(pendingQueues),
-		newTilesThisRun: runStats.newTilesThisRun,
-		newSegmentsThisRun: runStats.newSegmentsThisRun,
-		qualifiedRideSegments: segments.filter(
-			(segment) => segment.activityType === 'ride' && segment.passesThresholds
-		).length,
-		qualifiedRunSegments: segments.filter(
-			(segment) => segment.activityType === 'run' && segment.passesThresholds
-		).length
-	};
 }
 
 function buildRun(options, client, startedAt, phase, stopReason) {
