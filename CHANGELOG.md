@@ -6,6 +6,10 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-06-21
 
+### Fixed
+
+- The UI now actually loads its intended **Outfit** typeface. `@fontsource-variable/outfit` was installed and referenced in the CSS (`font-family: 'Outfit Variable'`) but never imported, so the app silently rendered in the system fallback font. Added the import to the root layout; verified the font loads (`document.fonts.check` → true).
+
 ### Internal — code-quality glow-up (phases 0–5, no behavior change)
 
 - ESLint now ignores `.vercel/` build output; combined with type-error fixes and lint triage, `svelte-check` and `eslint` are both clean (0 errors) where lint previously reported 4,687 problems (4,626 of them noise from the unignored build dir).
