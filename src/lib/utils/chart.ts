@@ -9,12 +9,12 @@
 import { scaleLinear } from 'd3-scale';
 import { area, curveMonotoneX, line } from 'd3-shape';
 
-export interface ChartDataPoint {
+interface ChartDataPoint {
 	value: number;
 	label?: string;
 }
 
-export interface ChartMargins {
+interface ChartMargins {
 	top: number;
 	right: number;
 	bottom: number;
@@ -29,13 +29,13 @@ export interface ChartConfig {
 	data: ChartDataPoint[];
 }
 
-export interface ChartDot {
+interface ChartDot {
 	x: number;
 	y: number;
 	value: number;
 }
 
-export interface ChartAxisLabel {
+interface ChartAxisLabel {
 	index: number;
 	x: number;
 	label: string;

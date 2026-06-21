@@ -8,8 +8,8 @@ import { MARIN_CENTER } from '$lib/config/towns';
 import { NWS_OFFICE } from '$lib/config/map';
 import { fetchWithTimeout } from './fetch-helpers';
 
-export const NWS_BASE = 'https://api.weather.gov';
-export const NWS_HEADERS: Record<string, string> = {
+const NWS_BASE = 'https://api.weather.gov';
+const NWS_HEADERS: Record<string, string> = {
 	Accept: 'application/geo+json',
 	'User-Agent': 'MarinMonitor/1.0 (marin-monitor@example.com)'
 };

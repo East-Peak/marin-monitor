@@ -13,10 +13,7 @@ import type { Map as MapLibreMap, MapLayerMouseEvent } from 'maplibre-gl';
 // ---------------------------------------------------------------------------
 
 /** A MapLibre expression that evaluates to `true` when a feature is hovered. */
-export const HOVER_STATE = ['boolean', ['feature-state', 'hover'], false] as const;
-
-/** Warm off-white stroke shown on hovered features. */
-export const INVITING_HOVER_STROKE = 'rgba(255, 247, 220, 0.98)';
+const HOVER_STATE = ['boolean', ['feature-state', 'hover'], false] as const;
 
 /**
  * MapLibre style expression — a JSON array representing a data-driven property.
@@ -45,14 +42,14 @@ export const hoveredFeatureIds = new Map<string, string | number | null>();
 
 export type HoveredMapFeature = NonNullable<MapLayerMouseEvent['features']>[number];
 
-export function getFeatureId(feature: { id?: unknown } | null | undefined): string | number | null {
+function getFeatureId(feature: { id?: unknown } | null | undefined): string | number | null {
 	if (typeof feature?.id === 'string' || typeof feature?.id === 'number') {
 		return feature.id;
 	}
 	return null;
 }
 
-export function setHoveredFeatureState(
+function setHoveredFeatureState(
 	map: MapLibreMap,
 	hoverKey: string,
 	sourceId: string,
@@ -72,7 +69,7 @@ export function setHoveredFeatureState(
 	}
 }
 
-export function clearHoveredFeatureState(map: MapLibreMap, hoverKey: string, sourceId: string) {
+function clearHoveredFeatureState(map: MapLibreMap, hoverKey: string, sourceId: string) {
 	setHoveredFeatureState(map, hoverKey, sourceId, null);
 }
 
