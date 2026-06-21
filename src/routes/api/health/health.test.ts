@@ -3,6 +3,7 @@
 // Tests for the /api/health server-route endpoint.
 // The health endpoint:
 //   1. Checks freshness of all monitored data sources (blob storage)
+/* eslint-disable @typescript-eslint/no-explicit-any -- SvelteKit RequestEvent mock; handler uses a subset of the full interface */
 //   2. Returns { status: "healthy" | "degraded" } with per-source details
 //   3. Includes internal info (API keys, proxy) only when cron auth is present
 //   4. No auth required for basic health check

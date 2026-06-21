@@ -2,6 +2,7 @@
 //
 // Integration-style tests for the /api/data/* server-route endpoints.
 //
+/* eslint-disable @typescript-eslint/no-explicit-any -- SvelteKit RequestEvent mocks; handlers use a subset of the full interface */
 // These endpoints all delegate to serveBlobJson (or compose tryReadBlobText
 // for fallback chains). On success they return blob contents with their
 // configured cache headers. On any failure (missing env, blob missing, fetch

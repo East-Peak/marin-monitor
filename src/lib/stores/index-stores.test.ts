@@ -5,6 +5,7 @@
  * Tests: cappuccino, gas-prices, ev-charging, composite, wine-index, fitness,
  *        grocery-basket, school-tuition, driveway, coffee
  */
+/* eslint-disable @typescript-eslint/no-explicit-any -- partial mock objects for typed stores; full shapes would bloat tests without adding coverage */
 
 import { describe, it, expect } from 'vitest';
 import { get } from 'svelte/store';

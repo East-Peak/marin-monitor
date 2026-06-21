@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- mock store references and partial fixture objects in tests */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { buildIdxTickerItems } from './tv';
 import { get } from 'svelte/store';
 
 // Mock the news stores before importing tv.ts
 vi.mock('$lib/stores/news', () => {
+	// eslint-disable-next-line @typescript-eslint/no-require-imports -- require() is necessary inside vi.mock() factories (hoisted before ESM imports)
 	const { writable } = require('svelte/store');
 
 	const mockSafetyState = writable({ items: [], loading: false, error: null, lastUpdated: null });
@@ -33,6 +35,7 @@ vi.mock('$lib/stores/news', () => {
 
 // Mock the strava store (5th derived input) with empty default
 vi.mock('$lib/stores/strava', () => {
+	// eslint-disable-next-line @typescript-eslint/no-require-imports -- require() is necessary inside vi.mock() factories (hoisted before ESM imports)
 	const { writable } = require('svelte/store');
 	const mockStravaEvents = writable({ events: [], lastUpdated: '' });
 	return {

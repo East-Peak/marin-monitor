@@ -3,6 +3,7 @@
 // Integration-style tests for the 5 most critical /api/cron/* server-route
 // endpoints.  Each endpoint follows the same pattern:
 //   1. verifyCronAuth() checks the Authorization header against CRON_SECRET
+/* eslint-disable @typescript-eslint/no-explicit-any -- SvelteKit RequestEvent mocks; handlers use a subset of the full interface */
 //   2. Call a scraper / external API to get fresh data
 //   3. Write result to Vercel Blob via put()
 //   4. Return { ok: true, ... } on success, { ok: false, error } on failure
