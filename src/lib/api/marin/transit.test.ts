@@ -36,16 +36,19 @@ function makeAlertEntity(
 		url?: string;
 		routes?: string[];
 		startTime?: number;
+		informedEntities?: Array<{ RouteId?: string; AgencyId?: string }>;
 	} = {}
 ): object {
 	return {
 		Id: overrides.id ?? 'alert-1',
 		Alert: {
 			ActivePeriods: overrides.startTime ? [{ Start: overrides.startTime }] : [],
-			InformedEntities: (overrides.routes ?? []).map((r) => ({
-				AgencyId: 'GG',
-				RouteId: r
-			})),
+			InformedEntities:
+				overrides.informedEntities ??
+				(overrides.routes ?? []).map((r) => ({
+					AgencyId: 'GG',
+					RouteId: r
+				})),
 			HeaderText: {
 				Translations: [{ Text: overrides.header ?? 'Service Alert', Language: 'en' }]
 			},
@@ -136,14 +139,10 @@ describe('fetchTransitAlerts', () => {
 
 	it('deduplicates route IDs in title', async () => {
 		const entity = makeAlertEntity({
-			routes: ['101', '101', '92']
+			routes: ['101', '101', '92'],
+			// Override InformedEntities to test dedup with exact duplicate RouteIds (no AgencyId)
+			informedEntities: [{ RouteId: '101' }, { RouteId: '101' }, { RouteId: '92' }]
 		});
-		// routes with duplicates
-		(entity as any).Alert.InformedEntities = [
-			{ RouteId: '101' },
-			{ RouteId: '101' },
-			{ RouteId: '92' }
-		];
 
 		mockFetch
 			.mockResolvedValueOnce(makeResponse(makeGtfsResponse([entity])))

@@ -33,8 +33,9 @@ function makeCalFireFeature(
 		name: string;
 		lat: number;
 		lon: number;
-		acres: number;
-		containment: number;
+		acres: number | null;
+		containment: number | null;
+		url: string;
 		isActive: string;
 	}> = {}
 ): object {
@@ -45,11 +46,11 @@ function makeCalFireFeature(
 			Name: overrides.name ?? 'Mill Fire',
 			Location: 'Near Mill Valley',
 			County: 'Marin',
-			AcresBurned: overrides.acres ?? 500,
-			PercentContained: overrides.containment ?? 25,
+			AcresBurned: overrides.acres !== undefined ? overrides.acres : 500,
+			PercentContained: overrides.containment !== undefined ? overrides.containment : 25,
 			Started: '2024-03-01T00:00:00Z',
 			Updated: '2024-03-02T12:00:00Z',
-			Url: 'https://www.fire.ca.gov/incidents/mill-fire',
+			Url: overrides.url !== undefined ? overrides.url : 'https://www.fire.ca.gov/incidents/mill-fire',
 			IsActive: overrides.isActive ?? 'true'
 		},
 		geometry: {
@@ -232,9 +233,7 @@ describe('fetchFireIncidents', () => {
 	});
 
 	it('defaults AcresBurned/PercentContained to 0 when null', async () => {
-		const feature = makeCalFireFeature();
-		(feature as any).properties.AcresBurned = null;
-		(feature as any).properties.PercentContained = null;
+		const feature = makeCalFireFeature({ acres: null, containment: null });
 
 		mockFetch
 			.mockResolvedValueOnce(makeResponse({ features: [feature] }))
@@ -257,8 +256,7 @@ describe('fetchFireIncidents', () => {
 	});
 
 	it('uses fallback URL when CalFire Url is empty', async () => {
-		const feature = makeCalFireFeature();
-		(feature as any).properties.Url = '';
+		const feature = makeCalFireFeature({ url: '' });
 
 		mockFetch
 			.mockResolvedValueOnce(makeResponse({ features: [feature] }))

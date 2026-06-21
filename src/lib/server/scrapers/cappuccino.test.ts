@@ -99,6 +99,7 @@ describe('extractPriceFromState', () => {
 	});
 
 	it('returns null for null/empty state', () => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- testing null-guard on untyped JS function boundary
 		expect(extractPriceFromState(null as any, 'cappuccino')).toBeNull();
 		expect(extractPriceFromState({}, 'cappuccino')).toBeNull();
 	});
