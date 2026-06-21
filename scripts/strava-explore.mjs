@@ -448,7 +448,7 @@ class StravaClient {
 
 				try {
 					payload = JSON.parse(bodyText);
-				} catch (error) {
+				} catch {
 					attempt = await this.retryTransient(
 						'OAuth token exchange',
 						attempt,
@@ -662,7 +662,7 @@ class StravaClient {
 			let payload;
 			try {
 				payload = JSON.parse(bodyText);
-			} catch (error) {
+			} catch {
 				parseRetryCount = await this.retryTransient(
 					label,
 					parseRetryCount,

@@ -164,12 +164,6 @@ function buildRejectionReasons(segment, activityType, rules, flags) {
 	return reasons;
 }
 
-function passesAutoFilter(segment, activityType, rules) {
-	return (
-		buildRejectionReasons(segment, activityType, rules, buildFlags(segment, rules)).length === 0
-	);
-}
-
 function sortSegments(segments) {
 	return [...segments].sort(
 		(a, b) =>

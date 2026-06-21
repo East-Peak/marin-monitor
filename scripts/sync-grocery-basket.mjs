@@ -479,7 +479,7 @@ async function scrapeItemPrices(
 
 	// Deduplicate by store (keep cheapest per store)
 	const byStore = new Map();
-	for (const { product, score } of scored) {
+	for (const { product } of scored) {
 		const storeKey = product.store.toLowerCase();
 		if (storeKey === 'unknown') continue; // skip products without a store
 		const existing = byStore.get(storeKey);
