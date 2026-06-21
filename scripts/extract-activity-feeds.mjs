@@ -363,7 +363,6 @@ const EVENT_PAGES = [
 	}
 ];
 
-
 async function fetchText(url) {
 	const response = await fetch(url, {
 		headers: {
@@ -402,7 +401,6 @@ function parseHtml(html) {
 		.replace(/<script(?![^>]*application\/ld\+json)[\s\S]*?<\/script>/gi, ' ');
 	return new DOMParser().parseFromString(sanitized, 'text/html');
 }
-
 
 async function parseEventPage(config) {
 	const {
@@ -517,7 +515,6 @@ async function parseEventPage(config) {
 	});
 	return item ? [item] : [];
 }
-
 
 function getTagText(element, tagName) {
 	const nodes = element.getElementsByTagName(tagName);
@@ -650,7 +647,6 @@ async function parseJsonLdEventPage({
 		.sort((a, b) => a.timestamp - b.timestamp)
 		.slice(0, limit);
 }
-
 
 async function parseMacsEvents() {
 	const html = await fetchText('https://macsat19broadway.com/events/');

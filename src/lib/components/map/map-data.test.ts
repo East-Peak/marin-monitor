@@ -403,7 +403,14 @@ describe('buildTownFeatures', () => {
 	it('returns one feature per town', () => {
 		const towns: Town[] = [
 			MOCK_TOWN,
-			{ name: 'Novato', slug: 'novato', lat: 38.107, lon: -122.57, incorporated: true, region: 'Novato' }
+			{
+				name: 'Novato',
+				slug: 'novato',
+				lat: 38.107,
+				lon: -122.57,
+				incorporated: true,
+				region: 'Novato'
+			}
 		];
 		const result = buildTownFeatures(towns, new Map(), null, null, MOCK_LAYER_COLORS);
 		expect(result).toHaveLength(2);
@@ -433,14 +440,30 @@ describe('buildNewsPinFeatures', () => {
 
 	it('skips items without lat/lon', () => {
 		const items = [
-			{ id: '1', title: 'No coords', category: 'local', townSlug: 'san-rafael', source: 's', timestamp: 0 }
+			{
+				id: '1',
+				title: 'No coords',
+				category: 'local',
+				townSlug: 'san-rafael',
+				source: 's',
+				timestamp: 0
+			}
 		] as unknown as import('$lib/types').NewsItem[];
 		expect(buildNewsPinFeatures(items, MOCK_CATEGORY_MAP, null, MOCK_LAYER_COLORS)).toHaveLength(0);
 	});
 
 	it('skips items not matching the town filter', () => {
 		const items = [
-			{ id: '1', title: 'Test', category: 'local', townSlug: 'novato', lat: 38.1, lon: -122.5, source: 's', timestamp: 0 }
+			{
+				id: '1',
+				title: 'Test',
+				category: 'local',
+				townSlug: 'novato',
+				lat: 38.1,
+				lon: -122.5,
+				source: 's',
+				timestamp: 0
+			}
 		] as unknown as import('$lib/types').NewsItem[];
 		expect(
 			buildNewsPinFeatures(items, MOCK_CATEGORY_MAP, 'san-rafael', MOCK_LAYER_COLORS)
@@ -449,7 +472,16 @@ describe('buildNewsPinFeatures', () => {
 
 	it('includes items with exact coords and matching filter', () => {
 		const items = [
-			{ id: '42', title: 'Event', category: 'local', townSlug: 'san-rafael', lat: 37.97, lon: -122.53, source: 'SFGATE', timestamp: 1000 }
+			{
+				id: '42',
+				title: 'Event',
+				category: 'local',
+				townSlug: 'san-rafael',
+				lat: 37.97,
+				lon: -122.53,
+				source: 'SFGATE',
+				timestamp: 1000
+			}
 		] as unknown as import('$lib/types').NewsItem[];
 		const result = buildNewsPinFeatures(items, MOCK_CATEGORY_MAP, 'san-rafael', MOCK_LAYER_COLORS);
 		expect(result).toHaveLength(1);
@@ -460,8 +492,26 @@ describe('buildNewsPinFeatures', () => {
 
 	it('passes through with null town filter (county-wide)', () => {
 		const items = [
-			{ id: '1', title: 'A', category: 'local', townSlug: 'novato', lat: 38.1, lon: -122.5, source: 's', timestamp: 0 },
-			{ id: '2', title: 'B', category: 'local', townSlug: 'san-rafael', lat: 37.97, lon: -122.53, source: 's', timestamp: 0 }
+			{
+				id: '1',
+				title: 'A',
+				category: 'local',
+				townSlug: 'novato',
+				lat: 38.1,
+				lon: -122.5,
+				source: 's',
+				timestamp: 0
+			},
+			{
+				id: '2',
+				title: 'B',
+				category: 'local',
+				townSlug: 'san-rafael',
+				lat: 37.97,
+				lon: -122.53,
+				source: 's',
+				timestamp: 0
+			}
 		] as unknown as import('$lib/types').NewsItem[];
 		expect(buildNewsPinFeatures(items, MOCK_CATEGORY_MAP, null, MOCK_LAYER_COLORS)).toHaveLength(2);
 	});
@@ -578,7 +628,16 @@ describe('buildFireIncidentFeatures', () => {
 
 	it('maps incidents to GeoJSON Point features', () => {
 		const incidents = [
-			{ id: 'fire-1', name: 'Miller Fire', acres: 250, containment: 45, lat: 38.0, lon: -122.5, url: 'http://calfire.ca.gov', source: 'CAL FIRE' }
+			{
+				id: 'fire-1',
+				name: 'Miller Fire',
+				acres: 250,
+				containment: 45,
+				lat: 38.0,
+				lon: -122.5,
+				url: 'http://calfire.ca.gov',
+				source: 'CAL FIRE'
+			}
 		];
 		const result = buildFireIncidentFeatures(incidents);
 		expect(result).toHaveLength(1);
@@ -650,7 +709,10 @@ const MOCK_EV_STATION: ChargingStation = {
 	lat: 37.971,
 	lon: -122.529,
 	network: 'ChargePoint',
-	connectors: [{ type: 'J1772', count: 2 }, { type: 'CCS', count: 1 }],
+	connectors: [
+		{ type: 'J1772', count: 2 },
+		{ type: 'CCS', count: 1 }
+	],
 	level2Count: 2,
 	dcFastCount: 1,
 	totalPorts: 3,
@@ -745,23 +807,40 @@ const MOCK_TYPE_COLORS: Record<string, string> = { yoga: '#6366f1', pilates: '#e
 
 describe('buildFitnessStudioFeatures', () => {
 	it('returns empty array for no studios', () => {
-		expect(buildFitnessStudioFeatures([], null, MOCK_TYPE_LABELS, MOCK_TYPE_COLORS)).toHaveLength(0);
+		expect(buildFitnessStudioFeatures([], null, MOCK_TYPE_LABELS, MOCK_TYPE_COLORS)).toHaveLength(
+			0
+		);
 	});
 
 	it('formats price as $X.dropInPrice', () => {
-		const result = buildFitnessStudioFeatures([MOCK_FITNESS_STUDIO], null, MOCK_TYPE_LABELS, MOCK_TYPE_COLORS);
+		const result = buildFitnessStudioFeatures(
+			[MOCK_FITNESS_STUDIO],
+			null,
+			MOCK_TYPE_LABELS,
+			MOCK_TYPE_COLORS
+		);
 		expect(result).toHaveLength(1);
 		expect(result[0].properties?.price).toBe('$24');
 	});
 
 	it('maps type to label and color', () => {
-		const result = buildFitnessStudioFeatures([MOCK_FITNESS_STUDIO], null, MOCK_TYPE_LABELS, MOCK_TYPE_COLORS);
+		const result = buildFitnessStudioFeatures(
+			[MOCK_FITNESS_STUDIO],
+			null,
+			MOCK_TYPE_LABELS,
+			MOCK_TYPE_COLORS
+		);
 		expect(result[0].properties?.typeName).toBe('Yoga');
 		expect(result[0].properties?.color).toBe('#6366f1');
 	});
 
 	it('places feature at studio coordinates', () => {
-		const result = buildFitnessStudioFeatures([MOCK_FITNESS_STUDIO], null, MOCK_TYPE_LABELS, MOCK_TYPE_COLORS);
+		const result = buildFitnessStudioFeatures(
+			[MOCK_FITNESS_STUDIO],
+			null,
+			MOCK_TYPE_LABELS,
+			MOCK_TYPE_COLORS
+		);
 		expect((result[0].geometry as GeoJSON.Point).coordinates).toEqual([-122.53, 37.97]);
 	});
 });
@@ -810,7 +889,13 @@ describe('build311ReportFeatures', () => {
 
 	it('builds label with street when title contains separator', () => {
 		const items = [
-			{ id: 'seeclickfix-10', title: 'Pothole · 123 Main St', lat: 37.97, lon: -122.53, description: '' }
+			{
+				id: 'seeclickfix-10',
+				title: 'Pothole · 123 Main St',
+				lat: 37.97,
+				lon: -122.53,
+				description: ''
+			}
 		] as unknown as import('$lib/types').NewsItem[];
 		const result = build311ReportFeatures(items, null);
 		expect(result[0].properties?.category).toBe('Pothole');
@@ -827,8 +912,22 @@ describe('build311ReportFeatures', () => {
 
 	it('filters by town when filter is set', () => {
 		const items = [
-			{ id: 'seeclickfix-1', title: 'Graffiti', lat: 37.97, lon: -122.53, townSlug: 'san-rafael', description: '' },
-			{ id: 'seeclickfix-2', title: 'Pothole', lat: 38.1, lon: -122.5, townSlug: 'novato', description: '' }
+			{
+				id: 'seeclickfix-1',
+				title: 'Graffiti',
+				lat: 37.97,
+				lon: -122.53,
+				townSlug: 'san-rafael',
+				description: ''
+			},
+			{
+				id: 'seeclickfix-2',
+				title: 'Pothole',
+				lat: 38.1,
+				lon: -122.5,
+				townSlug: 'novato',
+				description: ''
+			}
 		] as unknown as import('$lib/types').NewsItem[];
 		const result = build311ReportFeatures(items, 'san-rafael');
 		expect(result).toHaveLength(1);

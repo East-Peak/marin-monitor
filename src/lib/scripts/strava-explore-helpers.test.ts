@@ -294,7 +294,9 @@ describe('splitBoundingBox', () => {
 // ──────────────────────────────────────────────────────────────────────────────
 describe('formatBox', () => {
 	it('formats a box as comma-separated 5-decimal values', () => {
-		expect(formatBox([37.83, -122.75, 37.94, -122.48])).toBe('37.83000,-122.75000,37.94000,-122.48000');
+		expect(formatBox([37.83, -122.75, 37.94, -122.48])).toBe(
+			'37.83000,-122.75000,37.94000,-122.48000'
+		);
 	});
 
 	it('rounds to 5 decimal places', () => {
@@ -378,7 +380,13 @@ describe('qualityScore', () => {
 	});
 
 	it('scores higher for longer segments', () => {
-		const base = { distance: 1000, elevationGain: 50, totalAttempts: 100, totalAthletes: 30, climbCategory: 0 };
+		const base = {
+			distance: 1000,
+			elevationGain: 50,
+			totalAttempts: 100,
+			totalAthletes: 30,
+			climbCategory: 0
+		};
 		const longer = { ...base, distance: 5000 };
 		expect(qualityScore(longer)).toBeGreaterThan(qualityScore(base));
 	});
@@ -389,7 +397,13 @@ describe('qualityScore', () => {
 // ──────────────────────────────────────────────────────────────────────────────
 describe('previewReasons', () => {
 	it('returns all preview reasons when candidate exceeds all thresholds', () => {
-		const candidate = { distance: 2000, elevDifference: 50, discoveryHits: 3, climbCategory: 2, avgGrade: 5 };
+		const candidate = {
+			distance: 2000,
+			elevDifference: 50,
+			discoveryHits: 3,
+			climbCategory: 2,
+			avgGrade: 5
+		};
 		const reasons = previewReasons(candidate);
 		expect(reasons).toContain('distance');
 		expect(reasons).toContain('elevation');
@@ -399,7 +413,13 @@ describe('previewReasons', () => {
 	});
 
 	it('returns empty array for a minimal candidate', () => {
-		const candidate = { distance: 100, elevDifference: 5, discoveryHits: 1, climbCategory: 0, avgGrade: 0 };
+		const candidate = {
+			distance: 100,
+			elevDifference: 5,
+			discoveryHits: 1,
+			climbCategory: 0,
+			avgGrade: 0
+		};
 		expect(previewReasons(candidate)).toEqual([]);
 	});
 });
@@ -422,12 +442,24 @@ describe('previewScore', () => {
 	});
 
 	it('returns 0 for a zero-everything candidate', () => {
-		const candidate = { distance: 0, elevDifference: 0, avgGrade: 0, climbCategory: 0, discoveryHits: 0 };
+		const candidate = {
+			distance: 0,
+			elevDifference: 0,
+			avgGrade: 0,
+			climbCategory: 0,
+			discoveryHits: 0
+		};
 		expect(previewScore(candidate)).toBe(0);
 	});
 
 	it('accounts for negative avgGrade via Math.abs', () => {
-		const up = { distance: 1000, elevDifference: 100, avgGrade: 10, climbCategory: 1, discoveryHits: 1 };
+		const up = {
+			distance: 1000,
+			elevDifference: 100,
+			avgGrade: 10,
+			climbCategory: 1,
+			discoveryHits: 1
+		};
 		const down = { ...up, avgGrade: -10 };
 		expect(previewScore(up)).toBe(previewScore(down));
 	});
@@ -484,7 +516,17 @@ describe('serializeOptions', () => {
 
 	it('includes all expected keys', () => {
 		const result = serializeOptions(opts) as Record<string, unknown>;
-		for (const key of ['mode', 'maxDepth', 'minRequestGapMs', 'tileLimit', 'segmentLimit', 'maxRequests', 'dailyHeadroom', 'tileCheckpointEvery', 'segmentCheckpointEvery']) {
+		for (const key of [
+			'mode',
+			'maxDepth',
+			'minRequestGapMs',
+			'tileLimit',
+			'segmentLimit',
+			'maxRequests',
+			'dailyHeadroom',
+			'tileCheckpointEvery',
+			'segmentCheckpointEvery'
+		]) {
 			expect(key in result).toBe(true);
 		}
 	});
@@ -521,11 +563,15 @@ describe('normalizeLatlng', () => {
 // ──────────────────────────────────────────────────────────────────────────────
 describe('normalizeBox', () => {
 	it('returns numeric values for a valid box', () => {
-		expect(normalizeBox([37.83, -122.75, 37.94, -122.48])).toEqual([37.83, -122.75, 37.94, -122.48]);
+		expect(normalizeBox([37.83, -122.75, 37.94, -122.48])).toEqual([
+			37.83, -122.75, 37.94, -122.48
+		]);
 	});
 
 	it('coerces string values to numbers', () => {
-		expect(normalizeBox(['37.83', '-122.75', '37.94', '-122.48'])).toEqual([37.83, -122.75, 37.94, -122.48]);
+		expect(normalizeBox(['37.83', '-122.75', '37.94', '-122.48'])).toEqual([
+			37.83, -122.75, 37.94, -122.48
+		]);
 	});
 
 	it('returns [0,0,0,0] for null', () => {
@@ -569,22 +615,34 @@ describe('applyCandidateDerivedFields', () => {
 	});
 
 	it('defaults name to "Unnamed segment" when missing', () => {
-		const result = applyCandidateDerivedFields({ ...base, name: undefined }) as Record<string, unknown>;
+		const result = applyCandidateDerivedFields({ ...base, name: undefined }) as Record<
+			string,
+			unknown
+		>;
 		expect(result.name).toBe('Unnamed segment');
 	});
 
 	it('defaults activityType to "ride" for unknown values', () => {
-		const result = applyCandidateDerivedFields({ ...base, activityType: 'swim' }) as Record<string, unknown>;
+		const result = applyCandidateDerivedFields({ ...base, activityType: 'swim' }) as Record<
+			string,
+			unknown
+		>;
 		expect(result.activityType).toBe('ride');
 	});
 
 	it('sets activityType to "run" when provided', () => {
-		const result = applyCandidateDerivedFields({ ...base, activityType: 'run' }) as Record<string, unknown>;
+		const result = applyCandidateDerivedFields({ ...base, activityType: 'run' }) as Record<
+			string,
+			unknown
+		>;
 		expect(result.activityType).toBe('run');
 	});
 
 	it('defaults discoveredFrom to [] when missing', () => {
-		const result = applyCandidateDerivedFields({ ...base, discoveredFrom: undefined }) as Record<string, unknown>;
+		const result = applyCandidateDerivedFields({ ...base, discoveredFrom: undefined }) as Record<
+			string,
+			unknown
+		>;
 		expect(result.discoveredFrom).toEqual([]);
 	});
 });
@@ -595,16 +653,56 @@ describe('applyCandidateDerivedFields', () => {
 describe('sortCandidates', () => {
 	it('returns a new array (does not mutate input)', () => {
 		const input = [
-			{ id: 1, name: 'A', activityType: 'ride', distance: 1000, elevDifference: 50, avgGrade: 2, climbCategory: 0, discoveryHits: 1, discoveredFrom: [] },
-			{ id: 2, name: 'B', activityType: 'ride', distance: 5000, elevDifference: 200, avgGrade: 5, climbCategory: 1, discoveryHits: 3, discoveredFrom: [] }
+			{
+				id: 1,
+				name: 'A',
+				activityType: 'ride',
+				distance: 1000,
+				elevDifference: 50,
+				avgGrade: 2,
+				climbCategory: 0,
+				discoveryHits: 1,
+				discoveredFrom: []
+			},
+			{
+				id: 2,
+				name: 'B',
+				activityType: 'ride',
+				distance: 5000,
+				elevDifference: 200,
+				avgGrade: 5,
+				climbCategory: 1,
+				discoveryHits: 3,
+				discoveredFrom: []
+			}
 		];
 		const result = sortCandidates(input);
 		expect(result).not.toBe(input);
 	});
 
 	it('sorts by previewScore descending', () => {
-		const low = { id: 1, name: 'Low', activityType: 'ride', distance: 500, elevDifference: 10, avgGrade: 1, climbCategory: 0, discoveryHits: 1, discoveredFrom: [] };
-		const high = { id: 2, name: 'High', activityType: 'ride', distance: 10000, elevDifference: 500, avgGrade: 10, climbCategory: 3, discoveryHits: 5, discoveredFrom: [] };
+		const low = {
+			id: 1,
+			name: 'Low',
+			activityType: 'ride',
+			distance: 500,
+			elevDifference: 10,
+			avgGrade: 1,
+			climbCategory: 0,
+			discoveryHits: 1,
+			discoveredFrom: []
+		};
+		const high = {
+			id: 2,
+			name: 'High',
+			activityType: 'ride',
+			distance: 10000,
+			elevDifference: 500,
+			avgGrade: 10,
+			climbCategory: 3,
+			discoveryHits: 5,
+			discoveredFrom: []
+		};
 		const result = sortCandidates([low, high]) as Array<Record<string, unknown>>;
 		expect((result[0] as Record<string, unknown>).id).toBe(2);
 	});
@@ -631,7 +729,12 @@ describe('buildCandidateRecord', () => {
 	};
 
 	it('builds a candidate with correct shape', () => {
-		const record = buildCandidateRecord(rawSegment, 'ride', [37.83, -122.75, 37.94, -122.48], 0) as Record<string, unknown>;
+		const record = buildCandidateRecord(
+			rawSegment,
+			'ride',
+			[37.83, -122.75, 37.94, -122.48],
+			0
+		) as Record<string, unknown>;
 		expect(record.id).toBe(999);
 		expect(record.name).toBe('Marin Ave Climb');
 		expect(record.activityType).toBe('ride');
@@ -648,7 +751,12 @@ describe('buildCandidateRecord', () => {
 	});
 
 	it('includes previewScore and previewReasons', () => {
-		const record = buildCandidateRecord(rawSegment, 'ride', [37.83, -122.75, 37.94, -122.48], 0) as Record<string, unknown>;
+		const record = buildCandidateRecord(
+			rawSegment,
+			'ride',
+			[37.83, -122.75, 37.94, -122.48],
+			0
+		) as Record<string, unknown>;
 		expect(typeof record.previewScore).toBe('number');
 		expect(Array.isArray(record.previewReasons)).toBe(true);
 	});
@@ -663,11 +771,11 @@ describe('discoveryComplete', () => {
 	});
 
 	it('returns false when any queue has entries', () => {
-		expect(discoveryComplete({ ride: [{ box: [0,0,1,1], depth: 0 }], run: [] })).toBe(false);
+		expect(discoveryComplete({ ride: [{ box: [0, 0, 1, 1], depth: 0 }], run: [] })).toBe(false);
 	});
 
 	it('returns false when both queues have entries', () => {
-		const q = { box: [0,0,1,1], depth: 0 };
+		const q = { box: [0, 0, 1, 1], depth: 0 };
 		expect(discoveryComplete({ ride: [q], run: [q] })).toBe(false);
 	});
 });
@@ -681,7 +789,7 @@ describe('pendingDiscoveryTileCount', () => {
 	});
 
 	it('sums tiles across all activity types', () => {
-		const q = { box: [0,0,1,1], depth: 0 };
+		const q = { box: [0, 0, 1, 1], depth: 0 };
 		expect(pendingDiscoveryTileCount({ ride: [q, q], run: [q] })).toBe(3);
 	});
 });
@@ -691,14 +799,17 @@ describe('pendingDiscoveryTileCount', () => {
 // ──────────────────────────────────────────────────────────────────────────────
 describe('clonePendingQueues', () => {
 	it('returns a deep clone (not the same reference)', () => {
-		const original = { ride: [{ box: [0,0,1,1], depth: 0 }], run: [] };
+		const original = { ride: [{ box: [0, 0, 1, 1], depth: 0 }], run: [] };
 		const clone = clonePendingQueues(original);
 		expect(clone).not.toBe(original);
 		expect(clone.ride).not.toBe(original.ride);
 	});
 
 	it('normalises box values to numbers', () => {
-		const input = { ride: [{ box: ['37.83', '-122.75', '37.94', '-122.48'], depth: '1' }], run: [] };
+		const input = {
+			ride: [{ box: ['37.83', '-122.75', '37.94', '-122.48'], depth: '1' }],
+			run: []
+		};
 		const clone = clonePendingQueues(input);
 		expect(clone.ride[0].box).toEqual([37.83, -122.75, 37.94, -122.48]);
 		expect(clone.ride[0].depth).toBe(1);
@@ -724,7 +835,7 @@ describe('buildDiscoveryState', () => {
 	});
 
 	it('returns complete=false when queues have entries', () => {
-		const queues = { ride: [{ box: [0,0,1,1], depth: 0 }], run: [] };
+		const queues = { ride: [{ box: [0, 0, 1, 1], depth: 0 }], run: [] };
 		const state = buildDiscoveryState(queues);
 		expect(state.complete).toBe(false);
 		expect(state.pendingTileCount).toBe(1);
@@ -748,7 +859,10 @@ describe('buildSummary', () => {
 	it('returns correct counts', () => {
 		const candidates = [{ id: 1 }, { id: 2 }];
 		const segments = [{ id: 1, activityType: 'ride', passesThresholds: true }];
-		const summary = buildSummary(candidates, segments, 20, queues, runStats) as Record<string, unknown>;
+		const summary = buildSummary(candidates, segments, 20, queues, runStats) as Record<
+			string,
+			unknown
+		>;
 
 		expect(summary.discoveredIds).toBe(2);
 		expect(summary.exploredTiles).toBe(20);
@@ -764,7 +878,10 @@ describe('buildSummary', () => {
 			{ id: 2, activityType: 'ride', passesThresholds: false },
 			{ id: 3, activityType: 'run', passesThresholds: true }
 		];
-		const summary = buildSummary([], segments, 0, queues, { newTilesThisRun: 0, newSegmentsThisRun: 0 }) as Record<string, unknown>;
+		const summary = buildSummary([], segments, 0, queues, {
+			newTilesThisRun: 0,
+			newSegmentsThisRun: 0
+		}) as Record<string, unknown>;
 		expect(summary.qualifiedRideSegments).toBe(1);
 		expect(summary.qualifiedRunSegments).toBe(1);
 	});

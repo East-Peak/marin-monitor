@@ -28,3 +28,6 @@ tests/fixtures/
 
 # IDE settings
 .claude/
+
+# Ambient planning docs (do not reformat — content is intentionally unmanaged)
+docs/superpowers/

@@ -422,9 +422,7 @@ interface FireIncidentOverlay {
 /**
  * Build GeoJSON features for active fire incidents.
  */
-export function buildFireIncidentFeatures(
-	fireIncidents: FireIncidentOverlay[]
-): GeoJSON.Feature[] {
+export function buildFireIncidentFeatures(fireIncidents: FireIncidentOverlay[]): GeoJSON.Feature[] {
 	return fireIncidents.map((fire) => ({
 		type: 'Feature' as const,
 		id: fire.id,

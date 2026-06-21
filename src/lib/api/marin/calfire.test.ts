@@ -50,7 +50,8 @@ function makeCalFireFeature(
 			PercentContained: overrides.containment !== undefined ? overrides.containment : 25,
 			Started: '2024-03-01T00:00:00Z',
 			Updated: '2024-03-02T12:00:00Z',
-			Url: overrides.url !== undefined ? overrides.url : 'https://www.fire.ca.gov/incidents/mill-fire',
+			Url:
+				overrides.url !== undefined ? overrides.url : 'https://www.fire.ca.gov/incidents/mill-fire',
 			IsActive: overrides.isActive ?? 'true'
 		},
 		geometry: {
