@@ -4,30 +4,12 @@
  */
 import { DOMParser } from 'linkedom/worker';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
+import { stripHtml, decodeEntities } from '../html-text.js';
 
-export function stripHtml(raw = ''): string {
-	return raw
-		.replace(/<!\[CDATA\[|\]\]>/g, '')
-		.replace(/<script[\s\S]*?<\/script>/gi, ' ')
-		.replace(/<style[\s\S]*?<\/style>/gi, ' ')
-		.replace(/<br\s*\/?>/gi, '\n')
-		.replace(/<\/p>/gi, '\n')
-		.replace(/<[^>]+>/g, ' ')
-		.replace(/&nbsp;/gi, ' ')
-		.replace(/&amp;/gi, '&')
-		.replace(/&quot;/gi, '"')
-		.replace(/&#039;|&apos;/gi, "'")
-		.replace(/&#8211;|&#x2013;/gi, '–')
-		.replace(/&#8212;|&#x2014;/gi, '—')
-		.replace(/&#8217;|&#x2019;/gi, "'")
-		.replace(/&#8220;|&#x201c;/gi, '"')
-		.replace(/&#8221;|&#x201d;/gi, '"')
-		.replace(/&lt;/gi, '<')
-		.replace(/&gt;/gi, '>')
-		.replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
-		.replace(/\s+/g, ' ')
-		.trim();
-}
+// DOM-based strip + single-pass entity decode live in ../html-text.js (shared
+// with the standalone .mjs scrapers). Re-exported here so existing importers
+// (police.ts etc.) are unchanged.
+export { stripHtml, decodeEntities };
 
 export function excerpt(raw = '', maxLength = 220): string {
 	const text = stripHtml(raw);
@@ -107,18 +89,6 @@ export function parseHtml(html: string): Document {
 
 export function normalizeWhitespace(raw = ''): string {
 	return raw.replace(/\s+/g, ' ').trim();
-}
-
-export function decodeEntities(raw: string): string {
-	return raw
-		.replace(/&#x([0-9a-f]+);/gi, (_, value) => String.fromCodePoint(Number.parseInt(value, 16)))
-		.replace(/&#(\d+);/g, (_, value) => String.fromCodePoint(Number.parseInt(value, 10)))
-		.replace(/&nbsp;/gi, ' ')
-		.replace(/&amp;/gi, '&')
-		.replace(/&quot;/gi, '"')
-		.replace(/&(apos|#39);/gi, "'")
-		.replace(/&lt;/gi, '<')
-		.replace(/&gt;/gi, '>');
 }
 
 export async function safeParse<T>(label: string, fn: () => Promise<T[]>): Promise<T[]> {

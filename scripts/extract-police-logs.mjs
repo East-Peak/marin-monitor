@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
 import { DOMParser } from 'linkedom/worker';
+import { stripHtml, decodeEntities } from '../src/lib/server/html-text.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -62,31 +63,6 @@ const BELVEDERE_CONTENT_HINTS =
 
 function isRecent(timestamp) {
 	return timestamp >= Date.now() - RECENT_DAYS * 24 * 60 * 60 * 1000;
-}
-
-function decodeEntities(raw) {
-	return raw
-		.replace(/&#x([0-9a-f]+);/gi, (_, value) => String.fromCodePoint(Number.parseInt(value, 16)))
-		.replace(/&#(\d+);/g, (_, value) => String.fromCodePoint(Number.parseInt(value, 10)))
-		.replace(/&nbsp;/gi, ' ')
-		.replace(/&amp;/gi, '&')
-		.replace(/&quot;/gi, '"')
-		.replace(/&(apos|#39);/gi, "'")
-		.replace(/&lt;/gi, '<')
-		.replace(/&gt;/gi, '>');
-}
-
-function stripHtml(raw = '') {
-	return decodeEntities(
-		raw
-			.replace(/<script[\s\S]*?<\/script>/gi, ' ')
-			.replace(/<style[\s\S]*?<\/style>/gi, ' ')
-			.replace(/<br\s*\/?>/gi, '\n')
-			.replace(/<\/p>/gi, '\n')
-			.replace(/<[^>]+>/g, ' ')
-	)
-		.replace(/\s+/g, ' ')
-		.trim();
 }
 
 function formatPeriod(raw) {

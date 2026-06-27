@@ -15,6 +15,7 @@ import { put, head } from '@vercel/blob';
 import { proxyFetch } from './shared/proxy-fetch.mjs';
 import { withPreservedSuccessfulScrapeMetadata } from './shared/scrape-metadata.mjs';
 import { scoreGroceryPriceMatch } from '../src/lib/shared/grocery-basket-matching.js';
+import { decodeEntities } from '../src/lib/server/html-text.js';
 
 // ---- Config (from src/lib/config/grocery-basket.ts) ----
 
@@ -176,11 +177,7 @@ function parseInstacartResults(html) {
 		// Store name is in <span ... role="heading" aria-level="3">StoreName</span>
 		const nameMatch = section.match(/aria-level="3">([^<]+)</);
 		if (!nameMatch) continue;
-		const storeName = nameMatch[1]
-			.replace(/&amp;/g, '&')
-			.replace(/&lt;/g, '<')
-			.replace(/&gt;/g, '>')
-			.trim();
+		const storeName = decodeEntities(nameMatch[1]).trim();
 		// Extract the numeric store ID from item cards within this section
 		const idPattern = /item_list_item_items_(\d+)-/g;
 		let idMatch;

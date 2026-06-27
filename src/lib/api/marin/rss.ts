@@ -172,17 +172,15 @@ function getElementText(parent: Element, tagName: string): string | null {
  * Strip HTML tags from text (for descriptions that contain markup)
  */
 function cleanHtml(text: string): string {
-	return text
-		.replace(/<!\[CDATA\[|\]\]>/g, '')
-		.replace(/<[^>]+>/g, '')
-		.replace(/&amp;/g, '&')
-		.replace(/&lt;/g, '<')
-		.replace(/&gt;/g, '>')
-		.replace(/&quot;/g, '"')
-		.replace(/&#039;/g, "'")
-		.replace(/&nbsp;/g, ' ')
-		.replace(/\s+/g, ' ')
-		.trim();
+	// Browser-native DOM (this module is client-side): strips tags and decodes
+	// entities via the parser instead of regex chains — clears CodeQL's
+	// incomplete-multi-character-sanitization + double-escaping on this function.
+	// (Feed text reaches here already once-decoded by the upstream XML parse; that
+	// extra pass is intentional and locked by rss.test.ts.)
+	const cleaned = text.replace(/<!\[CDATA\[|\]\]>/g, '');
+	const doc = new DOMParser().parseFromString(cleaned, 'text/html');
+	for (const el of doc.querySelectorAll('script, style')) el.remove();
+	return (doc.body?.textContent ?? '').replace(/\s+/g, ' ').trim();
 }
 
 /**

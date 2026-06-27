@@ -3,32 +3,13 @@
  * No fetch, no fs, no global mutation — safe to unit-test without network or disk.
  */
 
+import { stripHtml } from '../../src/lib/server/html-text.js';
+
 export const MAX_PAST_DAYS = 300;
 export const MAX_FUTURE_DAYS = 400;
 
-export function stripHtml(raw = '') {
-	return raw
-		.replace(/<!\[CDATA\[|\]\]>/g, '')
-		.replace(/<script[\s\S]*?<\/script>/gi, ' ')
-		.replace(/<style[\s\S]*?<\/style>/gi, ' ')
-		.replace(/<br\s*\/?>/gi, '\n')
-		.replace(/<\/p>/gi, '\n')
-		.replace(/<[^>]+>/g, ' ')
-		.replace(/&nbsp;/gi, ' ')
-		.replace(/&amp;/gi, '&')
-		.replace(/&quot;/gi, '"')
-		.replace(/&#039;|&apos;/gi, "'")
-		.replace(/&#8211;|&#x2013;/gi, '–')
-		.replace(/&#8212;|&#x2014;/gi, '—')
-		.replace(/&#8217;|&#x2019;/gi, "'")
-		.replace(/&#8220;|&#x201c;/gi, '"')
-		.replace(/&#8221;|&#x201d;/gi, '"')
-		.replace(/&lt;/gi, '<')
-		.replace(/&gt;/gi, '>')
-		.replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
-		.replace(/\s+/g, ' ')
-		.trim();
-}
+// DOM-based strip + single-pass decode now live in the shared module.
+export { stripHtml };
 
 export function excerpt(raw = '', maxLength = 220) {
 	const text = stripHtml(raw);

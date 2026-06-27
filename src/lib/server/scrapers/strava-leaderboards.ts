@@ -15,6 +15,7 @@ import type {
 	StravaRecordHolder,
 	StravaLeaderboardRow
 } from '$lib/types/strava';
+import { stripHtml } from '../html-text.js';
 
 // ---------------------------------------------------------------------------
 // HTML entity decoding
@@ -44,12 +45,10 @@ function decodeEntities(s: string): string {
 	});
 }
 
-function stripTags(s: string): string {
-	return s.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, '');
-}
-
 function cleanText(s: string): string {
-	return decodeEntities(stripTags(s)).replace(/\s+/g, ' ').trim();
+	// DOM-based strip + decode (handles tags/entities robustly); replaces the
+	// prior regex stripTags + decodeEntities composition (CodeQL incomplete-sanitization).
+	return stripHtml(s);
 }
 
 // ---------------------------------------------------------------------------
