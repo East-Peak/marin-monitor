@@ -31,8 +31,13 @@ async function runScraper(
 		const count = Array.isArray(result) ? result.length : 0;
 		return { name, ok: true, count, durationMs: Date.now() - start };
 	} catch (err) {
-		const message = err instanceof Error ? err.message : String(err);
-		return { name, ok: false, count: null, durationMs: Date.now() - start, error: message };
+		// Log the full error (incl. stack) server-side; return a generic message so
+		// internal error strings are never echoed in the response (CodeQL stack-trace-exposure).
+		console.error(
+			`[run-all] ${name} FAILED after ${Date.now() - start}ms:`,
+			err instanceof Error ? err : String(err)
+		);
+		return { name, ok: false, count: null, durationMs: Date.now() - start, error: 'sync failed' };
 	}
 }
 
@@ -70,7 +75,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		if (r.ok) {
 			console.log(`[run-all] ${r.name}: OK (${r.count} items, ${r.durationMs}ms)`);
 		} else {
-			console.error(`[run-all] ${r.name}: FAILED (${r.durationMs}ms) — ${r.error}`);
+			console.error(`[run-all] ${r.name}: FAILED (${r.durationMs}ms)`);
 		}
 	}
 

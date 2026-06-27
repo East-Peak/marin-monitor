@@ -239,7 +239,7 @@ describe('/api/cron/sync-311', () => {
 
 		const data = await response.json();
 		expect(data.ok).toBe(false);
-		expect(data.error).toContain('SeeClickFix API timeout');
+		expect(data.error).toBe('sync failed');
 	});
 
 	it('handles non-OK API response gracefully', async () => {
@@ -250,7 +250,7 @@ describe('/api/cron/sync-311', () => {
 
 		const data = await response.json();
 		expect(data.ok).toBe(false);
-		expect(data.error).toContain('503');
+		expect(data.error).toBe('sync failed');
 	});
 });
 
@@ -338,7 +338,7 @@ describe('/api/cron/sync-strava-leaderboards', () => {
 
 		const data = await response.json();
 		expect(data.ok).toBe(false);
-		expect(data.error).toContain('Catalog file corrupted');
+		expect(data.error).toBe('sync failed');
 	});
 });
 
@@ -416,7 +416,7 @@ describe('/api/cron/sync-composite', () => {
 
 		const data = await response.json();
 		expect(data.ok).toBe(false);
-		expect(data.error).toContain('Missing required inputs');
+		expect(data.error).toBe('sync failed');
 	});
 });
 
@@ -497,7 +497,7 @@ describe('/api/cron/sync-grocery-basket', () => {
 
 		const data = await response.json();
 		expect(data.ok).toBe(false);
-		expect(data.error).toContain('Store website changed layout');
+		expect(data.error).toBe('sync failed');
 	});
 
 	it('does not write to blob when scraper throws', async () => {
@@ -577,7 +577,7 @@ describe('/api/cron/sync-wine-index', () => {
 
 		const data = await response.json();
 		expect(data.ok).toBe(false);
-		expect(data.error).toContain('Wine shop returned 403');
+		expect(data.error).toBe('sync failed');
 	});
 
 	it('does not write to blob when scraper throws', async () => {

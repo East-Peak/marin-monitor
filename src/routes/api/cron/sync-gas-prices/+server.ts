@@ -2,6 +2,7 @@ import { put, head } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
 import { scrapeGasPrices } from '$lib/server/scrapers/gas-prices';
 import { verifyCronAuth } from '$lib/server/cron-auth';
+import { cronErrorResponse } from '$lib/server/cron-response';
 import type { RequestHandler } from './$types';
 import type { GasPriceData, GasPriceSnapshot } from '$lib/types/gas';
 
@@ -77,11 +78,6 @@ export const GET: RequestHandler = async ({ request }) => {
 			{ headers: { 'Content-Type': 'application/json' } }
 		);
 	} catch (err) {
-		const message = err instanceof Error ? err.message : String(err);
-		console.error(`[sync-gas-prices] FAILED after ${Date.now() - start}ms:`, message);
-		return new Response(JSON.stringify({ ok: false, error: message }), {
-			status: 500,
-			headers: { 'Content-Type': 'application/json' }
-		});
+		return cronErrorResponse('sync-gas-prices', err, start);
 	}
 };

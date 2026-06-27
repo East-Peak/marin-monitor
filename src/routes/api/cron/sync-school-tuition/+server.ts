@@ -2,6 +2,7 @@ import { put, head } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
 import { computeSchoolSnapshot } from '$lib/server/scrapers/school-tuition';
 import { verifyCronAuth } from '$lib/server/cron-auth';
+import { cronErrorResponse } from '$lib/server/cron-response';
 import { SCHOOL_TUITION_BLOB_KEY, MAX_SCHOOL_HISTORY } from '$lib/config/schools';
 import type { RequestHandler } from './$types';
 import type { SchoolIndexData, SchoolSnapshot } from '$lib/types/school';
@@ -83,11 +84,6 @@ export const GET: RequestHandler = async ({ request }) => {
 			{ headers: { 'Content-Type': 'application/json' } }
 		);
 	} catch (err) {
-		const message = err instanceof Error ? err.message : String(err);
-		console.error(`[sync-school-tuition] FAILED after ${Date.now() - start}ms:`, message);
-		return new Response(JSON.stringify({ ok: false, error: message }), {
-			status: 500,
-			headers: { 'Content-Type': 'application/json' }
-		});
+		return cronErrorResponse('sync-school-tuition', err, start);
 	}
 };

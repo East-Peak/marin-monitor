@@ -2,6 +2,7 @@ import { put, head } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
 import { scrapeGroceryBasket } from '$lib/server/scrapers/grocery-basket';
 import { verifyCronAuth } from '$lib/server/cron-auth';
+import { cronErrorResponse } from '$lib/server/cron-response';
 import { withPreservedSuccessfulScrapeMetadata } from '$lib/server/scrape-metadata';
 import type { RequestHandler } from './$types';
 import type { GroceryBasketData, GrocerySnapshot } from '$lib/types/grocery';
@@ -86,11 +87,6 @@ export const GET: RequestHandler = async ({ request }) => {
 			{ headers: { 'Content-Type': 'application/json' } }
 		);
 	} catch (err) {
-		const message = err instanceof Error ? err.message : String(err);
-		console.error(`[sync-grocery-basket] FAILED after ${Date.now() - start}ms:`, message);
-		return new Response(JSON.stringify({ ok: false, error: message }), {
-			status: 500,
-			headers: { 'Content-Type': 'application/json' }
-		});
+		return cronErrorResponse('sync-grocery-basket', err, start);
 	}
 };

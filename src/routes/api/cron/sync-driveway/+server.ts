@@ -2,6 +2,7 @@ import { put, head } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
 import { computeDrivewaySnapshot } from '$lib/server/scrapers/driveway';
 import { verifyCronAuth } from '$lib/server/cron-auth';
+import { cronErrorResponse } from '$lib/server/cron-response';
 import { DRIVEWAY_BLOB_KEY, MAX_DRIVEWAY_HISTORY } from '$lib/config/driveway';
 import type { RequestHandler } from './$types';
 import type { DrivewayData, DrivewaySnapshot } from '$lib/types/driveway';
@@ -81,11 +82,6 @@ export const GET: RequestHandler = async ({ request }) => {
 			{ headers: { 'Content-Type': 'application/json' } }
 		);
 	} catch (err) {
-		const message = err instanceof Error ? err.message : String(err);
-		console.error(`[sync-driveway] FAILED after ${Date.now() - start}ms:`, message);
-		return new Response(JSON.stringify({ ok: false, error: message }), {
-			status: 500,
-			headers: { 'Content-Type': 'application/json' }
-		});
+		return cronErrorResponse('sync-driveway', err, start);
 	}
 };

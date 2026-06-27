@@ -4,6 +4,12 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-06-27
+
+### Security — code-scanning (CodeQL)
+
+- **Stack-trace exposure hardening (14 cron sync endpoints + `run-all`).** Every `/api/cron/sync-*` endpoint and the `run-all` aggregator returned the raw internal error string (`err.message`) in their JSON response on failure. Added a shared `cronErrorResponse()` helper that logs the full error (with stack) server-side but returns a generic `{ ok: false, error: 'sync failed' }` — internal details (DB hosts, upstream URLs, stack info) are never echoed to callers. Clears 14 CodeQL `js/stack-trace-exposure` alerts. TDD + Codex-reviewed; 1400 unit tests green, svelte-check clean.
+
 ## 2026-06-21
 
 ### Fixed

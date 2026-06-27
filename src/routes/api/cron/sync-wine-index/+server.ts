@@ -2,6 +2,7 @@ import { put, head } from '@vercel/blob';
 import { env } from '$env/dynamic/private';
 import { scrapeWineIndex } from '$lib/server/scrapers/wine-index';
 import { verifyCronAuth } from '$lib/server/cron-auth';
+import { cronErrorResponse } from '$lib/server/cron-response';
 import { WINE_INDEX_BLOB_KEY, MAX_WINE_HISTORY } from '$lib/config/wine';
 import type { RequestHandler } from './$types';
 import type { WineIndexData, WineSnapshot } from '$lib/types/wine';
@@ -79,11 +80,6 @@ export const GET: RequestHandler = async ({ request }) => {
 			{ headers: { 'Content-Type': 'application/json' } }
 		);
 	} catch (err) {
-		const message = err instanceof Error ? err.message : String(err);
-		console.error(`[sync-wine-index] FAILED after ${Date.now() - start}ms:`, message);
-		return new Response(JSON.stringify({ ok: false, error: message }), {
-			status: 500,
-			headers: { 'Content-Type': 'application/json' }
-		});
+		return cronErrorResponse('sync-wine-index', err, start);
 	}
 };
