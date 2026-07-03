@@ -4,6 +4,12 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-07-03
+
+### Internal — dead-code gate (knip), no behavior change
+
+- Wired **knip** into `verify` (and therefore CI): dead FILES and unused/missing **dependencies** now fail the gate, so new dead code can't accumulate silently. Config (`knip.jsonc`) gates the low-false-positive classes only; export/type checks are deferred because barrel re-exports (`src/lib/**/index.ts`) produce a large false-positive set that needs a consent-gated triage. Seven pre-existing unused-file candidates and three false-positive devDependencies (`@typescript-eslint/*` peer-deps, `@types/d3` ambient types) are baselined with inline notes; a deletion manifest tracks the triage. Gate proven (exits non-zero on a planted dead file); 1417 unit tests green, build green.
+
 ## 2026-06-27
 
 ### Security — code-scanning (CodeQL)

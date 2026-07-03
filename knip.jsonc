@@ -1,0 +1,31 @@
+{
+	"$schema": "https://unpkg.com/knip@6/schema.json",
+	// Wiring baseline (code glow-up re-pass, 2026-07-03). Gate the
+	// low-false-positive classes — dead FILES and unused/missing DEPENDENCIES —
+	// so NEW dead code fails CI. Export/type checks are deferred: barrel
+	// re-exports (the src/lib/**/index.ts files) produce a large false-positive
+	// set (139 in the first pass) that needs a consent-gated triage, not a gate.
+	// See the deletion manifest before removing anything ignored here.
+	"include": ["files", "dependencies", "unlisted", "unresolved"],
+	"ignore": [
+		// Pre-existing unused-FILE candidates — baselined pending the deletion
+		// manifest. NOT confirmed dead: the .d.mts files are JSDoc type
+		// companions and the index.ts files are barrels that may be consumed
+		// via aliases; triage before deleting.
+		"scripts/lib/activity-feed-helpers.d.mts",
+		"scripts/lib/strava-explore-helpers.d.mts",
+		"scripts/scrape-proxy.mjs",
+		"src/lib/analysis/index.ts",
+		"src/lib/components/index.ts",
+		"src/lib/server/sanity.ts",
+		"src/lib/services/index.ts"
+	],
+	"ignoreDependencies": [
+		// Documented false positives: @typescript-eslint/* are peer-deps of the
+		// typescript-eslint meta-package; @types/d3 is ambient types for d3
+		// (which IS used, so it's never imported directly).
+		"@typescript-eslint/eslint-plugin",
+		"@typescript-eslint/parser",
+		"@types/d3"
+	]
+}

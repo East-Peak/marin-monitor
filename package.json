@@ -24,7 +24,7 @@
 		"sync:uninstall": "bash scripts/manage-sync.sh uninstall",
 		"sync:status": "bash scripts/manage-sync.sh status",
 		"coverage": "vitest run --coverage",
-		"verify": "npm run check && npm run lint && npm run test:unit",
+		"verify": "npm run check && npm run lint && knip && npm run test:unit",
 		"prepare": "husky"
 	},
 	"devDependencies": {
@@ -48,6 +48,7 @@
 		"globals": "^15.0.0",
 		"husky": "^9.1.7",
 		"jsdom": "^25.0.0",
+		"knip": "^6.24.0",
 		"lint-staged": "^17.0.8",
 		"playwright": "^1.61.0",
 		"postcss": "^8.4.0",
