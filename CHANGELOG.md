@@ -8,7 +8,8 @@ All notable changes to Marin Monitor are documented here.
 
 ### Internal — dead-code gate (knip), no behavior change
 
-- Wired **knip** into `verify` (and therefore CI): dead FILES and unused/missing **dependencies** now fail the gate, so new dead code can't accumulate silently. Config (`knip.jsonc`) gates the low-false-positive classes only; export/type checks are deferred because barrel re-exports (`src/lib/**/index.ts`) produce a large false-positive set that needs a consent-gated triage. Seven pre-existing unused-file candidates and three false-positive devDependencies (`@typescript-eslint/*` peer-deps, `@types/d3` ambient types) are baselined with inline notes; a deletion manifest tracks the triage. Gate proven (exits non-zero on a planted dead file); 1417 unit tests green, build green.
+- Wired **knip** into `verify` (and therefore CI): dead FILES and unused/missing **dependencies** now fail the gate, so new dead code can't accumulate silently. Config (`knip.jsonc`) gates the low-false-positive classes only; export/type checks are deferred to a later triage. Three false-positive devDependencies (`@typescript-eslint/*` peer-deps, `@types/d3` ambient types) and three false-positive files (two `.d.mts` type companions, the LaunchAgent-invoked `scrape-proxy.mjs`) are baselined with inline notes. Gate proven (exits non-zero on a planted dead file).
+- **Removed 4 confirmed-dead files** (Codex-verified zero real importers across 413 files): `src/lib/server/sanity.ts` (unwired price-sanity-bounds helper — never called), and three unused re-export barrels `src/lib/{analysis,components,services}/index.ts` (all imports use direct subpaths). 1417 unit tests green, build green.
 
 ## 2026-06-27
 
