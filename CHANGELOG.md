@@ -6,6 +6,14 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-28
 
+### Fixed — TV camera tiles no longer flash "Camera offline" (TV slice 1)
+
+- **TV: camera tiles no longer flash 'Camera offline' while loading.** They show the last good frame (marked stale if old), recover automatically, and the next camera slide is preloaded so it appears ready.
+- **Ready means decoded.** A new `TvCameraTile` swaps in a frame only after it has loaded _and_ decoded (`image-preload.ts`, 8s timeout, late loads ignored). Preload and display use the same bucketed `?t=` URL (`camera-frame.ts`).
+- **Failures degrade instead of blanking.** A tile with a previous frame keeps it and shows "Last frame N min ago" once it's older than max(60s, 3 refresh intervals). "Camera offline" appears only after 2 consecutive failures with no frame ever shown, counted across carousel visits so a dead slow-refresh camera still surfaces as offline. The old error handler set `display:none` forever, so a camera that recovered never came back; recovery is now automatic.
+- **Next-slide warm-up.** While any slide is showing, the wallboard preloads the next camera slide's frames (image cams only, max 8) into a small per-camera last-good cache. The tiles mount already showing a frame.
+- Windy iframe cameras render exactly as before.
+
 ### Fixed — one truthful health evaluator (G0a)
 
 - **`/api/health` now tells the truth and says so with its status code.** It returns **200 only when every source is ok or declared reference data**, and **503** otherwise. Before this it always returned 200, even while 7 of 15 sources were months stale. Generic uptime monitors can now see degradation.

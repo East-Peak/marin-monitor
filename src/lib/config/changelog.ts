@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-09-28',
+		title: 'TV cameras load cleanly',
+		description:
+			"TV: camera tiles no longer flash 'Camera offline' while loading. They show the last good frame (marked stale if old), recover automatically, and the next camera slide is preloaded so it appears ready."
+	},
+	{
+		date: '2026-09-28',
 		title: 'Honest health check',
 		description:
 			'/api/health now covers all 20 data sources, including the five Cost of Being Marin inputs, and returns 503 whenever any of them is stale or unverifiable. Several sources are stale today and are shown that way until they are repaired.'
