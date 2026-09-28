@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-09-28',
+		title: 'Honest health check',
+		description:
+			'/api/health now covers all 20 data sources, including the five Cost of Being Marin inputs, and returns 503 whenever any of them is stale or unverifiable. Several sources are stale today and are shown that way until they are repaired.'
+	},
+	{
 		date: '2026-04-05',
 		title: 'Mobile layout fixes',
 		description:

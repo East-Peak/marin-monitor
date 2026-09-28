@@ -35,6 +35,39 @@ describe('extractBlobFreshnessTimestamp', () => {
 		).toBe('2026-03-28T12:00:00.000Z');
 	});
 
+	it('treats an explicit null lastSuccessfulScrapeAt as "never succeeded", not as lastUpdated', () => {
+		expect(
+			extractBlobFreshnessTimestamp({
+				lastUpdated: '2026-09-28T12:00:00.000Z',
+				lastSuccessfulScrapeAt: null
+			})
+		).toBeNull();
+		expect(
+			extractBlobFreshnessTimestamp({
+				current: { timestamp: '2026-09-28T12:00:00.000Z', lastSuccessfulScrapeAt: null },
+				lastUpdated: '2026-09-28T12:00:00.000Z'
+			})
+		).toBeNull();
+	});
+
+	it('treats an explicit null lastLiveScrapeAt as "never succeeded", not as lastUpdated', () => {
+		expect(
+			extractBlobFreshnessTimestamp({
+				current: { lastUpdated: '2026-09-28T12:00:00.000Z', lastLiveScrapeAt: null }
+			})
+		).toBeNull();
+	});
+
+	it('keeps the old success time when a failed refresh re-uploads with a new timestamp', () => {
+		expect(
+			extractBlobFreshnessTimestamp({
+				timestamp: '2026-09-28T12:00:00.000Z',
+				lastUpdated: '2026-09-28T12:00:00.000Z',
+				lastSuccessfulScrapeAt: '2026-06-21T10:17:48.204Z'
+			})
+		).toBe('2026-06-21T10:17:48.204Z');
+	});
+
 	it('returns null for array-backed blobs without embedded metadata', () => {
 		expect(extractBlobFreshnessTimestamp([{ timestamp: '2026-03-30T12:00:00.000Z' }])).toBeNull();
 	});

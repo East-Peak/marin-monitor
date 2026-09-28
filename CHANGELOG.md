@@ -4,6 +4,21 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-09-28
+
+### Fixed — one truthful health evaluator (G0a)
+
+- **`/api/health` now tells the truth and says so with its status code.** It returns **200 only when every source is ok or declared reference data**, and **503** otherwise. Before this it always returned 200, even while 7 of 15 sources were months stale. Generic uptime monitors can now see degradation.
+- **One evaluator, one inventory.** New `src/lib/server/health/`:
+  - a frozen 20-source inventory: the 15 existing sources plus the 5 composite inputs that were never monitored (Cappuccino, Camp Prices, Dog Walker, Ikon Pass, Rivian Lease);
+  - a declared list of known subsource failures (Fairfax/Belvedere police 403s, empty Marin IJ news/breaking/emergency feeds, dead Marin Lately, NIFC `attr_POOState` rename), each with a disposition;
+  - a pure, clock-injected `evaluate()` giving per-source `ok | stale | unavailable | reference | unknown`.
+    `/api/health` and the daily `check-freshness` cron both use it, and a test proves they classify identically.
+- **Timestamps that can't be vouched for are `unknown`, never `ok`:** missing, malformed or impossible (`2026-02-30`), non-ISO, or in the future. Previously NaN ages and future timestamps passed as ok. An explicit `lastSuccessfulScrapeAt`/`lastLiveScrapeAt: null` no longer falls back to `lastUpdated`.
+- **`check-freshness` returns 503 when anything is degraded** (was 207, which Vercel treats as success) and still rejects unauthorized calls.
+- **Public diagnostics trimmed:** blob keys, subsource problem detail and repair notes now appear only for authenticated (cron-secret) callers.
+- **No sources were repaired.** Coffee, Grocery, Wine, EV Charging, both Strava sources, Driveway (hardcoded 2024 fallback) and the stalled composite inputs stay visibly degraded until G0.
+
 ## 2026-07-03
 
 ### Internal — dead-code gate (knip), no behavior change

@@ -1,24 +1,19 @@
 // src/routes/api/health/health.test.ts
 //
-// Tests for the /api/health server-route endpoint.
-// The health endpoint:
-//   1. Checks freshness of all monitored data sources (blob storage)
-/* eslint-disable @typescript-eslint/no-explicit-any -- SvelteKit RequestEvent mock; handler uses a subset of the full interface */
-//   2. Returns { status: "healthy" | "degraded" } with per-source details
-//   3. Includes internal info (API keys, proxy) only when cron auth is present
-//   4. No auth required for basic health check
+// Contract for /api/health and /api/cron/check-freshness. Both classify via the
+// shared evaluator over the frozen source inventory, so they must agree.
+/* eslint-disable @typescript-eslint/no-explicit-any -- SvelteKit RequestEvent mock; handlers use a subset of the full interface */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// ──────────────────────────────────────────────────────────
-// Module-level mocks (must precede dynamic imports)
-// ──────────────────────────────────────────────────────────
 
 const mockReadBlobFreshnessTimestamp = vi.fn();
 const mockFetchWithTimeout = vi.fn();
 
+class MockBlobNotFoundError extends Error {}
+
 vi.mock('@vercel/blob', () => ({
-	head: vi.fn()
+	head: vi.fn(),
+	BlobNotFoundError: MockBlobNotFoundError
 }));
 
 vi.mock('$env/dynamic/private', () => ({
@@ -42,185 +37,142 @@ vi.mock('$lib/server/fetch-utils', () => ({
 	fetchWithTimeout: mockFetchWithTimeout
 }));
 
-// ──────────────────────────────────────────────────────────
-// Dynamic import (resolved after mocks are wired)
-// ──────────────────────────────────────────────────────────
+const { GET: getHealth } = await import('./+server');
+const { GET: getFreshness } = await import('../cron/check-freshness/+server');
+const { SOURCE_INVENTORY } = await import('$lib/server/health/inventory');
 
-const { GET: getHealth, _DATA_SOURCES } = await import('./+server');
-
-// ──────────────────────────────────────────────────────────
-// Helpers
-// ──────────────────────────────────────────────────────────
-
-function makeEvent(authHeader?: string) {
+function makeEvent(path: string, authHeader?: string) {
 	const headers = new Headers();
-	if (authHeader) {
-		headers.set('authorization', authHeader);
-	}
-	return { request: new Request('https://localhost/api/health', { headers }) } as any;
+	if (authHeader) headers.set('authorization', authHeader);
+	return { request: new Request(`https://localhost${path}`, { headers }) } as any;
 }
 
-function publicEvent() {
-	return makeEvent();
+const publicHealth = () => makeEvent('/api/health');
+const authedHealth = () => makeEvent('/api/health', 'Bearer test-cron-secret');
+const authedFreshness = () => makeEvent('/api/cron/check-freshness', 'Bearer test-cron-secret');
+
+function allFresh() {
+	const now = new Date().toISOString();
+	mockReadBlobFreshnessTimestamp.mockResolvedValue({ uploadedAt: now, lastUpdated: now });
 }
 
-function authedEvent() {
-	return makeEvent('Bearer test-cron-secret');
+/** Every source fresh except the named one, whose content is 99 days old. */
+function freshExcept(staleBlobKey: string) {
+	const now = new Date().toISOString();
+	const old = new Date(Date.now() - 99 * 86_400_000).toISOString();
+	mockReadBlobFreshnessTimestamp.mockImplementation(async (blobKey: string) =>
+		blobKey === staleBlobKey
+			? { uploadedAt: now, lastUpdated: old }
+			: { uploadedAt: now, lastUpdated: now }
+	);
 }
-
-// ──────────────────────────────────────────────────────────
-// Reset mocks
-// ──────────────────────────────────────────────────────────
 
 beforeEach(() => {
 	mockReadBlobFreshnessTimestamp.mockReset();
 	mockFetchWithTimeout.mockReset();
+	vi.spyOn(console, 'error').mockImplementation(() => {});
+	vi.spyOn(console, 'log').mockImplementation(() => {});
 });
 
-// ──────────────────────────────────────────────────────────
-// Tests
-// ──────────────────────────────────────────────────────────
-
 describe('/api/health', () => {
-	it('returns 200 with status field', async () => {
-		// All sources fresh
-		mockReadBlobFreshnessTimestamp.mockResolvedValue({
-			uploadedAt: new Date().toISOString(),
-			lastUpdated: new Date().toISOString()
-		});
-
-		const response = await getHealth(publicEvent());
-		expect(response.status).toBe(200);
-
-		const data = await response.json();
-		expect(data.status).toBe('healthy');
+	it('lists every inventory source', async () => {
+		allFresh();
+		const data = await (await getHealth(publicHealth())).json();
+		expect(data.sources.map((s: { name: string }) => s.name)).toEqual(
+			SOURCE_INVENTORY.map((s) => s.name)
+		);
+		expect(data.summary.total).toBe(SOURCE_INVENTORY.length);
 	});
 
-	it('returns correct JSON shape with summary and sources', async () => {
-		mockReadBlobFreshnessTimestamp.mockResolvedValue({
-			uploadedAt: new Date().toISOString(),
-			lastUpdated: new Date().toISOString()
-		});
-
-		const response = await getHealth(publicEvent());
+	it('returns 503 and degraded while known subsource failures are unrepaired', async () => {
+		allFresh();
+		const response = await getHealth(publicHealth());
 		const data = await response.json();
-
-		// Top-level fields
-		expect(data).toHaveProperty('status');
-		expect(data).toHaveProperty('timestamp');
-		expect(data).toHaveProperty('summary');
-		expect(data).toHaveProperty('sources');
-
-		// Summary shape
-		expect(data.summary).toHaveProperty('total');
-		expect(data.summary).toHaveProperty('ok');
-		expect(data.summary).toHaveProperty('stale');
-		expect(data.summary).toHaveProperty('error');
-		expect(typeof data.summary.total).toBe('number');
-		expect(data.summary.total).toBe(_DATA_SOURCES.length);
-
-		// Sources is an array matching DATA_SOURCES length
-		expect(Array.isArray(data.sources)).toBe(true);
-		expect(data.sources.length).toBe(_DATA_SOURCES.length);
+		expect(response.status).toBe(503);
+		expect(data.status).toBe('degraded');
+		expect(data.subsources.length).toBeGreaterThan(0);
 	});
 
-	it('returns Content-Type application/json', async () => {
-		mockReadBlobFreshnessTimestamp.mockResolvedValue({
-			uploadedAt: new Date().toISOString(),
-			lastUpdated: new Date().toISOString()
-		});
+	it('returns 503 when one source is stale despite a fresh upload', async () => {
+		freshExcept('marin-coffee-index.json');
+		const response = await getHealth(publicHealth());
+		const data = await response.json();
+		expect(response.status).toBe(503);
+		const coffee = data.sources.find((s: { name: string }) => s.name === 'Marin Coffee Index');
+		expect(coffee.status).toBe('stale');
+	});
 
-		const response = await getHealth(publicEvent());
+	it('reports a missing blob as unavailable and an unreadable one as unknown', async () => {
+		mockReadBlobFreshnessTimestamp.mockImplementation(async (blobKey: string) => {
+			if (blobKey === 'marin-ikon-pass.json') throw new MockBlobNotFoundError('missing');
+			if (blobKey === 'marin-rivian-lease.json') throw new Error('network down');
+			const now = new Date().toISOString();
+			return { uploadedAt: now, lastUpdated: now };
+		});
+		const data = await (await getHealth(publicHealth())).json();
+		const statusOf = (name: string) =>
+			data.sources.find((s: { name: string }) => s.name === name).status;
+		expect(statusOf('Ikon Pass')).toBe('unavailable');
+		expect(statusOf('Rivian Lease')).toBe('unknown');
+	});
+
+	it('returns JSON with no-cache', async () => {
+		allFresh();
+		const response = await getHealth(publicHealth());
 		expect(response.headers.get('Content-Type')).toBe('application/json');
-	});
-
-	it('returns Cache-Control: no-cache', async () => {
-		mockReadBlobFreshnessTimestamp.mockResolvedValue({
-			uploadedAt: new Date().toISOString(),
-			lastUpdated: new Date().toISOString()
-		});
-
-		const response = await getHealth(publicEvent());
 		expect(response.headers.get('Cache-Control')).toBe('no-cache');
 	});
 
-	it('returns "degraded" when a source is stale', async () => {
-		// Return a very old timestamp so it exceeds maxAgeDays
-		const oldDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
-		mockReadBlobFreshnessTimestamp.mockResolvedValue({
-			uploadedAt: oldDate,
-			lastUpdated: oldDate
-		});
-
-		const response = await getHealth(publicEvent());
-		const data = await response.json();
-
-		expect(data.status).toBe('degraded');
-		expect(data.summary.stale).toBeGreaterThan(0);
-	});
-
-	it('returns "degraded" when a source blob is missing', async () => {
-		mockReadBlobFreshnessTimestamp.mockRejectedValue(new Error('blob not found'));
-
-		const response = await getHealth(publicEvent());
-		const data = await response.json();
-
-		expect(data.status).toBe('degraded');
-		expect(data.summary.error).toBeGreaterThan(0);
-	});
-
-	it('each source entry has the expected fields', async () => {
-		mockReadBlobFreshnessTimestamp.mockResolvedValue({
-			uploadedAt: new Date().toISOString(),
-			lastUpdated: new Date().toISOString()
-		});
-
-		const response = await getHealth(publicEvent());
-		const data = await response.json();
-
-		const source = data.sources[0];
-		expect(source).toHaveProperty('name');
-		expect(source).toHaveProperty('blobKey');
-		expect(source).toHaveProperty('lastUpdated');
-		expect(source).toHaveProperty('expectedCadence');
-		expect(source).toHaveProperty('maxAgeDays');
-		expect(source).toHaveProperty('isStale');
-		expect(source).toHaveProperty('ageDays');
-		expect(source).toHaveProperty('status');
-	});
-
-	it('does NOT include internal info without cron auth', async () => {
-		mockReadBlobFreshnessTimestamp.mockResolvedValue({
-			uploadedAt: new Date().toISOString(),
-			lastUpdated: new Date().toISOString()
-		});
-
-		const response = await getHealth(publicEvent());
-		const data = await response.json();
-
+	it('excludes internal diagnostics, blob keys and error detail without cron auth', async () => {
+		allFresh();
+		const body = await (await getHealth(publicHealth())).text();
+		const data = JSON.parse(body);
 		expect(data.internal).toBeUndefined();
+		expect(body).not.toContain('.json');
+		expect(body).not.toContain('API_KEY');
 	});
 
-	it('includes internal info (apiKeys) when cron auth is present', async () => {
-		mockReadBlobFreshnessTimestamp.mockResolvedValue({
-			uploadedAt: new Date().toISOString(),
-			lastUpdated: new Date().toISOString()
-		});
+	it('includes internal diagnostics with cron auth', async () => {
+		allFresh();
+		const data = await (await getHealth(authedHealth())).json();
+		expect(data.internal.apiKeys).toContainEqual({ name: 'GOOGLE_PLACES_API_KEY', set: true });
+		expect(data.internal.apiKeys).toContainEqual({ name: 'NREL_API_KEY', set: false });
+		expect(data.internal.blobKeys['Cappuccino']).toBe('marin-cappuccino.json');
+		expect(data.internal.subsources[0]).toHaveProperty('problem');
+		expect(data.internal.subsources[0]).toHaveProperty('disposition');
+	});
 
-		const response = await getHealth(authedEvent());
-		const data = await response.json();
+	it('publishes subsources as name, parent and status only', async () => {
+		allFresh();
+		const data = await (await getHealth(publicHealth())).json();
+		for (const subsource of data.subsources) {
+			expect(Object.keys(subsource).sort()).toEqual(['name', 'parent', 'status']);
+		}
+	});
+});
 
-		expect(data.internal).toBeDefined();
-		expect(data.internal.apiKeys).toBeDefined();
-		expect(Array.isArray(data.internal.apiKeys)).toBe(true);
+describe('/api/cron/check-freshness', () => {
+	it('rejects unauthorized calls', async () => {
+		allFresh();
+		const response = await getFreshness(makeEvent('/api/cron/check-freshness'));
+		expect(response.status).toBe(401);
+		expect(mockReadBlobFreshnessTimestamp).not.toHaveBeenCalled();
+	});
 
-		// Check that API key availability is reported correctly
-		const gpKey = data.internal.apiKeys.find(
-			(k: { name: string }) => k.name === 'GOOGLE_PLACES_API_KEY'
-		);
-		expect(gpKey?.set).toBe(true);
+	it('returns non-2xx when degraded', async () => {
+		freshExcept('marin-grocery-basket.json');
+		const response = await getFreshness(authedFreshness());
+		expect(response.status).toBe(503);
+		expect((await response.json()).status).toBe('degraded');
+	});
 
-		const nrelKey = data.internal.apiKeys.find((k: { name: string }) => k.name === 'NREL_API_KEY');
-		expect(nrelKey?.set).toBe(false);
+	it('classifies every source identically to /api/health', async () => {
+		freshExcept('strava-events.json');
+		const health = await (await getHealth(publicHealth())).json();
+		const freshness = await (await getFreshness(authedFreshness())).json();
+		const statuses = (report: { sources: { name: string; status: string }[] }) =>
+			report.sources.map(({ name, status }) => ({ name, status }));
+		expect(statuses(freshness)).toEqual(statuses(health));
+		expect(freshness.status).toBe(health.status);
 	});
 });

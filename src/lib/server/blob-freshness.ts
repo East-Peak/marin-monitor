@@ -12,13 +12,27 @@ function asScrapeMetadataValue(value: unknown): ScrapeMetadataValue | null {
 	return isJsonRecord(value) ? (value as ScrapeMetadataValue) : null;
 }
 
+const asString = (value: unknown) => (typeof value === 'string' ? value : null);
+
+/**
+ * Once a writer records scrape metadata (`lastSuccessfulScrapeAt`, or the
+ * legacy `lastLiveScrapeAt`), that is authoritative: null means no live scrape
+ * has succeeded, and it must not fall back to `lastUpdated`.
+ */
+function readObservedAt(value: unknown): string | null | undefined {
+	if (!isJsonRecord(value)) return undefined;
+	if ('lastSuccessfulScrapeAt' in value || 'lastLiveScrapeAt' in value) {
+		return asString(value.lastSuccessfulScrapeAt) ?? asString(value.lastLiveScrapeAt);
+	}
+	return readSuccessfulScrapeAt(asScrapeMetadataValue(value)) ?? undefined;
+}
+
 export function extractBlobFreshnessTimestamp(data: unknown): string | null {
 	if (!isJsonRecord(data)) return null;
 
-	return (
-		readSuccessfulScrapeAt(asScrapeMetadataValue(data.current)) ??
-		readSuccessfulScrapeAt(asScrapeMetadataValue(data))
-	);
+	const current = readObservedAt(data.current);
+	if (current !== undefined) return current;
+	return readObservedAt(data) ?? null;
 }
 
 /**
