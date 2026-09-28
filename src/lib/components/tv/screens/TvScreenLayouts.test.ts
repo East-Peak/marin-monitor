@@ -73,6 +73,25 @@ describe('tv layout regressions', () => {
 		for (const cell of Array.from(grid?.children ?? [])) {
 			expect((cell as HTMLElement).className).toContain('overflow-hidden');
 		}
+
+		const tiles = container.querySelectorAll('[data-camera-id]');
+		expect(tiles).toHaveLength(8);
+		expect(container.textContent).not.toMatch(/Camera offline/);
+	});
+
+	it('still renders iframe cameras as iframes, not tiles', async () => {
+		const { CAMERAS } = await import('$lib/config/cameras');
+		const original = [...CAMERAS];
+		CAMERAS.splice(0, 1, {
+			...original[0],
+			id: 'windy-x',
+			type: 'iframe',
+			url: 'https://windy.test/embed'
+		});
+		const { container } = render(TvCameraClusterScreen, { props: { clusterId: 'tam-coast' } });
+		expect(container.querySelector('iframe[src="https://windy.test/embed"]')).not.toBeNull();
+		expect(container.querySelector('[data-camera-id="windy-x"]')).toBeNull();
+		CAMERAS.splice(0, CAMERAS.length, ...original);
 	});
 
 	it('uses shorter 16:9 photo cards and a three-column grid for fix-it marin', () => {
