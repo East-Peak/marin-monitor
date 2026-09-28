@@ -19,6 +19,7 @@
 	import Tv311PhotoWall from './screens/Tv311PhotoWall.svelte';
 	import TvConditionsCard from './screens/TvConditionsCard.svelte';
 	import TvOutdoorsCard from './screens/TvOutdoorsCard.svelte';
+	import { preloadScreenFrames } from './camera-preload';
 	import { loadStravaData } from '$lib/stores/strava';
 	import { TV_SCREENS, TV_MAP_VIEWS, CURSOR_HIDE_MS, TV_REFRESH_INTERVAL_MS } from '$lib/config/tv';
 	import { refresh, allNewsItems, alerts, mapStore, settings, threeOneOneNews } from '$lib/stores';
@@ -134,6 +135,13 @@
 		carouselIdx = targetIdx;
 		screenStartedAt = Date.now();
 	}
+
+	// Warm the next camera slide while the current one is showing, so its tiles
+	// mount with decoded frames (bounded to one slide's worth of images).
+	$effect(() => {
+		const upcoming = TV_SCREENS[nextValidIdx(carouselIdx, 1)];
+		if (upcoming) void preloadScreenFrames(upcoming.id, Date.now());
+	});
 
 	function togglePause() {
 		paused = !paused;
