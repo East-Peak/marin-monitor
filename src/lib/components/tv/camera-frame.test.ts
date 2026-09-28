@@ -2,6 +2,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
 	OFFLINE_AFTER_FAILURES,
+	priorFailures,
+	rememberFailure,
 	initialTileState,
 	lastGoodFrame,
 	onFrameFailed,
@@ -88,5 +90,14 @@ describe('last-good frame cache', () => {
 		rememberFrame('cam', 'u2', T0 + 10_000);
 		rememberFrame('cam', 'u1', T0);
 		expect(lastGoodFrame('cam')?.url).toBe('u2');
+	});
+	it('counts consecutive failures per camera across mounts until a frame loads', () => {
+		expect(priorFailures('cam')).toBe(0);
+		rememberFailure('cam');
+		rememberFailure('cam');
+		expect(priorFailures('cam')).toBe(2);
+		expect(tileStatus(initialTileState(null, priorFailures('cam')), T0, 60_000)).toBe('offline');
+		rememberFrame('cam', 'u1', T0);
+		expect(priorFailures('cam')).toBe(0);
 	});
 });

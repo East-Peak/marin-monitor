@@ -5,6 +5,8 @@
 	import {
 		initialTileState,
 		lastGoodFrame,
+		priorFailures,
+		rememberFailure,
 		onFrameFailed,
 		onFrameLoaded,
 		rememberFrame,
@@ -24,7 +26,9 @@
 	let { cam, preload = preloadImage, now = Date.now }: Props = $props();
 
 	// Seeded once: each tile is keyed by camera id, so `cam` never changes underneath it.
-	let tile = $state<TileState>(untrack(() => initialTileState(lastGoodFrame(cam.id))));
+	let tile = $state<TileState>(
+		untrack(() => initialTileState(lastGoodFrame(cam.id), priorFailures(cam.id)))
+	);
 	let clock = $state(untrack(() => now()));
 	let inFlight = false;
 	let destroyed = false;
@@ -47,6 +51,7 @@
 			rememberFrame(cam.id, url, at);
 		} else {
 			tile = onFrameFailed(tile);
+			rememberFailure(cam.id);
 		}
 		clock = at;
 	}

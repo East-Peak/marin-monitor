@@ -1,7 +1,7 @@
 // src/lib/components/tv/camera-preload.ts
 import { CAMERAS, type CameraConfig } from '$lib/config/cameras';
 import type { TvCameraCluster, TvScreenId } from '$lib/config/tv';
-import { rememberFrame, versionedFrameUrl } from './camera-frame';
+import { rememberFailure, rememberFrame, versionedFrameUrl } from './camera-frame';
 import { preloadImage } from './image-preload';
 
 const SCREEN_CLUSTER: Partial<Record<TvScreenId, TvCameraCluster>> = {
@@ -39,6 +39,7 @@ export async function preloadScreenFrames(
 		frames.map(async ({ camId, url }) => {
 			const ok = await preload(url);
 			if (ok) rememberFrame(camId, url, Date.now());
+			else rememberFailure(camId);
 			return ok;
 		})
 	);

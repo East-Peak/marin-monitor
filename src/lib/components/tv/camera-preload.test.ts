@@ -1,7 +1,7 @@
 // src/lib/components/tv/camera-preload.test.ts
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { clusterForScreen, framesToPreload, preloadScreenFrames } from './camera-preload';
-import { lastGoodFrame, resetFrameCache, versionedFrameUrl } from './camera-frame';
+import { lastGoodFrame, priorFailures, resetFrameCache, versionedFrameUrl } from './camera-frame';
 import { CAMERAS } from '$lib/config/cameras';
 
 const NOW = Date.parse('2026-09-28T20:00:05.000Z');
@@ -34,6 +34,7 @@ describe('camera preload', () => {
 		const ok = await preloadScreenFrames('cameras-west-north', NOW, preload);
 		expect(ok).toBe(frames.length - 1);
 		expect(lastGoodFrame(frames[0].camId)).toBeNull();
+		expect(priorFailures(frames[0].camId)).toBe(1);
 		expect(lastGoodFrame(frames[1].camId)?.url).toBe(frames[1].url);
 	});
 });

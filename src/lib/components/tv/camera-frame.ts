@@ -25,10 +25,13 @@ export function versionedFrameUrl(
 	return `${url}${url.includes('?') ? '&' : '?'}t=${version}`;
 }
 
-export function initialTileState(lastGood?: { url: string; at: number } | null): TileState {
+export function initialTileState(
+	lastGood?: { url: string; at: number } | null,
+	failures = 0
+): TileState {
 	return lastGood
 		? { shownUrl: lastGood.url, shownAt: lastGood.at, failures: 0 }
-		: { shownUrl: null, shownAt: null, failures: 0 };
+		: { shownUrl: null, shownAt: null, failures };
 }
 
 export function onFrameLoaded(_s: TileState, url: string, at: number): TileState {
@@ -52,6 +55,9 @@ export function tileStatus(s: TileState, nowMs: number, staleMs: number): TileSt
 
 // Bounded by the camera count (one entry per camera); survives slide unmounts.
 const frameCache = new Map<string, { url: string; at: number }>();
+// Consecutive failures since the last decoded frame. A slow-refresh camera gets
+// one attempt per visit, so counting per mount would never reach "offline".
+const failureCounts = new Map<string, number>();
 
 export function lastGoodFrame(camId: string): { url: string; at: number } | null {
 	return frameCache.get(camId) ?? null;
@@ -61,8 +67,18 @@ export function rememberFrame(camId: string, url: string, at: number): void {
 	const prev = frameCache.get(camId);
 	if (prev && prev.at > at) return;
 	frameCache.set(camId, { url, at });
+	failureCounts.delete(camId);
+}
+
+export function priorFailures(camId: string): number {
+	return failureCounts.get(camId) ?? 0;
+}
+
+export function rememberFailure(camId: string): void {
+	failureCounts.set(camId, priorFailures(camId) + 1);
 }
 
 export function resetFrameCache(): void {
 	frameCache.clear();
+	failureCounts.clear();
 }

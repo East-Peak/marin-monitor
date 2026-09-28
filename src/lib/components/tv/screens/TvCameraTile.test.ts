@@ -99,6 +99,20 @@ describe('TvCameraTile', () => {
 		expect(root(container).dataset.status).toBe('live');
 	});
 
+	it('carries failures across remounts so a dead slow-refresh camera reaches offline', async () => {
+		// 60s refresh but ~18s on screen: one attempt per visit, so per-mount counting never trips.
+		const slowCam = { ...cam, id: 'abc7-tam', refreshInterval: 60 };
+		const preload = vi.fn(async () => false);
+		const first = render(TvCameraTile, { cam: slowCam, preload, now });
+		await flush();
+		expect(root(first.container).dataset.status).toBe('connecting');
+		first.unmount();
+		clock += 60_000;
+		const second = render(TvCameraTile, { cam: slowCam, preload, now });
+		await flush();
+		expect(root(second.container).dataset.status).toBe('offline');
+	});
+
 	it('stops refreshing when destroyed', async () => {
 		const preload = vi.fn(async () => true);
 		const { unmount } = render(TvCameraTile, { cam, preload, now });
