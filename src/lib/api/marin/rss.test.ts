@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { fetchCategory } from './rss';
+import { hasKnownPublicationTime } from '$lib/news/order';
 import type { NewsCategory, VerificationLevel } from '$lib/types';
 
 // Mock $lib/config/api (logger)
@@ -14,7 +15,14 @@ vi.mock('$lib/config/api', () => ({
 // We'll set feed config per test via the mock
 let mockFeeds: Record<
 	string,
-	Array<{ name: string; url: string; verification: VerificationLevel; broken?: boolean }>
+	Array<{
+		name: string;
+		url: string;
+		verification: VerificationLevel;
+		broken?: boolean;
+		assumedTimeZone?: string;
+		pubDateMeaning?: 'publication' | 'event-start';
+	}>
 > = {};
 
 vi.mock('$lib/config/feeds', () => ({
@@ -153,7 +161,7 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 			expect(item.source).toBe('Test News');
 			expect(item.category).toBe('safety');
 			expect(item.verification).toBe('local_media');
-			expect(item.id).toBe('article-1');
+			expect(item.id).toBe('test-news:article-1');
 			expect(item.timestamp).toBe(new Date('Mon, 01 Apr 2026 10:30:00 GMT').getTime());
 		});
 
@@ -226,7 +234,7 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 			setupSingleFeed('local', 'Test Source', 'local_media', xml);
 			const result = await fetchCategory('local');
 
-			expect(result.items[0].id).toBe('https://example.com/no-guid');
+			expect(result.items[0].id).toBe('test-source:https://example.com/no-guid');
 		});
 
 		it('generates a stable hash id when both guid and link are absent', async () => {
@@ -240,7 +248,7 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 			setupSingleFeed('local', 'Test Source', 'local_media', xml);
 			const result = await fetchCategory('local');
 
-			expect(result.items[0].id).toMatch(/^rss-/);
+			expect(result.items[0].id).toMatch(/^test-source:rss-/);
 			// Same input should produce the same hash
 			const firstId = result.items[0].id;
 
@@ -274,10 +282,10 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 			expect(item.source).toBe('Atom Source');
 			expect(item.category).toBe('civic');
 			expect(item.verification).toBe('official');
-			expect(item.id).toBe('urn:atom:1');
+			expect(item.id).toBe('atom-source:urn:atom:1');
 		});
 
-		it('falls back to updated when published is absent', async () => {
+		it('keeps an entry that has only <updated> as undated — updated is not publication', async () => {
 			const xml = atomXml([
 				{
 					title: 'Updated Only',
@@ -289,9 +297,29 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 			setupSingleFeed('civic', 'Atom Source', 'official', xml);
 			const result = await fetchCategory('civic');
 
-			expect(result.items).toHaveLength(1);
-			expect(result.items[0].pubDate).toBe('2026-03-31T08:00:00Z');
-			expect(result.items[0].timestamp).toBe(new Date('2026-03-31T08:00:00Z').getTime());
+			// retained and displayable…
+			expect(result.items.map((i) => i.title)).toEqual(['Updated Only']);
+			expect(result.items[0]).toMatchObject({ publishedAtStatus: 'missing', pubDate: undefined });
+			expect(result.items[0].timestamp).toBeNaN();
+			// …but not eligible for Latest reporting or recency counts
+			expect(hasKnownPublicationTime(result.items[0])).toBe(false);
+		});
+
+		it('records which field the publication time came from', async () => {
+			const xml = atomXml([
+				{
+					title: 'Both',
+					linkHref: 'https://example.com/atom/3',
+					published: '2026-04-01T12:00:00Z',
+					updated: '2026-04-02T12:00:00Z'
+				}
+			]);
+
+			setupSingleFeed('civic', 'Atom Source', 'official', xml);
+			const result = await fetchCategory('civic');
+
+			expect(result.items[0].publishedAtSource).toBe('atom:published');
+			expect(result.items[0].timestamp).toBe(Date.parse('2026-04-01T12:00:00Z'));
 		});
 	});
 
@@ -329,41 +357,114 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 			expect(result.items[0].link).toBe('');
 		});
 
-		it('uses Date.now() for timestamp when pubDate is missing', async () => {
-			const before = Date.now();
+		it.each([
+			['missing', undefined, undefined],
+			['invalid', 'not-a-real-date', 'not-a-real-date'],
+			['date-only', '2026-04-01', '2026-04-01'],
+			['future', 'Tue, 01 Apr 2098 10:00:00 GMT', 'Tue, 01 Apr 2098 10:00:00 GMT']
+		])(
+			'keeps an item whose pubDate is %s as undated — never stamps it "now"',
+			async (label, pubDate, raw) => {
+				const xml = rssXml([
+					{ title: 'Undated', link: 'https://example.com/undated', pubDate },
+					{
+						title: 'Dated',
+						link: 'https://example.com/dated',
+						pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
+					}
+				]);
+
+				setupSingleFeed('local', 'Test Source', 'local_media', xml);
+				const result = await fetchCategory('local');
+
+				// retention and display: both kept, dated first, undated last
+				expect(result.items.map((i) => i.title)).toEqual(['Dated', 'Undated']);
+				const undated = result.items[1];
+				expect(undated.publishedAtStatus).toBe(label === 'date-only' ? 'invalid' : label);
+				expect(undated.pubDate).toBe(raw);
+				expect(undated.timestamp).toBeNaN();
+				// eligibility: only the dated item counts as reporting
+				expect(result.items.map(hasKnownPublicationTime)).toEqual([true, false]);
+			}
+		);
+
+		it('orders dated items newest first with undated items last, wherever they appear', async () => {
 			const xml = rssXml([
-				{
-					title: 'No Date',
-					link: 'https://example.com/no-date'
-				}
+				{ title: 'U1', link: 'https://example.com/u1' },
+				{ title: 'Old', link: 'https://example.com/o', pubDate: 'Tue, 01 Apr 2026 08:00:00 GMT' },
+				{ title: 'U2', link: 'https://example.com/u2', pubDate: 'garbage' },
+				{ title: 'New', link: 'https://example.com/n', pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT' },
+				{ title: 'U3', link: 'https://example.com/u3' }
 			]);
 
 			setupSingleFeed('local', 'Test Source', 'local_media', xml);
 			const result = await fetchCategory('local');
-			const after = Date.now();
 
-			expect(result.items[0].pubDate).toBeUndefined();
-			expect(result.items[0].timestamp).toBeGreaterThanOrEqual(before);
-			expect(result.items[0].timestamp).toBeLessThanOrEqual(after);
+			expect(result.items.map((i) => i.title)).toEqual(['New', 'Old', 'U1', 'U2', 'U3']);
 		});
 
-		it('uses Date.now() for timestamp when pubDate is invalid', async () => {
-			const before = Date.now();
-			const xml = rssXml([
-				{
-					title: 'Bad Date',
-					link: 'https://example.com/bad-date',
-					pubDate: 'not-a-real-date'
-				}
-			]);
+		it("dates zone-less items in the feed's declared time zone", async () => {
+			mockFeeds = {
+				local: [
+					{
+						name: 'NBC Bay Area – Marin',
+						url: 'https://example.com/nbc.xml',
+						verification: 'local_media',
+						assumedTimeZone: 'America/Los_Angeles'
+					}
+				]
+			};
+			global.fetch = vi.fn().mockResolvedValue({
+				ok: true,
+				text: () =>
+					Promise.resolve(
+						rssXml([
+							{
+								title: 'NBC item',
+								link: 'https://example.com/n',
+								pubDate: 'Fri, Sep 25 2026 11:48:58 AM'
+							}
+						])
+					)
+			});
 
-			setupSingleFeed('local', 'Test Source', 'local_media', xml);
 			const result = await fetchCategory('local');
-			const after = Date.now();
 
-			// When date is invalid, pubDate is omitted and timestamp falls back to Date.now()
-			expect(result.items[0].timestamp).toBeGreaterThanOrEqual(before);
-			expect(result.items[0].timestamp).toBeLessThanOrEqual(after);
+			expect(result.items[0].timestamp).toBe(Date.parse('2026-09-25T18:48:58.000Z'));
+		});
+
+		it('keeps an event-start item undated, with the meeting time as eventAt', async () => {
+			mockFeeds = {
+				civic: [
+					{
+						name: 'Marin County BOS – Agendas',
+						url: 'https://example.com/bos.xml',
+						verification: 'official',
+						pubDateMeaning: 'event-start'
+					}
+				]
+			};
+			global.fetch = vi.fn().mockResolvedValue({
+				ok: true,
+				text: () =>
+					Promise.resolve(
+						rssXml([
+							{
+								title: 'BOS Meeting 260915',
+								link: 'https://example.com/m',
+								pubDate: 'Tue, 15 Sep 2026 09:00:00 -0800'
+							}
+						])
+					)
+			});
+
+			const [meeting] = (await fetchCategory('civic')).items;
+			expect(meeting).toMatchObject({
+				publishedAtStatus: 'missing',
+				eventAt: '2026-09-15T17:00:00.000Z'
+			});
+			expect(meeting.timestamp).toBeNaN();
+			expect(hasKnownPublicationTime(meeting)).toBe(false);
 		});
 
 		it('omits description and content when absent', async () => {

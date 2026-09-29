@@ -2,14 +2,20 @@
  * RSS Feed Adapter for Marin Monitor
  *
  * Fetches and parses RSS/Atom feeds from Marin news sources.
- * Uses browser-native DOMParser (no npm dependencies).
+ * Parsing and normalization are shared with the server producer
+ * ($lib/news/feed-xml + normalize), so both paths behave identically.
  * Feed XML is fetched through the first-party /api/feeds route.
  */
 
 import { FEEDS, type FeedSource } from '$lib/config/feeds';
-import type { NewsItem, NewsCategory, VerificationLevel } from '$lib/types';
+import type { NewsItem, NewsCategory } from '$lib/types';
 import { logger } from '$lib/config/api';
 import { fetchWithTimeout } from './fetch-helpers';
+import type { NormalizedNewsItem } from '$lib/news/normalize';
+import { newsSourceId } from '$lib/news/source-id';
+import { compareByTimestamp } from '$lib/news/order';
+import { sourceScopedId } from '$lib/news/identity';
+import { loadNewsPipeline, type NewsPipeline } from './news-pipeline';
 
 /** Result from fetching a single feed */
 interface FeedResult {
@@ -26,175 +32,62 @@ export interface CategoryFetchResult {
 }
 
 /**
- * Parse an RSS 2.0 or Atom XML string into NewsItem[]
+ * Browser view of a normalized item. An unknown publication time is never
+ * replaced by "now" (dashboard spec §13.8, TV spec Principle 3): the item is
+ * kept with `timestamp: NaN` and its publishedAtStatus/raw value, shows as
+ * "undated", and is excluded only from Latest reporting and recency counts.
+ */
+function toNewsItem(item: NormalizedNewsItem): NewsItem {
+	return {
+		id: sourceScopedId(item.sourceId, item.id),
+		title: item.title,
+		link: item.link,
+		pubDate: item.publishedAtRaw ?? undefined,
+		publishedAtSource: item.publishedAtSource ?? undefined,
+		publishedAtStatus: item.publishedAtStatus,
+		timestamp: item.publishedAt === null ? Number.NaN : Date.parse(item.publishedAt),
+		...(item.eventAt ? { eventAt: item.eventAt } : {}),
+		description: item.summary ?? undefined,
+		content: item.content ?? undefined,
+		source: item.source,
+		category: item.category,
+		verification: item.verification,
+		...(item.point
+			? {
+					lat: item.point.lat,
+					lon: item.point.lon,
+					locationConfidence: 'exact' as const,
+					locationEvidence: 'feed coordinates'
+				}
+			: {})
+	};
+}
+
+/**
+ * Parse an RSS 2.0 or Atom XML string into NewsItem[] with the same shared
+ * parser and normalizer the server producer uses.
  */
 function parseRssXml(
 	xml: string,
-	source: string,
+	feedSource: FeedSource,
 	category: NewsCategory,
-	verification: VerificationLevel
+	nowMs: number,
+	{ parseFeedXml, normalizeEntry }: NewsPipeline
 ): NewsItem[] {
-	const parser = new DOMParser();
-	const doc = parser.parseFromString(xml, 'text/xml');
-
-	// Check for parse errors
-	const parseError = doc.querySelector('parsererror');
-	if (parseError) {
-		throw new Error(`XML parse error: ${parseError.textContent?.slice(0, 100)}`);
-	}
-
+	const ctx = {
+		sourceId: newsSourceId(feedSource.name),
+		source: feedSource.name,
+		category,
+		verification: feedSource.verification,
+		assumedTimeZone: feedSource.assumedTimeZone,
+		pubDateMeaning: feedSource.pubDateMeaning
+	};
 	const items: NewsItem[] = [];
-
-	// Try RSS 2.0 format first (most common for these feeds)
-	const rssItems = doc.querySelectorAll('item');
-	if (rssItems.length > 0) {
-		rssItems.forEach((item) => {
-			const newsItem = parseRssItem(item, source, category, verification);
-			if (newsItem) items.push(newsItem);
-		});
-		return items;
+	for (const entry of parseFeedXml(xml).entries) {
+		const normalized = normalizeEntry(entry, ctx, nowMs);
+		if (normalized) items.push(toNewsItem(normalized));
 	}
-
-	// Try Atom format
-	const atomEntries = doc.querySelectorAll('entry');
-	if (atomEntries.length > 0) {
-		atomEntries.forEach((entry) => {
-			const newsItem = parseAtomEntry(entry, source, category, verification);
-			if (newsItem) items.push(newsItem);
-		});
-		return items;
-	}
-
 	return items;
-}
-
-/**
- * Parse a single RSS 2.0 <item> element
- */
-function parseRssItem(
-	item: Element,
-	source: string,
-	category: NewsCategory,
-	verification: VerificationLevel
-): NewsItem | null {
-	const title = getElementText(item, 'title');
-	if (!title) return null;
-
-	const link = getElementText(item, 'link');
-	const description = getElementText(item, 'description');
-	const pubDate = getElementText(item, 'pubDate');
-	const guid = getElementText(item, 'guid');
-	const content = getElementText(item, 'content:encoded');
-
-	const timestamp = pubDate ? new Date(pubDate).getTime() : Date.now();
-
-	// Skip items with invalid dates (NaN)
-	if (isNaN(timestamp)) {
-		return {
-			id: guid || link || generateId(title, source),
-			title: cleanHtml(title),
-			link: link || '',
-			timestamp: Date.now(),
-			description: description ? cleanHtml(description).slice(0, 300) : undefined,
-			content: content ? cleanHtml(content) : undefined,
-			source,
-			category,
-			verification
-		};
-	}
-
-	return {
-		id: guid || link || generateId(title, source),
-		title: cleanHtml(title),
-		link: link || '',
-		pubDate: pubDate || undefined,
-		timestamp,
-		description: description ? cleanHtml(description).slice(0, 300) : undefined,
-		content: content ? cleanHtml(content) : undefined,
-		source,
-		category,
-		verification
-	};
-}
-
-/**
- * Parse a single Atom <entry> element
- */
-function parseAtomEntry(
-	entry: Element,
-	source: string,
-	category: NewsCategory,
-	verification: VerificationLevel
-): NewsItem | null {
-	const title = getElementText(entry, 'title');
-	if (!title) return null;
-
-	// Atom links are in <link> elements with href attribute
-	const linkEl = entry.querySelector('link[rel="alternate"]') || entry.querySelector('link');
-	const link = linkEl?.getAttribute('href') || '';
-
-	const summary = getElementText(entry, 'summary');
-	const content = getElementText(entry, 'content');
-	const published = getElementText(entry, 'published') || getElementText(entry, 'updated');
-	const id = getElementText(entry, 'id');
-
-	const timestamp = published ? new Date(published).getTime() : Date.now();
-
-	return {
-		id: id || link || generateId(title, source),
-		title: cleanHtml(title),
-		link,
-		pubDate: published || undefined,
-		timestamp: isNaN(timestamp) ? Date.now() : timestamp,
-		description: summary ? cleanHtml(summary).slice(0, 300) : undefined,
-		content: content ? cleanHtml(content) : undefined,
-		source,
-		category,
-		verification
-	};
-}
-
-/**
- * Get text content of a child element.
- * Uses getElementsByTagName to handle namespaced tags (e.g. content:encoded)
- * since querySelector chokes on colons in tag names.
- */
-function getElementText(parent: Element, tagName: string): string | null {
-	// getElementsByTagName handles namespace prefixes correctly
-	const els = parent.getElementsByTagName(tagName);
-	if (els.length === 0) return null;
-
-	const text = els[0].textContent?.trim();
-	return text || null;
-}
-
-/**
- * Strip HTML tags from text (for descriptions that contain markup)
- */
-function cleanHtml(text: string): string {
-	// Browser-native DOM (this module is client-side): strips tags and decodes
-	// entities via the parser instead of regex chains — clears CodeQL's
-	// incomplete-multi-character-sanitization + double-escaping on this function.
-	// (Feed text reaches here already once-decoded by the upstream XML parse; that
-	// extra pass is intentional and locked by rss.test.ts.)
-	const cleaned = text.replace(/<!\[CDATA\[|\]\]>/g, '');
-	const doc = new DOMParser().parseFromString(cleaned, 'text/html');
-	for (const el of doc.querySelectorAll('script, style')) el.remove();
-	return (doc.body?.textContent ?? '').replace(/\s+/g, ' ').trim();
-}
-
-/**
- * Generate a stable ID from title + source
- */
-function generateId(title: string, source: string): string {
-	const str = `${source}:${title}`.toLowerCase();
-	let hash = 0;
-	for (let i = 0; i < str.length; i++) {
-		const char = str.charCodeAt(i);
-		hash = (hash << 5) - hash + char;
-		hash |= 0;
-	}
-	return `rss-${Math.abs(hash).toString(36)}`;
 }
 
 /**
@@ -220,12 +113,16 @@ async function fetchRssXml(url: string): Promise<string> {
 /**
  * Fetch and parse a single RSS feed
  */
-async function fetchFeed(feedSource: FeedSource, category: NewsCategory): Promise<FeedResult> {
+async function fetchFeed(
+	feedSource: FeedSource,
+	category: NewsCategory,
+	pipeline: NewsPipeline
+): Promise<FeedResult> {
 	try {
 		logger.log('RSS', `Fetching ${feedSource.name}: ${feedSource.url}`);
 
 		const xml = await fetchRssXml(feedSource.url);
-		const items = parseRssXml(xml, feedSource.name, category, feedSource.verification);
+		const items = parseRssXml(xml, feedSource, category, Date.now(), pipeline);
 
 		logger.log('RSS', `${feedSource.name}: ${items.length} items`);
 		return { items, feedName: feedSource.name };
@@ -237,7 +134,8 @@ async function fetchFeed(feedSource: FeedSource, category: NewsCategory): Promis
 }
 
 /**
- * Fetch all feeds for a given category
+ * Fetch all feeds for a given category. Rejects when the parser cannot load,
+ * so callers keep their previous items instead of replacing them with none.
  */
 export async function fetchCategory(category: NewsCategory): Promise<CategoryFetchResult> {
 	const feeds = FEEDS[category].filter((f) => !f.broken);
@@ -246,8 +144,11 @@ export async function fetchCategory(category: NewsCategory): Promise<CategoryFet
 		return { category, items: [], errors: [] };
 	}
 
+	const pipeline = await loadNewsPipeline();
 	// Fetch all feeds in the category concurrently
-	const results = await Promise.allSettled(feeds.map((feed) => fetchFeed(feed, category)));
+	const results = await Promise.allSettled(
+		feeds.map((feed) => fetchFeed(feed, category, pipeline))
+	);
 
 	const allItems: NewsItem[] = [];
 	const errors: string[] = [];
@@ -263,16 +164,19 @@ export async function fetchCategory(category: NewsCategory): Promise<CategoryFet
 		}
 	}
 
-	// Sort by timestamp, newest first
-	allItems.sort((a, b) => b.timestamp - a.timestamp);
+	// Dated newest first; undated (NaN) last — never a subtraction comparator.
+	allItems.sort(compareByTimestamp);
 
 	return { category, items: allItems, errors };
 }
 
 /**
- * Fetch all RSS categories
+ * Fetch all RSS categories. If the parser cannot load, this rejects as a
+ * whole: loadAllNews then records an `rss:` error and rewrites no category,
+ * so the stores keep their last items until a later refresh recovers.
  */
 export async function fetchAllFeeds(): Promise<CategoryFetchResult[]> {
+	await loadNewsPipeline();
 	const rssCategories: NewsCategory[] = [
 		'local',
 		'civic',
