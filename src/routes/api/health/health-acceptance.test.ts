@@ -15,6 +15,13 @@ vi.mock('$lib/server/blob-freshness', () => ({
 	readBlobFreshnessTimestamp: mockReadBlobFreshnessTimestamp
 }));
 vi.mock('$lib/server/fetch-utils', () => ({ fetchWithTimeout: vi.fn() }));
+vi.mock('$lib/server/news/health', () => ({
+	NEWS_SNAPSHOT_SOURCE: 'News Snapshot',
+	readNewsHealthFromBlob: async () => ({
+		observation: { kind: 'found', uploadedAt: null, contentTimestamp: new Date().toISOString() },
+		failures: []
+	})
+}));
 vi.mock('$lib/server/health/inventory', async (importOriginal) => {
 	const accept = (name: string, condition: 'stale' | 'unavailable') => ({
 		name,

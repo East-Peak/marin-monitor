@@ -8,6 +8,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockReadBlobFreshnessTimestamp = vi.fn();
 const mockFetchWithTimeout = vi.fn();
+const mockReadNewsHealthFromBlob = vi.fn();
 
 class MockBlobNotFoundError extends Error {}
 
@@ -36,6 +37,16 @@ vi.mock('$lib/server/blob-freshness', () => ({
 vi.mock('$lib/server/fetch-utils', () => ({
 	fetchWithTimeout: mockFetchWithTimeout
 }));
+
+vi.mock('$lib/server/news/health', () => ({
+	NEWS_SNAPSHOT_SOURCE: 'News Snapshot',
+	readNewsHealthFromBlob: mockReadNewsHealthFromBlob
+}));
+
+const freshNews = (failures: unknown[] = []) => ({
+	observation: { kind: 'found', uploadedAt: null, contentTimestamp: new Date().toISOString() },
+	failures
+});
 
 const { GET: getHealth } = await import('./+server');
 const { GET: getFreshness } = await import('../cron/check-freshness/+server');
@@ -70,6 +81,8 @@ function freshExcept(staleBlobKey: string) {
 beforeEach(() => {
 	mockReadBlobFreshnessTimestamp.mockReset();
 	mockFetchWithTimeout.mockReset();
+	mockReadNewsHealthFromBlob.mockReset();
+	mockReadNewsHealthFromBlob.mockResolvedValue(freshNews());
 	vi.spyOn(console, 'error').mockImplementation(() => {});
 	vi.spyOn(console, 'log').mockImplementation(() => {});
 });
@@ -177,5 +190,64 @@ describe('/api/cron/check-freshness', () => {
 			report.sources.map(({ name, status }) => ({ name, status }));
 		expect(statuses(freshness)).toEqual(statuses(health));
 		expect(freshness.status).toBe(health.status);
+	});
+});
+
+describe('/api/health — live news feed failures', () => {
+	const stale = (name: string) => ({
+		name,
+		parent: 'News feeds',
+		problem:
+			'no successful fetch since 2026-09-28T00:00:00.000Z (last error: http-status: HTTP 404)',
+		disposition: 'Repair or retire the feed in src/lib/config/feeds.ts'
+	});
+
+	it('adds a stale producer feed to the subsources', async () => {
+		allFresh();
+		mockReadNewsHealthFromBlob.mockResolvedValue(freshNews([stale('KQED News')]));
+		const data = await (await getHealth(publicHealth())).json();
+		expect(data.subsources).toContainEqual({
+			name: 'KQED News',
+			parent: 'News feeds',
+			status: 'unavailable'
+		});
+	});
+
+	it('does not repeat a feed already declared as a known failure', async () => {
+		allFresh();
+		mockReadNewsHealthFromBlob.mockResolvedValue(freshNews([stale('Fairfax Police')]));
+		const data = await (await getHealth(publicHealth())).json();
+		expect(
+			data.subsources.filter((s: { name: string }) => s.name === 'Fairfax Police')
+		).toHaveLength(1);
+	});
+});
+
+describe('/api/health — News Snapshot comes from the validated read', () => {
+	it.each([
+		['missing', { kind: 'missing' }, 'unavailable'],
+		['unreadable, invalid or unsupported', { kind: 'error' }, 'unknown']
+	])(
+		'a %s snapshot makes News Snapshot %s and the report degraded',
+		async (_l, observation, status) => {
+			allFresh();
+			mockReadNewsHealthFromBlob.mockResolvedValue({ observation, failures: [] });
+			const response = await getHealth(publicHealth());
+			const data = await response.json();
+			expect(data.sources.find((s: { name: string }) => s.name === 'News Snapshot').status).toBe(
+				status
+			);
+			expect(response.status).toBe(503);
+		}
+	);
+
+	it('never reads the snapshot through the timestamp-only path', async () => {
+		allFresh();
+		await getHealth(publicHealth());
+		expect(mockReadBlobFreshnessTimestamp).not.toHaveBeenCalledWith(
+			'news/v1/snapshot.json',
+			expect.anything(),
+			expect.anything()
+		);
 	});
 });

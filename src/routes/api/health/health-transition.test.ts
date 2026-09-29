@@ -14,6 +14,11 @@ vi.mock('$lib/server/blob-freshness', () => ({
 	readBlobFreshnessTimestamp: mockReadBlobFreshnessTimestamp
 }));
 vi.mock('$lib/server/fetch-utils', () => ({ fetchWithTimeout: vi.fn() }));
+const mockReadNewsHealthFromBlob = vi.fn();
+vi.mock('$lib/server/news/health', () => ({
+	NEWS_SNAPSHOT_SOURCE: 'News Snapshot',
+	readNewsHealthFromBlob: mockReadNewsHealthFromBlob
+}));
 vi.mock('$lib/server/health/inventory', async (importOriginal) => ({
 	...(await importOriginal<typeof import('$lib/server/health/inventory')>()),
 	KNOWN_SUBSOURCE_FAILURES: []
@@ -28,6 +33,11 @@ beforeEach(() => {
 	mockReadBlobFreshnessTimestamp.mockReset();
 	const now = new Date().toISOString();
 	mockReadBlobFreshnessTimestamp.mockResolvedValue({ uploadedAt: now, lastUpdated: now });
+	mockReadNewsHealthFromBlob.mockReset();
+	mockReadNewsHealthFromBlob.mockResolvedValue({
+		observation: { kind: 'found', uploadedAt: null, contentTimestamp: now },
+		failures: []
+	});
 });
 
 describe('/api/health status transition', () => {
@@ -37,16 +47,23 @@ describe('/api/health status transition', () => {
 		expect((await response.json()).status).toBe('healthy');
 	});
 
-	it.each(SOURCE_INVENTORY.map((s) => [s.name, s.blobKey]))(
-		'returns 503 when only %s has no observation',
-		async (_name, blobKey) => {
-			const now = new Date().toISOString();
-			mockReadBlobFreshnessTimestamp.mockImplementation(async (key: string) =>
-				key === blobKey
-					? { uploadedAt: null, lastUpdated: null }
-					: { uploadedAt: now, lastUpdated: now }
-			);
-			expect((await getHealth(event())).status).toBe(503);
-		}
-	);
+	it('returns 503 when only the news snapshot has no observation', async () => {
+		mockReadNewsHealthFromBlob.mockResolvedValue({
+			observation: { kind: 'missing' },
+			failures: []
+		});
+		expect((await getHealth(event())).status).toBe(503);
+	});
+
+	it.each(
+		SOURCE_INVENTORY.filter((s) => s.name !== 'News Snapshot').map((s) => [s.name, s.blobKey])
+	)('returns 503 when only %s has no observation', async (_name, blobKey) => {
+		const now = new Date().toISOString();
+		mockReadBlobFreshnessTimestamp.mockImplementation(async (key: string) =>
+			key === blobKey
+				? { uploadedAt: null, lastUpdated: null }
+				: { uploadedAt: now, lastUpdated: now }
+		);
+		expect((await getHealth(event())).status).toBe(503);
+	});
 });

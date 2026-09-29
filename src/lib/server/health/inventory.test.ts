@@ -19,6 +19,7 @@ const EXPECTED_SOURCES = [
 	'EV Charging',
 	'Strava Segments',
 	'Strava Events',
+	'News Snapshot',
 	// Composite inputs that were never monitored before G0a
 	'Cappuccino',
 	'Camp Prices',
@@ -67,6 +68,7 @@ describe('SOURCE_INVENTORY', () => {
 			'EV Charging',
 			'Strava Segments',
 			'Strava Events',
+			'News Snapshot',
 			'Driveway',
 			'Cappuccino',
 			'Camp Prices',
@@ -76,6 +78,13 @@ describe('SOURCE_INVENTORY', () => {
 		]) {
 			expect(contentSources).toContain(name);
 		}
+	});
+
+	it('watches the news snapshot at the key the producer writes', async () => {
+		const { NEWS_SNAPSHOT_KEY } = await import('$lib/server/news/snapshot-store');
+		const news = SOURCE_INVENTORY.find((s) => s.name === 'News Snapshot');
+		expect(news).toMatchObject({ blobKey: NEWS_SNAPSHOT_KEY, observedAt: 'content' });
+		expect(news?.maxAgeDays).toBeLessThanOrEqual(0.25);
 	});
 
 	it('gives every source a positive max age', () => {

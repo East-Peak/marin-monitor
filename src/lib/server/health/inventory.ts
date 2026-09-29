@@ -133,6 +133,18 @@ export const SOURCE_INVENTORY: readonly SourcePolicy[] = freeze<SourcePolicy>([
 		maxAgeDays: 2,
 		observedAt: 'content'
 	},
+	// Vercel cron every 15 min (/api/cron/produce-news). Observation =
+	// lastSuccessfulScrapeAt: the last run in which ≥1 feed fetched OK.
+	// Observed by a validated snapshot read, not readBlobFreshnessTimestamp;
+	// per-feed staleness becomes subsource failures (server/news/health.ts).
+	{
+		name: 'News Snapshot',
+		blobKey: 'news/v1/snapshot.json',
+		cadence: 'daily',
+		maxAgeDays: 0.125,
+		observedAt: 'content',
+		note: '3h = 12 missed 15-minute runs'
+	},
 	// Composite inputs, unmonitored before G0a. Camp + Rivian: GitHub Actions;
 	// Cappuccino, Dog Walker, Ikon: Mac mini launchd (residential IP).
 	{
