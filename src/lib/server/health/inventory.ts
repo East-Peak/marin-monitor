@@ -6,7 +6,7 @@
  * Changing a threshold, an observation field, or removing a source here
  * changes what "healthy" means — inventory.test.ts pins the list on purpose.
  */
-import type { SourcePolicy, SubsourceFailure } from './evaluate';
+import type { AcceptedException, SourcePolicy, SubsourceFailure } from './evaluate';
 
 function freeze<T extends object>(entries: T[]): readonly Readonly<T>[] {
 	return Object.freeze(entries.map((entry) => Object.freeze(entry)));
@@ -199,5 +199,44 @@ export const KNOWN_SUBSOURCE_FAILURES: readonly SubsourceFailure[] = freeze<Subs
 		parent: 'News feeds',
 		problem: 'marinij.com/tag/emergency returns 0 items',
 		disposition: 'G0: replace with a populated Marin IJ tag feed'
+	}
+]);
+
+/**
+ * Known failures that do not fail /api/health until they expire. Each covers
+ * one exact condition; the source still reports its real status. Decided in
+ * chat 2026-09-29 (Stuart delegated to Claude + Codex); recorded in the G0
+ * runbook. Remove an entry as soon as its source is repaired.
+ */
+const G0_DECISION = {
+	approvedBy: 'Stuart Watson (delegated in chat, 2026-09-29)',
+	approvedAt: '2026-09-29T00:00:00.000Z',
+	expiresAt: '2026-12-31T23:59:59.000Z'
+} as const;
+
+export const ACCEPTED_EXCEPTIONS: readonly AcceptedException[] = freeze<AcceptedException>([
+	{
+		name: 'Strava Segments',
+		condition: 'stale',
+		reason: 'GS: logged-out scrape is gone; API rebuild waits on Strava policy answer',
+		...G0_DECISION
+	},
+	{
+		name: 'Strava Events',
+		condition: 'stale',
+		reason: 'GS: logged-out scrape is gone; API rebuild waits on Strava policy answer',
+		...G0_DECISION
+	},
+	{
+		name: 'Fairfax Police',
+		condition: 'unavailable',
+		reason: 'HTTP 403 on every run (Vercel and local); no allowed fetch path yet',
+		...G0_DECISION
+	},
+	{
+		name: 'Belvedere Police',
+		condition: 'unavailable',
+		reason: 'HTTP 403 on every run (Vercel and local); no allowed fetch path yet',
+		...G0_DECISION
 	}
 ]);

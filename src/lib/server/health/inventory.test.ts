@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { KNOWN_SUBSOURCE_FAILURES, SOURCE_INVENTORY } from './inventory';
+import { ACCEPTED_EXCEPTIONS, KNOWN_SUBSOURCE_FAILURES, SOURCE_INVENTORY } from './inventory';
 
 // The inventory is the contract for "what must be healthy". Dropping a source
 // is the cheapest way to make /api/health go green, so every name is pinned.
@@ -96,5 +96,30 @@ describe('KNOWN_SUBSOURCE_FAILURES', () => {
 			expect(failure.disposition).not.toBe('');
 		}
 		expect(Object.isFrozen(KNOWN_SUBSOURCE_FAILURES)).toBe(true);
+	});
+});
+
+describe('ACCEPTED_EXCEPTIONS', () => {
+	it('accepts exactly the G0 decisions (2026-09-29), each for one condition, expiring 2026-12-31', () => {
+		expect(ACCEPTED_EXCEPTIONS.map((e) => [e.name, e.condition])).toEqual([
+			['Strava Segments', 'stale'],
+			['Strava Events', 'stale'],
+			['Fairfax Police', 'unavailable'],
+			['Belvedere Police', 'unavailable']
+		]);
+		for (const exception of ACCEPTED_EXCEPTIONS) {
+			expect(exception.expiresAt).toBe('2026-12-31T23:59:59.000Z');
+			expect(exception.reason).not.toBe('');
+			expect(exception.approvedBy).not.toBe('');
+		}
+		expect(Object.isFrozen(ACCEPTED_EXCEPTIONS)).toBe(true);
+	});
+
+	it('only names real sources or declared subsource failures', () => {
+		const known = new Set([
+			...SOURCE_INVENTORY.map((s) => s.name),
+			...KNOWN_SUBSOURCE_FAILURES.map((f) => f.name)
+		]);
+		for (const exception of ACCEPTED_EXCEPTIONS) expect(known.has(exception.name)).toBe(true);
 	});
 });

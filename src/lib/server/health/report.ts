@@ -5,7 +5,7 @@
 import { BlobNotFoundError } from '@vercel/blob';
 import { readBlobFreshnessTimestamp } from '$lib/server/blob-freshness';
 import { evaluate, type HealthReport, type Observation, type SourcePolicy } from './evaluate';
-import { KNOWN_SUBSOURCE_FAILURES, SOURCE_INVENTORY } from './inventory';
+import { ACCEPTED_EXCEPTIONS, KNOWN_SUBSOURCE_FAILURES, SOURCE_INVENTORY } from './inventory';
 
 async function observe(policy: SourcePolicy, token: string): Promise<Observation> {
 	try {
@@ -29,7 +29,11 @@ export async function buildHealthReport(token: string, now: Date): Promise<Healt
 		)
 	);
 	return evaluate(
-		{ sources: SOURCE_INVENTORY, subsourceFailures: KNOWN_SUBSOURCE_FAILURES },
+		{
+			sources: SOURCE_INVENTORY,
+			subsourceFailures: KNOWN_SUBSOURCE_FAILURES,
+			exceptions: ACCEPTED_EXCEPTIONS
+		},
 		observations,
 		now
 	);

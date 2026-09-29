@@ -37,9 +37,32 @@ export interface SubsourceFailure {
 	readonly disposition: string;
 }
 
+/**
+ * A time-boxed decision that one known failure does not page anyone. It never
+ * changes what a source *is*: the status stays factual, and only the exact
+ * accepted condition is covered. Expired or malformed exceptions fail closed.
+ */
+export interface AcceptedException {
+	/** Source or subsource name. */
+	readonly name: string;
+	/** The one status being accepted (e.g. `stale`); any other failure still counts. */
+	readonly condition: Exclude<SourceStatus, 'ok' | 'reference'>;
+	readonly reason: string;
+	readonly approvedBy: string;
+	readonly approvedAt: string;
+	/** Exact UTC instant (strict ISO) after which the failure counts again. */
+	readonly expiresAt: string;
+}
+
+export interface Acceptance {
+	reason: string;
+	expiresAt: string;
+}
+
 export interface HealthInventory {
 	readonly sources: readonly SourcePolicy[];
 	readonly subsourceFailures: readonly SubsourceFailure[];
+	readonly exceptions?: readonly AcceptedException[];
 }
 
 export type Observation =
@@ -55,14 +78,20 @@ export interface SourceResult {
 	maxAgeDays: number;
 	observedAt: string | null;
 	ageDays: number | null;
+	/** Present only while an active exception covers this exact status. */
+	accepted?: Acceptance;
 }
 
 export interface SubsourceResult extends SubsourceFailure {
 	status: 'unavailable';
+	accepted?: Acceptance;
 }
 
 export interface HealthReport {
+	/** Factual: `healthy` only when every source is ok/reference and no subsource fails. */
 	status: 'healthy' | 'degraded';
+	/** `healthy`, or degraded only by failures covered by active exceptions. Drives HTTP 200/503. */
+	acceptable: boolean;
 	summary: Record<SourceStatus, number> & { total: number };
 	sources: SourceResult[];
 	subsources: SubsourceResult[];
@@ -136,19 +165,44 @@ function evaluateSource(
 	return result('ok', null, observedAt, ageDays);
 }
 
+/** The acceptance covering `name` in `condition` at `now`, if one is active. */
+function activeAcceptance(
+	exceptions: readonly AcceptedException[],
+	name: string,
+	condition: SourceStatus,
+	now: Date
+): Acceptance | undefined {
+	for (const exception of exceptions) {
+		if (exception.name !== name || exception.condition !== condition) continue;
+		if (!exception.reason.trim() || !exception.approvedBy.trim()) continue;
+		const approvedMs = parseTimestamp(exception.approvedAt);
+		const expiresMs = parseTimestamp(exception.expiresAt);
+		if (approvedMs === null || approvedMs > now.getTime()) continue;
+		if (expiresMs === null || expiresMs <= now.getTime()) continue;
+		return { reason: exception.reason, expiresAt: exception.expiresAt };
+	}
+	return undefined;
+}
+
 export function evaluate(
 	inventory: HealthInventory,
 	observations: Readonly<Record<string, Observation>>,
 	now: Date
 ): HealthReport {
 	if (Number.isNaN(now.getTime())) throw new Error('evaluate: invalid clock');
-	const sources = inventory.sources.map((policy) =>
-		evaluateSource(policy, observations[policy.name], now)
-	);
-	const subsources: SubsourceResult[] = inventory.subsourceFailures.map((failure) => ({
-		...failure,
-		status: 'unavailable'
-	}));
+	const exceptions = inventory.exceptions ?? [];
+	const sources = inventory.sources.map((policy) => {
+		const result = evaluateSource(policy, observations[policy.name], now);
+		if (ACCEPTABLE.has(result.status)) return result;
+		const accepted = activeAcceptance(exceptions, result.name, result.status, now);
+		return accepted ? { ...result, accepted } : result;
+	});
+	const subsources: SubsourceResult[] = inventory.subsourceFailures.map((failure) => {
+		const accepted = activeAcceptance(exceptions, failure.name, 'unavailable', now);
+		return accepted
+			? { ...failure, status: 'unavailable', accepted }
+			: { ...failure, status: 'unavailable' };
+	});
 
 	const summary: HealthReport['summary'] = {
 		total: sources.length,
@@ -162,5 +216,9 @@ export function evaluate(
 
 	const healthy =
 		sources.length > 0 && subsources.length === 0 && sources.every((s) => ACCEPTABLE.has(s.status));
-	return { status: healthy ? 'healthy' : 'degraded', summary, sources, subsources };
+	const acceptable =
+		sources.length > 0 &&
+		sources.every((s) => ACCEPTABLE.has(s.status) || s.accepted) &&
+		subsources.every((s) => s.accepted);
+	return { status: healthy ? 'healthy' : 'degraded', acceptable, summary, sources, subsources };
 }

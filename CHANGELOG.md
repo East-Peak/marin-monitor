@@ -6,6 +6,13 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Changed — /api/health: 200 means "no unaccepted failure" (G0 alerting contract)
+
+- **The problem:** G0 leaves Strava stale by design (GS), and the Fairfax and Belvedere police sites answer 403. The strict evaluator returned 503 until every source was fixed, so an external uptime monitor could never see a recovery.
+- **The fix does not relabel anything.** Each source keeps its real status, `status` stays `degraded`, and the summary counts are unchanged. A separate `acceptable` flag drives HTTP 200/503. An inventory `ACCEPTED_EXCEPTIONS` entry covers **one exact condition** for one named source or subsource (e.g. Strava _stale_; a missing or unreadable Strava blob still fails). Each entry has a reason, approver, approval time and an exact UTC expiry. Expired, future-approved or incomplete exceptions fail closed. Accepted items show `accepted` (sources) or `acceptedUntil` (subsources) in the public body.
+- Accepted until 2026-12-31: Strava Segments + Strava Events (stale), Fairfax + Belvedere Police (403). `check-freshness` still returns 503 whenever anything is degraded, accepted or not.
+- Tests: `health/exceptions.test.ts` (exact-condition coverage, expiry, malformed metadata, subsources, empty inventory) and `api/health/health-acceptance.test.ts` (200 while still reporting stale; 503 on an unaccepted failure mode; check-freshness still 503).
+
 ### Fixed — Marin IJ local news from a populated feed (G0)
 
 - `marinij.com/tag/news/feed/` has been empty all year. The "Marin Independent Journal" local feed now reads `tag/marin-county/feed/`, the IJ's live Marin tag (10 items; newest 2026-09-28). The IJ's non-tag feeds answer 403 to bots. Removed from the known subsource failures.

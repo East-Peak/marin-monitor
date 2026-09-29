@@ -2,9 +2,10 @@
  * Health check endpoint — the truthful freshness contract for every data source.
  * GET /api/health
  *
- * Public: 200 only when every inventory source is ok or declared reference
- * data and no known subsource failure is outstanding; 503 otherwise, so a
- * plain uptime monitor sees degradation. Internal diagnostics (API key
+ * Public: 200 only when every failure is covered by an active accepted
+ * exception (inventory.ts) — i.e. "no unaccepted failure", never "all data
+ * healthy"; `status` and each source's status stay factual. 503 otherwise, so
+ * a plain uptime monitor sees any new degradation. Internal diagnostics (API key
  * presence, proxy health, blob keys) are included only with cron auth.
  */
 import { env } from '$env/dynamic/private';
@@ -71,17 +72,24 @@ export const GET: RequestHandler = async ({ request }) => {
 		JSON.stringify(
 			{
 				status: report.status,
+				acceptable: report.acceptable,
 				timestamp: now.toISOString(),
 				summary: report.summary,
 				sources: report.sources,
-				subsources: report.subsources.map(({ name, parent, status }) => ({ name, parent, status })),
+				subsources: report.subsources.map(({ name, parent, status, accepted }) => ({
+					name,
+					parent,
+					status,
+					...(accepted ? { acceptedUntil: accepted.expiresAt } : {})
+				})),
 				...(internal ? { internal } : {})
 			},
 			null,
 			2
 		),
 		{
-			status: report.status === 'healthy' ? 200 : 503,
+			// 200 = no unaccepted failure, never "all data healthy": see `status`.
+			status: report.acceptable ? 200 : 503,
 			headers: {
 				'Content-Type': 'application/json',
 				'Cache-Control': 'no-cache'

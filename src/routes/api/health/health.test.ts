@@ -142,11 +142,13 @@ describe('/api/health', () => {
 		expect(data.internal.subsources[0]).toHaveProperty('disposition');
 	});
 
-	it('publishes subsources as name, parent and status only', async () => {
+	it('publishes subsources as name, parent, status (and acceptedUntil when accepted) only', async () => {
 		allFresh();
 		const data = await (await getHealth(publicHealth())).json();
 		for (const subsource of data.subsources) {
-			expect(Object.keys(subsource).sort()).toEqual(['name', 'parent', 'status']);
+			const expected = ['name', 'parent', 'status'];
+			if ('acceptedUntil' in subsource) expected.unshift('acceptedUntil');
+			expect(Object.keys(subsource).sort()).toEqual(expected);
 		}
 	});
 });
