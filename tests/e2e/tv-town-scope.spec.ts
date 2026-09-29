@@ -40,3 +40,48 @@ test.describe('TV has its own transient scope', () => {
 		expect(await page.evaluate(() => localStorage.getItem('mm_town'))).toBe('mill-valley');
 	});
 });
+
+async function saveLightTheme(page: Page) {
+	await page.goto('/');
+	await page.evaluate(() => {
+		localStorage.setItem('mm_onboardingComplete', 'true');
+		localStorage.setItem('mm_theme', '"light"');
+	});
+}
+
+const savedTheme = (page: Page) => page.evaluate(() => localStorage.getItem('mm_theme'));
+const shownTheme = (page: Page) =>
+	page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+
+test.describe('TV forces dark without saving it', () => {
+	test('a TV visit and reload (no onDestroy) keep the saved light theme', async ({ page }) => {
+		await saveLightTheme(page);
+		await page.goto('/tv');
+		await tvReady(page);
+		expect(await shownTheme(page)).toBe('dark');
+		expect(await savedTheme(page)).toBe('"light"');
+		// TV's own 6-hour location.reload(), or a closed tab: onDestroy never runs.
+		await page.reload();
+		await tvReady(page);
+		expect(await savedTheme(page)).toBe('"light"');
+		await page.goto('/');
+		await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
+		await expect.poll(() => shownTheme(page)).toBe('light');
+		expect(await savedTheme(page)).toBe('"light"');
+	});
+
+	test('dashboard → TV → dashboard by keyboard restores the light theme', async ({ page }) => {
+		await saveLightTheme(page);
+		await page.reload();
+		await expect.poll(() => shownTheme(page)).toBe('light');
+		await page.keyboard.press('m');
+		await expect(page).toHaveURL(/\/tv$/);
+		await tvReady(page);
+		expect(await shownTheme(page)).toBe('dark');
+		await page.keyboard.press('Escape');
+		await expect(page).toHaveURL(/\/$/);
+		await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
+		await expect.poll(() => shownTheme(page)).toBe('light');
+		expect(await savedTheme(page)).toBe('"light"');
+	});
+});

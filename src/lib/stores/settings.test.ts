@@ -291,3 +291,73 @@ describe('settings storage hardening (v2 retained controls)', () => {
 		}
 	});
 });
+
+describe('transient theme (TV never persists its forced theme)', () => {
+	beforeEach(() => {
+		localStorageMock.clear();
+		vi.clearAllMocks();
+		vi.resetModules();
+	});
+
+	function stubDocument() {
+		const attrs: Record<string, string> = {};
+		const setAttribute = vi.fn((name: string, value: string) => {
+			attrs[name] = value;
+		});
+		vi.stubGlobal('document', { documentElement: { setAttribute, style: {} } });
+		return attrs;
+	}
+
+	it('shows the transient theme without saving it, so a reload without end() keeps the saved theme', async () => {
+		localStorageMock.setItem('mm_theme', '"light"');
+		const attrs = stubDocument();
+		try {
+			const { settings } = await import('./settings');
+			settings.beginTransientTheme('dark');
+			expect(get(settings).theme).toBe('dark');
+			expect(attrs['data-theme']).toBe('dark');
+			expect(localStorageMock.getItem('mm_theme')).toBe('"light"');
+
+			// Tab close, reload or TV's 6-hour location.reload(): onDestroy never runs.
+			vi.resetModules();
+			const reloaded = await import('./settings');
+			expect(get(reloaded.settings).theme).toBe('light');
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it('end() restores the saved theme to the store and the document, and is idempotent', async () => {
+		localStorageMock.setItem('mm_theme', '"light"');
+		const attrs = stubDocument();
+		try {
+			const { settings } = await import('./settings');
+			const end = settings.beginTransientTheme('dark');
+			end();
+			expect(get(settings).theme).toBe('light');
+			expect(attrs['data-theme']).toBe('light');
+			settings.setTheme('dark');
+			end();
+			expect(get(settings).theme).toBe('dark');
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it('a theme change during the transient scope is shown but neither saved nor kept after end()', async () => {
+		localStorageMock.setItem('mm_theme', '"light"');
+		stubDocument();
+		try {
+			const { settings } = await import('./settings');
+			const end = settings.beginTransientTheme('dark');
+			settings.toggleTheme();
+			expect(get(settings).theme).toBe('light');
+			settings.setTheme('dark');
+			expect(localStorageMock.getItem('mm_theme')).toBe('"light"');
+			end();
+			expect(get(settings).theme).toBe('light');
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+});

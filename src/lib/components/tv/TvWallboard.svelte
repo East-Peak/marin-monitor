@@ -648,13 +648,11 @@
 	const PAGE_RELOAD_MS = 6 * 60 * 60 * 1000; // 6 hours
 	let reloadTimer: ReturnType<typeof setTimeout> | null = null;
 
-	// --- Force dark theme ---
-	let originalTheme = '';
-	let originalSettingsTheme: 'dark' | 'light' = 'dark';
-
-	// TV is always county-wide. It takes a transient scope, so visiting /tv never
-	// clears the dashboard's saved town (spec §5, §13.5).
+	// TV is always county-wide and always dark. Both are transient, so visiting /tv
+	// never changes the dashboard's saved town or theme, even when onDestroy never
+	// runs (tab close, reload, PAGE_RELOAD_MS) (spec §5, §13.5).
 	let endTvScope: (() => void) | null = null;
+	let endTvTheme: (() => void) | null = null;
 
 	onMount(() => {
 		endTvScope = townFilter.beginTransientScope(null);
@@ -663,13 +661,9 @@
 		// Reset map layers to prevent dashboard layer bleed
 		mapStore.clearAllLayers();
 
-		// Force dark theme — both data-theme attribute AND settings store
-		// (MapContainer reads settings.theme for basemap style)
-		originalTheme = document.documentElement.getAttribute('data-theme') ?? '';
-		originalSettingsTheme =
-			(document.documentElement.getAttribute('data-theme') as 'dark' | 'light') || 'dark';
-		document.documentElement.setAttribute('data-theme', 'dark');
-		settings.setTheme('dark');
+		// Force dark — data-theme and the settings store (MapContainer reads
+		// settings.theme for the basemap style), without saving it.
+		endTvTheme = settings.beginTransientTheme('dark');
 
 		// Start carousel
 		startCarousel();
@@ -706,6 +700,7 @@
 
 	onDestroy(() => {
 		endTvScope?.();
+		endTvTheme?.();
 		stopCarousel();
 		if (clockTimer) clearInterval(clockTimer);
 		if (cursorTimer) clearTimeout(cursorTimer);
@@ -720,10 +715,6 @@
 			window.removeEventListener('touchend', handleTouchEnd);
 			window.removeEventListener('touchcancel', handleTouchCancel);
 			document.removeEventListener('visibilitychange', handleVisibilityChange);
-
-			// Restore original theme (both data-theme and settings store)
-			document.documentElement.setAttribute('data-theme', originalTheme || 'dark');
-			settings.setTheme(originalSettingsTheme);
 		}
 	});
 </script>

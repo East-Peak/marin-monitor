@@ -172,6 +172,20 @@ function createSettingsStore() {
 	applyTheme(initialState.theme);
 	applyUiScale(initialState.uiScale);
 
+	/** The dashboard's theme for this page view. Storage is only a best-effort copy. */
+	let dashboardTheme: ThemeMode = initialState.theme;
+	/** While a transient theme (e.g. TV) is active, the dashboard theme and storage are untouched. */
+	let transientTheme = false;
+
+	function showTheme(theme: ThemeMode) {
+		if (!transientTheme) {
+			dashboardTheme = theme;
+			saveToStorage('theme', theme);
+		}
+		applyTheme(theme);
+		update((state) => ({ ...state, theme }));
+	}
+
 	return {
 		subscribe,
 
@@ -276,23 +290,33 @@ function createSettingsStore() {
 		 * Set light/dark theme
 		 */
 		setTheme(theme: ThemeMode) {
-			update((state) => {
-				saveToStorage('theme', theme);
-				applyTheme(theme);
-				return { ...state, theme };
-			});
+			showTheme(theme);
 		},
 
 		/**
 		 * Toggle light/dark theme
 		 */
 		toggleTheme() {
-			update((state) => {
-				const theme: ThemeMode = state.theme === 'dark' ? 'light' : 'dark';
-				saveToStorage('theme', theme);
-				applyTheme(theme);
-				return { ...state, theme };
-			});
+			showTheme(get({ subscribe }).theme === 'dark' ? 'light' : 'dark');
+		},
+
+		/**
+		 * Show `theme` without touching the dashboard theme or storage, for views that
+		 * force their own look (the TV wallboard is always dark). Returns `end`, which
+		 * restores the dashboard theme from memory. A reload or tab close without `end`
+		 * leaves the saved theme intact (mirrors townFilter.beginTransientScope).
+		 */
+		beginTransientTheme(theme: ThemeMode): () => void {
+			transientTheme = true;
+			showTheme(theme);
+			let ended = false;
+			return () => {
+				if (ended) return;
+				ended = true;
+				transientTheme = false;
+				applyTheme(dashboardTheme);
+				update((state) => ({ ...state, theme: dashboardTheme }));
+			};
 		},
 
 		/**
@@ -368,6 +392,7 @@ function createSettingsStore() {
 			if (browser) {
 				for (const key of Object.values(STORAGE_KEYS)) safeRemoveItem(key);
 			}
+			dashboardTheme = defaults.theme;
 			applyTheme(defaults.theme);
 			applyUiScale(defaults.uiScale);
 			set({ ...defaults, initialized: true });
