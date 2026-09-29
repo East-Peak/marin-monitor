@@ -208,13 +208,16 @@
 		window.addEventListener('resize', handleResize);
 
 		void (async () => {
-			hourlyData = await fetchHourlyForecast(locationLat, locationLon, { signal: lifetime });
+			const hourly = await fetchHourlyForecast(locationLat, locationLon, { signal: lifetime });
+			if (!lifetime.aborted) hourlyData = hourly;
 		})();
 		void (async () => {
-			dailyRain = await fetchDailyRainForecast(locationLat, locationLon, { signal: lifetime });
+			const rain = await fetchDailyRainForecast(locationLat, locationLon, { signal: lifetime });
+			if (!lifetime.aborted) dailyRain = rain;
 		})();
 		void (async () => {
-			sunData = await fetchSunTimes(locationLat, locationLon);
+			const sun = await fetchSunTimes(locationLat, locationLon);
+			if (!lifetime.aborted) sunData = sun;
 		})();
 
 		return () => {
