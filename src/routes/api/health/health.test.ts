@@ -84,13 +84,14 @@ describe('/api/health', () => {
 		expect(data.summary.total).toBe(SOURCE_INVENTORY.length);
 	});
 
-	it('returns 503 and degraded while known subsource failures are unrepaired', async () => {
+	it('stays degraded while known subsource failures exist, answering 200 only because each is accepted', async () => {
 		allFresh();
 		const response = await getHealth(publicHealth());
 		const data = await response.json();
-		expect(response.status).toBe(503);
 		expect(data.status).toBe('degraded');
 		expect(data.subsources.length).toBeGreaterThan(0);
+		for (const subsource of data.subsources) expect(subsource.acceptedUntil).toBeTruthy();
+		expect(response.status).toBe(200);
 	});
 
 	it('returns 503 when one source is stale despite a fresh upload', async () => {
