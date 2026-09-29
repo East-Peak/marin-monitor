@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-09-29',
+		title: 'TV keeps your town',
+		description:
+			'Opening the TV wallboard no longer clears the town you picked on the dashboard, and clicking a map pin opens its details without switching the whole dashboard to that town.'
+	},
+	{
+		date: '2026-09-29',
 		title: 'Preview settings menu',
 		description:
 			'The dashboard preview has a small ⚙ menu for text size, default location, theme, camera visibility and Reset sections. Settings are shared with the regular dashboard. One corrupt saved setting no longer resets the others, and a saved light theme now sticks.'

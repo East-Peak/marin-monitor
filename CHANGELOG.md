@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Fixed — TV scope and map pin inspection no longer overwrite the dashboard town (D1 PR 3)
+
+- **`/tv` takes a transient county-wide scope** (`townFilter.beginTransientScope`): `mm_town` is never written while it is active and is restored on exit, whether you arrive by URL or by the `m` / `Escape` keys.
+- **Map pin inspection opens the inspector only**, for pins, stations, incidents and fire zones alike. Clicking a town, "focus town", and the clear-filter chip remain the explicit ways to change the town.
+- `townFilter` never throws when storage is denied.
+
 ### Added — v2 section preferences and the ⚙ menu (D1 PR 2)
 
 - **Versioned v2 section prefs** under `mm_sections_v2`: validated entry by entry, idempotent, and independent of the v1 keys (left intact for rollback). Precedence: hash target > saved choice > viewport default (phone < 768px closed; desktop open except Strava).
