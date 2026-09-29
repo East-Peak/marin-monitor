@@ -6,6 +6,16 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Added — shared news producer (TV slice 2)
+
+- **One scheduled news producer.** `/api/cron/produce-news` runs every 15 minutes. It fetches the 22 configured RSS/Atom feeds and publishes a versioned, normalized snapshot to Vercel Blob (`news/v1/snapshot.json`). The TV (slice 3) and later the dashboard read it. Article enrichment and geocoding are not part of it.
+- **Bounded and overlap-safe.** One 50s budget per run covers the lease, reads, fetches, publish and release, and every Blob call is cancellable. Only allowlisted https hosts are contacted, redirects are checked hop by hop, one 10s deadline covers each body, and bodies are capped at 2 MB. An expiring lease makes overlapping runs skip, and the snapshot is published by ETag compare-and-swap, so a late run can never overwrite newer data.
+- **Per-source status and last-good retention.** Each feed is `ok`, `empty`, `retained` (serving its own last good items for up to 48h) or `failed`. `/api/health` validates the snapshot with one read: it is stale after 3h, and any feed with no successful fetch in 6h is listed.
+- **Honest times.** Items without a trustworthy publication time are no longer stamped "now". They stay visible as **undated**, sort after dated items, and are excluded from recency counts. This covers missing, invalid, date-only and more-than-5-minutes-in-the-future dates. Atom `<updated>` no longer counts as published. Board of Supervisors agenda and minutes dates are meeting times, so they are kept as the meeting time and are no longer shown as news ages. NBC Bay Area's zone-less dates are read as Pacific time, and that assumption is recorded.
+- **Story identity.** Items are identified per feed, so two feeds' GUID "42" never collide. A story that several feeds carry, such as one Marin IJ post in two tag feeds, still appears once, joined by its article URL.
+- **Undated items are handled everywhere they appear.** The dashboard wire, map lists, map and pin tooltips, Signals, and the TV wire and map sidebar all sort undated items last, label them "undated", and keep them out of "fresh" and "nearby this week".
+- **One parser for browser and server.** RSS/Atom parsing moved from the browser-only `DOMParser` to a shared `htmlparser2` pipeline (`src/lib/news/`) that rejects anything that is not well-formed XML. In the browser it is lazy-loaded. If its chunk fails to load (for example, just after a deploy), the page reloads once for that failure and deployment. It never reloads repeatedly; a TV keeps its 6-hour reload.
+
 ### Fixed — Grocery Basket priced live from Instacart again (G0)
 
 - Instacart changed its product cards (`data-item-card` with an `<h3>` name, and the `item_list_item_items_…` test IDs are gone), so every run found 0 products and fell back to reference prices. New `scripts/shared/instacart-parse.mjs` parses the current markup: store from the section heading, name plus size with star ratings and review counts stripped (they had broken size matching), current price, and sale state per card. It is tested against a trimmed real page (`src/lib/server/__fixtures__/instacart-cross-retailer.html`: 40 cards, 4 stores), including a sign-posts block before the results (seen live on the eggs search) and after them.

@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-09-29',
+		title: 'Honest news timestamps',
+		description:
+			'News items without a real publication date now say "undated" instead of "just now", and a new background producer collects every local feed every 15 minutes, keeping the last good stories when a source is down.'
+	},
+	{
+		date: '2026-09-29',
 		title: 'Live data is back',
 		description:
 			'Coffee, cappuccino, grocery, wine, Ikon Pass, dog-walker, EV-charging and driveway numbers are live again after months of silently stale data. Federal fire incidents are back on the fire map, Marin IJ local news and Marin Lately read from working feeds, and the health check now alerts on any new failure.'
