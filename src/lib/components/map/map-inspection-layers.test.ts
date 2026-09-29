@@ -9,10 +9,11 @@ import { INSPECTION_CLICK_LAYERS } from './map-interactions';
  */
 function triggerLayerGroups(source: string): Map<string, string[]> {
 	const groups = new Map<string, string[]>();
-	for (const [, name, body] of source.matchAll(/const (\w+)TriggerLayers = \[([^\]]*)\]/g)) {
+	const declaration = /\b(?:const|let|var)\s+(\w+)TriggerLayers\b\s*(?::[^=]+)?=\s*\[([^\]]*)\]/g;
+	for (const [, name, body] of source.matchAll(declaration)) {
 		groups.set(
 			name,
-			[...body.matchAll(/'([^']+)'/g)].map(([, id]) => id)
+			[...body.matchAll(/(['"`])(.+?)\1/g)].map(([, , id]) => id)
 		);
 	}
 	return groups;
@@ -21,6 +22,26 @@ function triggerLayerGroups(source: string): Map<string, string[]> {
 describe('INSPECTION_CLICK_LAYERS stays in sync with MapDataLayer', () => {
 	const groups = triggerLayerGroups(mapDataLayerSource);
 	groups.delete('town'); // towns are the fallback click, not an inspection layer
+
+	it('parses every declaration shape and quote style, so no id is silently skipped (Codex final-fix P3)', () => {
+		const parsed = triggerLayerGroups(`
+			const plainTriggerLayers = ['a-layer', "b-layer"];
+			const typedTriggerLayers: string[] = [\`c-layer\`];
+			let spacedTriggerLayers=[
+				'd-layer',
+			];
+		`);
+		expect([...parsed]).toEqual([
+			['plain', ['a-layer', 'b-layer']],
+			['typed', ['c-layer']],
+			['spaced', ['d-layer']]
+		]);
+	});
+
+	it('parses every *TriggerLayers declaration in MapDataLayer', () => {
+		const declared = mapDataLayerSource.match(/\b\w+TriggerLayers\b\s*[:=]/g) ?? [];
+		expect(triggerLayerGroups(mapDataLayerSource).size).toBe(declared.length);
+	});
 
 	it('finds the trigger-layer groups (the guard is not hollow)', () => {
 		expect(groups.size).toBeGreaterThanOrEqual(12);
