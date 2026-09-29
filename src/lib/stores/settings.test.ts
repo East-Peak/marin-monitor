@@ -242,14 +242,52 @@ describe('settings storage hardening (v2 retained controls)', () => {
 			expect(() => settings.setUiScale(120)).not.toThrow();
 			expect(get(settings).uiScale).toBe(120);
 			expect(() => settings.toggleCamerasHidden()).not.toThrow();
+			expect(get(settings).camerasHidden).toBe(true);
 			expect(() => settings.toggleCamerasExpanded()).not.toThrow();
+			expect(get(settings).camerasExpanded).toBe(true);
+			expect(get(settings).camerasHidden).toBe(false);
 			expect(() => settings.setLocation('novato')).not.toThrow();
+			expect(get(settings).locationId).toBe('novato');
 			expect(() => settings.setTheme('light')).not.toThrow();
+			expect(get(settings).theme).toBe('light');
+			const dashboardBefore = get(settings).dashboardExpanded;
+			expect(() => settings.toggleDashboard()).not.toThrow();
+			expect(get(settings).dashboardExpanded).toBe(!dashboardBefore);
 			expect(() => settings.reset()).not.toThrow();
+			expect(get(settings).uiScale).toBe(100);
 		} finally {
 			localStorageMock.getItem = realGet;
 			localStorageMock.setItem = realSet;
 			localStorageMock.removeItem = realRemove;
+		}
+	});
+	it('keeps the selection for the page view when storage is full (QuotaExceededError)', async () => {
+		const realSet = localStorageMock.setItem;
+		localStorageMock.setItem = vi.fn(() => {
+			throw new DOMException('full', 'QuotaExceededError');
+		});
+		try {
+			const { settings } = await import('./settings');
+			expect(() => settings.setUiScale(120)).not.toThrow();
+			expect(get(settings).uiScale).toBe(120);
+			expect(() => settings.setLocation('novato')).not.toThrow();
+			expect(get(settings).locationId).toBe('novato');
+			expect(() => settings.setTheme('light')).not.toThrow();
+			expect(get(settings).theme).toBe('light');
+		} finally {
+			localStorageMock.setItem = realSet;
+		}
+	});
+
+	it('applies a restored light theme to the document on load', async () => {
+		localStorageMock.setItem('mm_theme', '"light"');
+		const setAttribute = vi.fn();
+		vi.stubGlobal('document', { documentElement: { setAttribute, style: {} } });
+		try {
+			await import('./settings');
+			expect(setAttribute).toHaveBeenCalledWith('data-theme', 'light');
+		} finally {
+			vi.unstubAllGlobals();
 		}
 	});
 });
