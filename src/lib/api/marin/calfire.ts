@@ -28,9 +28,23 @@ export interface FireIncident {
 
 const CALFIRE_URL = '/api/calfire';
 
-// NIFC/WFIGS — California active fire locations
+// NIFC/WFIGS — current (active) incidents inside an envelope around Marin
+// (~80 km, matching isNearMarin). The YearToDate layer rarely sets
+// FireOutDateTime, so it cannot tell active fires from long-out ones.
 const NIFC_URL =
-	"https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/WFIGS_Incident_Locations_YearToDate/FeatureServer/0/query?where=attr_POOState='US-CA'&outFields=*&f=json&resultRecordCount=50";
+	'https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query?' +
+	new URLSearchParams({
+		where: "POOState='US-CA'",
+		geometry: '-123.6,37.3,-121.6,38.8',
+		geometryType: 'esriGeometryEnvelope',
+		inSR: '4326',
+		spatialRel: 'esriSpatialRelIntersects',
+		outSR: '4326',
+		outFields:
+			'IrwinID,IncidentName,POOCounty,IncidentSize,DiscoveryAcres,PercentContained,FireDiscoveryDateTime,ModifiedOnDateTime_dt',
+		resultRecordCount: '200',
+		f: 'json'
+	});
 
 interface CalFireFeature {
 	type: 'Feature';
@@ -57,14 +71,14 @@ interface NifcFeature {
 		IrwinID: string;
 		IncidentName: string;
 		POOCounty: string;
-		DailyAcres: number | null;
 		IncidentSize: number | null;
+		DiscoveryAcres: number | null;
 		PercentContained: number | null;
 		FireDiscoveryDateTime: number | null;
 		ModifiedOnDateTime_dt: number | null;
-		POOLatitude: number | null;
-		POOLongitude: number | null;
 	};
+	/** Point of origin in WGS84 (outSR=4326). */
+	geometry: { x: number; y: number } | null;
 }
 
 /**
@@ -124,24 +138,21 @@ async function fetchNifc(): Promise<FireIncident[]> {
 		}
 
 		const data = await response.json();
+		// ArcGIS reports query errors (e.g. a renamed field) as HTTP 200 + `error`.
+		if (data.error) throw new Error(`NIFC query rejected: ${data.error.message}`);
 		const features: NifcFeature[] = data.features ?? [];
 
 		return features
-			.filter((f) => {
-				const lat = f.attributes.POOLatitude;
-				const lon = f.attributes.POOLongitude;
-				if (lat == null || lon == null) return false;
-				return isNearMarin(lat, lon);
-			})
+			.filter((f) => f.geometry != null && isNearMarin(f.geometry.y, f.geometry.x))
 			.map((f) => ({
 				id: `nifc-${f.attributes.IrwinID}`,
 				name: f.attributes.IncidentName,
 				location: f.attributes.POOCounty ?? '',
 				county: f.attributes.POOCounty ?? '',
-				acres: f.attributes.DailyAcres ?? f.attributes.IncidentSize ?? 0,
+				acres: f.attributes.IncidentSize ?? f.attributes.DiscoveryAcres ?? 0,
 				containment: f.attributes.PercentContained ?? 0,
-				lat: f.attributes.POOLatitude!,
-				lon: f.attributes.POOLongitude!,
+				lat: f.geometry!.y,
+				lon: f.geometry!.x,
 				startDate: f.attributes.FireDiscoveryDateTime ?? Date.now(),
 				updatedDate: f.attributes.ModifiedOnDateTime_dt ?? Date.now(),
 				url: 'https://inciweb.wildfire.gov/',

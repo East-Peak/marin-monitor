@@ -90,8 +90,7 @@ describe('KNOWN_SUBSOURCE_FAILURES', () => {
 			'Belvedere Police',
 			'Marin IJ news feed',
 			'Marin IJ breaking-news feed',
-			'Marin IJ emergency feed',
-			'NIFC WFIGS fires'
+			'Marin IJ emergency feed'
 		]);
 		for (const failure of KNOWN_SUBSOURCE_FAILURES) {
 			expect(failure.problem).not.toBe('');

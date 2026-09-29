@@ -70,19 +70,21 @@ function makeNifcFeature(
 		acres: number;
 	}> = {}
 ): object {
+	// Live WFIGS shape (2026): the point is in `geometry`; POOLatitude/POOLongitude
+	// and DailyAcres no longer exist.
 	return {
 		attributes: {
 			IrwinID: overrides.id ?? 'nifc-001',
 			IncidentName: overrides.name ?? 'Federal Fire',
 			POOCounty: 'Marin',
-			DailyAcres: overrides.acres ?? 200,
-			IncidentSize: 300,
+			POOState: 'US-CA',
+			IncidentSize: overrides.acres ?? 200,
+			DiscoveryAcres: 1,
 			PercentContained: 10,
 			FireDiscoveryDateTime: 1711900000000,
-			ModifiedOnDateTime_dt: 1711950000000,
-			POOLatitude: overrides.lat ?? 38.05,
-			POOLongitude: overrides.lon ?? -122.6
-		}
+			ModifiedOnDateTime_dt: 1711950000000
+		},
+		geometry: { x: overrides.lon ?? -122.6, y: overrides.lat ?? 38.05 }
 	};
 }
 
@@ -178,29 +180,42 @@ describe('fetchFireIncidents', () => {
 		expect(result).toHaveLength(0);
 	});
 
-	it('filters out NIFC features with null lat/lon', async () => {
-		const noCoords = {
-			attributes: {
-				IrwinID: 'no-coords',
-				IncidentName: 'Invisible Fire',
-				POOCounty: 'Marin',
-				DailyAcres: 50,
-				IncidentSize: null,
-				PercentContained: null,
-				FireDiscoveryDateTime: null,
-				ModifiedOnDateTime_dt: null,
-				POOLatitude: null,
-				POOLongitude: null
-			}
-		};
-
+	it('filters out NIFC features with no geometry', async () => {
+		const feature = { ...makeNifcFeature(), geometry: null };
 		mockFetch
 			.mockResolvedValueOnce(makeResponse({ features: [] }))
-			.mockResolvedValueOnce(makeResponse({ features: [noCoords] }));
+			.mockResolvedValueOnce(makeResponse({ features: [feature] }));
+		expect(await fetchFireIncidents()).toEqual([]);
+	});
 
-		const result = await fetchFireIncidents();
+	it('queries WFIGS by the current POOState field inside a Marin envelope, in WGS84', async () => {
+		mockFetch
+			.mockResolvedValueOnce(makeResponse({ features: [] }))
+			.mockResolvedValueOnce(makeResponse({ features: [] }));
+		await fetchFireIncidents();
+		const url = new URL(String(mockFetch.mock.calls[1][0]));
+		// Current (active) incidents: the YearToDate layer never marks fires out.
+		expect(url.pathname).toContain('/WFIGS_Incident_Locations_Current/');
+		expect(url.searchParams.get('where')).toBe("POOState='US-CA'");
+		expect(url.searchParams.get('geometryType')).toBe('esriGeometryEnvelope');
+		expect(url.searchParams.get('inSR')).toBe('4326');
+		expect(url.searchParams.get('outSR')).toBe('4326');
+		const [xmin, ymin, xmax, ymax] = url.searchParams.get('geometry')!.split(',').map(Number);
+		expect(xmin).toBeLessThan(-122.6);
+		expect(xmax).toBeGreaterThan(-122.6);
+		expect(ymin).toBeLessThan(38.05);
+		expect(ymax).toBeGreaterThan(38.05);
+	});
 
-		expect(result).toHaveLength(0);
+	it('treats an ArcGIS error envelope (HTTP 200 + error) as a failure, not as "no fires"', async () => {
+		const { logger } = await import('$lib/config/api');
+		mockFetch
+			.mockResolvedValueOnce(makeResponse({ features: [] }))
+			.mockResolvedValueOnce(
+				makeResponse({ error: { code: 400, message: 'Invalid field: attr_POOState' } })
+			);
+		expect(await fetchFireIncidents()).toEqual([]);
+		expect(logger.warn).toHaveBeenCalledWith('NIFC', expect.stringContaining('attr_POOState'));
 	});
 
 	it('deduplicates NIFC fire within 5km of a CAL FIRE incident', async () => {

@@ -205,11 +205,5 @@ export const KNOWN_SUBSOURCE_FAILURES: readonly SubsourceFailure[] = freeze<Subs
 		parent: 'News feeds',
 		problem: 'marinij.com/tag/emergency returns 0 items',
 		disposition: 'G0: replace with a populated Marin IJ tag feed'
-	},
-	{
-		name: 'NIFC WFIGS fires',
-		parent: 'Fire map',
-		problem: 'ArcGIS rejects renamed field attr_POOState (now POOState)',
-		disposition: 'G0: update the query field'
 	}
 ]);

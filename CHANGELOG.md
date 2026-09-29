@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Fixed — federal (NIFC) fires back on the fire map (G0)
+
+- **The NIFC query had been rejected since ArcGIS renamed `attr_POOState` to `POOState`.** ArcGIS answers a bad query with HTTP 200 plus an `error` body, which the adapter read as "no fires". An error body now fails loudly (logged), and the adapter reads the current schema: the point comes from `geometry` (`POOLatitude/POOLongitude` are gone), and acres from `IncidentSize`/`DiscoveryAcres` (`DailyAcres` is gone).
+- **The query was also wrong in shape.** It asked for the first 50 year-to-date California incidents and filtered for Marin afterwards; Marin fires were rarely among those 50, and the YearToDate layer almost never marks a fire out. It now queries WFIGS **Current** (active) incidents inside a Marin envelope (~80 km) in WGS84. Live check: 1 active incident near Marin (CHILENO, Marin County, 341 ac).
+- NIFC is removed from the health inventory's known subsource failures.
+
 ### Fixed — Marin Lately column reads the Substack feed (G0 repair 5b)
 
 - `marinlately.com/feed/` redirected to a dead sfcurrently.com page. The satire column now reads `https://marinlately.substack.com/feed` (200, 10 items). The newest post is from January, so it shows as dated satire, which is honest. The feed proxy allowlist follows the config automatically; the article allowlist is untouched because satire is never enriched.
