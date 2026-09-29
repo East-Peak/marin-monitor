@@ -17,6 +17,16 @@ export interface FeedSource {
 	confirmed?: boolean;
 	/** Known to be broken — skip in fetcher */
 	broken?: boolean;
+	/**
+	 * IANA zone for feeds whose item dates carry no zone. Only zone-less values
+	 * use it, and the assumption is recorded as provenance ($lib/news/feed-date).
+	 */
+	assumedTimeZone?: string;
+	/**
+	 * What the item date means. 'event-start': it is when the thing happens
+	 * (a meeting), kept as eventAt; publication time stays unknown.
+	 */
+	pubDateMeaning?: 'publication' | 'event-start';
 }
 
 export const FEEDS: Record<NewsCategory, FeedSource[]> = {
@@ -53,7 +63,10 @@ export const FEEDS: Record<NewsCategory, FeedSource[]> = {
 			name: 'NBC Bay Area – Marin',
 			url: 'https://www.nbcbayarea.com/tag/marin-county/feed/',
 			verification: 'local_media',
-			confirmed: true
+			confirmed: true,
+			// Item pubDate is zone-less local time ("Fri, Sep 25 2026 11:48:58 AM");
+			// the channel pubDate is -0700, i.e. Pacific.
+			assumedTimeZone: 'America/Los_Angeles'
 		},
 		{
 			name: 'KQED News',
@@ -87,13 +100,17 @@ export const FEEDS: Record<NewsCategory, FeedSource[]> = {
 			name: 'Marin County BOS – Agendas',
 			url: 'https://marin.granicus.com/ViewPublisherRSS.php?view_id=33&mode=agendas',
 			verification: 'official',
-			confirmed: true
+			confirmed: true,
+			// pubDate is the meeting time, not when the agenda was posted.
+			pubDateMeaning: 'event-start'
 		},
 		{
 			name: 'Marin County BOS – Minutes',
 			url: 'https://marin.granicus.com/ViewPublisherRSS.php?view_id=33&mode=minutes',
 			verification: 'official',
-			confirmed: true
+			confirmed: true,
+			// pubDate is the meeting time the minutes record, not a publication time.
+			pubDateMeaning: 'event-start'
 		}
 		// Dead: Novato (404), San Anselmo (.gov migration, empty), Mill Valley (404),
 		// Corte Madera (.gov migration, empty), Marin County (Cloudflare 403)
@@ -116,7 +133,9 @@ export const FEEDS: Record<NewsCategory, FeedSource[]> = {
 			name: 'NBC Bay Area – Crime',
 			url: 'https://www.nbcbayarea.com/tag/crime/feed/',
 			verification: 'local_media',
-			confirmed: true
+			confirmed: true,
+			// Same NBC CMS as NBC Bay Area – Marin: zone-less Pacific item dates.
+			assumedTimeZone: 'America/Los_Angeles'
 		}
 		// Dead: CHP Golden Gate (returns HTML), Marin County Emergency (403),
 		// CAL FIRE (403), Nixle (absorbed by Everbridge, RSS dead),
