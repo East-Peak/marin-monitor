@@ -186,3 +186,70 @@ describe('Settings Store', () => {
 		expect(enabled).toContain('local-wire');
 	});
 });
+
+describe('settings storage hardening (v2 retained controls)', () => {
+	beforeEach(() => {
+		localStorageMock.clear();
+		vi.clearAllMocks();
+		vi.resetModules();
+	});
+
+	it('keeps valid presentation prefs when panel JSON is malformed', async () => {
+		localStorageMock.setItem('mm_panels', '{not json');
+		localStorageMock.setItem('mm_panelOrder', '"not-an-array"');
+		localStorageMock.setItem('mm_uiScale', '120');
+		localStorageMock.setItem('mm_location', 'mill-valley');
+		localStorageMock.setItem('mm_camerasHidden', 'true');
+		const { settings } = await import('./settings');
+		const state = get(settings);
+		expect(state.uiScale).toBe(120);
+		expect(state.locationId).toBe('mill-valley');
+		expect(state.camerasHidden).toBe(true);
+		expect(state.enabled['outdoors']).toBe(true);
+	});
+
+	it('restores a saved light theme after reload', async () => {
+		const first = await import('./settings');
+		first.settings.setTheme('light');
+		vi.resetModules();
+		const { settings } = await import('./settings');
+		expect(get(settings).theme).toBe('light');
+	});
+
+	it('falls back to the default location when the saved one is unknown', async () => {
+		localStorageMock.setItem('mm_location', 'atlantis');
+		const [{ settings }, { DEFAULT_LOCATION_ID }] = await Promise.all([
+			import('./settings'),
+			import('../config/locations')
+		]);
+		expect(get(settings).locationId).toBe(DEFAULT_LOCATION_ID);
+	});
+
+	it('uses defaults and never throws when storage is denied', async () => {
+		const realGet = localStorageMock.getItem;
+		const realSet = localStorageMock.setItem;
+		const realRemove = localStorageMock.removeItem;
+		const denied = () => {
+			throw new DOMException('denied', 'SecurityError');
+		};
+		localStorageMock.getItem = vi.fn(denied);
+		localStorageMock.setItem = vi.fn(denied);
+		localStorageMock.removeItem = vi.fn(denied);
+		try {
+			const { settings } = await import('./settings');
+			expect(get(settings).uiScale).toBe(100);
+			expect(settings.isOnboardingComplete()).toBe(false);
+			expect(() => settings.setUiScale(120)).not.toThrow();
+			expect(get(settings).uiScale).toBe(120);
+			expect(() => settings.toggleCamerasHidden()).not.toThrow();
+			expect(() => settings.toggleCamerasExpanded()).not.toThrow();
+			expect(() => settings.setLocation('novato')).not.toThrow();
+			expect(() => settings.setTheme('light')).not.toThrow();
+			expect(() => settings.reset()).not.toThrow();
+		} finally {
+			localStorageMock.getItem = realGet;
+			localStorageMock.setItem = realSet;
+			localStorageMock.removeItem = realRemove;
+		}
+	});
+});

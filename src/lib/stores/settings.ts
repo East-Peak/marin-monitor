@@ -12,7 +12,8 @@ import {
 	PRESET_STORAGE_KEY,
 	type PanelId
 } from '$lib/config';
-import { DEFAULT_LOCATION_ID } from '$lib/config/locations';
+import { DEFAULT_LOCATION_ID, LOCATION_PRESETS } from '$lib/config/locations';
+import { safeGetItem, safeSetItem, safeRemoveItem } from '$lib/utils/safe-storage';
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -84,38 +85,53 @@ function getDefaultSettings(): PanelSettings {
 	};
 }
 
-// Load from localStorage
+function parseJson(raw: string | null): unknown {
+	if (raw === null) return undefined;
+	try {
+		return JSON.parse(raw);
+	} catch {
+		return undefined;
+	}
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/** setTheme has always written JSON ('"light"'); older values may be bare. Accept both. */
+function parseTheme(raw: string | null): ThemeMode | undefined {
+	const value = raw?.startsWith('"') ? parseJson(raw) : raw;
+	return value === 'light' || value === 'dark' ? value : undefined;
+}
+
+// Load from localStorage. Each key is read and validated on its own, so one
+// malformed value (e.g. corrupt mm_panels JSON) never discards the others.
 function loadFromStorage(): Partial<PanelSettings> {
 	if (!browser) return {};
 
-	try {
-		const panels = localStorage.getItem(STORAGE_KEYS.panels);
-		const order = localStorage.getItem(STORAGE_KEYS.order);
-		const sizes = localStorage.getItem(STORAGE_KEYS.sizes);
-		const theme = localStorage.getItem(STORAGE_KEYS.theme);
+	const enabled = parseJson(safeGetItem(STORAGE_KEYS.panels));
+	const order = parseJson(safeGetItem(STORAGE_KEYS.order));
+	const sizes = parseJson(safeGetItem(STORAGE_KEYS.sizes));
+	const location = safeGetItem(STORAGE_KEYS.location);
+	const uiScale = Number(safeGetItem(STORAGE_KEYS.uiScale) ?? Number.NaN);
+	const dashRaw = safeGetItem(STORAGE_KEYS.dashboardExpanded);
+	const camerasRaw = safeGetItem(STORAGE_KEYS.camerasExpanded);
+	const camerasHiddenRaw = safeGetItem(STORAGE_KEYS.camerasHidden);
 
-		const location = localStorage.getItem(STORAGE_KEYS.location);
-		const uiScaleRaw = localStorage.getItem(STORAGE_KEYS.uiScale);
-		const uiScale = uiScaleRaw ? Number(uiScaleRaw) : undefined;
-		const dashRaw = localStorage.getItem(STORAGE_KEYS.dashboardExpanded);
-		const camerasRaw = localStorage.getItem(STORAGE_KEYS.camerasExpanded);
-		const camerasHiddenRaw = localStorage.getItem(STORAGE_KEYS.camerasHidden);
-
-		return {
-			enabled: panels ? JSON.parse(panels) : undefined,
-			order: order ? JSON.parse(order) : undefined,
-			sizes: sizes ? JSON.parse(sizes) : undefined,
-			theme: theme === 'light' || theme === 'dark' ? theme : undefined,
-			locationId: location ?? undefined,
-			uiScale: uiScale && uiScale >= 50 && uiScale <= 150 ? uiScale : undefined,
-			dashboardExpanded: dashRaw !== null ? dashRaw !== 'false' : undefined,
-			camerasExpanded: camerasRaw !== null ? camerasRaw === 'true' : undefined,
-			camerasHidden: camerasHiddenRaw !== null ? camerasHiddenRaw === 'true' : undefined
-		};
-	} catch (e) {
-		console.warn('Failed to load settings from localStorage:', e);
-		return {};
-	}
+	return {
+		enabled: isPlainObject(enabled) ? (enabled as Record<PanelId, boolean>) : undefined,
+		order: Array.isArray(order) ? (order as PanelId[]) : undefined,
+		sizes: isPlainObject(sizes) ? (sizes as PanelSettings['sizes']) : undefined,
+		theme: parseTheme(safeGetItem(STORAGE_KEYS.theme)),
+		locationId:
+			location !== null && LOCATION_PRESETS.some((preset) => preset.id === location)
+				? location
+				: undefined,
+		uiScale: uiScale >= 50 && uiScale <= 150 ? uiScale : undefined,
+		dashboardExpanded: dashRaw !== null ? dashRaw !== 'false' : undefined,
+		camerasExpanded: camerasRaw !== null ? camerasRaw === 'true' : undefined,
+		camerasHidden: camerasHiddenRaw !== null ? camerasHiddenRaw === 'true' : undefined
+	};
 }
 
 function applyTheme(theme: ThemeMode): void {
@@ -131,12 +147,7 @@ function applyUiScale(scale: number): void {
 // Save to localStorage
 function saveToStorage(key: keyof typeof STORAGE_KEYS, value: unknown): void {
 	if (!browser) return;
-
-	try {
-		localStorage.setItem(STORAGE_KEYS[key], JSON.stringify(value));
-	} catch (e) {
-		console.warn(`Failed to save ${key} to localStorage:`, e);
-	}
+	safeSetItem(STORAGE_KEYS[key], JSON.stringify(value));
 }
 
 // Create the store
@@ -290,9 +301,7 @@ function createSettingsStore() {
 		setUiScale(scale: number) {
 			const clamped = Math.max(50, Math.min(150, Math.round(scale)));
 			update((state) => {
-				if (browser) {
-					localStorage.setItem(STORAGE_KEYS.uiScale, String(clamped));
-				}
+				safeSetItem(STORAGE_KEYS.uiScale, String(clamped));
 				applyUiScale(clamped);
 				return { ...state, uiScale: clamped };
 			});
@@ -304,9 +313,7 @@ function createSettingsStore() {
 		toggleDashboard() {
 			update((state) => {
 				const expanded = !state.dashboardExpanded;
-				if (browser) {
-					localStorage.setItem(STORAGE_KEYS.dashboardExpanded, String(expanded));
-				}
+				safeSetItem(STORAGE_KEYS.dashboardExpanded, String(expanded));
 				return { ...state, dashboardExpanded: expanded };
 			});
 		},
@@ -317,12 +324,10 @@ function createSettingsStore() {
 		toggleCamerasExpanded() {
 			update((state) => {
 				const expanded = !state.camerasExpanded;
-				if (browser) {
-					localStorage.setItem(STORAGE_KEYS.camerasExpanded, String(expanded));
-				}
+				safeSetItem(STORAGE_KEYS.camerasExpanded, String(expanded));
 				// Unhide cameras when expanding
 				if (expanded && state.camerasHidden) {
-					localStorage.setItem(STORAGE_KEYS.camerasHidden, 'false');
+					safeSetItem(STORAGE_KEYS.camerasHidden, 'false');
 					return { ...state, camerasExpanded: expanded, camerasHidden: false };
 				}
 				return { ...state, camerasExpanded: expanded };
@@ -335,12 +340,10 @@ function createSettingsStore() {
 		toggleCamerasHidden() {
 			update((state) => {
 				const hidden = !state.camerasHidden;
-				if (browser) {
-					localStorage.setItem(STORAGE_KEYS.camerasHidden, String(hidden));
-				}
+				safeSetItem(STORAGE_KEYS.camerasHidden, String(hidden));
 				// Also collapse expanded view when hiding
 				if (hidden && state.camerasExpanded) {
-					localStorage.setItem(STORAGE_KEYS.camerasExpanded, 'false');
+					safeSetItem(STORAGE_KEYS.camerasExpanded, 'false');
 					return { ...state, camerasHidden: hidden, camerasExpanded: false };
 				}
 				return { ...state, camerasHidden: hidden };
@@ -352,9 +355,7 @@ function createSettingsStore() {
 		 */
 		setLocation(locationId: string) {
 			update((state) => {
-				if (browser) {
-					localStorage.setItem(STORAGE_KEYS.location, locationId);
-				}
+				safeSetItem(STORAGE_KEYS.location, locationId);
 				return { ...state, locationId };
 			});
 		},
@@ -365,15 +366,7 @@ function createSettingsStore() {
 		reset() {
 			const defaults = getDefaultSettings();
 			if (browser) {
-				localStorage.removeItem(STORAGE_KEYS.panels);
-				localStorage.removeItem(STORAGE_KEYS.order);
-				localStorage.removeItem(STORAGE_KEYS.sizes);
-				localStorage.removeItem(STORAGE_KEYS.theme);
-				localStorage.removeItem(STORAGE_KEYS.location);
-				localStorage.removeItem(STORAGE_KEYS.uiScale);
-				localStorage.removeItem(STORAGE_KEYS.dashboardExpanded);
-				localStorage.removeItem(STORAGE_KEYS.camerasExpanded);
-				localStorage.removeItem(STORAGE_KEYS.camerasHidden);
+				for (const key of Object.values(STORAGE_KEYS)) safeRemoveItem(key);
 			}
 			applyTheme(defaults.theme);
 			applyUiScale(defaults.uiScale);
@@ -393,7 +386,7 @@ function createSettingsStore() {
 		 */
 		isOnboardingComplete(): boolean {
 			if (!browser) return true;
-			return localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true';
+			return safeGetItem(ONBOARDING_STORAGE_KEY) === 'true';
 		},
 
 		/**
@@ -401,7 +394,7 @@ function createSettingsStore() {
 		 */
 		getSelectedPreset(): string | null {
 			if (!browser) return null;
-			return localStorage.getItem(PRESET_STORAGE_KEY);
+			return safeGetItem(PRESET_STORAGE_KEY);
 		},
 
 		/**
@@ -428,8 +421,8 @@ function createSettingsStore() {
 
 			// Mark onboarding complete and save preset
 			if (browser) {
-				localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true');
-				localStorage.setItem(PRESET_STORAGE_KEY, presetId);
+				safeSetItem(ONBOARDING_STORAGE_KEY, 'true');
+				safeSetItem(PRESET_STORAGE_KEY, presetId);
 			}
 		},
 
@@ -437,10 +430,8 @@ function createSettingsStore() {
 		 * Reset onboarding to show modal again
 		 */
 		resetOnboarding() {
-			if (browser) {
-				localStorage.removeItem(ONBOARDING_STORAGE_KEY);
-				localStorage.removeItem(PRESET_STORAGE_KEY);
-			}
+			safeRemoveItem(ONBOARDING_STORAGE_KEY);
+			safeRemoveItem(PRESET_STORAGE_KEY);
 		}
 	};
 }
