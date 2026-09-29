@@ -200,11 +200,13 @@ describe('fetchFireIncidents', () => {
 		expect(url.searchParams.get('geometryType')).toBe('esriGeometryEnvelope');
 		expect(url.searchParams.get('inSR')).toBe('4326');
 		expect(url.searchParams.get('outSR')).toBe('4326');
+		// The envelope must contain the whole isNearMarin circle (80 km around
+		// 37.9735, -122.5311): ~0.72° of latitude and ~0.94° of longitude.
 		const [xmin, ymin, xmax, ymax] = url.searchParams.get('geometry')!.split(',').map(Number);
-		expect(xmin).toBeLessThan(-122.6);
-		expect(xmax).toBeGreaterThan(-122.6);
-		expect(ymin).toBeLessThan(38.05);
-		expect(ymax).toBeGreaterThan(38.05);
+		expect(ymin).toBeLessThanOrEqual(37.9735 - 80 / 111);
+		expect(ymax).toBeGreaterThanOrEqual(37.9735 + 80 / 111);
+		expect(xmin).toBeLessThanOrEqual(-122.5311 - 80 / 85);
+		expect(xmax).toBeGreaterThanOrEqual(-122.5311 + 80 / 85);
 	});
 
 	it('treats an ArcGIS error envelope (HTTP 200 + error) as a failure, not as "no fires"', async () => {

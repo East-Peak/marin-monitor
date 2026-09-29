@@ -9,6 +9,7 @@
 import { logger } from '$lib/config/api';
 import { fetchWithTimeout } from './fetch-helpers';
 import { isNearMarin } from '$lib/geo/proximity';
+import { MARIN_CENTER } from '$lib/config/towns';
 
 export interface FireIncident {
 	id: string;
@@ -28,6 +29,15 @@ export interface FireIncident {
 
 const CALFIRE_URL = '/api/calfire';
 
+/** Bounding box of isNearMarin's 80 km circle (~111 km/° lat, ~85 km/° lon). */
+const NIFC_RADIUS_KM = 80;
+const NIFC_ENVELOPE = [
+	MARIN_CENTER.lon - NIFC_RADIUS_KM / 85,
+	MARIN_CENTER.lat - NIFC_RADIUS_KM / 111,
+	MARIN_CENTER.lon + NIFC_RADIUS_KM / 85,
+	MARIN_CENTER.lat + NIFC_RADIUS_KM / 111
+].join(',');
+
 // NIFC/WFIGS — current (active) incidents inside an envelope around Marin
 // (~80 km, matching isNearMarin). The YearToDate layer rarely sets
 // FireOutDateTime, so it cannot tell active fires from long-out ones.
@@ -35,7 +45,7 @@ const NIFC_URL =
 	'https://services3.arcgis.com/T4QMspbfLg3qTGWY/ArcGIS/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query?' +
 	new URLSearchParams({
 		where: "POOState='US-CA'",
-		geometry: '-123.6,37.3,-121.6,38.8',
+		geometry: NIFC_ENVELOPE,
 		geometryType: 'esriGeometryEnvelope',
 		inSR: '4326',
 		spatialRel: 'esriSpatialRelIntersects',
