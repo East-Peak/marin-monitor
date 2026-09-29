@@ -49,4 +49,9 @@ describe('DashboardV2 preview shell', () => {
 		expect(loadAllNews).not.toHaveBeenCalled();
 		expect(loadStravaData).not.toHaveBeenCalled();
 	});
+
+	it('puts the ⚙ settings menu in the v2 header', () => {
+		render(DashboardV2);
+		expect(screen.getByRole('button', { name: 'Dashboard settings' })).toBeTruthy();
+	});
 });

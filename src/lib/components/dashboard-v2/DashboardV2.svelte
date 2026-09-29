@@ -2,6 +2,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import TownPicker from '$lib/components/layout/TownPicker.svelte';
+	import SettingsMenu from './SettingsMenu.svelte';
 
 	// SSR renders "false"; tests and later sections use this to know the page is interactive.
 	let hydrated = $state(false);
@@ -22,6 +23,7 @@
 			<span class="v2-scope-label" id="v2-scope-label">Showing:</span>
 			<TownPicker />
 		</div>
+		<SettingsMenu />
 		<span class="v2-badge">v2 preview</span>
 		<a class="v2-leave" href="/">Leave preview</a>
 	</header>
