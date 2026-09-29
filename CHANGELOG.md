@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Added — sync workflows stay enabled: weekly API keepalive (G0 repair 2)
+
+- **All 8 GitHub sync workflows had been `disabled_inactivity`.** GitHub disables scheduled workflows in a public repo after 60 days without activity. They are re-enabled.
+- New `.github/workflows/sync-keepalive.yml`: weekly (Wed 07:23 UTC) plus on demand, `permissions: actions: write` only, no checkout and no commits. It calls the enable API for every sync workflow and itself, tries all of them, and fails the run if any fails. It runs on the same scheduler it protects, so the independent backstop is external: stale data turns `/api/health` 503, and UptimeRobot alerts on that. (GitHub doesn't document that re-enabling resets the timer; this is the pattern established keepalive actions use.)
+- `src/lib/server/sync-keepalive.test.ts` pins the cadence, the minimal permissions, error accumulation, and that the list matches every `sync-*.yml` on disk.
+
 ### Changed — /api/health: 200 means "no unaccepted failure" (G0 alerting contract)
 
 - **The problem:** G0 leaves Strava stale by design (GS), and the Fairfax and Belvedere police sites answer 403. The strict evaluator returned 503 until every source was fixed, so an external uptime monitor could never see a recovery.
