@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-09-29',
+		title: 'Preview settings menu',
+		description:
+			'The dashboard preview has a small ⚙ menu for text size, default location, theme, camera visibility and Reset sections. Settings are shared with the regular dashboard. One corrupt saved setting no longer resets the others, and a saved light theme now sticks.'
+	},
+	{
+		date: '2026-09-29',
 		title: 'Dashboard redesign preview',
 		description:
 			'An early preview of the redesigned dashboard is available at marinmonitor.com/?layout=v2. The regular dashboard is unchanged.'

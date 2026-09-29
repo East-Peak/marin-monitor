@@ -6,6 +6,13 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Added — v2 section preferences and the ⚙ menu (D1 PR 2)
+
+- **Versioned v2 section prefs** under `mm_sections_v2`: validated entry by entry, idempotent, and independent of the v1 keys (left intact for rollback). Precedence: hash target > saved choice > viewport default (phone < 768px closed; desktop open except Strava).
+- **⚙ menu in the preview header** with the retained controls: UI scale, default location, theme, camera visibility, and "Reset sections" (resets sections only).
+- **Fixed:** a malformed `mm_panels` no longer discards the other saved settings; denied storage never throws; the saved theme (written as JSON) is read back; an unknown saved location falls back to the default.
+- **Fixed (PR 1 follow-up):** one caller's abort no longer fails a shared deduplicated `ServiceClient` request; `fetchJson` reads the body under its deadline and owner signal; an owner abort is not logged as a fetch failure; `WeatherPanel` writes no state after it is destroyed.
+
 ### Added — dashboard redesign preview behind `?layout=v2` (D1 PR 1)
 
 - **`/?layout=v2` renders the new dashboard shell; `/` is unchanged.** The layout is resolved in the server `load({ url })` and returned as page data, so SSR, hydration and client navigation agree.
