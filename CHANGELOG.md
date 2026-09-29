@@ -6,6 +6,14 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-28
 
+### Fixed — fire-cam frames painted the moment a camera slide appears (TV slice 1b)
+
+- **TV: ALERTCalifornia fire-cam tiles are painted as soon as the slide appears.** Before, they sat blank for about 2s.
+- **Why they were blank.** Those frames are ~276 KB with `cache-control: max-age=10`, and the warm-up runs ~19s before the slide. Rendering a fresh `<img src>` made Chromium refetch the expired frame even though a decoded copy was still in memory, and keeping the preloaded `Image` object alive was not enough on its own (checked empirically).
+- **Fix: mount the decoded element itself.** `preloadImage` now resolves the decoded `HTMLImageElement`. The per-camera last-good cache keeps that element: one per camera, replaced when a newer frame arrives. `TvCameraTile` mounts it directly, so a remount cannot trigger a fetch.
+- **New e2e fixture.** It serves a 300 KB frame with `max-age=10` and waits 12s between warm-up and slide. It asserts that every live tile is painted 0.5s after the slide appears and that each frame was fetched exactly once. It fails on the previous build.
+- `.prettierignore` and `knip.jsonc` now skip `.superpowers/`, the agent scratch directory (already gitignored).
+
 ### Fixed — TV camera tiles no longer flash "Camera offline" (TV slice 1)
 
 - **TV: camera tiles no longer flash 'Camera offline' while loading.** They show the last good frame (marked stale if old), recover automatically, and the next camera slide is preloaded so it appears ready.

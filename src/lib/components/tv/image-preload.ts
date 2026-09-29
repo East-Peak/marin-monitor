@@ -1,6 +1,10 @@
 // src/lib/components/tv/image-preload.ts
-/** Resolve true only once the image has loaded AND decoded; never rejects. */
-export function preloadImage(url: string, timeoutMs = 8_000): Promise<boolean> {
+/**
+ * Resolve the element only once it has loaded AND decoded (null otherwise; never
+ * rejects). Callers mount this element itself: a fresh <img src> would refetch
+ * once a short max-age expires, even though these bytes are already decoded.
+ */
+export function preloadImage(url: string, timeoutMs = 8_000): Promise<HTMLImageElement | null> {
 	return new Promise((resolve) => {
 		const img = new Image();
 		let settled = false;
@@ -10,7 +14,7 @@ export function preloadImage(url: string, timeoutMs = 8_000): Promise<boolean> {
 			clearTimeout(timer);
 			img.onload = null;
 			img.onerror = null;
-			resolve(ok);
+			resolve(ok ? img : null);
 		};
 		const timer = setTimeout(() => finish(false), timeoutMs);
 		img.onload = () => {

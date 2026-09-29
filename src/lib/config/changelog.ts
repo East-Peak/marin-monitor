@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-09-28',
+		title: 'Fire cams appear instantly',
+		description:
+			'TV: ALERTCalifornia fire-cam tiles are now painted the moment a camera slide appears, instead of sitting blank for a couple of seconds while the frame downloaded again.'
+	},
+	{
+		date: '2026-09-28',
 		title: 'TV cameras load cleanly',
 		description:
 			"TV: camera tiles no longer flash 'Camera offline' while loading. They show the last good frame (marked stale if old), recover automatically, and the next camera slide is preloaded so it appears ready."

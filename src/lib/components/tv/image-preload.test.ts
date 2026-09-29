@@ -26,28 +26,28 @@ afterEach(() => {
 });
 
 describe('preloadImage', () => {
-	it('resolves true after load and decode', async () => {
+	it('resolves the decoded element itself after load and decode', async () => {
 		const p = preloadImage('https://x/a.jpg', 1_000);
 		expect(FakeImage.last.src).toBe('https://x/a.jpg');
 		FakeImage.last.onload?.();
-		await expect(p).resolves.toBe(true);
+		await expect(p).resolves.toBe(FakeImage.last);
 	});
-	it('resolves false on error', async () => {
+	it('resolves null on error', async () => {
 		const p = preloadImage('https://x/a.jpg', 1_000);
 		FakeImage.last.onerror?.();
-		await expect(p).resolves.toBe(false);
+		await expect(p).resolves.toBeNull();
 	});
-	it('resolves false when decode rejects', async () => {
+	it('resolves null when decode rejects', async () => {
 		const p = preloadImage('https://x/a.jpg', 1_000);
 		FakeImage.last.decodeResult = Promise.reject(new Error('bad'));
 		FakeImage.last.onload?.();
-		await expect(p).resolves.toBe(false);
+		await expect(p).resolves.toBeNull();
 	});
-	it('resolves false on timeout and ignores a late load', async () => {
+	it('resolves null on timeout and ignores a late load', async () => {
 		const p = preloadImage('https://x/a.jpg', 1_000);
 		const img = FakeImage.last;
 		vi.advanceTimersByTime(1_001);
-		await expect(p).resolves.toBe(false);
+		await expect(p).resolves.toBeNull();
 		expect(() => img.onload?.()).not.toThrow();
 	});
 });

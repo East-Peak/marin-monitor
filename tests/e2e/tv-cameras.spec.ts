@@ -1,4 +1,5 @@
 // tests/e2e/tv-cameras.spec.ts
+import zlib from 'node:zlib';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
 const CAM = /cameras\.alertcalifornia\.org|cwwp2\.dot\.ca\.gov|cdns\.abclocal\.go\.com/;
@@ -6,6 +7,18 @@ const PIXEL = Buffer.from(
 	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
 	'base64'
 );
+
+/** A valid PNG padded to ALERTCalifornia frame size (~300 KB) with an ignored tEXt chunk. */
+function paddedPng(bytes: number): Buffer {
+	const data = Buffer.concat([Buffer.from('Comment\0'), Buffer.alloc(bytes, 0x61)]);
+	const typeAndData = Buffer.concat([Buffer.from('tEXt'), data]);
+	const len = Buffer.alloc(4);
+	len.writeUInt32BE(data.length);
+	const crc = Buffer.alloc(4);
+	crc.writeUInt32BE(zlib.crc32(typeAndData));
+	const iend = PIXEL.length - 12;
+	return Buffer.concat([PIXEL.subarray(0, iend), len, typeAndData, crc, PIXEL.subarray(iend)]);
+}
 
 /** /tv is client-only: keys pressed before the header renders are dropped. */
 async function openPaused(page: Page) {
@@ -95,5 +108,57 @@ test.describe('TV camera tiles', () => {
 			await expect(tile).toHaveAttribute('data-status', 'live', { timeout: 1_000 });
 			await expectDecoded(tile);
 		}
+	});
+
+	test('frames warmed longer ago than max-age are painted on arrival without a refetch', async ({
+		page
+	}) => {
+		test.setTimeout(60_000);
+		// Real ALERTCalifornia frames: ~276 KB, cache-control max-age=10, ~1.5s to download.
+		const body = paddedPng(300_000);
+		const requests = new Map<string, number>();
+		await page.route(CAM, async (route) => {
+			const url = route.request().url();
+			requests.set(url, (requests.get(url) ?? 0) + 1);
+			await new Promise((r) => setTimeout(r, 1_500));
+			await route.fulfill({
+				status: 200,
+				contentType: 'image/png',
+				headers: { 'cache-control': 'max-age=10' },
+				body
+			});
+		});
+		await openPaused(page);
+		await page.getByRole('button', { name: 'Crime & Safety' }).click();
+		await expect.poll(() => requests.size, { timeout: 10_000 }).toBeGreaterThan(0);
+		// Outlive max-age, as the carousel does (warm-up runs ~19s before the slide).
+		await page.waitForTimeout(12_000);
+		const warmed = [...requests.keys()];
+		await page.keyboard.press('ArrowRight');
+		await expect(page.locator('[data-camera-id]').first()).toBeVisible();
+		await page.waitForTimeout(500);
+		const tiles = await page.locator('[data-camera-id]').evaluateAll((els) =>
+			els.map((el) => {
+				const imgs = [...el.querySelectorAll('img')];
+				return {
+					id: el.getAttribute('data-camera-id'),
+					status: el.getAttribute('data-status'),
+					imgs: imgs.length,
+					src: imgs[0]?.src ?? null,
+					painted: imgs.length === 1 && imgs[0].complete && imgs[0].naturalWidth > 0
+				};
+			})
+		);
+		// One tile per warmed camera, each live and painted 0.5s after the slide appeared,
+		// showing its single warm-up fetch.
+		expect(tiles).toHaveLength(warmed.length);
+		const lagging = tiles
+			.map((t) => ({
+				...t,
+				warmed: warmed.includes(t.src ?? ''),
+				fetches: requests.get(t.src ?? '')
+			}))
+			.filter((t) => t.status !== 'live' || !t.painted || !t.warmed || t.fetches !== 1);
+		expect(lagging).toEqual([]);
 	});
 });

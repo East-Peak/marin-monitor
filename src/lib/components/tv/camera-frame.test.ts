@@ -16,6 +16,8 @@ import {
 } from './camera-frame';
 
 const T0 = Date.parse('2026-09-28T20:00:05.000Z');
+// Pure logic never touches the element; a unique token per frame is enough.
+const img = (tag: string) => ({ tag }) as unknown as HTMLImageElement;
 
 describe('versionedFrameUrl', () => {
 	it('buckets by refresh interval so preload and display compute the same URL', () => {
@@ -82,13 +84,21 @@ describe('last-good frame cache', () => {
 	beforeEach(() => resetFrameCache());
 	it('remembers the most recent decoded frame per camera', () => {
 		expect(lastGoodFrame('cam')).toBeNull();
-		rememberFrame('cam', 'u1', T0);
-		rememberFrame('cam', 'u2', T0 + 10_000);
-		expect(lastGoodFrame('cam')).toEqual({ url: 'u2', at: T0 + 10_000 });
+		rememberFrame('cam', 'u1', T0, img('u1'));
+		rememberFrame('cam', 'u2', T0 + 10_000, img('u2'));
+		expect(lastGoodFrame('cam')).toEqual({ url: 'u2', at: T0 + 10_000, img: img('u2') });
+	});
+	it('keeps the decoded element itself, one per camera, replaced by a newer frame', () => {
+		const first = img('u1');
+		const second = img('u2');
+		rememberFrame('cam', 'u1', T0, first);
+		expect(lastGoodFrame('cam')?.img).toBe(first);
+		rememberFrame('cam', 'u2', T0 + 10_000, second);
+		expect(lastGoodFrame('cam')?.img).toBe(second);
 	});
 	it('ignores an older frame arriving after a newer one', () => {
-		rememberFrame('cam', 'u2', T0 + 10_000);
-		rememberFrame('cam', 'u1', T0);
+		rememberFrame('cam', 'u2', T0 + 10_000, img('u2'));
+		rememberFrame('cam', 'u1', T0, img('u1'));
 		expect(lastGoodFrame('cam')?.url).toBe('u2');
 	});
 	it('counts consecutive failures per camera across mounts until a frame loads', () => {
@@ -97,7 +107,7 @@ describe('last-good frame cache', () => {
 		rememberFailure('cam');
 		expect(priorFailures('cam')).toBe(2);
 		expect(tileStatus(initialTileState(null, priorFailures('cam')), T0, 60_000)).toBe('offline');
-		rememberFrame('cam', 'u1', T0);
+		rememberFrame('cam', 'u1', T0, img('u1'));
 		expect(priorFailures('cam')).toBe(0);
 	});
 });

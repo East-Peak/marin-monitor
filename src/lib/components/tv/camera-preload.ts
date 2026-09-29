@@ -32,15 +32,15 @@ export function framesToPreload(
 export async function preloadScreenFrames(
 	screenId: TvScreenId,
 	nowMs: number,
-	preload: (url: string) => Promise<boolean> = preloadImage
+	preload: (url: string) => Promise<HTMLImageElement | null> = preloadImage
 ): Promise<number> {
 	const frames = framesToPreload(screenId, nowMs);
 	const results = await Promise.all(
 		frames.map(async ({ camId, url }) => {
-			const ok = await preload(url);
-			if (ok) rememberFrame(camId, url, Date.now());
+			const img = await preload(url);
+			if (img) rememberFrame(camId, url, Date.now(), img);
 			else rememberFailure(camId);
-			return ok;
+			return img !== null;
 		})
 	);
 	return results.filter(Boolean).length;

@@ -1,6 +1,7 @@
 <!-- src/lib/components/tv/screens/TvCameraTile.svelte -->
 <script lang="ts">
 	import { onDestroy, onMount, untrack } from 'svelte';
+	import type { Action } from 'svelte/action';
 	import type { CameraConfig } from '$lib/config/cameras';
 	import {
 		initialTileState,
@@ -19,7 +20,7 @@
 
 	interface Props {
 		cam: CameraConfig;
-		preload?: (url: string) => Promise<boolean>;
+		preload?: (url: string) => Promise<HTMLImageElement | null>;
 		now?: () => number;
 	}
 
@@ -29,6 +30,9 @@
 	let tile = $state<TileState>(
 		untrack(() => initialTileState(lastGoodFrame(cam.id), priorFailures(cam.id)))
 	);
+	// The decoded element on screen. Mounting it (not a new <img src>) means a
+	// remount never refetches, even after the CDN's short max-age has expired.
+	let shownImg = $state.raw(untrack(() => lastGoodFrame(cam.id)?.img ?? null));
 	let clock = $state(untrack(() => now()));
 	let inFlight = false;
 	let destroyed = false;
@@ -42,19 +46,31 @@
 		const url = versionedFrameUrl(cam.url, cam.refreshInterval, clock);
 		if (inFlight || url === tile.shownUrl) return;
 		inFlight = true;
-		const ok = await preload(url);
+		const img = await preload(url);
 		inFlight = false;
 		if (destroyed) return;
 		const at = now();
-		if (ok) {
+		if (img) {
 			tile = onFrameLoaded(tile, url, at);
-			rememberFrame(cam.id, url, at);
+			shownImg = img;
+			rememberFrame(cam.id, url, at, img);
 		} else {
 			tile = onFrameFailed(tile);
 			rememberFailure(cam.id);
 		}
 		clock = at;
 	}
+
+	const showFrame: Action<HTMLElement, HTMLImageElement> = (host, img) => {
+		const mount = (frame: HTMLImageElement) => {
+			frame.alt = cam.name;
+			frame.className = 'block h-full w-full object-cover';
+			host.replaceChildren(frame);
+		};
+		mount(img);
+		// Detach on unmount: the cached element outlives the slide and must not pin it.
+		return { update: mount, destroy: () => host.replaceChildren() };
+	};
 
 	onMount(() => {
 		void refresh();
@@ -72,8 +88,8 @@
 	data-camera-id={cam.id}
 	data-status={status}
 >
-	{#if tile.shownUrl}
-		<img src={tile.shownUrl} alt={cam.name} class="block h-full w-full object-cover" />
+	{#if shownImg}
+		<div class="h-full w-full" use:showFrame={shownImg}></div>
 	{/if}
 	{#if status === 'connecting'}
 		<div class="absolute inset-0 flex items-center justify-center">

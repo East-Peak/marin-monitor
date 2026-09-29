@@ -53,20 +53,27 @@ export function tileStatus(s: TileState, nowMs: number, staleMs: number): TileSt
 	return nowMs - s.shownAt > staleMs ? 'stale' : 'live';
 }
 
-// Bounded by the camera count (one entry per camera); survives slide unmounts.
-const frameCache = new Map<string, { url: string; at: number }>();
+export interface LastGoodFrame {
+	url: string;
+	at: number;
+	/** The decoded element itself, so a remount paints without refetching. */
+	img: HTMLImageElement;
+}
+
+// Bounded by the camera count (one entry, one element per camera); survives slide unmounts.
+const frameCache = new Map<string, LastGoodFrame>();
 // Consecutive failures since the last decoded frame. A slow-refresh camera gets
 // one attempt per visit, so counting per mount would never reach "offline".
 const failureCounts = new Map<string, number>();
 
-export function lastGoodFrame(camId: string): { url: string; at: number } | null {
+export function lastGoodFrame(camId: string): LastGoodFrame | null {
 	return frameCache.get(camId) ?? null;
 }
 
-export function rememberFrame(camId: string, url: string, at: number): void {
+export function rememberFrame(camId: string, url: string, at: number, img: HTMLImageElement): void {
 	const prev = frameCache.get(camId);
 	if (prev && prev.at > at) return;
-	frameCache.set(camId, { url, at });
+	frameCache.set(camId, { url, at, img });
 	failureCounts.delete(camId);
 }
 

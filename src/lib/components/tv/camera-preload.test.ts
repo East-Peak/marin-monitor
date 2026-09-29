@@ -30,11 +30,19 @@ describe('camera preload', () => {
 
 	it('remembers only successfully decoded frames', async () => {
 		const frames = framesToPreload('cameras-west-north', NOW);
-		const preload = vi.fn(async (url: string) => url !== frames[0].url);
+		const decoded = new Map<string, HTMLImageElement>();
+		const preload = vi.fn(async (url: string) => {
+			if (url === frames[0].url) return null;
+			const img = document.createElement('img');
+			decoded.set(url, img);
+			return img;
+		});
 		const ok = await preloadScreenFrames('cameras-west-north', NOW, preload);
 		expect(ok).toBe(frames.length - 1);
 		expect(lastGoodFrame(frames[0].camId)).toBeNull();
 		expect(priorFailures(frames[0].camId)).toBe(1);
 		expect(lastGoodFrame(frames[1].camId)?.url).toBe(frames[1].url);
+		// The warmed element itself is retained so the tile can mount it without a refetch.
+		expect(lastGoodFrame(frames[1].camId)?.img).toBe(decoded.get(frames[1].url));
 	});
 });
