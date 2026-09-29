@@ -87,9 +87,7 @@ describe('KNOWN_SUBSOURCE_FAILURES', () => {
 	it('records each audited subsource failure with a disposition', () => {
 		expect(KNOWN_SUBSOURCE_FAILURES.map((f) => f.name)).toEqual([
 			'Fairfax Police',
-			'Belvedere Police',
-			'Marin IJ breaking-news feed',
-			'Marin IJ emergency feed'
+			'Belvedere Police'
 		]);
 		for (const failure of KNOWN_SUBSOURCE_FAILURES) {
 			expect(failure.problem).not.toBe('');

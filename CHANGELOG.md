@@ -6,6 +6,10 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Removed — two dead Marin IJ tag feeds (G0, Stuart approved 2026-09-29)
+
+- `marinij.com/tag/breaking-news/feed/` (Local Wire) and `tag/emergency/feed/` (Crime & Safety) have returned 0 items all year, and the IJ has no populated equivalent. Both are retired; local news comes from `tag/marin-county`, and Crime & Safety keeps the IJ Crime and Fire feeds. With them gone, the only remaining known subsource failures are the Fairfax and Belvedere police 403s (accepted until 2026-12-31).
+
 ### Added — sync workflows stay enabled: weekly API keepalive (G0 repair 2)
 
 - **All 8 GitHub sync workflows had been `disabled_inactivity`.** GitHub disables scheduled workflows in a public repo after 60 days without activity. They are re-enabled.

@@ -187,18 +187,6 @@ export const KNOWN_SUBSOURCE_FAILURES: readonly SubsourceFailure[] = freeze<Subs
 		parent: 'Police Logs',
 		problem: 'HTTP 403 on every run (Vercel and local)',
 		disposition: 'G0: find an allowed fetch path or retire the agency'
-	},
-	{
-		name: 'Marin IJ breaking-news feed',
-		parent: 'News feeds',
-		problem: 'marinij.com/tag/breaking-news returns 0 items',
-		disposition: 'G0: replace with a populated Marin IJ tag feed'
-	},
-	{
-		name: 'Marin IJ emergency feed',
-		parent: 'News feeds',
-		problem: 'marinij.com/tag/emergency returns 0 items',
-		disposition: 'G0: replace with a populated Marin IJ tag feed'
 	}
 ]);
 

@@ -29,12 +29,7 @@ export const FEEDS: Record<NewsCategory, FeedSource[]> = {
 			verification: 'local_media',
 			confirmed: true
 		},
-		{
-			name: 'Marin IJ – Breaking News',
-			url: 'https://www.marinij.com/tag/breaking-news/feed/',
-			verification: 'local_media',
-			confirmed: true
-		},
+		// Retired 2026-09: Marin IJ tag/breaking-news and tag/emergency (empty all year).
 		{
 			name: 'Point Reyes Light',
 			url: 'https://www.ptreyeslight.com/feed/',
@@ -114,12 +109,6 @@ export const FEEDS: Record<NewsCategory, FeedSource[]> = {
 		{
 			name: 'Marin IJ – Fire',
 			url: 'https://www.marinij.com/tag/fire/feed/',
-			verification: 'local_media',
-			confirmed: true
-		},
-		{
-			name: 'Marin IJ – Emergency',
-			url: 'https://www.marinij.com/tag/emergency/feed/',
 			verification: 'local_media',
 			confirmed: true
 		},

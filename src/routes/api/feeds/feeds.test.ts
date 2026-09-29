@@ -34,6 +34,13 @@ describe('Marin Lately feed', () => {
 });
 
 describe('Marin IJ local news feed', () => {
+	it('no longer configures the retired breaking-news and emergency tags (empty all year)', () => {
+		const urls = Object.values(FEEDS).flatMap((feeds) => feeds.map((f) => f.url));
+		expect(urls.filter((u) => /marinij\.com\/tag\/(breaking-news|emergency)\//.test(u))).toEqual(
+			[]
+		);
+	});
+
 	it('reads the populated marin-county tag (tag/news has returned 0 items since 2026)', () => {
 		const ij = FEEDS.local.find((f) => f.name === 'Marin Independent Journal');
 		expect(ij?.url).toBe('https://www.marinij.com/tag/marin-county/feed/');
