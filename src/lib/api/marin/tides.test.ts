@@ -22,6 +22,7 @@ vi.mock('$lib/config/map', () => ({
 
 import { fetchTidePredictions, fetchHourlyTides } from './tides';
 import { serviceClient } from '$lib/services/client';
+import { logger } from '$lib/config/api';
 
 const mockRequest = vi.mocked(serviceClient.request);
 
@@ -376,5 +377,18 @@ describe('NOAA Tides adapter', () => {
 			expect(mockRequest).toHaveBeenCalledTimes(2);
 			for (const call of mockRequest.mock.calls) expect(call[2]?.signal).toBe(owner.signal);
 		});
+	});
+
+	it('an owner abort is not logged as a tide fetch failure (fix round 2 item 3)', async () => {
+		const owner = new AbortController();
+		mockRequest.mockImplementation(async () => {
+			owner.abort();
+			throw new DOMException('Aborted', 'AbortError');
+		});
+
+		await fetchTidePredictions('9415020', { signal: owner.signal });
+		await fetchHourlyTides('9415020', { signal: owner.signal });
+
+		expect(vi.mocked(logger.warn)).not.toHaveBeenCalled();
 	});
 });

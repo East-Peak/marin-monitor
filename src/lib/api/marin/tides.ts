@@ -66,7 +66,8 @@ export async function fetchTidePredictions(
 			type: (p.type === 'H' ? 'H' : 'L') as 'H' | 'L'
 		}));
 	} catch (error) {
-		logger.warn('NOAA', `Tide fetch failed: ${(error as Error).message}`);
+		// An owner abort (destroyed dashboard or panel) is not an upstream failure.
+		if (!signal?.aborted) logger.warn('NOAA', `Tide fetch failed: ${(error as Error).message}`);
 		return [];
 	}
 }
@@ -106,7 +107,9 @@ export async function fetchHourlyTides(
 			height: parseFloat(p.v)
 		}));
 	} catch (error) {
-		logger.warn('NOAA', `Hourly tide fetch failed: ${(error as Error).message}`);
+		// An owner abort (destroyed dashboard or panel) is not an upstream failure.
+		if (!signal?.aborted)
+			logger.warn('NOAA', `Hourly tide fetch failed: ${(error as Error).message}`);
 		return [];
 	}
 }
