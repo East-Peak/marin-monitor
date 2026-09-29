@@ -188,20 +188,7 @@ export const SOURCE_INVENTORY: readonly SourcePolicy[] = freeze<SourcePolicy>([
  * Parts of a source that fail while the source itself still refreshes. Each
  * keeps the report degraded until it is repaired or deliberately retired.
  */
-export const KNOWN_SUBSOURCE_FAILURES: readonly SubsourceFailure[] = freeze<SubsourceFailure>([
-	{
-		name: 'Fairfax Police',
-		parent: 'Police Logs',
-		problem: 'HTTP 403 on every run (Vercel and local)',
-		disposition: 'G0: find an allowed fetch path or retire the agency'
-	},
-	{
-		name: 'Belvedere Police',
-		parent: 'Police Logs',
-		problem: 'HTTP 403 on every run (Vercel and local)',
-		disposition: 'G0: find an allowed fetch path or retire the agency'
-	}
-]);
+export const KNOWN_SUBSOURCE_FAILURES: readonly SubsourceFailure[] = freeze<SubsourceFailure>([]);
 
 /**
  * Known failures that do not fail /api/health until they expire. Each covers
@@ -226,18 +213,6 @@ export const ACCEPTED_EXCEPTIONS: readonly AcceptedException[] = freeze<Accepted
 		name: 'Strava Events',
 		condition: 'stale',
 		reason: 'GS: logged-out scrape is gone; API rebuild waits on Strava policy answer',
-		...G0_DECISION
-	},
-	{
-		name: 'Fairfax Police',
-		condition: 'unavailable',
-		reason: 'HTTP 403 on every run (Vercel and local); no allowed fetch path yet',
-		...G0_DECISION
-	},
-	{
-		name: 'Belvedere Police',
-		condition: 'unavailable',
-		reason: 'HTTP 403 on every run (Vercel and local); no allowed fetch path yet',
 		...G0_DECISION
 	}
 ]);

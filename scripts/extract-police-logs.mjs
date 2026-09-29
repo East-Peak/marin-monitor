@@ -4,21 +4,22 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
 import { DOMParser } from 'linkedom/worker';
 import { stripHtml, decodeEntities } from '../src/lib/server/html-text.js';
+import {
+	BELVEDERE_POSTS_URL,
+	FAIRFAX_DOCS_URL,
+	POLICE_USER_AGENT
+} from '../src/lib/config/police.shared.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const outputPath = path.resolve(__dirname, '../static/data/marin-police-logs.json');
 
-const FAIRFAX_DOCS_URL =
-	'https://townoffairfaxca.gov/wp-json/wp/v2/documents?search=Press%20log&per_page=8&_fields=id,date,title,link,meta';
 const MILL_VALLEY_DOC_INDEX = 'https://www.cityofmillvalley.gov/DocumentCenter/Index/852';
 const MILL_VALLEY_DOC_ENDPOINT =
 	'https://www.cityofmillvalley.gov/Admin/DocumentCenter/Home/Document_AjaxBinding?renderMode=0&loadSource=7';
 const ROSS_STATS_URL = 'https://www.townofrossca.gov/police/page/monthly-statistics';
 const TIBURON_POLICE_FEED_URL = 'https://www.townoftiburon.org/m/newsflash?cat=8&sortBy=Category';
 const TIBURON_BASE_URL = 'https://www.townoftiburon.org';
-const BELVEDERE_POSTS_URL =
-	'https://www.cityofbelvedere.org/wp-json/wp/v2/posts?per_page=40&_fields=id,date,link,title,excerpt,content';
 const NIXLE_MAX_PAGES = 4;
 const NIXLE_AGENCIES = [
 	{
@@ -226,7 +227,8 @@ function buildHtmlItem({
 async function fetchFairfaxLogs() {
 	const response = await fetch(FAIRFAX_DOCS_URL, {
 		headers: {
-			Accept: 'application/json'
+			Accept: 'application/json',
+			'User-Agent': POLICE_USER_AGENT
 		}
 	});
 	if (!response.ok) {
@@ -430,7 +432,8 @@ async function fetchTiburonPoliceNews() {
 async function fetchBelvedereSafetyPosts() {
 	const response = await fetch(BELVEDERE_POSTS_URL, {
 		headers: {
-			Accept: 'application/json'
+			Accept: 'application/json',
+			'User-Agent': POLICE_USER_AGENT
 		}
 	});
 	if (!response.ok) {

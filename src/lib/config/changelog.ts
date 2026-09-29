@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-09-29',
+		title: 'Fairfax and Belvedere police logs return',
+		description:
+			'Fairfax weekly press logs and Belvedere public-safety posts show up in Police Logs again. Both town sites had been refusing our requests; Marin Monitor now identifies itself honestly and reads Belvedere from its new cityofbelvedere.gov address.'
+	},
+	{
+		date: '2026-09-29',
 		title: 'Honest news timestamps',
 		description:
 			'News items without a real publication date now say "undated" instead of "just now", and a new background producer collects every local feed every 15 minutes, keeping the last good stories when a source is down.'

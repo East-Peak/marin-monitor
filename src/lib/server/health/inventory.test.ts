@@ -94,10 +94,7 @@ describe('SOURCE_INVENTORY', () => {
 
 describe('KNOWN_SUBSOURCE_FAILURES', () => {
 	it('records each audited subsource failure with a disposition', () => {
-		expect(KNOWN_SUBSOURCE_FAILURES.map((f) => f.name)).toEqual([
-			'Fairfax Police',
-			'Belvedere Police'
-		]);
+		expect(KNOWN_SUBSOURCE_FAILURES.map((f) => f.name)).toEqual([]);
 		for (const failure of KNOWN_SUBSOURCE_FAILURES) {
 			expect(failure.problem).not.toBe('');
 			expect(failure.disposition).not.toBe('');
@@ -110,9 +107,7 @@ describe('ACCEPTED_EXCEPTIONS', () => {
 	it('accepts exactly the G0 decisions (2026-09-29), each for one condition, expiring 2026-12-31', () => {
 		expect(ACCEPTED_EXCEPTIONS.map((e) => [e.name, e.condition])).toEqual([
 			['Strava Segments', 'stale'],
-			['Strava Events', 'stale'],
-			['Fairfax Police', 'unavailable'],
-			['Belvedere Police', 'unavailable']
+			['Strava Events', 'stale']
 		]);
 		for (const exception of ACCEPTED_EXCEPTIONS) {
 			expect(exception.expiresAt).toBe('2026-12-31T23:59:59.000Z');

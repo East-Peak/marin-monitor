@@ -48,9 +48,17 @@ const freshNews = (failures: unknown[] = []) => ({
 	failures
 });
 
+const staleFeed = (name: string) => ({
+	name,
+	parent: 'News feeds',
+	problem: 'no successful fetch since 2026-09-28T00:00:00.000Z (last error: http-status: HTTP 404)',
+	disposition: 'Repair or retire the feed in src/lib/config/feeds.ts'
+});
+
 const { GET: getHealth } = await import('./+server');
 const { GET: getFreshness } = await import('../cron/check-freshness/+server');
 const { SOURCE_INVENTORY } = await import('$lib/server/health/inventory');
+const { mergeSubsourceFailures } = await import('$lib/server/health/report');
 
 function makeEvent(path: string, authHeader?: string) {
 	const headers = new Headers();
@@ -97,14 +105,21 @@ describe('/api/health', () => {
 		expect(data.summary.total).toBe(SOURCE_INVENTORY.length);
 	});
 
-	it('stays degraded while known subsource failures exist, answering 200 only because each is accepted', async () => {
+	it('is healthy with 200 when every source is fresh and no subsource fails', async () => {
 		allFresh();
 		const response = await getHealth(publicHealth());
 		const data = await response.json();
-		expect(data.status).toBe('degraded');
-		expect(data.subsources.length).toBeGreaterThan(0);
-		for (const subsource of data.subsources) expect(subsource.acceptedUntil).toBeTruthy();
+		expect(data.status).toBe('healthy');
+		expect(data.subsources).toEqual([]);
 		expect(response.status).toBe(200);
+	});
+
+	it('returns 503 while an unaccepted subsource fails', async () => {
+		allFresh();
+		mockReadNewsHealthFromBlob.mockResolvedValue(freshNews([staleFeed('KQED News')]));
+		const response = await getHealth(publicHealth());
+		expect((await response.json()).status).toBe('degraded');
+		expect(response.status).toBe(503);
 	});
 
 	it('returns 503 when one source is stale despite a fresh upload', async () => {
@@ -148,6 +163,7 @@ describe('/api/health', () => {
 
 	it('includes internal diagnostics with cron auth', async () => {
 		allFresh();
+		mockReadNewsHealthFromBlob.mockResolvedValue(freshNews([staleFeed('KQED News')]));
 		const data = await (await getHealth(authedHealth())).json();
 		expect(data.internal.apiKeys).toContainEqual({ name: 'GOOGLE_PLACES_API_KEY', set: true });
 		expect(data.internal.apiKeys).toContainEqual({ name: 'NREL_API_KEY', set: false });
@@ -158,7 +174,9 @@ describe('/api/health', () => {
 
 	it('publishes subsources as name, parent, status (and acceptedUntil when accepted) only', async () => {
 		allFresh();
+		mockReadNewsHealthFromBlob.mockResolvedValue(freshNews([staleFeed('KQED News')]));
 		const data = await (await getHealth(publicHealth())).json();
+		expect(data.subsources).toHaveLength(1);
 		for (const subsource of data.subsources) {
 			const expected = ['name', 'parent', 'status'];
 			if ('acceptedUntil' in subsource) expected.unshift('acceptedUntil');
@@ -194,17 +212,9 @@ describe('/api/cron/check-freshness', () => {
 });
 
 describe('/api/health — live news feed failures', () => {
-	const stale = (name: string) => ({
-		name,
-		parent: 'News feeds',
-		problem:
-			'no successful fetch since 2026-09-28T00:00:00.000Z (last error: http-status: HTTP 404)',
-		disposition: 'Repair or retire the feed in src/lib/config/feeds.ts'
-	});
-
 	it('adds a stale producer feed to the subsources', async () => {
 		allFresh();
-		mockReadNewsHealthFromBlob.mockResolvedValue(freshNews([stale('KQED News')]));
+		mockReadNewsHealthFromBlob.mockResolvedValue(freshNews([staleFeed('KQED News')]));
 		const data = await (await getHealth(publicHealth())).json();
 		expect(data.subsources).toContainEqual({
 			name: 'KQED News',
@@ -213,13 +223,16 @@ describe('/api/health — live news feed failures', () => {
 		});
 	});
 
-	it('does not repeat a feed already declared as a known failure', async () => {
-		allFresh();
-		mockReadNewsHealthFromBlob.mockResolvedValue(freshNews([stale('Fairfax Police')]));
-		const data = await (await getHealth(publicHealth())).json();
-		expect(
-			data.subsources.filter((s: { name: string }) => s.name === 'Fairfax Police')
-		).toHaveLength(1);
+	it('does not repeat a feed already declared as a known failure', () => {
+		const declared = [{ ...staleFeed('Fairfax Police'), parent: 'Police Logs' }];
+		const merged = mergeSubsourceFailures(declared, [
+			staleFeed('Fairfax Police'),
+			staleFeed('KQED News')
+		]);
+		expect(merged.map((f) => [f.name, f.parent])).toEqual([
+			['Fairfax Police', 'Police Logs'],
+			['KQED News', 'News feeds']
+		]);
 	});
 });
 

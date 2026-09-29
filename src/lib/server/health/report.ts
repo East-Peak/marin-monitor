@@ -30,7 +30,7 @@ async function observe(policy: SourcePolicy, token: string): Promise<Observation
 }
 
 /** Declared failures first; a live failure already declared by name is not repeated. */
-function mergeSubsourceFailures(
+export function mergeSubsourceFailures(
 	declared: readonly SubsourceFailure[],
 	live: readonly SubsourceFailure[]
 ): SubsourceFailure[] {

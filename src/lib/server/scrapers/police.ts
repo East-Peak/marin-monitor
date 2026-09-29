@@ -6,6 +6,11 @@
 import type { NewsItem } from '$lib/types';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import {
+	BELVEDERE_POSTS_URL,
+	FAIRFAX_DOCS_URL,
+	POLICE_USER_AGENT
+} from '$lib/config/police.shared.js';
+import {
 	stripHtml,
 	excerpt,
 	slugify,
@@ -14,15 +19,11 @@ import {
 	parseHtml
 } from './shared';
 
-const FAIRFAX_DOCS_URL =
-	'https://townoffairfaxca.gov/wp-json/wp/v2/documents?search=Press%20log&per_page=8&_fields=id,date,title,link,meta';
 const MILL_VALLEY_DOC_ENDPOINT =
 	'https://www.cityofmillvalley.gov/Admin/DocumentCenter/Home/Document_AjaxBinding?renderMode=0&loadSource=7';
 const ROSS_STATS_URL = 'https://www.townofrossca.gov/police/page/monthly-statistics';
 const TIBURON_POLICE_FEED_URL = 'https://www.townoftiburon.org/m/newsflash?cat=8&sortBy=Category';
 const TIBURON_BASE_URL = 'https://www.townoftiburon.org';
-const BELVEDERE_POSTS_URL =
-	'https://www.cityofbelvedere.org/wp-json/wp/v2/posts?per_page=40&_fields=id,date,link,title,excerpt,content';
 const NIXLE_MAX_PAGES = 4;
 
 const NIXLE_AGENCIES = [
@@ -212,7 +213,7 @@ async function fetchFairfaxLogs(): Promise<NewsItem[]> {
 	const response = await fetchWithTimeout(
 		FAIRFAX_DOCS_URL,
 		{
-			headers: { Accept: 'application/json' }
+			headers: { Accept: 'application/json', 'User-Agent': POLICE_USER_AGENT }
 		},
 		8000
 	);
@@ -419,7 +420,7 @@ async function fetchBelvedereSafetyPosts(): Promise<NewsItem[]> {
 	const response = await fetchWithTimeout(
 		BELVEDERE_POSTS_URL,
 		{
-			headers: { Accept: 'application/json' }
+			headers: { Accept: 'application/json', 'User-Agent': POLICE_USER_AGENT }
 		},
 		8000
 	);
