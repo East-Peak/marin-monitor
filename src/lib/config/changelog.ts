@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-09-29',
+		title: 'Latest reporting groundwork',
+		description:
+			"Marin IJ's and NBC Bay Area's Marin County feeds now count as county-wide news, TV and Pulse '24h' counts only count dated stories, and earthquake pins show their age. Groundwork for the redesign's Latest reporting list."
+	},
+	{
+		date: '2026-09-29',
 		title: 'TV keeps your town',
 		description:
 			'Opening the TV wallboard no longer clears the town you picked on the dashboard, and clicking a map pin opens its details without switching the whole dashboard to that town.'

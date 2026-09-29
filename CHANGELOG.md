@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Added — Latest-reporting selector and county-wide rule (D1 PR 4)
+
+- **County-wide rule** (`src/lib/config/county-scope.ts`, one constant, **confirmed by Stuart on 2026-09-29**). The existing Marin IJ `/tag/marin-county` and NBC Bay Area – Marin feeds are county-scoped: their items count as county-wide unless tagged to a specific town. All of Marin → the 5 newest dated items from any source. A town → up to 3 town items plus 2 county-wide, with county backfilling a short town and never unlocated items.
+- **`selectLatestReporting`** (`src/lib/news/reporting.ts`, pure) is built on the news pipeline's shared dedupe, ordering and per-feed ids. It is rendered in a later release.
+- **Fixed:** TV header and Pulse "24h" counts include only known publication times, and earthquake pins carry their time, so the tooltip shows an age.
+
 ### Fixed — TV scope and map pin inspection no longer overwrite the dashboard town (D1 PR 3)
 
 - **`/tv` takes a transient county-wide scope** (`townFilter.beginTransientScope`): `mm_town` is never written while it is active and is restored on exit, whether you arrive by URL or by the `m` / `Escape` keys.
