@@ -184,7 +184,7 @@ function createNewsStore() {
 		 * Enrich already-filtered items with precise map locations (when available).
 		 * This runs in the background and only updates items still present in the category.
 		 */
-		async enrichLocations(category: NewsCategory) {
+		async enrichLocations(category: NewsCategory, options: { signal?: AbortSignal } = {}) {
 			if (inFlightLocationEnrichment.has(category)) return;
 			inFlightLocationEnrichment.add(category);
 
@@ -192,7 +192,8 @@ function createNewsStore() {
 				const snapshot = get({ subscribe }).categories[category].items;
 				if (snapshot.length === 0) return;
 
-				const enriched = await enrichItemsForLocation(snapshot);
+				const enriched = await enrichItemsForLocation(snapshot, { signal: options.signal });
+				if (options.signal?.aborted) return;
 				const byId = new Map(enriched.map((item) => [item.id, item]));
 
 				update((state) => {

@@ -652,4 +652,49 @@ describe('loadAllNews orchestrator', () => {
 		expect(Array.isArray(result.earthquakeNews)).toBe(true);
 		expect(Array.isArray(result.earthquakesRaw)).toBe(true);
 	});
+
+	// ---------- Owner lifetime (dashboard spec §13.6; Codex r1 #5) ----------
+
+	it('aborted while fetching: no enrichment, no store writes, no location lookups', async () => {
+		const owner = new AbortController();
+		mockFetchAllFeeds.mockImplementation(async () => {
+			owner.abort(); // the dashboard unmounts while feeds are in flight
+			return [makeCategoryResult('local', [makeNewsItem({ id: 'late', category: 'local' })])];
+		});
+		const { loadAllNews } = await import('./load-all');
+		const result = await loadAllNews(false, { signal: owner.signal });
+		expect(result.aborted).toBe(true);
+		expect(mockEnrichItemsForRelevance).not.toHaveBeenCalled();
+		expect(mockSetItems).not.toHaveBeenCalled();
+		expect(mockEnrichLocations).not.toHaveBeenCalled();
+	});
+
+	it('aborted during enrichment: the enriched result is never committed', async () => {
+		const owner = new AbortController();
+		mockEnrichItemsForRelevance.mockImplementation(async (items: NewsItem[]) => {
+			owner.abort();
+			return items;
+		});
+		const { loadAllNews } = await import('./load-all');
+		await loadAllNews(false, { signal: owner.signal });
+		expect(mockSetItems).not.toHaveBeenCalled();
+		expect(mockEnrichLocations).not.toHaveBeenCalled();
+	});
+
+	it('without a signal (TV) it behaves exactly as before', async () => {
+		const { loadAllNews } = await import('./load-all');
+		const result = await loadAllNews();
+		expect(result.aborted).toBeUndefined();
+		expect(mockSetItems).toHaveBeenCalled();
+	});
+
+	it('passes the owner signal to background location enrichment', async () => {
+		const owner = new AbortController();
+		const { loadAllNews } = await import('./load-all');
+		await loadAllNews(false, { signal: owner.signal });
+		expect(mockEnrichLocations).toHaveBeenCalled();
+		for (const call of mockEnrichLocations.mock.calls) {
+			expect(call[1]).toEqual({ signal: owner.signal });
+		}
+	});
 });

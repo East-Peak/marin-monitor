@@ -69,13 +69,17 @@
 
 	let editMode = $state(false);
 
+	// Everything this controller starts dies with it (spec §13.6): aborted in the onMount cleanup.
+	const lifetime = new AbortController();
+
 	// Fetch all RSS feeds and API data, populate stores. Per-adapter failures
 	// inside loadAllNews surface as `result.errors` and are propagated up to
 	// `refresh.endRefresh(errors)` so refresh history correctly records
 	// degraded cycles.
 	async function loadNews(errors: string[]) {
 		try {
-			const result = await loadAllNews(true);
+			const result = await loadAllNews(true, { signal: lifetime.signal });
+			if (result.aborted || lifetime.signal.aborted) return;
 			liveEarthquakeItems = result.earthquakeNews;
 			liveEarthquakesRaw = result.earthquakesRaw;
 			errors.push(...result.errors);
@@ -89,22 +93,23 @@
 	const weatherGuard = createRequestGuard();
 
 	async function loadWeather(errors?: string[]) {
+		if (lifetime.signal.aborted) return;
 		const requestId = weatherGuard.next();
 		weatherLoadingState = true;
 		weatherError = null;
 		try {
 			const loc = userLocation;
 			const result = await fetchWeather(loc.lat, loc.lon);
-			if (!weatherGuard.isLatest(requestId)) return;
+			if (lifetime.signal.aborted || !weatherGuard.isLatest(requestId)) return;
 			liveWeatherForecast = result.forecast;
 			liveWeatherAlerts = result.alerts;
 		} catch (error) {
-			if (weatherGuard.isLatest(requestId)) {
+			if (!lifetime.signal.aborted && weatherGuard.isLatest(requestId)) {
 				weatherError = (error as Error).message;
 				errors?.push(`weather: ${(error as Error).message}`);
 			}
 		} finally {
-			if (weatherGuard.isLatest(requestId)) {
+			if (!lifetime.signal.aborted && weatherGuard.isLatest(requestId)) {
 				weatherReady = true;
 				weatherLoadingState = false;
 			}
@@ -113,7 +118,7 @@
 
 	async function loadStravaSafe(errors: string[]) {
 		try {
-			await loadStravaData();
+			await loadStravaData({ signal: lifetime.signal });
 		} catch (err) {
 			errors.push(`strava: ${(err as Error).message}`);
 		}
@@ -128,7 +133,7 @@
 	// cycles instead of silently reporting success.
 	let refreshInFlight = false;
 	async function handleRefresh() {
-		if (refreshInFlight) return;
+		if (refreshInFlight || lifetime.signal.aborted) return;
 		refreshInFlight = true;
 		refresh.startRefresh();
 		const errors: string[] = [];
@@ -137,7 +142,7 @@
 		} catch (error) {
 			errors.push(`refresh: ${(error as Error).message ?? String(error)}`);
 		} finally {
-			refresh.endRefresh(errors);
+			if (!lifetime.signal.aborted) refresh.endRefresh(errors);
 			refreshInFlight = false;
 		}
 	}
@@ -177,7 +182,9 @@
 		if (locId !== lastLocationId) {
 			lastLocationId = locId;
 			if (weatherDebounceTimer) clearTimeout(weatherDebounceTimer);
-			weatherDebounceTimer = setTimeout(() => loadWeather(), 500);
+			weatherDebounceTimer = setTimeout(() => {
+				if (!lifetime.signal.aborted) loadWeather();
+			}, 500);
 		}
 	});
 
@@ -211,7 +218,7 @@
 			} catch (error) {
 				errors.push(`refresh: ${(error as Error).message ?? String(error)}`);
 			} finally {
-				refresh.endRefresh(errors);
+				if (!lifetime.signal.aborted) refresh.endRefresh(errors);
 			}
 		}
 		initialLoad();
@@ -240,6 +247,8 @@
 		window.addEventListener('keydown', handleMainKeydown);
 
 		return () => {
+			lifetime.abort();
+			if (weatherDebounceTimer) clearTimeout(weatherDebounceTimer);
 			refresh.stopAutoRefresh();
 			document.removeEventListener('visibilitychange', handleVisibilityChange);
 			window.removeEventListener('keydown', handleMainKeydown);

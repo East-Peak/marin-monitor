@@ -186,7 +186,11 @@ async function geocodeCandidate(
 	}
 }
 
-export async function enrichItemsForLocation(items: NewsItem[]): Promise<NewsItem[]> {
+export async function enrichItemsForLocation(
+	items: NewsItem[],
+	options: { signal?: AbortSignal } = {}
+): Promise<NewsItem[]> {
+	const { signal } = options;
 	const targetItems = items
 		.filter(
 			(item) =>
@@ -211,8 +215,10 @@ export async function enrichItemsForLocation(items: NewsItem[]): Promise<NewsIte
 	>();
 
 	for (const item of targetItems) {
+		if (signal?.aborted) return items;
 		const fullTextParts = [item.title, item.description || '', item.content || ''];
 		const excerpt = await fetchArticleExcerpt(item.link);
+		if (signal?.aborted) return items;
 		if (excerpt) {
 			fullTextParts.push(excerpt);
 		}
@@ -221,11 +227,13 @@ export async function enrichItemsForLocation(items: NewsItem[]): Promise<NewsIte
 
 		const candidates = extractAddressCandidates(combinedText);
 		for (const candidate of candidates) {
+			if (signal?.aborted) return items;
 			// Skip if already cached (no delay needed for cache hits)
 			const cacheKey = `${candidate}, ${item.town ?? ''}, Marin County, California`.toLowerCase();
 			if (!geocodeCache.has(cacheKey)) {
 				await new Promise((r) => setTimeout(r, GEOCODE_DELAY_MS));
 			}
+			if (signal?.aborted) return items;
 			const location = await geocodeCandidate(candidate, item.town);
 			if (!location) continue;
 
@@ -239,6 +247,7 @@ export async function enrichItemsForLocation(items: NewsItem[]): Promise<NewsIte
 		}
 	}
 
+	if (signal?.aborted) return items;
 	if (updates.size === 0) return items;
 
 	return items.map((item) => {

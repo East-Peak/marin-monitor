@@ -45,6 +45,8 @@ export interface LoadAllResult {
 	 * so refresh history correctly records degraded vs. clean cycles.
 	 */
 	errors: string[];
+	/** Set when the owner's signal aborted; nothing was committed. */
+	aborted?: true;
 }
 
 const ADAPTER_LABELS = [
@@ -58,11 +60,27 @@ const ADAPTER_LABELS = [
 	'seeclickfix'
 ] as const;
 
+export interface LoadAllOptions {
+	/** Aborted when the owning view is destroyed. After that, nothing new starts and no store is written. */
+	signal?: AbortSignal;
+}
+
+const ABORTED: LoadAllResult = {
+	earthquakeNews: [],
+	earthquakesRaw: [],
+	errors: [],
+	aborted: true
+};
+
 /**
  * Fetch all news data, populate stores, and return earthquake items for the map.
  * @param showLoadingSpinners If true, sets loading state on empty categories (main dashboard only)
  */
-export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllResult> {
+export async function loadAllNews(
+	showLoadingSpinners = false,
+	options: LoadAllOptions = {}
+): Promise<LoadAllResult> {
+	const { signal } = options;
 	if (showLoadingSpinners) {
 		RSS_CATEGORIES.forEach((cat) => {
 			if (news.getItems(cat).length === 0) news.setLoading(cat, true);
@@ -81,6 +99,7 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 		fetchSupplementalActivityFeeds(),
 		fetchSeeClickFixIssues()
 	]);
+	if (signal?.aborted) return ABORTED;
 
 	settled.forEach((result, i) => {
 		if (result.status === 'rejected') {
@@ -156,9 +175,10 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 
 			try {
 				const enrichedItems = await enrichItemsForRelevance(allItems);
+				if (signal?.aborted) return;
 				news.setItems(result.category, enrichedItems);
 				if (enrichedItems.length > 0) {
-					void news.enrichLocations(result.category);
+					void news.enrichLocations(result.category, { signal });
 				}
 			} catch (err) {
 				errors.push(`enrich:${result.category}: ${(err as Error).message}`);
@@ -169,6 +189,7 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 			}
 		})
 	);
+	if (signal?.aborted) return ABORTED;
 
 	// 311 has no live RSS source today, but if `fetchAllFeeds` ever returns a
 	// '311' category result, the per-category loop above already wrote it
@@ -185,9 +206,10 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 	if (shouldWrite311) {
 		try {
 			const enriched311 = await enrichItemsForRelevance(seeClickFixIssues);
+			if (signal?.aborted) return ABORTED;
 			news.setItems('311', enriched311);
 			if (enriched311.length > 0) {
-				void news.enrichLocations('311');
+				void news.enrichLocations('311', { signal });
 			}
 		} catch (err) {
 			errors.push(`enrich:311: ${(err as Error).message}`);

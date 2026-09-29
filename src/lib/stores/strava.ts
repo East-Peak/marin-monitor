@@ -34,12 +34,13 @@ function shouldCacheLeaderboard(data: StravaLeaderboard): boolean {
 	);
 }
 
-export async function loadStravaData(): Promise<void> {
+export async function loadStravaData(options: { signal?: AbortSignal } = {}): Promise<void> {
 	if (!STRAVA_ENABLED) return;
 
 	const previousCatalog = get(stravaSegments);
 	const previousEvents = get(stravaEvents);
 	const [catalog, events] = await Promise.all([fetchStravaSegments(), fetchStravaEvents()]);
+	if (options.signal?.aborted) return;
 
 	const catalogChanged =
 		Boolean(previousCatalog.lastUpdated) && previousCatalog.lastUpdated !== catalog.lastUpdated;

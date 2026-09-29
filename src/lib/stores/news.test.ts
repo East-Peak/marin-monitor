@@ -322,4 +322,31 @@ describe('News Store', () => {
 		expect(local.items).toHaveLength(1);
 		expect(local.items[0].townSlug).toBe('ross');
 	});
+
+	it('enrichLocations never writes coordinates after its owner is gone', async () => {
+		let release!: (items: import('$lib/types').NewsItem[]) => void;
+		vi.doMock('$lib/api/marin/article-enrichment', () => ({
+			enrichItemsForLocation: () => new Promise((r) => (release = r))
+		}));
+		const { news } = await import('./news');
+		const item = {
+			id: 'x:1',
+			title: 'Mill Valley road work begins',
+			link: 'https://www.marinij.com/x',
+			timestamp: Date.parse('2026-09-28T18:00:00Z'),
+			source: 'Marin IJ',
+			category: 'local' as const,
+			verification: 'local_media' as const
+		};
+		news.setItems('local', [item]);
+		const owner = new AbortController();
+		const running = news.enrichLocations('local', { signal: owner.signal });
+		owner.abort();
+		release([
+			{ ...item, lat: 37.9, lon: -122.5, locationConfidence: 'exact', locationEvidence: 'x' }
+		]);
+		await running;
+		expect(news.getItems('local')[0].lat).toBeUndefined();
+		vi.doUnmock('$lib/api/marin/article-enrichment');
+	});
 });
