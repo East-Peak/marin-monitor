@@ -5,6 +5,7 @@
  */
 
 import { news } from '$lib/stores';
+import { compareByTimestamp } from '$lib/news/order';
 import type { NewsCategory, NewsItem, EarthquakeData } from '$lib/types';
 import {
 	fetchAllFeeds,
@@ -151,7 +152,7 @@ export async function loadAllNews(showLoadingSpinners = false): Promise<LoadAllR
 							? [...seeClickFixIssues, ...(supplementalByCategory.get(result.category) ?? [])]
 							: (supplementalByCategory.get(result.category) ?? []);
 
-			const allItems = [...result.items, ...extraItems].sort((a, b) => b.timestamp - a.timestamp);
+			const allItems = [...result.items, ...extraItems].sort(compareByTimestamp);
 
 			try {
 				const enrichedItems = await enrichItemsForRelevance(allItems);

@@ -15,6 +15,10 @@ describe('timeAgo', () => {
 		vi.useRealTimers();
 	});
 
+	it.each([[Number.NaN], ['not a date']])('shows an unknown time (%s) as "undated"', (input) => {
+		expect(timeAgo(input)).toBe('undated');
+	});
+
 	it('returns "just now" for dates less than 60 seconds ago', () => {
 		const thirtySecsAgo = new Date('2026-04-01T11:59:30Z');
 		expect(timeAgo(thirtySecsAgo)).toBe('just now');

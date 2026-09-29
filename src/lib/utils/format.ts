@@ -7,6 +7,8 @@
  */
 export function timeAgo(dateInput: string | number | Date): string {
 	const date = new Date(dateInput);
+	// An unknown time (NaN timestamp, invalid date) is shown as such, never as "NaNd".
+	if (!Number.isFinite(date.getTime())) return 'undated';
 	const now = new Date();
 	const deltaSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 	const future = deltaSeconds < 0;

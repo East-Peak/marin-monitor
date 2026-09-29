@@ -7,6 +7,8 @@ import type { NewsItem, NewsCategory } from '$lib/types';
 import { containsAlertKeyword, detectTown, detectTopics } from '$lib/config';
 import { isLocallyRelevant } from '$lib/config/relevance';
 import { enrichItemsForLocation } from '$lib/api/marin/article-enrichment';
+import { compareByTimestamp } from '$lib/news/order';
+import { collapseStoryCopies } from '$lib/news/identity';
 
 export interface CategoryState {
 	items: NewsItem[];
@@ -266,7 +268,7 @@ function createNewsStore() {
 			for (const category of NEWS_CATEGORIES) {
 				alerts.push(...state.categories[category].items.filter((i) => i.isAlert));
 			}
-			return alerts.sort((a, b) => b.timestamp - a.timestamp);
+			return alerts.sort(compareByTimestamp);
 		},
 
 		/**
@@ -278,7 +280,7 @@ function createNewsStore() {
 			for (const category of NEWS_CATEGORIES) {
 				items.push(...state.categories[category].items.filter((i) => i.townSlug === townSlug));
 			}
-			return items.sort((a, b) => b.timestamp - a.timestamp);
+			return items.sort(compareByTimestamp);
 		},
 
 		/**
@@ -323,7 +325,7 @@ export const housingNews = derived(news, ($news) => $news.categories.housing);
 export const cyclingNews = derived(news, ($news) => $news.categories.cycling);
 export const enduranceNews = derived(news, ($news) => $news.categories.endurance);
 export const humanPoweredNews = derived([cyclingNews, enduranceNews], ([$cycling, $endurance]) => ({
-	items: [...$cycling.items, ...$endurance.items].sort((a, b) => b.timestamp - a.timestamp),
+	items: [...$cycling.items, ...$endurance.items].sort(compareByTimestamp),
 	loading: $cycling.loading || $endurance.loading,
 	error: $cycling.error ?? $endurance.error,
 	lastUpdated: Math.max($cycling.lastUpdated ?? 0, $endurance.lastUpdated ?? 0) || null
@@ -334,35 +336,18 @@ export const farmNews = derived(news, ($news) => $news.categories.farm);
 export const satireNews = derived(news, ($news) => $news.categories.satire);
 export const threeOneOneNews = derived(news, ($news) => $news.categories['311']);
 
-// Derived store for all news items (reactive, deduplicated by id)
-export const allNewsItems = derived(news, ($news) => {
-	const seen = new Set<string>();
-	const allItems: NewsItem[] = [];
-	for (const category of NEWS_CATEGORIES) {
-		for (const item of $news.categories[category].items) {
-			if (!seen.has(item.id)) {
-				seen.add(item.id);
-				allItems.push(item);
-			}
-		}
-	}
-	return allItems;
-});
+// Derived store for all news items — one entry per story (ids are
+// source-scoped; copies of one story in several feeds are joined by article URL).
+export const allNewsItems = derived(news, ($news) =>
+	collapseStoryCopies(NEWS_CATEGORIES.flatMap((category) => $news.categories[category].items))
+);
 
-// Derived store for alerts (deduplicated by id)
-export const alerts = derived(news, ($news) => {
-	const seen = new Set<string>();
-	const allAlerts: NewsItem[] = [];
-	for (const category of NEWS_CATEGORIES) {
-		for (const item of $news.categories[category].items) {
-			if (item.isAlert && !seen.has(item.id)) {
-				seen.add(item.id);
-				allAlerts.push(item);
-			}
-		}
-	}
-	return allAlerts.sort((a, b) => b.timestamp - a.timestamp);
-});
+// Derived store for alerts (one entry per story)
+export const alerts = derived(news, ($news) =>
+	collapseStoryCopies(
+		NEWS_CATEGORIES.flatMap((category) => $news.categories[category].items.filter((i) => i.isAlert))
+	).sort(compareByTimestamp)
+);
 
 // Derived store for loading state
 export const isLoading = derived(news, ($news) =>

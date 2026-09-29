@@ -4,6 +4,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { get } from 'svelte/store';
+import type { NewsItem } from '$lib/types';
 
 // Mock $app/environment
 vi.mock('$app/environment', () => ({
@@ -206,6 +207,60 @@ describe('News Store', () => {
 		const alertItems = get(alerts);
 		expect(alertItems.length).toBe(1);
 		expect(alertItems[0].title).toContain('Wildfire');
+	});
+
+	it('orders derived lists dated-newest-first with NaN (undated) items last', async () => {
+		const { news, alerts, humanPoweredNews } = await import('./news');
+		const wildfire = (id: string, timestamp: number) => ({
+			id,
+			title: `Wildfire ${id} near Stinson Beach`,
+			source: 'Cal Fire',
+			link: id,
+			timestamp,
+			category: 'safety' as const,
+			verification: 'official' as const
+		});
+		news.setItems('safety', [
+			wildfire('u1', NaN),
+			wildfire('old', 1_000),
+			wildfire('u2', NaN),
+			wildfire('new', 2_000)
+		]);
+		expect(get(alerts).map((i) => i.id)).toEqual(['new', 'old', 'u1', 'u2']);
+
+		const ride = (id: string, timestamp: number, category: 'cycling' | 'endurance') => ({
+			id,
+			title: `Mt Tam ride ${id} in Marin`,
+			source: 'Marin Trail Stewards',
+			link: id,
+			timestamp,
+			category,
+			verification: 'community' as const
+		});
+		news.setItems('cycling', [ride('c-undated', NaN, 'cycling'), ride('c-old', 1_000, 'cycling')]);
+		news.setItems('endurance', [ride('e-new', 3_000, 'endurance')]);
+		expect(get(humanPoweredNews).items.map((i) => i.id)).toEqual(['e-new', 'c-old', 'c-undated']);
+	});
+
+	it('allNewsItems keeps the county scope of a later county-feed copy of the same story', async () => {
+		const { news, allNewsItems } = await import('./news');
+		const copy = (id: string, source: string, category: 'local' | 'safety', extra = {}) => ({
+			id,
+			title: 'Marin County burn ban issued for Novato hills',
+			source,
+			link: 'https://www.marinij.com/2026/09/28/burn-ban/',
+			timestamp: Date.now(),
+			category,
+			verification: 'local_media' as const,
+			...extra
+		});
+		news.setItems('local', [copy('marin-ij:p5', 'Marin IJ', 'local')]);
+		news.setItems('safety', [
+			copy('marin-ij-county:p5', 'Marin IJ – Marin County', 'safety', { geoScope: 'county' })
+		]);
+		const combined = get(allNewsItems) as (NewsItem & { geoScope?: 'county' })[];
+		expect(combined).toHaveLength(1);
+		expect(combined.filter((i) => i.geoScope === 'county')).toHaveLength(1); // county selector
 	});
 
 	it('should clear all categories', async () => {
