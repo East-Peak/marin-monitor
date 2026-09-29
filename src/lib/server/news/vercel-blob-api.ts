@@ -21,7 +21,9 @@ export function vercelBlobApi(token: string): BlobApi {
 			if (!result || result.statusCode !== 200) return null;
 			const body = await readStreamCapped(result.stream, MAX_SNAPSHOT_BYTES, signal);
 			if (body === null) throw new Error(`blob ${key} exceeds ${MAX_SNAPSHOT_BYTES} bytes`);
-			return { text: body.text, etag: result.blob.etag };
+			// A compressed read reports the validator weak (W/"…"); put/del ifMatch
+			// accept only the strong form, and the opaque tag is the same.
+			return { text: body.text, etag: result.blob.etag.replace(/^W\//, '') };
 		},
 
 		async write(key, body, condition, signal) {

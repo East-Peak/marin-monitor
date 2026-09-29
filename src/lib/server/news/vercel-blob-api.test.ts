@@ -48,6 +48,14 @@ describe('vercelBlobApi', () => {
 		);
 	});
 
+	it('returns the strong etag when a compressed read reports it weak (put ifMatch rejects W/)', async () => {
+		// Live 2026-09-29: a 320 KB snapshot read back as W/"3cc4…" while head() and put()
+		// used "3cc4…"; put({ ifMatch: 'W/…' }) failed with "ETag mismatch", so every
+		// scheduled run after the first reported 'superseded'.
+		mockGet.mockResolvedValue(found('{"a":1}', 'W/"3cc4"'));
+		expect(await api.read('k', go())).toEqual({ text: '{"a":1}', etag: '"3cc4"' });
+	});
+
 	it('maps a missing blob to null', async () => {
 		mockGet.mockResolvedValue(null);
 		expect(await api.read('k', go())).toBeNull();
