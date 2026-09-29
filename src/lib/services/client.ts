@@ -19,11 +19,50 @@ export interface RequestOptions {
 	fetchOptions?: RequestInit;
 	responseType?: 'json' | 'text';
 	/**
-	 * Owner lifetime (e.g. a destroyed dashboard): once it aborts, no attempt or retry
-	 * starts. It is never attached to the fetch itself, because deduplicated callers
-	 * share that request.
+	 * Owner lifetime (e.g. a destroyed dashboard). An aborted owner starts no request,
+	 * and its caller settles at once. A shared (deduplicated) request stops retrying
+	 * only when every caller waiting on it has aborted; a caller without a signal keeps
+	 * it alive. The signal is never attached to the fetch itself.
 	 */
 	signal?: AbortSignal;
+}
+
+/**
+ * The callers waiting on one shared in-flight request. `signal` aborts once every
+ * caller has an aborted owner; any caller without an owner keeps it alive forever.
+ */
+class SharedWaiters {
+	private readonly controller = new AbortController();
+	private unowned = false;
+	private live = 0;
+
+	get signal(): AbortSignal {
+		return this.controller.signal;
+	}
+
+	join(owner?: AbortSignal): void {
+		if (!owner) {
+			this.unowned = true;
+			return;
+		}
+		this.live++;
+		const leave = () => {
+			this.live--;
+			if (!this.unowned && this.live === 0) this.controller.abort();
+		};
+		if (owner.aborted) leave();
+		else owner.addEventListener('abort', leave, { once: true });
+	}
+}
+
+/** Settle with `shared`, or reject as soon as this caller's own owner aborts. */
+function raceOwner<T>(shared: Promise<T>, owner: AbortSignal): Promise<T> {
+	return new Promise<T>((resolve, reject) => {
+		const onAbort = () => reject(owner.reason);
+		if (owner.aborted) return onAbort();
+		owner.addEventListener('abort', onAbort, { once: true });
+		shared.then(resolve, reject).finally(() => owner.removeEventListener('abort', onAbort));
+	});
 }
 
 export interface RequestResult<T = unknown> {
@@ -51,6 +90,7 @@ export class ServiceClient {
 	private readonly circuitBreakers: CircuitBreakerRegistry;
 	private readonly deduplicator: RequestDeduplicator;
 	private readonly debug: boolean;
+	private readonly waiters = new WeakMap<Promise<unknown>, SharedWaiters>();
 
 	constructor(options: ServiceClientOptions = {}) {
 		this.cache = new CacheManager({ prefix: 'mm_', debug: options.debug });
@@ -103,10 +143,23 @@ export class ServiceClient {
 			throw new CircuitOpenError(serviceId);
 		}
 
-		// 3. Deduplicate concurrent requests
-		return this.deduplicator.dedupe(cacheKey, () =>
-			this.executeRequest<T>(serviceId, url, options, cacheKey, breaker, config)
-		);
+		// 3. Deduplicate concurrent requests. The shared loop never sees any one caller's
+		// signal: it stops retrying only when every waiter's owner has aborted.
+		let shared = this.deduplicator.get<RequestResult<T>>(cacheKey);
+		const existing = shared ? this.waiters.get(shared) : undefined;
+		// An orphaned request (every waiter gone) will not retry, so a new caller starts afresh.
+		if (shared && existing && !existing.signal.aborted) {
+			existing.join(options.signal);
+		} else {
+			const waiters = new SharedWaiters();
+			waiters.join(options.signal); // before the first attempt can run
+			shared = this.deduplicator.track(
+				cacheKey,
+				this.executeRequest<T>(serviceId, url, options, cacheKey, breaker, config, waiters.signal)
+			);
+			this.waiters.set(shared, waiters);
+		}
+		return options.signal ? raceOwner(shared, options.signal) : shared;
 	}
 
 	/**
@@ -118,14 +171,16 @@ export class ServiceClient {
 		options: RequestOptions,
 		cacheKey: string,
 		breaker: CircuitBreaker,
-		config: ServiceConfig
+		config: ServiceConfig,
+		allWaitersGone?: AbortSignal
 	): Promise<RequestResult<T>> {
 		const retries = options.retries ?? config.retries ?? 2;
 		let lastError: Error | undefined;
 
 		for (let attempt = 0; attempt <= retries; attempt++) {
-			// An owner abort is not an upstream failure: leave the breaker untouched.
-			options.signal?.throwIfAborted();
+			// Nobody is waiting any more: start no retry, but still record the real
+			// failure and fall back to stale cache below.
+			if (attempt > 0 && allWaitersGone?.aborted) break;
 			try {
 				if (attempt > 0) {
 					this.log(`Retry attempt ${attempt} for ${serviceId}`);

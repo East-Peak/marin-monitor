@@ -119,4 +119,17 @@ describe('RequestDeduplicator', () => {
 			expect(deduplicator.isInFlight('test-key')).toBe(false);
 		});
 	});
+
+	it('a settling older request never evicts a newer in-flight entry for the same key', async () => {
+		const dedup = new RequestDeduplicator();
+		let settleOld!: () => void;
+		const old = dedup.track('k', new Promise<void>((r) => (settleOld = r)));
+		const newer = dedup.track('k', new Promise<void>(() => {}));
+
+		settleOld();
+		await old;
+		await Promise.resolve();
+
+		expect(dedup.get('k')).toBe(newer);
+	});
 });

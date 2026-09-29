@@ -18,9 +18,11 @@ export class RequestDeduplicator {
 	track<T>(key: string, promise: Promise<T>): Promise<T> {
 		this.inFlight.set(key, promise);
 
-		// Clean up when promise resolves or rejects
+		// Clean up when promise resolves or rejects, unless a newer request replaced it
 		promise
-			.finally(() => this.inFlight.delete(key))
+			.finally(() => {
+				if (this.inFlight.get(key) === promise) this.inFlight.delete(key);
+			})
 			.catch(() => {
 				// Prevent unhandled rejection
 			});
