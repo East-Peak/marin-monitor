@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-09-29',
+		title: 'Dashboard redesign preview',
+		description:
+			'An early preview of the redesigned dashboard is available at marinmonitor.com/?layout=v2. The regular dashboard is unchanged.'
+	},
+	{
+		date: '2026-09-29',
 		title: 'Belvedere moves to civic news',
 		description:
 			'Belvedere items no longer appear in Police Logs: they were city announcements, not police calls. City of Belvedere news now comes from its official feed in the Civic column. Belvedere does not publish a public police call log that we could find.'

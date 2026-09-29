@@ -6,6 +6,13 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Added — dashboard redesign preview behind `?layout=v2` (D1 PR 1)
+
+- **`/?layout=v2` renders the new dashboard shell; `/` is unchanged.** The layout is resolved in the server `load({ url })` and returned as page data, so SSR, hydration and client navigation agree.
+- **Exactly one layout mounts.** The legacy page moved unchanged into `LegacyDashboard.svelte`; under v2 its loaders never start, and the server skips the legacy weather/quake prefetch.
+- **Caching:** `/` keeps `s-maxage=120, stale-while-revalidate=300`; the v2 preview (HTML and `__data.json`) is `private, no-store`. `?layout=legacy` is reserved as the post-flip rollback override.
+- **Isolation:** a destroyed legacy controller and legacy panels abort their timers and in-flight continuations, so no request starts and no shared store is written after the switch. `loadAllNews`, `loadStravaData`, the transit, NWS, tides and data-panel adapters, and `ServiceClient` retries accept an owner `AbortSignal`.
+
 ### Changed — Belvedere is city news, not a police log
 
 - **Belvedere no longer appears in Police Logs.** Its "public safety" items were keyword-matched city news (an AlertMarin countywide test, a shelter-in-place preparedness event), not police calls. Both police producers (`src/lib/server/scrapers/police.ts` and `scripts/extract-police-logs.mjs`) drop the Belvedere fetch, and `police.shared.js` no longer exports a Belvedere URL. The bundled fallback `static/data/marin-police-logs.json` (served when Blob is unreadable) is stripped of its Belvedere items, and a test keeps it that way.
