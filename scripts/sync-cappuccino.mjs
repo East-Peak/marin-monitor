@@ -11,7 +11,7 @@
  */
 
 import { put, head } from '@vercel/blob';
-import { chromium } from 'playwright';
+import { chromium } from '@playwright/test';
 import {
 	COFFEE_SHOPS_DATA as COFFEE_SHOPS,
 	CAPPUCCINO_HARDCODED_PRICES as HARDCODED_PRICES,

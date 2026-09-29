@@ -6,7 +6,7 @@
  */
 
 import { head, put } from '@vercel/blob';
-import { chromium } from 'playwright';
+import { chromium } from '@playwright/test';
 import {
 	CAPPUCCINO_USER_AGENT,
 	COFFEE_INDEX_NAME_DATA,

@@ -4,6 +4,14 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-09-29
+
+### Fixed — scrapers launch Chromium again: one Playwright version (G0 repair 1)
+
+- **Coffee, Cappuccino and Grocery syncs died at browser launch.** Two Playwright versions were in the tree: a direct `playwright@1.61` beside `@playwright/test@1.57`'s own copy. The workflows' `npx playwright install` fetched one browser build and the scripts launched the other.
+- Dropped the direct dep. `@playwright/test@^1.61` (resolves 1.63.0) is now the only Playwright, and the three scrapers import `chromium` from it. The workflows install it with `--with-deps chromium`, so a clean runner has the system libraries.
+- `src/lib/server/playwright-pin.test.ts` pins it: exactly one resolved `playwright`/`playwright-core` in the lockfile, no direct dep, no `playwright` imports (static or dynamic) in `scripts/`, and every browser-launching sync workflow installs from the pinned package.
+
 ## 2026-09-28
 
 ### Fixed — fire-cam frames painted the moment a camera slide appears (TV slice 1b)

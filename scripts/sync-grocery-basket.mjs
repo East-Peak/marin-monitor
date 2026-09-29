@@ -366,7 +366,7 @@ let _browser = null;
 async function getPlaywrightBrowser() {
 	if (_browser) return _browser;
 	try {
-		const { chromium } = await import('playwright');
+		const { chromium } = await import('@playwright/test');
 		_browser = await chromium.launch({ headless: true });
 		return _browser;
 	} catch (err) {
