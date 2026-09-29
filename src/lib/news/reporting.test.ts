@@ -235,3 +235,32 @@ describe('dedupe via the shared rules', () => {
 		expect(items).toEqual(copy);
 	});
 });
+
+describe('COUNTY_WIDE_RULE allocation takes the newest of each quota (Codex PR4 #3)', () => {
+	it('town 3 + county 2 are the newest of each, whatever the input order', () => {
+		const town = [5, 1, 4, 2, 3].map((h) => report({ hoursAgo: h + 0.5, townSlug: 'mill-valley' }));
+		const county = [4, 1, 3, 2].map((h) => report({ hoursAgo: h, geoScope: 'county' }));
+		const items = [
+			county[2],
+			town[0],
+			county[0],
+			town[3],
+			town[1],
+			county[3],
+			town[4],
+			town[2],
+			county[1]
+		];
+		const out = selectLatestReporting(items, { town: 'mill-valley', now: NOW });
+		// newest first: county 1h, town 1.5h, county 2h, town 2.5h, town 3.5h
+		expect(ids(out)).toEqual([county[1], town[1], county[3], town[3], town[4]].map((i) => i.id));
+	});
+
+	it('county backfill takes the newest county items', () => {
+		const town = report({ hoursAgo: 1.5, townSlug: 'mill-valley' });
+		const county = [6, 2, 5, 1, 3, 4].map((h) => report({ hoursAgo: h, geoScope: 'county' }));
+		const out = selectLatestReporting([...county, town], { town: 'mill-valley', now: NOW });
+		// newest first: county 1h, town 1.5h, county 2h, 3h, 4h
+		expect(ids(out)).toEqual([county[3], town, county[1], county[4], county[5]].map((i) => i.id));
+	});
+});
