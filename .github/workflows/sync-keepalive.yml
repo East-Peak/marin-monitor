@@ -29,14 +29,8 @@ jobs:
           failed=0
           for workflow in \
             sync-camp-prices.yml \
-            sync-cappuccino.yml \
-            sync-coffee-index.yml \
-            sync-dog-walker.yml \
-            sync-grocery-basket.yml \
-            sync-ikon-pass.yml \
             sync-keepalive.yml \
-            sync-rivian-lease.yml \
-            sync-wine-index.yml
+            sync-rivian-lease.yml
           do
             if ! gh workflow enable "$workflow"; then
               echo "::error::could not enable $workflow"

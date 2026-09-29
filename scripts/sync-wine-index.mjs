@@ -2,7 +2,7 @@
 
 /**
  * Standalone scraper for PlumpJack Wine Index data.
- * Runs in GitHub Actions (or locally) — no SvelteKit dependencies.
+ * Runs on the Mac mini via launchd (residential IP; see scripts/sync-runner.sh) — no SvelteKit dependencies.
  *
  * Replicates the logic from src/lib/server/scrapers/wine-index.ts
  * and the blob persistence from src/routes/api/cron/sync-wine-index/+server.ts.

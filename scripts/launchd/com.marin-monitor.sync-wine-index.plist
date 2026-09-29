@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.marin-monitor.sync-wine-index</string>
+
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Users/tammypais/projects/marin-monitor/scripts/sync-runner.sh</string>
+		<string>wine-index</string>
+	</array>
+
+	<!-- Local time. Runs here, not on GitHub Actions: the target blocks datacenter IPs. -->
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Weekday</key>
+		<integer>0</integer>
+		<key>Hour</key>
+		<integer>10</integer>
+		<key>Minute</key>
+		<integer>10</integer>
+	</dict>
+
+	<key>WorkingDirectory</key>
+	<string>/Users/tammypais/projects/marin-monitor</string>
+
+	<key>StandardOutPath</key>
+	<string>/Users/tammypais/Library/Logs/marin-monitor/sync-wine-index-launchd.log</string>
+
+	<key>StandardErrorPath</key>
+	<string>/Users/tammypais/Library/Logs/marin-monitor/sync-wine-index-launchd.log</string>
+</dict>
+</plist>

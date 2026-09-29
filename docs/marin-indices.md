@@ -743,16 +743,15 @@ Approach:
 - Sanity bounds on scraped values (cappuccino shouldn't cost $0 or $500)
 - No need for Datadog/PagerDuty — keep it simple
 
-### Scrape Proxy on Mac Mini
+### Residential scrapes run on the Mac mini (2026-09-29)
 
-The Mac mini runs a residential IP proxy at 127.0.0.1:8889 (LaunchAgent: com.marinmonitor.scrape-proxy). GitHub Actions workflows route scraping requests through it via Tailscale (100.67.183.14:8889) to avoid datacenter IP blocking.
+Toast, Instacart, PlumpJack, ikonpass.com and Thumbtack block datacenter IPs. Since 2026-09-29, the six scrapers that need a residential IP (coffee-index, cappuccino, grocery-basket, wine-index, ikon-pass, dog-walker) run on the Mac mini via launchd instead of GitHub Actions.
 
-- LaunchAgent: /Users/tammypais/Library/LaunchAgents/com.marinmonitor.scrape-proxy.plist
-- Script: scripts/scrape-proxy.mjs
-- Health endpoint: http://127.0.0.1:8889/health (returns request counts, success/error rates, last request/error)
-- Auth: Bearer token stored in GH Actions secret SCRAPE_PROXY_SECRET
-- Tailscale auth key for GH runners: stored in GH Actions secret TAILSCALE_AUTHKEY (ephemeral, reusable, 90-day expiry — renew before expiration)
-- Monitor: proxy health should be checked alongside index freshness in the observability system
+- Plists: `scripts/launchd/com.marin-monitor.sync-<job>.plist` (calendar-scheduled, local time); install with `npm run sync:install`.
+- Runner: `scripts/sync-runner.sh <job>`. It exports only `BLOB_READ_WRITE_TOKEN` from `.env.local`, never the scrape proxy, and kills a hung job after 20 min.
+- Logs: `~/Library/Logs/marin-monitor/sync-<job>.log`.
+- If the Mac stops, the data goes stale, `/api/health` turns 503, and UptimeRobot alerts.
+- The earlier path (GitHub runners → Tailscale → `scripts/scrape-proxy.mjs` on :8889) is no longer used by any workflow. Its Tailscale authkey had expired.
 
 ### Better Event Scraping / Calendar Ingestion
 

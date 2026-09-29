@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.marin-monitor.sync-cappuccino</string>
+
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Users/tammypais/projects/marin-monitor/scripts/sync-runner.sh</string>
+		<string>cappuccino</string>
+	</array>
+
+	<!-- Local time, before the Monday 06:00/07:00 composite cron. Runs here, not on GitHub Actions: the target blocks datacenter IPs. -->
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Weekday</key>
+		<integer>1</integer>
+		<key>Hour</key>
+		<integer>3</integer>
+		<key>Minute</key>
+		<integer>40</integer>
+	</dict>
+
+	<key>WorkingDirectory</key>
+	<string>/Users/tammypais/projects/marin-monitor</string>
+
+	<key>StandardOutPath</key>
+	<string>/Users/tammypais/Library/Logs/marin-monitor/sync-cappuccino-launchd.log</string>
+
+	<key>StandardErrorPath</key>
+	<string>/Users/tammypais/Library/Logs/marin-monitor/sync-cappuccino-launchd.log</string>
+</dict>
+</plist>

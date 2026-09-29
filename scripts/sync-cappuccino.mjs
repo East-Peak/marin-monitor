@@ -2,7 +2,7 @@
 
 /**
  * Standalone scraper for Marin Cappuccino Index data.
- * Runs in GitHub Actions (or locally) — no SvelteKit dependencies.
+ * Runs on the Mac mini via launchd (residential IP; see scripts/sync-runner.sh) — no SvelteKit dependencies.
  *
  * Uses Playwright (full, not @sparticuz/chromium) for Toast shop scraping.
  *

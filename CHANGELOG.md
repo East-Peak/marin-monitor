@@ -6,6 +6,13 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Changed — residential scrapers run on the Mac mini, not GitHub Actions (G0, Stuart approved 2026-09-29)
+
+- **Why:** Toast, Instacart, PlumpJack, ikonpass.com and Thumbtack block datacenter IPs. On clean GitHub runners Cappuccino got 2–4 of 10 Toast menus while the same pages loaded fully from the Mac. The runners' route to the Mac's residential proxy had also broken three ways: the Tailscale authkey had expired, Tailscale on the Mac was stopped, and the proxy URL was unreachable.
+- **Now:** coffee-index, cappuccino, grocery-basket, wine-index, ikon-pass and dog-walker run from launchd plists in `scripts/launchd/` (calendar-scheduled, local time; coffee and cappuccino run Monday 03:10/03:40, ahead of the Monday composite cron). They go through `scripts/sync-runner.sh`, which exports only `BLOB_READ_WRITE_TOKEN` from `.env.local`, never the scrape proxy, fails loudly if the token is missing, and kills a job hung for 20 min. Their six GitHub workflows are deleted, so each blob has exactly one writer; the keepalive now covers Camp, Rivian and itself.
+- **First local runs (production writes):** Coffee 12/12 live menus, Cappuccino 10/10 live Toast, Wine live (134/64/81 wines), Dog Walker live (thumbtack.com).
+- `src/lib/server/local-sync.test.ts` pins the wiring: plist ↔ runner ↔ manage-sync, calendar schedule, no RunAtLoad, blob token only, watchdog, the composite ordering, and no remaining GitHub workflow for any moved job. Docs: `docs/marin-indices.md`.
+
 ### Removed — two dead Marin IJ tag feeds (G0, Stuart approved 2026-09-29)
 
 - `marinij.com/tag/breaking-news/feed/` (Local Wire) and `tag/emergency/feed/` (Crime & Safety) have returned 0 items all year, and the IJ has no populated equivalent. Both are retired; local news comes from `tag/marin-county`, and Crime & Safety keeps the IJ Crime and Fire feeds. With them gone, the only remaining known subsource failures are the Fairfax and Belvedere police 403s (accepted until 2026-12-31).

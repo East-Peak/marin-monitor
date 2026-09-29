@@ -12,6 +12,12 @@ LOG_DIR="$HOME/Library/Logs/marin-monitor"
 PLISTS=(
   "com.marin-monitor.sync-activity"
   "com.marin-monitor.sync-police"
+  "com.marin-monitor.sync-coffee-index"
+  "com.marin-monitor.sync-cappuccino"
+  "com.marin-monitor.sync-grocery-basket"
+  "com.marin-monitor.sync-wine-index"
+  "com.marin-monitor.sync-ikon-pass"
+  "com.marin-monitor.sync-dog-walker"
 )
 
 case "${1:-}" in
@@ -31,7 +37,7 @@ case "${1:-}" in
       echo "Installed and loaded: $name"
     done
     echo ""
-    echo "Sync jobs will run every 6 hours. First run happening now (RunAtLoad)."
+    echo "activity/police: every 6 hours (first run now). Residential syncs: weekly/monthly calendar."
     echo "Logs: $LOG_DIR/"
     ;;
 
@@ -57,7 +63,7 @@ case "${1:-}" in
     # Show last run timestamps from logs
     if [[ -d "$LOG_DIR" ]]; then
       echo "--- Recent log entries ---"
-      for job in activity police; do
+      for job in activity police coffee-index cappuccino grocery-basket wine-index ikon-pass dog-walker; do
         logfile="$LOG_DIR/sync-${job}.log"
         if [[ -f "$logfile" ]]; then
           echo "[$job] $(tail -3 "$logfile" | head -1)"

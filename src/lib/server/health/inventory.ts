@@ -29,7 +29,7 @@ export const SOURCE_INVENTORY: readonly SourcePolicy[] = freeze<SourcePolicy>([
 		maxAgeDays: 45,
 		observedAt: 'upload'
 	},
-	// GitHub Actions (Playwright via scrape proxy).
+	// Mac mini launchd (Playwright; residential IP).
 	{
 		name: 'Marin Coffee Index',
 		blobKey: 'marin-coffee-index.json',
@@ -37,7 +37,7 @@ export const SOURCE_INVENTORY: readonly SourcePolicy[] = freeze<SourcePolicy>([
 		maxAgeDays: 10,
 		observedAt: 'content'
 	},
-	// GitHub Actions; falls back to reference prices without advancing the observation.
+	// Mac mini launchd; falls back to reference prices without advancing the observation.
 	{
 		name: 'Grocery Basket',
 		blobKey: 'marin-grocery-basket.json',
@@ -45,7 +45,7 @@ export const SOURCE_INVENTORY: readonly SourcePolicy[] = freeze<SourcePolicy>([
 		maxAgeDays: 10,
 		observedAt: 'content'
 	},
-	// GitHub Actions.
+	// Mac mini launchd.
 	{
 		name: 'Wine Index',
 		blobKey: 'marin-wine-index.json',
@@ -133,7 +133,8 @@ export const SOURCE_INVENTORY: readonly SourcePolicy[] = freeze<SourcePolicy>([
 		maxAgeDays: 2,
 		observedAt: 'content'
 	},
-	// Composite inputs — GitHub Actions workflows, unmonitored before G0a.
+	// Composite inputs, unmonitored before G0a. Camp + Rivian: GitHub Actions;
+	// Cappuccino, Dog Walker, Ikon: Mac mini launchd (residential IP).
 	{
 		name: 'Cappuccino',
 		blobKey: 'marin-cappuccino.json',

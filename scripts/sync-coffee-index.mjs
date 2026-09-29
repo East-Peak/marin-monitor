@@ -2,7 +2,7 @@
 
 /**
  * Standalone scraper for the Marin coffee index.
- * Runs in GitHub Actions (or locally) and writes a generic multi-drink blob.
+ * Runs on the Mac mini via launchd (residential IP; see scripts/sync-runner.sh) and writes a generic multi-drink blob.
  */
 
 import { head, put } from '@vercel/blob';
