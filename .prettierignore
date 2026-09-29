@@ -31,3 +31,6 @@ tests/fixtures/
 
 # Ambient planning docs (do not reformat — content is intentionally unmanaged)
 docs/superpowers/
+
+# Agent tool scratch (gitignored via its own nested .gitignore)
+.superpowers/

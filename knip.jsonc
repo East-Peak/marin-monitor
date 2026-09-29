@@ -12,7 +12,8 @@
 		// 2026-07-03 deletion manifest). knip can't see their real callers:
 		"scripts/lib/activity-feed-helpers.d.mts", // .d.mts type companion for the used .mjs
 		"scripts/lib/strava-explore-helpers.d.mts", // .d.mts type companion for the used .mjs
-		"scripts/scrape-proxy.mjs" // invoked by a LaunchAgent (com.marinmonitor.scrape-proxy)
+		"scripts/scrape-proxy.mjs", // invoked by a LaunchAgent (com.marinmonitor.scrape-proxy)
+		".superpowers/**" // agent tool scratch, gitignored via its own nested .gitignore
 	],
 	"ignoreDependencies": [
 		// Documented false positives: @typescript-eslint/* are peer-deps of the
