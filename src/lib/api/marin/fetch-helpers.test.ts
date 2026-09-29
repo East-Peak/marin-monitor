@@ -300,3 +300,42 @@ describe('owner signal (Codex PR1 C1)', () => {
 		});
 	}
 });
+
+describe('fetchJson body read stays under the deadline and owner signal (post-push review item 2)', () => {
+	/** A response whose body stalls until the request's signal aborts, like a real fetch. */
+	function stallingBody(init?: RequestInit): Response {
+		return {
+			ok: true,
+			status: 200,
+			json: () =>
+				new Promise((_resolve, reject) => {
+					init?.signal?.addEventListener('abort', () =>
+						reject(new DOMException('Aborted', 'AbortError'))
+					);
+				})
+		} as unknown as Response;
+	}
+
+	it('the owner aborting during the body read rejects', async () => {
+		const owner = new AbortController();
+		mockFetch.mockImplementationOnce(async (_url, init) => stallingBody(init));
+
+		const pending = fetchJson('https://api.example.com/data', { signal: owner.signal });
+		const settled = pending.catch((e: unknown) => e);
+		await vi.advanceTimersByTimeAsync(0);
+		owner.abort();
+
+		expect(await settled).toBeInstanceOf(DOMException);
+	});
+
+	it('the timeout covers a stalled body read', async () => {
+		mockFetch.mockImplementationOnce(async (_url, init) => stallingBody(init));
+
+		const settled = fetchJson('https://api.example.com/data', undefined, 1000).catch(
+			(e: unknown) => e
+		);
+		await vi.advanceTimersByTimeAsync(1500);
+
+		expect(await settled).toBeInstanceOf(DOMException);
+	});
+});

@@ -4,14 +4,16 @@ export interface OwnerOptions {
 }
 
 /**
- * Run `fetch` under a timeout that also honours the caller's own signal (an owner
- * lifetime such as a destroyed dashboard): whichever fires first aborts the request.
+ * Run `fetch`, then `read` the response, under a timeout that also honours the caller's
+ * own signal (an owner lifetime such as a destroyed dashboard): whichever fires first
+ * aborts the request, including a body that is still being read.
  */
-async function fetchWithDeadline(
+async function fetchWithDeadline<T>(
 	url: string,
 	options: RequestInit | undefined,
-	timeoutMs: number
-): Promise<Response> {
+	timeoutMs: number,
+	read: (response: Response) => Promise<T>
+): Promise<T> {
 	const controller = new AbortController();
 	const id = setTimeout(() => controller.abort(), timeoutMs);
 	const owner = options?.signal;
@@ -19,7 +21,7 @@ async function fetchWithDeadline(
 	if (owner?.aborted) controller.abort();
 	else owner?.addEventListener('abort', abortFromOwner, { once: true });
 	try {
-		return await fetch(url, { ...options, signal: controller.signal });
+		return await read(await fetch(url, { ...options, signal: controller.signal }));
 	} finally {
 		clearTimeout(id);
 		owner?.removeEventListener('abort', abortFromOwner);
@@ -34,9 +36,10 @@ export async function fetchJson<T>(
 	options?: RequestInit,
 	timeoutMs = 10000
 ): Promise<T> {
-	const response = await fetchWithDeadline(url, options, timeoutMs);
-	if (!response.ok) throw new Error(`HTTP ${response.status}`);
-	return (await response.json()) as T;
+	return fetchWithDeadline(url, options, timeoutMs, async (response) => {
+		if (!response.ok) throw new Error(`HTTP ${response.status}`);
+		return (await response.json()) as T;
+	});
 }
 
 /**
@@ -47,5 +50,5 @@ export async function fetchWithTimeout(
 	options?: RequestInit,
 	timeoutMs = 10000
 ): Promise<Response> {
-	return fetchWithDeadline(url, options, timeoutMs);
+	return fetchWithDeadline(url, options, timeoutMs, async (response) => response);
 }
