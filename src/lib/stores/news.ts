@@ -87,7 +87,8 @@ function enrichNewsItem(item: NewsItem): NewsItem {
 // Create the store
 function createNewsStore() {
 	const { subscribe, set, update } = writable<NewsState>(createInitialState());
-	const inFlightLocationEnrichment = new Set<NewsCategory>();
+	/** One token per enrichment run, so only the run that owns a category can release it. */
+	const inFlightLocationEnrichment = new Map<NewsCategory, symbol>();
 
 	return {
 		subscribe,
@@ -185,15 +186,25 @@ function createNewsStore() {
 		 * This runs in the background and only updates items still present in the category.
 		 */
 		async enrichLocations(category: NewsCategory, options: { signal?: AbortSignal } = {}) {
-			if (inFlightLocationEnrichment.has(category)) return;
-			inFlightLocationEnrichment.add(category);
+			const { signal } = options;
+			if (signal?.aborted || inFlightLocationEnrichment.has(category)) return;
+			const run = Symbol(category);
+			inFlightLocationEnrichment.set(category, run);
+			// An aborted run discards its results, so it releases the category at once:
+			// a newer view's run must not wait out this run's un-abortable fetches.
+			const release = () => {
+				if (inFlightLocationEnrichment.get(category) === run) {
+					inFlightLocationEnrichment.delete(category);
+				}
+			};
+			signal?.addEventListener('abort', release, { once: true });
 
 			try {
 				const snapshot = get({ subscribe }).categories[category].items;
 				if (snapshot.length === 0) return;
 
-				const enriched = await enrichItemsForLocation(snapshot, { signal: options.signal });
-				if (options.signal?.aborted) return;
+				const enriched = await enrichItemsForLocation(snapshot, { signal });
+				if (signal?.aborted) return;
 				const byId = new Map(enriched.map((item) => [item.id, item]));
 
 				update((state) => {
@@ -237,7 +248,8 @@ function createNewsStore() {
 					};
 				});
 			} finally {
-				inFlightLocationEnrichment.delete(category);
+				signal?.removeEventListener('abort', release);
+				release();
 			}
 		},
 

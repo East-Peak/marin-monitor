@@ -349,4 +349,47 @@ describe('News Store', () => {
 		expect(news.getItems('local')[0].lat).toBeUndefined();
 		vi.doUnmock('$lib/api/marin/article-enrichment');
 	});
+
+	it('an aborted enrichLocations run never blocks a newer run, and never clears its flag', async () => {
+		type Items = import('$lib/types').NewsItem[];
+		const held: Array<(items: Items) => void> = [];
+		const calls = vi.fn(() => new Promise<Items>((r) => held.push(r)));
+		vi.doMock('$lib/api/marin/article-enrichment', () => ({ enrichItemsForLocation: calls }));
+		const { news } = await import('./news');
+		const item = {
+			id: 'x:1',
+			title: 'Mill Valley road work begins',
+			link: 'https://www.marinij.com/x',
+			timestamp: Date.parse('2026-09-28T18:00:00Z'),
+			source: 'Marin IJ',
+			category: 'local' as const,
+			verification: 'local_media' as const
+		};
+		const pinned = (lat: number) => [
+			{ ...item, lat, lon: -122.5, locationConfidence: 'exact' as const, locationEvidence: 'x' }
+		];
+		news.setItems('local', [item]);
+
+		// Run A (legacy controller) is aborted while its fetch is still held.
+		const ownerA = new AbortController();
+		const runA = news.enrichLocations('local', { signal: ownerA.signal });
+		ownerA.abort();
+
+		// Run B (the next view, e.g. TV's signal-less loadAllNews) must not be skipped.
+		const runB = news.enrichLocations('local');
+		expect(calls).toHaveBeenCalledTimes(2);
+
+		// A settles: it writes nothing and leaves B's in-flight flag alone.
+		held[0](pinned(1));
+		await runA;
+		expect(news.getItems('local')[0].lat).toBeUndefined();
+		const runC = news.enrichLocations('local');
+		expect(calls).toHaveBeenCalledTimes(2);
+		await runC;
+
+		held[1](pinned(37.9));
+		await runB;
+		expect(news.getItems('local')[0].lat).toBe(37.9);
+		vi.doUnmock('$lib/api/marin/article-enrichment');
+	});
 });
