@@ -55,3 +55,41 @@ describe('DashboardV2 preview shell', () => {
 		expect(screen.getByRole('button', { name: 'Dashboard settings' })).toBeTruthy();
 	});
 });
+
+describe('DashboardV2 town display across hydration', () => {
+	/** The markup of the first client render, before any effect (onMount) runs — what hydration adopts. */
+	async function firstRenderHtml(storedTown: string | null): Promise<string> {
+		localStorage.clear();
+		if (storedTown) localStorage.setItem('mm_town', storedTown);
+		vi.resetModules();
+		const [{ mount, unmount }, { default: Component }] = await Promise.all([
+			import('svelte'),
+			import('./DashboardV2.svelte')
+		]);
+		const target = document.body.appendChild(document.createElement('div'));
+		const app = mount(Component, { target });
+		const html = target.querySelector('.picker-trigger')!.outerHTML;
+		await unmount(app);
+		target.remove();
+		return html;
+	}
+
+	it('first renders the server markup ("All of Marin") even with a saved town, then shows it after mount', async () => {
+		// SSR never reads storage, so the server always renders the no-town picker.
+		const server = await firstRenderHtml(null);
+		expect(server).toContain('All of Marin');
+		expect(await firstRenderHtml('mill-valley')).toBe(server);
+
+		localStorage.setItem('mm_town', 'mill-valley');
+		vi.resetModules();
+		const [{ flushSync }, { render: renderFresh }, { default: Fresh }] = await Promise.all([
+			import('svelte'),
+			import('@testing-library/svelte'),
+			import('./DashboardV2.svelte')
+		]);
+		const { container } = renderFresh(Fresh);
+		flushSync();
+		expect(container.querySelector('.picker-label')?.textContent).toBe('Mill Valley');
+		localStorage.clear();
+	});
+});

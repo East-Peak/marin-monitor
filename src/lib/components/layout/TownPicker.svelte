@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tick } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { townFilter, selectedTownObj } from '$lib/stores/town-filter';
 	import { MARIN_TOWNS, MARIN_REGIONS } from '$lib/config/towns';
 	import type { MarinRegion } from '$lib/types';
@@ -31,7 +31,14 @@
 			.filter((group) => group.towns.length > 0);
 	});
 
-	const displayName = $derived($selectedTownObj?.name ?? 'All of Marin');
+	// The server never reads storage, so it renders "All of Marin". Show the stored town only
+	// after mount, so the first client render matches the server markup it hydrates.
+	let mounted = $state(false);
+	onMount(() => {
+		mounted = true;
+	});
+	const shownTown = $derived(mounted ? $selectedTownObj : null);
+	const displayName = $derived(shownTown?.name ?? 'All of Marin');
 
 	function selectTown(slug: string | null) {
 		townFilter.select(slug);
@@ -83,7 +90,7 @@
 	<button
 		type="button"
 		class="picker-trigger"
-		class:active={$selectedTownObj !== null}
+		class:active={shownTown !== null}
 		bind:this={triggerEl}
 		aria-haspopup="listbox"
 		aria-expanded={open}
@@ -92,7 +99,7 @@
 		title="Filter by town"
 	>
 		<svg class="picker-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-			{#if $selectedTownObj}
+			{#if shownTown}
 				<path
 					d="M8 1C5.24 1 3 3.24 3 6c0 3.75 5 9 5 9s5-5.25 5-9c0-2.76-2.24-5-5-5z"
 					fill="currentColor"

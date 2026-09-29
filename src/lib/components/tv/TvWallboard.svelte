@@ -651,9 +651,12 @@
 	let originalTheme = '';
 	let originalSettingsTheme: 'dark' | 'light' = 'dark';
 
+	// TV is always county-wide. It takes a transient scope, so visiting /tv never
+	// clears the dashboard's saved town (spec §5, §13.5).
+	let endTvScope: (() => void) | null = null;
+
 	onMount(() => {
-		// Reset shared state so TV mode starts county-wide, not town-scoped
-		townFilter.clear();
+		endTvScope = townFilter.beginTransientScope(null);
 		mapStore.selectTown(null);
 
 		// Reset map layers to prevent dashboard layer bleed
@@ -701,6 +704,7 @@
 	});
 
 	onDestroy(() => {
+		endTvScope?.();
 		stopCarousel();
 		if (clockTimer) clearInterval(clockTimer);
 		if (cursorTimer) clearTimeout(cursorTimer);

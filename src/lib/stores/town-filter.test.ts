@@ -116,3 +116,135 @@ describe('Town Filter Store', () => {
 		expect(get(townFilter)).toBeNull();
 	});
 });
+
+describe('transient scope (TV)', () => {
+	beforeEach(() => {
+		// Earlier tests leave getItem.mockReturnValue(...) behind; clearAllMocks does not reset it.
+		localStorageMock.getItem.mockReset();
+		localStorageMock.setItem.mockReset();
+		localStorageMock.removeItem.mockReset();
+		localStorageMock.clear();
+		vi.clearAllMocks();
+		vi.resetModules();
+	});
+
+	it('shows the transient scope without touching mm_town, then restores the saved town', async () => {
+		localStorageMock.setItem('mm_town', 'mill-valley');
+		vi.clearAllMocks();
+		const { townFilter } = await import('./town-filter');
+		expect(get(townFilter)).toBe('mill-valley');
+
+		const end = townFilter.beginTransientScope(null);
+		expect(get(townFilter)).toBeNull();
+		expect(localStorageMock.setItem).not.toHaveBeenCalled();
+		expect(localStorageMock.removeItem).not.toHaveBeenCalled();
+
+		end();
+		expect(get(townFilter)).toBe('mill-valley');
+		expect(localStorageMock.getItem('mm_town')).toBe('mill-valley');
+	});
+
+	it('does not persist selections made while the scope is active', async () => {
+		localStorageMock.setItem('mm_town', 'mill-valley');
+		vi.clearAllMocks();
+		const { townFilter } = await import('./town-filter');
+		const end = townFilter.beginTransientScope(null);
+		townFilter.select('novato');
+		townFilter.clear();
+		expect(localStorageMock.setItem).not.toHaveBeenCalled();
+		expect(localStorageMock.removeItem).not.toHaveBeenCalled();
+		end();
+		expect(get(townFilter)).toBe('mill-valley');
+	});
+
+	it('end() is idempotent and persistence resumes after it', async () => {
+		const { townFilter } = await import('./town-filter');
+		const end = townFilter.beginTransientScope(null);
+		end();
+		townFilter.select('novato');
+		end();
+		expect(get(townFilter)).toBe('novato');
+		expect(localStorageMock.getItem('mm_town')).toBe('novato');
+	});
+
+	it('townLocation follows the transient scope', async () => {
+		localStorageMock.setItem('mm_town', 'novato');
+		const [{ townFilter, townLocation }, { DEFAULT_LOCATION_ID }] = await Promise.all([
+			import('./town-filter'),
+			import('$lib/config/locations')
+		]);
+		const end = townFilter.beginTransientScope(null);
+		expect(get(townLocation).id).toBe(DEFAULT_LOCATION_ID);
+		end();
+	});
+
+	/** Temporarily replace storage methods; restores them afterwards. */
+	async function withStorage(
+		overrides: Partial<Record<'getItem' | 'setItem' | 'removeItem', (...a: string[]) => unknown>>,
+		run: () => Promise<void>
+	) {
+		const real = { ...localStorageMock };
+		Object.assign(
+			localStorageMock,
+			Object.fromEntries(Object.entries(overrides).map(([k, f]) => [k, vi.fn(f)]))
+		);
+		try {
+			await run();
+		} finally {
+			Object.assign(localStorageMock, real);
+		}
+	}
+	const deny = (name: string) => () => {
+		throw new DOMException('denied', name);
+	};
+
+	it('read denied: the town chosen in this page view survives a TV round-trip', async () => {
+		await withStorage(
+			{ getItem: deny('SecurityError'), setItem: deny('SecurityError') },
+			async () => {
+				const { townFilter } = await import('./town-filter');
+				expect(get(townFilter)).toBeNull();
+				expect(() => townFilter.select('novato')).not.toThrow();
+				const end = townFilter.beginTransientScope(null);
+				expect(get(townFilter)).toBeNull();
+				expect(() => end()).not.toThrow();
+				expect(get(townFilter)).toBe('novato');
+			}
+		);
+	});
+
+	it('write denied with an older stored town: the round-trip returns the new choice, not the stale copy', async () => {
+		localStorageMock.setItem('mm_town', 'mill-valley');
+		await withStorage(
+			{ setItem: deny('SecurityError'), removeItem: deny('SecurityError') },
+			async () => {
+				const { townFilter } = await import('./town-filter');
+				expect(get(townFilter)).toBe('mill-valley');
+				townFilter.select('novato');
+				const end = townFilter.beginTransientScope(null);
+				end();
+				expect(get(townFilter)).toBe('novato');
+			}
+		);
+	});
+
+	it('quota exceeded: same guarantee', async () => {
+		localStorageMock.setItem('mm_town', 'mill-valley');
+		await withStorage({ setItem: deny('QuotaExceededError') }, async () => {
+			const { townFilter } = await import('./town-filter');
+			townFilter.select('novato');
+			townFilter.beginTransientScope(null)();
+			expect(get(townFilter)).toBe('novato');
+		});
+	});
+
+	it('clearing to "All of Marin" with storage denied also survives the round-trip', async () => {
+		localStorageMock.setItem('mm_town', 'mill-valley');
+		await withStorage({ removeItem: deny('SecurityError') }, async () => {
+			const { townFilter } = await import('./town-filter');
+			townFilter.clear();
+			townFilter.beginTransientScope(null)();
+			expect(get(townFilter)).toBeNull();
+		});
+	});
+});
