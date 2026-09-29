@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	compareRepresentative,
+	disambiguateReusedIds,
 	isGenericUrl,
 	sameStoryByTitle,
 	collapseStoryCopies,
@@ -137,9 +138,79 @@ describe('collapseStoryCopies', () => {
 		expect(merged).toMatchObject({ townSlug: 'novato', town: 'Novato' });
 	});
 
+	it("represents a story by its dated copy even when an undated copy comes first, keeping every copy's scope", () => {
+		const undated = {
+			...story(
+				'marin-ij-news:p9',
+				'Marin IJ',
+				'Novato levee repair begins',
+				'https://www.marinij.com/2026/09/28/levee/'
+			),
+			category: 'local' as const,
+			town: 'Novato',
+			townSlug: 'novato',
+			timestamp: Number.NaN,
+			publishedAtStatus: 'missing' as const
+		};
+		const dated = {
+			...story(
+				'marin-ij-marin-county:p9',
+				'Marin IJ – Marin County',
+				'Novato levee repair begins',
+				'https://www.marinij.com/2026/09/28/levee/'
+			),
+			category: 'safety' as const,
+			geoScope: 'county' as const,
+			timestamp: Date.parse('2026-09-28T17:00:00.000Z'),
+			publishedAtStatus: 'valid' as const
+		};
+		type Copy = ReturnType<typeof story> & {
+			category: 'local' | 'safety';
+			town?: string;
+			townSlug?: string;
+			geoScope?: 'county';
+			timestamp: number;
+			publishedAtStatus: 'missing' | 'valid';
+		};
+		const copies: Copy[] = [undated, dated];
+		expect(collapseStoryCopies(copies)).toEqual([
+			{
+				...dated,
+				town: 'Novato',
+				townSlug: 'novato',
+				categories: ['safety', 'local'],
+				alsoReportedBy: ['Marin IJ']
+			}
+		]);
+	});
+
+	it('keeps the first copy when no copy is dated', () => {
+		const a = {
+			...story('a:1', 'A', 'Fire crews train', 'https://x.com/2026/fire'),
+			timestamp: Number.NaN
+		};
+		const b = {
+			...story('b:1', 'B', 'Fire crews train', 'https://x.com/2026/fire'),
+			timestamp: Number.NaN
+		};
+		expect(collapseStoryCopies([a, b]).map((s) => s.id)).toEqual(['a:1']);
+	});
+
 	it('drops an exact duplicate id', () => {
 		const s = story('a:1', 'A', 'T', '');
 		expect(collapseStoryCopies([s, { ...s }])).toHaveLength(1);
+	});
+});
+
+describe('disambiguateReusedIds', () => {
+	it('keeps two stories one feed filed under the same GUID apart, as the producer does', () => {
+		const out = disambiguateReusedIds([
+			{ id: 'ij:7', title: 'Sausalito ferry fares rise' },
+			{ id: 'ij:7', title: 'San Anselmo creek cleanup' },
+			{ id: 'ij:7', title: 'Sausalito ferry fares rise!' },
+			{ id: 'ij:8', title: 'Other' }
+		]);
+		expect(out.map((i) => i.id)).toEqual(['ij:7', 'ij:7~2', 'ij:7', 'ij:8']);
 	});
 });
 

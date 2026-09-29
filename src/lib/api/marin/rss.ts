@@ -14,7 +14,7 @@ import { fetchWithTimeout } from './fetch-helpers';
 import type { NormalizedNewsItem } from '$lib/news/normalize';
 import { newsSourceId } from '$lib/news/source-id';
 import { compareByTimestamp } from '$lib/news/order';
-import { sourceScopedId } from '$lib/news/identity';
+import { disambiguateReusedIds, sourceScopedId } from '$lib/news/identity';
 import { loadNewsPipeline, type NewsPipeline } from './news-pipeline';
 
 /** Result from fetching a single feed */
@@ -87,7 +87,7 @@ function parseRssXml(
 		const normalized = normalizeEntry(entry, ctx, nowMs);
 		if (normalized) items.push(toNewsItem(normalized));
 	}
-	return items;
+	return disambiguateReusedIds(items);
 }
 
 /**

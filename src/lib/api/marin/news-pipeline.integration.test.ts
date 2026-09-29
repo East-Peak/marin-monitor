@@ -244,6 +244,31 @@ describe('frozen feeds → adapter → store → dashboard and TV', () => {
 		expect(new Set(get(allNewsItems).map((i) => i.id)).size).toBe(get(allNewsItems).length);
 	});
 
+	it('keeps two stories ONE feed files under the same GUID apart, with unique ids (as the producer does)', async () => {
+		feedBodies = {
+			...FEED_BODIES,
+			[IJ_CRIME]: rss(
+				guidItem(
+					'99',
+					'Sausalito ferry fares rise in Marin',
+					'https://www.marinij.com/2026/09/28/fares/'
+				) +
+					guidItem(
+						'99',
+						'San Anselmo creek cleanup in Marin',
+						'https://www.marinij.com/2026/09/28/creek/'
+					)
+			)
+		};
+		await loadAllNews(true);
+		const reused = get(allNewsItems).filter((i) => i.id.startsWith('marin-ij-crime:99'));
+		expect(reused.map((i) => i.title).sort()).toEqual([
+			'San Anselmo creek cleanup in Marin',
+			'Sausalito ferry fares rise in Marin'
+		]);
+		expect(new Set(get(allNewsItems).map((i) => i.id)).size).toBe(get(allNewsItems).length);
+	});
+
 	it('keeps the previous items when the parser chunk fails to load, then recovers', async () => {
 		await loadAllNews();
 		const before = titles(get(localNews).items);

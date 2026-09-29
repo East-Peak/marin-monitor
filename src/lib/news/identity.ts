@@ -11,8 +11,9 @@
  * - compareRepresentative: which copy of a story represents it — a dated
  *   copy beats an undated one, then source priority, newest, id.
  */
+import type { PublishedAtStatus } from './feed-date';
+import { compareNewest, hasKnownPublicationTime } from './order';
 import { canonicalizeUrl } from './url';
-import { compareNewest } from './order';
 
 export const TITLE_MATCH_WINDOW_MS = 24 * 3_600_000;
 export const MIN_TITLE_KEY_CHARS = 12;
@@ -111,56 +112,82 @@ interface CollapsibleStory {
 	townSlug?: string;
 	/** Set by county-scoped feeds (dashboard D1); merged, never dropped. */
 	geoScope?: 'county';
+	/** NaN when the publication time is unknown (browser NewsItem). */
+	timestamp?: number;
+	publishedAtStatus?: PublishedAtStatus;
+}
+
+/**
+ * A feed that files two different stories under one GUID (the producer's
+ * rule in dedupeItems): the first title keeps the id, each other distinct
+ * title gets `~2`, `~3`, …; a repeated title is the same story and keeps it.
+ */
+export function disambiguateReusedIds<T extends { id: string; title: string }>(
+	items: readonly T[]
+): T[] {
+	const titlesById = new Map<string, string[]>();
+	return items.map((item) => {
+		const titles = titlesById.get(item.id) ?? [];
+		titlesById.set(item.id, titles);
+		const key = titleKey(item.title);
+		const n = titles.includes(key) ? titles.indexOf(key) : titles.push(key) - 1;
+		return n === 0 ? item : { ...item, id: `${item.id}~${n + 1}` };
+	});
+}
+
+/**
+ * One story from its copies. The representative is the first DATED copy —
+ * compareRepresentative's first rule, with input (feed) order standing in for
+ * source priority — else the first copy. Scope and provenance are MERGED
+ * from every copy, so nothing is lost to input order:
+ * - geoScope: 'county' if ANY copy is explicitly county-scoped;
+ * - town/townSlug: the representative's, else the first copy that has one;
+ * - categories: union, the representative's own first;
+ * - alsoReportedBy: the other copies' sources.
+ */
+function mergeCopies<T extends CollapsibleStory>(
+	copies: readonly T[]
+): T & StoryCopyProvenance<NonNullable<T['category']>> {
+	type C = NonNullable<T['category']>;
+	const dated = (c: T) =>
+		hasKnownPublicationTime({ timestamp: c.timestamp, publishedAtStatus: c.publishedAtStatus });
+	const rep = copies.find(dated) ?? copies[0];
+	const withTown = rep.townSlug ? rep : copies.find((c) => c.townSlug);
+	const unique = <V>(values: (V | undefined)[]) =>
+		[...new Set(values)].filter((v): v is V => v !== undefined);
+	return {
+		...rep,
+		...(copies.some((c) => c.geoScope === 'county') ? { geoScope: 'county' as const } : {}),
+		...(withTown ? { town: withTown.town, townSlug: withTown.townSlug } : {}),
+		categories: unique([rep, ...copies].map((c) => c.category as C | undefined)),
+		alsoReportedBy: unique(copies.map((c) => c.source)).filter((s) => s !== rep.source)
+	};
 }
 
 /**
  * The browser stores' combined view (allNewsItems, alerts): one entry per
- * story. Ids are source-scoped, so equal GUIDs from different feeds never
- * collide; copies of ONE story carried by several feeds (e.g. a Marin IJ post
- * in two tag feeds) are joined by trustworthy article identity — the same
- * canonical, non-generic, non-reused article URL.
- *
- * The first copy is kept, but scope and provenance are MERGED from every
- * copy, so no copy's scope is lost to input order:
- * - geoScope: 'county' if ANY copy is explicitly county-scoped;
- * - town/townSlug: the kept copy's, else the first copy that has one;
- * - categories: union; alsoReportedBy: the other copies' sources.
+ * story, in first-seen order. Ids are source-scoped, so equal GUIDs from
+ * different feeds never collide; copies of ONE story carried by several feeds
+ * (e.g. a Marin IJ post in two tag feeds) are joined by trustworthy article
+ * identity — the same canonical, non-generic, non-reused article URL — and
+ * merged by mergeCopies.
  */
 export function collapseStoryCopies<T extends CollapsibleStory>(
 	items: readonly T[]
 ): (T & StoryCopyProvenance<NonNullable<T['category']>>)[] {
-	type Out = T & StoryCopyProvenance<NonNullable<T['category']>>;
 	const urls = items.map((item) => canonicalizeUrl(item.link));
 	const reused = reusedArticleUrls(items.map((item, k) => ({ ...item, url: urls[k] })));
-	const byId = new Map<string, Out>();
-	const byUrl = new Map<string, Out>();
-	const out: Out[] = [];
+	const byId = new Map<string, T[]>();
+	const byUrl = new Map<string, T[]>();
+	const groups: T[][] = [];
 	items.forEach((item, k) => {
 		const url = urls[k];
 		const article = url && !reused.has(url) && !isGenericUrl(url) ? url : null;
-		const kept = byId.get(item.id) ?? (article ? byUrl.get(article) : undefined);
-		if (kept) {
-			if (item.geoScope === 'county') kept.geoScope = 'county';
-			if (!kept.townSlug && item.townSlug) {
-				kept.townSlug = item.townSlug;
-				kept.town = item.town;
-			}
-			const category = item.category as NonNullable<T['category']> | undefined;
-			if (category && !kept.categories.includes(category)) kept.categories.push(category);
-			if (item.source !== kept.source && !kept.alsoReportedBy.includes(item.source)) {
-				kept.alsoReportedBy.push(item.source);
-			}
-			if (article && !byUrl.has(article)) byUrl.set(article, kept);
-			return;
-		}
-		const copy = {
-			...item,
-			categories: item.category ? [item.category] : [],
-			alsoReportedBy: []
-		} as Out;
-		byId.set(item.id, copy);
-		if (article) byUrl.set(article, copy);
-		out.push(copy);
+		let group = byId.get(item.id) ?? (article ? byUrl.get(article) : undefined);
+		if (group) group.push(item);
+		else groups.push((group = [item]));
+		if (!byId.has(item.id)) byId.set(item.id, group);
+		if (article && !byUrl.has(article)) byUrl.set(article, group);
 	});
-	return out;
+	return groups.map(mergeCopies);
 }
