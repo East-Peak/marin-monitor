@@ -3,6 +3,7 @@
 	import { timeAgo } from '$lib/utils';
 	import { townFilter } from '$lib/stores/town-filter';
 	import type { NewsItem } from '$lib/types';
+	import { compareStoryGroups, selectFreshStories, topAlerts } from './signals-model';
 
 	interface Props {
 		news?: NewsItem[];
@@ -18,12 +19,7 @@
 	);
 
 	// Active alerts — the most important thing to surface
-	const activeAlerts = $derived(
-		filteredNews
-			.filter((item) => item.isAlert)
-			.sort((a, b) => b.timestamp - a.timestamp)
-			.slice(0, 5)
-	);
+	const activeAlerts = $derived(topAlerts(filteredNews));
 
 	// Multi-source stories — same topic covered by 2+ sources (real signal)
 	const multiSourceStories = $derived.by(() => {
@@ -59,9 +55,7 @@
 
 		return Array.from(storyGroups.values())
 			.filter((g) => g.sources.size >= 2)
-			.sort(
-				(a, b) => b.sources.size - a.sources.size || b.items[0].timestamp - a.items[0].timestamp
-			)
+			.sort(compareStoryGroups)
 			.slice(0, 4)
 			.map((g) => ({
 				title: g.items[0].title,
@@ -110,11 +104,7 @@
 
 	// Fresh stories — most recent items in the last few hours
 	const freshStories = $derived.by(() => {
-		const fourHoursAgo = Date.now() - 4 * 60 * 60 * 1000;
-		return filteredNews
-			.filter((item) => item.timestamp > fourHoursAgo)
-			.sort((a, b) => b.timestamp - a.timestamp)
-			.slice(0, 6);
+		return selectFreshStories(filteredNews, Date.now(), 4 * 60 * 60 * 1000);
 	});
 
 	function categoryLabel(cat: string): string {

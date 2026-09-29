@@ -1,5 +1,8 @@
 // Core data types for Marin Monitor
 
+import type { PublishedAtStatus } from '$lib/news/feed-date';
+import type { PublishedAtSource } from '$lib/news/feed-xml';
+
 /**
  * Marin news/data categories
  */
@@ -48,6 +51,16 @@ export interface NewsItem {
 	title: string;
 	link: string;
 	pubDate?: string;
+	/** Which feed field `pubDate`/`timestamp` came from (RSS/Atom items only). */
+	publishedAtSource?: PublishedAtSource;
+	/**
+	 * RSS/Atom items: whether the publication time is trustworthy. Anything but
+	 * 'valid' means `timestamp` is NaN — shown "undated", excluded from Latest
+	 * reporting and recency counts (see hasKnownPublicationTime).
+	 */
+	publishedAtStatus?: PublishedAtStatus;
+	/** Event-start sources (e.g. Granicus agendas): when the meeting happens. */
+	eventAt?: string;
 	timestamp: number;
 	description?: string;
 	content?: string;

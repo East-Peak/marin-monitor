@@ -11,6 +11,8 @@
 	import { allNewsItems } from '$lib/stores/news';
 	import { TOWN_BY_SLUG } from '$lib/config';
 	import type { NewsItem } from '$lib/types';
+	import { timeAgo } from '$lib/utils';
+	import { pinAgeLabel, townTooltipItems } from './map-story-model';
 
 	let tooltipX = $state(0);
 	let tooltipY = $state(0);
@@ -28,7 +30,7 @@
 		source: string;
 		layer: string;
 		locationType: string;
-		timestamp: number | null;
+		age: string;
 	} | null>(null);
 	let removeMapListeners: (() => void) | null = null;
 
@@ -36,15 +38,6 @@
 		getMap: () => MapLibreMap | null;
 		mapReady: Writable<boolean>;
 	}>('maplibre-map');
-
-	function formatAge(timestamp: number): string {
-		const deltaMs = Date.now() - timestamp;
-		const deltaHours = Math.floor(deltaMs / 3600000);
-		if (deltaHours < 1) return 'now';
-		if (deltaHours < 24) return `${deltaHours}h`;
-		const days = Math.floor(deltaHours / 24);
-		return `${days}d`;
-	}
 
 	function layerLabel(layer: string): string {
 		switch (layer) {
@@ -88,12 +81,10 @@
 		}
 
 		townName = town.name;
-		const items = $allNewsItems.filter((item) => {
-			if (item.townSlug !== slug) return false;
+		const items = townTooltipItems($allNewsItems, slug, (item) => {
 			const layer = CATEGORY_TO_LAYER[item.category];
 			return Boolean(layer && activeLayers[layer]);
 		});
-		items.sort((a, b) => b.timestamp - a.timestamp);
 		townItems = items;
 		storyCount = items.length;
 		exactCount = items.filter(
@@ -156,7 +147,7 @@
 					source: String(props.source ?? (props.magnitude ? 'USGS Earthquake' : 'Unknown source')),
 					layer: String(props.layer ?? (props.magnitude ? 'safety' : 'news')),
 					locationType: String(props.locationType ?? 'exact'),
-					timestamp: Number.isFinite(Number(props.timestamp)) ? Number(props.timestamp) : null
+					age: pinAgeLabel(props.timestamp)
 				};
 				pinVisible = true;
 			}
@@ -189,9 +180,7 @@
 		<div class="tooltip-metrics">
 			<span>{layerLabel(pinData.layer)}</span>
 			<span>{pinData.locationType === 'exact' ? 'exact location' : pinData.locationType}</span>
-			{#if pinData.timestamp}
-				<span>{formatAge(pinData.timestamp)}</span>
-			{/if}
+			<span>{pinData.age}</span>
 		</div>
 		<div class="item-title">{pinData.title}</div>
 		<div class="item-meta">{pinData.source}</div>
@@ -218,7 +207,7 @@
 						</span>
 						<div class="item-main">
 							<div class="item-title">{item.title}</div>
-							<div class="item-meta">{item.source} · {formatAge(item.timestamp)}</div>
+							<div class="item-meta">{item.source} · {timeAgo(item.timestamp)}</div>
 						</div>
 					</div>
 				{/each}

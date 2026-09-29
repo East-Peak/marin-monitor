@@ -10,6 +10,7 @@
 	import { TV_MAP_VIEWS } from '$lib/config/tv';
 	import type { FireIncident } from '$lib/api/marin/calfire';
 	import type { NewsItem } from '$lib/types';
+	import { selectNearby } from '$lib/components/tv/tv-nearby';
 	import type { GasStation } from '$lib/types/gas';
 	import type { CoffeeShop } from '$lib/types/coffee';
 	import type { FitnessStudio } from '$lib/types/fitness';
@@ -58,18 +59,16 @@
 		)
 	);
 
-	const nearby = $derived.by(() => {
-		const maxAge = 7 * 24 * 60 * 60 * 1000;
-		const now = Date.now();
-		return $allNewsItems.filter((item) => {
-			if (now - item.timestamp > maxAge) return false;
-			if (typeof item.lat === 'number' && typeof item.lon === 'number') {
-				if (Math.abs(item.lat - lat) < radius && Math.abs(item.lon - lon) < radius) return true;
-			}
-			if (item.townSlug && nearbyTownSlugs.has(item.townSlug)) return true;
-			return false;
-		});
-	});
+	const nearby = $derived(
+		selectNearby($allNewsItems, {
+			lat,
+			lon,
+			radius,
+			nearbyTownSlugs,
+			nowMs: Date.now(),
+			maxAgeMs: 7 * 24 * 60 * 60 * 1000
+		})
+	);
 
 	const stories = $derived(nearby.filter((i) => !i.isAlert).slice(0, 6));
 	const alerts = $derived(nearby.filter((i) => i.isAlert).slice(0, 4));

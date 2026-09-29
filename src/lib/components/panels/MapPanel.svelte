@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { visibleMapItems } from '$lib/components/map/map-story-model';
 	import { onMount } from 'svelte';
 	import { Panel } from '$lib/components/common';
 	import {
@@ -53,12 +54,10 @@
 	const noLocationCount = $derived($allNewsItems.filter((i) => !i.townSlug).length);
 	const mapVisibleItems = $derived.by(() => {
 		const layers = $activeLayers;
-		return $allNewsItems
-			.filter((item) => {
-				const layer = CATEGORY_TO_LAYER[item.category];
-				return Boolean(layer && layers[layer]);
-			})
-			.sort((a, b) => b.timestamp - a.timestamp);
+		return visibleMapItems($allNewsItems, (item) => {
+			const layer = CATEGORY_TO_LAYER[item.category];
+			return Boolean(layer && layers[layer]);
+		});
 	});
 
 	const inspectorModel = $derived.by(() => {
