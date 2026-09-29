@@ -1,0 +1,125 @@
+#header	09/09/2026	09/15/2026	09/21/2026	8
+2609090020	09:47	Chalking for Parking Enforcement	true	Service Provided	1	1
+2609090028	10:33	Parking Complaint	false	Responsibles advised of complaint	1	1
+2609090029	10:44	Found Property	false	Report Taken	1	1
+2609090033	11:53	Cite Sign Off	false	Service Provided	1	1
+2609090040	13:03	Meet the Citizen	false	Service Provided	1	1
+2609090042	13:33	Assault	false	Report Taken	1	1
+2609090044	13:45	Suspicious Circumstances	false	Handled by Phone	1	1
+2609090045	13:50	Meet the Citizen	false	Service Provided	1	1
+2609090050	14:14	Meet the Citizen	false	Service Provided	1	1
+2609090051	14:16	Town Code Violation	true	Service Provided	1	1
+2609090052	14:27	Footbeat	true	Extra Patrol	1	1
+2609090053	14:43	Restraining Order Violation	false	Advice Given	1	1
+2609090054	14:44	Meet the Citizen	false	Service Provided	1	1
+2609090067	16:50	Animal Complaint/Problem Misc	false	Service Provided	1	1
+2609090073	20:33	Barking Dog	false	Responsibles advised of complaint	1	1
+2609100002	01:38	Meet the Citizen	false	Service Provided	1	1
+2609100007	09:02	Chalking for Parking Enforcement	true	Service Provided	1	1
+2609100009	09:14	Parking Complaint	false	Service Provided	1	2
+2609100011	10:31	Fingerprinting	false	Service Provided	2	2
+2609100015	11:28	Fingerprinting	false	Service Provided	2	2
+2609100017	12:20	Fingerprinting	false	Service Provided	2	2
+2609100023	14:06	Footbeat	true	Extra Patrol	2	2
+2609100025	14:44	Welfare Check	false	Service Provided	2	2
+2609100026	14:54	Lost/Stolen	false	Counter Report	2	2
+2609100028	15:10	Animal Complaint/Problem Misc	true	Service Provided	2	2
+2609100036	16:28	Meet the Citizen	false	Service Provided	2	2
+2609100037	16:51	Suspicious Circumstances	false	Service Provided	2	2
+2609100047	19:55	Danger to Self/Others/Gravely Disabled	false	Report Taken	2	2
+2609100054	21:32	Theft	false	Advice Given	2	2
+2609110001	00:22	Suspicious Circumstances	false	Service Provided	2	2
+2609110002	00:41	Open Door	true	Service Provided	2	2
+2609110003	01:49	Open Door	true	Service Provided	2	2
+2609110004	02:03	Nighttime Hill Extra Patrol	true	Extra Patrol	2	2
+2609110005	02:03	Nighttime Hill Extra Patrol	true	Extra Patrol	2	3
+2609110008	02:29	ALARM	false	Service Provided	3	3
+2609110012	06:34	ALARM	false	Response Canceled	3	3
+2609110013	07:20	Citizen Assist	false	Log Entry Only	3	3
+2609110021	09:17	Citizen Assist	false	Service Provided	3	3
+2609110024	09:36	Chalking for Parking Enforcement	true	Service Provided	3	3
+2609110025	10:14	Abandoned Vehicle	false	GOA/UTL	3	3
+2609110030	10:43	Footbeat	true	Extra Patrol	3	3
+2609110033	11:10	Abandoned Vehicle	false	Service Provided	3	3
+2609110037	12:14	Generic Fire Call/Not Specified	false	Log Entry Only	3	3
+2609110040	12:44	Parking Complaint	false	GOA/UTL	3	3
+2609110043	13:26	Chalking for Parking Enforcement	true	Citation Issued	3	3
+2609110053	14:48	Abandoned Vehicle	false	Service Provided	3	3
+2609110055	14:58	With Subjects	true	Service Provided	3	3
+2609110056	15:04	Medical Aid	false	Report Taken	3	3
+2609110058	15:19	Cite Sign Off	false	Service Provided	3	3
+2609110066	17:55	Animal Complaint/Problem Misc	false	Log Entry Only	3	3
+2609110067	18:05	Drug Violation	true	Arrest Made	3	3
+2609110068	19:18	ALARM	false	Service Provided	3	3
+2609110069	19:38	Vehicle Accident - Non Injury	false	Log Entry Only	3	4
+2609110075	21:41	Meet the Citizen	false	Service Provided	4	4
+2609110076	21:42	ALARM	false	Alarm - False or Unk Reason for Activation	4	4
+2609110078	22:11	Town Code Violation	true	Verbal Warning	4	4
+2609110079	22:25	Disturbance	false	Service Provided	4	4
+2609110081	23:23	Disturbance	false	Arrest Made	4	4
+2609120001	02:41	ALARM	false	Service Provided	4	4
+2609120004	03:10	Nighttime Hill Extra Patrol	true	Extra Patrol	4	4
+2609120005	03:11	Nighttime Hill Extra Patrol	true	Extra Patrol	4	4
+2609120008	03:18	Welfare Check	false	Service Provided	4	4
+2609120015	08:54	ALARM	false	Service Provided	4	4
+2609120021	09:28	Chalking for Parking Enforcement	true	Service Provided	4	4
+2609120028	10:26	Fingerprinting	false	Service Provided	4	4
+2609120032	11:08	Footbeat	true	Extra Patrol	4	4
+2609120033	11:25	Fingerprinting	false	Extra Patrol	4	4
+2609120035	11:30	Dead Body	false	Report Taken	4	4
+2609120036	11:40	Fraud - ID Theft / Checks	false	Report Taken	4	4
+2609120039	12:06	Fingerprinting	false	Service Provided	4	4
+2609120046	14:30	Vehicle Impound	true	Vehicle Booted/Towed	5	5
+2609120047	14:46	911 HANG UPS / MISDIALS / ETC	false	Log Entry Only	5	5
+2609120048	14:55	Lost/Stolen	false	Log Entry Only	5	5
+2609120049	14:59	Trespassing	false	Extra Patrol	5	5
+2609120052	16:02	Footbeat	true	Extra Patrol	5	5
+2609120058	18:12	911 HANG UPS / MISDIALS / ETC	false	Service Provided	5	5
+2609120060	18:43	Parking Complaint	false	Service Provided	5	5
+2609120064	20:27	Noise Complaint	false	Service Provided	5	5
+2609120067	21:07	Fireworks	false	GOA/UTL	5	5
+2609120069	21:39	Attempt to Contact	false	Service Provided	5	5
+2609130009	09:03	ALARM	false	Alarm - False or Unk Reason for Activation	5	5
+2609130011	10:07	Unwanted Subject	false	Service Provided	5	5
+2609130012	10:38	Welfare Check	false	Report Taken	5	5
+2609130015	12:55	Disturbance	false	Report Taken	5	6
+2609130017	14:03	Assist Outside Agency - Law Enforcement	true	Outside Assist	6	6
+2609130018	14:13	Unwanted Subject	false	Service Provided	6	6
+2609130019	15:46	Footbeat	true	Extra Patrol	6	6
+2609130021	16:30	Barking Dog	false	Log Entry Only	6	6
+2609130022	17:07	Generic Fire Call/Not Specified	false	Service Provided	6	6
+2609130023	17:16	Open Door	false	GOA/UTL	6	6
+2609130024	18:28	Abandoned Vehicle	false	Service Provided	6	6
+2609130027	20:09	Suspicious Vehicle	true	Service Provided	6	6
+2609140002	00:46	ALARM	false	Alarm - False or Unk Reason for Activation	6	6
+2609140007	03:08	ALARM	false	Service Provided	6	6
+2609140010	07:56	Traffic Complaint / Problem	true	Service Provided	6	6
+2609140014	08:24	With Subjects	true	Service Provided	6	6
+2609140025	09:44	Meet the Citizen	true	Service Provided	6	6
+2609140030	11:37	Abandoned Vehicle	false	Service Provided	6	6
+2609140033	11:58	Fingerprinting	false	Service Provided	6	6
+2609140035	12:34	Vandalism	false	Advice Given	6	6
+2609140036	12:40	Welfare Check	false	Service Provided	6	7
+2609140040	13:16	Danger to Self/Others/Gravely Disabled	false	Report Taken	7	7
+2609140050	16:21	Footbeat	true	Extra Patrol	7	7
+2609140052	16:52	Lost/Stolen	false	Log Entry Only	7	7
+2609140054	17:39	With Subjects	true	Log Entry Only	7	7
+2609140055	17:44	Threats	false	Advice Given	7	7
+2609140059	20:25	Suspicious Circumstances	false	GOA/UTL	7	7
+2609150001	00:25	Suspicious Vehicle	true	Service Provided	7	7
+2609150003	00:40	Suspicious Circumstances	true	Service Provided	7	7
+2609150009	06:46	ALARM	false	Alarm - False or Unk Reason for Activation	7	7
+2609150017	08:24	Citizen Assist	false	Service Provided	7	7
+2609150020	08:54	Suspicious Circumstances	false	Arrest Made	7	7
+2609150022	09:24	Theft	false	Service Provided	7	7
+2609150025	10:33	Hazard	false	Service Provided	7	7
+2609150027	10:55	911 HANG UPS / MISDIALS / ETC	false	Service Provided	7	7
+2609150041	13:32	Parking Complaint	false	Service Provided	7	7
+2609150042	14:18	Power Outage	false	Log Entry Only	7	7
+2609150043	14:40	Meet the Citizen	false	Advice Given	8	8
+2609150044	14:50	Citizen Assist	false	Service Provided	8	8
+2609150050	16:26	Vehicle Release	true	Service Provided	8	8
+2609150054	16:43	Any civil problem	false	Log Entry Only	8	8
+2609150058	17:25	Miscellaneous Service	false	Service Provided	8	8
+2609150060	18:04	Traffic Complaint / Problem	false	GOA/UTL	8	8
+2609150061	18:07	Abandoned Vehicle	false	Service Provided	8	8

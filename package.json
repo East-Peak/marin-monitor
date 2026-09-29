@@ -74,7 +74,8 @@
 		"htmlparser2": "^10.1.0",
 		"linkedom": "^0.18.12",
 		"maplibre-gl": "^4.7.1",
-		"puppeteer-core": "^24.40.0"
+		"puppeteer-core": "^24.40.0",
+		"zod": "^4.6.5"
 	},
 	"overrides": {
 		"cookie": "0.7.2"
