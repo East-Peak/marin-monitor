@@ -49,6 +49,14 @@ describe('map click priority (real MapLibre delegation)', () => {
 		map.click();
 		expect(calls).toEqual([]);
 	});
+	it('a fire zone over a town inspects the zone and never selects the town (Codex PR3 #1)', async () => {
+		const { map, calls } = await wire({
+			...TOWN,
+			'fire-zones-layer': [{ properties: { id: 'fz1' } }]
+		});
+		map.click();
+		expect(calls).toEqual([]);
+	});
 	it('a bare town click still selects the town', async () => {
 		const { map, calls } = await wire(TOWN);
 		map.click();

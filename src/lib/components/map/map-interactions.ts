@@ -187,6 +187,7 @@ export const INSPECTION_CLICK_LAYERS = [
 	'landmarks-layer',
 	'landmarks-hit-layer',
 	'landmarks-label',
+	'fire-zones-layer',
 	'traffic-events-layer',
 	'traffic-events-hit-layer',
 	'earthquakes-layer',
