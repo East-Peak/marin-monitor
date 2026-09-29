@@ -99,7 +99,7 @@
 		weatherError = null;
 		try {
 			const loc = userLocation;
-			const result = await fetchWeather(loc.lat, loc.lon);
+			const result = await fetchWeather(loc.lat, loc.lon, { signal: lifetime.signal });
 			if (lifetime.signal.aborted || !weatherGuard.isLatest(requestId)) return;
 			liveWeatherForecast = result.forecast;
 			liveWeatherAlerts = result.alerts;

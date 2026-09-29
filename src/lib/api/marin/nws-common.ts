@@ -17,18 +17,21 @@ const NWS_HEADERS: Record<string, string> = {
 const gridCacheMap = new Map<string, { office: string; gridX: number; gridY: number }>();
 
 /**
- * Get NWS grid coordinates for a location (defaults to Marin County center)
+ * Get NWS grid coordinates for a location (defaults to Marin County center).
+ * An owner `signal` cancels the /points request and prevents one from starting.
  */
 export async function getGridPoint(
 	lat: number = MARIN_CENTER.lat,
-	lon: number = MARIN_CENTER.lon
+	lon: number = MARIN_CENTER.lon,
+	signal?: AbortSignal
 ): Promise<{ office: string; gridX: number; gridY: number }> {
 	const key = `${lat},${lon}`;
 	const cached = gridCacheMap.get(key);
 	if (cached) return cached;
+	signal?.throwIfAborted();
 
 	const url = `${NWS_BASE}/points/${lat},${lon}`;
-	const response = await fetchWithTimeout(url, { headers: NWS_HEADERS });
+	const response = await fetchWithTimeout(url, { headers: NWS_HEADERS, signal });
 
 	if (!response.ok) {
 		throw new Error(`NWS points lookup failed: ${response.status}`);

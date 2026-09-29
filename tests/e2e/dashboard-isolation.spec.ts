@@ -1,7 +1,7 @@
 import { expect, test, type Route } from '@playwright/test';
 
 /** Anything the legacy controller could start after it is destroyed. */
-const LEGACY_WORK = /\/api\/(feeds|article|geocode|data\/)|api\.weather\.gov/;
+const LEGACY_WORK = /\/api\/(feeds|article|geocode|transit|data\/)|api\.weather\.gov/;
 
 test('a destroyed legacy controller starts no further work (debounce, timers, visibility, delayed responses)', async ({
 	page
@@ -9,13 +9,17 @@ test('a destroyed legacy controller starts no further work (debounce, timers, vi
 	await page.clock.install();
 	await page.addInitScript(() => localStorage.setItem('mm_onboardingComplete', 'true'));
 	const held: Route[] = [];
-	await page.route(/\/api\/feeds\?/, (route) => {
-		held.push(route); // hold every feed response until the controller is gone
+	// Hold every feed and transit response until the controller is gone. Transit is a
+	// sequential per-agency loop, so a released response would start the next agency.
+	await page.route(/\/api\/(feeds|transit)\?/, (route) => {
+		held.push(route);
 	});
 
 	await page.goto('/');
 	await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
-	await expect.poll(() => held.length, { timeout: 15_000 }).toBeGreaterThan(0);
+	const heldUrl = (re: RegExp) => held.some((r) => re.test(r.request().url()));
+	await expect.poll(() => heldUrl(/\/api\/feeds\?/), { timeout: 15_000 }).toBe(true);
+	await expect.poll(() => heldUrl(/\/api\/transit\?/), { timeout: 15_000 }).toBe(true);
 
 	// A town change arms the 500 ms weather debounce; navigate to v2 immediately.
 	await page.locator('.picker-trigger').click();
@@ -40,7 +44,15 @@ test('a destroyed legacy controller starts no further work (debounce, timers, vi
 	// Delayed responses arrive after the controller is gone.
 	const xml = `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>t</title><item><title>Mill Valley council approves late story</title><link>https://example.com/late</link><pubDate>${new Date().toUTCString()}</pubDate></item></channel></rss>`;
 	for (const route of held.splice(0)) {
-		await route.fulfill({ status: 200, contentType: 'application/rss+xml', body: xml });
+		if (route.request().url().includes('/api/transit?')) {
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: '{"Entities":[]}'
+			});
+		} else {
+			await route.fulfill({ status: 200, contentType: 'application/rss+xml', body: xml });
+		}
 	}
 	// Past the debounce and the 5-minute auto-refresh, then a tab-visible event.
 	await page.clock.runFor(6 * 60_000);

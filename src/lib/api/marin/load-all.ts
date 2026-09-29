@@ -93,7 +93,7 @@ export async function loadAllNews(
 		fetchAllFeeds(),
 		fetchNpsAlerts(),
 		fetchEarthquakes(),
-		fetchTransitAlerts().then((r) => r.items),
+		fetchTransitAlerts({ signal }).then((r) => r.items),
 		fetchSheriffCrimeBlotter(),
 		fetchSupplementalPoliceLogs(),
 		fetchSupplementalActivityFeeds(),

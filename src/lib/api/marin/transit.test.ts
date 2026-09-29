@@ -212,4 +212,32 @@ describe('fetchTransitAlerts', () => {
 
 		expect(result.items[0].link).toBe('https://511.org/transit/service-alerts');
 	});
+
+	// ---------- Owner lifetime (dashboard spec §13.6; Codex PR1 C1) ----------
+
+	it('starts no further agency request or delay once the owner signal aborts', async () => {
+		const owner = new AbortController();
+		mockFetch.mockImplementation(async () => {
+			owner.abort(); // the dashboard unmounts while the first agency is in flight
+			return makeResponse(makeGtfsResponse([]));
+		});
+
+		const promise = fetchTransitAlerts({ signal: owner.signal });
+		await vi.advanceTimersByTimeAsync(3000);
+		await promise;
+
+		expect(mockFetch).toHaveBeenCalledTimes(1);
+		expect(vi.getTimerCount()).toBe(0);
+	});
+
+	it('passes the owner signal to each agency request', async () => {
+		const owner = new AbortController();
+		mockFetch.mockResolvedValue(makeResponse(makeGtfsResponse([])));
+
+		const promise = fetchTransitAlerts({ signal: owner.signal });
+		await vi.advanceTimersByTimeAsync(3000);
+		await promise;
+
+		for (const [, init] of mockFetch.mock.calls) expect(init?.signal).toBe(owner.signal);
+	});
 });

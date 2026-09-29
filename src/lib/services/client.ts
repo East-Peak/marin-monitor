@@ -18,6 +18,12 @@ export interface RequestOptions {
 	headers?: Record<string, string>;
 	fetchOptions?: RequestInit;
 	responseType?: 'json' | 'text';
+	/**
+	 * Owner lifetime (e.g. a destroyed dashboard): once it aborts, no attempt or retry
+	 * starts. It is never attached to the fetch itself, because deduplicated callers
+	 * share that request.
+	 */
+	signal?: AbortSignal;
 }
 
 export interface RequestResult<T = unknown> {
@@ -61,6 +67,7 @@ export class ServiceClient {
 		endpoint: string,
 		options: RequestOptions = {}
 	): Promise<RequestResult<T>> {
+		options.signal?.throwIfAborted();
 		const config = ServiceRegistry.get(serviceId);
 		if (!config) {
 			throw new ServiceError(`Unknown service: ${serviceId}`, serviceId);
@@ -117,6 +124,8 @@ export class ServiceClient {
 		let lastError: Error | undefined;
 
 		for (let attempt = 0; attempt <= retries; attempt++) {
+			// An owner abort is not an upstream failure: leave the breaker untouched.
+			options.signal?.throwIfAborted();
 			try {
 				if (attempt > 0) {
 					this.log(`Retry attempt ${attempt} for ${serviceId}`);

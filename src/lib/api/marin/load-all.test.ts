@@ -697,4 +697,11 @@ describe('loadAllNews orchestrator', () => {
 			expect(call[1]).toEqual({ signal: owner.signal });
 		}
 	});
+
+	it('passes the owner signal to the sequential transit loop', async () => {
+		const owner = new AbortController();
+		const { loadAllNews } = await import('./load-all');
+		await loadAllNews(false, { signal: owner.signal });
+		expect(mockFetchTransitAlerts).toHaveBeenCalledWith({ signal: owner.signal });
+	});
 });

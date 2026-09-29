@@ -207,7 +207,7 @@ describe('NWS adapter', () => {
 			mockRequest.mockResolvedValueOnce(wrapResult({ properties: { periods: [makePeriod()] } }));
 
 			await fetchForecast(37.95, -122.55);
-			expect(mockGetGridPoint).toHaveBeenCalledWith(37.95, -122.55);
+			expect(mockGetGridPoint).toHaveBeenCalledWith(37.95, -122.55, undefined);
 		});
 
 		it('builds the correct endpoint from grid point data', async () => {
@@ -421,7 +421,7 @@ describe('NWS adapter', () => {
 			});
 
 			await fetchWeather(38.05, -122.75);
-			expect(mockGetGridPoint).toHaveBeenCalledWith(38.05, -122.75);
+			expect(mockGetGridPoint).toHaveBeenCalledWith(38.05, -122.75, undefined);
 		});
 
 		it('still returns alerts when forecast fails', async () => {
@@ -464,6 +464,50 @@ describe('NWS adapter', () => {
 			expect(result.forecast).toHaveLength(1);
 			expect(result.forecast[0].temperature).toBe(65);
 			expect(result.alerts).toEqual([]);
+		});
+	});
+
+	// ── Owner lifetime (dashboard spec §13.6; Codex PR1 C1) ──────────────
+
+	describe('owner signal', () => {
+		it('fetchForecast starts no gridpoint request once the signal aborts during the grid lookup', async () => {
+			const owner = new AbortController();
+			mockGetGridPoint.mockImplementationOnce(async () => {
+				owner.abort();
+				return { office: 'MTR', gridX: 85, gridY: 105 };
+			});
+
+			const result = await fetchForecast(38.05, -122.75, { signal: owner.signal });
+
+			expect(result).toEqual([]);
+			expect(mockRequest).not.toHaveBeenCalled();
+		});
+
+		it('fetchAlerts starts no request when the signal has already aborted', async () => {
+			const owner = new AbortController();
+			owner.abort();
+
+			expect(await fetchAlerts({ signal: owner.signal })).toEqual([]);
+			expect(mockRequest).not.toHaveBeenCalled();
+		});
+
+		it('passes the owner signal to the service client so no retry starts after it aborts', async () => {
+			const owner = new AbortController();
+			mockRequest.mockResolvedValue(wrapResult({ features: [], properties: { periods: [] } }));
+
+			await fetchWeather(38.05, -122.75, { signal: owner.signal });
+
+			expect(mockRequest).toHaveBeenCalledTimes(2);
+			for (const call of mockRequest.mock.calls) expect(call[2]?.signal).toBe(owner.signal);
+		});
+
+		it('fetchWeather threads the signal into the grid lookup', async () => {
+			const owner = new AbortController();
+			mockRequest.mockResolvedValue(wrapResult({ features: [], properties: { periods: [] } }));
+
+			await fetchWeather(38.05, -122.75, { signal: owner.signal });
+
+			expect(mockGetGridPoint).toHaveBeenCalledWith(38.05, -122.75, owner.signal);
 		});
 	});
 });

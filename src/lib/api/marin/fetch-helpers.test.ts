@@ -271,3 +271,32 @@ describe('fetchWithTimeout', () => {
 		);
 	});
 });
+
+describe('owner signal (Codex PR1 C1)', () => {
+	for (const [name, call] of [
+		['fetchJson', (init: RequestInit) => fetchJson('https://api.example.com/data', init)],
+		[
+			'fetchWithTimeout',
+			(init: RequestInit) => fetchWithTimeout('https://api.example.com/data', init)
+		]
+	] as const) {
+		it(`${name} aborts the request when the caller's signal aborts`, async () => {
+			const owner = new AbortController();
+			mockFetch.mockImplementationOnce(
+				(_url, init) =>
+					new Promise((_resolve, reject) => {
+						init?.signal?.addEventListener('abort', () =>
+							reject(new DOMException('Aborted', 'AbortError'))
+						);
+					})
+			);
+
+			const pending = call({ signal: owner.signal });
+			owner.abort();
+
+			await expect(pending).rejects.toThrow();
+			const [, init] = mockFetch.mock.calls[0];
+			expect(init?.signal?.aborted).toBe(true);
+		});
+	}
+});

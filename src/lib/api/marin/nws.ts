@@ -56,6 +56,11 @@ interface NwsAlertFeature {
 	};
 }
 
+/** An owner lifetime: once `signal` aborts, no further request starts. */
+export interface OwnerOptions {
+	signal?: AbortSignal;
+}
+
 const NWS_OPTIONS = {
 	accept: 'application/geo+json',
 	headers: { 'User-Agent': 'MarinMonitor/1.0 (marin-monitor@example.com)' }
@@ -67,15 +72,20 @@ const NWS_OPTIONS = {
  */
 export async function fetchForecast(
 	lat?: number,
-	lon?: number
+	lon?: number,
+	{ signal }: OwnerOptions = {}
 ): Promise<(WeatherData & { name: string })[]> {
 	try {
-		const grid = await getGridPoint(lat, lon);
+		const grid = await getGridPoint(lat, lon, signal);
+		if (signal?.aborted) return [];
 		const endpoint = `/gridpoints/${grid.office}/${grid.gridX},${grid.gridY}/forecast`;
 
 		logger.log('NWS', `Fetching forecast: ${endpoint}`);
 
-		const result = await serviceClient.request<NwsForecastResponse>('NWS', endpoint, NWS_OPTIONS);
+		const result = await serviceClient.request<NwsForecastResponse>('NWS', endpoint, {
+			...NWS_OPTIONS,
+			signal
+		});
 		const periods: NwsForecastPeriod[] = result.data.properties?.periods || [];
 
 		// Include enough periods to derive a real 5-day daytime outlook.
@@ -99,13 +109,15 @@ export async function fetchForecast(
 /**
  * Fetch active weather alerts for Marin County
  */
-export async function fetchAlerts(): Promise<FireWeatherAlert[]> {
+export async function fetchAlerts({ signal }: OwnerOptions = {}): Promise<FireWeatherAlert[]> {
+	if (signal?.aborted) return [];
 	try {
 		logger.log('NWS', `Fetching alerts for zone ${NWS_ZONE}`);
 
 		const result = await serviceClient.request<NwsAlertsResponse>('NWS', '/alerts/active', {
 			...NWS_OPTIONS,
-			params: { zone: NWS_ZONE }
+			params: { zone: NWS_ZONE },
+			signal
 		});
 		const features: NwsAlertFeature[] = result.data.features || [];
 
@@ -131,11 +143,15 @@ export async function fetchAlerts(): Promise<FireWeatherAlert[]> {
  */
 export async function fetchWeather(
 	lat?: number,
-	lon?: number
+	lon?: number,
+	options: OwnerOptions = {}
 ): Promise<{
 	forecast: (WeatherData & { name: string })[];
 	alerts: FireWeatherAlert[];
 }> {
-	const [forecast, alerts] = await Promise.all([fetchForecast(lat, lon), fetchAlerts()]);
+	const [forecast, alerts] = await Promise.all([
+		fetchForecast(lat, lon, options),
+		fetchAlerts(options)
+	]);
 	return { forecast, alerts };
 }

@@ -59,13 +59,15 @@ interface GtfsResponse {
  */
 async function fetchAgencyAlerts(
 	agencyId: string,
-	agencyName: string
+	agencyName: string,
+	signal?: AbortSignal
 ): Promise<{ items: NewsItem[]; error?: string }> {
 	try {
 		logger.log('511', `Fetching ${agencyName} alerts`);
 		const proxyUrl = `/api/transit?agency=${agencyId}`;
 		const proxyResponse = await fetchWithTimeout(proxyUrl, {
-			headers: { Accept: 'application/json' }
+			headers: { Accept: 'application/json' },
+			signal
 		});
 		if (!proxyResponse.ok) {
 			throw new Error(`Transit proxy failed for ${agencyId}: ${proxyResponse.status}`);
@@ -123,8 +125,9 @@ function entityToNewsItem(entity: GtfsAlertEntity, agencyId: string, agencyName:
 /**
  * Fetch transit alerts for all Marin agencies.
  * Requests are sequential with a delay to avoid 511.org rate limiting (429s).
+ * Once the owner `signal` aborts, no further agency request or delay starts.
  */
-export async function fetchTransitAlerts(): Promise<{
+export async function fetchTransitAlerts({ signal }: { signal?: AbortSignal } = {}): Promise<{
 	items: NewsItem[];
 	errors: string[];
 }> {
@@ -132,16 +135,17 @@ export async function fetchTransitAlerts(): Promise<{
 	const errors: string[] = [];
 
 	for (let i = 0; i < MARIN_AGENCIES.length; i++) {
+		if (signal?.aborted) break;
 		const agency = MARIN_AGENCIES[i];
 		try {
-			const result = await fetchAgencyAlerts(agency.id, agency.name);
+			const result = await fetchAgencyAlerts(agency.id, agency.name, signal);
 			allItems.push(...result.items);
 			if (result.error) errors.push(result.error);
 		} catch (err) {
 			errors.push((err as Error).message || 'Unknown error');
 		}
 		// Small delay between requests to avoid rate limiting
-		if (i < MARIN_AGENCIES.length - 1) {
+		if (i < MARIN_AGENCIES.length - 1 && !signal?.aborted) {
 			await new Promise((r) => setTimeout(r, 500));
 		}
 	}
