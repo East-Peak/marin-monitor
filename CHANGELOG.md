@@ -6,6 +6,11 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Fixed — Ikon Pass price read live again (G0)
+
+- `ikonpass.com/en/shop-passes` now redirects to a JavaScript-only homepage, so every run silently used the hardcoded $1,399. The sync now renders `/en/shop-passes/ikon-pass` with Playwright and reads the adult season price ("From $1,449 USD (Age 23+)", 26/27) with a tested parser (`scripts/shared/ikon-pass.mjs`, a plausible range guard). A failed render keeps the previous prices and never advances the observation.
+- Ikon publishes no child price (only a "save up to $100" child discount), so the child price is carried forward from the previous snapshot and marked `childPriceObserved: false`. The composite still counts the family-of-4 figure as live; that's flagged for the composite redesign.
+
 ### Changed — residential scrapers run on the Mac mini, not GitHub Actions (G0, Stuart approved 2026-09-29)
 
 - **Why:** Toast, Instacart, PlumpJack, ikonpass.com and Thumbtack block datacenter IPs. On clean GitHub runners Cappuccino got 2–4 of 10 Toast menus while the same pages loaded fully from the Mac. The runners' route to the Mac's residential proxy had also broken three ways: the Tailscale authkey had expired, Tailscale on the Mac was stopped, and the proxy URL was unreachable.
