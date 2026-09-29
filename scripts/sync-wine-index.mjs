@@ -9,7 +9,7 @@
  */
 
 import { put, head } from '@vercel/blob';
-import { proxyFetch } from './shared/proxy-fetch.mjs';
+import { fetchShopifyCollection, requireNonEmpty } from './shared/shopify-collection.mjs';
 import { withSuccessfulScrapeMetadata } from './shared/scrape-metadata.mjs';
 
 // ---- Config (from src/lib/config/wine.ts) ----
@@ -113,68 +113,26 @@ function buildStaffPick(product, listingType) {
 	};
 }
 
+const SHOPIFY_HEADERS = {
+	Accept: 'application/json, text/plain, */*',
+	'Accept-Language': 'en-US,en;q=0.9',
+	'Accept-Encoding': 'gzip, deflate, br',
+	'User-Agent':
+		'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+	Referer: 'https://plumpjackwines.com/',
+	'Sec-Fetch-Dest': 'empty',
+	'Sec-Fetch-Mode': 'cors',
+	'Sec-Fetch-Site': 'same-origin'
+};
+
+/** Any failed page throws, so a partial or blocked scrape never overwrites the blob. */
 async function fetchCollectionProducts(collectionHandle) {
-	const allProducts = [];
-	let page = 1;
-
-	while (true) {
-		const url = `${PLUMPJACK_BASE_URL}/collections/${collectionHandle}/products.json?limit=${SHOPIFY_PAGE_LIMIT}&page=${page}`;
-
-		const controller = new AbortController();
-		const timeoutId = setTimeout(() => controller.abort(), SHOPIFY_FETCH_TIMEOUT);
-
-		try {
-			const response = await proxyFetch(url, {
-				signal: controller.signal,
-				headers: {
-					Accept: 'application/json, text/plain, */*',
-					'Accept-Language': 'en-US,en;q=0.9',
-					'Accept-Encoding': 'gzip, deflate, br',
-					'User-Agent':
-						'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-					Referer: 'https://plumpjackwines.com/',
-					'Sec-Fetch-Dest': 'empty',
-					'Sec-Fetch-Mode': 'cors',
-					'Sec-Fetch-Site': 'same-origin'
-				}
-			});
-
-			if (!response.ok) {
-				const bodyPreview = await response.text().catch(() => '(unreadable)');
-				console.error(
-					`[wine-index] Failed to fetch ${collectionHandle} page ${page}: HTTP ${response.status}`,
-					`| Content-Type: ${response.headers.get('content-type')}`,
-					`| Body preview: ${bodyPreview.substring(0, 500)}`
-				);
-				break;
-			}
-
-			const data = await response.json();
-			const products = extractProducts(data);
-
-			if (products.length === 0) break;
-
-			allProducts.push(...products);
-
-			if (data.products.length < SHOPIFY_PAGE_LIMIT) break;
-
-			page++;
-		} catch (err) {
-			if (err.name === 'AbortError') {
-				console.error(`[wine-index] Timeout fetching ${collectionHandle} page ${page}`);
-			} else {
-				console.error(`[wine-index] Error fetching ${collectionHandle} page ${page}:`, err.message);
-			}
-			break;
-		} finally {
-			clearTimeout(timeoutId);
-		}
-
-		// Polite delay between pages
-		await new Promise((resolve) => setTimeout(resolve, 500));
-	}
-
-	return allProducts;
+	const products = await fetchShopifyCollection(PLUMPJACK_BASE_URL, collectionHandle, {
+		pageLimit: SHOPIFY_PAGE_LIMIT,
+		timeoutMs: SHOPIFY_FETCH_TIMEOUT,
+		headers: SHOPIFY_HEADERS
+	});
+	return extractProducts({ products });
 }
 
 // ---- Strip bottle listings from history entries ----
@@ -197,7 +155,10 @@ async function main() {
 
 	for (const collection of INDEX_COLLECTIONS) {
 		console.log(`[wine-index] Fetching ${collection.handle}...`);
-		const products = await fetchCollectionProducts(collection.handle);
+		const products = requireNonEmpty(
+			collection.handle,
+			await fetchCollectionProducts(collection.handle)
+		);
 		console.log(`[wine-index] ${collection.handle}: ${products.length} products`);
 
 		const snapshot = buildCategorySnapshot(collection.category, collection.label, products);

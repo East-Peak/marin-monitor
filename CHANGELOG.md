@@ -6,6 +6,11 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Fixed — Wine Index fails closed instead of publishing empty scrapes (G0 repair 3)
+
+- **A blocked or partial PlumpJack scrape no longer overwrites the blob.** Before, a failed page logged an error and `break`, and the run still wrote whatever it had with a fresh `lastSuccessfulScrapeAt`. Now any failed page (HTTP error, dead proxy, timeout, a non-JSON bot wall), or an empty index category, aborts the run before the write. The last good data and its real observation time stay put, and `/api/health` keeps reporting it stale.
+- New `scripts/shared/shopify-collection.mjs` (`fetchShopifyCollection`, `requireNonEmpty`), tested in `src/lib/server/shopify-collection.test.ts`. `proxyFetch` now forwards the caller's abort signal, so timeouts fire through the proxy.
+
 ### Changed — the scrape proxy never silently goes direct (G0)
 
 - **`scripts/shared/proxy-fetch.mjs`: a configured proxy is now required.** With `SCRAPE_PROXY_URL` + `SCRAPE_PROXY_SECRET` set, an unreachable or rejecting proxy throws. Before, it quietly fell back to a direct fetch from the GitHub runner, which the target sites block, so a dead proxy looked like a thin but successful scrape. Setting only one of the two variables throws; setting neither fetches direct (local runs).

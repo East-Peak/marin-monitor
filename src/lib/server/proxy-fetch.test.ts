@@ -46,6 +46,13 @@ describe('proxyFetch', () => {
 		log.mockRestore();
 	});
 
+	it("forwards the caller's abort signal to the proxy call so timeouts fire", async () => {
+		fetchMock.mockResolvedValueOnce(envelope(200, ''));
+		const controller = new AbortController();
+		await proxyFetch(TARGET, { signal: controller.signal });
+		expect(fetchMock.mock.calls[0][1].signal).toBe(controller.signal);
+	});
+
 	it('throws instead of fetching direct when the proxy is unreachable', async () => {
 		fetchMock.mockRejectedValueOnce(new TypeError('fetch failed'));
 		await expect(proxyFetch(TARGET)).rejects.toThrow(/proxy/i);

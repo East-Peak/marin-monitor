@@ -25,6 +25,7 @@ export async function proxyFetch(url, options = {}) {
 	try {
 		res = await fetch(`${proxyUrl}/proxy`, {
 			method: 'POST',
+			signal: options.signal,
 			headers: {
 				'Content-Type': 'application/json',
 				Authorization: `Bearer ${proxySecret}`,
