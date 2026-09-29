@@ -61,6 +61,8 @@ export interface NewsItem {
 	publishedAtStatus?: PublishedAtStatus;
 	/** Event-start sources (e.g. Granicus agendas): when the meeting happens. */
 	eventAt?: string;
+	/** 'county' only when the item is explicitly county-scoped (COUNTY_WIDE_RULE). Absence means unlocated, not county-wide. */
+	geoScope?: 'county';
 	timestamp: number;
 	description?: string;
 	content?: string;

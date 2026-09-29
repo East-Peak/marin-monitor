@@ -901,4 +901,36 @@ describe('RSS Feed Parser (via fetchCategory)', () => {
 			expect(result.errors).toHaveLength(1);
 		});
 	});
+
+	// ── County scope from COUNTY_WIDE_RULE (dashboard §4) ──
+
+	describe('county scope', () => {
+		it('marks items from a county-scoped feed; other feeds stay unscoped', async () => {
+			const county = 'https://www.nbcbayarea.com/tag/marin-county/feed/';
+			mockFeeds = {
+				local: [
+					{ name: 'NBC Bay Area – Marin', url: county, verification: 'local_media' },
+					{ name: 'Town News', url: 'https://example.com/b.xml', verification: 'local_media' }
+				]
+			};
+			global.fetch = vi.fn().mockImplementation((url: string) =>
+				Promise.resolve({
+					ok: true,
+					text: () =>
+						Promise.resolve(
+							rssXml([
+								{
+									title: url.includes('nbcbayarea') ? 'County item' : 'Town item',
+									link: `https://example.com/${url.includes('nbcbayarea') ? 'c' : 't'}`,
+									pubDate: 'Tue, 01 Apr 2026 10:00:00 GMT'
+								}
+							])
+						)
+				})
+			);
+			const { items } = await fetchCategory('local');
+			expect(items.find((i) => i.title === 'County item')?.geoScope).toBe('county');
+			expect(items.find((i) => i.title === 'Town item')?.geoScope).toBeUndefined();
+		});
+	});
 });

@@ -8,6 +8,7 @@
  */
 
 import { FEEDS, type FeedSource } from '$lib/config/feeds';
+import { isCountyScopedFeed } from '$lib/config/county-scope';
 import type { NewsItem, NewsCategory } from '$lib/types';
 import { logger } from '$lib/config/api';
 import { fetchWithTimeout } from './fetch-helpers';
@@ -85,7 +86,10 @@ function parseRssXml(
 	const items: NewsItem[] = [];
 	for (const entry of parseFeedXml(xml).entries) {
 		const normalized = normalizeEntry(entry, ctx, nowMs);
-		if (normalized) items.push(toNewsItem(normalized));
+		if (normalized) {
+			const item = toNewsItem(normalized);
+			items.push(isCountyScopedFeed(feedSource.url) ? { ...item, geoScope: 'county' } : item);
+		}
 	}
 	return disambiguateReusedIds(items);
 }
