@@ -2,7 +2,7 @@
 
 /**
  * Standalone scraper for Marin Grocery Basket (Bare Essentials) data.
- * Runs in GitHub Actions (or locally) — no SvelteKit dependencies.
+ * Runs on the Mac mini via launchd (residential IP; see scripts/sync-runner.sh) — no SvelteKit dependencies.
  *
  * Searches Instacart cross-store for each of the 12 basket items.
  * Uses Playwright as fallback if plain fetch is blocked by Instacart.
@@ -15,7 +15,7 @@ import { put, head } from '@vercel/blob';
 import { proxyFetch } from './shared/proxy-fetch.mjs';
 import { withPreservedSuccessfulScrapeMetadata } from './shared/scrape-metadata.mjs';
 import { scoreGroceryPriceMatch } from '../src/lib/shared/grocery-basket-matching.js';
-import { decodeEntities } from '../src/lib/server/html-text.js';
+import { hasLiveBasketCoverage, parseCrossRetailerCards } from './shared/instacart-parse.mjs';
 
 // ---- Config (from src/lib/config/grocery-basket.ts) ----
 
@@ -164,71 +164,11 @@ function parseInstacartResults(html) {
 	if (!html || html.length === 0) return products;
 
 	// ---- Strategy 1: Playwright-rendered cross-retailer DOM ----
-	// Instacart SPA renders store sections (CrossRetailerResultRowWrapper)
-	// each containing a store header and product cards (item_list_item_items_{storeId}-{productId}).
-
-	// Step 1a: Build a storeId -> storeName map from CrossRetailerResultRowWrapper sections
-	const storeMap = new Map();
-	const sectionPattern =
-		/data-testid="CrossRetailerResultRowWrapper"([\s\S]*?)(?=data-testid="CrossRetailerResultRowWrapper"|data-testid="CrossRetailerSearchRetailerSignPosts"|$)/g;
-	let sectionMatch;
-	while ((sectionMatch = sectionPattern.exec(html)) !== null) {
-		const section = sectionMatch[1];
-		// Store name is in <span ... role="heading" aria-level="3">StoreName</span>
-		const nameMatch = section.match(/aria-level="3">([^<]+)</);
-		if (!nameMatch) continue;
-		const storeName = decodeEntities(nameMatch[1]).trim();
-		// Extract the numeric store ID from item cards within this section
-		const idPattern = /item_list_item_items_(\d+)-/g;
-		let idMatch;
-		while ((idMatch = idPattern.exec(section)) !== null) {
-			if (!storeMap.has(idMatch[1])) {
-				storeMap.set(idMatch[1], storeName);
-			}
-		}
-	}
-
-	// Step 1b: Parse individual product cards
-	const itemPattern =
-		/data-testid="item_list_item_items_(\d+)-(\d+)"([\s\S]{0,5000}?)(?=data-testid="item_list_item|data-testid="CrossRetailer|data-testid="loading-lockup|$)/g;
-	let itemMatch;
-	while ((itemMatch = itemPattern.exec(html)) !== null) {
-		const storeId = itemMatch[1];
-		const chunk = itemMatch[3];
-
-		// Extract current price from "Current price: $X.XX" text
-		const currentPriceMatch = chunk.match(/Current price: \$(\d+\.?\d*)/);
-		if (!currentPriceMatch) continue;
-		const price = parseFloat(currentPriceMatch[1]);
-		if (isNaN(price) || price <= 0) continue;
-
-		// Detect sale: "Original Price: $X.XX" present means item is on sale
-		const originalPriceMatch = chunk.match(/Original Price: \$(\d+\.?\d*)/);
-		const onSale = !!originalPriceMatch;
-
-		// Extract product name: find substantial text spans that aren't prices/ratings/labels
-		const skipPatterns =
-			/^(Current price|Original Price|Great price|Out of stock|Request|\d+% off|About |\$|★|per package|\d+ sizes?|\(\d)/i;
-		const spanPattern = />([^<]{5,200})</g;
-		let s;
-		let productName = '';
-		while ((s = spanPattern.exec(chunk)) !== null) {
-			const text = s[1].trim();
-			if (text && !skipPatterns.test(text) && text.length > productName.length) {
-				productName = text;
-			}
-		}
-
-		if (!productName) continue;
-
-		const store = storeMap.get(storeId) || 'Unknown';
-
-		products.push({ name: productName, price, store, onSale });
-	}
-
+	products.push(...parseCrossRetailerCards(html));
 	if (products.length > 0) {
+		const stores = new Set(products.map((p) => p.store)).size;
 		console.log(
-			`[grocery-basket] Parsed ${products.length} products from ${storeMap.size} stores (Playwright DOM)`
+			`[grocery-basket] Parsed ${products.length} products from ${stores} stores (Playwright DOM)`
 		);
 		return products;
 	}
@@ -359,7 +299,7 @@ async function fetchInstacartPlain(searchTerm) {
 
 /**
  * Fallback: use Playwright if plain fetch is blocked.
- * Playwright is installed in the GitHub Actions workflow.
+ * Playwright (@playwright/test) and its Chromium are installed on the Mac mini.
  */
 let _browser = null;
 
@@ -393,15 +333,14 @@ async function fetchInstacartPlaywright(searchTerm) {
 		const url = buildSearchUrl(searchTerm);
 		await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-		// Wait for product cards to render (Instacart is a React SPA)
-		// Cross-retailer results use item_list_item_items_{storeId}-{productId} testids
+		// Wait for priced product cards (Instacart is a React SPA; cards render
+		// as loading placeholders first).
 		await page
 			.waitForFunction(
 				() =>
-					document.querySelectorAll(
-						'[data-testid^="item_list_item_items_"], [data-testid="CrossRetailerResultRowWrapper"]'
-					).length > 0,
-				{ timeout: 15000 }
+					document.querySelectorAll('[data-item-card="true"]').length > 0 &&
+					document.body.innerText.includes('$'),
+				{ timeout: 20000 }
 			)
 			.catch(() => {
 				// If product cards never appear, continue with whatever rendered
@@ -771,7 +710,8 @@ async function main() {
 	}
 
 	const snapshot = withPreservedSuccessfulScrapeMetadata(rawSnapshot, {
-		wasLive: !instacartBlocked,
+		// Mostly reference prices is not an observation, even if the first item was live.
+		wasLive: !instacartBlocked && hasLiveBasketCoverage(liveItemsFound, BASKET_ITEMS.length),
 		previous: existing.current
 	});
 

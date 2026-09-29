@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Fixed — Grocery Basket priced live from Instacart again (G0)
+
+- Instacart changed its product cards (`data-item-card` with an `<h3>` name, and the `item_list_item_items_…` test IDs are gone), so every run found 0 products and fell back to reference prices. New `scripts/shared/instacart-parse.mjs` parses the current markup: store from the section heading, name plus size with star ratings and review counts stripped (they had broken size matching), current price, and sale state per card. It is tested against a trimmed real page (`src/lib/server/__fixtures__/instacart-cross-retailer.html`: 40 cards, 4 stores), including a sign-posts block before the results (seen live on the eggs search) and after them.
+- **Freshness invariant fixed:** the basket used to count as live whenever the first item was. It now needs at least half the items priced live (`hasLiveBasketCoverage`).
+- Live run from the Mac: 12/12 items live, total $172.86 (reference $236.29).
+
 ### Fixed — Ikon Pass price read live again (G0)
 
 - `ikonpass.com/en/shop-passes` now redirects to a JavaScript-only homepage, so every run silently used the hardcoded $1,399. The sync now renders `/en/shop-passes/ikon-pass` with Playwright and reads the adult season price ("From $1,449 USD (Age 23+)", 26/27) with a tested parser (`scripts/shared/ikon-pass.mjs`, a plausible range guard). A failed render keeps the previous prices and never advances the observation.
