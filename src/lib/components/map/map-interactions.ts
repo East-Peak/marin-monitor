@@ -170,3 +170,65 @@ export function clickHitsVisibleStravaFeature(map: MapLibreMap, e: MapLayerMouse
 	if (interactiveLayers.length === 0) return false;
 	return map.queryRenderedFeatures(e.point, { layers: [...interactiveLayers] }).length > 0;
 }
+
+// ---------------------------------------------------------------------------
+// Town selection yields to inspection targets (dashboard spec §2.4, §4)
+// ---------------------------------------------------------------------------
+
+export const TOWN_CLICK_LAYERS = ['towns-layer', 'towns-label'] as const;
+
+/**
+ * Point-like layers whose click opens an inspector. A click on any of them never selects a town.
+ * Keep in sync with the *TriggerLayers arrays in MapDataLayer.svelte `bindInteractions`.
+ */
+export const INSPECTION_CLICK_LAYERS = [
+	'news-pins-hit-layer',
+	'news-pins-layer',
+	'landmarks-layer',
+	'landmarks-hit-layer',
+	'landmarks-label',
+	'traffic-events-layer',
+	'traffic-events-hit-layer',
+	'earthquakes-layer',
+	'earthquakes-ring-layer',
+	'gas-stations-layer',
+	'gas-stations-hit-layer',
+	'gas-stations-label',
+	'ev-charging-stations-layer',
+	'ev-charging-stations-hit-layer',
+	'ev-charging-stations-label',
+	'coffee-shops-layer',
+	'coffee-shops-hit-layer',
+	'coffee-shops-label',
+	'fitness-studios-layer',
+	'fitness-studios-hit-layer',
+	'fitness-studios-label',
+	'311-reports-layer',
+	'311-reports-hit-layer',
+	'fire-incidents-layer',
+	'fire-incidents-label',
+	'airports-layer',
+	'airports-hit-layer',
+	'airports-label'
+] as const;
+
+/** True when the click point overlaps a visible inspection target. */
+export function clickHitsInspectionTarget(map: MapLibreMap, e: MapLayerMouseEvent): boolean {
+	const visible = INSPECTION_CLICK_LAYERS.filter(
+		(layerId) => map.getLayer(layerId) && map.getLayoutProperty(layerId, 'visibility') !== 'none'
+	);
+	if (visible.length === 0) return false;
+	return map.queryRenderedFeatures(e.point, { layers: [...visible] }).length > 0;
+}
+
+/**
+ * Town selection by map click. It yields to Strava and to every inspection target,
+ * so inspecting a pin, station or incident never changes the global town.
+ */
+export function bindTownSelectionClick(map: MapLibreMap, onTownClick: (townSlug: string) => void) {
+	bindLayerGroupClick(map, [...TOWN_CLICK_LAYERS], (e: MapLayerMouseEvent) => {
+		if (clickHitsVisibleStravaFeature(map, e) || clickHitsInspectionTarget(map, e)) return;
+		const slug = e.features?.[0]?.properties?.slug;
+		if (slug) onTownClick(String(slug));
+	});
+}

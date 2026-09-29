@@ -45,6 +45,7 @@
 		hoveredFeatureIds,
 		bindInteractiveHover,
 		bindLayerGroupClick,
+		bindTownSelectionClick,
 		clickHitsVisibleStravaFeature
 	} from './map-interactions';
 
@@ -185,11 +186,7 @@
 
 		// --- Click handlers ---
 
-		bindLayerGroupClick(map, townTriggerLayers, (e: MapLayerMouseEvent) => {
-			if (clickHitsVisibleStravaFeature(map, e)) return;
-			const slug = e.features?.[0]?.properties?.slug;
-			if (slug && onTownClick) onTownClick(slug);
-		});
+		if (onTownClick) bindTownSelectionClick(map, onTownClick);
 
 		bindLayerGroupClick(map, newsTriggerLayers, (e: MapLayerMouseEvent) => {
 			if (clickHitsVisibleStravaFeature(map, e)) return;

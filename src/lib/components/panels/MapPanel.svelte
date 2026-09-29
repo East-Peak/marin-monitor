@@ -11,6 +11,12 @@
 		MapFeatureInspector,
 		SegmentLayer
 	} from '$lib/components/map';
+	import {
+		pinClickOutcome,
+		townClickOutcome,
+		type InspectorState,
+		type MapClickOutcome
+	} from '$lib/components/map/map-inspection';
 	import { STRAVA_ENABLED } from '$lib/config/strava';
 	import { mapStore, selectedTown, activeLayers, CATEGORY_TO_LAYER } from '$lib/stores/map';
 	import { townFilter } from '$lib/stores/town-filter';
@@ -35,17 +41,6 @@
 			// Silent fail — fire overlay is additive
 		}
 	});
-
-	type InspectorState =
-		| {
-				mode: 'town';
-				townSlug: string;
-		  }
-		| {
-				mode: 'pin';
-				itemId: string;
-				townSlug: string | null;
-		  };
 
 	let inspectorState = $state<InspectorState | null>(null);
 	let featureInspector = $state<MapFeatureInspectorData | null>(null);
@@ -102,14 +97,17 @@
 		};
 	});
 
-	function handleTownClick(slug: string) {
-		const current = $selectedTown;
-		// Toggle: click same town again to deselect
-		const next = current === slug ? null : slug;
-		mapStore.selectTown(next);
-		townFilter.select(next);
-		inspectorState = next ? { mode: 'town', townSlug: next } : null;
+	function applyOutcome(outcome: MapClickOutcome) {
+		if (outcome.selectTown !== undefined) {
+			mapStore.selectTown(outcome.selectTown);
+			townFilter.select(outcome.selectTown);
+		}
+		inspectorState = outcome.inspector;
 		featureInspector = null;
+	}
+
+	function handleTownClick(slug: string) {
+		applyOutcome(townClickOutcome($selectedTown, slug));
 	}
 
 	function handleTownHover(slug: string | null) {
@@ -119,16 +117,7 @@
 	function handlePinClick(itemId: string) {
 		const item = mapVisibleItems.find((candidate) => candidate.id === itemId);
 		if (!item) return;
-		if (item.townSlug) {
-			mapStore.selectTown(item.townSlug);
-			townFilter.select(item.townSlug);
-		}
-		inspectorState = {
-			mode: 'pin',
-			itemId: item.id,
-			townSlug: item.townSlug ?? null
-		};
-		featureInspector = null;
+		applyOutcome(pinClickOutcome(item));
 	}
 
 	function handleFeatureClick(feature: MapFeatureInspectorData) {
