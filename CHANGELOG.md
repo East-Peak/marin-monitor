@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Fixed — EV Charging back on NREL's new host; fails closed on partial scrapes (G0 repair 4)
+
+- **`developer.nrel.gov` no longer resolves.** The API moved to `developer.nlr.gov`, and existing keys carry over. The EV cron had been failing every day since the move.
+- **A partial scrape is no longer published as fresh.** The four county tiles overlap for coverage, but the scraper published whatever tiles succeeded. Now any failed, malformed, empty or truncated tile, or zero Marin stations, throws; the cron returns 500 and leaves the last-good blob untouched. Tiles request `limit=all`: the old `limit=200` silently truncated San Rafael (222 stations within 10 mi).
+- Tests: `ev-charging.scrape.test.ts` (NLR host + `limit=all`, fresh stamp only for a complete scrape; failed, malformed, empty and truncated tiles throw) and `sync-ev-charging.test.ts` (a failure writes nothing and returns 500; success writes and reports the station count).
+
 ### Fixed — Wine Index fails closed instead of publishing empty scrapes (G0 repair 3)
 
 - **A blocked or partial PlumpJack scrape no longer overwrites the blob.** Before, a failed page logged an error and `break`, and the run still wrote whatever it had with a fresh `lastSuccessfulScrapeAt`. Now any failed page (HTTP error, dead proxy, timeout, a non-JSON bot wall), or an empty index category, aborts the run before the write. The last good data and its real observation time stay put, and `/api/health` keeps reporting it stale.

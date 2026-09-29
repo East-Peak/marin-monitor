@@ -17,7 +17,9 @@ import type {
 	EvChargingSnapshot
 } from '$lib/types/ev-charging';
 
-const NREL_BASE = 'https://developer.nrel.gov/api/alt-fuel-stations/v1/nearest.json';
+// NREL's developer API moved to the National Laboratory of the Rockies host;
+// developer.nrel.gov no longer resolves. Existing keys carry over.
+const NREL_BASE = 'https://developer.nlr.gov/api/alt-fuel-stations/v1/nearest.json';
 
 /** 4 tile centers covering Marin County with 10-mile radii */
 const TILE_CENTERS = [
@@ -88,7 +90,7 @@ async function fetchNrelTile(
 		latitude: String(center.lat),
 		longitude: String(center.lon),
 		radius: String(TILE_RADIUS_MILES),
-		limit: '200',
+		limit: 'all',
 		status: 'E'
 	});
 
@@ -99,7 +101,14 @@ async function fetchNrelTile(
 	}
 
 	const data = (await response.json()) as NrelResponse;
-	return data.fuel_stations ?? [];
+	const stations = data.fuel_stations;
+	if (!Array.isArray(stations)) throw new Error('NREL response has no fuel_stations');
+	// Every 10-mile Marin tile has stations; none means a bad response, not an empty county.
+	if (stations.length === 0) throw new Error('NREL tile returned 0 stations');
+	if (typeof data.total_results === 'number' && data.total_results > stations.length) {
+		throw new Error(`NREL tile truncated: ${stations.length} of ${data.total_results}`);
+	}
+	return stations;
 }
 
 /** Fetch OCM stations for pricing enrichment */
@@ -203,8 +212,9 @@ export async function scrapeEvCharging(): Promise<EvChargingSnapshot> {
 		console.log(`[ev-charging] Tile ${TILE_CENTERS[i].label}: ${result.value.length} stations`);
 	}
 
-	if (failures.length === tileResults.length) {
-		throw new Error(`All NREL tile fetches failed: ${failures.join('; ')}`);
+	// Tiles overlap to cover the county; a missing tile is a partial scrape.
+	if (failures.length > 0) {
+		throw new Error(`NREL tile fetches failed: ${failures.join('; ')}`);
 	}
 
 	for (const result of tileResults) {
@@ -224,6 +234,8 @@ export async function scrapeEvCharging(): Promise<EvChargingSnapshot> {
 			stations.push(station);
 		}
 	}
+
+	if (stations.length === 0) throw new Error('NREL returned 0 stations in Marin');
 
 	// OCM enrichment for pricing
 	const ocmKey = getOpenChargeMapApiKey();
