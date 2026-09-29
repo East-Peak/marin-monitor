@@ -7,8 +7,15 @@ import {
 	TRUNCATED_RSS
 } from '$lib/news/feed-fixtures';
 import { parseNewsSnapshot, type NewsSourceItem, type NewsSourceStatus } from '$lib/news/snapshot';
-import { buildSnapshot, ingestFeed, MAX_ITEMS_PER_SOURCE, resolveSource } from './ingest';
-import type { NewsSource } from './sources';
+import {
+	buildSnapshot,
+	ingestFeed,
+	MAX_ITEMS_PER_SOURCE,
+	MAX_SOURCE_ITEMS_BYTES,
+	resolveSource
+} from './ingest';
+import { MAX_SNAPSHOT_BYTES } from './snapshot-store';
+import { NEWS_SOURCES, type NewsSource } from './sources';
 
 const SRC: NewsSource = {
 	id: 'pt-reyes-light',
@@ -70,6 +77,18 @@ describe('ingestFeed', () => {
 		expect(r.items).toHaveLength(MAX_ITEMS_PER_SOURCE);
 		expect(r.items[0].title).toBe('Day 40');
 		expect(r.items.at(-1)?.title).toBe('Day 11');
+	});
+	it(`fails a source whose items exceed ${MAX_SOURCE_ITEMS_BYTES} bytes, so one feed cannot outgrow the snapshot`, () => {
+		const xml = RSS_WORDPRESS.replace(
+			'Mill Valley',
+			`Mill Valley ${'x'.repeat(MAX_SOURCE_ITEMS_BYTES)}`
+		);
+		const r = ingestFeed(SRC, ok(xml), NOW);
+		expect(r).toMatchObject({ ok: false });
+		expect(!r.ok && r.error).toMatch(/^too-large: items are \d+ bytes \(max 50000\)$/);
+	});
+	it('budgets every source well inside the snapshot ceiling (each item appears in both views)', () => {
+		expect(NEWS_SOURCES.length * 2 * MAX_SOURCE_ITEMS_BYTES).toBeLessThan(0.8 * MAX_SNAPSHOT_BYTES);
 	});
 	it('treats a 200 HTML page (bot challenge, soft 404) as a failure, not an empty feed', () => {
 		expect(ingestFeed(SRC, ok(HTML_ERROR_PAGE), NOW)).toEqual({

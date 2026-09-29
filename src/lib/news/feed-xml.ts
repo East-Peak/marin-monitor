@@ -47,6 +47,9 @@ export class FeedParseError extends Error {
 	override name = 'FeedParseError';
 }
 
+/** Real feeds nest a handful of levels; deeper is hostile or broken. */
+export const MAX_FEED_DEPTH = 64;
+
 type Field =
 	| 'title'
 	| 'link'
@@ -126,7 +129,7 @@ function toEntry(state: EntryState): RawFeedEntry {
 	};
 }
 
-/** Element names whose children are entries, per format. */
+/** Element names whose children are entries, per format; `path` ends at the parent. */
 function isEntryStart(
 	format: 'rss' | 'rdf' | 'atom',
 	name: string,
@@ -169,12 +172,17 @@ export function parseFeedXml(xml: string): ParsedFeed {
 	const parser = new Parser(
 		{
 			onopentag(name, attribs) {
-				const parentPath = [...s.path];
+				// Decide entry start against the parent path BEFORE pushing: no
+				// per-tag copy, so deep nesting stays linear.
+				const startsEntry = s.entry === null && isEntryStart(format, name, s.path);
 				s.path.push(name);
 				const depth = s.path.length;
+				if (depth > MAX_FEED_DEPTH) {
+					throw new FeedParseError(`elements nested deeper than ${MAX_FEED_DEPTH}`);
+				}
 				if (depth === 2 && name === 'channel') s.hasChannel = true;
 				if (s.entry === null) {
-					if (isEntryStart(format, name, parentPath)) {
+					if (startsEntry) {
 						s.entry = { fields: {}, atomAlternate: null, atomFirstLink: null };
 						s.entryDepth = depth;
 					}

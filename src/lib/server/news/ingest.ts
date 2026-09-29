@@ -25,6 +25,12 @@ import type { BoundedFetchResult } from './bounded-fetch';
 import type { NewsSource } from './sources';
 
 export const MAX_ITEMS_PER_SOURCE = 30;
+/**
+ * Serialized budget for one source's items. Every item appears in both
+ * snapshot views, so all sources together stay well under MAX_SNAPSHOT_BYTES:
+ * one oversized feed fails (or retains) only itself, never the publication.
+ */
+export const MAX_SOURCE_ITEMS_BYTES = 50_000;
 
 export type SourceIngest = { ok: true; items: NewsSourceItem[] } | { ok: false; error: string };
 
@@ -76,7 +82,15 @@ export function ingestFeed(
 		items.push({ ...rest, id: sourceScopedId(source.id, rest.id), fetchedAt });
 	}
 	// Newest first regardless of feed order, then cap.
-	return { ok: true, items: items.sort(compareNewest).slice(0, MAX_ITEMS_PER_SOURCE) };
+	const kept = items.sort(compareNewest).slice(0, MAX_ITEMS_PER_SOURCE);
+	const bytes = new TextEncoder().encode(JSON.stringify(kept)).byteLength;
+	if (bytes > MAX_SOURCE_ITEMS_BYTES) {
+		return {
+			ok: false,
+			error: `too-large: items are ${bytes} bytes (max ${MAX_SOURCE_ITEMS_BYTES})`
+		};
+	}
+	return { ok: true, items: kept };
 }
 
 /**

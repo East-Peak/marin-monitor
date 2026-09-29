@@ -103,6 +103,16 @@ describe('snapshot store — lease', () => {
 		expect(await store.acquireLease('a', T0, 120_000, go())).toBe(true);
 	});
 
+	it.each([
+		['an infinite expiry (1e400)', '{"runId":"x","expiresAt":1e400}'],
+		['a non-numeric expiry', '{"runId":"x","expiresAt":"never"}'],
+		['no owner', '{"expiresAt":1e400}']
+	])('takes over a lease with %s instead of wedging forever', async (_label, text) => {
+		const store = createSnapshotStore(createMemoryBlobApi({ [NEWS_LEASE_KEY]: text }));
+		expect(await store.acquireLease('a', T0, 120_000, go())).toBe(true);
+		expect(await store.acquireLease('b', T0 + 1_000, 120_000, go())).toBe(false);
+	});
+
 	it('releases only its own lease', async () => {
 		const api = createMemoryBlobApi();
 		const store = createSnapshotStore(api);

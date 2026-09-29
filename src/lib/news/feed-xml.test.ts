@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FeedParseError, parseFeedXml } from './feed-xml';
+import { FeedParseError, MAX_FEED_DEPTH, parseFeedXml } from './feed-xml';
 import {
 	ATOM_FEED,
 	HTML_ERROR_PAGE,
@@ -145,6 +145,20 @@ describe('parseFeedXml — rejection', () => {
 		['RSS with items but no channel', '<rss><item><title>x</title></item></rss>', /no <channel>/]
 	])('rejects %s', (_label, xml, message) => {
 		expect(() => parseFeedXml(xml)).toThrow(message);
+	});
+	it('handles deep nesting in linear time: an ~800 KB nested document is rejected fast', () => {
+		const n = 100_000;
+		const xml = `<rss><channel>${'<a>'.repeat(n)}${'</a>'.repeat(n)}</channel></rss>`;
+		const started = performance.now();
+		expect(() => parseFeedXml(xml)).toThrow(/nested deeper than 64/);
+		expect(performance.now() - started).toBeLessThan(2_000);
+	});
+	it('accepts nesting up to the depth limit, and rejects one level more', () => {
+		// rss > channel > item, then n more levels
+		const nested = (n: number) =>
+			`<rss><channel><item><title>t</title>${'<a>'.repeat(n)}${'</a>'.repeat(n)}</item></channel></rss>`;
+		expect(parseFeedXml(nested(MAX_FEED_DEPTH - 3)).entries.map((e) => e.title)).toEqual(['t']);
+		expect(() => parseFeedXml(nested(MAX_FEED_DEPTH - 2))).toThrow(/nested deeper than 64/);
 	});
 	it('ignores items outside the channel (wrong ancestry)', () => {
 		const feed = parseFeedXml(

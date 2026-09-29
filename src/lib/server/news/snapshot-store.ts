@@ -80,10 +80,11 @@ function parseJson(text: string): unknown {
 	}
 }
 
+/** null for anything malformed — including a non-finite expiry (1e400 parses as Infinity). */
 function parseLease(text: string): { runId: string; expiresAt: number } | null {
 	const value = parseJson(text) as { runId?: unknown; expiresAt?: unknown } | null;
-	return value && typeof value.runId === 'string' && typeof value.expiresAt === 'number'
-		? { runId: value.runId, expiresAt: value.expiresAt }
+	return value && typeof value.runId === 'string' && Number.isFinite(value.expiresAt)
+		? { runId: value.runId, expiresAt: value.expiresAt as number }
 		: null;
 }
 

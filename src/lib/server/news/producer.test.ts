@@ -86,6 +86,34 @@ describe('runNewsProducer — publication', () => {
 		expect(s.items.length).toBeGreaterThan(0);
 	});
 
+	it('an oversized feed fails (or retains) only its own source; the others still publish', async () => {
+		// A 1.5 MB title: a valid feed under the fetch cap, but twice that once
+		// it sits in both snapshot views — over the store's ceiling.
+		const HUGE = STORY.replace(
+			'Point Reyes oyster farm reopens',
+			`Point Reyes ${'x'.repeat(1_550_000)}`
+		);
+		const api = createMemoryBlobApi();
+		const first = await runNewsProducer(
+			deps(api, { [A.url]: ok(RSS_WORDPRESS), [B.url]: ok(HUGE) })
+		);
+		expect(first).toMatchObject({ outcome: 'published', revision: 1 });
+		expect(statusOf(published(api), 'b')).toMatchObject({ status: 'failed', itemCount: 0 });
+		expect(statusOf(published(api), 'b')?.lastError).toMatch(/^too-large: /);
+		expect(statusOf(published(api), 'a')).toMatchObject({ status: 'ok' });
+
+		await runNewsProducer(
+			deps(api, { [A.url]: ok(RSS_WORDPRESS), [B.url]: ok(STORY) }, { runId: 'run-2' })
+		);
+		await runNewsProducer(
+			deps(api, { [A.url]: ok(RSS_WORDPRESS), [B.url]: ok(HUGE) }, { runId: 'run-3' })
+		);
+		const s = published(api);
+		expect(s.revision).toBe(3);
+		expect(statusOf(s, 'b')).toMatchObject({ status: 'retained', itemCount: 1 });
+		expect(s.items.map((i) => i.title)).toContain('Point Reyes oyster farm reopens');
+	});
+
 	it('publishes a story carried by two feeds once, with both categories and sources', async () => {
 		const api = createMemoryBlobApi();
 		const crime = { ...B, category: 'safety' as const };
