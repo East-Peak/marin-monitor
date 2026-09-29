@@ -40,18 +40,23 @@ class SharedWaiters {
 		return this.controller.signal;
 	}
 
-	join(owner?: AbortSignal): void {
+	/** Join `owner`; the returned disposer releases the listener once the request settles. */
+	join(owner?: AbortSignal): () => void {
 		if (!owner) {
 			this.unowned = true;
-			return;
+			return () => {};
 		}
 		this.live++;
 		const leave = () => {
 			this.live--;
 			if (!this.unowned && this.live === 0) this.controller.abort();
 		};
-		if (owner.aborted) leave();
-		else owner.addEventListener('abort', leave, { once: true });
+		if (owner.aborted) {
+			leave();
+			return () => {};
+		}
+		owner.addEventListener('abort', leave, { once: true });
+		return () => owner.removeEventListener('abort', leave);
 	}
 }
 
@@ -148,17 +153,20 @@ export class ServiceClient {
 		let shared = this.deduplicator.get<RequestResult<T>>(cacheKey);
 		const existing = shared ? this.waiters.get(shared) : undefined;
 		// An orphaned request (every waiter gone) will not retry, so a new caller starts afresh.
+		let release: () => void;
 		if (shared && existing && !existing.signal.aborted) {
-			existing.join(options.signal);
+			release = existing.join(options.signal);
 		} else {
 			const waiters = new SharedWaiters();
-			waiters.join(options.signal); // before the first attempt can run
+			release = waiters.join(options.signal); // before the first attempt can run
 			shared = this.deduplicator.track(
 				cacheKey,
 				this.executeRequest<T>(serviceId, url, options, cacheKey, breaker, config, waiters.signal)
 			);
 			this.waiters.set(shared, waiters);
 		}
+		// Long-lived owner signals must not accumulate listeners across requests.
+		shared.then(release, release);
 		return options.signal ? raceOwner(shared, options.signal) : shared;
 	}
 
@@ -352,7 +360,17 @@ export class ServiceClient {
 		}
 		const url = this.buildUrl(config, endpoint, options.params);
 
-		this.executeRequest(serviceId, url, { ...options, useCache: false }, cacheKey, breaker, config)
+		// The revalidation belongs to the caller that hit the stale entry: once its owner
+		// aborts, no retry starts (the attempt in flight still refreshes the cache).
+		this.executeRequest(
+			serviceId,
+			url,
+			{ ...options, useCache: false },
+			cacheKey,
+			breaker,
+			config,
+			options.signal
+		)
 			.then(() => this.log(`Background revalidation complete: ${serviceId}`))
 			.catch(() => this.log(`Background revalidation failed: ${serviceId}`));
 	}

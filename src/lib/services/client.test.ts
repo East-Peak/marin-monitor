@@ -136,4 +136,50 @@ describe('ServiceClient owner signal (dashboard spec §13.6; Codex PR1 C1)', () 
 		expect(await legacy).toBeInstanceOf(Error);
 		expect(mockFetch).toHaveBeenCalledTimes(2);
 	});
+
+	// ---------- Fix round 2 (post-push re-review) ----------
+
+	it('background revalidation of a stale hit stops retrying once its owner aborts', async () => {
+		const json = (body: unknown) =>
+			new Response(JSON.stringify(body), {
+				status: 200,
+				headers: { 'Content-Type': 'application/json' }
+			});
+		mockFetch.mockResolvedValueOnce(json({ v: 1 }));
+		const client = new ServiceClient();
+		await client.request('NWS', '/stale-revalidate'); // warm the cache
+		await vi.advanceTimersByTimeAsync(16 * 60 * 1000); // past the 15-minute TTL: stale
+
+		const owner = new AbortController();
+		mockFetch.mockImplementation(async () => {
+			owner.abort(); // the dashboard is destroyed while revalidation is in flight
+			throw new TypeError('network down');
+		});
+		const result = await client.request('NWS', '/stale-revalidate', { signal: owner.signal });
+		await vi.advanceTimersByTimeAsync(30_000);
+
+		expect(result.stale).toBe(true);
+		expect(mockFetch).toHaveBeenCalledTimes(2); // warm-up + one revalidation attempt, no retries
+	});
+
+	it('a settled shared request releases its abort listener on the owner signal', async () => {
+		const owner = new AbortController();
+		const add = vi.spyOn(owner.signal, 'addEventListener');
+		const remove = vi.spyOn(owner.signal, 'removeEventListener');
+		mockFetch.mockResolvedValueOnce(
+			new Response(JSON.stringify({ ok: 1 }), {
+				status: 200,
+				headers: { 'Content-Type': 'application/json' }
+			})
+		);
+		const client = new ServiceClient();
+
+		await client.request('NWS', '/listener-release', { useCache: false, signal: owner.signal });
+		await vi.advanceTimersByTimeAsync(0);
+
+		const added = add.mock.calls.map((c) => c[1]);
+		const removed = remove.mock.calls.map((c) => c[1]);
+		expect(added.length).toBeGreaterThan(0);
+		for (const listener of added) expect(removed).toContain(listener);
+	});
 });
