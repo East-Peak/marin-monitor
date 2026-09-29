@@ -7,10 +7,10 @@
  * Endpoints used:
  * - /points/{lat},{lon} → gets forecast office + grid coordinates
  * - /gridpoints/{office}/{x},{y}/forecast → 7-day forecast
- * - /alerts/active?zone=CAZ006 → active weather alerts for Marin
+ * - /alerts/active?zone=CAZ502,CAZ505,CAZ506,CAC041 → active weather alerts for Marin
  */
 
-import { NWS_ZONE } from '$lib/config/map';
+import { NWS_ALERT_ZONES } from '$lib/config/map';
 import type { WeatherData, FireWeatherAlert } from '$lib/types';
 import { logger } from '$lib/config/api';
 import { getGridPoint } from './nws-common';
@@ -109,11 +109,12 @@ export async function fetchForecast(
 export async function fetchAlerts({ signal }: OwnerOptions = {}): Promise<FireWeatherAlert[]> {
 	if (signal?.aborted) return [];
 	try {
-		logger.log('NWS', `Fetching alerts for zone ${NWS_ZONE}`);
+		const zone = NWS_ALERT_ZONES.join(',');
+		logger.log('NWS', `Fetching alerts for zones ${zone}`);
 
 		const result = await serviceClient.request<NwsAlertsResponse>('NWS', '/alerts/active', {
 			...NWS_OPTIONS,
-			params: { zone: NWS_ZONE },
+			params: { zone },
 			signal
 		});
 		const features: NwsAlertFeature[] = result.data.features || [];

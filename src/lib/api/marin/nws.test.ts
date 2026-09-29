@@ -20,12 +20,8 @@ vi.mock('$lib/config/api', () => ({
 	logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn() }
 }));
 
-// Mock NWS_ZONE
-vi.mock('$lib/config/map', () => ({
-	NWS_ZONE: 'CAZ006'
-}));
-
 import { fetchForecast, fetchAlerts, fetchWeather } from './nws';
+import { NWS_ALERT_ZONES } from '$lib/config/map';
 import { serviceClient } from '$lib/services/client';
 import { getGridPoint } from './nws-common';
 import { logger } from '$lib/config/api';
@@ -331,16 +327,17 @@ describe('NWS adapter', () => {
 			expect(result).toEqual([]);
 		});
 
-		it('passes zone parameter in the request', async () => {
+		it('asks for every Marin zone, not San Francisco (CAZ006)', async () => {
 			mockRequest.mockResolvedValueOnce(wrapResult({ features: [] }));
 
 			await fetchAlerts();
 
+			expect(NWS_ALERT_ZONES).toEqual(['CAZ502', 'CAZ505', 'CAZ506', 'CAC041']);
 			expect(mockRequest).toHaveBeenCalledWith(
 				'NWS',
 				'/alerts/active',
 				expect.objectContaining({
-					params: { zone: 'CAZ006' }
+					params: { zone: 'CAZ502,CAZ505,CAZ506,CAC041' }
 				})
 			);
 		});

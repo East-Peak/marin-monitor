@@ -6,6 +6,10 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Fixed — Weather alerts are Marin's, not San Francisco's
+
+- **NWS alerts now query Marin's zones** (`NWS_ALERT_ZONES` in `src/lib/config/map.ts`): CAZ502 Marin Coastal Range, CAZ505 Coastal North Bay incl. Point Reyes, CAZ506 North Bay Interior Valleys, and county CAC041, sent as one comma-joined `zone` param. The old `NWS_ZONE = 'CAZ006'` was San Francisco's forecast zone, so the banner showed SF alerts as Marin's and missed Marin-only ones.
+
 ### Fixed — TV keeps your theme (D1 batch 1 final review)
 
 - **`/tv` forces dark through a transient theme** (`settings.beginTransientTheme`): `mm_theme` is never written, so a saved light theme survives a TV visit however it ends (Escape, reload, closed tab, or TV's 6-hour reload).

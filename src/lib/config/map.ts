@@ -132,10 +132,16 @@ export const AIRPORT_STATUS_COLORS: Record<string, string> = {
 };
 
 /**
- * NWS weather zone for Marin
+ * NWS zones covering Marin, queried together for active alerts.
+ * (CAZ006 is San Francisco, not Marin.)
  */
-export const NWS_ZONE = 'CAZ006'; // Marin County coast and valleys
-export const NWS_FIRE_ZONE = 'CAZ506'; // Marin fire weather zone
+export const NWS_ALERT_ZONES = [
+	'CAZ502', // Marin Coastal Range
+	'CAZ505', // Coastal North Bay Including Point Reyes National Seashore
+	'CAZ506', // North Bay Interior Valleys
+	'CAC041' // Marin County
+] as const;
+export const NWS_FIRE_ZONE = 'CAZ506'; // North Bay Interior Valleys fire weather zone
 export const NWS_OFFICE = 'MTR'; // San Francisco Bay Area forecast office
 
 /**

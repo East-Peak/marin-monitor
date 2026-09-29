@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-09-29',
+		title: "Weather alerts are Marin's",
+		description:
+			"The weather alert banner now shows National Weather Service alerts for Marin's own zones (coast, Point Reyes, interior valleys and the county). It had been showing San Francisco's alerts."
+	},
+	{
+		date: '2026-09-29',
 		title: 'TV keeps your theme',
 		description:
 			'Opening the TV wallboard no longer switches the dashboard to dark mode for good, and precise news pin locations no longer go missing after a quick trip to TV and back.'
