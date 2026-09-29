@@ -91,7 +91,6 @@ describe('KNOWN_SUBSOURCE_FAILURES', () => {
 			'Marin IJ news feed',
 			'Marin IJ breaking-news feed',
 			'Marin IJ emergency feed',
-			'Marin Lately',
 			'NIFC WFIGS fires'
 		]);
 		for (const failure of KNOWN_SUBSOURCE_FAILURES) {

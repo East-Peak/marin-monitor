@@ -185,7 +185,7 @@ export const FEEDS: Record<NewsCategory, FeedSource[]> = {
 	satire: [
 		{
 			name: 'Marin Lately',
-			url: 'https://marinlately.com/feed/',
+			url: 'https://marinlately.substack.com/feed',
 			verification: 'satire',
 			confirmed: true
 		}

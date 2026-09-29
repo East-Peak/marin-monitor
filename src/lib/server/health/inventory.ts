@@ -207,12 +207,6 @@ export const KNOWN_SUBSOURCE_FAILURES: readonly SubsourceFailure[] = freeze<Subs
 		disposition: 'G0: replace with a populated Marin IJ tag feed'
 	},
 	{
-		name: 'Marin Lately',
-		parent: 'News feeds',
-		problem: 'site rebranded; feed redirects to a 404',
-		disposition: 'G0: retire the feed'
-	},
-	{
 		name: 'NIFC WFIGS fires',
 		parent: 'Fire map',
 		problem: 'ArcGIS rejects renamed field attr_POOState (now POOState)',

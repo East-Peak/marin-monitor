@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Fixed — Marin Lately column reads the Substack feed (G0 repair 5b)
+
+- `marinlately.com/feed/` redirected to a dead sfcurrently.com page. The satire column now reads `https://marinlately.substack.com/feed` (200, 10 items). The newest post is from January, so it shows as dated satire, which is honest. The feed proxy allowlist follows the config automatically; the article allowlist is untouched because satire is never enriched.
+- Marin Lately is removed from the health inventory's known subsource failures.
+- Test: `src/routes/api/feeds/feeds.test.ts` (configured URL; the proxy accepts the Substack feed and rejects the retired one).
+
 ### Fixed — Driveway reads the newest DMV release; no more hardcoded 2024 data (G0 repair 5)
 
 - **The DMV retired the fixed resource ID the scraper queried**, and renamed the columns it used (`Zip Code`→`ZIP Code`, `Fuel Type`→`Fuel`, `Number of Vehicles`→`Vehicles`). Every run silently served hardcoded 2024 numbers, with no observation time.
