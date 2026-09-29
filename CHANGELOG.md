@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Changed — the scrape proxy never silently goes direct (G0)
+
+- **`scripts/shared/proxy-fetch.mjs`: a configured proxy is now required.** With `SCRAPE_PROXY_URL` + `SCRAPE_PROXY_SECRET` set, an unreachable or rejecting proxy throws. Before, it quietly fell back to a direct fetch from the GitHub runner, which the target sites block, so a dead proxy looked like a thin but successful scrape. Setting only one of the two variables throws; setting neither fetches direct (local runs).
+- **Run ↔ proxy correlation.** Every proxied call sends an `X-Request-Id` UUID and logs `[proxy <id>] <host> -> <upstream status>` in the Actions log. The Mac proxy logs the same ID with host, status and bytes.
+- Tests: `src/lib/server/proxy-fetch.test.ts` (envelope passthrough, request ID, success log, unreachable, rejected, half-configured, unconfigured).
+
 ### Fixed — scrapers launch Chromium again: one Playwright version (G0 repair 1)
 
 - **Coffee, Cappuccino and Grocery syncs died at browser launch.** Two Playwright versions were in the tree: a direct `playwright@1.61` beside `@playwright/test@1.57`'s own copy. The workflows' `npx playwright install` fetched one browser build and the scripts launched the other.

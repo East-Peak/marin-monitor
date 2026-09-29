@@ -155,6 +155,9 @@ const server = createServer(async (req, res) => {
 	}
 
 	const timeoutMs = Math.min(Math.max(Number(timeout) || 30000, 1000), 30000);
+	// Correlates a GitHub Actions run with this log (proxy-fetch.mjs sends a UUID).
+	const rawId = req.headers['x-request-id'];
+	const requestId = typeof rawId === 'string' && /^[0-9a-f-]{36}$/.test(rawId) ? rawId : '-';
 
 	stats.totalRequests++;
 	stats.lastRequest = { hostname: targetUrl.hostname, time: new Date().toISOString() };
@@ -179,6 +182,9 @@ const server = createServer(async (req, res) => {
 
 		const data = await response.text();
 		stats.successCount++;
+		console.log(
+			`[scrape-proxy] ${new Date().toISOString()} ${requestId} ${targetUrl.hostname} -> ${response.status} ${data.length}b`
+		);
 
 		res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
 		res.end(
@@ -191,6 +197,9 @@ const server = createServer(async (req, res) => {
 		);
 	} catch (err) {
 		stats.errorCount++;
+		console.log(
+			`[scrape-proxy] ${new Date().toISOString()} ${requestId} ${targetUrl.hostname} -> error ${err.message}`
+		);
 		stats.lastError = {
 			hostname: targetUrl.hostname,
 			error: err.message,
