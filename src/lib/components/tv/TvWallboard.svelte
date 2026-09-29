@@ -24,6 +24,7 @@
 	import { TV_SCREENS, TV_MAP_VIEWS, CURSOR_HIDE_MS, TV_REFRESH_INTERVAL_MS } from '$lib/config/tv';
 	import { refresh, allNewsItems, alerts, mapStore, settings, threeOneOneNews } from '$lib/stores';
 	import { townFilter } from '$lib/stores/town-filter';
+	import { isWithinWindow } from '$lib/news/recency';
 	import {
 		fetchFireIncidents,
 		fetchAirQuality,
@@ -281,7 +282,7 @@
 
 	// --- Pulse stats for header bar ---
 	const stories24h = $derived(
-		$allNewsItems.filter((item) => Date.now() - item.timestamp <= 24 * 60 * 60 * 1000).length
+		$allNewsItems.filter((item) => isWithinWindow(item, 24 * 60 * 60 * 1000, Date.now())).length
 	);
 	const alertCount = $derived($alerts.length);
 

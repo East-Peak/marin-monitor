@@ -5,6 +5,7 @@
 	import { allNewsItems, refresh } from '$lib/stores';
 	import { townFilter, selectedTownObj } from '$lib/stores/town-filter';
 	import { fetchTidePredictions } from '$lib/api/marin';
+	import { isWithinWindow } from '$lib/news/recency';
 	import type { FireWeatherAlert, WeatherData, EarthquakeData, TidePrediction } from '$lib/types';
 
 	interface Props {
@@ -19,7 +20,7 @@
 	let tideError = $state<string | null>(null);
 
 	const recentItems = $derived(
-		$allNewsItems.filter((item) => Date.now() - item.timestamp <= 24 * 60 * 60 * 1000)
+		$allNewsItems.filter((item) => isWithinWindow(item, 24 * 60 * 60 * 1000, Date.now()))
 	);
 
 	const filteredRecentItems = $derived(

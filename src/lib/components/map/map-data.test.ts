@@ -26,6 +26,7 @@ import {
 	buildAirportWeatherSummary,
 	buildAirportFeatures
 } from './map-data';
+import { pinAgeLabel } from './map-story-model';
 import type { Town } from '$lib/types';
 import type { GasStation } from '$lib/types/gas';
 import type { ChargingStation } from '$lib/types/ev-charging';
@@ -1083,5 +1084,26 @@ describe('buildAirportFeatures', () => {
 	it('places feature at pin coordinates', () => {
 		const result = buildAirportFeatures(MOCK_AIRPORT_PINS, new Map(), MOCK_STATUS_COLORS);
 		expect((result[0].geometry as GeoJSON.Point).coordinates).toEqual([-122.379, 37.6213]);
+	});
+});
+
+describe('earthquake pin time', () => {
+	it('carries the quake time, so the pin tooltip shows an age, not "undated"', () => {
+		const at = Date.now() - 2 * 3_600_000;
+		const [f] = buildEarthquakeFeatures([
+			{
+				id: 'q',
+				title: 'M 3.1 - 2km N of Novato',
+				link: '',
+				timestamp: at,
+				lat: 38.1,
+				lon: -122.57,
+				source: 'USGS',
+				category: 'safety',
+				verification: 'official'
+			}
+		]);
+		expect(f.properties?.timestamp).toBe(at);
+		expect(pinAgeLabel(f.properties?.timestamp)).not.toBe('undated');
 	});
 });

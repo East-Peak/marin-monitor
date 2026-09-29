@@ -399,7 +399,8 @@ export function buildEarthquakeFeatures(earthquakes: NewsItem[]): GeoJSON.Featur
 			id: eq.id,
 			properties: {
 				title: eq.title,
-				magnitude: parseMagnitudeFromTitle(eq.title)
+				magnitude: parseMagnitudeFromTitle(eq.title),
+				timestamp: eq.timestamp
 			},
 			geometry: {
 				type: 'Point' as const,
