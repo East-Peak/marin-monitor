@@ -8,6 +8,7 @@ vi.mock('$lib/config/api', () => ({ logger: { log: vi.fn(), warn: vi.fn(), error
 import { fetchHourlyForecast, fetchDailyRainForecast } from './nws-hourly';
 import { serviceClient } from '$lib/services/client';
 import { getGridPoint } from './nws-common';
+import { logger } from '$lib/config/api';
 
 const mockRequest = vi.mocked(serviceClient.request);
 const mockGetGridPoint = vi.mocked(getGridPoint);
@@ -43,6 +44,22 @@ describe('NWS hourly/QPF owner signal (dashboard spec §13.6; Codex PR1 C2)', ()
 
 			expect(mockGetGridPoint).toHaveBeenCalledWith(38, -122.5, owner.signal);
 			expect(mockRequest.mock.calls[0][2]?.signal).toBe(owner.signal);
+		});
+	}
+
+	for (const [name, call] of [
+		['fetchHourlyForecast', fetchHourlyForecast],
+		['fetchDailyRainForecast', fetchDailyRainForecast]
+	] as const) {
+		it(`${name}: an owner abort is not logged as a failure (post-push review item 3)`, async () => {
+			const owner = new AbortController();
+			mockRequest.mockImplementationOnce(async () => {
+				owner.abort();
+				throw new DOMException('Aborted', 'AbortError');
+			});
+
+			expect(await call(38, -122.5, { signal: owner.signal })).toEqual([]);
+			expect(vi.mocked(logger.warn)).not.toHaveBeenCalled();
 		});
 	}
 });

@@ -104,7 +104,9 @@ export async function fetchHourlyForecast(
 			relativeHumidity: p.relativeHumidity?.value ?? null
 		}));
 	} catch (error) {
-		logger.warn('NWS', `Hourly forecast fetch failed: ${(error as Error).message}`);
+		// An owner abort (destroyed dashboard or panel) is not an upstream failure.
+		if (!signal?.aborted)
+			logger.warn('NWS', `Hourly forecast fetch failed: ${(error as Error).message}`);
 		return [];
 	}
 }
@@ -171,7 +173,8 @@ export async function fetchDailyRainForecast(
 				totalInches: Math.round((mm / 25.4) * 100) / 100
 			}));
 	} catch (error) {
-		logger.warn('NWS', `QPF fetch failed: ${(error as Error).message}`);
+		// An owner abort (destroyed dashboard or panel) is not an upstream failure.
+		if (!signal?.aborted) logger.warn('NWS', `QPF fetch failed: ${(error as Error).message}`);
 		return [];
 	}
 }

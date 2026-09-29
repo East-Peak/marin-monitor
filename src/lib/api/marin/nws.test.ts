@@ -28,6 +28,7 @@ vi.mock('$lib/config/map', () => ({
 import { fetchForecast, fetchAlerts, fetchWeather } from './nws';
 import { serviceClient } from '$lib/services/client';
 import { getGridPoint } from './nws-common';
+import { logger } from '$lib/config/api';
 
 const mockRequest = vi.mocked(serviceClient.request);
 const mockGetGridPoint = vi.mocked(getGridPoint);
@@ -509,5 +510,17 @@ describe('NWS adapter', () => {
 
 			expect(mockGetGridPoint).toHaveBeenCalledWith(38.05, -122.75, owner.signal);
 		});
+	});
+
+	it('an owner abort is not logged as a forecast or alerts failure (post-push review item 3)', async () => {
+		const owner = new AbortController();
+		mockRequest.mockImplementation(async () => {
+			owner.abort();
+			throw new DOMException('Aborted', 'AbortError');
+		});
+
+		await fetchWeather(38.05, -122.75, { signal: owner.signal });
+
+		expect(vi.mocked(logger.warn)).not.toHaveBeenCalled();
 	});
 });

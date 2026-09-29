@@ -97,7 +97,8 @@ export async function fetchForecast(
 			name: period.name
 		})) as (WeatherData & { name: string })[];
 	} catch (error) {
-		logger.warn('NWS', `Forecast fetch failed: ${(error as Error).message}`);
+		// An owner abort (destroyed dashboard or panel) is not an upstream failure.
+		if (!signal?.aborted) logger.warn('NWS', `Forecast fetch failed: ${(error as Error).message}`);
 		return [];
 	}
 }
@@ -129,7 +130,8 @@ export async function fetchAlerts({ signal }: OwnerOptions = {}): Promise<FireWe
 			areaDesc: feature.properties.areaDesc
 		}));
 	} catch (error) {
-		logger.warn('NWS', `Alerts fetch failed: ${(error as Error).message}`);
+		// An owner abort (destroyed dashboard or panel) is not an upstream failure.
+		if (!signal?.aborted) logger.warn('NWS', `Alerts fetch failed: ${(error as Error).message}`);
 		return [];
 	}
 }

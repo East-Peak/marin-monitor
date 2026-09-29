@@ -324,4 +324,23 @@ describe('createDataFetcherWithStatus', () => {
 			expect(mockFetchWithTimeout.mock.calls[0][1]?.signal).toBe(owner.signal);
 		});
 	});
+
+	it('an owner abort is not logged as a fetch failure (post-push review item 3)', async () => {
+		const owner = new AbortController();
+		mockFetchWithTimeout.mockImplementationOnce(async () => {
+			owner.abort();
+			throw new DOMException('Aborted', 'AbortError');
+		});
+
+		const result = await createDataFetcherWithStatus(
+			'/api/data/foo',
+			'FOO',
+			{}
+		)({
+			signal: owner.signal
+		});
+
+		expect(result.ok).toBe(false);
+		expect(mockLoggerWarn).not.toHaveBeenCalled();
+	});
 });

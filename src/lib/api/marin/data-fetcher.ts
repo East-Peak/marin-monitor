@@ -66,7 +66,8 @@ export function createDataFetcherWithStatus<T>(
 			return { ok: true, data: (await response.json()) as T, dataSource };
 		} catch (error) {
 			const message = (error as Error).message;
-			logger.warn(serviceId, `Fetch failed: ${message}`);
+			// An owner abort (destroyed dashboard or panel) is not an upstream failure.
+			if (!signal?.aborted) logger.warn(serviceId, `Fetch failed: ${message}`);
 			return { ok: false, error: message, fallback };
 		}
 	};
