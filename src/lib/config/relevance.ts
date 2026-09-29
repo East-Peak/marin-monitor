@@ -18,8 +18,6 @@ const STRICT_LOCAL_SOURCES = new Set([
 	'Marin Magazine',
 	'City of San Rafael',
 	'Town of Fairfax',
-	'MMWD / Marin Water',
-	'Marin Humane',
 	'WildCare',
 	'Marin Sheriff Blotter',
 	'Fairfax Police Log',

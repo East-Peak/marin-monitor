@@ -6,6 +6,10 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Removed — two feeds behind a bot captcha
+
+- **MMWD / Marin Water and Marin Humane are no longer read.** Both sites' SiteGround hosting answers every `/feed/` request with an `sgcaptcha` challenge page instead of RSS, so neither feed has delivered stories. The producer now reads 20 feeds. Neither blocked feed will be worked around.
+
 ### Added — shared news producer (TV slice 2)
 
 - **One scheduled news producer.** `/api/cron/produce-news` runs every 15 minutes. It fetches the 22 configured RSS/Atom feeds and publishes a versioned, normalized snapshot to Vercel Blob (`news/v1/snapshot.json`). The TV (slice 3) and later the dashboard read it. Article enrichment and geocoding are not part of it.

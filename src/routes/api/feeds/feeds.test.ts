@@ -46,3 +46,10 @@ describe('Marin IJ local news feed', () => {
 		expect(ij?.url).toBe('https://www.marinij.com/tag/marin-county/feed/');
 	});
 });
+
+describe('SiteGround-captcha feeds', () => {
+	it('no longer configures MMWD or Marin Humane (every /feed/ request gets an sgcaptcha page)', () => {
+		const urls = Object.values(FEEDS).flatMap((feeds) => feeds.map((f) => f.url));
+		expect(urls.filter((u) => /(marinwater|marinhumane)\.org/.test(u))).toEqual([]);
+	});
+});

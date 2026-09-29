@@ -145,21 +145,9 @@ export const FEEDS: Record<NewsCategory, FeedSource[]> = {
 
 	outdoors: [
 		{
-			name: 'MMWD / Marin Water',
-			url: 'https://www.marinwater.org/feed/',
-			verification: 'official',
-			confirmed: true
-		},
-		{
 			name: 'Marin IJ – Environment',
 			url: 'https://www.marinij.com/tag/environment/feed/',
 			verification: 'local_media',
-			confirmed: true
-		},
-		{
-			name: 'Marin Humane',
-			url: 'https://marinhumane.org/feed/',
-			verification: 'community',
 			confirmed: true
 		},
 		{
