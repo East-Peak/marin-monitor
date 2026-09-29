@@ -69,15 +69,13 @@ export const SOURCE_INVENTORY: readonly SourcePolicy[] = freeze<SourcePolicy>([
 		maxAgeDays: 45,
 		observedAt: 'content'
 	},
-	// Vercel cron monthly. Serves a hardcoded 2024 fallback (retired CKAN
-	// resource) with no observation — degraded, NOT reference, until repaired.
+	// Vercel cron monthly; the newest DMV release, resolved via CKAN package_show.
 	{
 		name: 'Driveway',
 		blobKey: 'marin-driveway.json',
 		cadence: 'monthly',
 		maxAgeDays: 45,
-		observedAt: 'content',
-		note: 'serving hardcoded 2024 fallback until the CKAN resource is repaired'
+		observedAt: 'content'
 	},
 	// Vercel cron weekly; derived from the composite inputs below.
 	{

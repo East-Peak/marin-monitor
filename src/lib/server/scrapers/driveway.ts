@@ -7,142 +7,105 @@ import type {
 	DrivewayFunStats,
 	FuelType
 } from '$lib/types/driveway';
+import { withSuccessfulScrapeMetadata } from '$lib/server/scrape-metadata';
 import {
-	withPreservedSuccessfulScrapeMetadata,
-	withSuccessfulScrapeMetadata
-} from '$lib/server/scrape-metadata';
-import {
-	DMV_API_BASE,
+	CKAN_API_BASE,
+	DMV_PACKAGE_ID,
+	DMV_REQUIRED_COLUMNS,
 	DMV_FUEL_TYPE_MAP,
 	MARIN_ZIPS,
 	FUEL_TYPE_ORDER,
-	FALLBACK_DATA_YEAR,
-	FALLBACK_TOP_MAKES,
-	FALLBACK_FUEL_BREAKDOWN,
-	FALLBACK_TOTAL_VEHICLES,
-	FALLBACK_FUN_STATS
+	MARIN_2024_TOTAL_VEHICLES,
+	MARIN_TOTAL_TOLERANCE
 } from '$lib/config/driveway';
 
-// DMV dataset resource ID -- "Vehicle Fuel Type Count by Zip Code"
-// Discovered via: https://data.ca.gov/dataset/vehicle-fuel-type-count-by-zip-code
-const RESOURCE_ID = '52a74e3a-6bc4-4068-a28c-c1a81e637811';
+type FetchLike = (input: string) => Promise<Response>;
 
-/** Build the ZIP IN clause for the SQL query */
-function zipInClause(): string {
-	return MARIN_ZIPS.map((z) => `'${z}'`).join(',');
+interface CkanResource {
+	id: string;
+	name?: string;
+	datastore_active?: boolean;
 }
 
-interface DmvApiResult {
-	success: boolean;
-	result: {
-		records: Array<Record<string, string | number>>;
-	};
-}
+/** Yearly releases are named "1/1/2026 Vehicle Fuel Type Count by Zip Code". */
+const RELEASE_NAME = /^1\/1\/(\d{4}) Vehicle Fuel Type Count by Zip Code$/i;
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Attempt to fetch the latest data year available from the DMV API.
- * Returns the most recent year that has data for Marin ZIPs.
+ * The newest yearly release. It must be queryable: falling back to last year's
+ * release would publish old data as a fresh observation.
  */
-async function fetchLatestDataYear(): Promise<number | null> {
-	const sql = `SELECT DISTINCT "Date" FROM "${RESOURCE_ID}" WHERE "Zip Code" IN (${zipInClause()}) ORDER BY "Date" DESC LIMIT 1`;
-	const url = `${DMV_API_BASE}?sql=${encodeURIComponent(sql)}`;
-
-	const controller = new AbortController();
-	const timeout = setTimeout(() => controller.abort(), 15000);
-	try {
-		const response = await fetch(url, { signal: controller.signal });
-		if (!response.ok) return null;
-		const data = (await response.json()) as DmvApiResult;
-		if (!data.success || !data.result.records.length) return null;
-
-		const dateStr = String(data.result.records[0]['Date']);
-		// Date field is typically "01/01/2024" or just "2024"
-		const yearMatch = dateStr.match(/(\d{4})/);
-		return yearMatch ? parseInt(yearMatch[1], 10) : null;
-	} catch {
-		return null;
-	} finally {
-		clearTimeout(timeout);
+export function selectNewestResource(resources: CkanResource[]): { id: string; year: number } {
+	let newest: (CkanResource & { year: number }) | null = null;
+	for (const resource of resources) {
+		const match = RELEASE_NAME.exec(resource.name?.trim() ?? '');
+		if (!match) continue;
+		const year = Number(match[1]);
+		if (!newest || year > newest.year) newest = { ...resource, year };
 	}
+	if (!newest) throw new Error(`${DMV_PACKAGE_ID}: no datastore resource`);
+	if (!newest.datastore_active) throw new Error(`DMV ${newest.year} release is not queryable yet`);
+	// The id is interpolated into SQL as a table name.
+	if (!UUID.test(newest.id)) throw new Error(`DMV ${newest.year}: unexpected resource id`);
+	return { id: newest.id, year: newest.year };
 }
 
-/**
- * Fetch aggregated make counts from the DMV API for a given year.
- */
-async function fetchMakeCounts(year: number): Promise<MakeCount[]> {
-	const sql = `SELECT "Make", SUM("Number of Vehicles"::int) as total FROM "${RESOURCE_ID}" WHERE "Zip Code" IN (${zipInClause()}) AND "Date" LIKE '%${year}%' GROUP BY "Make" ORDER BY total DESC`;
-	const url = `${DMV_API_BASE}?sql=${encodeURIComponent(sql)}`;
-
+async function ckanResult<T>(fetchImpl: FetchLike, path: string): Promise<T> {
 	const controller = new AbortController();
 	const timeout = setTimeout(() => controller.abort(), 30000);
 	try {
-		const response = await fetch(url, { signal: controller.signal });
-		if (!response.ok) throw new Error(`DMV make query failed: ${response.status}`);
-		const data = (await response.json()) as DmvApiResult;
-		if (!data.success) throw new Error('DMV API returned success=false');
-
-		return data.result.records
-			.filter((r) => {
-				const make = String(r['Make'] ?? '');
-				// Exclude privacy-masked "OTHER/UNK" entries
-				return make && make !== 'OTHER/UNK' && make !== 'Other/Unk';
-			})
-			.map((r) => ({
-				make: titleCase(String(r['Make'] ?? '')),
-				count: parseInt(String(r['total']), 10)
-			}))
-			.filter((m) => !isNaN(m.count) && m.count > 0);
+		const response = await (fetchImpl as typeof fetch)(`${CKAN_API_BASE}/${path}`, {
+			signal: controller.signal
+		});
+		if (!response.ok) throw new Error(`CKAN ${path.split('?')[0]}: HTTP ${response.status}`);
+		const body = (await response.json()) as { success?: boolean; result?: T };
+		if (!body.success || !body.result) throw new Error(`CKAN ${path.split('?')[0]}: success=false`);
+		return body.result;
 	} finally {
 		clearTimeout(timeout);
 	}
 }
 
-/**
- * Fetch aggregated fuel type counts from the DMV API for a given year.
- */
-async function fetchFuelCounts(year: number): Promise<FuelBreakdown[]> {
-	const sql = `SELECT "Fuel Type", SUM("Number of Vehicles"::int) as total FROM "${RESOURCE_ID}" WHERE "Zip Code" IN (${zipInClause()}) AND "Date" LIKE '%${year}%' GROUP BY "Fuel Type" ORDER BY total DESC`;
-	const url = `${DMV_API_BASE}?sql=${encodeURIComponent(sql)}`;
+async function assertSchema(fetchImpl: FetchLike, resourceId: string): Promise<void> {
+	const { fields } = await ckanResult<{ fields: Array<{ id: string }> }>(
+		fetchImpl,
+		`datastore_search?resource_id=${resourceId}&limit=0`
+	);
+	const present = new Set(fields.map((f) => f.id));
+	const missing = DMV_REQUIRED_COLUMNS.filter((c) => !present.has(c));
+	if (missing.length)
+		throw new Error(`DMV resource ${resourceId} missing columns: ${missing.join(', ')}`);
+}
 
-	const controller = new AbortController();
-	const timeout = setTimeout(() => controller.abort(), 30000);
-	try {
-		const response = await fetch(url, { signal: controller.signal });
-		if (!response.ok) throw new Error(`DMV fuel query failed: ${response.status}`);
-		const data = (await response.json()) as DmvApiResult;
-		if (!data.success) throw new Error('DMV API returned success=false');
+/** Sum of "Vehicles" across Marin ZIPs, grouped by one column. */
+async function sumBy(
+	fetchImpl: FetchLike,
+	resourceId: string,
+	column: 'Make' | 'Fuel'
+): Promise<Array<{ key: string; count: number }>> {
+	const zips = MARIN_ZIPS.map((z) => `'${z}'`).join(',');
+	const sql = `SELECT "${column}", SUM("Vehicles"::int) as total FROM "${resourceId}" WHERE "ZIP Code" IN (${zips}) GROUP BY "${column}" ORDER BY total DESC`;
+	const { records } = await ckanResult<{ records: Array<Record<string, string | number>> }>(
+		fetchImpl,
+		`datastore_search_sql?sql=${encodeURIComponent(sql)}`
+	);
+	return records
+		.map((r) => ({ key: String(r[column] ?? ''), count: parseInt(String(r['total']), 10) }))
+		.filter((r) => r.key && !isNaN(r.count) && r.count > 0);
+}
 
-		const rawCounts: Array<{ fuelType: FuelType; count: number }> = [];
-
-		for (const r of data.result.records) {
-			const rawFuel = String(r['Fuel Type'] ?? '');
-			const mappedType = DMV_FUEL_TYPE_MAP[rawFuel] ?? 'other';
-			const count = parseInt(String(r['total']), 10);
-			if (isNaN(count) || count <= 0) continue;
-
-			const existing = rawCounts.find((c) => c.fuelType === mappedType);
-			if (existing) {
-				existing.count += count;
-			} else {
-				rawCounts.push({ fuelType: mappedType, count });
-			}
-		}
-
-		const total = rawCounts.reduce((sum, c) => sum + c.count, 0);
-
-		// Sort by FUEL_TYPE_ORDER, then build breakdowns with percentages
-		return FUEL_TYPE_ORDER.map((ft) => {
-			const entry = rawCounts.find((c) => c.fuelType === ft);
-			if (!entry) return null;
-			return {
-				fuelType: ft,
-				count: entry.count,
-				pct: Math.round((entry.count / total) * 10000) / 100
-			};
-		}).filter((f): f is FuelBreakdown => f !== null);
-	} finally {
-		clearTimeout(timeout);
+function toFuelBreakdown(rows: Array<{ key: string; count: number }>): FuelBreakdown[] {
+	const counts = new Map<FuelType, number>();
+	for (const { key, count } of rows) {
+		const fuelType = DMV_FUEL_TYPE_MAP[key] ?? 'other';
+		counts.set(fuelType, (counts.get(fuelType) ?? 0) + count);
 	}
+	const total = [...counts.values()].reduce((sum, c) => sum + c, 0);
+	return FUEL_TYPE_ORDER.filter((ft) => counts.has(ft)).map((fuelType) => {
+		const count = counts.get(fuelType)!;
+		return { fuelType, count, pct: Math.round((count / total) * 10000) / 100 };
+	});
 }
 
 /**
@@ -181,75 +144,46 @@ function titleCase(s: string): string {
 }
 
 /**
- * Attempt to fetch live DMV data. Returns a snapshot or null on failure.
- */
-async function fetchLiveDmvData(): Promise<DrivewaySnapshot | null> {
-	try {
-		const year = await fetchLatestDataYear();
-		if (!year) {
-			console.log('[driveway] Could not determine latest data year from DMV API');
-			return null;
-		}
-
-		console.log(`[driveway] Fetching DMV data for year ${year}...`);
-
-		const [makeCounts, fuelCounts] = await Promise.all([
-			fetchMakeCounts(year),
-			fetchFuelCounts(year)
-		]);
-
-		if (makeCounts.length === 0 || fuelCounts.length === 0) {
-			console.log('[driveway] DMV API returned empty results');
-			return null;
-		}
-
-		const totalVehicles = fuelCounts.reduce((sum, f) => sum + f.count, 0);
-		const funStats = extractFunStats(makeCounts, fuelCounts);
-
-		return withSuccessfulScrapeMetadata({
-			timestamp: new Date().toISOString(),
-			dataYear: year,
-			totalVehicles,
-			topMakes: makeCounts.slice(0, 20), // Keep top 20
-			fuelBreakdown: fuelCounts,
-			funStats
-		});
-	} catch (err) {
-		console.warn('[driveway] Live DMV fetch failed:', err instanceof Error ? err.message : err);
-		return null;
-	}
-}
-
-/**
- * Compute a DrivewaySnapshot. Attempts live DMV API first, falls back to
- * hardcoded 2024 data if the API is unavailable or returns bad results.
+ * Compute a DrivewaySnapshot from the newest DMV release. Throws on any
+ * failure (package, schema, query or an implausible total): the caller keeps
+ * the last good blob and its real observation time rather than publishing
+ * placeholder data as fresh.
  */
 export async function computeDrivewaySnapshot(
-	previous: DrivewaySnapshot | null = null
+	fetchImpl: FetchLike = fetch
 ): Promise<DrivewaySnapshot> {
-	// Try live API first
-	const live = await fetchLiveDmvData();
-	if (live) {
-		console.log(
-			`[driveway] Live data: ${live.totalVehicles.toLocaleString()} vehicles, year ${live.dataYear}`
-		);
-		return live;
+	const { resources } = await ckanResult<{ resources: CkanResource[] }>(
+		fetchImpl,
+		`package_show?id=${DMV_PACKAGE_ID}`
+	);
+	const { id, year } = selectNewestResource(resources);
+	await assertSchema(fetchImpl, id);
+
+	const [makeRows, fuelRows] = await Promise.all([
+		sumBy(fetchImpl, id, 'Make'),
+		sumBy(fetchImpl, id, 'Fuel')
+	]);
+	const fuelBreakdown = toFuelBreakdown(fuelRows);
+	const totalVehicles = fuelBreakdown.reduce((sum, f) => sum + f.count, 0);
+	const drift = Math.abs(totalVehicles - MARIN_2024_TOTAL_VEHICLES) / MARIN_2024_TOTAL_VEHICLES;
+	if (drift > MARIN_TOTAL_TOLERANCE) {
+		throw new Error(`DMV ${year}: implausible Marin total ${totalVehicles}`);
 	}
 
-	// Fall back to hardcoded 2024 data
-	console.log('[driveway] Using hardcoded 2024 fallback data');
-	return withPreservedSuccessfulScrapeMetadata(
-		{
-			timestamp: new Date().toISOString(),
-			dataYear: FALLBACK_DATA_YEAR,
-			totalVehicles: FALLBACK_TOTAL_VEHICLES,
-			topMakes: FALLBACK_TOP_MAKES,
-			fuelBreakdown: FALLBACK_FUEL_BREAKDOWN,
-			funStats: FALLBACK_FUN_STATS
-		},
-		{
-			wasLive: false,
-			previous
-		}
-	);
+	// Exclude privacy-masked "OTHER/UNK" makes.
+	const topMakes: MakeCount[] = makeRows
+		.filter((r) => r.key.toUpperCase() !== 'OTHER/UNK')
+		.map((r) => ({ make: titleCase(r.key), count: r.count }));
+
+	if (topMakes.length === 0) throw new Error(`DMV ${year}: no makes in the Marin aggregate`);
+
+	console.log(`[driveway] DMV ${year} (${id}): ${totalVehicles.toLocaleString()} vehicles`);
+	return withSuccessfulScrapeMetadata({
+		timestamp: new Date().toISOString(),
+		dataYear: year,
+		totalVehicles,
+		topMakes: topMakes.slice(0, 20),
+		fuelBreakdown,
+		funStats: extractFunStats(topMakes, fuelBreakdown)
+	});
 }

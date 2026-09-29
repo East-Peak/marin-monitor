@@ -40,7 +40,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			// No existing blob -- start fresh
 		}
 
-		const snapshot = await computeDrivewaySnapshot(existing.current);
+		const snapshot = await computeDrivewaySnapshot();
 
 		// Deduplicate by dataYear -- only keep the latest snapshot for each year
 		const historyMap = new Map<number, DrivewayData['history'][number]>();

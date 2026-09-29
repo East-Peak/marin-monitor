@@ -6,6 +6,14 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Fixed — Driveway reads the newest DMV release; no more hardcoded 2024 data (G0 repair 5)
+
+- **The DMV retired the fixed resource ID the scraper queried**, and renamed the columns it used (`Zip Code`→`ZIP Code`, `Fuel Type`→`Fuel`, `Number of Vehicles`→`Vehicles`). Every run silently served hardcoded 2024 numbers, with no observation time.
+- **Now:** the newest yearly release is resolved through CKAN `package_show` (named `1/1/YYYY …`; the newest must be queryable, with no quiet fallback to last year). The run checks the columns the SQL reads, requires a UUID resource ID before it goes into SQL, and requires a non-empty make aggregate and a Marin total within 15% of the 2024 reference (210,586). Any failure throws: the cron returns 500 and the last-good blob stays. The hardcoded fallback is gone.
+- **Fuel labels:** the current release says `Battery Electric`/`Plug-in Hybrid` (the `(BEV)`/`(PHEV)` suffixes are gone), and both forms are mapped, so EVs are no longer lumped into "other".
+- Live check (read-only): the 1/1/2026 release has 210,427 Marin vehicles; Toyota 27,246, Honda 11,475, Tesla 8,795; 20,405 battery-electric.
+- Tests: `scrapers/driveway.test.ts` (newest-release selection, no older fallback, UUID guard, column names, tolerance, fuel labels, empty makes, CKAN down) and `sync-driveway.test.ts` (failure writes nothing).
+
 ### Fixed — EV Charging back on NREL's new host; fails closed on partial scrapes (G0 repair 4)
 
 - **`developer.nrel.gov` no longer resolves.** The API moved to `developer.nlr.gov`, and existing keys carry over. The EV cron had been failing every day since the move.

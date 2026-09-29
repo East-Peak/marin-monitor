@@ -51,7 +51,7 @@ describe('SOURCE_INVENTORY', () => {
 		expect(keyOf('Rivian Lease')).toBe('marin-rivian-lease.json');
 	});
 
-	it('declares no reference data yet — Driveway serves a 2024 fallback and must stay degraded', () => {
+	it('declares no reference data — Driveway is judged by its live DMV observation, never as static', () => {
 		expect(SOURCE_INVENTORY.filter((s) => s.reference)).toEqual([]);
 		const driveway = SOURCE_INVENTORY.find((s) => s.name === 'Driveway');
 		expect(driveway?.observedAt).toBe('content');
