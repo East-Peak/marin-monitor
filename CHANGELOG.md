@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Changed — Belvedere is city news, not a police log
+
+- **Belvedere no longer appears in Police Logs.** Its "public safety" items were keyword-matched city news (an AlertMarin countywide test, a shelter-in-place preparedness event), not police calls. Both police producers (`src/lib/server/scrapers/police.ts` and `scripts/extract-police-logs.mjs`) drop the Belvedere fetch, and `police.shared.js` no longer exports a Belvedere URL. The bundled fallback `static/data/marin-police-logs.json` (served when Blob is unreadable) is stripped of its Belvedere items, and a test keeps it that way.
+- **City of Belvedere is a civic news feed instead.** `https://cityofbelvedere.gov/feed/` validated on 2026-09-29 (200, `application/rss+xml`, 10 current items, no redirect) with both the police User-Agent and the news producer's. It is added to the civic feeds, so the producer's host allowlist and per-feed health cover it automatically. The producer now reads 19 feeds.
+- **No public Belvedere call log located.** A bounded search on 2026-09-29 (city site search for police log / calls for service / blotter / police activity; the Police Transparency page, which links only a 2022 RIPA stop-data dashboard; four likely Nixle agency slugs) found none. That is not proof none exists.
+
 ### Fixed — Fairfax and Belvedere police logs are back
 
 - Both town sites answer `403` to fetch's default User-Agent. Every Fairfax and Belvedere police request now sends one honest, identifying User-Agent, `MarinMonitor/2.0 (+https://marinmonitor.com; stuart@eastpeak.cc)`, never a browser impersonation. Belvedere moved from `www.cityofbelvedere.org` (now a 302) to `cityofbelvedere.gov`. The UA and both URLs live in `src/lib/config/police.shared.js`, shared by the Vercel scraper (`src/lib/server/scrapers/police.ts`, the writer `/api/health` observes) and the local `scripts/extract-police-logs.mjs`.
@@ -14,7 +20,7 @@ All notable changes to Marin Monitor are documented here.
 
 ### Removed — two feeds behind a bot captcha
 
-- **MMWD / Marin Water and Marin Humane are no longer read.** Both sites' SiteGround hosting answers every `/feed/` request with an `sgcaptcha` challenge page instead of RSS, so neither feed has delivered stories. The producer now reads 20 feeds. Neither blocked feed will be worked around.
+- **MMWD / Marin Water and Marin Humane are no longer read.** Both sites' SiteGround hosting answers every `/feed/` request with an `sgcaptcha` challenge page instead of RSS, so neither feed has delivered stories. The producer now reads 18 feeds. Neither blocked feed will be worked around.
 
 ### Added — shared news producer (TV slice 2)
 

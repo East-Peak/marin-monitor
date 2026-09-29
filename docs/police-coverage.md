@@ -6,20 +6,20 @@ This is the working coverage map for official municipal and county law-enforceme
 
 ## Coverage map
 
-| Area / town                       | Primary law-enforcement agency | Official source surface                             | Current ingestion status | Notes                                                                                          |
-| --------------------------------- | ------------------------------ | --------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
-| Unincorporated Marin / West Marin | Marin County Sheriff's Office  | Reported-crime open data, booking log, sheriff site | Live                     | Covers sheriff jurisdiction in unincorporated Marin, including West Marin communities.         |
-| Larkspur                          | Central Marin Police Authority | CMPA Nixle alerts + police logs page                | Live                     | Official Nixle alerts are live; police logs on CMPA site remain in-person only.                |
-| Corte Madera                      | Central Marin Police Authority | CMPA Nixle alerts + police logs page                | Live                     | Official Nixle alerts are live; police logs on CMPA site remain in-person only.                |
-| San Anselmo                       | Central Marin Police Authority | CMPA Nixle alerts + police logs page                | Live                     | Official Nixle alerts are live; police logs on CMPA site remain in-person only.                |
-| Fairfax                           | Fairfax Police Department      | Weekly press-log PDFs                               | Live                     | Official PDF feed; currently document-level only.                                              |
-| Mill Valley                       | Mill Valley Police Department  | Weekly calls-for-service PDFs                       | Live                     | Official PDF feed; currently document-level only.                                              |
-| Ross                              | Ross Police Department         | Monthly statistics PDFs                             | Live                     | Official PDF feed; currently document-level only.                                              |
-| Tiburon                           | Tiburon Police Department      | CivicAlerts police stats + police releases          | Live                     | Machine-readable HTML; currently town-level placement in dashboard.                            |
-| Belvedere                         | Belvedere Police Department    | Town posts + police department page                 | Live                     | Official Belvedere public-safety town posts are live; no dedicated recurring police log found. |
-| Sausalito                         | Sausalito Police Department    | Nixle alerts + calls-for-service page               | Live                     | Nixle alerts are live; the calls-for-service page remains blocked to unattended fetches.       |
-| San Rafael                        | San Rafael Police Department   | Nixle alerts + arrest-log page                      | Live                     | Nixle alerts are live; arrest-log HTML is reachable but does not expose actual entries.        |
-| Novato                            | Novato Police Department       | Nixle alerts + crime-map page                       | Live                     | Nixle alerts are live; Community Crime Map remains a separate vendor/API decision.             |
+| Area / town                       | Primary law-enforcement agency | Official source surface                             | Current ingestion status | Notes                                                                                      |
+| --------------------------------- | ------------------------------ | --------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------ |
+| Unincorporated Marin / West Marin | Marin County Sheriff's Office  | Reported-crime open data, booking log, sheriff site | Live                     | Covers sheriff jurisdiction in unincorporated Marin, including West Marin communities.     |
+| Larkspur                          | Central Marin Police Authority | CMPA Nixle alerts + police logs page                | Live                     | Official Nixle alerts are live; police logs on CMPA site remain in-person only.            |
+| Corte Madera                      | Central Marin Police Authority | CMPA Nixle alerts + police logs page                | Live                     | Official Nixle alerts are live; police logs on CMPA site remain in-person only.            |
+| San Anselmo                       | Central Marin Police Authority | CMPA Nixle alerts + police logs page                | Live                     | Official Nixle alerts are live; police logs on CMPA site remain in-person only.            |
+| Fairfax                           | Fairfax Police Department      | Weekly press-log PDFs                               | Live                     | Official PDF feed; currently document-level only.                                          |
+| Mill Valley                       | Mill Valley Police Department  | Weekly calls-for-service PDFs                       | Live                     | Official PDF feed; currently document-level only.                                          |
+| Ross                              | Ross Police Department         | Monthly statistics PDFs                             | Live                     | Official PDF feed; currently document-level only.                                          |
+| Tiburon                           | Tiburon Police Department      | CivicAlerts police stats + police releases          | Live                     | Machine-readable HTML; currently town-level placement in dashboard.                        |
+| Belvedere                         | Belvedere Police Department    | None                                                | Not covered              | No public call log located (bounded search 2026-09-29); city news is a civic feed instead. |
+| Sausalito                         | Sausalito Police Department    | Nixle alerts + calls-for-service page               | Live                     | Nixle alerts are live; the calls-for-service page remains blocked to unattended fetches.   |
+| San Rafael                        | San Rafael Police Department   | Nixle alerts + arrest-log page                      | Live                     | Nixle alerts are live; arrest-log HTML is reachable but does not expose actual entries.    |
+| Novato                            | Novato Police Department       | Nixle alerts + crime-map page                       | Live                     | Nixle alerts are live; Community Crime Map remains a separate vendor/API decision.         |
 
 ## Source notes
 
@@ -27,7 +27,7 @@ This is the working coverage map for official municipal and county law-enforceme
 - Central Marin Police Authority: official site states it serves Larkspur, Corte Madera, and San Anselmo. Its public police-log page still points residents to in-person viewing, but the agency’s official Nixle feed is usable.
 - Ross / Fairfax / Mill Valley: official municipal sites expose police PDFs directly enough for static ingestion.
 - Tiburon: official CivicAlerts pages expose article titles, posted dates, and article bodies in HTML, so these are usable without OCR.
-- Belvedere exists as its own department, but the current police department page does not expose a clear recurring blotter or stats feed; the dashboard currently uses official town public-safety posts instead.
+- Belvedere exists as its own department, but no public call log was located (bounded search 2026-09-29: city site search, the Police Transparency page's 2022 RIPA dashboard, four Nixle slugs). Its former keyword-matched "public safety" posts were city news, so they now come through the City of Belvedere civic feed and Belvedere is not a police source.
 - Sausalito, San Rafael, Novato, and Central Marin all expose public Nixle alert feeds that are accessible without login and suitable for official alert ingestion.
 
 ## Immediate next targets

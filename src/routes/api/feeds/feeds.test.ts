@@ -53,3 +53,13 @@ describe('SiteGround-captcha feeds', () => {
 		expect(urls.filter((u) => /(marinwater|marinhumane)\.org/.test(u))).toEqual([]);
 	});
 });
+
+describe('City of Belvedere feed', () => {
+	it('is a civic feed on its .gov host (replaces the retired Belvedere police-source posts)', () => {
+		expect(FEEDS.civic.find((f) => f.name === 'City of Belvedere')).toMatchObject({
+			url: 'https://cityofbelvedere.gov/feed/',
+			verification: 'official',
+			confirmed: true
+		});
+	});
+});

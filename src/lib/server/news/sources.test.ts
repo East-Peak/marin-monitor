@@ -34,5 +34,6 @@ describe('NEWS_SOURCES', () => {
 			[...new Set(NEWS_SOURCES.map((s) => new URL(s.url).hostname))].sort()
 		);
 		expect(NEWS_ALLOWED_HOSTS.has('www.marinij.com')).toBe(true);
+		expect(NEWS_ALLOWED_HOSTS.has('cityofbelvedere.gov')).toBe(true);
 	});
 });

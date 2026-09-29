@@ -16,6 +16,13 @@ function makeItem(overrides: Partial<NewsItem>): NewsItem {
 }
 
 describe('getRelevanceDecision', () => {
+	it('treats the City of Belvedere feed as strict-local official news', () => {
+		const item = { title: 'City Council Report', description: 'Agenda highlights.' };
+		const belvedere = getRelevanceDecision(makeItem({ ...item, source: 'City of Belvedere' }));
+		const unlisted = getRelevanceDecision(makeItem({ ...item, source: 'Unlisted Source' }));
+		expect(belvedere.score - unlisted.score).toBe(2);
+	});
+
 	it('keeps strict-local official sources even without an explicit town mention', () => {
 		const decision = getRelevanceDecision(
 			makeItem({

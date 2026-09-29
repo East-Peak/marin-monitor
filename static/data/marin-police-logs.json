@@ -177,27 +177,6 @@
     "locationEvidence": "Mill Valley"
   },
   {
-    "id": "belvedere-safety-20755",
-    "title": "Help Make Belvedere #1 in Safety",
-    "link": "https://www.cityofbelvedere.org/help-make-belvedere-1-in-safety/",
-    "pubDate": "2026-03-16T16:01:41.000Z",
-    "timestamp": 1773676901000,
-    "description": "For a community that often leads the way, it’s surprising that Belvedere ranks near the bottom—10th out of 12 Marin communities—when it comes to AlertMarin registrations. AlertMarin is Marin County’s official emergency notification system.…",
-    "content": "For a community that often leads the way, it’s surprising that Belvedere ranks near the bottom—10th out of 12 Marin communities—when it comes to AlertMarin registrations. AlertMarin is Marin County’s official emergency notification system. Belvedere Police Chief Jason Wu says it’s our primary tool for reaching residents when it matters most. Whether it’s a wildfire, flood or urgent public safety alert, AlertMarin is how critical information reaches you. At present, approximately 47% of Belvedere households are registered. Increasing participation will ensure that more residents receive critical information when it matters most. Registration is quick and easy, and while one adult per household is the goal, ideally every adult resident should sign up.",
-    "source": "Belvedere Public Safety",
-    "category": "safety",
-    "verification": "official",
-    "topics": [
-      "public-safety",
-      "official-update"
-    ],
-    "isAlert": false,
-    "town": "Belvedere",
-    "townSlug": "belvedere",
-    "locationConfidence": "town",
-    "locationEvidence": "Belvedere"
-  },
-  {
     "id": "fairfax-police-log-40679",
     "title": "Weekly police log · Mar 7th thru 13th , 2026",
     "link": "https://storage.googleapis.com/proudcity/fairfaxca/2026/03/9cbffc9f-doc00905520260314114342.pdf",
@@ -539,27 +518,6 @@
     "townSlug": "sausalito",
     "locationConfidence": "town",
     "locationEvidence": "Sausalito"
-  },
-  {
-    "id": "belvedere-safety-20524",
-    "title": "Emergency Notification News",
-    "link": "https://www.cityofbelvedere.org/emergency-notification-news/",
-    "pubDate": "2026-02-17T17:20:47.000Z",
-    "timestamp": 1771348847000,
-    "description": "Start the new year safer! Now is the perfect time to replace the batteries in all older smoke and carbon monoxide detectors—make this an annual habit. Newer smoke and CO₂ detectors are sealed with 10-year batteries, so check the manufactur…",
-    "content": "Start the new year safer! Now is the perfect time to replace the batteries in all older smoke and carbon monoxide detectors—make this an annual habit. Newer smoke and CO₂ detectors are sealed with 10-year batteries, so check the manufacture date to be sure yours are still within their lifespan. While you’re in safety mode, verify that you are signed up for emergency alerts through AlertMarin and confirm that your contact information is current. AlertMarin is the only official emergency notification system for Belvedere and Tiburon. Other systems like Nixle do not send disaster alerts for the Tiburon Peninsula. However, Nixle may be useful for receiving traffic updates along the Highway 101 corridor. These free services provide critical, real-time notifications during emergencies. For real-time emergency information, visit the Marin County Emergency Portal .",
-    "source": "Belvedere Public Safety",
-    "category": "safety",
-    "verification": "official",
-    "topics": [
-      "public-safety",
-      "official-update"
-    ],
-    "isAlert": false,
-    "town": "Belvedere",
-    "townSlug": "belvedere",
-    "locationConfidence": "town",
-    "locationEvidence": "Belvedere"
   },
   {
     "id": "nixle-san-rafael-pd-h3tsp",
@@ -1003,26 +961,5 @@
     "townSlug": "mill-valley",
     "locationConfidence": "town",
     "locationEvidence": "Mill Valley"
-  },
-  {
-    "id": "belvedere-safety-20374",
-    "title": "Annual Firearm Safety Reminder from the Belvedere P.D.",
-    "link": "https://www.cityofbelvedere.org/annual-firearm-safety-reminder-from-the-belvedere-p-d/",
-    "pubDate": "2026-01-20T17:26:44.000Z",
-    "timestamp": 1768930004000,
-    "description": "Securely storing firearms when not in use is an essential part of responsible gun ownership—and the most effective way to help prevent firearm accidents, theft, and misuse. Belvedere Municipal Code 9.7 requires all firearms to be properly…",
-    "content": "Securely storing firearms when not in use is an essential part of responsible gun ownership—and the most effective way to help prevent firearm accidents, theft, and misuse. Belvedere Municipal Code 9.7 requires all firearms to be properly secured when not in use, and California Penal Code 25100 makes an individual criminally liable if a loaded firearm is stored where a child is likely to gain access. The Belvedere Police Department offers free trigger locks and cable locks that prevent a firearm from operating while secured under lock and key, providing an added level of safety. To obtain a lock, call the Belvedere Police Department at (415) 435-3233 to arrange a time with a police officer. For more information on firearm safety, visit the Belvedere P olice Department webpage .",
-    "source": "Belvedere Public Safety",
-    "category": "safety",
-    "verification": "official",
-    "topics": [
-      "public-safety",
-      "official-update"
-    ],
-    "isAlert": false,
-    "town": "Belvedere",
-    "townSlug": "belvedere",
-    "locationConfidence": "town",
-    "locationEvidence": "Belvedere"
   }
 ]

@@ -91,6 +91,12 @@ export const FEEDS: Record<NewsCategory, FeedSource[]> = {
 			confirmed: true
 		},
 		{
+			name: 'City of Belvedere',
+			url: 'https://cityofbelvedere.gov/feed/',
+			verification: 'official',
+			confirmed: true
+		},
+		{
 			name: 'Marin IJ – Politics',
 			url: 'https://www.marinij.com/tag/politics/feed/',
 			verification: 'local_media',

@@ -5,11 +5,7 @@
  */
 import type { NewsItem } from '$lib/types';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
-import {
-	BELVEDERE_POSTS_URL,
-	FAIRFAX_DOCS_URL,
-	POLICE_USER_AGENT
-} from '$lib/config/police.shared.js';
+import { FAIRFAX_DOCS_URL, POLICE_USER_AGENT } from '$lib/config/police.shared.js';
 import {
 	stripHtml,
 	excerpt,
@@ -63,9 +59,6 @@ const TIBURON_TITLE_HINTS =
 	/(police|arrest|burglary|robbery|theft|dui|checkpoint|scam|traffic|safety|siren|preparedness)/i;
 const TIBURON_BODY_HINTS =
 	/(tiburon police|police department|calls for service|traffic citations|burglary|theft|robbery|dui|checkpoint|preparedness|public safety|traffic advisory|scam)/i;
-const BELVEDERE_TITLE_HINTS = /(officer|police|emergency|alert|public safety|wellbeing|camera)/i;
-const BELVEDERE_CONTENT_HINTS =
-	/(alertmarin|nixle|emergency notification|security camera|wellbeing checks|firearm safety|police transparency)/i;
 
 function isRecent(timestamp: number): boolean {
 	return timestamp >= Date.now() - RECENT_DAYS * 24 * 60 * 60 * 1000;
@@ -416,52 +409,6 @@ async function fetchTiburonPoliceNews(): Promise<NewsItem[]> {
 	return items.filter((item): item is NewsItem => item !== null);
 }
 
-async function fetchBelvedereSafetyPosts(): Promise<NewsItem[]> {
-	const response = await fetchWithTimeout(
-		BELVEDERE_POSTS_URL,
-		{
-			headers: { Accept: 'application/json', 'User-Agent': POLICE_USER_AGENT }
-		},
-		8000
-	);
-	if (!response.ok) throw new Error(`Belvedere posts fetch failed: ${response.status}`);
-
-	const posts = (await response.json()) as Array<{
-		id: number;
-		date: string;
-		link: string;
-		title?: { rendered?: string };
-		excerpt?: { rendered?: string };
-		content?: { rendered?: string };
-	}>;
-
-	return posts
-		.map((post) => {
-			const title = stripHtml(post.title?.rendered || '');
-			const content = stripHtml(post.content?.rendered || '');
-			const description = excerpt(post.excerpt?.rendered || content);
-			const haystack = `${title} ${content}`;
-
-			if (!BELVEDERE_TITLE_HINTS.test(title) && !BELVEDERE_CONTENT_HINTS.test(haystack)) {
-				return null;
-			}
-
-			return buildHtmlItem({
-				id: `belvedere-safety-${post.id}`,
-				title,
-				link: post.link,
-				pubDate: post.date,
-				source: 'Belvedere Public Safety',
-				town: 'Belvedere',
-				townSlug: 'belvedere',
-				description,
-				content,
-				topics: ['public-safety', 'official-update']
-			});
-		})
-		.filter((item): item is NewsItem => item !== null);
-}
-
 function extractNixleDate(doc: Document): string | null {
 	const headerText = normalizeWhitespace(doc.querySelector('.hd.clearfix')?.textContent || '');
 	const match = headerText.match(
@@ -588,7 +535,6 @@ export async function scrapePolice(): Promise<NewsItem[]> {
 		fetchMillValleyLogs(),
 		fetchRossStats(),
 		fetchTiburonPoliceNews(),
-		fetchBelvedereSafetyPosts(),
 		...NIXLE_AGENCIES.map((agency) => fetchNixleAgencyAlerts(agency))
 	]);
 
