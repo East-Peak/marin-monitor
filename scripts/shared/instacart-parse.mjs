@@ -6,6 +6,7 @@ const SIGN_POSTS = 'data-testid="CrossRetailerSearchRetailerSignPosts"';
 const RATING = /<div[^>]*aria-label="Average rating[^"]*"[\s\S]*?<\/div>|\(\d[\d.,]*K?\)/g;
 const CARD = 'data-item-card="true"';
 
+/** @param {string} html */
 const text = (html) =>
 	decodeEntities(html.replace(/<[^>]*>/g, ' '))
 		.replace(/\s+/g, ' ')

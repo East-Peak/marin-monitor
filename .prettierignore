@@ -34,3 +34,6 @@ docs/superpowers/
 
 # Agent tool scratch (gitignored via its own nested .gitignore)
 .superpowers/
+
+# Captured third-party markup, kept verbatim (not valid standalone HTML).
+src/lib/server/__fixtures__/

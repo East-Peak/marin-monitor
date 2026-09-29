@@ -7,6 +7,9 @@
 	// set (139 in the first pass) that needs a consent-gated triage, not a gate.
 	// See the deletion manifest before removing anything ignored here.
 	"include": ["files", "dependencies", "unlisted", "unresolved"],
+	// Residential syncs run from launchd through scripts/sync-runner.sh, which
+	// knip can't read (2026-09-29). Declared as entries so their imports are traced.
+	"entry": ["scripts/sync-*.mjs"],
 	"ignore": [
 		// Confirmed FALSE POSITIVES — kept permanently (Codex-verified, see the
 		// 2026-07-03 deletion manifest). knip can't see their real callers:
