@@ -364,4 +364,17 @@ describe('NOAA Tides adapter', () => {
 			expect(result[0].height).toBeCloseTo(-0.45);
 		});
 	});
+
+	describe('owner signal (Codex PR1 C2)', () => {
+		it('passes the owner signal to the service client so no retry starts after it aborts', async () => {
+			const owner = new AbortController();
+			mockRequest.mockResolvedValue(wrapResult({ predictions: [] }));
+
+			await fetchTidePredictions('9415020', { signal: owner.signal });
+			await fetchHourlyTides('9415020', { signal: owner.signal });
+
+			expect(mockRequest).toHaveBeenCalledTimes(2);
+			for (const call of mockRequest.mock.calls) expect(call[2]?.signal).toBe(owner.signal);
+		});
+	});
 });

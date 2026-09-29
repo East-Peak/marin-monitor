@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { componentLifetime } from '$lib/utils/lifetime';
 	import { Panel } from '$lib/components/common';
 	import { fetchGasPriceDataWithStatus } from '$lib/api/marin/gas-prices';
 	import { gasPriceStore } from '$lib/stores/gas-prices';
@@ -174,6 +175,8 @@
 		}
 	}
 
+	const lifetime = componentLifetime();
+
 	onMount(() => {
 		measureWidth();
 
@@ -189,7 +192,8 @@
 			dataLoading = true;
 			dataError = null;
 			try {
-				const result = await fetchGasPriceDataWithStatus();
+				const result = await fetchGasPriceDataWithStatus({ signal: lifetime });
+				if (lifetime.aborted) return; // destroyed while in flight: never write the shared store
 				if (result.ok) {
 					data = result.data;
 					gasPriceStore.set(result.data);
@@ -203,6 +207,7 @@
 
 		return () => {
 			window.removeEventListener('resize', handleResize);
+			clearTimeout(resizeTimer);
 		};
 	});
 

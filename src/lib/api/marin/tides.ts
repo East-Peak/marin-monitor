@@ -11,6 +11,7 @@ import { TIDE_STATIONS } from '$lib/config/map';
 import type { TidePrediction } from '$lib/types';
 import { logger } from '$lib/config/api';
 import { serviceClient } from '$lib/services/client';
+import type { OwnerOptions } from './fetch-helpers';
 
 interface NoaaTidePrediction {
 	t: string; // time "YYYY-MM-DD HH:MM"
@@ -33,7 +34,8 @@ function stableHour(d: Date): Date {
  * Fetch high/low tide predictions for the next 48 hours
  */
 export async function fetchTidePredictions(
-	station: string = TIDE_STATIONS.pointReyes
+	station: string = TIDE_STATIONS.pointReyes,
+	{ signal }: OwnerOptions = {}
 ): Promise<TidePrediction[]> {
 	try {
 		const now = stableHour(new Date());
@@ -53,7 +55,8 @@ export async function fetchTidePredictions(
 				interval: 'hilo',
 				format: 'json',
 				application: 'MarinMonitor'
-			}
+			},
+			signal
 		});
 		const predictions: NoaaTidePrediction[] = result.data.predictions || [];
 
@@ -72,7 +75,8 @@ export async function fetchTidePredictions(
  * Fetch hourly tide heights for chart display (next 24 hours)
  */
 export async function fetchHourlyTides(
-	station: string = TIDE_STATIONS.pointReyes
+	station: string = TIDE_STATIONS.pointReyes,
+	{ signal }: OwnerOptions = {}
 ): Promise<{ time: string; height: number }[]> {
 	try {
 		const now = stableHour(new Date());
@@ -92,7 +96,8 @@ export async function fetchHourlyTides(
 				interval: '60',
 				format: 'json',
 				application: 'MarinMonitor'
-			}
+			},
+			signal
 		});
 		const predictions: NoaaTidePrediction[] = result.data.predictions || [];
 

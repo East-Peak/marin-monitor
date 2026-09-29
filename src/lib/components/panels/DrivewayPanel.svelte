@@ -43,6 +43,7 @@
 
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { componentLifetime } from '$lib/utils/lifetime';
 	import { Panel } from '$lib/components/common';
 	import { fetchDrivewayDataWithStatus } from '$lib/api/marin/driveway';
 	import { drivewayStore } from '$lib/stores/driveway';
@@ -85,12 +86,15 @@
 		return n.toLocaleString('en-US');
 	}
 
+	const lifetime = componentLifetime();
+
 	onMount(() => {
 		void (async () => {
 			dataLoading = true;
 			dataError = null;
 			try {
-				const result = await fetchDrivewayDataWithStatus();
+				const result = await fetchDrivewayDataWithStatus({ signal: lifetime });
+				if (lifetime.aborted) return; // destroyed while in flight: never write the shared store
 				if (result.ok) {
 					data = result.data;
 					drivewayStore.set(result.data);

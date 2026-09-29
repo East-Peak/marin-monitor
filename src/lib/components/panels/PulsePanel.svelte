@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { componentLifetime } from '$lib/utils/lifetime';
 	import { Panel } from '$lib/components/common';
 	import { allNewsItems, refresh } from '$lib/stores';
 	import { townFilter, selectedTownObj } from '$lib/stores/town-filter';
@@ -53,9 +54,12 @@
 		return `M${eq.magnitude.toFixed(1)} ${new Date(eq.time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
 	}
 
+	const lifetime = componentLifetime();
+
 	onMount(async () => {
 		try {
-			const predictions = await fetchTidePredictions();
+			const predictions = await fetchTidePredictions(undefined, { signal: lifetime });
+			if (lifetime.aborted) return;
 			const now = Date.now();
 			nextTide =
 				predictions

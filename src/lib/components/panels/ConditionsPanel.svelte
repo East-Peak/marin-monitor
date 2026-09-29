@@ -21,23 +21,29 @@
 		return Math.max(0, Math.min(100, moisture));
 	}
 
-	// Re-fetch when town location changes
+	// Re-fetch when town location changes. Each run owns its request: a location
+	// change or destroy aborts it, so a stale or late NWS chain never continues.
 	$effect(() => {
 		const loc = $townLocation;
 		const lat = loc.lat;
 		const lon = loc.lon;
+		const run = new AbortController();
 		loading = true;
 		error = null;
-		Promise.all([fetchObservedWeather(lat, lon), fetchHourlyForecast(lat, lon)])
+		Promise.all([
+			fetchObservedWeather(lat, lon),
+			fetchHourlyForecast(lat, lon, { signal: run.signal })
+		])
 			.then(([observed, forecast]) => {
-				score = computeHeroDirt(observed, forecast);
+				if (!run.signal.aborted) score = computeHeroDirt(observed, forecast);
 			})
 			.catch((err) => {
-				error = (err as Error).message;
+				if (!run.signal.aborted) error = (err as Error).message;
 			})
 			.finally(() => {
-				loading = false;
+				if (!run.signal.aborted) loading = false;
 			});
+		return () => run.abort();
 	});
 </script>
 

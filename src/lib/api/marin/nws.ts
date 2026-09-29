@@ -14,6 +14,7 @@ import { NWS_ZONE } from '$lib/config/map';
 import type { WeatherData, FireWeatherAlert } from '$lib/types';
 import { logger } from '$lib/config/api';
 import { getGridPoint } from './nws-common';
+import type { OwnerOptions } from './fetch-helpers';
 import { serviceClient } from '$lib/services/client';
 
 /** NWS forecast period from the API */
@@ -54,11 +55,6 @@ interface NwsAlertFeature {
 		expires: string;
 		areaDesc: string;
 	};
-}
-
-/** An owner lifetime: once `signal` aborts, no further request starts. */
-export interface OwnerOptions {
-	signal?: AbortSignal;
 }
 
 const NWS_OPTIONS = {

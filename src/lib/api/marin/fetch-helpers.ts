@@ -1,3 +1,8 @@
+/** An owner lifetime (e.g. a destroyed dashboard or panel): once `signal` aborts, no further request starts. */
+export interface OwnerOptions {
+	signal?: AbortSignal;
+}
+
 /**
  * Run `fetch` under a timeout that also honours the caller's own signal (an owner
  * lifetime such as a destroyed dashboard): whichever fires first aborts the request.

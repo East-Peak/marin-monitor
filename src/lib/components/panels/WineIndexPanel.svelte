@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { componentLifetime } from '$lib/utils/lifetime';
 	import { Panel } from '$lib/components/common';
 	import { fetchWineIndexDataWithStatus } from '$lib/api/marin/wine-index';
 	import { wineIndexStore } from '$lib/stores/wine-index';
@@ -98,12 +99,15 @@
 		};
 	}
 
+	const lifetime = componentLifetime();
+
 	onMount(() => {
 		void (async () => {
 			dataLoading = true;
 			dataError = null;
 			try {
-				const result = await fetchWineIndexDataWithStatus();
+				const result = await fetchWineIndexDataWithStatus({ signal: lifetime });
+				if (lifetime.aborted) return; // destroyed while in flight: never write the shared store
 				if (result.ok) {
 					data = result.data;
 					wineIndexStore.set(result.data);

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { componentLifetime } from '$lib/utils/lifetime';
 	import { Panel } from '$lib/components/common';
 	import { fetchSchoolTuitionDataWithStatus } from '$lib/api/marin/school-tuition';
 	import { schoolTuitionStore } from '$lib/stores/school-tuition';
@@ -37,12 +38,15 @@
 		return '$' + amount.toLocaleString('en-US');
 	}
 
+	const lifetime = componentLifetime();
+
 	onMount(() => {
 		void (async () => {
 			dataLoading = true;
 			dataError = null;
 			try {
-				const result = await fetchSchoolTuitionDataWithStatus();
+				const result = await fetchSchoolTuitionDataWithStatus({ signal: lifetime });
+				if (lifetime.aborted) return; // destroyed while in flight: never write the shared store
 				if (result.ok) {
 					data = result.data;
 					schoolTuitionStore.set(result.data);

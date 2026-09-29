@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { componentLifetime } from '$lib/utils/lifetime';
 	import { Panel } from '$lib/components/common';
 	import type { WeatherData, FireWeatherAlert } from '$lib/types';
 	import type { HourlyPeriod, DailyRainForecast } from '$lib/api/marin/nws-hourly';
@@ -193,6 +194,8 @@
 		if (precipContainer) precipWidth = precipContainer.clientWidth;
 	}
 
+	const lifetime = componentLifetime();
+
 	onMount(() => {
 		measureWidths();
 
@@ -205,10 +208,10 @@
 		window.addEventListener('resize', handleResize);
 
 		void (async () => {
-			hourlyData = await fetchHourlyForecast(locationLat, locationLon);
+			hourlyData = await fetchHourlyForecast(locationLat, locationLon, { signal: lifetime });
 		})();
 		void (async () => {
-			dailyRain = await fetchDailyRainForecast(locationLat, locationLon);
+			dailyRain = await fetchDailyRainForecast(locationLat, locationLon, { signal: lifetime });
 		})();
 		void (async () => {
 			sunData = await fetchSunTimes(locationLat, locationLon);
@@ -216,6 +219,7 @@
 
 		return () => {
 			window.removeEventListener('resize', handleResize);
+			clearTimeout(resizeTimer);
 		};
 	});
 

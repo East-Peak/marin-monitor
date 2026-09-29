@@ -64,3 +64,54 @@ test('a destroyed legacy controller starts no further work (debounce, timers, vi
 	expect(held).toEqual([]); // no new feed request was even attempted
 	expect(await readRefresh()).toBe(refreshAtTeardown); // no refresh.endRefresh after teardown
 });
+
+/** Chains legacy child panels start on mount: NWS /points → gridpoints, NOAA tides (retried). */
+const PANEL_WORK = /api\.weather\.gov|tidesandcurrents\.noaa\.gov/;
+
+test('legacy panels start no request after teardown (NWS grid chains, tide retries)', async ({
+	page
+}) => {
+	await page.clock.install();
+	await page.addInitScript(() => localStorage.setItem('mm_onboardingComplete', 'true'));
+	const held: Route[] = [];
+	await page.route(/api\.weather\.gov\/points\/|tidesandcurrents\.noaa\.gov/, (route) => {
+		held.push(route); // hold each panel's first hop until the legacy dashboard is gone
+	});
+
+	await page.goto('/');
+	await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
+	const heldUrl = (re: RegExp) => held.some((r) => re.test(r.request().url()));
+	await expect.poll(() => heldUrl(/\/points\//), { timeout: 15_000 }).toBe(true);
+	await expect.poll(() => heldUrl(/tidesandcurrents/), { timeout: 15_000 }).toBe(true);
+
+	await page.evaluate(() => {
+		const a = document.createElement('a');
+		a.href = '/?layout=v2';
+		document.querySelector('[data-layout="legacy"]')!.append(a);
+		a.click();
+	});
+	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+
+	const late: string[] = [];
+	page.on('request', (req) => {
+		if (PANEL_WORK.test(req.url())) late.push(req.url());
+	});
+
+	// /points answers normally (a live chain would now fetch gridpoints); tides fail
+	// (a live ServiceClient would retry after its backoff).
+	for (const route of held.splice(0)) {
+		if (route.request().url().includes('/points/')) {
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/geo+json',
+				body: JSON.stringify({ properties: { gridId: 'MTR', gridX: 82, gridY: 121 } })
+			});
+		} else {
+			await route.fulfill({ status: 503, body: 'unavailable' });
+		}
+	}
+	await page.clock.runFor(60_000);
+	await page.waitForTimeout(1_500);
+
+	expect(late).toEqual([]);
+});

@@ -7,6 +7,7 @@
 
 import { logger } from '$lib/config/api';
 import { getGridPoint } from './nws-common';
+import type { OwnerOptions } from './fetch-helpers';
 import { serviceClient } from '$lib/services/client';
 
 export interface HourlyPeriod {
@@ -71,14 +72,22 @@ export interface DailyRainForecast {
 /**
  * Fetch hourly forecast for the next 24 hours
  */
-export async function fetchHourlyForecast(lat?: number, lon?: number): Promise<HourlyPeriod[]> {
+export async function fetchHourlyForecast(
+	lat?: number,
+	lon?: number,
+	{ signal }: OwnerOptions = {}
+): Promise<HourlyPeriod[]> {
 	try {
-		const grid = await getGridPoint(lat, lon);
+		const grid = await getGridPoint(lat, lon, signal);
+		if (signal?.aborted) return [];
 		const endpoint = `/gridpoints/${grid.office}/${grid.gridX},${grid.gridY}/forecast/hourly`;
 
 		logger.log('NWS', `Fetching hourly forecast: ${endpoint}`);
 
-		const result = await serviceClient.request<NwsHourlyResponse>('NWS', endpoint, NWS_OPTIONS);
+		const result = await serviceClient.request<NwsHourlyResponse>('NWS', endpoint, {
+			...NWS_OPTIONS,
+			signal
+		});
 		const periods = result.data.properties?.periods || [];
 
 		// Return next 24 hours
@@ -123,15 +132,20 @@ function parseValidTime(validTime: string): { start: Date; end: Date } | null {
  */
 export async function fetchDailyRainForecast(
 	lat?: number,
-	lon?: number
+	lon?: number,
+	{ signal }: OwnerOptions = {}
 ): Promise<DailyRainForecast[]> {
 	try {
-		const grid = await getGridPoint(lat, lon);
+		const grid = await getGridPoint(lat, lon, signal);
+		if (signal?.aborted) return [];
 		const endpoint = `/gridpoints/${grid.office}/${grid.gridX},${grid.gridY}`;
 
 		logger.log('NWS', `Fetching QPF: ${endpoint}`);
 
-		const result = await serviceClient.request<NwsGridpointResponse>('NWS', endpoint, NWS_OPTIONS);
+		const result = await serviceClient.request<NwsGridpointResponse>('NWS', endpoint, {
+			...NWS_OPTIONS,
+			signal
+		});
 		const qpf = result.data.properties?.quantitativePrecipitation;
 		if (!qpf?.values?.length) return [];
 

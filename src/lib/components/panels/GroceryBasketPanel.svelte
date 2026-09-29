@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { componentLifetime } from '$lib/utils/lifetime';
 	import { Panel } from '$lib/components/common';
 	import { fetchGroceryBasketDataWithStatus } from '$lib/api/marin/grocery-basket';
 	import { groceryBasketStore } from '$lib/stores/grocery-basket';
@@ -107,6 +108,8 @@
 		}
 	}
 
+	const lifetime = componentLifetime();
+
 	onMount(() => {
 		measureWidth();
 
@@ -122,7 +125,8 @@
 			dataLoading = true;
 			dataError = null;
 			try {
-				const result = await fetchGroceryBasketDataWithStatus();
+				const result = await fetchGroceryBasketDataWithStatus({ signal: lifetime });
+				if (lifetime.aborted) return; // destroyed while in flight: never write the shared store
 				if (result.ok) {
 					data = result.data;
 					groceryBasketStore.set(result.data);
@@ -136,6 +140,7 @@
 
 		return () => {
 			window.removeEventListener('resize', handleResize);
+			clearTimeout(resizeTimer);
 		};
 	});
 

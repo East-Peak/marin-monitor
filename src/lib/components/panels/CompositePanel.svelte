@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { componentLifetime } from '$lib/utils/lifetime';
 	import { Panel } from '$lib/components/common';
 	import { fetchCompositeDataWithStatus } from '$lib/api/marin/composite';
 	import { compositeStore } from '$lib/stores/composite';
@@ -111,6 +112,8 @@
 		}
 	}
 
+	const lifetime = componentLifetime();
+
 	onMount(() => {
 		measureWidth();
 
@@ -126,7 +129,8 @@
 			dataLoading = true;
 			dataError = null;
 			try {
-				const result = await fetchCompositeDataWithStatus();
+				const result = await fetchCompositeDataWithStatus({ signal: lifetime });
+				if (lifetime.aborted) return; // destroyed while in flight: never write the shared store
 				if (result.ok) {
 					data = result.data;
 					compositeStore.set(result.data);
@@ -140,6 +144,7 @@
 
 		return () => {
 			window.removeEventListener('resize', handleResize);
+			clearTimeout(resizeTimer);
 		};
 	});
 

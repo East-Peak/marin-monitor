@@ -14,7 +14,7 @@
 
 import type { NewsItem } from '$lib/types';
 import { logger } from '$lib/config/api';
-import { fetchWithTimeout } from './fetch-helpers';
+import { fetchWithTimeout, type OwnerOptions } from './fetch-helpers';
 
 /** Marin-relevant transit agencies */
 const MARIN_AGENCIES = [
@@ -127,7 +127,7 @@ function entityToNewsItem(entity: GtfsAlertEntity, agencyId: string, agencyName:
  * Requests are sequential with a delay to avoid 511.org rate limiting (429s).
  * Once the owner `signal` aborts, no further agency request or delay starts.
  */
-export async function fetchTransitAlerts({ signal }: { signal?: AbortSignal } = {}): Promise<{
+export async function fetchTransitAlerts({ signal }: OwnerOptions = {}): Promise<{
 	items: NewsItem[];
 	errors: string[];
 }> {

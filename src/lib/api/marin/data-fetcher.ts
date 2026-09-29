@@ -18,7 +18,7 @@
  */
 
 import { logger } from '$lib/config/api';
-import { fetchWithTimeout } from './fetch-helpers';
+import { fetchWithTimeout, type OwnerOptions } from './fetch-helpers';
 
 /**
  * How the server produced a successful response. `live` is the normal path;
@@ -49,11 +49,11 @@ export function createDataFetcherWithStatus<T>(
 	endpoint: string,
 	serviceId: string,
 	fallback: T
-): () => Promise<FetchResult<T>> {
-	return async (): Promise<FetchResult<T>> => {
+): (options?: OwnerOptions) => Promise<FetchResult<T>> {
+	return async ({ signal }: OwnerOptions = {}): Promise<FetchResult<T>> => {
 		try {
 			logger.log(serviceId, `Loading from ${endpoint}`);
-			const response = await fetchWithTimeout(endpoint);
+			const response = await fetchWithTimeout(endpoint, { signal });
 			if (!response.ok) {
 				const error = `HTTP ${response.status}`;
 				logger.warn(serviceId, `Fetch failed: ${error}`);
@@ -76,10 +76,10 @@ export function createDataFetcher<T>(
 	endpoint: string,
 	serviceId: string,
 	fallback: T
-): () => Promise<T> {
+): (options?: OwnerOptions) => Promise<T> {
 	const withStatus = createDataFetcherWithStatus<T>(endpoint, serviceId, fallback);
-	return async (): Promise<T> => {
-		const result = await withStatus();
+	return async (options: OwnerOptions = {}): Promise<T> => {
+		const result = await withStatus(options);
 		return result.ok ? result.data : result.fallback;
 	};
 }

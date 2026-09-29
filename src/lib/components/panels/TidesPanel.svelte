@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { componentLifetime } from '$lib/utils/lifetime';
 	import { Panel } from '$lib/components/common';
 	import { fetchTidePredictions, fetchHourlyTides } from '$lib/api/marin/tides';
 	import {
@@ -364,6 +365,8 @@
 		if (tideContainer) tideWidth = tideContainer.clientWidth;
 	}
 
+	const lifetime = componentLifetime();
+
 	onMount(() => {
 		measureTideWidth();
 
@@ -381,12 +384,13 @@
 
 		void (async () => {
 			const [predictions, tides, marine, weather, snapshot] = await Promise.allSettled([
-				fetchTidePredictions(tideStation),
-				fetchHourlyTides(tideStation),
+				fetchTidePredictions(tideStation, { signal: lifetime }),
+				fetchHourlyTides(tideStation, { signal: lifetime }),
 				fetchMarineHourly(24),
-				fetchHourlyForecast(locationLat, locationLon),
+				fetchHourlyForecast(locationLat, locationLon, { signal: lifetime }),
 				fetchMarineSnapshot()
 			]);
+			if (lifetime.aborted) return;
 
 			if (predictions.status === 'fulfilled') tidePredictions = predictions.value;
 			if (tides.status === 'fulfilled') hourlyTides = tides.value;
@@ -399,6 +403,7 @@
 
 		return () => {
 			window.removeEventListener('resize', handleResize);
+			clearTimeout(resizeTimer);
 		};
 	});
 

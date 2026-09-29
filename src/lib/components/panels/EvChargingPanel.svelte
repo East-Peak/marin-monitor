@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { componentLifetime } from '$lib/utils/lifetime';
 	import { Panel } from '$lib/components/common';
 	import { fetchEvChargingData } from '$lib/api/marin/ev-charging';
 	import { evChargingStore } from '$lib/stores/ev-charging';
@@ -120,12 +121,16 @@
 		return station.chargingLevels.includes('DCFast') ? 'DC Fast' : 'Level 2';
 	}
 
+	const lifetime = componentLifetime();
+
 	onMount(() => {
 		void (async () => {
 			dataLoading = true;
 			try {
-				data = await fetchEvChargingData();
-				evChargingStore.set(data);
+				const next = await fetchEvChargingData({ signal: lifetime });
+				if (lifetime.aborted) return; // destroyed while in flight: never write the shared store
+				data = next;
+				evChargingStore.set(next);
 			} finally {
 				dataLoading = false;
 			}

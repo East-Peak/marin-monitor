@@ -61,7 +61,7 @@ describe('createDataFetcher', () => {
 		await fetcher();
 
 		expect(mockFetchWithTimeout).toHaveBeenCalledOnce();
-		expect(mockFetchWithTimeout).toHaveBeenCalledWith('/api/data/foo');
+		expect(mockFetchWithTimeout).toHaveBeenCalledWith('/api/data/foo', { signal: undefined });
 	});
 
 	it('returns parsed JSON on success', async () => {
@@ -307,5 +307,21 @@ describe('createDataFetcherWithStatus', () => {
 
 		expect(mockLoggerLog).toHaveBeenCalledWith('FOO', expect.stringContaining('/api/data/foo'));
 		expect(mockLoggerWarn).not.toHaveBeenCalled();
+	});
+
+	describe('owner signal (Codex PR1 C2)', () => {
+		it('createDataFetcherWithStatus passes the owner signal to the request', async () => {
+			const owner = new AbortController();
+			mockFetchWithTimeout.mockResolvedValueOnce(jsonResponse({ a: 1 }));
+			await createDataFetcherWithStatus('/api/data/foo', 'FOO', {})({ signal: owner.signal });
+			expect(mockFetchWithTimeout.mock.calls[0][1]?.signal).toBe(owner.signal);
+		});
+
+		it('createDataFetcher passes the owner signal through', async () => {
+			const owner = new AbortController();
+			mockFetchWithTimeout.mockResolvedValueOnce(jsonResponse({ a: 1 }));
+			await createDataFetcher('/api/data/foo', 'FOO', {})({ signal: owner.signal });
+			expect(mockFetchWithTimeout.mock.calls[0][1]?.signal).toBe(owner.signal);
+		});
 	});
 });

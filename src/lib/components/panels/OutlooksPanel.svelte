@@ -149,13 +149,16 @@
 		marineLoading = false;
 	});
 
-	// Re-fetch rain forecast when location changes
+	// Re-fetch rain forecast when location changes. Each run owns its request: a
+	// location change or destroy aborts it, so a stale or late chain never continues.
 	$effect(() => {
 		const lat = locationLat;
 		const lon = locationLon;
-		fetchDailyRainForecast(lat, lon).then((rain) => {
-			dailyRain = rain;
+		const run = new AbortController();
+		fetchDailyRainForecast(lat, lon, { signal: run.signal }).then((rain) => {
+			if (!run.signal.aborted) dailyRain = rain;
 		});
+		return () => run.abort();
 	});
 </script>
 

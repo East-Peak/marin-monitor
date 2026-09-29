@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { componentLifetime } from '$lib/utils/lifetime';
 	import { Panel } from '$lib/components/common';
 	import { COFFEE_INDEX_DRINKS, COFFEE_INDEX_NAME, COFFEE_PRIMARY_DRINK } from '$lib/config/coffee';
 	import { fetchCoffeeIndexData } from '$lib/api/marin/coffee';
@@ -215,6 +216,8 @@
 		}
 	}
 
+	const lifetime = componentLifetime();
+
 	onMount(() => {
 		measureWidth();
 
@@ -229,8 +232,10 @@
 		void (async () => {
 			dataLoading = true;
 			try {
-				data = await fetchCoffeeIndexData();
-				coffeeIndexStore.set(data);
+				const next = await fetchCoffeeIndexData({ signal: lifetime });
+				if (lifetime.aborted) return; // destroyed while in flight: never write the shared store
+				data = next;
+				coffeeIndexStore.set(next);
 			} finally {
 				dataLoading = false;
 			}
@@ -238,6 +243,7 @@
 
 		return () => {
 			window.removeEventListener('resize', handleResize);
+			clearTimeout(resizeTimer);
 		};
 	});
 
