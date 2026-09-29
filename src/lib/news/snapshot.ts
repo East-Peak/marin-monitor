@@ -20,6 +20,8 @@
  * - items[].fetchedAt: when the run that produced the item fetched its source.
  */
 import type { NewsCategory, VerificationLevel } from '$lib/types';
+import { resolvePublishedAt } from './feed-date';
+import type { PublishedAtSource } from './feed-xml';
 import type { NormalizedNewsItem } from './normalize';
 
 export const NEWS_SNAPSHOT_SCHEMA_VERSION = 1;
@@ -125,34 +127,37 @@ const SKEW_MS = 5 * 60_000;
 const notAfter = (a: unknown, b: unknown) =>
 	Date.parse(a as string) <= Date.parse(b as string) + SKEW_MS;
 
+/**
+ * Publication provenance must reproduce its outcome: the raw value, re-read
+ * by the shared feed-date parser in the recorded zone against the item's own
+ * fetch time, yields exactly the recorded status, instant and zone. So a
+ * writer cannot record a publication time its raw evidence does not support.
+ */
 function publishedAtConsistent(v: Rec): boolean {
 	const {
 		publishedAt,
 		publishedAtRaw,
 		publishedAtSource,
 		publishedAtStatus,
-		publishedAtAssumedZone
+		publishedAtAssumedZone: zone
 	} = v;
-	if (!(publishedAtAssumedZone === null || isNonEmpty(publishedAtAssumedZone))) return false;
-	if (!(publishedAtSource === null || DATE_SOURCES.has(publishedAtSource as string))) return false;
-	switch (publishedAtStatus) {
-		case 'valid':
-			// A valid publication time cannot be later than the fetch that saw it.
-			return (
-				isIsoInstant(publishedAt) &&
-				isIsoInstant(v.fetchedAt) &&
-				notAfter(publishedAt, v.fetchedAt) &&
-				isString(publishedAtRaw) &&
-				publishedAtSource !== null
-			);
-		case 'missing':
-			return publishedAt === null && publishedAtRaw === null && publishedAtSource === null;
-		case 'invalid':
-		case 'future':
-			return publishedAt === null && isString(publishedAtRaw) && publishedAtSource !== null;
-		default:
-			return false;
+	if (publishedAtStatus === 'missing') {
+		return (
+			publishedAt === null && publishedAtRaw === null && publishedAtSource === null && zone === null
+		);
 	}
+	if (!isString(publishedAtRaw) || !DATE_SOURCES.has(publishedAtSource as string)) return false;
+	if (!(zone === null || isNonEmpty(zone)) || !isIsoInstant(v.fetchedAt)) return false;
+	const again = resolvePublishedAt(
+		[{ source: publishedAtSource as PublishedAtSource, raw: publishedAtRaw }],
+		Date.parse(v.fetchedAt),
+		zone ?? undefined
+	);
+	return (
+		again.publishedAtStatus === publishedAtStatus &&
+		again.publishedAt === publishedAt &&
+		again.publishedAtAssumedZone === zone
+	);
 }
 
 function isSourceItem(v: unknown): v is Rec {
@@ -172,6 +177,8 @@ function isSourceItem(v: unknown): v is Rec {
 		isIsoOrNull(v.updatedAt) &&
 		isIsoOrNull(eventAt) &&
 		(eventAt === null ? eventAtSource === null : DATE_SOURCES.has(eventAtSource as string)) &&
+		// An event-start date is never also a publication time (Decision 7).
+		(eventAt === null || v.publishedAtStatus === 'missing') &&
 		isIsoInstant(v.fetchedAt) &&
 		(town === null ||
 			(isRecord(town) &&
@@ -195,10 +202,22 @@ const STATE_RULES: ReadonlyMap<string, (s: Rec, items: unknown[]) => boolean> = 
 	NewsSourceState,
 	(s: Rec, items: unknown[]) => boolean
 >([
-	['ok', (s, items) => s.consecutiveFailures === 0 && s.lastError === null && items.length > 0],
+	// ok/empty: fetched THIS run, so the last success is this attempt.
+	[
+		'ok',
+		(s, items) =>
+			s.consecutiveFailures === 0 &&
+			s.lastError === null &&
+			s.lastSuccessAt === s.lastAttemptAt &&
+			items.length > 0
+	],
 	[
 		'empty',
-		(s, items) => s.consecutiveFailures === 0 && s.lastError === null && items.length === 0
+		(s, items) =>
+			s.consecutiveFailures === 0 &&
+			s.lastError === null &&
+			s.lastSuccessAt === s.lastAttemptAt &&
+			items.length === 0
 	],
 	[
 		'retained',
@@ -231,20 +250,37 @@ function isSourceStatus(v: unknown): v is Rec {
 		isNat(v.consecutiveFailures) &&
 		v.itemCount === v.items.length &&
 		rule(v, v.items) &&
-		v.items.every((item) => isSourceItem(item) && item.sourceId === v.id)
+		v.items.every(
+			(item) =>
+				isSourceItem(item) &&
+				item.sourceId === v.id &&
+				// Last-good items come from the last success, never after it.
+				Date.parse(item.fetchedAt as string) <= Date.parse(v.lastSuccessAt as string)
+		)
 	);
 }
 
-function isSnapshotItem(v: unknown, sourceIds: ReadonlySet<string>): boolean {
+/** dedupe keeps a same-source reused GUID apart as `<id>~2`, `<id>~3`, … */
+function isCopyOf(item: Rec, own: Rec): boolean {
+	const [id, base] = [item.id as string, own.id as string];
+	const suffix = id.startsWith(`${base}~`) ? id.slice(base.length + 1) : null;
+	return own.title === item.title && (id === base || (suffix !== null && /^\d+$/.test(suffix)));
+}
+
+/**
+ * A public story is a copy of an item in its own source's collection, and
+ * every source it also cites still carries items (retention view agrees).
+ */
+function isSnapshotItem(v: unknown, collections: ReadonlyMap<string, Rec[]>): boolean {
 	return (
 		isSourceItem(v) &&
-		sourceIds.has(v.sourceId as string) &&
+		(collections.get(v.sourceId as string) ?? []).some((own) => isCopyOf(v, own)) &&
 		Array.isArray(v.categories) &&
 		v.categories.length > 0 &&
 		v.categories.every((c) => CATEGORIES.has(c as string)) &&
 		v.categories.includes(v.category) &&
 		isStringArray(v.alsoReportedBy) &&
-		v.alsoReportedBy.every((id) => sourceIds.has(id) && id !== v.sourceId)
+		v.alsoReportedBy.every((id) => id !== v.sourceId && (collections.get(id)?.length ?? 0) > 0)
 	);
 }
 
@@ -257,9 +293,11 @@ export function parseNewsSnapshot(value: unknown): NewsSnapshot | null {
 	if (!isIsoInstant(value.generatedAt) || !isIsoOrNull(value.lastSuccessfulScrapeAt)) return null;
 	const { sources, items } = value;
 	if (!Array.isArray(sources) || !sources.every(isSourceStatus)) return null;
-	const sourceIds = new Set(sources.map((s) => (s as Rec).id as string));
-	if (sourceIds.size !== sources.length) return null;
-	if (!Array.isArray(items) || !items.every((i) => isSnapshotItem(i, sourceIds))) return null;
+	const collections = new Map(
+		sources.map((s) => [(s as Rec).id as string, (s as Rec).items as Rec[]])
+	);
+	if (collections.size !== sources.length) return null;
+	if (!Array.isArray(items) || !items.every((i) => isSnapshotItem(i, collections))) return null;
 	// Nothing in a revision can have been fetched or attempted after it was generated.
 	const generatedAt = value.generatedAt;
 	const stamps = [

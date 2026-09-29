@@ -35,7 +35,8 @@ const sourceItem = (sourceId: string, id: string): NewsSourceItem => ({
 
 function valid(): NewsSnapshot {
 	const a1 = sourceItem('a', '1');
-	const b1 = sourceItem('b', '1');
+	// b is retained: its item is the one fetched at its last success.
+	const b1 = { ...sourceItem('b', '1'), fetchedAt: '2026-09-28T19:45:00.000Z' };
 	return {
 		schemaVersion: NEWS_SNAPSHOT_SCHEMA_VERSION,
 		revision: 3,
@@ -75,6 +76,11 @@ function valid(): NewsSnapshot {
 
 type Mutate = (s: NewsSnapshot & Record<string, unknown>) => void;
 const item0 = (s: NewsSnapshot) => s.items[0] as unknown as Record<string, unknown>;
+/** The same edit to both views of a's story, so only the edited rule can object. */
+const bothViews = (s: NewsSnapshot, edit: (item: Record<string, unknown>) => void) => {
+	edit(item0(s));
+	edit(s.sources[0].items[0] as unknown as Record<string, unknown>);
+};
 const src0 = (s: NewsSnapshot) => s.sources[0] as unknown as Record<string, unknown>;
 
 describe('parseNewsSnapshot', () => {
@@ -150,11 +156,119 @@ describe('parseNewsSnapshot', () => {
 		[
 			'lastSuccessfulScrapeAt after generatedAt',
 			(s) => (s.lastSuccessfulScrapeAt = '2026-09-28T21:00:00.000Z')
+		],
+		// Codex slice-2 #3: publication provenance must be real.
+		[
+			'a valid publication whose raw date is not a date',
+			(s) => bothViews(s, (i) => (i.publishedAtRaw = 'not a date'))
+		],
+		[
+			'a valid publication whose raw date names another instant',
+			(s) => bothViews(s, (i) => (i.publishedAtRaw = 'Mon, 28 Sep 2026 11:00:00 -0700'))
+		],
+		[
+			'an assumed zone recorded for a raw date that carries its own zone',
+			(s) => bothViews(s, (i) => (i.publishedAtAssumedZone = 'America/Los_Angeles'))
+		],
+		[
+			'an invalid status for a raw date that parses',
+			(s) =>
+				bothViews(s, (i) => {
+					i.publishedAtStatus = 'invalid';
+					i.publishedAt = null;
+				})
+		],
+		[
+			'an event time alongside a publication time (event-start keeps publication unknown)',
+			(s) =>
+				bothViews(s, (i) => {
+					i.eventAt = '2026-10-01T02:00:00.000Z';
+					i.eventAtSource = 'rss:pubDate';
+				})
+		],
+		// Codex slice-2 #4: the public view and the retention view must agree.
+		[
+			'a public story its source no longer carries',
+			(s) =>
+				Object.assign(s.sources[0], {
+					status: 'failed',
+					lastError: 'http-status: HTTP 503',
+					consecutiveFailures: 1,
+					itemCount: 0,
+					items: []
+				})
+		],
+		[
+			'a reporter whose own collection is empty',
+			(s) =>
+				Object.assign(s.sources[1], {
+					status: 'failed',
+					itemCount: 0,
+					items: []
+				})
+		],
+		['a public copy titled differently from its source copy', (s) => (item0(s).title = 'Other')],
+		['an ok source with no last success', (s) => (s.sources[0].lastSuccessAt = null)],
+		[
+			'an ok source whose last success is not this attempt',
+			(s) => (s.sources[0].lastSuccessAt = '2026-09-28T19:00:00.000Z')
+		],
+		[
+			'a retained item fetched after its source last succeeded',
+			(s) => (s.sources[1].items[0].fetchedAt = '2026-09-28T19:50:00.000Z')
 		]
 	])('rejects %s', (_label, mutate) => {
 		const s = valid() as NewsSnapshot & Record<string, unknown>;
 		mutate(s);
 		expect(parseNewsSnapshot(JSON.parse(JSON.stringify(s)))).toBeNull();
+	});
+
+	it.each<[string, Mutate]>([
+		[
+			'a dedupe-suffixed id for a same-source GUID reused by another story',
+			(s) => {
+				const again = { ...s.sources[0].items[0], title: 'Story 1, again' };
+				Object.assign(s.sources[0], { itemCount: 2, items: [s.sources[0].items[0], again] });
+				s.items.push({ ...again, id: `${again.id}~2`, categories: ['local'], alsoReportedBy: [] });
+			}
+		],
+		[
+			'a zone-less raw date read in its recorded assumed zone',
+			(s) =>
+				bothViews(s, (i) => {
+					i.publishedAtRaw = 'Mon, Sep 28 2026 12:00:00 PM';
+					i.publishedAtAssumedZone = 'America/Los_Angeles';
+				})
+		],
+		[
+			'an event-start item: event time known, publication unknown',
+			(s) =>
+				bothViews(s, (i) =>
+					Object.assign(i, {
+						publishedAt: null,
+						publishedAtRaw: null,
+						publishedAtSource: null,
+						publishedAtStatus: 'missing',
+						eventAt: '2026-10-01T02:00:00.000Z',
+						eventAtSource: 'rss:pubDate'
+					})
+				)
+		],
+		[
+			'a future raw date kept as provenance',
+			(s) =>
+				bothViews(s, (i) =>
+					Object.assign(i, {
+						publishedAt: null,
+						publishedAtRaw: 'Mon, 28 Sep 2026 14:00:00 -0700',
+						publishedAtStatus: 'future'
+					})
+				)
+		]
+	])('accepts %s', (_label, mutate) => {
+		const s = valid() as NewsSnapshot & Record<string, unknown>;
+		mutate(s);
+		expect(parseNewsSnapshot(JSON.parse(JSON.stringify(s)))).not.toBeNull();
 	});
 
 	it.each(['toString', 'hasOwnProperty', 'valueOf', '__proto__'])(

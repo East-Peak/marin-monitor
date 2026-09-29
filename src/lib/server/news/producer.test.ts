@@ -1,6 +1,12 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from 'vitest';
-import { NOW, RSS_WORDPRESS, rssWithItems } from '$lib/news/feed-fixtures';
+import {
+	ATOM_FEED,
+	NOW,
+	RSS_DATE_CASES,
+	RSS_WORDPRESS,
+	rssWithItems
+} from '$lib/news/feed-fixtures';
 import { parseNewsSnapshot, type NewsSnapshot } from '$lib/news/snapshot';
 import type { BoundedFetchResult } from './bounded-fetch';
 import { createMemoryBlobApi, type MemoryBlobApi } from './memory-blob-api';
@@ -112,6 +118,43 @@ describe('runNewsProducer — publication', () => {
 		expect(s.revision).toBe(3);
 		expect(statusOf(s, 'b')).toMatchObject({ status: 'retained', itemCount: 1 });
 		expect(s.items.map((i) => i.title)).toContain('Point Reyes oyster farm reopens');
+	});
+
+	it('publishes what the strict reader accepts — every date case, event-start, assumed zone, reused GUID, retention', async () => {
+		const agendas = { ...source('bos', 2), pubDateMeaning: 'event-start' as const };
+		const zoned = { ...source('nbc', 3), assumedTimeZone: 'America/Los_Angeles' };
+		const reused = source('reused', 4);
+		const feeds = {
+			[A.url]: ok(RSS_DATE_CASES),
+			[B.url]: ok(ATOM_FEED),
+			[agendas.url]: ok(RSS_WORDPRESS),
+			[zoned.url]: ok(
+				`<rss><channel><item><title>Point Reyes zone-less</title><link>https://nbc.example/1</link><pubDate>Mon, Sep 28 2026 11:48:58 AM</pubDate></item></channel></rss>`
+			),
+			[reused.url]: ok(
+				`<rss><channel><item><title>Point Reyes first story</title><guid>7</guid></item><item><title>Point Reyes second story</title><guid>7</guid></item></channel></rss>`
+			)
+		};
+		const sources = [A, B, agendas, zoned, reused];
+		const api = createMemoryBlobApi();
+		await runNewsProducer(deps(api, feeds, { sources }));
+		const first = published(api);
+		expect(first.items.map((i) => i.id)).toContain('reused:7~2');
+		expect(first.items.some((i) => i.publishedAtAssumedZone === 'America/Los_Angeles')).toBe(true);
+		expect(first.items.some((i) => i.eventAt !== null)).toBe(true);
+		expect(new Set(first.items.map((i) => i.publishedAtStatus))).toEqual(
+			new Set(['valid', 'missing', 'invalid', 'future'])
+		);
+
+		const later = { sources, now: () => NOW + HOUR, runId: 'run-2' };
+		await runNewsProducer(deps(api, { [A.url]: ok(RSS_DATE_CASES) }, later));
+		expect(published(api).sources.map((x) => x.status)).toEqual([
+			'ok',
+			'retained',
+			'retained',
+			'retained',
+			'retained'
+		]);
 	});
 
 	it('publishes a story carried by two feeds once, with both categories and sources', async () => {
