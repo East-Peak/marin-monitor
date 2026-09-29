@@ -42,7 +42,7 @@ test('a destroyed legacy controller starts no further work (debounce, timers, vi
 	});
 
 	// Delayed responses arrive after the controller is gone.
-	const xml = `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>t</title><item><title>Mill Valley council approves late story</title><link>https://example.com/late</link><pubDate>${new Date().toUTCString()}</pubDate></item></channel></rss>`;
+	const xml = `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>t</title><item><title>Novato council approves late story</title><link>https://example.com/late</link><pubDate>${new Date().toUTCString()}</pubDate></item></channel></rss>`;
 	for (const route of held.splice(0)) {
 		if (route.request().url().includes('/api/transit?')) {
 			await route.fulfill({
@@ -63,6 +63,19 @@ test('a destroyed legacy controller starts no further work (debounce, timers, vi
 	expect(late).toEqual([]);
 	expect(held).toEqual([]); // no new feed request was even attempted
 	expect(await readRefresh()).toBe(refreshAtTeardown); // no refresh.endRefresh after teardown
+
+	// Codex C4: no news-store write either. The news store outlives the page component, so a
+	// late write by the destroyed controller would render at once on a round trip back to
+	// legacy, before the new controller's (held) feed requests could answer.
+	await page.evaluate(() => {
+		const a = document.createElement('a');
+		a.href = '/';
+		document.querySelector('[data-layout="v2"]')!.append(a);
+		a.click();
+	});
+	await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
+	await page.waitForTimeout(1_000);
+	await expect(page.getByText('Novato council approves late story')).toHaveCount(0);
 });
 
 /** Chains legacy child panels start on mount: NWS /points → gridpoints, NOAA tides (retried). */
