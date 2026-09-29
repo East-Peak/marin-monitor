@@ -32,3 +32,10 @@ describe('Marin Lately feed', () => {
 		await expect(get('https://marinlately.com/feed/')).rejects.toMatchObject({ status: 400 });
 	});
 });
+
+describe('Marin IJ local news feed', () => {
+	it('reads the populated marin-county tag (tag/news has returned 0 items since 2026)', () => {
+		const ij = FEEDS.local.find((f) => f.name === 'Marin Independent Journal');
+		expect(ij?.url).toBe('https://www.marinij.com/tag/marin-county/feed/');
+	});
+});

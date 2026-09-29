@@ -6,6 +6,10 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Fixed — Marin IJ local news from a populated feed (G0)
+
+- `marinij.com/tag/news/feed/` has been empty all year. The "Marin Independent Journal" local feed now reads `tag/marin-county/feed/`, the IJ's live Marin tag (10 items; newest 2026-09-28). The IJ's non-tag feeds answer 403 to bots. Removed from the known subsource failures.
+
 ### Fixed — federal (NIFC) fires back on the fire map (G0)
 
 - **The NIFC query had been rejected since ArcGIS renamed `attr_POOState` to `POOState`.** ArcGIS answers a bad query with HTTP 200 plus an `error` body, which the adapter read as "no fires". An error body now fails loudly (logged), and the adapter reads the current schema: the point comes from `geometry` (`POOLatitude/POOLongitude` are gone), and acres from `IncidentSize`/`DiscoveryAcres` (`DailyAcres` is gone).

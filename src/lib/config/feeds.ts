@@ -24,7 +24,8 @@ export const FEEDS: Record<NewsCategory, FeedSource[]> = {
 		// --- Primary Marin sources ---
 		{
 			name: 'Marin Independent Journal',
-			url: 'https://www.marinij.com/tag/news/feed/',
+			// tag/news stopped being populated; marin-county is the IJ's live local tag.
+			url: 'https://www.marinij.com/tag/marin-county/feed/',
 			verification: 'local_media',
 			confirmed: true
 		},

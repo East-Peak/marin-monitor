@@ -88,7 +88,6 @@ describe('KNOWN_SUBSOURCE_FAILURES', () => {
 		expect(KNOWN_SUBSOURCE_FAILURES.map((f) => f.name)).toEqual([
 			'Fairfax Police',
 			'Belvedere Police',
-			'Marin IJ news feed',
 			'Marin IJ breaking-news feed',
 			'Marin IJ emergency feed'
 		]);

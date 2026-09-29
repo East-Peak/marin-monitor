@@ -189,12 +189,6 @@ export const KNOWN_SUBSOURCE_FAILURES: readonly SubsourceFailure[] = freeze<Subs
 		disposition: 'G0: find an allowed fetch path or retire the agency'
 	},
 	{
-		name: 'Marin IJ news feed',
-		parent: 'News feeds',
-		problem: 'marinij.com/tag/news returns 0 items',
-		disposition: 'G0: replace with a populated Marin IJ tag feed'
-	},
-	{
 		name: 'Marin IJ breaking-news feed',
 		parent: 'News feeds',
 		problem: 'marinij.com/tag/breaking-news returns 0 items',
