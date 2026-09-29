@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Fixed — TV keeps your theme (D1 batch 1 final review)
+
+- **`/tv` forces dark through a transient theme** (`settings.beginTransientTheme`): `mm_theme` is never written, so a saved light theme survives a TV visit however it ends (Escape, reload, closed tab, or TV's 6-hour reload).
+- **Precise news pin locations** are no longer skipped when you leave the dashboard mid-refresh (for example `m` → TV): an aborted enrichment run releases its category at once.
+- A drift test keeps the map's pin-inspection layer list in sync with the layers it binds.
+
 ### Added — Latest-reporting selector and county-wide rule (D1 PR 4)
 
 - **County-wide rule** (`src/lib/config/county-scope.ts`, one constant, **confirmed by Stuart on 2026-09-29**). The existing Marin IJ `/tag/marin-county` and NBC Bay Area – Marin feeds are county-scoped: their items count as county-wide unless tagged to a specific town. All of Marin → the 5 newest dated items from any source. A town → up to 3 town items plus 2 county-wide, with county backfilling a short town and never unlocated items.
