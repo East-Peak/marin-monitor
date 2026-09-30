@@ -85,4 +85,15 @@ describe('createSectionOpenState', () => {
 		prefs.set(emptySectionPrefs());
 		expect(get(s.open).news).toBe(true);
 	});
+
+	it('Reset sections uses the current viewport, not the one at load (Codex PR 7 #4)', () => {
+		const prefs = prefsStore();
+		const s = createSectionOpenState(prefs);
+		s.resolve('', 1440); // loaded on desktop
+		prefs.set(emptySectionPrefs());
+		s.clearTransient(390); // reset after resizing to a phone
+		expect(openIds(get(s.open))).toEqual([]);
+		s.clearTransient(1440);
+		expect(openIds(get(s.open))).toEqual(['getting-around', 'outdoors', 'news', 'cost', 'events']);
+	});
 });

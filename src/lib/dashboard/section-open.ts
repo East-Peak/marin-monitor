@@ -52,9 +52,12 @@ export function createSectionOpenState(prefs: PrefsStore) {
 		openTransient(id: SectionId) {
 			ctx.update((c) => ({ ...c, transient: { ...c.transient, [id]: true } }));
 		},
-		/** "Reset sections": transient opens end too, so the viewport defaults really return. */
-		clearTransient() {
-			ctx.update((c) => ({ ...c, transient: {} }));
+		/**
+		 * "Reset sections": transient opens end too, and the defaults are those of the
+		 * viewport now (the page may have been resized since load), so they really return.
+		 */
+		clearTransient(viewportWidth?: number) {
+			ctx.update((c) => ({ ...c, transient: {}, viewportWidth: viewportWidth ?? c.viewportWidth }));
 		},
 		toggle(id: SectionId) {
 			const next = !get(open)[id];

@@ -79,7 +79,9 @@
 			<span class="v2-scope-label" id="v2-scope-label" data-text-role="label">Showing:</span>
 			<span data-text-role="control"><TownPicker /></span>
 		</div>
-		<span data-text-role="control"><SettingsMenu onreset={() => sections.clearTransient()} /></span>
+		<span data-text-role="control"
+			><SettingsMenu onreset={() => sections.clearTransient(window.innerWidth)} /></span
+		>
 		<span class="v2-badge" data-text-role="meta">v2 preview</span>
 		<a class="v2-leave" href="/" data-text-role="label">Leave preview</a>
 	</header>
