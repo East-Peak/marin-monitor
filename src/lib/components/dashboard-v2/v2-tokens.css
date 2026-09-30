@@ -43,3 +43,18 @@
 	font-size: var(--v2-fs-brand);
 	font-weight: 700;
 }
+
+/* The reused TownPicker keeps its look but meets the v2 12px floor (spec §6, §13.4; Codex r1 #12).
+   Scoped to .dash-v2: the legacy page's picker is unchanged. */
+.dash-v2 .town-picker .picker-trigger,
+.dash-v2 .town-picker .picker-option,
+.dash-v2 .town-picker .option-name {
+	font-size: var(--v2-fs-label);
+}
+.dash-v2 .town-picker .picker-caret,
+.dash-v2 .town-picker .picker-search input,
+.dash-v2 .town-picker .picker-group-header,
+.dash-v2 .town-picker .option-pop,
+.dash-v2 .town-picker .picker-empty {
+	font-size: var(--v2-fs-meta);
+}

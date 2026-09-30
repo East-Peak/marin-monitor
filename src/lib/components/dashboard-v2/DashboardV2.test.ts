@@ -89,6 +89,35 @@ describe('DashboardV2 preview shell', () => {
 		unmount();
 		expect(controller.created[0].aborted).toBe(true);
 	});
+
+	it('renders the shell: map region, Getting Around under it, then five sections in order', async () => {
+		const { container } = render(DashboardV2);
+		await tick();
+		expect(container.querySelector('section#map')).toBeTruthy();
+		const order = [...container.querySelectorAll('[data-section]')].map((s) =>
+			s.getAttribute('data-section')
+		);
+		expect(order).toEqual(['getting-around', 'outdoors', 'news', 'cost', 'events', 'strava']);
+		expect(container.querySelector('#sections [data-section="getting-around"]')).toBeNull();
+		expect(screen.getByRole('navigation', { name: 'Jump to' })).toBeTruthy();
+	});
+
+	it('every section toggle is a real disclosure button', async () => {
+		render(DashboardV2);
+		await tick();
+		for (const name of [
+			'Getting Around',
+			'Outdoors & Conditions',
+			'News & Civic',
+			'Cost & Character',
+			'Events & Sports',
+			'Strava'
+		]) {
+			const button = screen.getByRole('button', { name: new RegExp(name) });
+			expect(button.getAttribute('aria-expanded')).toMatch(/^(true|false)$/);
+			expect(button.getAttribute('aria-controls')).toMatch(/^section-.+-body$/);
+		}
+	});
 });
 
 describe('DashboardV2 town display across hydration', () => {
