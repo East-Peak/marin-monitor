@@ -6,6 +6,13 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-30
 
+### Added — dataset ownership for the v2 preview (D1 PR 6)
+
+- **One owner per dataset** (`src/lib/dashboard/datasets.ts`, `v2-controller.ts`): gas, EV, coffee and fitness (the map stores) plus news load when the preview mounts, whatever sections are open, and refresh every 5 minutes (at most once a minute on tab focus). Concurrent requests share one fetch; a failed refresh keeps the last good data and reports it as retained.
+- **News from the snapshot:** the preview reads `GET /api/news/snapshot` through the TV's snapshot loader, so it never runs the browser feed, article or geocode chain.
+- **Strava is an inventory:** it loads only on an explicit browse, which nothing in D1 does.
+- **Tests:** a request-count e2e (each essential once; no `/api/feeds|article|geocode`, no Strava); the layout and isolation e2e now key on legacy-only URLs, with a mutation run proving the isolation test still fails when legacy cleanup is removed.
+
 ### Added — per-source status and coverage for the v2 preview (D1 PR 5)
 
 - **State model** (`src/lib/dashboard/source-status.ts`): the G0a states (ok, stale, unavailable, reference, unknown; pinned type-equal to the health evaluator) plus UI-only loading, evaluated against the clock on every read. `presentSection()` implements one precedence table: loading, ok, partial coverage (failing sources named), stale ("as of"), successful-empty, no town match, unavailable, unknown.

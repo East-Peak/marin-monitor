@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-09-30',
+		title: 'Preview loads only what it shows',
+		description:
+			'The dashboard preview now loads its map data and headlines itself, once, whichever sections are open, and reads headlines from the shared news snapshot instead of fetching every feed in your browser. Strava data is never loaded in the preview. The regular dashboard is unchanged.'
+	},
+	{
+		date: '2026-09-30',
 		title: 'Honest source status for the preview',
 		description:
 			'Behind the scenes of the dashboard preview: every data source now reports ok, out of date, unavailable or unknown against the clock, and a section that mixes working and failing sources says "partial coverage" and names the ones that failed. Nothing changes on the regular dashboard.'
