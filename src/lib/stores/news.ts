@@ -135,10 +135,18 @@ function createNewsStore() {
 		},
 
 		/**
-		 * Set items for a category
+		 * Set items for a category. `keep` decides which enriched items stay;
+		 * the default is the local-relevance rule. A caller whose items were
+		 * already judged elsewhere passes its own: the server producer applies
+		 * the same rule with the article text the browser never sees.
 		 */
-		setItems(category: NewsCategory, items: NewsItem[]) {
-			const enrichedItems = items.map(enrichNewsItem).filter(isLocallyRelevant);
+		setItems(
+			category: NewsCategory,
+			items: NewsItem[],
+			options: { keep?: (item: NewsItem) => boolean } = {}
+		) {
+			const keep = options.keep ?? isLocallyRelevant;
+			const enrichedItems = items.map(enrichNewsItem).filter((item) => keep(item));
 
 			update((state) => ({
 				...state,

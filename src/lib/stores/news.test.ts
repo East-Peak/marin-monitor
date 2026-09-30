@@ -392,4 +392,39 @@ describe('News Store', () => {
 		expect(news.getItems('local')[0].lat).toBe(37.9);
 		vi.doUnmock('$lib/api/marin/article-enrichment');
 	});
+
+	it('setItems: a caller-supplied keep replaces the relevance rule (producer-judged items)', async () => {
+		const { news, localNews } = await import('./news');
+		const judgedByProducer = {
+			id: 'marin-independent-journal:1',
+			title: 'Council approves budget plan',
+			link: 'https://www.marinij.com/1',
+			timestamp: Date.now(),
+			source: 'Marin Independent Journal',
+			category: 'local',
+			verification: 'local_media'
+		} as NewsItem;
+		// The browser rule alone drops it: a mixed source with no Marin anchor in title/summary.
+		news.setItems('local', [judgedByProducer]);
+		expect(get(localNews).items).toHaveLength(0);
+		news.setItems('local', [judgedByProducer], { keep: () => true });
+		expect(get(localNews).items.map((i) => i.id)).toEqual(['marin-independent-journal:1']);
+	});
+
+	it('per-category copies of one story are one story in allNewsItems with both categories (guard)', async () => {
+		const { news, allNewsItems } = await import('./news');
+		const story = {
+			id: 'point-reyes-light:9',
+			title: 'Point Reyes road closure',
+			link: 'https://www.ptreyeslight.com/9',
+			timestamp: Date.now(),
+			source: 'Point Reyes Light',
+			verification: 'local_media'
+		} as Omit<NewsItem, 'category'>;
+		news.setItems('local', [{ ...story, category: 'local' }], { keep: () => true });
+		news.setItems('safety', [{ ...story, category: 'safety' }], { keep: () => true });
+		const all = get(allNewsItems).filter((i) => i.id === story.id);
+		expect(all).toHaveLength(1);
+		expect(all[0].categories).toEqual(['local', 'safety']);
+	});
 });
