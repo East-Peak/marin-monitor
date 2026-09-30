@@ -68,6 +68,17 @@ async function setup(
 	return probe;
 }
 
+const UNAVAILABLE = JSON.stringify({ status: 'unavailable', reason: 'missing' });
+
+/** The header's DEGRADED count (0 when the badge is absent). */
+const degradedCount = (page: Page) =>
+	page.evaluate(() => {
+		const badge = [...document.querySelectorAll('span')].find((el) =>
+			/^DEGRADED · \d+$/.test(el.textContent?.trim() ?? '')
+		);
+		return badge ? Number(badge.textContent!.trim().split('· ')[1]) : 0;
+	});
+
 type ProbeMap = {
 	getLayer(id: string): unknown;
 	loaded(): boolean;
@@ -127,12 +138,26 @@ test.describe('TV reads the news snapshot — built app', () => {
 		expect(probe.snapshotServed).toBe(false);
 	});
 
-	test('an unavailable snapshot shows DEGRADED and keeps the TV running (pins, no NaN)', async ({
+	test('an unavailable snapshot is DEGRADED on every refresh and keeps the TV running (pins, last-good headline, no NaN)', async ({
 		page
 	}) => {
-		await setup(page, {
-			status: 503,
-			body: JSON.stringify({ status: 'unavailable', reason: 'missing' })
+		await setup(page, { status: 503, body: UNAVAILABLE });
+		// Switchable snapshot, registered after setup so it wins. The other stubs
+		// fail deterministically, so DEGRADED > 0 on its own; the snapshot's own
+		// line is proven by the count moving by exactly one with the snapshot
+		// (Codex slice review #4).
+		let healthy = false;
+		let snapshotRequests = 0;
+		const okBody = snapshotEnvelope([{ title: STORY, hoursAgo: 1, slug: 'oysters' }], 3);
+		await page.route('**/api/news/snapshot', (route) => {
+			snapshotRequests += 1;
+			return route
+				.fulfill({
+					status: healthy ? 200 : 503,
+					contentType: 'application/json',
+					body: healthy ? okBody : UNAVAILABLE
+				})
+				.catch(() => {});
 		});
 		await page.goto('/tv?probe=1');
 		// Concurrently: pins must render on the county slide without waiting for
@@ -142,8 +167,49 @@ test.describe('TV reads the news snapshot — built app', () => {
 			expect(page.getByText(/DEGRADED · \d+/)).toBeVisible({ timeout: 15_000 })
 		]);
 		await expect(page.locator('[data-news-revision]')).toHaveCount(0);
-		await page.getByRole('button', { name: 'Local News Wire' }).click();
+		const wireStory = page.locator('h3', { hasText: STORY });
+		const showWire = () => page.getByRole('button', { name: 'Local News Wire' }).click();
+		await showWire();
 		await expect(page.locator('h3', { hasText: /Point Reyes/ })).toHaveCount(0);
+
+		/** Starts one more refresh ('r'); returns the badge the previous refresh left. */
+		const refreshOnce = async () => {
+			const before = snapshotRequests;
+			let shown = -1;
+			await expect
+				.poll(
+					async () => {
+						if (snapshotRequests > before) return true;
+						shown = await degradedCount(page);
+						await page.keyboard.press('r'); // ignored while a refresh is in flight
+						return snapshotRequests > before;
+					},
+					{ timeout: 15_000, intervals: [300] }
+				)
+				.toBe(true);
+			return shown;
+		};
+		// Each call returns the previous refresh's badge. Refresh 1 is skipped: its
+		// count can differ from later ones by loader TTLs (region weather).
+		await refreshOnce(); // starts refresh 2 (unavailable)
+		const unavailable = await refreshOnce(); // refresh 2's badge; starts 3 (unavailable)
+		healthy = true;
+		await refreshOnce(); // starts refresh 4 (healthy)
+		const recovered = await refreshOnce(); // refresh 4's badge; starts 5 (healthy)
+		await showWire();
+		await expect(wireStory).toBeVisible();
+		healthy = false;
+		await refreshOnce(); // starts refresh 6 (unavailable)
+		const again = await refreshOnce(); // refresh 6's badge; starts 7 (unavailable)
+		const repeated = await refreshOnce(); // refresh 7's badge
+		expect(unavailable).toBeGreaterThan(0);
+		expect(recovered).toBe(unavailable - 1);
+		expect(again).toBe(unavailable);
+		expect(repeated).toBe(unavailable);
+		// Last-good: the applied story stays through the outage.
+		await expect(page.locator('[data-news-revision="3"]')).toHaveCount(1);
+		await showWire();
+		await expect(wireStory).toBeVisible();
 		await expect(page.locator('body')).not.toContainText(/NaN[dhm]\b/);
 	});
 });
