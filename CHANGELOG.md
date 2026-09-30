@@ -4,6 +4,14 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-09-30
+
+### Added — per-source status and coverage for the v2 preview (D1 PR 5)
+
+- **State model** (`src/lib/dashboard/source-status.ts`): the G0a states (ok, stale, unavailable, reference, unknown; pinned type-equal to the health evaluator) plus UI-only loading, evaluated against the clock on every read. `presentSection()` implements one precedence table: loading, ok, partial coverage (failing sources named), stale ("as of"), successful-empty, no town match, unavailable, unknown.
+- **Adapters** (`source-adapters.ts`): snapshot sources (retained → stale as of its last success), snapshot reads, news-loader parts (the five adapters that swallow failures always read "unknown"), datasets (dated by their own payload's scrape time, never by our fetch time or a separate health read) and G0a JSON. A transport success alone reads "unknown".
+- **Fixed:** `news.setItems()` no longer clears a category error or stamps "now"; `lastUpdated` is the caller's observation time. The snapshot loader reports each part's outcome (`onPartSettled`).
+
 ## 2026-09-29
 
 ### Changed — the TV reads the shared news snapshot (TV slice 3)
