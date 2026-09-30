@@ -118,16 +118,30 @@ function classify(feature: unknown): Advisory | typeof EXCLUDED | typeof UNREADA
 	};
 }
 
+/** The ids an Actual message updates or cancels, from its well-formed references only. */
+function retiredBy(feature: unknown): string[] {
+	if (!isRec(feature) || !isRec(feature.properties)) return [];
+	const p = feature.properties;
+	if (p.status !== 'Actual' || !Array.isArray(p.references)) return [];
+	return p.references.flatMap((r) =>
+		isRec(r) && typeof r.identifier === 'string' && r.identifier ? [r.identifier] : []
+	);
+}
+
 export function parseNwsAlerts(json: unknown): ParsedAlerts | null {
 	if (!isRec(json) || !Array.isArray(json.features)) return null;
 	const advisories: Advisory[] = [];
+	const retired = new Set<string>();
 	let unreadable = 0;
 	for (const feature of json.features) {
+		// Lifecycle first: an Actual message retires what it references even when it can't be
+		// shown itself (moved out of Marin, or unreadable), so its predecessor never lingers.
+		for (const id of retiredBy(feature)) retired.add(id);
 		const result = classify(feature);
 		if (result === UNREADABLE) unreadable += 1;
 		else if (result !== EXCLUDED) advisories.push(result);
 	}
-	return { advisories, unreadable };
+	return { advisories: advisories.filter((a) => !retired.has(a.id)), unreadable };
 }
 
 export function currentAdvisories(list: readonly Advisory[], now: number): Advisory[] {

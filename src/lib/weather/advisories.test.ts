@@ -124,6 +124,34 @@ describe('parseNwsAlerts (identity, lifecycle, applicability)', () => {
 		});
 		expect(parse({ severity: 'toString' }).advisories[0].severity).toBe('Unknown');
 	});
+
+	it('a replacement that cannot be shown still retires what it replaces (Codex PR 8 #1)', () => {
+		const old = {};
+		// An Update that moves the hazard out of Marin: excluded itself, but the old Marin alert is superseded.
+		const outOfMarin = {
+			id: 'urn:u',
+			messageType: 'Update',
+			geocode: { UGC: ['CAZ006'] },
+			references: [{ identifier: 'urn:oid:2.49.0.1.840.0.a1' }]
+		};
+		expect(parse(old, outOfMarin)).toEqual({ advisories: [], unreadable: 0 });
+		// A Cancel with a valid reference but no expiry: unreadable itself, and still retires its predecessor.
+		const cancel = {
+			id: 'urn:c',
+			messageType: 'Cancel',
+			expires: null,
+			references: [{ identifier: 'urn:oid:2.49.0.1.840.0.a1' }]
+		};
+		expect(parse(old, cancel)).toEqual({ advisories: [], unreadable: 1 });
+		// A Test message never retires a real alert.
+		const test = {
+			id: 'urn:t',
+			status: 'Test',
+			messageType: 'Cancel',
+			references: [{ identifier: 'urn:oid:2.49.0.1.840.0.a1' }]
+		};
+		expect(parse(old, test).advisories.map((a) => a.id)).toEqual(['urn:oid:2.49.0.1.840.0.a1']);
+	});
 });
 
 describe('currentAdvisories (updates, cancellation, clock)', () => {
