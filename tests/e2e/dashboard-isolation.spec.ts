@@ -6,7 +6,7 @@ import { expect, test, type Route } from '@playwright/test';
  * hourly and alert URLs, so those are not evidence of a leak.
  */
 const LEGACY_WORK =
-	/\/api\/(feeds|article|geocode)\b|api\.weather\.gov\/gridpoints\/[A-Z]{3}\/\d+,\d+\/forecast(?:$|\?)/;
+	/\/api\/(feeds|article|geocode)\b|\/api\/data\/strava|api\.weather\.gov\/gridpoints\/[A-Z]{3}\/\d+,\d+\/forecast(?:$|\?)/;
 
 test('a destroyed legacy controller starts no further work (debounce, timers, visibility, delayed responses)', async ({
 	page
@@ -17,14 +17,14 @@ test('a destroyed legacy controller starts no further work (debounce, timers, vi
 	let navigated = false;
 	// Hold every feed and transit response until the controller is gone. Transit is a
 	// sequential per-agency loop, so a released response would start the next agency.
-	// v2's news loader requests /api/transit too: after the navigation, answer it at once.
+	// v2's news loader requests /api/transit too. After the navigation its requests are held
+	// unanswered, so v2 cannot pass its first agency (GG) before the 10 s per-agency timeout;
+	// a later agency within 2 s of the release is legacy's loop continuing (Codex PR 6 #3).
+	const transitAfterNav: string[] = [];
 	await page.route(/\/api\/(feeds|transit)\?/, (route) => {
 		if (navigated && route.request().url().includes('/api/transit?')) {
-			return route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: '{"Entities":[]}'
-			});
+			transitAfterNav.push(route.request().url());
+			return;
 		}
 		held.push(route);
 	});
@@ -77,12 +77,18 @@ test('a destroyed legacy controller starts no further work (debounce, timers, vi
 			await route.fulfill({ status: 200, contentType: 'application/rss+xml', body: xml });
 		}
 	}
+	// Legacy's loop would request the next agency 500 ms after its held response arrives.
+	await page.clock.runFor(2_000);
+	await page.waitForTimeout(500);
+	const transitContinuation = transitAfterNav.filter((u) => !/[?&]agency=GG\b/.test(u));
+
 	// Past the debounce and the 5-minute auto-refresh, then a tab-visible event.
 	await page.clock.runFor(6 * 60_000);
 	await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
 	await page.clock.runFor(1_000);
 	await page.waitForTimeout(1_500);
 
+	expect(transitContinuation).toEqual([]);
 	expect(late).toEqual([]);
 	expect(held).toEqual([]); // no new feed request was even attempted
 	expect(await readRefresh()).toBe(refreshAtTeardown); // no refresh.endRefresh after teardown
