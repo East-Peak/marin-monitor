@@ -237,6 +237,15 @@ test.describe('phone', () => {
 	test('"Traffic cams & map" opens the collapsed Getting Around section, then focuses it', async ({
 		page
 	}) => {
+		// Count focus landings on the toggle: one jump, one focus (final review, Task 13's class).
+		await page.addInitScript(() => {
+			document.addEventListener('focusin', (e) => {
+				if ((e.target as HTMLElement).dataset?.sectionToggle === 'getting-around') {
+					const w = window as unknown as { __toggleFocus?: number };
+					w.__toggleFocus = (w.__toggleFocus ?? 0) + 1;
+				}
+			});
+		});
 		await stubAll(page);
 		await openV2(page);
 		const toggle = page.locator('[data-section-toggle="getting-around"]');
@@ -244,5 +253,9 @@ test.describe('phone', () => {
 		await page.locator('[data-card="getting-around"] a').click();
 		await expect(toggle).toHaveAttribute('aria-expanded', 'true');
 		await expect(toggle).toBeFocused();
+		await page.waitForTimeout(300);
+		expect(
+			await page.evaluate(() => (window as unknown as { __toggleFocus?: number }).__toggleFocus)
+		).toBe(1);
 	});
 });

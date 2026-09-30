@@ -111,7 +111,7 @@
 	<main class="v2-main">
 		{#if controller && hydrated}
 			<AdvisoryRow feed={controller.advisories} now={clock} />
-			<BriefRow brief={controller.brief} now={clock} onjump={jump} />
+			<BriefRow brief={controller.brief} now={clock} onjump={navJump} />
 		{/if}
 
 		<section id="map" class="v2-region" tabindex="-1" aria-labelledby="v2-map-title">
