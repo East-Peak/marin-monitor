@@ -1,0 +1,45 @@
+/* v2 type tokens (spec §6, §13.4). Values mirror src/lib/dashboard/type-roles.ts;
+ * type-roles.test.ts keeps the two equal. */
+.dash-v2 {
+	--v2-fs-body: 15px;
+	--v2-fs-label: 13px;
+	--v2-fs-meta: 12px;
+	--v2-fs-value: 20px;
+	--v2-fs-section-title: 17px;
+	--v2-fs-brand: 17px;
+	--v2-line-height: 1.45;
+	--v2-card-padding: 10px;
+	font-size: var(--v2-fs-body);
+	line-height: var(--v2-line-height);
+}
+
+@media (max-width: 767px) {
+	.dash-v2 {
+		--v2-fs-body: 16px;
+	}
+}
+
+.dash-v2 [data-text-role] {
+	line-height: var(--v2-line-height);
+}
+.dash-v2 [data-text-role='body'] {
+	font-size: var(--v2-fs-body);
+}
+.dash-v2 [data-text-role='label'] {
+	font-size: var(--v2-fs-label);
+}
+.dash-v2 [data-text-role='meta'] {
+	font-size: var(--v2-fs-meta);
+}
+.dash-v2 [data-text-role='value'] {
+	font-size: var(--v2-fs-value);
+	font-weight: 600;
+}
+.dash-v2 [data-text-role='section-title'] {
+	font-size: var(--v2-fs-section-title);
+	font-weight: 600;
+}
+.dash-v2 [data-text-role='brand'] {
+	font-size: var(--v2-fs-brand);
+	font-weight: 700;
+}
