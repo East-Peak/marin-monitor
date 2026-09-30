@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
 	NEWS_SNAPSHOT_SCHEMA_VERSION,
 	parseNewsSnapshot,
+	parseNewsSnapshotResponse,
+	parseNewsSnapshotView,
 	salvageRevision,
+	toNewsSnapshotView,
 	type NewsSnapshot,
 	type NewsSourceItem
 } from './snapshot';
@@ -291,5 +294,151 @@ describe('salvageRevision', () => {
 		expect(salvageRevision({ schemaVersion: 99, revision: 57 })).toBe(57);
 		expect(salvageRevision({ revision: 'x' })).toBe(0);
 		expect(salvageRevision(null)).toBe(0);
+	});
+});
+
+type ViewMutate = (
+	v: { sources: Record<string, unknown>[]; items: Record<string, unknown>[] } & Record<
+		string,
+		unknown
+	>
+) => void;
+/** A JSON round-tripped view of valid(), edited by one rule. */
+const viewWith = (mutate: ViewMutate = () => {}) => {
+	const v = JSON.parse(JSON.stringify(toNewsSnapshotView(valid())));
+	mutate(v);
+	return v;
+};
+
+describe('toNewsSnapshotView / parseNewsSnapshotView', () => {
+	it('serves the deduplicated items and each source status, never the retention items', () => {
+		const snapshot = valid();
+		const view = toNewsSnapshotView(snapshot);
+		expect(view).toMatchObject({
+			schemaVersion: NEWS_SNAPSHOT_SCHEMA_VERSION,
+			revision: 3,
+			generatedAt: T,
+			lastSuccessfulScrapeAt: T
+		});
+		expect(view.items).toEqual(snapshot.items);
+		expect(view.sources).toEqual(snapshot.sources.map(({ items: _items, ...status }) => status));
+		expect(view.sources.some((s) => 'items' in s)).toBe(false);
+	});
+
+	it('a view survives JSON and the strict reader unchanged', () => {
+		expect(parseNewsSnapshotView(viewWith())).toEqual(toNewsSnapshotView(valid()));
+	});
+
+	it.each<[string, ViewMutate]>([
+		['an unknown schema version', (v) => void (v.schemaVersion = 2)],
+		['revision 0', (v) => void (v.revision = 0)],
+		['a non-canonical generatedAt', (v) => void (v.generatedAt = '2026-09-28T20:00:00Z')],
+		[
+			'a successful scrape after generation',
+			(v) => void (v.lastSuccessfulScrapeAt = '2026-09-28T20:10:00.000Z')
+		],
+		['an inherited status name', (v) => void (v.sources[0].status = 'toString')],
+		['a duplicate source id', (v) => void (v.sources[1].id = 'a')],
+		['a negative itemCount', (v) => void (v.sources[0].itemCount = -1)],
+		['an ok source with no items', (v) => void (v.sources[0].itemCount = 0)],
+		[
+			'an ok source with 100 failures, an error and no success (Codex r1 #13)',
+			(v) =>
+				void Object.assign(v.sources[0], {
+					consecutiveFailures: 100,
+					lastError: 'x',
+					lastSuccessAt: null,
+					itemCount: 0
+				})
+		],
+		[
+			'a source attempted after the view was generated',
+			(v) => void (v.sources[1].lastAttemptAt = '2099-01-01T00:00:00.000Z')
+		],
+		[
+			'a success after its own attempt',
+			(v) => void (v.sources[1].lastSuccessAt = '2026-09-28T20:10:00.000Z')
+		],
+		[
+			'an item from an unlisted source',
+			(v) => {
+				v.items[0].sourceId = 'zzz';
+				v.items[0].id = 'zzz:1';
+			}
+		],
+		['alsoReportedBy an unlisted source', (v) => void (v.items[0].alsoReportedBy = ['zzz'])],
+		['categories without the own category', (v) => void (v.items[0].categories = ['safety'])],
+		[
+			'a publication time its raw value does not support',
+			(v) => void (v.items[0].publishedAt = '2026-09-28T18:00:00.000Z')
+		],
+		[
+			'an item fetched after the view was generated',
+			(v) => void (v.items[0].fetchedAt = '2026-09-28T20:06:00.000Z')
+		],
+		['a duplicate story id', (v) => void v.items.push({ ...v.items[0] })],
+		['items that are not an array', (v) => void (v.items = {} as never)],
+		[
+			'stories from a source that carries none (Codex r2 #7 repro)',
+			(v) => void Object.assign(v.sources[0], { status: 'empty', itemCount: 0 })
+		],
+		[
+			"a story fetched after its source's last success",
+			(v) => void (v.items[0].fetchedAt = '2026-09-28T20:01:00.000Z')
+		],
+		[
+			'alsoReportedBy a source that now carries nothing',
+			(v) =>
+				void Object.assign(v.sources[1], {
+					status: 'failed',
+					itemCount: 0,
+					lastError: 'x',
+					consecutiveFailures: 1
+				})
+		],
+		[
+			'more public stories than the source carries',
+			(v) => void v.items.push({ ...v.items[0], id: 'a:2', title: 'Story 2' })
+		],
+		[
+			'two stories citing a source that carries one item (Codex r3 #4)',
+			(v) => {
+				v.sources[0].itemCount = 2;
+				v.items.push({ ...v.items[0], id: 'a:2', title: 'Story 2', alsoReportedBy: ['b'] });
+			}
+		]
+	])('rejects %s', (_name, mutate) => {
+		expect(parseNewsSnapshotView(viewWith(mutate))).toBeNull();
+	});
+});
+
+describe('parseNewsSnapshotResponse', () => {
+	it('accepts ok with a valid view, and each honest failure', () => {
+		expect(parseNewsSnapshotResponse({ status: 'ok', snapshot: viewWith() })).toEqual({
+			status: 'ok',
+			snapshot: toNewsSnapshotView(valid())
+		});
+		expect(parseNewsSnapshotResponse({ status: 'unavailable', reason: 'missing' })).toEqual({
+			status: 'unavailable',
+			reason: 'missing'
+		});
+		for (const reason of ['invalid', 'read-failed', 'not-configured'] as const) {
+			expect(parseNewsSnapshotResponse({ status: 'unknown', reason })).toEqual({
+				status: 'unknown',
+				reason
+			});
+		}
+	});
+
+	it.each<[string, unknown]>([
+		['ok with an invalid view', { status: 'ok', snapshot: viewWith((v) => void (v.revision = 0)) }],
+		['ok without a view', { status: 'ok' }],
+		['unavailable for an unknown reason', { status: 'unavailable', reason: 'invalid' }],
+		['unknown with an inherited reason', { status: 'unknown', reason: 'toString' }],
+		['an unknown status', { status: 'error', reason: 'missing' }],
+		['null', null],
+		['an array', []]
+	])('rejects %s', (_name, value) => {
+		expect(parseNewsSnapshotResponse(value)).toBeNull();
 	});
 });

@@ -198,39 +198,39 @@ function isSourceItem(v: unknown): v is Rec {
 
 // A Map, not an object literal: a status such as "toString" or
 // "hasOwnProperty" must be unknown, never an inherited prototype member.
-const STATE_RULES: ReadonlyMap<string, (s: Rec, items: unknown[]) => boolean> = new Map<
+// Rules take the item COUNT so the public view (no items) is held to them too.
+const STATE_RULES: ReadonlyMap<string, (s: Rec, count: number) => boolean> = new Map<
 	NewsSourceState,
-	(s: Rec, items: unknown[]) => boolean
+	(s: Rec, count: number) => boolean
 >([
 	// ok/empty: fetched THIS run, so the last success is this attempt.
 	[
 		'ok',
-		(s, items) =>
+		(s, count) =>
 			s.consecutiveFailures === 0 &&
 			s.lastError === null &&
 			s.lastSuccessAt === s.lastAttemptAt &&
-			items.length > 0
+			count > 0
 	],
 	[
 		'empty',
-		(s, items) =>
+		(s, count) =>
 			s.consecutiveFailures === 0 &&
 			s.lastError === null &&
 			s.lastSuccessAt === s.lastAttemptAt &&
-			items.length === 0
+			count === 0
 	],
 	[
 		'retained',
-		(s, items) =>
+		(s, count) =>
 			(s.consecutiveFailures as number) > 0 &&
 			isNonEmpty(s.lastError) &&
 			s.lastSuccessAt !== null &&
-			items.length > 0
+			count > 0
 	],
 	[
 		'failed',
-		(s, items) =>
-			(s.consecutiveFailures as number) > 0 && isNonEmpty(s.lastError) && items.length === 0
+		(s, count) => (s.consecutiveFailures as number) > 0 && isNonEmpty(s.lastError) && count === 0
 	]
 ]);
 
@@ -249,7 +249,7 @@ function isSourceStatus(v: unknown): v is Rec {
 		(v.lastError === null || isString(v.lastError)) &&
 		isNat(v.consecutiveFailures) &&
 		v.itemCount === v.items.length &&
-		rule(v, v.items) &&
+		rule(v, v.items.length) &&
 		v.items.every(
 			(item) =>
 				isSourceItem(item) &&
@@ -267,6 +267,18 @@ function isCopyOf(item: Rec, own: Rec): boolean {
 	return own.title === item.title && (id === base || (suffix !== null && /^\d+$/.test(suffix)));
 }
 
+/** categories contains the item's own; alsoReportedBy names other sources the reader can vouch for. */
+function hasStoryProvenance(v: Rec, vouched: (sourceId: string) => boolean): boolean {
+	return (
+		Array.isArray(v.categories) &&
+		v.categories.length > 0 &&
+		v.categories.every((c) => CATEGORIES.has(c as string)) &&
+		v.categories.includes(v.category) &&
+		isStringArray(v.alsoReportedBy) &&
+		v.alsoReportedBy.every((id) => id !== v.sourceId && vouched(id))
+	);
+}
+
 /**
  * A public story is a copy of an item in its own source's collection, and
  * every source it also cites still carries items (retention view agrees).
@@ -275,12 +287,7 @@ function isSnapshotItem(v: unknown, collections: ReadonlyMap<string, Rec[]>): bo
 	return (
 		isSourceItem(v) &&
 		(collections.get(v.sourceId as string) ?? []).some((own) => isCopyOf(v, own)) &&
-		Array.isArray(v.categories) &&
-		v.categories.length > 0 &&
-		v.categories.every((c) => CATEGORIES.has(c as string)) &&
-		v.categories.includes(v.category) &&
-		isStringArray(v.alsoReportedBy) &&
-		v.alsoReportedBy.every((id) => id !== v.sourceId && (collections.get(id)?.length ?? 0) > 0)
+		hasStoryProvenance(v, (id) => (collections.get(id)?.length ?? 0) > 0)
 	);
 }
 
@@ -322,4 +329,130 @@ export function parseNewsSnapshot(value: unknown): NewsSnapshot | null {
 export function salvageRevision(value: unknown): number {
 	const revision = isRecord(value) ? value.revision : undefined;
 	return Number.isInteger(revision) && (revision as number) > 0 ? (revision as number) : 0;
+}
+
+// ── Public projection: what GET /api/news/snapshot serves ─────────────────
+// sources[].items is the producer's retention state (about half the blob) and
+// is never served: readers get the deduplicated items plus each source's
+// status. The view shares schemaVersion (a breaking snapshot change is a
+// breaking view change). The browser re-checks every view it receives: a
+// cached body can predate a deploy.
+
+export interface NewsSnapshotView {
+	schemaVersion: typeof NEWS_SNAPSHOT_SCHEMA_VERSION;
+	revision: number;
+	generatedAt: string;
+	lastSuccessfulScrapeAt: string | null;
+	sources: Omit<NewsSourceStatus, 'items'>[];
+	items: NewsSnapshotItem[];
+}
+
+/**
+ * The endpoint body (dashboard §13.2 mapping): unavailable = nothing has been
+ * published yet; unknown = a snapshot may exist but cannot be trusted or read.
+ */
+export type NewsSnapshotResponse =
+	| { status: 'ok'; snapshot: NewsSnapshotView }
+	| { status: 'unavailable'; reason: 'missing' }
+	| { status: 'unknown'; reason: 'invalid' | 'read-failed' | 'not-configured' };
+
+export function toNewsSnapshotView(snapshot: NewsSnapshot): NewsSnapshotView {
+	return {
+		schemaVersion: snapshot.schemaVersion,
+		revision: snapshot.revision,
+		generatedAt: snapshot.generatedAt,
+		lastSuccessfulScrapeAt: snapshot.lastSuccessfulScrapeAt,
+		sources: snapshot.sources.map(({ items: _items, ...status }) => status),
+		items: snapshot.items
+	};
+}
+
+/** The full reader's source rules, held against itemCount instead of items. */
+function isSourceSummary(v: unknown, generatedAt: unknown): boolean {
+	if (!isRecord(v)) return false;
+	const rule = isString(v.status) ? STATE_RULES.get(v.status) : undefined;
+	return (
+		isNonEmpty(v.id) &&
+		isNonEmpty(v.name) &&
+		CATEGORIES.has(v.category as string) &&
+		VERIFICATIONS.has(v.verification as string) &&
+		rule !== undefined &&
+		isIsoInstant(v.lastAttemptAt) &&
+		notAfter(v.lastAttemptAt, generatedAt) &&
+		isIsoOrNull(v.lastSuccessAt) &&
+		(v.lastSuccessAt === null || notAfter(v.lastSuccessAt, v.lastAttemptAt)) &&
+		(v.lastError === null || isString(v.lastError)) &&
+		isNat(v.consecutiveFailures) &&
+		isNat(v.itemCount) &&
+		rule(v, v.itemCount as number)
+	);
+}
+
+/** Strict check of an untrusted view. Anything short of a valid v1 view → null. */
+export function parseNewsSnapshotView(value: unknown): NewsSnapshotView | null {
+	if (!isRecord(value) || value.schemaVersion !== NEWS_SNAPSHOT_SCHEMA_VERSION) return null;
+	if (!Number.isInteger(value.revision) || (value.revision as number) < 1) return null;
+	if (!isIsoInstant(value.generatedAt) || !isIsoOrNull(value.lastSuccessfulScrapeAt)) return null;
+	const { sources, items, generatedAt } = value;
+	if (
+		value.lastSuccessfulScrapeAt !== null &&
+		!notAfter(value.lastSuccessfulScrapeAt, generatedAt)
+	) {
+		return null;
+	}
+	if (!Array.isArray(sources) || !sources.every((s) => isSourceSummary(s, generatedAt)))
+		return null;
+	const sourceIds = new Set(sources.map((s) => (s as Rec).id as string));
+	if (sourceIds.size !== sources.length) return null;
+	// Story ↔ source consistency still checkable without the retention items
+	// (Codex r2 #7): a story comes from a source that carries items, no later
+	// than that source's last success, and a source cannot show more public
+	// stories than it carries.
+	const byId = new Map(sources.map((s) => [(s as Rec).id as string, s as Rec]));
+	const carries = (id: string) => ((byId.get(id)?.itemCount as number | undefined) ?? 0) > 0;
+	const isViewItem = (v: unknown) => {
+		if (!isSourceItem(v)) return false;
+		const own = byId.get(v.sourceId as string);
+		return (
+			own !== undefined &&
+			carries(v.sourceId as string) &&
+			own.lastSuccessAt !== null &&
+			Date.parse(v.fetchedAt as string) <= Date.parse(own.lastSuccessAt as string) &&
+			notAfter(v.fetchedAt, generatedAt) &&
+			hasStoryProvenance(v, carries)
+		);
+	};
+	if (!Array.isArray(items) || !items.every(isViewItem)) return null;
+	// Every distinct source a story references (own + alsoReportedBy) holds
+	// one of its items for that story (Codex r3 #4).
+	const perSource = new Map<string, number>();
+	for (const i of items as Rec[]) {
+		for (const id of new Set([i.sourceId as string, ...(i.alsoReportedBy as string[])])) {
+			perSource.set(id, (perSource.get(id) ?? 0) + 1);
+		}
+	}
+	for (const [id, n] of perSource) if (n > ((byId.get(id)?.itemCount as number) ?? 0)) return null;
+	if (!allUnique(items.map((i) => (i as Rec).id))) return null;
+	return value as unknown as NewsSnapshotView;
+}
+
+const UNKNOWN_REASONS: ReadonlySet<string> = new Set(['invalid', 'read-failed', 'not-configured']);
+
+/** Strict check of an untrusted endpoint body. */
+export function parseNewsSnapshotResponse(value: unknown): NewsSnapshotResponse | null {
+	if (!isRecord(value)) return null;
+	if (value.status === 'ok') {
+		const snapshot = parseNewsSnapshotView(value.snapshot);
+		return snapshot === null ? null : { status: 'ok', snapshot };
+	}
+	if (value.status === 'unavailable' && value.reason === 'missing') {
+		return { status: 'unavailable', reason: 'missing' };
+	}
+	if (value.status === 'unknown' && UNKNOWN_REASONS.has(value.reason as string)) {
+		return {
+			status: 'unknown',
+			reason: value.reason as 'invalid' | 'read-failed' | 'not-configured'
+		};
+	}
+	return null;
 }
