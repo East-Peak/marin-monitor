@@ -122,6 +122,15 @@ for (const viewport of [
 				for (const t of await page.locator('[data-section-toggle]').all()) {
 					await expect(t).toBeVisible();
 				}
+				// The disclosures open at this scale too, and stay inside the page (Codex PR 7 #3).
+				for (const d of DISCLOSURES) {
+					await d.open(page);
+					const open = await page.evaluate(
+						() => document.documentElement.scrollWidth - window.innerWidth
+					);
+					expect(open, `${d.name} open at ${zoom}`).toBeLessThanOrEqual(1);
+					await d.close(page);
+				}
 			});
 		}
 	});

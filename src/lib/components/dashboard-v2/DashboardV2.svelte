@@ -206,5 +206,9 @@
 		.v2-main {
 			padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
 		}
+		/* Keyboard focus and fragment jumps scroll targets clear of the fixed jump-nav (§8). */
+		:global(html:has(.dash-v2)) {
+			scroll-padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+		}
 	}
 </style>

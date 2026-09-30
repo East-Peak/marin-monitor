@@ -47,7 +47,7 @@ test.describe('desktop 1440×900', () => {
 		await expect(toggle(page, 'news')).toHaveAttribute('aria-expanded', 'false');
 		await openV2(page, '#news');
 		await expect(toggle(page, 'news')).toHaveAttribute('aria-expanded', 'true');
-		expect(await focusedToggle(page)).toBe('news');
+		await expect.poll(() => focusedToggle(page)).toBe('news');
 		expect(
 			JSON.parse((await page.evaluate(() => localStorage.getItem('mm_sections_v2'))) ?? '{}')
 		).toEqual({
@@ -58,7 +58,11 @@ test.describe('desktop 1440×900', () => {
 
 	test('keyboard: Tab reaches a toggle, Enter and Space operate it', async ({ page }) => {
 		await openV2(page);
-		await toggle(page, 'cost').focus();
+		// Real Tab navigation from the top of the page, not .focus() (Codex PR 7 #3).
+		for (let i = 0; i < 60 && (await focusedToggle(page)) !== 'cost'; i++) {
+			await page.keyboard.press('Tab');
+		}
+		expect(await focusedToggle(page)).toBe('cost');
 		await page.keyboard.press('Enter');
 		await expect(toggle(page, 'cost')).toHaveAttribute('aria-expanded', 'false');
 		await page.keyboard.press('Space');
@@ -107,7 +111,7 @@ test.describe('phone 390×844', () => {
 		const nav = page.getByRole('navigation', { name: 'Jump to' });
 		await nav.getByRole('link', { name: 'News' }).click();
 		await expect(toggle(page, 'news')).toHaveAttribute('aria-expanded', 'true');
-		expect(await focusedToggle(page)).toBe('news');
+		await expect.poll(() => focusedToggle(page)).toBe('news');
 		const atFocus = await page.evaluate(
 			() => (window as unknown as { __expandedAtFocus: string[] }).__expandedAtFocus
 		);
@@ -171,7 +175,37 @@ test.describe('phone 390×844', () => {
 		await toggle(page, 'news').click(); // an explicit close
 		await page.goBack();
 		await expect(toggle(page, 'news')).toHaveAttribute('aria-expanded', 'true');
-		expect(await focusedToggle(page)).toBe('news');
+		await expect.poll(() => focusedToggle(page)).toBe('news');
+	});
+
+	test('keyboard focus is never hidden under the jump-nav (Codex PR 7 #3)', async ({ page }) => {
+		// A short phone viewport (landscape, or browser chrome shown), so Tab has to scroll.
+		await page.setViewportSize({ width: 390, height: 480 });
+		await openV2(page);
+		for (const t of await page.locator('[data-section-toggle]').all()) await t.click(); // all open: a long page
+		await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+		await page.evaluate(() => window.scrollTo(0, 0));
+		const hidden: string[] = [];
+		for (let i = 0; i < 80; i++) {
+			await page.keyboard.press('Tab');
+			const r = await page.evaluate(() => {
+				const el = document.activeElement as HTMLElement | null;
+				const nav = document.querySelector('nav[aria-label="Jump to"]');
+				if (!el || !nav || nav.contains(el) || el === document.body) return null;
+				const b = el.getBoundingClientRect();
+				return {
+					name: el.textContent?.trim().slice(0, 30) ?? el.tagName,
+					bottom: b.bottom,
+					top: b.top,
+					navTop: nav.getBoundingClientRect().top
+				};
+			});
+			if (r && (r.bottom > r.navTop || r.top < 0))
+				hidden.push(
+					`${r.name}: ${Math.round(r.top)}–${Math.round(r.bottom)} vs nav ${Math.round(r.navTop)}`
+				);
+		}
+		expect(hidden).toEqual([]);
 	});
 
 	test('the jump-nav never covers the last section toggle', async ({ page }) => {
