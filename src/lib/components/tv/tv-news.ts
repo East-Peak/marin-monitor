@@ -53,7 +53,10 @@ const ADAPTER_BUCKET = {
 } as const satisfies Record<string, NewsCategory | 'own'>;
 
 type AdapterPart = keyof typeof ADAPTER_BUCKET;
-type Part = 'snapshot' | AdapterPart;
+export type TvNewsPart = 'snapshot' | AdapterPart;
+type Part = TvNewsPart;
+/** One part's result in one refresh (for per-source status; the TV ignores it). */
+export type PartOutcome = { ok: true; at: number } | { ok: false; error: string; at: number };
 type Buckets = Map<NewsCategory, NewsItem[]>;
 
 export type TvNewsSources = {
@@ -137,6 +140,8 @@ export function createTvNewsLoader(deps: {
 	commit: (category: NewsCategory, items: NewsItem[], keep: (item: NewsItem) => boolean) => void;
 	onEarthquakes: (items: NewsItem[]) => void;
 	onSnapshotApplied?: (view: NewsSnapshotView) => void;
+	/** Called once per part per live refresh, never after disposal or supersession. */
+	onPartSettled?: (part: TvNewsPart, outcome: PartOutcome) => void;
 	now: () => number;
 	partDeadlineMs?: number;
 }): { refresh(): Promise<string[]> } {
@@ -181,6 +186,10 @@ export function createTvNewsLoader(deps: {
 			failure = `news-snapshot: ${response.status} (${response.reason})`;
 		}
 		if (failure) problems.push(failure);
+		deps.onPartSettled?.(
+			'snapshot',
+			failure ? { ok: false, error: failure, at: deps.now() } : { ok: true, at: deps.now() }
+		);
 		if (response?.status === 'ok' && (applied === null || isNewer(applied, response.snapshot))) {
 			apply(response.snapshot);
 		}
@@ -193,12 +202,16 @@ export function createTvNewsLoader(deps: {
 		try {
 			items = await withDeadline(deps.sources[part](), deadlineMs);
 		} catch (err) {
-			if (live()) problems.push(`${part}: ${message(err)}`);
+			if (live()) {
+				problems.push(`${part}: ${message(err)}`);
+				deps.onPartSettled?.(part, { ok: false, error: message(err), at: deps.now() });
+			}
 			return;
 		}
 		if (!live()) return;
 		if (part === 'earthquakes') deps.onEarthquakes(items);
 		store(part, adapterBuckets(part, items));
+		deps.onPartSettled?.(part, { ok: true, at: deps.now() });
 	}
 
 	return {
