@@ -96,4 +96,12 @@ describe('v2 ⚙ settings menu', () => {
 		expect(data.get('mm_panels')).toBe('{"outdoors":false}');
 		expect(screen.getByRole('status').textContent).toBe('Sections reset to defaults.');
 	});
+
+	it('Reset sections tells the page, so transient opens end too', async () => {
+		const onreset = vi.fn();
+		render(SettingsMenu, { props: { onreset } });
+		await fireEvent.click(screen.getByRole('button', { name: 'Dashboard settings' }));
+		await fireEvent.click(screen.getByRole('button', { name: 'Reset sections' }));
+		expect(onreset).toHaveBeenCalledTimes(1);
+	});
 });

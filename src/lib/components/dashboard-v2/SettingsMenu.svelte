@@ -11,6 +11,8 @@
 	];
 	const menuId = 'v2-settings-menu';
 
+	let { onreset }: { onreset?: () => void } = $props();
+
 	let open = $state(false);
 	let resetNotice = $state(false);
 	let triggerEl = $state<HTMLButtonElement>();
@@ -46,6 +48,7 @@
 
 	function resetSections() {
 		sectionPrefs.reset();
+		onreset?.();
 		resetNotice = true;
 	}
 </script>
