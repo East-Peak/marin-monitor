@@ -8,7 +8,7 @@
 import { logger } from '$lib/config/api';
 import { getGridPoint } from './nws-common';
 import type { OwnerOptions } from './fetch-helpers';
-import { serviceClient } from '$lib/services/client';
+import { liveData, serviceClient } from '$lib/services/client';
 import { parseFeedDate } from '$lib/news/feed-date';
 import type { HourlyForecast } from '$lib/weather/brief';
 
@@ -210,7 +210,7 @@ export async function fetchHourlyPopOrThrow(
 		signal,
 		revalidateInBackground: false // no detached refresh outliving the view
 	});
-	const props = result.data?.properties;
+	const props = liveData(result)?.properties;
 	if (!props || !Array.isArray(props.periods))
 		throw new Error('NWS hourly forecast missing periods');
 	const periods = props.periods.flatMap((p) => {

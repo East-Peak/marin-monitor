@@ -54,8 +54,9 @@ const OBSERVATION = {
 };
 const TIDES = {
 	predictions: [
-		{ t: '2026-09-29 12:41', v: '6.287', type: 'H' },
-		{ t: '2026-09-29 19:48', v: '-0.202', type: 'L' }
+		// GMT (the v2 fetcher requests time_zone=gmt): 12:41 PM and 7:48 PM PDT.
+		{ t: '2026-09-29 19:41', v: '6.287', type: 'H' },
+		{ t: '2026-09-30 02:48', v: '-0.202', type: 'L' }
 	]
 };
 const HEALTH = {

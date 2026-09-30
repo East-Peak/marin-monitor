@@ -2,7 +2,7 @@
  * Latest observation from one NWS station (spec §13.9: observed "now" is
  * kept separate from the forecast, with its station and time).
  */
-import { serviceClient } from '$lib/services/client';
+import { liveData, serviceClient } from '$lib/services/client';
 import { parseFeedDate } from '$lib/news/feed-date';
 import { celsiusToFahrenheit, type ObservedNow } from '$lib/weather/brief';
 import type { OwnerOptions } from './fetch-helpers';
@@ -24,7 +24,7 @@ export async function fetchLatestObservation(
 		`/stations/${station.id}/observations/latest`,
 		{ accept: 'application/geo+json', signal, revalidateInBackground: false }
 	);
-	const p = result.data?.properties;
+	const p = liveData(result)?.properties;
 	const observedAt = typeof p?.timestamp === 'string' ? parseFeedDate(p.timestamp) : null;
 	if (!p || observedAt === null) throw new Error('NWS observation missing its timestamp');
 	const t = p.temperature;

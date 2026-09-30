@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { request } = vi.hoisted(() => ({ request: vi.fn() }));
-vi.mock('$lib/services/client', () => ({ serviceClient: { request } }));
+vi.mock('$lib/services/client', async (orig) => ({
+	...(await orig<object>()),
+	serviceClient: { request }
+}));
 const { getGridPoint } = vi.hoisted(() => ({ getGridPoint: vi.fn() }));
 vi.mock('./nws-common', () => ({ getGridPoint }));
 
@@ -124,14 +127,14 @@ describe('fetchLatestObservation', () => {
 });
 
 describe('fetchTideEventsOrThrow', () => {
-	it('reads NOAA wall-clock times as Pacific and drops malformed rows', async () => {
+	it('reads NOAA GMT times and drops malformed rows', async () => {
 		request.mockResolvedValue(
 			ok({
 				predictions: [
-					{ t: '2026-09-29 12:41', v: '6.287', type: 'H' },
-					{ t: '2026-09-29 19:48', v: '-0.202', type: 'L' },
-					{ t: '2026-03-08 02:30', v: '1.0', type: 'L' },
-					{ t: '2026-09-30 02:21', v: 'x', type: 'H' }
+					{ t: '2026-09-29 19:41', v: '6.287', type: 'H' },
+					{ t: '2026-09-30 02:48', v: '-0.202', type: 'L' },
+					{ t: '2026-13-08 02:30', v: '1.0', type: 'L' },
+					{ t: '2026-09-30 09:21', v: 'x', type: 'H' }
 				]
 			})
 		);
@@ -144,7 +147,7 @@ describe('fetchTideEventsOrThrow', () => {
 			station: '9415020',
 			range: 48,
 			interval: 'hilo',
-			time_zone: 'lst_ldt'
+			time_zone: 'gmt'
 		});
 		expect(params.begin_date).toMatch(/^\d{8}$/);
 		const owner = new AbortController();
@@ -157,5 +160,44 @@ describe('fetchTideEventsOrThrow', () => {
 	it('a NOAA error body throws', async () => {
 		request.mockResolvedValue(ok({ error: { message: 'No Predictions data was found.' } }));
 		await expect(fetchTideEventsOrThrow('9415020')).rejects.toThrow('no predictions');
+	});
+});
+
+describe('a cached copy served because the live request failed is a failure, never fresh (Codex PR 8 #2)', () => {
+	const failedWithCache = (data: unknown) => ({
+		data,
+		fromCache: 'stale-fallback',
+		error: 'HTTP 500'
+	});
+	const circuitOpen = (data: unknown) => ({ data, fromCache: 'fallback', circuitOpen: true });
+	it.each([
+		[
+			'hourly',
+			() => fetchHourlyPopOrThrow(1, 2),
+			{ properties: { updateTime: '2026-09-29T14:30:00+00:00', periods: [] } }
+		],
+		[
+			'observation',
+			() => fetchLatestObservation({ id: 'KDVO', name: 'x' }),
+			{ properties: { timestamp: '2026-09-29T14:55:00+00:00', temperature: { value: 15 } } }
+		],
+		['tides', () => fetchTideEventsOrThrow('9415020'), { predictions: [] }]
+	] as const)('%s rejects a stale-fallback or circuit-open result', async (_n, run, body) => {
+		request.mockResolvedValueOnce(failedWithCache(body));
+		await expect(run()).rejects.toThrow('HTTP 500');
+		request.mockResolvedValueOnce(circuitOpen(body));
+		await expect(run()).rejects.toThrow(/circuit open/);
+	});
+});
+
+describe('tide times are requested in GMT, so the repeated fall-back hour is unambiguous (Codex PR 8 #3)', () => {
+	it('the second 1:30 AM on Nov 1 is 09:30Z, not 08:30Z', async () => {
+		request.mockResolvedValue(
+			ok({ predictions: [{ t: '2026-11-01 09:30', v: '5.1', type: 'H' }] })
+		);
+		expect(await fetchTideEventsOrThrow('9415020')).toEqual([
+			{ atMs: Date.parse('2026-11-01T09:30:00Z'), heightFt: 5.1, type: 'H' }
+		]);
+		expect(request.mock.calls[0][2].params).toMatchObject({ time_zone: 'gmt' });
 	});
 });

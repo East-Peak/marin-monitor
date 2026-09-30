@@ -10,9 +10,9 @@
 import { TIDE_STATIONS } from '$lib/config/map';
 import type { TidePrediction } from '$lib/types';
 import { logger } from '$lib/config/api';
-import { serviceClient } from '$lib/services/client';
+import { liveData, serviceClient } from '$lib/services/client';
 import type { OwnerOptions } from './fetch-helpers';
-import { pacificDate, parsePacificWallTime } from '$lib/dashboard/pacific-time';
+import { pacificDate } from '$lib/dashboard/pacific-time';
 import type { TideEvent } from '$lib/weather/brief';
 
 interface NoaaTidePrediction {
@@ -125,9 +125,17 @@ function formatDate(d: Date): string {
 	return `${y}${m}${day} ${h}:${min}`;
 }
 
+/** NOAA `YYYY-MM-DD HH:MM` in GMT; null when malformed or not a real date. */
+function parseGmtMinute(value: string): number | null {
+	if (!/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(value)) return null;
+	const iso = `${value.replace(' ', 'T')}:00.000Z`;
+	const ms = Date.parse(iso);
+	return Number.isFinite(ms) && new Date(ms).toISOString() === iso ? ms : null;
+}
+
 /**
  * v2 brief: hi/lo predictions for 48 h from the station's local midnight,
- * with times read as Pacific wall time (DST-checked). Throws on failure.
+ * requested in GMT so every time is unambiguous. Throws on failure.
  * (The legacy functions above build begin_date from the browser's zone.)
  */
 export async function fetchTideEventsOrThrow(
@@ -147,17 +155,18 @@ export async function fetchTideEventsOrThrow(
 				product: 'predictions',
 				datum: 'MLLW',
 				units: 'english',
-				time_zone: 'lst_ldt',
+				// GMT, not local: the repeated fall-back hour is ambiguous in lst_ldt (Codex PR 8 #3).
+				time_zone: 'gmt',
 				interval: 'hilo',
 				format: 'json',
 				application: 'MarinMonitor'
 			}
 		}
 	);
-	const predictions = result.data?.predictions;
+	const predictions = liveData(result)?.predictions;
 	if (!Array.isArray(predictions)) throw new Error('NOAA returned no predictions');
 	return predictions.flatMap((p) => {
-		const atMs = parsePacificWallTime(p.t);
+		const atMs = parseGmtMinute(p.t);
 		const heightFt = Number.parseFloat(p.v);
 		if (atMs === null || !Number.isFinite(heightFt) || (p.type !== 'H' && p.type !== 'L'))
 			return [];

@@ -85,6 +85,22 @@ export interface RequestResult<T = unknown> {
 	error?: string;
 }
 
+/**
+ * The live value, or a throw when the client could only serve a cached copy because the
+ * live request failed or the circuit is open. For callers that must never present a
+ * failed refresh as fresh (the v2 brief keeps its own retained value instead).
+ */
+export function liveData<T>(result: RequestResult<T>): T {
+	if (result.fromCache === 'fallback' || result.fromCache === 'stale-fallback') {
+		throw new Error(
+			result.circuitOpen
+				? 'circuit open; only a cached copy'
+				: (result.error ?? 'only a cached copy')
+		);
+	}
+	return result.data;
+}
+
 export interface ServiceClientOptions {
 	debug?: boolean;
 }
