@@ -49,7 +49,8 @@ describe('News Store', () => {
 		expect(local.items.length).toBe(1);
 		expect(local.items[0].title).toBe('Mill Valley council approves new plan');
 		expect(local.loading).toBe(false);
-		expect(local.lastUpdated).not.toBeNull();
+		// Unknown unless the caller says when the data was observed (dashboard spec §13.2).
+		expect(local.lastUpdated).toBeNull();
 	});
 
 	it('should enrich items with alert detection', async () => {
@@ -455,5 +456,31 @@ describe('News Store', () => {
 		expect(get(localNews).items.map((i) => i.id)).toEqual(['tv']);
 		news.setItems('local', [item('dash-again')]);
 		expect(get(localNews).items.map((i) => i.id)).toEqual(['dash-again']);
+	});
+
+	// ---------- Honest writes (dashboard spec §13.2) ----------
+	it('setItems keeps a category error instead of clearing it', async () => {
+		const { news } = await import('./news');
+		news.setError('local', 'Feed parser failed to load');
+		news.setItems('local', []);
+		expect(get(news).categories.local.error).toBe('Feed parser failed to load');
+	});
+
+	it('setItems never stamps the current time; lastUpdated is the caller-supplied observation', async () => {
+		vi.useFakeTimers();
+		vi.setSystemTime(Date.parse('2026-09-29T18:00:00Z'));
+		const { news } = await import('./news');
+		news.setItems('civic', []);
+		expect(get(news).categories.civic.lastUpdated).toBeNull();
+		news.setItems('civic', [], { observedAt: Date.parse('2026-09-29T17:58:00Z') });
+		expect(get(news).categories.civic.lastUpdated).toBe(Date.parse('2026-09-29T17:58:00Z'));
+		vi.useRealTimers();
+	});
+
+	it('appendItems follows the same rules', async () => {
+		const { news } = await import('./news');
+		news.setError('housing', 'x');
+		news.appendItems('housing', []);
+		expect(get(news).categories.housing).toMatchObject({ error: 'x', lastUpdated: null });
 	});
 });

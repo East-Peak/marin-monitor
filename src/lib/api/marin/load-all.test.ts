@@ -704,4 +704,20 @@ describe('loadAllNews orchestrator', () => {
 		await loadAllNews(false, { signal: owner.signal });
 		expect(mockFetchTransitAlerts).toHaveBeenCalledWith({ signal: owner.signal });
 	});
+
+	it('passes the time the adapters settled as observedAt, never a later write time', async () => {
+		vi.useFakeTimers();
+		vi.setSystemTime(Date.parse('2026-09-29T18:00:00Z'));
+		mockEnrichItemsForRelevance.mockImplementation(async (items: NewsItem[]) => {
+			vi.setSystemTime(Date.parse('2026-09-29T18:00:30Z')); // enrichment takes 30 s
+			return items;
+		});
+		const { loadAllNews } = await import('./load-all');
+		await loadAllNews(false);
+		expect(mockSetItems).toHaveBeenCalled();
+		for (const call of mockSetItems.mock.calls) {
+			expect(call[2]).toEqual({ observedAt: Date.parse('2026-09-29T18:00:00Z') });
+		}
+		vi.useRealTimers();
+	});
 });

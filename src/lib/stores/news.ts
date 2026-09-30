@@ -146,7 +146,11 @@ function createNewsStore() {
 		setItems(
 			category: NewsCategory,
 			items: NewsItem[],
-			options: { keep?: (item: NewsItem) => boolean; owner?: symbol } = {}
+			options: {
+				keep?: (item: NewsItem) => boolean;
+				owner?: symbol;
+				observedAt?: number | null;
+			} = {}
 		) {
 			if (!mayWrite(options.owner)) return;
 			const keep = options.keep ?? isLocallyRelevant;
@@ -157,10 +161,12 @@ function createNewsStore() {
 				categories: {
 					...state.categories,
 					[category]: {
+						...state.categories[category],
 						items: enrichedItems,
 						loading: false,
-						error: null,
-						lastUpdated: Date.now()
+						// Never implied (spec §13.2): the error stays until the owner clears it,
+						// and the time is when the caller observed the data, or unknown.
+						lastUpdated: options.observedAt ?? null
 					}
 				}
 			}));
@@ -169,7 +175,11 @@ function createNewsStore() {
 		/**
 		 * Append items to a category (for pagination)
 		 */
-		appendItems(category: NewsCategory, items: NewsItem[]) {
+		appendItems(
+			category: NewsCategory,
+			items: NewsItem[],
+			options: { observedAt?: number | null } = {}
+		) {
 			if (!mayWrite(undefined)) return;
 			const enrichedItems = items.map(enrichNewsItem).filter(isLocallyRelevant);
 
@@ -186,8 +196,7 @@ function createNewsStore() {
 							...state.categories[category],
 							items: [...existing, ...newItems],
 							loading: false,
-							error: null,
-							lastUpdated: Date.now()
+							lastUpdated: options.observedAt ?? null
 						}
 					}
 				};

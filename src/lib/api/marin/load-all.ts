@@ -100,6 +100,8 @@ export async function loadAllNews(
 		fetchSeeClickFixIssues()
 	]);
 	if (signal?.aborted) return ABORTED;
+	// When the sources were observed; enrichment time is not observation time.
+	const observedAt = Date.now();
 
 	settled.forEach((result, i) => {
 		if (result.status === 'rejected') {
@@ -176,7 +178,7 @@ export async function loadAllNews(
 			try {
 				const enrichedItems = await enrichItemsForRelevance(allItems);
 				if (signal?.aborted) return;
-				news.setItems(result.category, enrichedItems);
+				news.setItems(result.category, enrichedItems, { observedAt });
 				if (enrichedItems.length > 0) {
 					void news.enrichLocations(result.category, { signal });
 				}
@@ -207,7 +209,7 @@ export async function loadAllNews(
 		try {
 			const enriched311 = await enrichItemsForRelevance(seeClickFixIssues);
 			if (signal?.aborted) return ABORTED;
-			news.setItems('311', enriched311);
+			news.setItems('311', enriched311, { observedAt });
 			if (enriched311.length > 0) {
 				void news.enrichLocations('311', { signal });
 			}
