@@ -28,6 +28,14 @@ import {
 	fetchTransitAlerts
 } from '$lib/api/marin';
 import { boundedOp, DEFAULT_OP_DEADLINE_MS } from '$lib/api/marin/bounded-op';
+import { fetchMarinAdvisories } from '$lib/api/marin/nws-advisories';
+import { fetchHourlyPopOrThrow } from '$lib/api/marin/nws-hourly';
+import { fetchLatestObservation } from '$lib/api/marin/nws-observation';
+import { fetchTideEventsOrThrow } from '$lib/api/marin/tides';
+import type { LocationPreset } from '$lib/config/locations';
+import type { AdvisoryFeedState, ParsedAlerts } from '$lib/weather/advisories';
+import { createAdvisoryFeed } from './advisory-feed';
+import { createBriefStore, type BriefFetchers, type BriefState } from './brief-store';
 import {
 	createTvNewsLoader,
 	TV_NEWS_SOURCES,
@@ -119,6 +127,12 @@ export const INVENTORY_DATASETS: readonly DatasetDef[] = [
 	})
 ];
 
+export const BRIEF_FETCHERS: BriefFetchers = {
+	hourly: (lat, lon, signal) => fetchHourlyPopOrThrow(lat, lon, { signal }),
+	observation: (station, signal) => fetchLatestObservation(station, { signal }),
+	tides: (stationId, signal) => fetchTideEventsOrThrow(stationId, { signal })
+};
+
 /**
  * TV slice 3's sources, each owned by v2 (Codex PR 6 #1): every adapter request
  * gets its own signal, aborted by the owner's disposal or by a deadline that
@@ -167,6 +181,8 @@ export interface ControllerDeps {
 	datasets?: readonly DatasetDef[];
 	/** Whole-operation deadline for each dataset read (default 15 s). */
 	deadlineMs?: number;
+	briefFetchers?: BriefFetchers;
+	fetchAdvisories?: (signal: AbortSignal) => Promise<ParsedAlerts>;
 }
 
 export interface DashboardV2Controller {
@@ -175,6 +191,9 @@ export interface DashboardV2Controller {
 	ensure(id: string): Promise<void>;
 	earthquakes: Readable<NewsItem[]>;
 	sources: Readable<SourceStatusEntry[]>;
+	brief: Readable<BriefState>;
+	advisories: Readable<AdvisoryFeedState>;
+	setLocation(preset: LocationPreset): void;
 }
 
 export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Controller {
@@ -184,6 +203,15 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 	const earthquakes = writable<NewsItem[]>([]);
 	const snapshot = writable<NewsSnapshotView | null>(null);
 	const parts = writable<Partial<Record<TvNewsPart, PartRecord>>>({});
+	const brief = createBriefStore(deps.briefFetchers ?? BRIEF_FETCHERS, deps.signal, {
+		deadlineMs: deps.deadlineMs
+	});
+	const advisories = createAdvisoryFeed({
+		fetch: deps.fetchAdvisories ?? ((signal) => fetchMarinAdvisories({ signal })),
+		signal: deps.signal,
+		now
+	});
+	let location: LocationPreset | null = null;
 
 	// v2 owns the news store while mounted (TV slice 3's claim): writes without
 	// this token (a destroyed legacy controller, a late TV) are dropped.
@@ -240,7 +268,12 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 	function cycle(): Promise<void> {
 		if (running) return running;
 		lastCycleAt = now();
-		running = Promise.all([registry.refresh('essential'), newsLoader.refresh()])
+		running = Promise.all([
+			registry.refresh('essential'),
+			newsLoader.refresh(),
+			advisories.refresh(),
+			location ? brief.load(location) : undefined
+		])
 			.then(() => undefined)
 			.finally(() => {
 				running = null;
@@ -261,6 +294,14 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 			return cycle();
 		},
 		ensure: (id) => registry.ensure(id),
+		brief: { subscribe: brief.subscribe },
+		advisories: { subscribe: advisories.subscribe },
+		setLocation(preset) {
+			if (location?.id === preset.id) return;
+			location = preset;
+			// A town switch is the user asking; it is not held to the refresh gap.
+			if (started && !deps.signal.aborted) void brief.load(preset);
+		},
 		earthquakes: { subscribe: earthquakes.subscribe },
 		sources
 	};

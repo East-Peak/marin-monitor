@@ -3,6 +3,7 @@ import { get } from 'svelte/store';
 import type { NewsSnapshotResponse } from '$lib/news/snapshot';
 import type { NewsItem } from '$lib/types';
 import { SOURCE_INVENTORY } from '$lib/server/health/inventory';
+import { getLocationById } from '$lib/config/locations';
 
 vi.mock('$app/environment', () => ({ browser: true, version: 'test' }));
 vi.mock('$lib/services/client', () => ({ serviceClient: { request: vi.fn() } }));
@@ -101,6 +102,16 @@ function newsSources(over: Partial<Sources> = {}): Sources {
 
 let clock = NOW;
 const owners: AbortController[] = [];
+const fakeBrief = () => ({
+	hourly: vi.fn(async () => ({ updatedAt: NOW, periods: [] })),
+	observation: vi.fn(async () => ({
+		stationName: 'Gnoss Field (Novato)',
+		observedAt: NOW,
+		tempF: 60,
+		text: null
+	})),
+	tides: vi.fn(async () => [])
+});
 function controller(over: Partial<Deps> = {}) {
 	const owner = new AbortController();
 	owners.push(owner);
@@ -108,6 +119,8 @@ function controller(over: Partial<Deps> = {}) {
 		signal: owner.signal,
 		now: () => clock,
 		newsSources: newsSources(),
+		briefFetchers: fakeBrief(),
+		fetchAdvisories: async () => ({ advisories: [], unreadable: 0 }),
 		...over
 	});
 }
@@ -304,5 +317,60 @@ describe('createDashboardV2Controller', () => {
 		unsubscribe();
 		// The snapshot settled first; applying it (and its per-source entries) came after the abort.
 		expect(get(c.sources).some((e) => e.id === 'news:pacific-sun')).toBe(false);
+	});
+
+	it('a cycle refreshes the advisories and, once a location is set, the brief for it', async () => {
+		const briefFetchers = fakeBrief();
+		const fetchAdvisories = vi.fn(async () => ({ advisories: [], unreadable: 0 }));
+		const c = controller({ briefFetchers, fetchAdvisories });
+		c.setLocation(getLocationById('central-marin'));
+		await c.start();
+		expect(fetchAdvisories).toHaveBeenCalledTimes(1);
+		expect(briefFetchers.hourly).toHaveBeenCalledWith(37.9735, -122.5311, expect.any(AbortSignal));
+		expect(get(c.advisories)).toMatchObject({ lastSuccessAt: NOW, lastError: null });
+		expect(get(c.brief).forecast.scope).toBe('Central Marin forecast');
+	});
+
+	it('a town change reloads only the brief, at once; the same town again does nothing', async () => {
+		const briefFetchers = fakeBrief();
+		const fetchAdvisories = vi.fn(async () => ({ advisories: [], unreadable: 0 }));
+		const c = controller({ briefFetchers, fetchAdvisories });
+		c.setLocation(getLocationById('central-marin'));
+		await c.start();
+		c.setLocation(getLocationById('mill-valley'));
+		await vi.waitFor(() =>
+			expect(briefFetchers.hourly).toHaveBeenLastCalledWith(
+				37.906,
+				-122.5449,
+				expect.any(AbortSignal)
+			)
+		);
+		c.setLocation(getLocationById('mill-valley'));
+		expect(briefFetchers.hourly).toHaveBeenCalledTimes(2);
+		expect(fetchers.gas).toHaveBeenCalledTimes(1);
+		expect(fetchAdvisories).toHaveBeenCalledTimes(1);
+	});
+
+	it('disposal cancels in-flight brief and advisory requests (Codex r1 #8)', async () => {
+		const owner = new AbortController();
+		const seen: AbortSignal[] = [];
+		const hold = <T>(signal: AbortSignal) => {
+			seen.push(signal);
+			return new Promise<T>(() => {});
+		};
+		const c = controller({
+			signal: owner.signal,
+			briefFetchers: {
+				hourly: (_a, _b, s) => hold(s),
+				observation: (_st, s) => hold(s),
+				tides: (_id, s) => hold(s)
+			},
+			fetchAdvisories: (s) => hold(s)
+		});
+		c.setLocation(getLocationById('central-marin'));
+		void c.start();
+		await vi.waitFor(() => expect(seen).toHaveLength(4));
+		owner.abort();
+		expect(seen.every((s) => s.aborted)).toBe(true);
 	});
 });
