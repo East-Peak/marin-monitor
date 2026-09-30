@@ -6,6 +6,13 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-30
 
+### Added — sections, type tokens and fragment navigation in the v2 preview (D1 PR 7)
+
+- **Section primitive** (`Section.svelte`): a real disclosure button (`aria-expanded`, `aria-controls`) in an `<h2>`; a header that keeps its status line whether open or closed; a body mounted only while open.
+- **Open state:** hash target > saved choice > viewport default (phone < 768 px closed; desktop open except Strava). Hash and jump-nav opens are never saved; only a toggle is.
+- **Fragment navigation:** `#news`, `#cost`, `#strava`, … open their section, then focus it. A phone jump-nav (Top · Map · News · Sections) uses real anchors and clears the safe area.
+- **Type tokens** (`v2-tokens.css`, `type-roles.ts`): body 15 px (16 on phones), metadata ≥ 12, brief values 20, section titles 17, line-height 1.45. An e2e classifies every visible text node and checks overflow at 50% and 150% UI scale.
+
 ### Added — dataset ownership for the v2 preview (D1 PR 6)
 
 - **One owner per dataset** (`src/lib/dashboard/datasets.ts`, `v2-controller.ts`): gas, EV, coffee and fitness (the map stores) plus news load when the preview mounts, whatever sections are open, and refresh every 5 minutes (at most once a minute on tab focus). Concurrent requests share one fetch; a failed refresh keeps the last good data and reports it as retained.

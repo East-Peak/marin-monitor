@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-09-30',
+		title: 'Preview sections and larger type',
+		description:
+			'The dashboard preview now has its page structure: collapsible sections that remember what you opened, links like /?layout=v2#news that open a section directly, a jump bar on phones, and larger, airier text. Section contents arrive in upcoming releases. The regular dashboard is unchanged.'
+	},
+	{
+		date: '2026-09-30',
 		title: 'Preview loads only what it shows',
 		description:
 			'The dashboard preview now loads its map data and headlines itself, once, whichever sections are open, and reads headlines from the shared news snapshot instead of fetching every feed in your browser. Strava data is never loaded in the preview. The regular dashboard is unchanged.'
