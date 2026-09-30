@@ -4,7 +4,8 @@
  * and, later, the dashboard's SSR preview (dashboard spec §13.11 #15).
  *
  * §13.2 / G0a mapping: no blob → unavailable; unreadable, invalid or
- * unsupported → unknown. A blob that fails parseNewsSnapshot is never served.
+ * unsupported → unknown. A blob that fails parseNewsSnapshot, or whose public
+ * view fails parseNewsSnapshotView (the browser's reader), is never served.
  *
  * Caching (vercel.com/docs/caching/cdn-cache, read 2026-09-29): browsers get a
  * Cache-Control that always revalidates; Vercel's CDN alone gets a TTL through
@@ -12,7 +13,11 @@
  * not a cacheable status on Vercel, and failures say no-store regardless: in
  * an outage every TV poll reaches this function (stated, not hidden).
  */
-import { toNewsSnapshotView, type NewsSnapshotResponse } from '$lib/news/snapshot';
+import {
+	parseNewsSnapshotView,
+	toNewsSnapshotView,
+	type NewsSnapshotResponse
+} from '$lib/news/snapshot';
 import { createSnapshotStore, type BlobApi } from './snapshot-store';
 
 export const SNAPSHOT_READ_TIMEOUT_MS = 8_000;
@@ -29,8 +34,11 @@ export async function readNewsSnapshot(
 	try {
 		const { snapshot, etag } = await createSnapshotStore(api).read(AbortSignal.timeout(timeoutMs));
 		if (etag === null) return { status: 'unavailable', reason: 'missing' };
-		if (snapshot === null) return { status: 'unknown', reason: 'invalid' };
-		return { status: 'ok', snapshot: toNewsSnapshotView(snapshot) };
+		// The view is held to the browser's reader too: the full reader cannot check
+		// every public-view invariant, and a 200 the TVs reject would be cached.
+		const view = snapshot && parseNewsSnapshotView(toNewsSnapshotView(snapshot));
+		if (!view) return { status: 'unknown', reason: 'invalid' };
+		return { status: 'ok', snapshot: view };
 	} catch {
 		return { status: 'unknown', reason: 'read-failed' };
 	}

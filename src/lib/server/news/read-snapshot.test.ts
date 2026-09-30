@@ -44,6 +44,16 @@ describe('readNewsSnapshot', () => {
 		}
 	});
 
+	it('a snapshot whose public view fails the browser reader is never served → unknown (invalid) (Codex slice review #3)', async () => {
+		// The full reader accepts an extra same-source suffixed copy; the view
+		// reader does not (more public stories than the source carries). Serving
+		// it would cache a 200 every TV then rejects.
+		const snapshot = publishedSnapshot();
+		const extra = { ...snapshot.items[0], id: `${snapshot.items[0].id}~99` };
+		const text = JSON.stringify({ ...snapshot, items: [...snapshot.items, extra] });
+		expect(await readNewsSnapshot(stored(text))).toEqual({ status: 'unknown', reason: 'invalid' });
+	});
+
 	it('a stalled read ends at the timeout → unknown (read-failed)', async () => {
 		const api = stored(JSON.stringify(publishedSnapshot()));
 		api.before = () => new Promise(() => {});
