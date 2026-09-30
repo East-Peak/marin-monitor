@@ -211,7 +211,8 @@ export function createTvNewsLoader(deps: {
 		if (!live()) return;
 		if (part === 'earthquakes') deps.onEarthquakes(items);
 		store(part, adapterBuckets(part, items));
-		deps.onPartSettled?.(part, { ok: true, at: deps.now() });
+		// The callbacks above may dispose or supersede this refresh.
+		if (live()) deps.onPartSettled?.(part, { ok: true, at: deps.now() });
 	}
 
 	return {

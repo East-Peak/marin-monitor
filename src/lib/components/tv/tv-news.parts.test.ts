@@ -78,6 +78,42 @@ describe('createTvNewsLoader onPartSettled', () => {
 		expect(Object.fromEntries(settled).snapshot).toEqual({ ok: true, at: NOW });
 	});
 
+	it('reports each of the eight parts exactly once per refresh, on every refresh (Codex PR 5 #2)', async () => {
+		const { l, settled } = loader(sources());
+		const parts = () => settled.map(([p]) => p).sort();
+		const ALL = [
+			'earthquakes',
+			'nps',
+			'police-logs',
+			'seeclickfix',
+			'sheriff-blotter',
+			'snapshot',
+			'supplemental-activity',
+			'transit'
+		];
+		await l.refresh();
+		expect(parts()).toEqual(ALL);
+		expect(settled.every(([, o]) => o.ok)).toBe(true);
+		await l.refresh();
+		expect(parts()).toEqual([...ALL, ...ALL].sort());
+	});
+
+	it('reports nothing for a part whose own callback disposed the owner (Codex PR 5 #1)', async () => {
+		const owner = new AbortController();
+		const settled: Settled[] = [];
+		const l = createTvNewsLoader({
+			sources: sources(),
+			signal: owner.signal,
+			reset: () => {},
+			commit: () => {},
+			onEarthquakes: () => owner.abort(),
+			now: () => NOW,
+			onPartSettled: (part, outcome) => settled.push([part, outcome])
+		});
+		await l.refresh();
+		expect(settled.filter(([p]) => p === 'earthquakes')).toEqual([]);
+	});
+
 	it('reports nothing once the owner is gone', async () => {
 		const owner = new AbortController();
 		let release!: () => void;
