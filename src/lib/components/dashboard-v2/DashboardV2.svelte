@@ -10,7 +10,7 @@
 	import { createSectionOpenState } from '$lib/dashboard/section-open';
 	import { openAndFocus } from '$lib/dashboard/fragment-nav';
 	import { createDashboardV2Controller, V2_REFRESH_MS } from '$lib/dashboard/v2-controller';
-	import type { SectionId } from '$lib/dashboard/section-prefs';
+	import { sectionFromHash, type SectionId } from '$lib/dashboard/section-prefs';
 
 	/** Below the map, in page order (spec §2.7). Getting Around sits directly under the map. */
 	const SECTIONS: { id: SectionId; title: string }[] = [
@@ -35,9 +35,15 @@
 	function jump(hash: string) {
 		void openAndFocus(hash, (id) => sections.openTransient(id));
 	}
-	/** A tap on a new hash arrives as a hashchange; only a re-tap of the current one needs a direct jump. */
+	/**
+	 * A jump-nav tap. A re-tap of the current hash fires no hashchange, so it jumps here.
+	 * A new hash opens its section now, before the browser's own fragment navigation
+	 * focuses the section (§8: open before focus); the hashchange then focuses the toggle.
+	 */
 	function navJump(hash: string) {
-		if (window.location.hash === hash) jump(hash);
+		if (window.location.hash === hash) return jump(hash);
+		const id = sectionFromHash(hash);
+		if (id) sections.openTransient(id);
 	}
 
 	onMount(() => {

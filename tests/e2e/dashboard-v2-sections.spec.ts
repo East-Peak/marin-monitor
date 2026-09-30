@@ -90,14 +90,17 @@ test.describe('phone 390×844', () => {
 		page
 	}) => {
 		await page.addInitScript(() => {
+			// Any focus that lands on a section or its toggle (native fragment focus included,
+			// Codex PR 7 #1) records whether that section was already open.
 			document.addEventListener('focusin', (e) => {
 				const el = e.target as HTMLElement;
-				if (el.dataset?.sectionToggle) {
-					(window as unknown as { __expandedAtFocus: string[] }).__expandedAtFocus ??= [];
-					(window as unknown as { __expandedAtFocus: string[] }).__expandedAtFocus.push(
-						el.getAttribute('aria-expanded') ?? ''
-					);
-				}
+				const id = el.dataset?.sectionToggle ?? el.dataset?.section;
+				if (!id) return;
+				const toggle = document.querySelector(`[data-section-toggle="${id}"]`);
+				(window as unknown as { __expandedAtFocus: string[] }).__expandedAtFocus ??= [];
+				(window as unknown as { __expandedAtFocus: string[] }).__expandedAtFocus.push(
+					toggle?.getAttribute('aria-expanded') ?? ''
+				);
 			});
 		});
 		await openV2(page);
@@ -105,11 +108,11 @@ test.describe('phone 390×844', () => {
 		await nav.getByRole('link', { name: 'News' }).click();
 		await expect(toggle(page, 'news')).toHaveAttribute('aria-expanded', 'true');
 		expect(await focusedToggle(page)).toBe('news');
-		expect(
-			await page.evaluate(
-				() => (window as unknown as { __expandedAtFocus: string[] }).__expandedAtFocus
-			)
-		).toEqual(['true']);
+		const atFocus = await page.evaluate(
+			() => (window as unknown as { __expandedAtFocus: string[] }).__expandedAtFocus
+		);
+		expect(atFocus.length).toBeGreaterThan(0);
+		expect(atFocus.filter((v) => v !== 'true')).toEqual([]);
 		await toggle(page, 'news').click();
 		await expect(toggle(page, 'news')).toHaveAttribute('aria-expanded', 'false');
 		await nav.getByRole('link', { name: 'News' }).click(); // same hash: no hashchange
