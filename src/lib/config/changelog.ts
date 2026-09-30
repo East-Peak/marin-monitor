@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-09-29',
+		title: 'TV map pins show up right away',
+		description:
+			'The TV now reads headlines from the shared news snapshot instead of fetching and parsing every feed itself, so Fix It Marin and earthquake pins appear on the county map within a few seconds of loading, and a news outage shows as DEGRADED instead of an empty screen.'
+	},
+	{
+		date: '2026-09-29',
 		title: "Weather alerts are Marin's",
 		description:
 			"The weather alert banner now shows National Weather Service alerts for Marin's own zones (coast, Point Reyes, interior valleys and the county). It had been showing San Francisco's alerts."

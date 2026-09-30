@@ -6,6 +6,19 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-29
 
+### Changed — the TV reads the shared news snapshot (TV slice 3)
+
+- **`GET /api/news/snapshot`.** Serves the producer's published snapshot, only after it passes the strict reader. The body is the public view: deduplicated stories plus each source's status. The producer's retention copies stay server-side. Failures are honest: `503 {status:"unavailable", reason:"missing"}` before the first publication, and `503 {status:"unknown", reason:"invalid"|"read-failed"|"not-configured"}` when a snapshot cannot be trusted or read. Browsers always revalidate (`Cache-Control: public, max-age=0, must-revalidate`). Only Vercel's CDN keeps a copy, for 60 s plus up to 240 s stale while revalidating (`Vercel-CDN-Cache-Control`). Failures are never cached. The dashboard will read the same endpoint at G2.
+- **`/tv` no longer parses feeds, enriches articles or geocodes in the browser.** Before, every TV made about 22 feed-proxy, 60 `/api/article` and 16 `/api/geocode` calls every 3 minutes; now it makes none. Headlines come from the snapshot. 311 reports and earthquakes appear the moment their own requests return, instead of waiting for the news chain. That wait had put the county map's pins 4–24 s after load, sometimes after the first slide had moved on.
+- **Outages stay visible and never blank the TV.** The header's DEGRADED badge counts:
+  - an unavailable snapshot;
+  - a snapshot not published, or with no successful fetch, for 45 minutes;
+  - a feed that has failed with nothing retained;
+  - a feed serving retained stories for more than 2 hours;
+  - a failed 311 or earthquake read.
+    The last good stories and pins stay on screen. A running TV never goes back to an older snapshot, even after the snapshot is recreated. Leaving `/tv` cancels its pending work, so nothing late lands in the dashboard.
+- **Locations are exactly as precise as the evidence.** Feed coordinates become pins, and a town named in the title places a story at that town. Nothing is geocoded, because the TV's map shows 311, earthquake and fire pins, not news pins.
+
 ### Fixed — Weather alerts are Marin's, not San Francisco's
 
 - **NWS alerts now query Marin's zones** (`NWS_ALERT_ZONES` in `src/lib/config/map.ts`): CAZ502 Marin Coastal Range, CAZ505 Coastal North Bay incl. Point Reyes, CAZ506 North Bay Interior Valleys, and county CAC041, sent as one comma-joined `zone` param. The old `NWS_ZONE = 'CAZ006'` was San Francisco's forecast zone, so the banner showed SF alerts as Marin's and missed Marin-only ones.
