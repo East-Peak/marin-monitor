@@ -1,13 +1,30 @@
 <!-- src/lib/components/dashboard-v2/DashboardV2.svelte -->
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 	import TownPicker from '$lib/components/layout/TownPicker.svelte';
+	import { createDashboardV2Controller, V2_REFRESH_MS } from '$lib/dashboard/v2-controller';
 	import SettingsMenu from './SettingsMenu.svelte';
 
 	// SSR renders "false"; tests and later sections use this to know the page is interactive.
 	let hydrated = $state(false);
+	// The one owner of this page's data (spec §13.7); aborted when the page goes away.
+	const lifetime = new AbortController();
+	const controller = browser ? createDashboardV2Controller({ signal: lifetime.signal }) : null;
 	onMount(() => {
 		hydrated = true;
+		if (!controller) return;
+		void controller.start();
+		const timer = setInterval(() => void controller.refresh(), V2_REFRESH_MS);
+		const onVisible = () => {
+			if (document.visibilityState === 'visible') void controller.refresh();
+		};
+		document.addEventListener('visibilitychange', onVisible);
+		return () => {
+			lifetime.abort();
+			clearInterval(timer);
+			document.removeEventListener('visibilitychange', onVisible);
+		};
 	});
 </script>
 

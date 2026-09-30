@@ -1,7 +1,12 @@
 import { expect, test, type Route } from '@playwright/test';
 
-/** Anything the legacy controller could start after it is destroyed. */
-const LEGACY_WORK = /\/api\/(feeds|article|geocode|transit|data\/)|api\.weather\.gov/;
+/**
+ * Work only the legacy controller does. v2 legitimately requests /api/data/*,
+ * /api/transit, /api/news/snapshot and (from D1 PR 8) its own NWS observation,
+ * hourly and alert URLs, so those are not evidence of a leak.
+ */
+const LEGACY_WORK =
+	/\/api\/(feeds|article|geocode)\b|api\.weather\.gov\/gridpoints\/[A-Z]{3}\/\d+,\d+\/forecast(?:$|\?)/;
 
 test('a destroyed legacy controller starts no further work (debounce, timers, visibility, delayed responses)', async ({
 	page
@@ -9,11 +14,28 @@ test('a destroyed legacy controller starts no further work (debounce, timers, vi
 	await page.clock.install();
 	await page.addInitScript(() => localStorage.setItem('mm_onboardingComplete', 'true'));
 	const held: Route[] = [];
+	let navigated = false;
 	// Hold every feed and transit response until the controller is gone. Transit is a
 	// sequential per-agency loop, so a released response would start the next agency.
+	// v2's news loader requests /api/transit too: after the navigation, answer it at once.
 	await page.route(/\/api\/(feeds|transit)\?/, (route) => {
+		if (navigated && route.request().url().includes('/api/transit?')) {
+			return route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: '{"Entities":[]}'
+			});
+		}
 		held.push(route);
 	});
+	// A late legacy continuation would fetch this article; answering keeps the run fast and deterministic.
+	await page.route(/\/api\/article\b/, (route) =>
+		route.fulfill({
+			status: 200,
+			contentType: 'text/html',
+			body: '<article><p>Crash at 1200 Fourth Street, San Rafael.</p></article>'
+		})
+	);
 
 	await page.goto('/');
 	await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
@@ -24,6 +46,7 @@ test('a destroyed legacy controller starts no further work (debounce, timers, vi
 	// A town change arms the 500 ms weather debounce; navigate to v2 immediately.
 	await page.locator('.picker-trigger').click();
 	await page.getByRole('option', { name: 'Novato' }).click();
+	navigated = true;
 	await page.evaluate(() => {
 		const a = document.createElement('a');
 		a.href = '/?layout=v2';
@@ -42,7 +65,7 @@ test('a destroyed legacy controller starts no further work (debounce, timers, vi
 	});
 
 	// Delayed responses arrive after the controller is gone.
-	const xml = `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>t</title><item><title>Novato council approves late story</title><link>https://example.com/late</link><pubDate>${new Date().toUTCString()}</pubDate></item></channel></rss>`;
+	const xml = `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>t</title><item><title>Novato council approves late story</title><link>https://www.marinij.com/2026/09/29/late-legacy-story/</link><pubDate>${new Date().toUTCString()}</pubDate></item></channel></rss>`;
 	for (const route of held.splice(0)) {
 		if (route.request().url().includes('/api/transit?')) {
 			await route.fulfill({
@@ -78,8 +101,9 @@ test('a destroyed legacy controller starts no further work (debounce, timers, vi
 	await expect(page.getByText('Novato council approves late story')).toHaveCount(0);
 });
 
-/** Chains legacy child panels start on mount: NWS /points → gridpoints, NOAA tides (retried). */
-const PANEL_WORK = /api\.weather\.gov|tidesandcurrents\.noaa\.gov/;
+/** Work only a surviving legacy panel does: the sentinel grid it alone was given, or a legacy-shaped tide request. */
+const PANEL_WORK =
+	/api\.weather\.gov\/gridpoints\/MTR\/1,1\b|tidesandcurrents\.noaa\.gov\/[^#]*\bend_date=/;
 
 test('legacy panels start no request after teardown (NWS grid chains, tide retries)', async ({
 	page
@@ -97,6 +121,21 @@ test('legacy panels start no request after teardown (NWS grid chains, tide retri
 	await expect.poll(() => heldUrl(/\/points\//), { timeout: 15_000 }).toBe(true);
 	await expect.poll(() => heldUrl(/tidesandcurrents/), { timeout: 15_000 }).toBe(true);
 
+	// v2's own weather (D1 PR 8) gets a different grid and fast answers; only legacy ever sees grid 1,1.
+	await page.route(/api\.weather\.gov\/points\//, (route) =>
+		route.fulfill({
+			status: 200,
+			contentType: 'application/geo+json',
+			body: JSON.stringify({ properties: { gridId: 'MTR', gridX: 2, gridY: 2 } })
+		})
+	);
+	await page.route(/api\.weather\.gov\/(gridpoints|stations|alerts)\//, (route) =>
+		route.fulfill({ status: 503, body: 'test' })
+	);
+	await page.route(/tidesandcurrents\.noaa\.gov/, (route) =>
+		route.fulfill({ status: 503, body: 'test' })
+	);
+
 	await page.evaluate(() => {
 		const a = document.createElement('a');
 		a.href = '/?layout=v2';
@@ -110,14 +149,14 @@ test('legacy panels start no request after teardown (NWS grid chains, tide retri
 		if (PANEL_WORK.test(req.url())) late.push(req.url());
 	});
 
-	// /points answers normally (a live chain would now fetch gridpoints); tides fail
+	// /points answers with the sentinel grid (a live chain would now fetch gridpoints/MTR/1,1); tides fail
 	// (a live ServiceClient would retry after its backoff).
 	for (const route of held.splice(0)) {
 		if (route.request().url().includes('/points/')) {
 			await route.fulfill({
 				status: 200,
 				contentType: 'application/geo+json',
-				body: JSON.stringify({ properties: { gridId: 'MTR', gridX: 82, gridY: 121 } })
+				body: JSON.stringify({ properties: { gridId: 'MTR', gridX: 1, gridY: 1 } })
 			});
 		} else {
 			await route.fulfill({ status: 503, body: 'unavailable' });

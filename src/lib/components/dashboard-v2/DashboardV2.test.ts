@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.hoisted(() => {
 	const data = new Map<string, string>();
@@ -23,6 +23,32 @@ const { loadAllNews, loadStravaData } = vi.hoisted(() => ({
 }));
 vi.mock('$lib/api/marin/load-all', () => ({ loadAllNews }));
 vi.mock('$lib/stores/strava', () => ({ loadStravaData }));
+const controller = vi.hoisted(() => ({
+	start: vi.fn(async () => {}),
+	refresh: vi.fn(async () => {}),
+	ensure: vi.fn(async () => {}),
+	created: [] as AbortSignal[]
+}));
+// Earlier tests in this file render DashboardV2 too: reset every captured call per test (Codex r1 #11).
+beforeEach(() => {
+	controller.start.mockClear();
+	controller.refresh.mockClear();
+	controller.ensure.mockClear();
+	controller.created.length = 0;
+});
+vi.mock('$lib/dashboard/v2-controller', () => ({
+	V2_REFRESH_MS: 300_000,
+	createDashboardV2Controller: ({ signal }: { signal: AbortSignal }) => {
+		controller.created.push(signal);
+		return {
+			start: controller.start,
+			refresh: controller.refresh,
+			ensure: controller.ensure,
+			earthquakes: { subscribe: (fn: (v: unknown[]) => void) => (fn([]), () => {}) },
+			sources: { subscribe: (fn: (v: unknown[]) => void) => (fn([]), () => {}) }
+		};
+	}
+}));
 
 import DashboardV2 from './DashboardV2.svelte';
 
@@ -53,6 +79,15 @@ describe('DashboardV2 preview shell', () => {
 	it('puts the ⚙ settings menu in the v2 header', () => {
 		render(DashboardV2);
 		expect(screen.getByRole('button', { name: 'Dashboard settings' })).toBeTruthy();
+	});
+
+	it('owns exactly one v2 controller: started on mount, aborted on destroy', async () => {
+		const { unmount } = render(DashboardV2);
+		await tick();
+		expect(controller.created).toHaveLength(1);
+		expect(controller.start).toHaveBeenCalledTimes(1);
+		unmount();
+		expect(controller.created[0].aborted).toBe(true);
 	});
 });
 

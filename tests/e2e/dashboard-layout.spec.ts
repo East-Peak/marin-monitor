@@ -4,6 +4,14 @@ import { expect, test, type Page } from '@playwright/test';
 const DATA_REQUEST = /\/api\/|api\.weather\.gov|earthquake\.usgs\.gov|tidesandcurrents\.noaa\.gov/;
 /** A new legacy refresh cycle always starts with RSS fetches through /api/feeds. */
 const FEED_REQUEST = /\/api\/feeds\?/;
+/**
+ * Requests only the legacy controller makes. v2 reads the snapshot, its own
+ * /api/data/* and /api/transit, and (PR 8) the NWS hourly/observation/alert URLs;
+ * after the NWS zone fix legacy and v2 query the same alert URL, so alerts are
+ * not a legacy signature. The 7-day `/forecast` (non-hourly) is legacy-only.
+ */
+const LEGACY_ONLY =
+	/\/api\/(feeds|article|geocode)\b|\/api\/data\/strava|api\.weather\.gov\/gridpoints\/[A-Z]{3}\/\d+,\d+\/forecast(?:$|\?)/;
 
 function recordRequests(page: Page, pattern: RegExp): string[] {
 	const seen: string[] = [];
@@ -37,7 +45,8 @@ test.describe('dashboard layout flag', () => {
 		await page.keyboard.press('Escape');
 		await page.waitForTimeout(3_000);
 		await expect(page.locator('[data-layout]')).toHaveCount(1);
-		expect(data).toEqual([]);
+		// v2 owns its essentials since D1 PR 6; what must never start is legacy work or Strava.
+		expect(data.filter((u) => LEGACY_ONLY.test(u))).toEqual([]);
 		expect(errors).toEqual([]);
 	});
 
