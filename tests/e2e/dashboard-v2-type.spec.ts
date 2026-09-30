@@ -15,24 +15,50 @@ interface TextNode {
 	lineHeightPx: number;
 }
 
-/** Every visible text node under the v2 root, with the role it is classified under (§13.4). */
+/**
+ * Every visible piece of text under the v2 root, with the role it is classified under (§13.4):
+ * DOM text (including text inside `display: contents` wrappers), ::before/::after content, and
+ * form-field placeholders and values (Codex PR 7 #2).
+ */
 async function audit(page: Page): Promise<TextNode[]> {
 	return page.evaluate(() => {
 		const root = document.querySelector('[data-layout="v2"]')!;
-		const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
 		const out: TextNode[] = [];
-		for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-			const text = n.textContent?.trim();
-			const el = n.parentElement;
-			if (!text || !el) continue;
-			if (!el.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true })) continue;
-			const cs = getComputedStyle(el);
+		/** `display: contents` boxes report invisible; judge the nearest box that renders. */
+		const rendered = (el: Element | null): Element | null => {
+			while (el && getComputedStyle(el).display === 'contents') el = el.parentElement;
+			return el;
+		};
+		const visible = (el: Element) => {
+			const box = rendered(el);
+			return !!box && box.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true });
+		};
+		const push = (text: string, el: Element, cs: CSSStyleDeclaration) =>
 			out.push({
 				text: text.slice(0, 40),
 				role: el.closest('[data-text-role]')?.getAttribute('data-text-role') ?? null,
 				fontPx: parseFloat(cs.fontSize),
 				lineHeightPx: cs.lineHeight === 'normal' ? NaN : parseFloat(cs.lineHeight)
 			});
+
+		const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+		for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+			const text = n.textContent?.trim();
+			const el = n.parentElement;
+			if (!text || !el || !visible(el)) continue;
+			push(text, el, getComputedStyle(rendered(el) ?? el));
+		}
+		for (const el of root.querySelectorAll('*')) {
+			if (!visible(el)) continue;
+			for (const pseudo of ['::before', '::after']) {
+				const cs = getComputedStyle(el, pseudo);
+				const m = /^"(.*)"$/s.exec(cs.content);
+				if (m && m[1].trim() && cs.display !== 'none') push(m[1].trim(), el, cs);
+			}
+			if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+				const text = (el.value || el.placeholder).trim();
+				if (text) push(text, el, getComputedStyle(el));
+			}
 		}
 		return out;
 	});
@@ -70,6 +96,28 @@ const DISCLOSURES: {
 		close: (page) => page.getByRole('button', { name: 'Dashboard settings' }).click()
 	}
 ];
+
+test('the audit sees pseudo-element, form-field and display:contents text (negative control; Codex PR 7 #2)', async ({
+	page
+}) => {
+	await openAll(page);
+	await page.evaluate(() => {
+		const root = document.querySelector('[data-layout="v2"] main')!;
+		const style = document.createElement('style');
+		style.textContent = '.probe-pseudo::before { content: "probe pseudo"; }';
+		document.head.append(style);
+		root.insertAdjacentHTML(
+			'beforeend',
+			'<div class="probe-pseudo"></div>' +
+				'<input placeholder="probe placeholder" />' +
+				'<span style="display: contents">probe contents</span>'
+		);
+	});
+	const unclassified = (await audit(page)).filter((n) => n.role === null).map((n) => n.text);
+	expect(unclassified).toEqual(
+		expect.arrayContaining(['probe pseudo', 'probe placeholder', 'probe contents'])
+	);
+});
 
 for (const viewport of [
 	{ width: 1440, height: 900 },
