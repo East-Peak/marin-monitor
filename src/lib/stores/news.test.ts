@@ -427,4 +427,33 @@ describe('News Store', () => {
 		expect(all).toHaveLength(1);
 		expect(all[0].categories).toEqual(['local', 'safety']);
 	});
+
+	it('claim(): clears, then only the claim token writes until released', async () => {
+		const { news, localNews } = await import('./news');
+		const item = (id: string) =>
+			({
+				id,
+				title: `Point Reyes ${id}`,
+				link: `https://www.ptreyeslight.com/${id}`,
+				timestamp: Date.now(),
+				source: 'Point Reyes Light',
+				category: 'local',
+				verification: 'local_media'
+			}) as NewsItem;
+		news.setItems('local', [item('dash-before')]);
+		const claim = news.claim();
+		expect(get(localNews).items).toEqual([]);
+		news.setItems('local', [item('dash-late')]); // a pending dashboard write
+		news.appendItems('local', [item('dash-append')]);
+		news.setLoading('local', true);
+		news.setError('local', 'dash error');
+		expect(get(localNews)).toMatchObject({ items: [], loading: false, error: null });
+		news.setItems('local', [item('tv')], { owner: claim.token });
+		expect(get(localNews).items.map((i) => i.id)).toEqual(['tv']);
+		claim.release();
+		news.setItems('local', [item('tv-late')], { owner: claim.token }); // a destroyed TV
+		expect(get(localNews).items.map((i) => i.id)).toEqual(['tv']);
+		news.setItems('local', [item('dash-again')]);
+		expect(get(localNews).items.map((i) => i.id)).toEqual(['dash-again']);
+	});
 });

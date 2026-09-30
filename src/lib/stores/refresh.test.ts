@@ -234,3 +234,22 @@ describe('Refresh Store', () => {
 		expect(callback).toHaveBeenCalledTimes(2);
 	});
 });
+
+describe('refresh history ownership (Codex r3 #1)', () => {
+	it("a claimed owner's history is not overwritten by a pending default-owner refresh", async () => {
+		vi.resetModules();
+		const { refresh } = await import('./refresh');
+		const { claimSharedStores } = await import('./ownership');
+		const claim = claimSharedStores();
+		try {
+			refresh.startRefresh(claim.token);
+			refresh.endRefresh(['tv-problem'], claim.token);
+			refresh.startRefresh(); // late dashboard
+			refresh.endRefresh(['dash-error']);
+			expect(get(refresh).refreshHistory[0].errors).toEqual(['tv-problem']);
+			expect(get(refresh).isRefreshing).toBe(false);
+		} finally {
+			claim.release();
+		}
+	});
+});

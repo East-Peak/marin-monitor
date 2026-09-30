@@ -9,6 +9,7 @@ import { isLocallyRelevant } from '$lib/config/relevance';
 import { enrichItemsForLocation } from '$lib/api/marin/article-enrichment';
 import { compareByTimestamp } from '$lib/news/order';
 import { collapseStoryCopies } from '$lib/news/identity';
+import { claimSharedStores, mayWrite, type StoreClaim } from './ownership';
 
 export interface CategoryState {
 	items: NewsItem[];
@@ -104,6 +105,7 @@ function createNewsStore() {
 		 * Set loading state for a category
 		 */
 		setLoading(category: NewsCategory, loading: boolean) {
+			if (!mayWrite(undefined)) return;
 			update((state) => ({
 				...state,
 				categories: {
@@ -121,6 +123,7 @@ function createNewsStore() {
 		 * Set error state for a category
 		 */
 		setError(category: NewsCategory, error: string | null) {
+			if (!mayWrite(undefined)) return;
 			update((state) => ({
 				...state,
 				categories: {
@@ -143,8 +146,9 @@ function createNewsStore() {
 		setItems(
 			category: NewsCategory,
 			items: NewsItem[],
-			options: { keep?: (item: NewsItem) => boolean } = {}
+			options: { keep?: (item: NewsItem) => boolean; owner?: symbol } = {}
 		) {
+			if (!mayWrite(options.owner)) return;
 			const keep = options.keep ?? isLocallyRelevant;
 			const enrichedItems = items.map(enrichNewsItem).filter((item) => keep(item));
 
@@ -166,6 +170,7 @@ function createNewsStore() {
 		 * Append items to a category (for pagination)
 		 */
 		appendItems(category: NewsCategory, items: NewsItem[]) {
+			if (!mayWrite(undefined)) return;
 			const enrichedItems = items.map(enrichNewsItem).filter(isLocallyRelevant);
 
 			update((state) => {
@@ -194,6 +199,7 @@ function createNewsStore() {
 		 * This runs in the background and only updates items still present in the category.
 		 */
 		async enrichLocations(category: NewsCategory, options: { signal?: AbortSignal } = {}) {
+			if (!mayWrite(undefined)) return;
 			const { signal } = options;
 			if (signal?.aborted || inFlightLocationEnrichment.has(category)) return;
 			const run = Symbol(category);
@@ -216,6 +222,7 @@ function createNewsStore() {
 				const byId = new Map(enriched.map((item) => [item.id, item]));
 
 				update((state) => {
+					if (!mayWrite(undefined)) return state;
 					let changed = false;
 					const nextItems = state.categories[category].items.map((item) => {
 						const candidate = byId.get(item.id);
@@ -308,6 +315,7 @@ function createNewsStore() {
 		 * Clear a category
 		 */
 		clearCategory(category: NewsCategory) {
+			if (!mayWrite(undefined)) return;
 			update((state) => ({
 				...state,
 				categories: {
@@ -322,6 +330,16 @@ function createNewsStore() {
 		 */
 		clearAll() {
 			set(createInitialState());
+		},
+
+		/**
+		 * Take the news and refresh stores exclusively (TV mount): clears the
+		 * news store, and from now on only the returned token writes.
+		 */
+		claim(): StoreClaim {
+			const claim = claimSharedStores();
+			set(createInitialState());
+			return claim;
 		},
 
 		/**

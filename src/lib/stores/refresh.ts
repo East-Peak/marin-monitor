@@ -4,6 +4,7 @@
 
 import { writable, derived, get } from 'svelte/store';
 import { browser } from '$app/environment';
+import { mayWrite } from './ownership';
 
 // Refresh stages (matches existing 3-stage approach)
 export type RefreshStage = 'critical' | 'secondary' | 'tertiary';
@@ -186,7 +187,8 @@ function createRefreshStore() {
 		/**
 		 * Start a refresh cycle
 		 */
-		startRefresh() {
+		startRefresh(owner?: symbol) {
+			if (!mayWrite(owner)) return;
 			refreshStartTime = Date.now();
 			update((state) => ({
 				...state,
@@ -213,7 +215,8 @@ function createRefreshStore() {
 		/**
 		 * End refresh cycle
 		 */
-		endRefresh(errors: string[] = []) {
+		endRefresh(errors: string[] = [], owner?: symbol) {
+			if (!mayWrite(owner)) return;
 			const duration = refreshStartTime ? Date.now() - refreshStartTime : 0;
 			refreshStartTime = null;
 			const now = Date.now();
