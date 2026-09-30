@@ -16,7 +16,7 @@ vi.mock('$lib/config/towns', () => ({
 	MARIN_CENTER: { lat: 37.9735, lon: -122.5311 }
 }));
 
-import { fetchEarthquakes, earthquakesToNewsItems } from './usgs';
+import { fetchEarthquakes, fetchEarthquakesOrThrow, earthquakesToNewsItems } from './usgs';
 import { serviceClient } from '$lib/services/client';
 
 const mockRequest = vi.mocked(serviceClient.request);
@@ -174,5 +174,41 @@ describe('earthquakesToNewsItems', () => {
 	it('handles empty array', () => {
 		const items = earthquakesToNewsItems([]);
 		expect(items).toEqual([]);
+	});
+});
+
+describe('fetchEarthquakesOrThrow (status-aware; the TV keeps last-good pins on failure)', () => {
+	const one = {
+		fromCache: false as const,
+		data: {
+			features: [
+				{
+					id: 'nc1',
+					properties: {
+						mag: 2.4,
+						place: 'near Novato',
+						time: 1,
+						url: 'u',
+						title: 't',
+						type: 'earthquake'
+					},
+					geometry: { coordinates: [-122.57, 38.1, 5] }
+				}
+			]
+		}
+	};
+
+	it('success → network failure → successful empty, each reported honestly', async () => {
+		mockRequest.mockResolvedValueOnce(one);
+		expect((await fetchEarthquakesOrThrow()).map((q) => q.id)).toEqual(['nc1']);
+		mockRequest.mockRejectedValueOnce(new Error('Network timeout'));
+		await expect(fetchEarthquakesOrThrow()).rejects.toThrow('Network timeout');
+		mockRequest.mockResolvedValueOnce({ fromCache: false as const, data: { features: [] } });
+		expect(await fetchEarthquakesOrThrow()).toEqual([]);
+	});
+
+	it('rejects an unexpected response shape instead of reading it as "no quakes"', async () => {
+		mockRequest.mockResolvedValueOnce({ fromCache: false as const, data: {} } as never);
+		await expect(fetchEarthquakesOrThrow()).rejects.toThrow('unexpected response shape');
 	});
 });

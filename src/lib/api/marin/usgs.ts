@@ -30,35 +30,44 @@ interface UsgsResponse {
 }
 
 /**
- * Fetch recent earthquakes near Marin County.
- * Returns as EarthquakeData[].
+ * Fetch recent earthquakes near Marin County. Rejects on failure or an
+ * unexpected shape, so a caller that keeps last-good pins can tell a failure
+ * from a real "no quakes" (TV slice 3).
  */
+export async function fetchEarthquakesOrThrow(): Promise<EarthquakeData[]> {
+	logger.log('USGS', 'Fetching earthquakes');
+
+	const result = await serviceClient.request<UsgsResponse>('USGS', '/fdsnws/event/1/query', {
+		params: {
+			format: 'geojson',
+			latitude: MARIN_CENTER.lat,
+			longitude: MARIN_CENTER.lon,
+			maxradiuskm: 100,
+			minmagnitude: 2.0,
+			limit: 10,
+			orderby: 'time'
+		}
+	});
+	if (!Array.isArray(result.data?.features)) {
+		throw new Error('USGS: unexpected response shape');
+	}
+
+	return result.data.features.map((f) => ({
+		id: f.id,
+		magnitude: f.properties.mag,
+		place: f.properties.place,
+		time: f.properties.time,
+		lat: f.geometry.coordinates[1],
+		lon: f.geometry.coordinates[0],
+		depth: f.geometry.coordinates[2],
+		url: f.properties.url
+	}));
+}
+
+/** The swallowing form the dashboard uses: any failure reads as no quakes. */
 export async function fetchEarthquakes(): Promise<EarthquakeData[]> {
 	try {
-		logger.log('USGS', 'Fetching earthquakes');
-
-		const result = await serviceClient.request<UsgsResponse>('USGS', '/fdsnws/event/1/query', {
-			params: {
-				format: 'geojson',
-				latitude: MARIN_CENTER.lat,
-				longitude: MARIN_CENTER.lon,
-				maxradiuskm: 100,
-				minmagnitude: 2.0,
-				limit: 10,
-				orderby: 'time'
-			}
-		});
-
-		return result.data.features.map((f) => ({
-			id: f.id,
-			magnitude: f.properties.mag,
-			place: f.properties.place,
-			time: f.properties.time,
-			lat: f.geometry.coordinates[1],
-			lon: f.geometry.coordinates[0],
-			depth: f.geometry.coordinates[2],
-			url: f.properties.url
-		}));
+		return await fetchEarthquakesOrThrow();
 	} catch (error) {
 		logger.warn('USGS', `Earthquake fetch failed: ${(error as Error).message}`);
 		return [];
