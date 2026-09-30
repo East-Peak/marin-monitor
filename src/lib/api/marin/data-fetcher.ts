@@ -18,7 +18,7 @@
  */
 
 import { logger } from '$lib/config/api';
-import { fetchWithTimeout, type OwnerOptions } from './fetch-helpers';
+import { fetchAndRead, type OwnerOptions } from './fetch-helpers';
 
 /**
  * How the server produced a successful response. `live` is the normal path;
@@ -53,17 +53,18 @@ export function createDataFetcherWithStatus<T>(
 	return async ({ signal }: OwnerOptions = {}): Promise<FetchResult<T>> => {
 		try {
 			logger.log(serviceId, `Loading from ${endpoint}`);
-			const response = await fetchWithTimeout(endpoint, { signal });
-			if (!response.ok) {
-				const error = `HTTP ${response.status}`;
-				logger.warn(serviceId, `Fetch failed: ${error}`);
-				return { ok: false, error, fallback };
-			}
-			const dataSource = parseDataSource(response.headers?.get('X-Data-Source') ?? null);
-			if (dataSource !== 'live') {
-				logger.warn(serviceId, `Served from ${dataSource} (live blob unavailable)`);
-			}
-			return { ok: true, data: (await response.json()) as T, dataSource };
+			return await fetchAndRead(endpoint, { signal }, async (response): Promise<FetchResult<T>> => {
+				if (!response.ok) {
+					const error = `HTTP ${response.status}`;
+					logger.warn(serviceId, `Fetch failed: ${error}`);
+					return { ok: false, error, fallback };
+				}
+				const dataSource = parseDataSource(response.headers?.get('X-Data-Source') ?? null);
+				if (dataSource !== 'live') {
+					logger.warn(serviceId, `Served from ${dataSource} (live blob unavailable)`);
+				}
+				return { ok: true, data: (await response.json()) as T, dataSource };
+			});
 		} catch (error) {
 			const message = (error as Error).message;
 			// An owner abort (destroyed dashboard or panel) is not an upstream failure.

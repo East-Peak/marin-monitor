@@ -52,3 +52,17 @@ export async function fetchWithTimeout(
 ): Promise<Response> {
 	return fetchWithDeadline(url, options, timeoutMs, async (response) => response);
 }
+
+/**
+ * fetch + read under ONE lifetime: the owner signal and the deadline stay attached to
+ * the request until `read` finishes, so a stalled body is cancelled too. Use this, not
+ * fetchWithTimeout, whenever a body is read under an owner.
+ */
+export function fetchAndRead<T>(
+	url: string,
+	options: RequestInit | undefined,
+	read: (response: Response) => Promise<T>,
+	timeoutMs = 10_000
+): Promise<T> {
+	return fetchWithDeadline(url, options, timeoutMs, read);
+}

@@ -10,7 +10,13 @@ const mockLoggerWarn = vi.fn();
 
 vi.mock('./fetch-helpers', () => ({
 	fetchWithTimeout: (...args: unknown[]) =>
-		mockFetchWithTimeout(...(args as [string, RequestInit?]))
+		mockFetchWithTimeout(...(args as [string, RequestInit?])),
+	// The request phase is the same mock; `read` runs on its response (body-inclusive helper).
+	fetchAndRead: (
+		url: string,
+		options: RequestInit,
+		read: (response: Response) => Promise<unknown>
+	) => mockFetchWithTimeout(url, options).then(read)
 }));
 
 vi.mock('$lib/config/api', () => ({

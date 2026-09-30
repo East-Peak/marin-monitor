@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { fetchJson, fetchWithTimeout } from './fetch-helpers';
+import { fetchAndRead, fetchJson, fetchWithTimeout } from './fetch-helpers';
 
 // ────────────────────────────────────────────
 // Global mocks
@@ -337,5 +337,69 @@ describe('fetchJson body read stays under the deadline and owner signal (post-pu
 		await vi.advanceTimersByTimeAsync(1500);
 
 		expect(await settled).toBeInstanceOf(DOMException);
+	});
+});
+
+describe('fetchAndRead (body-inclusive; Codex r2 #4)', () => {
+	const bodyUntilAbort = (signal: AbortSignal) =>
+		({
+			ok: true,
+			status: 200,
+			json: () =>
+				new Promise((_, reject) =>
+					signal.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')))
+				)
+		}) as unknown as Response;
+
+	it("the owner's abort reaches the request while the body is pending", async () => {
+		let requestSignal!: AbortSignal;
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async (_i: RequestInfo | URL, init?: RequestInit) =>
+				bodyUntilAbort((requestSignal = init!.signal!))
+			)
+		);
+		const owner = new AbortController();
+		const pending = fetchAndRead('/x', { signal: owner.signal }, (res) => res.json());
+		await vi.waitFor(() => expect(requestSignal).toBeDefined());
+		owner.abort();
+		await expect(pending).rejects.toThrow(/abort/i);
+		expect(requestSignal.aborted).toBe(true);
+	});
+	it('the deadline reaches the request while the body is pending', async () => {
+		// This file's beforeEach installs fake timers: attach the expectation, advance past the deadline, then await (Codex r3 #1).
+		let requestSignal!: AbortSignal;
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(async (_i: RequestInfo | URL, init?: RequestInit) =>
+				bodyUntilAbort((requestSignal = init!.signal!))
+			)
+		);
+		const settled = expect(fetchAndRead('/x', undefined, (res) => res.json(), 20)).rejects.toThrow(
+			/abort/i
+		);
+		await vi.advanceTimersByTimeAsync(25);
+		await settled;
+		expect(requestSignal.aborted).toBe(true);
+	});
+	it('after completion it detaches from the owner (listener cleanup), so a later abort touches nothing', async () => {
+		let requestSignal!: AbortSignal;
+		vi.stubGlobal(
+			'fetch',
+			vi.fn(
+				async (_i: RequestInfo | URL, init?: RequestInit) => (
+					(requestSignal = init!.signal!),
+					new Response('{"a":1}')
+				)
+			)
+		);
+		const owner = new AbortController();
+		const removed = vi.spyOn(owner.signal, 'removeEventListener');
+		expect(await fetchAndRead('/x', { signal: owner.signal }, (res) => res.json())).toEqual({
+			a: 1
+		});
+		expect(removed).toHaveBeenCalledWith('abort', expect.any(Function));
+		owner.abort();
+		expect(requestSignal.aborted).toBe(false);
 	});
 });
