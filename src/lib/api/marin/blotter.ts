@@ -2,6 +2,7 @@ import { detectTown } from '$lib/config';
 import { logger } from '$lib/config/api';
 import type { NewsItem } from '$lib/types';
 import { serviceClient } from '$lib/services/client';
+import type { OwnerOptions } from './fetch-helpers';
 
 const SHERIFF_BLOTTER_PAGE =
 	'https://data.marincounty.gov/Public-Safety/Marin-County-Sheriff-Reported-Crime/ahxi-5nsc';
@@ -171,7 +172,8 @@ function recordToNewsItem(record: SheriffCrimeRecord): NewsItem | null {
 
 export async function fetchSheriffCrimeBlotter(
 	hours: number = 36,
-	limit: number = 30
+	limit: number = 30,
+	{ signal }: OwnerOptions = {}
 ): Promise<NewsItem[]> {
 	try {
 		// Round cutoff to the nearest hour for stable cache keys
@@ -190,7 +192,8 @@ export async function fetchSheriffCrimeBlotter(
 					$where: `incident_date_time >= '${cutoff}'`,
 					$order: 'incident_date_time DESC',
 					$limit: limit
-				}
+				},
+				signal
 			}
 		);
 

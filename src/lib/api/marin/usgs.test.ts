@@ -211,4 +211,11 @@ describe('fetchEarthquakesOrThrow (status-aware; the TV keeps last-good pins on 
 		mockRequest.mockResolvedValueOnce({ fromCache: false as const, data: {} } as never);
 		await expect(fetchEarthquakesOrThrow()).rejects.toThrow('unexpected response shape');
 	});
+
+	it('passes the owner signal to the service client (Codex PR 6 #1)', async () => {
+		mockRequest.mockResolvedValueOnce({ data: { features: [] } } as never);
+		const owner = new AbortController();
+		await fetchEarthquakesOrThrow({ signal: owner.signal });
+		expect(mockRequest.mock.calls[0][2]).toMatchObject({ signal: owner.signal });
+	});
 });

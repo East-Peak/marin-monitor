@@ -411,4 +411,28 @@ describe('fetchSeeClickFixIssues', () => {
 		const result = await fetchSeeClickFixIssues();
 		expect(result).toHaveLength(4);
 	});
+
+	it('aborting the owner while the body is pending aborts the actual request (Codex PR 6 #1)', async () => {
+		let requestSignal!: AbortSignal;
+		global.fetch = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+			requestSignal = init!.signal!;
+			return {
+				ok: true,
+				status: 200,
+				json: () =>
+					new Promise((_, reject) =>
+						requestSignal.addEventListener('abort', () =>
+							reject(new DOMException('aborted', 'AbortError'))
+						)
+					)
+			} as unknown as Response;
+		});
+		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const owner = new AbortController();
+		const pending = fetchSeeClickFixIssues({ signal: owner.signal });
+		await vi.waitFor(() => expect(requestSignal).toBeDefined());
+		owner.abort();
+		await expect(pending).rejects.toThrow(/abort/i);
+		expect(requestSignal.aborted).toBe(true);
+	});
 });

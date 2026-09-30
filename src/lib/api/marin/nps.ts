@@ -12,7 +12,7 @@
 
 import type { NewsItem } from '$lib/types';
 import { logger } from '$lib/config/api';
-import { fetchWithTimeout } from './fetch-helpers';
+import { fetchAndRead, type OwnerOptions } from './fetch-helpers';
 
 interface NpsAlert {
 	id: string;
@@ -34,18 +34,18 @@ const PARK_NAMES: Record<string, string> = {
  * Fetch active alerts from NPS for Marin-area parks.
  * Returns them as NewsItem[] for the safety or outdoors panel.
  */
-export async function fetchNpsAlerts(): Promise<NewsItem[]> {
+export async function fetchNpsAlerts({ signal }: OwnerOptions = {}): Promise<NewsItem[]> {
 	try {
 		logger.log('NPS', 'Fetching Marin park alerts via local API');
-		const response = await fetchWithTimeout('/api/nps/alerts', {
-			headers: { Accept: 'application/json' }
-		});
-
-		if (!response.ok) {
-			throw new Error(`NPS API failed: ${response.status}`);
-		}
-
-		const alerts: NpsAlert[] = await response.json();
+		// The owner and the deadline stay on the request until the body is read.
+		const alerts = await fetchAndRead(
+			'/api/nps/alerts',
+			{ headers: { Accept: 'application/json' }, signal },
+			async (response): Promise<NpsAlert[]> => {
+				if (!response.ok) throw new Error(`NPS API failed: ${response.status}`);
+				return response.json();
+			}
+		);
 
 		return alerts.map((alert) => ({
 			id: `nps-${alert.id}`,

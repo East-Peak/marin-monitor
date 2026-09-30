@@ -9,6 +9,7 @@ import type { NewsItem, EarthquakeData } from '$lib/types';
 import { MARIN_CENTER } from '$lib/config/towns';
 import { logger } from '$lib/config/api';
 import { serviceClient } from '$lib/services/client';
+import type { OwnerOptions } from './fetch-helpers';
 
 interface UsgsFeature {
 	id: string;
@@ -34,7 +35,9 @@ interface UsgsResponse {
  * unexpected shape, so a caller that keeps last-good pins can tell a failure
  * from a real "no quakes" (TV slice 3).
  */
-export async function fetchEarthquakesOrThrow(): Promise<EarthquakeData[]> {
+export async function fetchEarthquakesOrThrow({ signal }: OwnerOptions = {}): Promise<
+	EarthquakeData[]
+> {
 	logger.log('USGS', 'Fetching earthquakes');
 
 	const result = await serviceClient.request<UsgsResponse>('USGS', '/fdsnws/event/1/query', {
@@ -46,7 +49,8 @@ export async function fetchEarthquakesOrThrow(): Promise<EarthquakeData[]> {
 			minmagnitude: 2.0,
 			limit: 10,
 			orderby: 'time'
-		}
+		},
+		signal
 	});
 	if (!Array.isArray(result.data?.features)) {
 		throw new Error('USGS: unexpected response shape');

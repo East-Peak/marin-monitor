@@ -1,9 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock fetchWithTimeout
-vi.mock('./fetch-helpers', () => ({
-	fetchWithTimeout: vi.fn()
-}));
+// Mock the request phase; the body-inclusive helper reads the mocked response.
+vi.mock('./fetch-helpers', () => {
+	const fetchWithTimeout = vi.fn();
+	return {
+		fetchWithTimeout,
+		fetchAndRead: (url: string, options: RequestInit, read: (r: Response) => Promise<unknown>) =>
+			fetchWithTimeout(url, options).then(read)
+	};
+});
 
 vi.mock('$lib/config/api', () => ({
 	logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn() }
@@ -166,5 +171,12 @@ describe('fetchNpsAlerts', () => {
 		const result = await fetchNpsAlerts();
 
 		expect(result).toEqual([]);
+	});
+
+	it('reads under the owner signal (v2 owns its news requests; Codex PR 6 #1)', async () => {
+		mockFetch.mockResolvedValueOnce(makeResponse([]));
+		const owner = new AbortController();
+		await fetchNpsAlerts({ signal: owner.signal });
+		expect(mockFetch.mock.calls[0][1]).toMatchObject({ signal: owner.signal });
 	});
 });

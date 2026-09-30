@@ -1,7 +1,7 @@
 import { detectTown } from '$lib/config';
 import { logger } from '$lib/config/api';
 import type { NewsItem } from '$lib/types';
-import { fetchWithTimeout } from './fetch-helpers';
+import { fetchAndRead, type OwnerOptions } from './fetch-helpers';
 
 /** Marin County bounding box — filter out stray issues outside the county. */
 const MARIN_BOUNDS = {
@@ -144,18 +144,22 @@ function issueToNewsItem(issue: SeeClickFixIssue): NewsItem | null {
  * via Promise.allSettled or try/catch — silently returning `[]` for both
  * caused stale 311 incidents to pin indefinitely during outages.
  */
-export async function fetchSeeClickFixIssues(): Promise<NewsItem[]> {
+export async function fetchSeeClickFixIssues({ signal }: OwnerOptions = {}): Promise<NewsItem[]> {
 	logger.log('SEECLICKFIX', 'Fetching 311 issues from blob');
 
-	const response = await fetchWithTimeout('/api/data/311', { cache: 'no-store' });
-
-	if (!response.ok) {
-		const message = `HTTP ${response.status}`;
-		logger.warn('SEECLICKFIX', `311 blob fetch failed: ${message}`);
-		throw new Error(message);
-	}
-
-	const data = (await response.json()) as SeeClickFixBlobData;
+	// The owner and the deadline stay on the request until the body is read.
+	const data = await fetchAndRead(
+		'/api/data/311',
+		{ cache: 'no-store', signal },
+		async (response): Promise<SeeClickFixBlobData> => {
+			if (!response.ok) {
+				const message = `HTTP ${response.status}`;
+				logger.warn('SEECLICKFIX', `311 blob fetch failed: ${message}`);
+				throw new Error(message);
+			}
+			return (await response.json()) as SeeClickFixBlobData;
+		}
+	);
 
 	if (!data.issues || !Array.isArray(data.issues)) {
 		const message = 'Unexpected response shape — no issues array';

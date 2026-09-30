@@ -18,10 +18,16 @@ import { fetchEvChargingDataWithStatus } from '$lib/api/marin/ev-charging';
 import { fetchCoffeeIndexDataWithStatus } from '$lib/api/marin/coffee';
 import { fetchFitnessDataWithStatus } from '$lib/api/marin/fitness';
 import {
+	earthquakesToNewsItems,
+	fetchEarthquakesOrThrow,
+	fetchNpsAlerts,
+	fetchSeeClickFixIssues,
+	fetchSheriffCrimeBlotter,
 	fetchSupplementalActivityFeeds,
 	fetchSupplementalPoliceLogs,
 	fetchTransitAlerts
 } from '$lib/api/marin';
+import { boundedOp, DEFAULT_OP_DEADLINE_MS } from '$lib/api/marin/bounded-op';
 import {
 	createTvNewsLoader,
 	TV_NEWS_SOURCES,
@@ -114,17 +120,33 @@ export const INVENTORY_DATASETS: readonly DatasetDef[] = [
 ];
 
 /**
- * TV slice 3's sources with the owner signal threaded through every adapter
- * that can take it (transit makes sequential requests; the data fetchers are
- * owner-aware since batch 1). The rest are single requests bounded by the
- * loader's part deadline and never start follow-up work.
+ * TV slice 3's sources, each owned by v2 (Codex PR 6 #1): every adapter request
+ * gets its own signal, aborted by the owner's disposal or by a deadline that
+ * covers the body, so no request outlives the page or its part deadline.
  */
-export function v2NewsSources(signal: AbortSignal): TvNewsSources {
+export function v2NewsSources(
+	signal: AbortSignal,
+	{ deadlineMs = DEFAULT_OP_DEADLINE_MS }: { deadlineMs?: number } = {}
+): TvNewsSources {
+	const owned =
+		<T>(part: string, run: (s: AbortSignal) => Promise<T>) =>
+		() =>
+			boundedOp(`news ${part}`, run, { owner: signal, timeoutMs: deadlineMs });
 	return {
 		...TV_NEWS_SOURCES,
-		transit: async () => (await fetchTransitAlerts({ signal })).items,
-		'police-logs': () => fetchSupplementalPoliceLogs({ signal }),
-		'supplemental-activity': () => fetchSupplementalActivityFeeds({ signal })
+		nps: owned('nps', (s) => fetchNpsAlerts({ signal: s })),
+		earthquakes: owned('earthquakes', async (s) =>
+			earthquakesToNewsItems(await fetchEarthquakesOrThrow({ signal: s }))
+		),
+		transit: owned('transit', async (s) => (await fetchTransitAlerts({ signal: s })).items),
+		'sheriff-blotter': owned('sheriff-blotter', (s) =>
+			fetchSheriffCrimeBlotter(undefined, undefined, { signal: s })
+		),
+		'police-logs': owned('police-logs', (s) => fetchSupplementalPoliceLogs({ signal: s })),
+		'supplemental-activity': owned('supplemental-activity', (s) =>
+			fetchSupplementalActivityFeeds({ signal: s })
+		),
+		seeclickfix: owned('seeclickfix', (s) => fetchSeeClickFixIssues({ signal: s }))
 	};
 }
 
