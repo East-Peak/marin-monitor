@@ -74,6 +74,8 @@ export function createDatasetRegistry(
 			if (result.ok) {
 				const observedAt = parseObservedAt(def.observedAtOf(result.data));
 				def.commit(result.data);
+				// The commit notifies subscribers synchronously; one of them may dispose the owner.
+				if (signal.aborted) return;
 				retainedAt.set(def.id, observedAt);
 				outcome =
 					result.dataSource === 'live'

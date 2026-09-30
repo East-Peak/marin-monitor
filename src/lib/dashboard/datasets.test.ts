@@ -165,4 +165,14 @@ describe('createDatasetRegistry', () => {
 		const r = createDatasetRegistry([], new AbortController().signal);
 		await expect(r.ensure('nope')).rejects.toThrow('unknown dataset: nope');
 	});
+
+	it('a commit whose store notification disposes the owner publishes no outcome (Codex PR 6 #2)', async () => {
+		const gas = def('gas');
+		const owner = new AbortController();
+		gas.commit.mockImplementation(() => owner.abort());
+		const r = createDatasetRegistry([gas.d], owner.signal);
+		await r.refresh('essential');
+		expect(gas.commit).toHaveBeenCalledTimes(1);
+		expect(get(r.outcomes)).toEqual({});
+	});
 });

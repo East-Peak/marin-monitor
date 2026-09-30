@@ -128,4 +128,23 @@ describe('createTvNewsLoader onPartSettled', () => {
 		expect(settled.filter(([p]) => p === 'nps')).toEqual([]);
 		expect(settled.length).toBe(before);
 	});
+
+	it('a snapshot settlement that disposes the owner applies nothing after it (Codex PR 6 #2)', async () => {
+		const owner = new AbortController();
+		const applied: unknown[] = [];
+		const l = createTvNewsLoader({
+			sources: sources(),
+			signal: owner.signal,
+			reset: () => {},
+			commit: () => {},
+			onEarthquakes: () => {},
+			onSnapshotApplied: (view) => applied.push(view),
+			now: () => NOW,
+			onPartSettled: (part) => {
+				if (part === 'snapshot') owner.abort();
+			}
+		});
+		await l.refresh();
+		expect(applied).toEqual([]);
+	});
 });

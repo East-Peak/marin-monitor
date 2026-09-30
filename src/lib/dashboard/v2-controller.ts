@@ -166,21 +166,31 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 	// v2 owns the news store while mounted (TV slice 3's claim): writes without
 	// this token (a destroyed legacy controller, a late TV) are dropped.
 	let claim: StoreClaim | null = null;
+	// Store notifications run synchronously and may dispose the owner mid-refresh:
+	// every write re-checks it.
+	const live = () => !deps.signal.aborted;
 	const newsLoader = createTvNewsLoader({
 		sources: deps.newsSources ?? v2NewsSources(deps.signal),
 		signal: deps.signal,
 		reset: () => {
 			claim = news.claim();
 		},
-		commit: (category, items, keep) =>
-			news.setItems(category, items, { keep, owner: claim?.token }),
-		onEarthquakes: (items) => earthquakes.set(items),
-		onSnapshotApplied: (view) => snapshot.set(view),
-		onPartSettled: (part, outcome) =>
+		commit: (category, items, keep) => {
+			if (live()) news.setItems(category, items, { keep, owner: claim?.token });
+		},
+		onEarthquakes: (items) => {
+			if (live()) earthquakes.set(items);
+		},
+		onSnapshotApplied: (view) => {
+			if (live()) snapshot.set(view);
+		},
+		onPartSettled: (part, outcome) => {
+			if (!live()) return;
 			parts.update((all) => ({
 				...all,
 				[part]: { outcome, hadSuccess: outcome.ok || (all[part]?.hadSuccess ?? false) }
-			})),
+			}));
+		},
 		now
 	});
 	const releaseClaim = () => claim?.release();

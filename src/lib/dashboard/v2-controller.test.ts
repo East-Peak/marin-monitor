@@ -293,4 +293,16 @@ describe('createDashboardV2Controller', () => {
 		await running;
 		expect(get(gasPriceStore).current).toBeNull();
 	});
+
+	it('a subscriber that disposes the owner mid-cycle stops every later write (Codex PR 6 #2)', async () => {
+		const owner = new AbortController();
+		const c = controller({ signal: owner.signal });
+		const unsubscribe = c.sources.subscribe((entries) => {
+			if (entries.some((e) => e.id === 'part:snapshot' && e.state !== 'loading')) owner.abort();
+		});
+		await c.start();
+		unsubscribe();
+		// The snapshot settled first; applying it (and its per-source entries) came after the abort.
+		expect(get(c.sources).some((e) => e.id === 'news:pacific-sun')).toBe(false);
+	});
 });

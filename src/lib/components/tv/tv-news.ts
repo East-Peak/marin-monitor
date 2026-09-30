@@ -190,6 +190,8 @@ export function createTvNewsLoader(deps: {
 			'snapshot',
 			failure ? { ok: false, error: failure, at: deps.now() } : { ok: true, at: deps.now() }
 		);
+		// The callback may dispose or supersede this refresh.
+		if (!live()) return;
 		if (response?.status === 'ok' && (applied === null || isNewer(applied, response.snapshot))) {
 			apply(response.snapshot);
 		}
