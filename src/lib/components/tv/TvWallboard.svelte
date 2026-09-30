@@ -22,7 +22,16 @@
 	import { preloadScreenFrames } from './camera-preload';
 	import { loadStravaData } from '$lib/stores/strava';
 	import { TV_SCREENS, TV_MAP_VIEWS, CURSOR_HIDE_MS, TV_REFRESH_INTERVAL_MS } from '$lib/config/tv';
-	import { refresh, allNewsItems, alerts, mapStore, settings, threeOneOneNews } from '$lib/stores';
+	import {
+		refresh,
+		allNewsItems,
+		alerts,
+		mapStore,
+		news,
+		settings,
+		threeOneOneNews
+	} from '$lib/stores';
+	import type { StoreClaim } from '$lib/stores/ownership';
 	import { townFilter } from '$lib/stores/town-filter';
 	import { isWithinWindow } from '$lib/news/recency';
 	import {
@@ -32,7 +41,7 @@
 		fetchObservedWeather
 	} from '$lib/api/marin';
 	import { fetchTidePredictions } from '$lib/api/marin/tides';
-	import { loadAllNews } from '$lib/api/marin/load-all';
+	import { createTvNewsLoader, TV_NEWS_SOURCES } from './tv-news';
 	import { fetchHourlyForecast } from '$lib/api/marin/nws-hourly';
 	import { fetchCompositeDataWithStatus } from '$lib/api/marin/composite';
 	import { fetchCappuccinoDataWithStatus } from '$lib/api/marin/cappuccino';
@@ -437,14 +446,39 @@
 		return [];
 	});
 
+	// Everything this wallboard starts dies with it: aborted in onDestroy, so
+	// late TV results never land in the dashboard's stores (Codex r1 #10).
+	const lifetime = new AbortController();
+	let newsApplied = $state<{ generatedAt: string; revision: number } | null>(null);
+	// The TV's exclusive claim on the shared news/refresh stores (Task 4b):
+	// taken at mount by the loader's reset, released in onDestroy.
+	let storeClaim: StoreClaim | null = null;
+
+	// News for the TV (slice 3): the producer's snapshot plus the adapters,
+	// each committed as it lands. No feed parsing, article enrichment or
+	// geocoding runs here, so pins (311, quakes) never wait on news.
+	const tvNews = createTvNewsLoader({
+		sources: TV_NEWS_SOURCES,
+		signal: lifetime.signal,
+		// The TV takes the whole news store at mount (/tv is ssr=false, so this
+		// runs in the browser, once per wallboard). Inherited dashboard data is
+		// discarded; the dashboard refetches on its own mount (Codex r2 #2/#3).
+		reset: () => {
+			storeClaim = news.claim();
+		},
+		commit: (category, items, keep) =>
+			news.setItems(category, items, { keep, owner: storeClaim?.token }),
+		onEarthquakes: (items) => {
+			earthquakeItems = items;
+		},
+		onSnapshotApplied: (view) => {
+			newsApplied = { generatedAt: view.generatedAt, revision: view.revision };
+		},
+		now: () => Date.now()
+	});
+
 	async function loadNews(errors: string[]) {
-		try {
-			const result = await loadAllNews();
-			earthquakeItems = result.earthquakeNews;
-			errors.push(...result.errors);
-		} catch (err) {
-			errors.push(`news: ${(err as Error).message}`);
-		}
+		errors.push(...(await tvNews.refresh()));
 	}
 
 	let lastRegionWeatherFetch = 0;
@@ -619,9 +653,9 @@
 
 	let refreshInFlight = false;
 	async function handleRefresh() {
-		if (refreshInFlight) return;
+		if (refreshInFlight || lifetime.signal.aborted) return;
 		refreshInFlight = true;
-		refresh.startRefresh();
+		refresh.startRefresh(storeClaim?.token);
 		const errors: string[] = [];
 		try {
 			await Promise.all([
@@ -636,7 +670,7 @@
 			// belt-and-suspenders entry so an unexpected throw still surfaces.
 			errors.push(`refresh: ${(error as Error).message ?? String(error)}`);
 		} finally {
-			refresh.endRefresh(errors);
+			if (!lifetime.signal.aborted) refresh.endRefresh(errors, storeClaim?.token);
 			refreshInFlight = false;
 		}
 	}
@@ -700,6 +734,8 @@
 
 	onDestroy(() => {
 		endTvScope?.();
+		lifetime.abort();
+		storeClaim?.release();
 		endTvTheme?.();
 		stopCarousel();
 		if (clockTimer) clearInterval(clockTimer);
@@ -722,6 +758,8 @@
 <div
 	class="fixed inset-0 bg-gray-950 text-gray-100 flex flex-col overflow-hidden select-none"
 	class:cursor-none={cursorHidden}
+	data-news-revision={newsApplied?.revision}
+	data-news-generated-at={newsApplied?.generatedAt}
 >
 	<TvWallboardHeader
 		{carouselIdx}

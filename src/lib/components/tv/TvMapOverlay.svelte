@@ -10,6 +10,7 @@
 	import type { GasStation } from '$lib/types/gas';
 	import type { CoffeeShop } from '$lib/types/coffee';
 	import type { FitnessStudio } from '$lib/types/fitness';
+	import { exposeMapForProbe } from './tv-probe-hook';
 
 	interface Props {
 		viewId: string;
@@ -61,6 +62,7 @@
 
 	let sourcesAdded = false;
 	let removeStyleLoadListener: (() => void) | null = null;
+	let removeProbe: (() => void) | null = null;
 
 	function setupSources(map: MapLibreMap) {
 		// Guard against duplicate adds (style swaps remove sources, so re-add)
@@ -391,6 +393,12 @@
 
 			setupSources(map);
 			updateOverlayData(map);
+			removeProbe?.();
+			removeProbe = exposeMapForProbe(
+				location.search,
+				window as unknown as Record<string, unknown>,
+				map
+			);
 
 			// Re-add on style swap (theme change removes custom layers)
 			removeStyleLoadListener?.();
@@ -409,6 +417,7 @@
 	});
 
 	onDestroy(() => {
+		removeProbe?.();
 		removeStyleLoadListener?.();
 		const map = getMap();
 		if (map) {

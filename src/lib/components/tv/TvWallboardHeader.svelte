@@ -66,6 +66,7 @@
 					onclick={() => onGoToScreen(i)}
 					title={screen.name}
 					data-screen-idx={i}
+					data-screen-id={screen.id}
 					aria-current={carouselIdx === i ? 'true' : undefined}
 				></button>
 			{/each}
