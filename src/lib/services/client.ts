@@ -25,6 +25,12 @@ export interface RequestOptions {
 	 * it alive. The signal is never attached to the fetch itself.
 	 */
 	signal?: AbortSignal;
+	/**
+	 * false = never return a stale entry with a detached background refresh: that refresh
+	 * runs outside every owner's lifetime. The request takes the foreground path instead
+	 * (deduplicated, owner-aware), and the stale entry remains the failure fallback.
+	 */
+	revalidateInBackground?: boolean;
 }
 
 /**
@@ -127,7 +133,12 @@ export class ServiceClient {
 			if (cached && !cached.isStale) {
 				return { data: cached.data, fromCache: cached.fromCache, stale: false };
 			}
-			if (cached && cached.isStale && config.cache.staleWhileRevalidate) {
+			if (
+				cached &&
+				cached.isStale &&
+				config.cache.staleWhileRevalidate &&
+				options.revalidateInBackground !== false
+			) {
 				// Return stale data immediately and try to revalidate in background.
 				// Background revalidation is itself gated on the circuit breaker
 				// (see revalidateInBackground); when an upstream is down, every

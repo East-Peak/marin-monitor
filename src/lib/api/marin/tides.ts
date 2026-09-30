@@ -12,6 +12,8 @@ import type { TidePrediction } from '$lib/types';
 import { logger } from '$lib/config/api';
 import { serviceClient } from '$lib/services/client';
 import type { OwnerOptions } from './fetch-helpers';
+import { pacificDate, parsePacificWallTime } from '$lib/dashboard/pacific-time';
+import type { TideEvent } from '$lib/weather/brief';
 
 interface NoaaTidePrediction {
 	t: string; // time "YYYY-MM-DD HH:MM"
@@ -121,4 +123,44 @@ function formatDate(d: Date): string {
 	const h = String(d.getHours()).padStart(2, '0');
 	const min = String(d.getMinutes()).padStart(2, '0');
 	return `${y}${m}${day} ${h}:${min}`;
+}
+
+/**
+ * v2 brief: hi/lo predictions for 48 h from the station's local midnight,
+ * with times read as Pacific wall time (DST-checked). Throws on failure.
+ * (The legacy functions above build begin_date from the browser's zone.)
+ */
+export async function fetchTideEventsOrThrow(
+	station: string,
+	{ signal }: OwnerOptions = {}
+): Promise<TideEvent[]> {
+	const result = await serviceClient.request<{ predictions?: NoaaTidePrediction[] }>(
+		'NOAA_TIDES',
+		'',
+		{
+			signal,
+			revalidateInBackground: false,
+			params: {
+				begin_date: pacificDate(Date.now()).replace(/-/g, ''),
+				range: 48,
+				station,
+				product: 'predictions',
+				datum: 'MLLW',
+				units: 'english',
+				time_zone: 'lst_ldt',
+				interval: 'hilo',
+				format: 'json',
+				application: 'MarinMonitor'
+			}
+		}
+	);
+	const predictions = result.data?.predictions;
+	if (!Array.isArray(predictions)) throw new Error('NOAA returned no predictions');
+	return predictions.flatMap((p) => {
+		const atMs = parsePacificWallTime(p.t);
+		const heightFt = Number.parseFloat(p.v);
+		if (atMs === null || !Number.isFinite(heightFt) || (p.type !== 'H' && p.type !== 'L'))
+			return [];
+		return [{ atMs, heightFt, type: p.type }];
+	});
 }

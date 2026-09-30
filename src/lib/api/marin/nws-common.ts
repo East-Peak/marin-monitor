@@ -6,7 +6,7 @@
 
 import { MARIN_CENTER } from '$lib/config/towns';
 import { NWS_OFFICE } from '$lib/config/map';
-import { fetchWithTimeout } from './fetch-helpers';
+import { fetchAndRead } from './fetch-helpers';
 
 const NWS_BASE = 'https://api.weather.gov';
 const NWS_HEADERS: Record<string, string> = {
@@ -31,21 +31,19 @@ export async function getGridPoint(
 	signal?.throwIfAborted();
 
 	const url = `${NWS_BASE}/points/${lat},${lon}`;
-	const response = await fetchWithTimeout(url, { headers: NWS_HEADERS, signal });
-
-	if (!response.ok) {
-		throw new Error(`NWS points lookup failed: ${response.status}`);
-	}
-
-	const data = await response.json();
-	if (!data.properties) {
-		throw new Error('NWS returned unexpected response structure (missing properties)');
-	}
-	const grid = {
-		office: data.properties.gridId || NWS_OFFICE,
-		gridX: data.properties.gridX,
-		gridY: data.properties.gridY
-	};
+	// The owner and the deadline stay on the request until the body is read (Codex r3 #2).
+	const grid = await fetchAndRead(url, { headers: NWS_HEADERS, signal }, async (response) => {
+		if (!response.ok) throw new Error(`NWS points lookup failed: ${response.status}`);
+		const data = await response.json();
+		if (!data.properties) {
+			throw new Error('NWS returned unexpected response structure (missing properties)');
+		}
+		return {
+			office: data.properties.gridId || NWS_OFFICE,
+			gridX: data.properties.gridX,
+			gridY: data.properties.gridY
+		};
+	});
 	gridCacheMap.set(key, grid);
 
 	return grid;

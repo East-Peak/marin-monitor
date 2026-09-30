@@ -9,6 +9,8 @@ import { logger } from '$lib/config/api';
 import { getGridPoint } from './nws-common';
 import type { OwnerOptions } from './fetch-helpers';
 import { serviceClient } from '$lib/services/client';
+import { parseFeedDate } from '$lib/news/feed-date';
+import type { HourlyForecast } from '$lib/weather/brief';
 
 export interface HourlyPeriod {
 	startTime: string;
@@ -177,4 +179,51 @@ export async function fetchDailyRainForecast(
 		if (!signal?.aborted) logger.warn('NWS', `QPF fetch failed: ${(error as Error).message}`);
 		return [];
 	}
+}
+
+interface NwsHourlyPopResponse {
+	properties?: {
+		updateTime?: string;
+		periods?: Array<{
+			startTime: string;
+			endTime: string;
+			probabilityOfPrecipitation?: { value: number | null };
+		}>;
+	};
+}
+
+/**
+ * v2 brief: the hourly forecast with a nullable PoP (missing is unknown,
+ * never 0%) and the forecast's own update time. Throws on failure.
+ * fetchHourlyForecast (legacy) is unchanged.
+ */
+export async function fetchHourlyPopOrThrow(
+	lat: number,
+	lon: number,
+	{ signal }: OwnerOptions = {}
+): Promise<HourlyForecast> {
+	const grid = await getGridPoint(lat, lon, signal);
+	signal?.throwIfAborted(); // a destroyed view never starts the forecast request
+	const endpoint = `/gridpoints/${grid.office}/${grid.gridX},${grid.gridY}/forecast/hourly`;
+	const result = await serviceClient.request<NwsHourlyPopResponse>('NWS', endpoint, {
+		...NWS_OPTIONS,
+		signal,
+		revalidateInBackground: false // no detached refresh outliving the view
+	});
+	const props = result.data?.properties;
+	if (!props || !Array.isArray(props.periods))
+		throw new Error('NWS hourly forecast missing periods');
+	const periods = props.periods.flatMap((p) => {
+		const startMs = parseFeedDate(p.startTime);
+		const endMs = parseFeedDate(p.endTime);
+		if (startMs === null || endMs === null || endMs <= startMs) return [];
+		const value = p.probabilityOfPrecipitation?.value;
+		return [
+			{ startMs, endMs, pop: typeof value === 'number' && Number.isFinite(value) ? value : null }
+		];
+	});
+	return {
+		updatedAt: typeof props.updateTime === 'string' ? parseFeedDate(props.updateTime) : null,
+		periods
+	};
 }

@@ -1,6 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('./fetch-helpers', () => ({ fetchWithTimeout: vi.fn() }));
+// The request phase is the mock; the body-inclusive helper reads its response.
+vi.mock('./fetch-helpers', () => {
+	const fetchWithTimeout = vi.fn();
+	return {
+		fetchWithTimeout,
+		fetchAndRead: (url: string, options: RequestInit, read: (r: Response) => Promise<unknown>) =>
+			fetchWithTimeout(url, options).then(read)
+	};
+});
 
 import { getGridPoint } from './nws-common';
 import { fetchWithTimeout } from './fetch-helpers';
