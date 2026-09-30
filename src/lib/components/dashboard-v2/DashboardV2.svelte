@@ -5,6 +5,10 @@
 	import SettingsMenu from './SettingsMenu.svelte';
 	import Section from './Section.svelte';
 	import JumpNav from './JumpNav.svelte';
+	import BriefRow from './BriefRow.svelte';
+	import AdvisoryRow from './AdvisoryRow.svelte';
+	import { townLocation } from '$lib/stores/town-filter';
+	import { createClock } from '$lib/dashboard/clock';
 	import './v2-tokens.css';
 	import { sectionPrefs } from '$lib/stores/section-prefs';
 	import { createSectionOpenState } from '$lib/dashboard/section-open';
@@ -30,6 +34,7 @@
 	// The one owner of this page's data (spec §13.7); aborted when the page goes away.
 	const lifetime = new AbortController();
 	const controller = browser ? createDashboardV2Controller({ signal: lifetime.signal }) : null;
+	const clock = createClock();
 
 	/** Jump-nav, fragment links and back/forward: open a collapsed target, then focus it (§8). */
 	function jump(hash: string) {
@@ -56,9 +61,12 @@
 			if (document.visibilityState === 'visible') void controller?.refresh();
 		};
 		document.addEventListener('visibilitychange', onVisible);
+		// The brief is for the grid point of the selected town's preset (Decision 7).
+		const stopTown = townLocation.subscribe((preset) => controller?.setLocation(preset));
 		void controller?.start();
 		const timer = setInterval(() => void controller?.refresh(), V2_REFRESH_MS);
 		return () => {
+			stopTown();
 			lifetime.abort();
 			clearInterval(timer);
 			document.removeEventListener('visibilitychange', onVisible);
@@ -93,8 +101,10 @@
 	</header>
 
 	<main class="v2-main">
-		<div class="v2-slot" data-slot="advisories"></div>
-		<div class="v2-slot" data-slot="brief"></div>
+		{#if controller && hydrated}
+			<AdvisoryRow feed={controller.advisories} now={clock} />
+			<BriefRow brief={controller.brief} now={clock} onjump={jump} />
+		{/if}
 
 		<section id="map" class="v2-region" tabindex="-1" aria-labelledby="v2-map-title">
 			<h2 id="v2-map-title" class="v2-region-title" data-text-role="section-title">
@@ -180,9 +190,6 @@
 		max-width: 72rem;
 		margin: 0 auto;
 		padding: 1rem;
-	}
-	.v2-slot:empty {
-		display: none;
 	}
 	.v2-region {
 		padding: var(--v2-card-padding) 0;

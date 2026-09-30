@@ -27,11 +27,27 @@ const controller = vi.hoisted(() => ({
 	start: vi.fn(async () => {}),
 	refresh: vi.fn(async () => {}),
 	ensure: vi.fn(async () => {}),
-	created: [] as AbortSignal[]
+	setLocation: vi.fn(),
+	created: [] as AbortSignal[],
+	EMPTY_BRIEF: Object.fromEntries(
+		['forecast', 'observed', 'tides'].map((k) => [
+			k,
+			{
+				value: null,
+				scope: null,
+				observedAt: null,
+				maxAgeMs: null,
+				state: 'loading',
+				detail: null,
+				updatingFor: null
+			}
+		])
+	)
 }));
 // Earlier tests in this file render DashboardV2 too: reset every captured call per test (Codex r1 #11).
 beforeEach(() => {
 	controller.start.mockClear();
+	controller.setLocation.mockClear();
 	controller.refresh.mockClear();
 	controller.ensure.mockClear();
 	controller.created.length = 0;
@@ -45,7 +61,21 @@ vi.mock('$lib/dashboard/v2-controller', () => ({
 			refresh: controller.refresh,
 			ensure: controller.ensure,
 			earthquakes: { subscribe: (fn: (v: unknown[]) => void) => (fn([]), () => {}) },
-			sources: { subscribe: (fn: (v: unknown[]) => void) => (fn([]), () => {}) }
+			sources: { subscribe: (fn: (v: unknown[]) => void) => (fn([]), () => {}) },
+			brief: { subscribe: (fn: (v: unknown) => void) => (fn(controller.EMPTY_BRIEF), () => {}) },
+			advisories: {
+				subscribe: (fn: (v: unknown) => void) => (
+					fn({
+						advisories: [],
+						unreadable: 0,
+						lastAttemptAt: null,
+						lastSuccessAt: null,
+						lastError: null
+					}),
+					() => {}
+				)
+			},
+			setLocation: controller.setLocation
 		};
 	}
 }));
@@ -117,6 +147,15 @@ describe('DashboardV2 preview shell', () => {
 			expect(button.getAttribute('aria-expanded')).toMatch(/^(true|false)$/);
 			expect(button.getAttribute('aria-controls')).toMatch(/^section-.+-body$/);
 		}
+	});
+
+	it('tells the controller where the brief is for: the current town preset, on mount', async () => {
+		render(DashboardV2);
+		await tick();
+		expect(controller.setLocation).toHaveBeenCalledWith(
+			expect.objectContaining({ id: 'central-marin' })
+		);
+		expect(document.querySelector('[data-slot="brief"]')).toBeTruthy();
 	});
 });
 

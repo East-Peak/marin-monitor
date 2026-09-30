@@ -38,6 +38,19 @@ test('a tab-visible event inside a minute does not refetch; the 5-minute refresh
 	page
 }) => {
 	await page.clock.install();
+	// The browser's own HTTP cache would add stale-while-revalidate background requests
+	// (/api/data/* sends s-maxage + stale-while-revalidate, no max-age) that the app never
+	// made; serve the essentials uncacheable so the count is the app's own requests.
+	await page.route(
+		/\/api\/(data\/(gas-prices|ev-charging|coffee|fitness)|news\/snapshot)\b/,
+		async (route) => {
+			const response = await route.fetch();
+			await route.fulfill({
+				response,
+				headers: { ...response.headers(), 'cache-control': 'no-store' }
+			});
+		}
+	);
 	const seen = record(page);
 	await openV2(page);
 	await expect
@@ -51,4 +64,5 @@ test('a tab-visible event inside a minute does not refetch; the 5-minute refresh
 		.poll(() => ESSENTIAL.every((p) => count(seen, p) === 2), { timeout: 15_000 })
 		.toBe(true);
 	expect(seen.filter((u) => NEVER.test(u))).toEqual([]);
+	await page.unrouteAll({ behavior: 'ignoreErrors' });
 });
