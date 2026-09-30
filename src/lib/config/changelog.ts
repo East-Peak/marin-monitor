@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-09-30',
+		title: 'Preview morning brief',
+		description:
+			'The dashboard preview now opens with a morning brief: the temperature observed at Gnoss Field, today’s chance of rain for your forecast area, the next tide with its station, and a shortcut to traffic cams. Weather advisories for Marin’s zones appear with their area and end time and leave on time; if they can’t be checked, it says so. A source-health button lists any data source that is out of date. The regular dashboard is unchanged.'
+	},
+	{
+		date: '2026-09-30',
 		title: 'Preview sections and larger type',
 		description:
 			'The dashboard preview now has its page structure: collapsible sections that remember what you opened, links like /?layout=v2#news that open a section directly, a jump bar on phones, and larger, airier text. Section contents arrive in upcoming releases. The regular dashboard is unchanged.'

@@ -6,6 +6,15 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-09-30
 
+### Added — morning brief, advisory contract and source health in the v2 preview (D1 PR 8)
+
+- **Weather card:** observed "now" from NWS station KDVO (Gnoss Field, Novato; QC-rejected or missing values read "unknown"), kept separate from the forecast. "Rain today" is the highest hourly probability from now to Pacific midnight; a missing value or a gap reads "Rain chance unknown", never 0%. The forecast names the grid point it was made for ("Central Marin forecast"), and a town switch never relabels a retained value.
+- **Next tide:** NOAA hi/lo predictions for the preset's station, read as Pacific time and named ("Point Reyes").
+- **Advisory contract** (`src/lib/weather/advisories.ts`): the corrected Marin zone config (CAZ502/CAZ505/CAZ506 and county CAC041); `Actual` messages only; updates and cancellations honored; expiry by the clock with no refetch; a failed, stale or partly unreadable check shows "Advisories unavailable", "not updated since" or "N advisory messages couldn't be read", never an all-clear.
+- **Provenance and bounds:** every status carries the time of the value it describes (a transport success alone reads "unknown"); every preview request has a deadline that covers the body and ends with the page.
+- **Source health** in the header reads `/api/health` and lists degraded sources and failing feeds, with accepted exceptions marked.
+- **Not in the brief yet, on purpose:** incidents (G1c), "This weekend" (event contract), a 101 verdict and surf (no source).
+
 ### Added — sections, type tokens and fragment navigation in the v2 preview (D1 PR 7)
 
 - **Section primitive** (`Section.svelte`): a real disclosure button (`aria-expanded`, `aria-controls`) in an `<h2>`; a header that keeps its status line whether open or closed; a body mounted only while open.
