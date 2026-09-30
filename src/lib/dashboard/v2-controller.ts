@@ -28,6 +28,7 @@ import {
 	fetchTransitAlerts
 } from '$lib/api/marin';
 import { boundedOp, DEFAULT_OP_DEADLINE_MS } from '$lib/api/marin/bounded-op';
+import { fetchHealthReport, type HealthReportJson } from '$lib/api/marin/health-report';
 import { fetchMarinAdvisories } from '$lib/api/marin/nws-advisories';
 import { fetchHourlyPopOrThrow } from '$lib/api/marin/nws-hourly';
 import { fetchLatestObservation } from '$lib/api/marin/nws-observation';
@@ -51,7 +52,8 @@ import {
 	datasetEntry,
 	fromLoaderPart,
 	fromSnapshotRead,
-	fromSnapshotSource
+	fromSnapshotSource,
+	type DatasetFetch
 } from './source-adapters';
 import type { SourceStatusEntry } from './source-status';
 
@@ -194,11 +196,27 @@ export interface DashboardV2Controller {
 	brief: Readable<BriefState>;
 	advisories: Readable<AdvisoryFeedState>;
 	setLocation(preset: LocationPreset): void;
+	healthReport: Readable<HealthReportJson | null>;
+	datasetOutcomes: Readable<Readonly<Record<string, DatasetFetch>>>;
 }
 
 export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Controller {
 	const now = deps.now ?? Date.now;
-	const defs = deps.datasets ?? [...ESSENTIAL_DATASETS, ...INVENTORY_DATASETS];
+	const healthReport = writable<HealthReportJson | null>(null);
+	// /api/health feeds the header indicator only; it never re-dates a dataset (Codex r1 #3).
+	const defs = deps.datasets ?? [
+		...ESSENTIAL_DATASETS,
+		dataset({
+			id: 'health',
+			name: 'Source health',
+			tier: 'essential',
+			load: (signal) => fetchHealthReport({ signal }),
+			commit: (d) => healthReport.set(d),
+			observedAtOf: () => null,
+			maxAgeMs: null
+		}),
+		...INVENTORY_DATASETS
+	];
 	const registry = createDatasetRegistry(defs, deps.signal, { deadlineMs: deps.deadlineMs });
 	const earthquakes = writable<NewsItem[]>([]);
 	const snapshot = writable<NewsSnapshotView | null>(null);
@@ -294,6 +312,8 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 			return cycle();
 		},
 		ensure: (id) => registry.ensure(id),
+		healthReport: { subscribe: healthReport.subscribe },
+		datasetOutcomes: registry.outcomes,
 		brief: { subscribe: brief.subscribe },
 		advisories: { subscribe: advisories.subscribe },
 		setLocation(preset) {

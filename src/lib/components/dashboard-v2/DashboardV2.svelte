@@ -7,6 +7,7 @@
 	import JumpNav from './JumpNav.svelte';
 	import BriefRow from './BriefRow.svelte';
 	import AdvisoryRow from './AdvisoryRow.svelte';
+	import HealthIndicator from './HealthIndicator.svelte';
 	import { townLocation } from '$lib/stores/town-filter';
 	import { createClock } from '$lib/dashboard/clock';
 	import './v2-tokens.css';
@@ -97,6 +98,13 @@
 			><SettingsMenu onreset={() => sections.clearTransient(window.innerWidth)} /></span
 		>
 		<span class="v2-badge" data-text-role="meta">v2 preview</span>
+		{#if controller && hydrated}
+			<HealthIndicator
+				report={controller.healthReport}
+				outcomes={controller.datasetOutcomes}
+				now={clock}
+			/>
+		{/if}
 		<a class="v2-leave" href="/" data-text-role="label">Leave preview</a>
 	</header>
 

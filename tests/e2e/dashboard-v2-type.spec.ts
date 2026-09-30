@@ -94,6 +94,16 @@ const DISCLOSURES: {
 			await expect(page.getByRole('button', { name: 'Reset sections' })).toBeVisible();
 		},
 		close: (page) => page.getByRole('button', { name: 'Dashboard settings' }).click()
+	},
+	{
+		name: 'source health',
+		open: async (page) => {
+			const button = page.locator('.v2-health-button');
+			await expect(button).not.toHaveText('Checking sources…', { timeout: 15_000 });
+			await button.click();
+			await expect(page.locator('[data-health-list]')).toBeVisible();
+		},
+		close: (page) => page.locator('.v2-health-button').click()
 	}
 ];
 

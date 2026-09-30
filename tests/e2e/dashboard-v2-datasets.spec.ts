@@ -6,7 +6,8 @@ const ESSENTIAL = [
 	'/api/data/ev-charging',
 	'/api/data/coffee',
 	'/api/data/fitness',
-	'/api/news/snapshot'
+	'/api/news/snapshot',
+	'/api/health'
 ];
 const NEVER = /\/api\/(feeds|article|geocode)\b|\/api\/data\/strava/;
 
@@ -42,7 +43,7 @@ test('a tab-visible event inside a minute does not refetch; the 5-minute refresh
 	// (/api/data/* sends s-maxage + stale-while-revalidate, no max-age) that the app never
 	// made; serve the essentials uncacheable so the count is the app's own requests.
 	await page.route(
-		/\/api\/(data\/(gas-prices|ev-charging|coffee|fitness)|news\/snapshot)\b/,
+		/\/api\/(data\/(gas-prices|ev-charging|coffee|fitness)|news\/snapshot|health)\b/,
 		async (route) => {
 			const response = await route.fetch();
 			await route.fulfill({

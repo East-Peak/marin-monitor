@@ -75,7 +75,9 @@ vi.mock('$lib/dashboard/v2-controller', () => ({
 					() => {}
 				)
 			},
-			setLocation: controller.setLocation
+			setLocation: controller.setLocation,
+			healthReport: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
+			datasetOutcomes: { subscribe: (fn: (v: unknown) => void) => (fn({}), () => {}) }
 		};
 	}
 }));
@@ -156,6 +158,12 @@ describe('DashboardV2 preview shell', () => {
 			expect.objectContaining({ id: 'central-marin' })
 		);
 		expect(document.querySelector('[data-slot="brief"]')).toBeTruthy();
+	});
+
+	it('shows the source-health indicator in the header', async () => {
+		render(DashboardV2);
+		await tick();
+		expect(screen.getByRole('button', { name: 'Checking sources…' })).toBeTruthy();
 	});
 });
 

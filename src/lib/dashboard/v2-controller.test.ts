@@ -14,7 +14,8 @@ const fetchers = vi.hoisted(() => ({
 	ev: vi.fn(),
 	coffee: vi.fn(),
 	fitness: vi.fn(),
-	strava: vi.fn()
+	strava: vi.fn(),
+	health: vi.fn()
 }));
 // Keep every other export real: $lib/api/marin/index.ts re-exports these modules.
 vi.mock('$lib/api/marin/gas-prices', async (orig) => ({
@@ -36,6 +37,10 @@ vi.mock('$lib/api/marin/fitness', async (orig) => ({
 vi.mock('$lib/stores/strava', async (orig) => ({
 	...(await orig<object>()),
 	loadStravaData: fetchers.strava
+}));
+vi.mock('$lib/api/marin/health-report', async (orig) => ({
+	...(await orig<object>()),
+	fetchHealthReport: fetchers.health
 }));
 
 const { createDashboardV2Controller, DATASET_POLICY } = await import('./v2-controller');
@@ -128,6 +133,21 @@ function controller(over: Partial<Deps> = {}) {
 beforeEach(() => {
 	clock = NOW;
 	for (const f of Object.values(fetchers)) f.mockReset();
+	fetchers.health.mockResolvedValue(
+		live({
+			status: 'healthy',
+			sources: [
+				{
+					name: 'Gas Prices',
+					status: 'stale',
+					reason: 'older than 2d',
+					maxAgeDays: 2,
+					observedAt: '2026-09-26T00:00:00.000Z'
+				}
+			],
+			subsources: []
+		})
+	);
 	fetchers.gas.mockResolvedValue(
 		live({ current: { stations: [{ id: 'g1' }], lastSuccessfulScrapeAt: SCRAPED }, history: [] })
 	);
@@ -372,5 +392,16 @@ describe('createDashboardV2Controller', () => {
 		await vi.waitFor(() => expect(seen).toHaveLength(4));
 		owner.abort();
 		expect(seen.every((s) => s.aborted)).toBe(true);
+	});
+
+	it('loads /api/health as an essential for the indicator only: it never re-dates a dataset (Codex r1 #3)', async () => {
+		const c = controller();
+		await c.start();
+		expect(fetchers.health).toHaveBeenCalledTimes(1);
+		expect(fetchers.health.mock.calls[0][0]).toEqual({ signal: expect.any(AbortSignal) });
+		expect(get(c.healthReport)?.sources[0].name).toBe('Gas Prices');
+		const gas = get(c.sources).find((e) => e.id === 'dataset:gas');
+		expect(gas).toMatchObject({ state: 'ok', observedAt: Date.parse(SCRAPED) }); // its own payload, not the report's 2026-09-26
+		expect(get(c.sources).some((e) => e.id === 'dataset:health')).toBe(false);
 	});
 });
