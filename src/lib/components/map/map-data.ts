@@ -685,13 +685,12 @@ export async function refreshAirportPins(
 	fetchStatus: () => Promise<AirportStatusData | null>,
 	render: (features: GeoJSON.Feature[]) => void
 ): Promise<void> {
-	const statusMap = new Map<string, AirportStatus>();
+	let statusMap = new Map<string, AirportStatus>();
 	try {
-		for (const airport of (await fetchStatus())?.airports ?? []) {
-			statusMap.set(airport.code, airport);
-		}
+		const airports = (await fetchStatus())?.airports ?? [];
+		statusMap = new Map(airports.map((airport) => [airport.code, airport]));
 	} catch {
-		// A failed read leaves the map empty: every pin is drawn unknown.
+		// A failed or malformed read keeps the map empty: every pin is drawn unknown.
 	}
 	render(buildAirportFeatures(pins, statusMap, statusColors));
 }

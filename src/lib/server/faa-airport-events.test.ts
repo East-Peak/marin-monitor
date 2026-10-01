@@ -36,6 +36,63 @@ describe('parseFaaFeed', () => {
 		['a non-numeric delay', [{ airportId: 'SFO', groundDelay: { avgDelay: 'long' } }]],
 		['a non-string reason', [{ airportId: 'SFO', arrivalDelay: { reason: 7 } }]],
 		[
+			'an unreadable closure time',
+			[{ airportId: 'SFO', airportClosure: { startTime: 'garbled', endTime: 'garbled' } }]
+		],
+		[
+			'a closure with no effective interval',
+			[{ airportId: 'SFO', airportClosure: { text: 'Closed', startTime: null, endTime: null } }]
+		],
+		[
+			'an impossible calendar date',
+			[
+				{
+					airportId: 'SFO',
+					airportClosure: { startTime: '2026-02-30T10:00:00Z', endTime: '2026-03-03T10:00:00Z' }
+				}
+			]
+		],
+		[
+			'the same airport twice',
+			[
+				{ airportId: 'SFO', freeForm: { text: 'Notice' } },
+				{
+					airportId: 'sfo',
+					airportClosure: { startTime: '2026-10-01T10:00:00Z', endTime: '2026-10-01T13:00:00Z' }
+				}
+			]
+		],
+		[
+			'a closure that ends before it starts',
+			[
+				{
+					airportId: 'SFO',
+					airportClosure: { startTime: '2026-10-01T13:00:00Z', endTime: '2026-10-01T10:00:00Z' }
+				}
+			]
+		],
+		[
+			'an out-of-range zone offset',
+			[
+				{
+					airportId: 'SFO',
+					airportClosure: {
+						startTime: '2026-10-01T10:00:00+24:00',
+						endTime: '2026-10-01T13:00:00+24:00'
+					}
+				}
+			]
+		],
+		['a time without a zone', [{ airportId: 'SFO', groundStop: { endTime: '2026-10-01 20:00' } }]],
+		[
+			'an event with none of its fields',
+			[{ airportId: 'SFO', airportClosure: { error: 'unavailable' } }]
+		],
+		[
+			'minutes with trailing garbage',
+			[{ airportId: 'SFO', arrivalDelay: { averageDelay: '30garbage' } }]
+		],
+		[
 			'a valid entry beside a malformed one',
 			[...feed, { airportId: 'SFO', airportClosure: { startTime: 12 } }]
 		]

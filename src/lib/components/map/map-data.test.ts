@@ -1133,15 +1133,19 @@ describe('refreshAirportPins', () => {
 			.mockResolvedValueOnce(null)
 			.mockRejectedValueOnce(new Error('network'))
 			.mockResolvedValueOnce({ airports: [] } as unknown as AirportStatusData)
+			.mockResolvedValueOnce({
+				...onTime,
+				airports: [...onTime.airports, null]
+			} as unknown as AirportStatusData)
 			.mockResolvedValueOnce(onTime);
 		const labels: string[] = [];
 		const render = (features: GeoJSON.Feature[]) =>
 			labels.push(features[0].properties?.statusLabel);
 
-		for (let i = 0; i < 5; i++) {
+		for (let i = 0; i < 6; i++) {
 			await refreshAirportPins(MOCK_AIRPORT_PINS, MOCK_STATUS_COLORS, fetchStatus, render);
 		}
 
-		expect(labels).toEqual(['On Time', 'Unknown', 'Unknown', 'Unknown', 'On Time']);
+		expect(labels).toEqual(['On Time', 'Unknown', 'Unknown', 'Unknown', 'Unknown', 'On Time']);
 	});
 });

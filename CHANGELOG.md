@@ -9,7 +9,7 @@ All notable changes to Marin Monitor are documented here.
 ### Fixed — airport status: timed closures, strict feed reading, stale map pins (Codex review of 8f996bc)
 
 - **Closures follow their clock:** a closure counts as "Closed" only between its `startTime` and `endTime`. One announced for later is listed as "Closure Scheduled" with its window, and one that has ended is dropped.
-- **Strict feed reading:** every entry must name its airport, carry at least one event, and give each field it reads the expected type. Otherwise the whole read is untrusted and the status shows "Status Unavailable". A valid empty list still means no events.
+- **Strict feed reading:** every entry must name its airport (once), carry at least one event, and give each field it reads the expected type. Times must be zoned ISO 8601 times on a real calendar day, and a closure must have a start before its end. Otherwise the whole read is untrusted and the status shows "Status Unavailable". A valid empty list still means no events.
 - **Map pins:** a failed or empty refresh redraws every airport pin as "Unknown" instead of leaving the last "On Time" in place, and the next good refresh restores them.
 - **Deicing** is listed as its own notice ("Deicing", since its event time), with no delay minutes and without marking the airport delayed.
 - **Times in Pacific:** closure, delay and notice times read "Until Oct 1, 7:59 PM PDT" instead of raw ISO.

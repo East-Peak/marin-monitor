@@ -47,22 +47,22 @@ export interface FaaAirportStatus {
 	arrivalRate?: number;
 }
 
-type FieldKind = 'string' | 'number' | 'minutes';
+type FieldKind = 'string' | 'number' | 'minutes' | 'time';
 
 /** The fields read from each event, and the type each must have when present. */
 const EVENT_FIELDS: Record<string, Record<string, FieldKind>> = {
-	groundStop: { impactingCondition: 'string', endTime: 'string' },
+	groundStop: { impactingCondition: 'string', endTime: 'time' },
 	groundDelay: {
 		impactingCondition: 'string',
 		avgDelay: 'number',
 		maxDelay: 'number',
-		endTime: 'string'
+		endTime: 'time'
 	},
 	arrivalDelay: { reason: 'string', averageDelay: 'minutes', trend: 'string' },
 	departureDelay: { reason: 'string', averageDelay: 'minutes', trend: 'string' },
-	airportClosure: { text: 'string', simpleText: 'string', startTime: 'string', endTime: 'string' },
-	freeForm: { text: 'string', simpleText: 'string', endTime: 'string' },
-	deicing: { eventTime: 'string' }
+	airportClosure: { text: 'string', simpleText: 'string', startTime: 'time', endTime: 'time' },
+	freeForm: { text: 'string', simpleText: 'string', endTime: 'time' },
+	deicing: { eventTime: 'time' }
 };
 
 const CONFIG_FIELDS: Record<string, FieldKind> = {
@@ -75,21 +75,64 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/** A whole number in a string ("16"), not a prefix of one ("30garbage"). */
+function numericString(value: unknown): number | undefined {
+	return typeof value === 'string' && value.trim() !== '' ? Number(value) : undefined;
+}
+
 function hasKind(value: unknown, kind: FieldKind): boolean {
-	if (kind === 'string') return typeof value === 'string';
-	if (kind === 'number') return typeof value === 'number' && Number.isFinite(value);
+	switch (kind) {
+		case 'string':
+			return typeof value === 'string';
+		case 'number':
+			return typeof value === 'number' && Number.isFinite(value);
+		case 'minutes':
+			return hasKind(value, 'number') || Number.isFinite(numericString(value));
+		case 'time':
+			return isIsoTime(value);
+	}
+}
+
+const ISO_TIME =
+	/^(\d{4})-(\d{2})-(\d{2})T([01]\d|2[0-3]):[0-5]\d(:[0-5]\d(\.\d+)?)?(Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/;
+
+/** A zoned ISO 8601 time on a real calendar day: `Date.parse` alone rolls Feb 30 into March. */
+function isIsoTime(value: unknown): boolean {
+	const match = typeof value === 'string' ? ISO_TIME.exec(value) : null;
+	if (!match || !Number.isFinite(Date.parse(match[0]))) return false;
+	const [year, month, day] = match.slice(1, 4).map(Number);
+	const date = new Date(Date.UTC(year, month - 1, day));
+	return date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+
+function isPresent(value: unknown): boolean {
+	return value !== undefined && value !== null;
+}
+
+/**
+ * Absent or null, or an object whose read fields all have their expected types.
+ * An event must also carry at least one of them: `{ error: '…' }` is not an event.
+ */
+function isPayload(value: unknown, fields: Record<string, FieldKind>, isEvent: boolean): boolean {
+	if (!isPresent(value)) return true;
+	if (!isRecord(value)) return false;
+	const read = Object.entries(fields).filter(([field]) => isPresent(value[field]));
 	return (
-		hasKind(value, 'number') || (typeof value === 'string' && Number.isFinite(parseFloat(value)))
+		read.every(([field, kind]) => hasKind(value[field], kind)) && (!isEvent || read.length > 0)
 	);
 }
 
-/** Absent or null, or an object whose read fields all have their expected types. */
-function isPayload(value: unknown, fields: Record<string, FieldKind>): boolean {
-	if (value === undefined || value === null) return true;
-	if (!isRecord(value)) return false;
-	return Object.entries(fields).every(
-		([field, kind]) =>
-			value[field] === undefined || value[field] === null || hasKind(value[field], kind)
+/**
+ * A closure is in effect only inside its interval, so one without a real interval
+ * (a missing bound, or an end at or before its start) cannot be placed in time.
+ * Bounds have already passed the 'time' check, so both parse.
+ */
+function hasInterval(closure: Record<string, unknown>): boolean {
+	const { startTime, endTime } = closure;
+	return (
+		typeof startTime === 'string' &&
+		typeof endTime === 'string' &&
+		Date.parse(startTime) < Date.parse(endTime)
 	);
 }
 
@@ -99,25 +142,28 @@ function isEvent(entry: unknown): entry is FaaAirportEvent {
 	}
 	const events = Object.entries(EVENT_FIELDS);
 	return (
-		events.every(([key, fields]) => isPayload(entry[key], fields)) &&
+		events.every(([key, fields]) => isPayload(entry[key], fields, true)) &&
+		(!isRecord(entry.airportClosure) || hasInterval(entry.airportClosure)) &&
 		events.some(([key]) => isRecord(entry[key])) &&
-		isPayload(entry.airportConfig, CONFIG_FIELDS)
+		isPayload(entry.airportConfig, CONFIG_FIELDS, false)
 	);
 }
 
 /**
  * The feed's event list, or null when the body is not one: an outage page, error
- * JSON, or any entry that lacks an airport, carries no event, or has an event of
- * the wrong shape. A partly readable feed is not trusted for the rest, since an
- * airport missing from it would read as on time. An empty list is a real absence.
+ * JSON, or any entry that lacks an airport, carries no event, has an event of the
+ * wrong shape, or repeats an airport (only one entry per airport would be read).
+ * A partly readable feed is not trusted for the rest, since an airport missing
+ * from it would read as on time. An empty list is a real absence.
  */
 export function parseFaaFeed(body: unknown): FaaAirportEvent[] | null {
-	if (!Array.isArray(body)) return null;
-	return body.every(isEvent) ? body : null;
+	if (!Array.isArray(body) || !body.every(isEvent)) return null;
+	const airports = new Set(body.map((e) => e.airportId.toUpperCase()));
+	return airports.size === body.length ? body : null;
 }
 
 function minutes(value: number | string | undefined): number | undefined {
-	const n = typeof value === 'string' ? parseFloat(value) : value;
+	const n = typeof value === 'string' ? numericString(value) : value;
 	return Number.isFinite(n) ? Math.round(n as number) : undefined;
 }
 
@@ -128,17 +174,10 @@ function compact(delay: DelayInfo): DelayInfo {
 	) as DelayInfo;
 }
 
-function timeOf(iso: string | undefined): number | undefined {
-	const t = iso ? Date.parse(iso) : NaN;
-	return Number.isFinite(t) ? t : undefined;
-}
-
-/** Where `now` falls against a closure's effective interval; an open end is unbounded. */
+/** Where `now` falls in a closure's [start, end) interval; parseFaaFeed guarantees both. */
 function closurePhase(closure: FaaNotam, now: Date): 'upcoming' | 'active' | 'ended' {
-	const start = timeOf(closure.startTime);
-	const end = timeOf(closure.endTime);
-	if (start !== undefined && now.getTime() < start) return 'upcoming';
-	if (end !== undefined && now.getTime() >= end) return 'ended';
+	if (now.getTime() < Date.parse(closure.startTime!)) return 'upcoming';
+	if (now.getTime() >= Date.parse(closure.endTime!)) return 'ended';
 	return 'active';
 }
 
