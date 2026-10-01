@@ -5,8 +5,13 @@ import {
 	STRAVA_CURATED_RUN_COUNT
 } from './strava-curated.generated';
 
-/** Feature flag — set to false to disable all Strava scraping and hide UI */
-export const STRAVA_ENABLED = true;
+/**
+ * The one Strava switch. Off = mothballed (2026-10-01): no Strava panel, section,
+ * TV screen, map layer or toggle; /api/data/strava-* and the Strava crons answer 404;
+ * health stops watching the Strava sources. Scrapers, scripts, data and docs stay in
+ * the repo. To revive: set true and restore the two Strava crons in vercel.json.
+ */
+export const STRAVA_ENABLED = false;
 
 /** Blob storage keys */
 export const STRAVA_SEGMENTS_BLOB = 'strava-segments.json';

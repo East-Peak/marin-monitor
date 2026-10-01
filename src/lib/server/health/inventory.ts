@@ -6,13 +6,14 @@
  * Changing a threshold, an observation field, or removing a source here
  * changes what "healthy" means — inventory.test.ts pins the list on purpose.
  */
+import { STRAVA_ENABLED } from '$lib/config/strava';
 import type { AcceptedException, SourcePolicy, SubsourceFailure } from './evaluate';
 
 function freeze<T extends object>(entries: T[]): readonly Readonly<T>[] {
 	return Object.freeze(entries.map((entry) => Object.freeze(entry)));
 }
 
-export const SOURCE_INVENTORY: readonly SourcePolicy[] = freeze<SourcePolicy>([
+const ALL_SOURCES: readonly SourcePolicy[] = freeze<SourcePolicy>([
 	// Vercel cron every 4h.
 	{
 		name: 'Gas Prices',
@@ -184,6 +185,23 @@ export const SOURCE_INVENTORY: readonly SourcePolicy[] = freeze<SourcePolicy>([
 	}
 ]);
 
+/** Sources that exist only while Strava is on (mothballed 2026-10-01). */
+const STRAVA_SOURCE_NAMES: ReadonlySet<string> = new Set(['Strava Segments', 'Strava Events']);
+
+function withoutStrava<T extends { name: string }>(
+	entries: readonly T[],
+	stravaEnabled: boolean
+): readonly T[] {
+	return Object.freeze(entries.filter((e) => stravaEnabled || !STRAVA_SOURCE_NAMES.has(e.name)));
+}
+
+/** The inventory, without the Strava sources while Strava is off. */
+export function sourceInventory(stravaEnabled: boolean): readonly SourcePolicy[] {
+	return withoutStrava(ALL_SOURCES, stravaEnabled);
+}
+
+export const SOURCE_INVENTORY: readonly SourcePolicy[] = sourceInventory(STRAVA_ENABLED);
+
 /**
  * Parts of a source that fail while the source itself still refreshes. Each
  * keeps the report degraded until it is repaired or deliberately retired.
@@ -202,7 +220,7 @@ const G0_DECISION = {
 	expiresAt: '2026-12-31T23:59:59.000Z'
 } as const;
 
-export const ACCEPTED_EXCEPTIONS: readonly AcceptedException[] = freeze<AcceptedException>([
+const ALL_ACCEPTED_EXCEPTIONS: readonly AcceptedException[] = freeze<AcceptedException>([
 	{
 		name: 'Strava Segments',
 		condition: 'stale',
@@ -216,3 +234,10 @@ export const ACCEPTED_EXCEPTIONS: readonly AcceptedException[] = freeze<Accepted
 		...G0_DECISION
 	}
 ]);
+
+/** The accepted exceptions, without the Strava ones while Strava is off. */
+export function acceptedExceptions(stravaEnabled: boolean): readonly AcceptedException[] {
+	return withoutStrava(ALL_ACCEPTED_EXCEPTIONS, stravaEnabled);
+}
+
+export const ACCEPTED_EXCEPTIONS: readonly AcceptedException[] = acceptedExceptions(STRAVA_ENABLED);

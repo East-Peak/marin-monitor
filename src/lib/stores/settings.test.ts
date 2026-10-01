@@ -41,7 +41,7 @@ describe('Settings Store', () => {
 	});
 
 	it('should have default state with all panels enabled', async () => {
-		const [{ settings }, { PANELS, DEFAULT_PANEL_ORDER }] = await Promise.all([
+		const [{ settings }, { DEFAULT_PANEL_ORDER }] = await Promise.all([
 			import('./settings'),
 			import('../config')
 		]);
@@ -50,7 +50,7 @@ describe('Settings Store', () => {
 		expect(state.initialized).toBe(false);
 		expect(state.order).toEqual(DEFAULT_PANEL_ORDER);
 
-		for (const panelId of Object.keys(PANELS) as Array<keyof typeof PANELS>) {
+		for (const panelId of DEFAULT_PANEL_ORDER) {
 			expect(state.enabled[panelId]).toBe(true);
 		}
 	});
@@ -146,7 +146,7 @@ describe('Settings Store', () => {
 	});
 
 	it('should enable every registered panel for the everything preset', async () => {
-		const [{ settings }, { PANELS, PRESETS, DEFAULT_PANEL_ORDER }] = await Promise.all([
+		const [{ settings }, { PRESETS, DEFAULT_PANEL_ORDER }] = await Promise.all([
 			import('./settings'),
 			import('../config')
 		]);
@@ -158,7 +158,7 @@ describe('Settings Store', () => {
 		const state = get(settings);
 		expect(state.order).toEqual(DEFAULT_PANEL_ORDER);
 
-		for (const panelId of Object.keys(PANELS) as Array<keyof typeof PANELS>) {
+		for (const panelId of DEFAULT_PANEL_ORDER) {
 			expect(state.enabled[panelId]).toBe(true);
 		}
 	});

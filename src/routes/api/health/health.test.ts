@@ -105,6 +105,12 @@ describe('/api/health', () => {
 		expect(data.summary.total).toBe(SOURCE_INVENTORY.length);
 	});
 
+	it('reports no Strava source while Strava is mothballed', async () => {
+		allFresh();
+		const data = await (await getHealth(publicHealth())).json();
+		expect(JSON.stringify(data)).not.toMatch(/strava/i);
+	});
+
 	it('is healthy with 200 when every source is fresh and no subsource fails', async () => {
 		allFresh();
 		const response = await getHealth(publicHealth());
@@ -201,7 +207,7 @@ describe('/api/cron/check-freshness', () => {
 	});
 
 	it('classifies every source identically to /api/health', async () => {
-		freshExcept('strava-events.json');
+		freshExcept('marin-ev-charging.json');
 		const health = await (await getHealth(publicHealth())).json();
 		const freshness = await (await getFreshness(authedFreshness())).json();
 		const statuses = (report: { sources: { name: string; status: string }[] }) =>

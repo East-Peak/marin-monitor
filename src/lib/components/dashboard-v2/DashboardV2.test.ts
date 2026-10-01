@@ -122,16 +122,23 @@ describe('DashboardV2 preview shell', () => {
 		expect(controller.created[0].aborted).toBe(true);
 	});
 
-	it('renders the shell: map region, Getting Around under it, then five sections in order', async () => {
+	it('renders the shell: map region, Getting Around under it, then four sections in order', async () => {
 		const { container } = render(DashboardV2);
 		await tick();
 		expect(container.querySelector('section#map')).toBeTruthy();
 		const order = [...container.querySelectorAll('[data-section]')].map((s) =>
 			s.getAttribute('data-section')
 		);
-		expect(order).toEqual(['getting-around', 'outdoors', 'news', 'cost', 'events', 'strava']);
+		expect(order).toEqual(['getting-around', 'outdoors', 'news', 'cost', 'events']);
 		expect(container.querySelector('#sections [data-section="getting-around"]')).toBeNull();
 		expect(screen.getByRole('navigation', { name: 'Jump to' })).toBeTruthy();
+	});
+
+	it('shows nothing of Strava while it is mothballed', async () => {
+		const { container } = render(DashboardV2);
+		await tick();
+		expect(container.querySelector('[data-section="strava"]')).toBeNull();
+		expect(container.textContent).not.toMatch(/strava|segment leaderboard/i);
 	});
 
 	it('every section toggle is a real disclosure button', async () => {
@@ -142,8 +149,7 @@ describe('DashboardV2 preview shell', () => {
 			'Outdoors & Conditions',
 			'News & Civic',
 			'Cost & Character',
-			'Events & Sports',
-			'Strava'
+			'Events & Sports'
 		]) {
 			const button = screen.getByRole('button', { name: new RegExp(name) });
 			expect(button.getAttribute('aria-expanded')).toMatch(/^(true|false)$/);

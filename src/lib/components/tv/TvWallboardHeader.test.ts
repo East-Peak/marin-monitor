@@ -27,6 +27,12 @@ describe('TvWallboardHeader screen buttons', () => {
 		).toBe('map-county');
 	});
 
+	it('offers no Strava screen while Strava is mothballed', () => {
+		const { container } = render(TvWallboardHeader, { props: { ...props, carouselIdx: 0 } });
+		expect(container.querySelector('[data-screen-id="leaderboards"]')).toBeNull();
+		expect(container.innerHTML).not.toMatch(/strava|leaderboard/i);
+	});
+
 	it('the active id follows the carousel', () => {
 		const idx = TV_SCREENS.findIndex((s) => s.id === 'news-wire');
 		const { container } = render(TvWallboardHeader, { props: { ...props, carouselIdx: idx } });

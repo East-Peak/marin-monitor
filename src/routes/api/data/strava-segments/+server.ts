@@ -4,6 +4,7 @@ import {
 	mergeCatalogWithFallback,
 	readLocalCuratedCatalog
 } from '$lib/server/scrapers/strava-segments';
+import { stravaMothballed } from '$lib/server/strava-gate';
 import type { StravaSegmentCatalog } from '$lib/types/strava';
 import type { RequestHandler } from './$types';
 
@@ -20,6 +21,9 @@ import type { RequestHandler } from './$types';
  * surface 503 — matching the activity/housing/police-logs contract.
  */
 export const GET: RequestHandler = async () => {
+	const mothballed = stravaMothballed();
+	if (mothballed) return mothballed;
+
 	const blob = await tryReadBlobText(STRAVA_SEGMENTS_BLOB);
 	let blobCatalog: StravaSegmentCatalog | null = null;
 	if (blob.ok) {

@@ -2,6 +2,8 @@
  * Panel configuration — defines the dashboard panels for Marin Monitor
  */
 
+import { STRAVA_ENABLED } from './strava';
+
 export interface PanelConfig {
 	name: string;
 	priority: 1 | 2 | 3;
@@ -218,7 +220,28 @@ const CURATED_PANEL_ORDER: PanelId[] = [
 const registeredPanelIds = Object.keys(PANELS) as PanelId[];
 const registeredPanelSet = new Set<PanelId>(registeredPanelIds);
 
-export const DEFAULT_PANEL_ORDER: PanelId[] = [
-	...CURATED_PANEL_ORDER.filter((id) => registeredPanelSet.has(id)),
-	...registeredPanelIds.filter((id) => !CURATED_PANEL_ORDER.includes(id))
-];
+/** Panels that exist only while Strava is on. */
+const STRAVA_PANEL_IDS: readonly PanelId[] = ['leaderboards'];
+
+function isActivePanel(id: PanelId, stravaEnabled: boolean): boolean {
+	return stravaEnabled || !STRAVA_PANEL_IDS.includes(id);
+}
+
+/** The default order, without the Strava panels while Strava is off. */
+export function defaultPanelOrder(stravaEnabled: boolean): PanelId[] {
+	return [
+		...CURATED_PANEL_ORDER.filter((id) => registeredPanelSet.has(id)),
+		...registeredPanelIds.filter((id) => !CURATED_PANEL_ORDER.includes(id))
+	].filter((id) => isActivePanel(id, stravaEnabled));
+}
+
+export const DEFAULT_PANEL_ORDER: PanelId[] = defaultPanelOrder(STRAVA_ENABLED);
+
+/** The panels the settings list offers, without the Strava panels while Strava is off. */
+export function listedPanels(stravaEnabled: boolean): [PanelId, PanelConfig][] {
+	return (Object.entries(PANELS) as [PanelId, PanelConfig][]).filter(([id]) =>
+		isActivePanel(id, stravaEnabled)
+	);
+}
+
+export const LISTED_PANELS = listedPanels(STRAVA_ENABLED);

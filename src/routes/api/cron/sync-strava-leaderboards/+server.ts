@@ -10,13 +10,13 @@ import { verifyCronAuth } from '$lib/server/cron-auth';
 import { cronErrorResponse } from '$lib/server/cron-response';
 import { readSuccessfulScrapeAt } from '$lib/server/scrape-metadata';
 import {
-	STRAVA_ENABLED,
 	STRAVA_SEGMENTS_BLOB,
 	STRAVA_EVENTS_BLOB,
 	STRAVA_LEADERBOARDS_BLOB,
 	STRAVA_EVENT_MAX_AGE_MS,
 	stravaLeaderboardBlob
 } from '$lib/config/strava';
+import { stravaMothballed } from '$lib/server/strava-gate';
 import type { RequestHandler } from './$types';
 import type {
 	StravaSegment,
@@ -160,12 +160,8 @@ export const GET: RequestHandler = async ({ request }) => {
 	const authError = verifyCronAuth(request);
 	if (authError) return authError;
 
-	if (!STRAVA_ENABLED) {
-		return new Response(JSON.stringify({ ok: false, error: 'Strava disabled' }), {
-			status: 400,
-			headers: { 'Content-Type': 'application/json' }
-		});
-	}
+	const mothballed = stravaMothballed();
+	if (mothballed) return mothballed;
 
 	const start = Date.now();
 	try {

@@ -7,6 +7,7 @@ export {
 	PANELS,
 	NON_DRAGGABLE_PANELS,
 	DEFAULT_PANEL_ORDER,
+	LISTED_PANELS,
 	type PanelConfig,
 	type PanelId
 } from './panels';

@@ -24,6 +24,12 @@ vi.mock('$env/dynamic/private', () => ({
 vi.mock('$lib/server/fetch-utils', () => ({
 	fetchWithTimeout: mockFetchWithTimeout
 }));
+// The Strava route is exercised as it behaves with Strava on; strava-mothball.test.ts
+// covers the switch.
+vi.mock('$lib/config/strava', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/config/strava')>()),
+	STRAVA_ENABLED: true
+}));
 
 const { GET: get311 } = await import('./311/+server');
 const { GET: getComposite } = await import('./composite/+server');

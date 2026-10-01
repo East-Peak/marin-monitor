@@ -31,8 +31,12 @@ vi.mock('$lib/server/health/inventory', async (importOriginal) => {
 		approvedAt: '2026-09-29T00:00:00.000Z',
 		expiresAt: '2999-01-01T00:00:00.000Z'
 	});
+	const original = await importOriginal<typeof import('$lib/server/health/inventory')>();
 	return {
-		...(await importOriginal<typeof import('$lib/server/health/inventory')>()),
+		...original,
+		// The acceptance mechanics are exercised on the Strava sources, so watch them here
+		// even while Strava is mothballed.
+		SOURCE_INVENTORY: original.sourceInventory(true),
 		KNOWN_SUBSOURCE_FAILURES: [
 			{ name: 'Fairfax Police', parent: 'Police Logs', problem: '403', disposition: 'accepted' }
 		],

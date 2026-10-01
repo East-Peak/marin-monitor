@@ -1,8 +1,12 @@
 import { stravaLeaderboardBlob } from '$lib/config/strava';
 import { serveBlobJson } from '$lib/server/blob-endpoint';
+import { stravaMothballed } from '$lib/server/strava-gate';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = ({ params }) => {
+	const mothballed = stravaMothballed();
+	if (mothballed) return Promise.resolve(mothballed);
+
 	const segmentId = parseInt(params.id, 10);
 	if (!Number.isInteger(segmentId) || segmentId <= 0) {
 		return Promise.resolve(

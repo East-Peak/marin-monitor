@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { TV_SCREENS, CATEGORY_COLORS } from './tv';
+import { TV_SCREENS, CATEGORY_COLORS, tvScreens } from './tv';
 import type { TickerCategory } from './tv';
 
 describe('TV config', () => {
-	it('has 20 screens', () => {
-		expect(TV_SCREENS).toHaveLength(20);
+	it('has 20 screens with Strava on, 19 while it is mothballed', () => {
+		expect(tvScreens(true)).toHaveLength(20);
+		expect(TV_SCREENS).toHaveLength(19);
 	});
 
 	it('all screens have positive duration', () => {

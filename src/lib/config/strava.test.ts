@@ -3,7 +3,6 @@ import {
 	SEED_SEGMENTS,
 	MARIN_BOUNDING_BOXES,
 	stravaLeaderboardBlob,
-	STRAVA_ENABLED,
 	STRAVA_DASHBOARD_RIDE_LIMIT,
 	STRAVA_DASHBOARD_RUN_LIMIT
 } from './strava';
@@ -49,9 +48,5 @@ describe('strava config', () => {
 
 	it('generates correct blob key', () => {
 		expect(stravaLeaderboardBlob(229781)).toBe('strava-leaderboard-229781.json');
-	});
-
-	it('feature flag is enabled', () => {
-		expect(STRAVA_ENABLED).toBe(true);
 	});
 });

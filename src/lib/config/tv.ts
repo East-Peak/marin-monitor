@@ -1,5 +1,7 @@
 // src/lib/config/tv.ts
 
+import { STRAVA_ENABLED } from './strava';
+
 export type ScreenType = 'map' | 'hero' | 'anchor' | 'card';
 
 /** TV carousel screen identifiers */
@@ -35,7 +37,7 @@ export interface TvScreenConfig {
 	mapViewId?: string;
 }
 
-export const TV_SCREENS: TvScreenConfig[] = [
+const ALL_TV_SCREENS: TvScreenConfig[] = [
 	// Cluster: The Map
 	{
 		id: 'map-county',
@@ -190,6 +192,13 @@ export const TV_SCREENS: TvScreenConfig[] = [
 		screenType: 'card'
 	}
 ];
+
+/** The carousel, without the Strava leaderboards screen while Strava is off. */
+export function tvScreens(stravaEnabled: boolean): TvScreenConfig[] {
+	return ALL_TV_SCREENS.filter((screen) => stravaEnabled || screen.id !== 'leaderboards');
+}
+
+export const TV_SCREENS: TvScreenConfig[] = tvScreens(STRAVA_ENABLED);
 export const TV_REFRESH_INTERVAL_MS = 3 * 60 * 1000; // 3 minutes
 export const CURSOR_HIDE_MS = 5_000;
 

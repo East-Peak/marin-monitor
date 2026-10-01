@@ -15,16 +15,9 @@
 	import { createSectionOpenState } from '$lib/dashboard/section-open';
 	import { openAndFocus } from '$lib/dashboard/fragment-nav';
 	import { createDashboardV2Controller, V2_REFRESH_MS } from '$lib/dashboard/v2-controller';
-	import { sectionFromHash, type SectionId } from '$lib/dashboard/section-prefs';
+	import { sectionFromHash } from '$lib/dashboard/section-prefs';
+	import { V2_SECTIONS } from '$lib/dashboard/v2-sections';
 
-	/** Below the map, in page order (spec §2.7). Getting Around sits directly under the map. */
-	const SECTIONS: { id: SectionId; title: string }[] = [
-		{ id: 'outdoors', title: 'Outdoors & Conditions' },
-		{ id: 'news', title: 'News & Civic' },
-		{ id: 'cost', title: 'Cost & Character' },
-		{ id: 'events', title: 'Events & Sports' },
-		{ id: 'strava', title: 'Strava' }
-	];
 	const LATER = 'This part of the preview arrives in a later release.';
 
 	// SSR renders "false"; tests and later sections use this to know the page is interactive.
@@ -131,7 +124,7 @@
 		</Section>
 
 		<div id="sections" class="v2-sections" tabindex="-1" aria-label="Sections">
-			{#each SECTIONS as s (s.id)}
+			{#each V2_SECTIONS as s (s.id)}
 				<Section
 					id={s.id}
 					title={s.title}

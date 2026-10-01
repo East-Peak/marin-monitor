@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Modal from './Modal.svelte';
 	import { settings } from '$lib/stores';
-	import { PANELS, type PanelId } from '$lib/config';
+	import { LISTED_PANELS, type PanelId, type PanelConfig } from '$lib/config';
 	import type { ThemeMode } from '$lib/stores/settings';
 	import { LOCATION_PRESETS } from '$lib/config/locations';
 	import { selectedTownObj } from '$lib/stores/town-filter';
@@ -28,8 +28,8 @@
 		}
 	];
 
-	function panelsByPriority(priority: 1 | 2 | 3): [string, (typeof PANELS)[PanelId]][] {
-		return Object.entries(PANELS).filter(([, config]) => config.priority === priority);
+	function panelsByPriority(priority: 1 | 2 | 3): [PanelId, PanelConfig][] {
+		return LISTED_PANELS.filter(([, config]) => config.priority === priority);
 	}
 
 	function handleTogglePanel(panelId: PanelId) {
