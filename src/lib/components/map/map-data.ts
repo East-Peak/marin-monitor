@@ -13,7 +13,12 @@ import type { GasStation } from '$lib/types/gas';
 import type { ChargingStation } from '$lib/types/ev-charging';
 import type { CoffeeIndexShop } from '$lib/types/coffee';
 import type { FitnessStudio } from '$lib/types/fitness';
-import type { AirportOperationalStatus, AirportStatus, AirportWeather } from '$lib/types/airport';
+import type {
+	AirportOperationalStatus,
+	AirportStatus,
+	AirportStatusData,
+	AirportWeather
+} from '$lib/types/airport';
 import type { AirportPin } from '$lib/config/map';
 import {
 	getCoffeeHeadlinePrice,
@@ -668,4 +673,25 @@ export function buildAirportFeatures(
 			}
 		};
 	});
+}
+
+/**
+ * Fetch airport status and redraw the pins. A failed or empty refresh redraws every
+ * pin as unknown, so an earlier "On Time" never outlives the read that supported it.
+ */
+export async function refreshAirportPins(
+	pins: AirportPin[],
+	statusColors: Record<string, string>,
+	fetchStatus: () => Promise<AirportStatusData | null>,
+	render: (features: GeoJSON.Feature[]) => void
+): Promise<void> {
+	const statusMap = new Map<string, AirportStatus>();
+	try {
+		for (const airport of (await fetchStatus())?.airports ?? []) {
+			statusMap.set(airport.code, airport);
+		}
+	} catch {
+		// A failed read leaves the map empty: every pin is drawn unknown.
+	}
+	render(buildAirportFeatures(pins, statusMap, statusColors));
 }

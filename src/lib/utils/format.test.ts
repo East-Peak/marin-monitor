@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { timeAgo } from './format';
+import { timeAgo, formatPacificDateTime } from './format';
 
 describe('timeAgo', () => {
 	beforeEach(() => {
@@ -79,5 +79,17 @@ describe('timeAgo', () => {
 	it('accepts numeric timestamp input', () => {
 		const fiveMinsAgo = new Date('2026-04-01T11:55:00Z').getTime();
 		expect(timeAgo(fiveMinsAgo)).toBe('5m');
+	});
+});
+
+describe('formatPacificDateTime', () => {
+	it('shows an FAA end time in Pacific time, not raw ISO', () => {
+		expect(formatPacificDateTime('2026-10-02T02:59:00Z')).toBe('Oct 1, 7:59 PM PDT');
+		expect(formatPacificDateTime('2026-01-14T14:20:00Z')).toBe('Jan 14, 6:20 AM PST');
+	});
+
+	it('gives nothing for a missing or unreadable time', () => {
+		expect(formatPacificDateTime(undefined)).toBeNull();
+		expect(formatPacificDateTime('soon')).toBeNull();
 	});
 });

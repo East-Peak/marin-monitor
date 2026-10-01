@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Panel } from '$lib/components/common';
 	import { fetchAirportStatus } from '$lib/api/marin/airport-status';
+	import { formatPacificDateTime } from '$lib/utils/format';
 	import type {
 		AirportStatusData,
 		AirportStatus,
@@ -65,6 +66,10 @@
 				return 'Departure Delay';
 			case 'closure':
 				return 'Closed';
+			case 'scheduled-closure':
+				return 'Closure Scheduled';
+			case 'deicing':
+				return 'Deicing';
 			case 'notice':
 				return 'Notice';
 			default:
@@ -138,6 +143,8 @@
 					{#if airport.delays.length > 0}
 						<div class="delay-section">
 							{#each airport.delays as delay}
+								{@const from = formatPacificDateTime(delay.startTime)}
+								{@const until = formatPacificDateTime(delay.endTime)}
 								<div class="delay-row">
 									<span class="delay-type">{delayTypeLabel(delay.type)}</span>
 									{#if delay.reason}
@@ -150,8 +157,13 @@
 												: ''}
 										</span>
 									{/if}
-									{#if delay.endTime}
-										<span class="delay-end">Until {delay.endTime}</span>
+									{#if from}
+										<span class="delay-end"
+											>{delay.type === 'deicing' ? 'Since' : 'From'} {from}</span
+										>
+									{/if}
+									{#if until}
+										<span class="delay-end">Until {until}</span>
 									{/if}
 								</div>
 							{/each}

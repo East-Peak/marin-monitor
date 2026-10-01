@@ -26,3 +26,18 @@ export function timeAgo(dateInput: string | number | Date): string {
 	const days = Math.floor(seconds / 86400);
 	return future ? `in ${days}d` : `${days}d`;
 }
+
+const PACIFIC_DATE_TIME = new Intl.DateTimeFormat('en-US', {
+	month: 'short',
+	day: 'numeric',
+	hour: 'numeric',
+	minute: '2-digit',
+	timeZone: 'America/Los_Angeles',
+	timeZoneName: 'short'
+});
+
+/** An ISO time as a Pacific date and time ("Oct 1, 7:59 PM PDT"), or null if unreadable. */
+export function formatPacificDateTime(iso: string | undefined): string | null {
+	const t = iso ? Date.parse(iso) : NaN;
+	return Number.isFinite(t) ? PACIFIC_DATE_TIME.format(t) : null;
+}

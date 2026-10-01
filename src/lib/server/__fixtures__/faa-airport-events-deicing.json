@@ -1,0 +1,19 @@
+[
+	{
+		"airportId": "SEA",
+		"groundStop": null,
+		"groundDelay": null,
+		"airportClosure": null,
+		"freeForm": null,
+		"arrivalDelay": null,
+		"departureDelay": null,
+		"airportConfig": null,
+		"deicing": {
+			"airportId": "SEA",
+			"eventTime": "2026-01-14T14:20:00Z"
+		},
+		"airportLongName": "Seattle-Tacoma International",
+		"latitude": "47.4502",
+		"longitude": "-122.3088"
+	}
+]

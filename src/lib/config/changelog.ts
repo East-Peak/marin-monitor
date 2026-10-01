@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-01',
+		title: 'Airport status you can trust',
+		description:
+			'A closure now shows as Closed only while it is in effect; one announced for later is listed as scheduled, with its times. Deicing appears as its own notice. Times read in Pacific time (“Until Oct 1, 7:59 PM PDT”). If the FAA feed can’t be read cleanly, or a refresh fails, the panel and the map pins say the status is unknown rather than leaving On Time showing.'
+	},
+	{
+		date: '2026-10-01',
 		title: 'Airport delays show up again',
 		description:
 			'The airport panel now reads the FAA feed correctly: ground stops, ground delay programs, arrival and departure delays and closures appear with their cause and minutes, instead of every airport reading On Time. If the FAA can’t be reached, the panel says the status is unavailable rather than showing On Time.'

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
 	toNumber,
 	buildFallbackFeatureId,
@@ -24,14 +24,15 @@ import {
 	build311ReportFeatures,
 	formatAirportStatusLabel,
 	buildAirportWeatherSummary,
-	buildAirportFeatures
+	buildAirportFeatures,
+	refreshAirportPins
 } from './map-data';
 import { pinAgeLabel } from './map-story-model';
 import type { Town } from '$lib/types';
 import type { GasStation } from '$lib/types/gas';
 import type { ChargingStation } from '$lib/types/ev-charging';
 import type { FitnessStudio } from '$lib/types/fitness';
-import type { AirportStatus, AirportWeather } from '$lib/types/airport';
+import type { AirportStatus, AirportStatusData, AirportWeather } from '$lib/types/airport';
 import type { AirportPin } from '$lib/config/map';
 
 // ---------------------------------------------------------------------------
@@ -1105,5 +1106,42 @@ describe('earthquake pin time', () => {
 		]);
 		expect(f.properties?.timestamp).toBe(at);
 		expect(pinAgeLabel(f.properties?.timestamp)).not.toBe('undated');
+	});
+});
+
+describe('refreshAirportPins', () => {
+	const onTime: AirportStatusData = {
+		airports: [
+			{
+				code: 'SFO',
+				icao: 'KSFO',
+				name: 'San Francisco Intl',
+				status: 'on-time',
+				delays: [],
+				weather: null,
+				forecastNotes: [],
+				tsa: null
+			}
+		],
+		lastUpdated: '2026-10-01T12:00:00Z'
+	};
+
+	it('redraws pins as unknown when a refresh fails, then recovers', async () => {
+		const fetchStatus = vi
+			.fn<() => Promise<AirportStatusData | null>>()
+			.mockResolvedValueOnce(onTime)
+			.mockResolvedValueOnce(null)
+			.mockRejectedValueOnce(new Error('network'))
+			.mockResolvedValueOnce({ airports: [] } as unknown as AirportStatusData)
+			.mockResolvedValueOnce(onTime);
+		const labels: string[] = [];
+		const render = (features: GeoJSON.Feature[]) =>
+			labels.push(features[0].properties?.statusLabel);
+
+		for (let i = 0; i < 5; i++) {
+			await refreshAirportPins(MOCK_AIRPORT_PINS, MOCK_STATUS_COLORS, fetchStatus, render);
+		}
+
+		expect(labels).toEqual(['On Time', 'Unknown', 'Unknown', 'Unknown', 'On Time']);
 	});
 });

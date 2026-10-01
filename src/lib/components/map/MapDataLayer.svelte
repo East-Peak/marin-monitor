@@ -17,7 +17,6 @@
 	} from '$lib/config/fitness';
 	import { AIRPORT_PINS, AIRPORT_STATUS_COLORS } from '$lib/config/map';
 	import { fetchAirportStatus } from '$lib/api/marin/airport-status';
-	import type { AirportStatus } from '$lib/types/airport';
 	import { findNearestTown } from '$lib/geo/proximity';
 	// Coffee formatting now handled inside map-data.ts feature builders
 	import type { NewsItem, MapFeatureInspectorData } from '$lib/types';
@@ -38,7 +37,7 @@
 		buildCoffeeShopFeatures,
 		buildFitnessStudioFeatures,
 		build311ReportFeatures,
-		buildAirportFeatures
+		refreshAirportPins
 	} from './map-data';
 	import { setupSources } from './map-layers';
 	import {
@@ -661,18 +660,12 @@
 
 	async function refreshAirportStatus(map: MapLibreMap) {
 		if (!map.getSource('airports')) return;
-		try {
-			const data = await fetchAirportStatus();
-			if (!data?.airports) return;
-			const statusMap = new Map<string, AirportStatus>();
-			for (const ap of data.airports) statusMap.set(ap.code, ap);
-
-			const features = buildAirportFeatures(AIRPORT_PINS, statusMap, AIRPORT_STATUS_COLORS);
-			const source = map.getSource('airports') as GeoJSONSource;
-			source.setData({ type: 'FeatureCollection', features });
-		} catch {
-			// Silent fail: airport pins are additive
-		}
+		await refreshAirportPins(AIRPORT_PINS, AIRPORT_STATUS_COLORS, fetchAirportStatus, (features) =>
+			(map.getSource('airports') as GeoJSONSource | undefined)?.setData({
+				type: 'FeatureCollection',
+				features
+			})
+		);
 	}
 
 	// -------------------------------------------------------------------

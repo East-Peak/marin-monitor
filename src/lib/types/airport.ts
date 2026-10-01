@@ -10,11 +10,22 @@ export type AirportOperationalStatus =
 export type FlightCategory = 'VFR' | 'MVFR' | 'IFR' | 'LIFR';
 
 export interface DelayInfo {
-	type: 'ground-stop' | 'ground-delay' | 'arrival-delay' | 'departure-delay' | 'closure' | 'notice';
+	type:
+		| 'ground-stop'
+		| 'ground-delay'
+		| 'arrival-delay'
+		| 'departure-delay'
+		| 'closure'
+		/** A closure announced for later; the airport is open now. */
+		| 'scheduled-closure'
+		/** Aircraft are being deiced; no delay figure is reported. */
+		| 'deicing'
+		| 'notice';
 	reason?: string;
 	avgMinutes?: number;
 	maxMinutes?: number;
 	trend?: string;
+	startTime?: string;
 	endTime?: string;
 }
 
