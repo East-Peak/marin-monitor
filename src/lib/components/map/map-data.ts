@@ -675,9 +675,42 @@ export function buildAirportFeatures(
 	});
 }
 
+const OPERATIONAL_STATUSES: Record<AirportOperationalStatus, true> = {
+	'on-time': true,
+	delays: true,
+	'ground-delay': true,
+	'ground-stop': true,
+	closed: true,
+	unknown: true
+};
+
+function isAirportStatus(value: unknown): value is AirportStatus {
+	const airport = value as Partial<AirportStatus> | null;
+	return (
+		typeof airport === 'object' &&
+		airport !== null &&
+		typeof airport.code === 'string' &&
+		typeof airport.status === 'string' &&
+		Object.hasOwn(OPERATIONAL_STATUSES, airport.status)
+	);
+}
+
 /**
- * Fetch airport status and redraw the pins. A failed or empty refresh redraws every
- * pin as unknown, so an earlier "On Time" never outlives the read that supported it.
+ * Each pin's status from an airport-status response, or an empty map unless every
+ * entry is well formed and every pin has one: a partial or malformed answer is not
+ * trusted for the airports it does name.
+ */
+function statusesForPins(pins: AirportPin[], data: unknown): Map<string, AirportStatus> {
+	const airports = (data as { airports?: unknown } | null)?.airports;
+	if (!Array.isArray(airports) || !airports.every(isAirportStatus)) return new Map();
+	const statusMap = new Map(airports.map((airport) => [airport.code, airport]));
+	return pins.every((pin) => statusMap.has(pin.code)) ? statusMap : new Map();
+}
+
+/**
+ * Fetch airport status and redraw the pins. A failed, empty or incomplete refresh
+ * redraws every pin as unknown, so an earlier "On Time" never outlives the read
+ * that supported it.
  */
 export async function refreshAirportPins(
 	pins: AirportPin[],
@@ -687,10 +720,9 @@ export async function refreshAirportPins(
 ): Promise<void> {
 	let statusMap = new Map<string, AirportStatus>();
 	try {
-		const airports = (await fetchStatus())?.airports ?? [];
-		statusMap = new Map(airports.map((airport) => [airport.code, airport]));
+		statusMap = statusesForPins(pins, await fetchStatus());
 	} catch {
-		// A failed or malformed read keeps the map empty: every pin is drawn unknown.
+		// A failed read keeps the map empty: every pin is drawn unknown.
 	}
 	render(buildAirportFeatures(pins, statusMap, statusColors));
 }

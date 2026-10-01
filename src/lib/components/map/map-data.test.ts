@@ -1149,3 +1149,35 @@ describe('refreshAirportPins', () => {
 		expect(labels).toEqual(['On Time', 'Unknown', 'Unknown', 'Unknown', 'Unknown', 'On Time']);
 	});
 });
+
+describe('refreshAirportPins with an incomplete response', () => {
+	const pins: AirportPin[] = [
+		...MOCK_AIRPORT_PINS,
+		{ code: 'OAK', name: 'Oakland Intl', lat: 37.7126, lon: -122.2197 }
+	];
+	const sfo: AirportStatus = {
+		code: 'SFO',
+		icao: 'KSFO',
+		name: 'San Francisco Intl',
+		status: 'on-time',
+		delays: [],
+		weather: null,
+		forecastNotes: [],
+		tsa: null
+	};
+
+	it.each([
+		['an airport missing', [sfo]],
+		['an entry without a status', [sfo, { code: 'OAK' }]],
+		['an unknown status value', [sfo, { ...sfo, code: 'OAK', status: 'fine' }]]
+	])('draws every pin unknown with %s', async (_, airports) => {
+		let labels: string[] = [];
+		await refreshAirportPins(
+			pins,
+			MOCK_STATUS_COLORS,
+			async () => ({ airports, lastUpdated: '' }) as unknown as AirportStatusData,
+			(features) => (labels = features.map((f) => f.properties?.statusLabel))
+		);
+		expect(labels).toEqual(['Unknown', 'Unknown']);
+	});
+});

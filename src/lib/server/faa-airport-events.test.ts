@@ -53,6 +53,10 @@ describe('parseFaaFeed', () => {
 			]
 		],
 		[
+			'a padded airport id',
+			[{ airportId: ' SFO ', groundStop: { impactingCondition: 'weather' } }]
+		],
+		[
 			'the same airport twice',
 			[
 				{ airportId: 'SFO', freeForm: { text: 'Notice' } },

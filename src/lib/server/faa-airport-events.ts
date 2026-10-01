@@ -136,8 +136,15 @@ function hasInterval(closure: Record<string, unknown>): boolean {
 	);
 }
 
+/** An FAA location identifier, exactly as it is looked up ("SFO", "KSFO"): no padding. */
+const AIRPORT_ID = /^[A-Z0-9]{3,4}$/i;
+
 function isEvent(entry: unknown): entry is FaaAirportEvent {
-	if (!isRecord(entry) || typeof entry.airportId !== 'string' || !entry.airportId.trim()) {
+	if (
+		!isRecord(entry) ||
+		typeof entry.airportId !== 'string' ||
+		!AIRPORT_ID.test(entry.airportId)
+	) {
 		return false;
 	}
 	const events = Object.entries(EVENT_FIELDS);
