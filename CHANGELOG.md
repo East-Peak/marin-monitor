@@ -6,6 +6,13 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-01
 
+### Changed — Strava is paused (mothballed)
+
+- **Off the site:** one switch, `STRAVA_ENABLED = false` in `src/lib/config/strava.ts`, removes the Leaderboards panel, the v2 preview's Strava section, the TV leaderboards screen, the map's segment layer and its toggle, and the settings entry. The TV rotation and panel order close up with no gaps.
+- **API and schedules:** `/api/data/strava-*` answer 404 before any blob read; the two Strava crons are gone from `vercel.json`, and their routes answer 404 without scraping.
+- **Health:** `/api/health` no longer watches Strava Segments or Strava Events, and their accepted exceptions are retired with them.
+- **Kept for a revival:** scrapers, curation scripts, curated catalog, fixtures and docs stay in the repo. To bring Strava back, set the switch to `true` and restore the two crons; tests pin both states.
+
 ### Fixed — airport status: timed closures, strict feed reading, stale map pins (Codex review of 8f996bc)
 
 - **Closures follow their clock:** a closure counts as "Closed" only between its `startTime` and `endTime`. One announced for later is listed as "Closure Scheduled" with its window, and one that has ended is dropped.
