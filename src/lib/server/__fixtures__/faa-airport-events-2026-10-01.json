@@ -1,0 +1,102 @@
+[
+	{
+		"airportId": "CRQ",
+		"groundStop": null,
+		"groundDelay": null,
+		"airportClosure": {
+			"airportId": "CRQ",
+			"startTime": "2026-10-01T10:00:00Z",
+			"endTime": "2026-10-01T13:00:00Z",
+			"simpleText": "!CRQ 09/020 CRQ AD AP CLSD 2610011000-2610011300",
+			"text": ""
+		},
+		"freeForm": null,
+		"arrivalDelay": null,
+		"departureDelay": null,
+		"airportConfig": null,
+		"deicing": null,
+		"airportLongName": "Mc Clellan Palomar Airport",
+		"latitude": "33.126947459434675",
+		"longitude": "-117.27731279044369"
+	},
+	{
+		"airportId": "DFW",
+		"groundStop": null,
+		"groundDelay": {
+			"airportId": "DFW",
+			"impactingCondition": "thunderstorms",
+			"avgDelay": 79.0,
+			"maxDelay": 147,
+			"startTime": "2026-10-01T12:00:00Z",
+			"endTime": "2026-10-02T02:59:00Z",
+			"center": "ZFW",
+			"advisoryUrl": "https://www.fly.faa.gov/adv/adv_otherdis.jsp?advn=24&adv_date=10012026&facId=DFW&title=ATCSCC ADVZY 024 DFW/ZFW 10/01/2026 CDM GROUND DELAY PROGRAM&titleDate=10/01/2026",
+			"departureScope": null,
+			"includedFlights": ": ALL CONTIGUOUS US DEP",
+			"fadtParamType": "GDP",
+			"gsCancelReceivedTs": null,
+			"gsCancelSourceTs": null,
+			"compression": false,
+			"blanket": false
+		},
+		"airportClosure": null,
+		"freeForm": null,
+		"arrivalDelay": null,
+		"departureDelay": null,
+		"airportConfig": {
+			"airportId": "DFW",
+			"arrivalRunwayConfig": "17C/17L.",
+			"departureRunwayConfig": "18R/17R",
+			"arrivalRate": 40
+		},
+		"deicing": null,
+		"airportLongName": "Dallas/Ft Worth International",
+		"latitude": "32.8998",
+		"longitude": "-97.0403"
+	},
+	{
+		"airportId": "LAX",
+		"groundStop": null,
+		"groundDelay": null,
+		"airportClosure": null,
+		"freeForm": {
+			"airportId": "LAX",
+			"startTime": "2026-05-27T18:26:00Z",
+			"endTime": "2027-05-28T16:00:00Z",
+			"simpleText": "!LAX 05/277 LAX AD AP CLSD TO NON SKED TRANSIENT GA ACFT EXC 24HR PPR CTC ATLANTIC AVIATION 310-258-9884 OR SIGNATURE AVIATION 310-410-9605 2605271826-2705281600",
+			"text": "TO NON SKED TRANSIENT GA ACFT EXC 24HR PPR CTC ATLANTIC AVIATION 310-258-9884 OR SIGNATURE AVIATION 310-410-9605"
+		},
+		"arrivalDelay": null,
+		"departureDelay": null,
+		"airportConfig": null,
+		"deicing": null,
+		"airportLongName": "Los Angeles International",
+		"latitude": "33.9416",
+		"longitude": "-118.4085"
+	},
+	{
+		"airportId": "PHL",
+		"groundStop": null,
+		"groundDelay": null,
+		"airportClosure": null,
+		"freeForm": {
+			"airportId": "PHL",
+			"startTime": "2026-09-30T18:06:00Z",
+			"endTime": "2026-10-31T12:00:00Z",
+			"simpleText": "!PHL 09/263 PHL AD AP CLSD TO NON SKED ACFT WINGSPAN MORE THAN 214FT AND TAIL HGT MORE THAN 66FT. 2609301806-2610311200",
+			"text": "TO NON SKED ACFT WINGSPAN MORE THAN 214FT AND TAIL HGT MORE THAN 66FT."
+		},
+		"arrivalDelay": null,
+		"departureDelay": null,
+		"airportConfig": {
+			"airportId": "PHL",
+			"arrivalRunwayConfig": "27R/35/26",
+			"departureRunwayConfig": "27L/35",
+			"arrivalRate": 60
+		},
+		"deicing": null,
+		"airportLongName": "Philadelphia International",
+		"latitude": "39.8744",
+		"longitude": "-75.2424"
+	}
+]

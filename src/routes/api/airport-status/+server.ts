@@ -1,13 +1,12 @@
 import { json } from '@sveltejs/kit';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
+import { parseFaaFeed, faaStatusFor } from '$lib/server/faa-airport-events';
 import type { RequestHandler } from './$types';
 import type {
 	AirportStatus,
 	AirportStatusData,
-	AirportOperationalStatus,
 	AirportWeather,
 	AirportForecastNote,
-	DelayInfo,
 	FlightCategory,
 	TsaWaitTime
 } from '$lib/types/airport';
@@ -24,40 +23,6 @@ const METAR_URL = `https://aviationweather.gov/api/data/metar?ids=${AIRPORTS.map
 const TAF_URL = `https://aviationweather.gov/api/data/taf?ids=${AIRPORTS.map((a) => a.icao).join(',')}&format=json`;
 
 // --- Raw API types ---
-
-interface FaaEvent {
-	airportCode?: string;
-	airport?: string;
-	groundStop?: {
-		reason?: string;
-		endTime?: string;
-	};
-	groundDelay?: {
-		reason?: string;
-		avgDelay?: string;
-		maxDelay?: string;
-	};
-	arrivalDelay?: {
-		reason?: string;
-		trend?: string;
-		minDelay?: string;
-		maxDelay?: string;
-	};
-	departureDelay?: {
-		reason?: string;
-		trend?: string;
-		minDelay?: string;
-		maxDelay?: string;
-	};
-	airportClosure?: {
-		reason?: string;
-	};
-	airportConfig?: {
-		arrivalRunwayConfig?: string;
-		departureRunwayConfig?: string;
-		arrivalRate?: number;
-	};
-}
 
 interface MetarObs {
 	icaoId?: string;
@@ -87,89 +52,6 @@ interface TafPeriod {
 }
 
 // --- Parsing helpers ---
-
-function parseFaaEvents(
-	events: FaaEvent[],
-	airportCode: string
-): {
-	status: AirportOperationalStatus;
-	delays: DelayInfo[];
-	runwayConfig?: string;
-	arrivalRate?: number;
-} {
-	const entry = events.find(
-		(e) => (e.airportCode || e.airport || '').toUpperCase() === airportCode
-	);
-
-	if (!entry) {
-		return { status: 'on-time', delays: [] };
-	}
-
-	const delays: DelayInfo[] = [];
-
-	if (entry.airportClosure) {
-		delays.push({
-			type: 'closure',
-			reason: entry.airportClosure.reason
-		});
-	}
-
-	if (entry.groundStop) {
-		delays.push({
-			type: 'ground-stop',
-			reason: entry.groundStop.reason,
-			endTime: entry.groundStop.endTime
-		});
-	}
-
-	if (entry.groundDelay) {
-		delays.push({
-			type: 'ground-delay',
-			reason: entry.groundDelay.reason,
-			avgDelay: entry.groundDelay.avgDelay,
-			maxDelay: entry.groundDelay.maxDelay
-		});
-	}
-
-	if (entry.arrivalDelay) {
-		delays.push({
-			type: 'arrival-delay',
-			reason: entry.arrivalDelay.reason,
-			trend: entry.arrivalDelay.trend,
-			avgDelay: entry.arrivalDelay.minDelay,
-			maxDelay: entry.arrivalDelay.maxDelay
-		});
-	}
-
-	if (entry.departureDelay) {
-		delays.push({
-			type: 'departure-delay',
-			reason: entry.departureDelay.reason,
-			trend: entry.departureDelay.trend,
-			avgDelay: entry.departureDelay.minDelay,
-			maxDelay: entry.departureDelay.maxDelay
-		});
-	}
-
-	// Status hierarchy: closure > ground-stop > ground-delay > delays > on-time
-	let status: AirportOperationalStatus = 'on-time';
-	if (delays.some((d) => d.type === 'closure')) status = 'closed';
-	else if (delays.some((d) => d.type === 'ground-stop')) status = 'ground-stop';
-	else if (delays.some((d) => d.type === 'ground-delay')) status = 'ground-delay';
-	else if (delays.length > 0) status = 'delays';
-
-	const runwayConfig =
-		[entry.airportConfig?.arrivalRunwayConfig, entry.airportConfig?.departureRunwayConfig]
-			.filter(Boolean)
-			.join(' / ') || undefined;
-
-	return {
-		status,
-		delays,
-		runwayConfig,
-		arrivalRate: entry.airportConfig?.arrivalRate
-	};
-}
 
 function parseMetar(observations: MetarObs[], icao: string): AirportWeather | null {
 	const obs = observations.find((o) => o.icaoId === icao);
@@ -289,8 +171,8 @@ export const GET: RequestHandler = async () => {
 		tsaSjcResult
 	] = await Promise.allSettled([
 		fetchWithTimeout(FAA_NAS_URL, { headers: { Accept: 'application/json' } }, 10000)
-			.then((r) => (r.ok ? r.json() : []))
-			.catch(() => []),
+			.then((r) => (r.ok ? r.json() : null))
+			.catch(() => null),
 		fetchWithTimeout(METAR_URL, { headers: { Accept: 'application/json' } }, 10000)
 			.then((r) => (r.ok ? r.json() : []))
 			.catch(() => []),
@@ -303,7 +185,7 @@ export const GET: RequestHandler = async () => {
 		fetchTsa('SJC')
 	]);
 
-	const faaEvents = (faaResult.status === 'fulfilled' ? faaResult.value : []) as FaaEvent[];
+	const faaEvents = parseFaaFeed(faaResult.status === 'fulfilled' ? faaResult.value : null);
 	const metarObs = (metarResult.status === 'fulfilled' ? metarResult.value : []) as MetarObs[];
 	const tafData = (tafResult.status === 'fulfilled' ? tafResult.value : []) as TafForecast[];
 	const tsaSfo = tsaSfoResult.status === 'fulfilled' ? tsaSfoResult.value : null;
@@ -319,7 +201,7 @@ export const GET: RequestHandler = async () => {
 	};
 
 	const airports: AirportStatus[] = AIRPORTS.map((apt) => {
-		const faa = parseFaaEvents(faaEvents, apt.code);
+		const faa = faaStatusFor(faaEvents, apt.code);
 		const weather = parseMetar(metarObs, apt.icao);
 		const forecastNotes = parseTaf(tafData, apt.icao);
 

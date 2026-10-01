@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-10-01',
+		title: 'Airport delays show up again',
+		description:
+			'The airport panel now reads the FAA feed correctly: ground stops, ground delay programs, arrival and departure delays and closures appear with their cause and minutes, instead of every airport reading On Time. If the FAA can’t be reached, the panel says the status is unavailable rather than showing On Time.'
+	},
+	{
 		date: '2026-09-30',
 		title: 'Preview morning brief',
 		description:

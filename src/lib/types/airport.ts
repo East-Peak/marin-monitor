@@ -3,15 +3,17 @@ export type AirportOperationalStatus =
 	| 'delays'
 	| 'ground-delay'
 	| 'ground-stop'
-	| 'closed';
+	| 'closed'
+	/** The FAA read failed or did not parse — never shown as on time. */
+	| 'unknown';
 
 export type FlightCategory = 'VFR' | 'MVFR' | 'IFR' | 'LIFR';
 
 export interface DelayInfo {
-	type: 'ground-stop' | 'ground-delay' | 'arrival-delay' | 'departure-delay' | 'closure';
+	type: 'ground-stop' | 'ground-delay' | 'arrival-delay' | 'departure-delay' | 'closure' | 'notice';
 	reason?: string;
-	avgDelay?: string;
-	maxDelay?: string;
+	avgMinutes?: number;
+	maxMinutes?: number;
 	trend?: string;
 	endTime?: string;
 }

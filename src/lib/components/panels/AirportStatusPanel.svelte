@@ -17,7 +17,8 @@
 		delays: '#f59e0b',
 		'ground-delay': '#f97316',
 		'ground-stop': '#ef4444',
-		closed: '#6b7280'
+		closed: '#6b7280',
+		unknown: '#6b7280'
 	};
 
 	const STATUS_BG: Record<AirportOperationalStatus, string> = {
@@ -25,7 +26,8 @@
 		delays: 'rgba(245, 158, 11, 0.15)',
 		'ground-delay': 'rgba(249, 115, 22, 0.15)',
 		'ground-stop': 'rgba(239, 68, 68, 0.15)',
-		closed: 'rgba(107, 114, 128, 0.15)'
+		closed: 'rgba(107, 114, 128, 0.15)',
+		unknown: 'rgba(107, 114, 128, 0.15)'
 	};
 
 	const STATUS_LABELS: Record<AirportOperationalStatus, string> = {
@@ -33,7 +35,8 @@
 		delays: 'Delays',
 		'ground-delay': 'Ground Delay',
 		'ground-stop': 'Ground Stop',
-		closed: 'Closed'
+		closed: 'Closed',
+		unknown: 'Status Unavailable'
 	};
 
 	const FLT_CAT_COLORS: Record<FlightCategory, string> = {
@@ -62,6 +65,8 @@
 				return 'Departure Delay';
 			case 'closure':
 				return 'Closed';
+			case 'notice':
+				return 'Notice';
 			default:
 				return type;
 		}
@@ -138,9 +143,11 @@
 									{#if delay.reason}
 										<span class="delay-reason">{delay.reason}</span>
 									{/if}
-									{#if delay.avgDelay || delay.maxDelay}
+									{#if delay.avgMinutes !== undefined}
 										<span class="delay-time">
-											{delay.avgDelay ?? ''}{delay.maxDelay ? ` (max ${delay.maxDelay})` : ''}
+											avg {delay.avgMinutes} min{delay.maxMinutes !== undefined
+												? ` (max ${delay.maxMinutes})`
+												: ''}
 										</span>
 									{/if}
 									{#if delay.endTime}

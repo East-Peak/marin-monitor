@@ -624,6 +624,8 @@ export function formatAirportStatusLabel(status: AirportOperationalStatus): stri
 			return 'Ground Stop';
 		case 'closed':
 			return 'Closed';
+		case 'unknown':
+			return 'Unknown';
 		default:
 			return status;
 	}
@@ -651,7 +653,7 @@ export function buildAirportFeatures(
 ): GeoJSON.Feature[] {
 	return pins.map((pin) => {
 		const info = statusMap.get(pin.code);
-		const status: AirportOperationalStatus = info?.status ?? 'on-time';
+		const status: AirportOperationalStatus = info?.status ?? 'unknown';
 		const color = statusColors[status] ?? '#6b7280';
 		const statusLabel = formatAirportStatusLabel(status);
 		const weatherSummary = info?.weather ? buildAirportWeatherSummary(info.weather) : '';

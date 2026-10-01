@@ -128,7 +128,8 @@ export const AIRPORT_STATUS_COLORS: Record<string, string> = {
 	delays: '#f59e0b',
 	'ground-delay': '#f97316',
 	'ground-stop': '#ef4444',
-	closed: '#6b7280'
+	closed: '#6b7280',
+	unknown: '#6b7280'
 };
 
 /**

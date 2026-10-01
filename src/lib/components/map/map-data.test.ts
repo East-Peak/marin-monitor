@@ -1026,10 +1026,10 @@ describe('buildAirportFeatures', () => {
 		expect(result).toHaveLength(1);
 	});
 
-	it('uses on-time defaults when no status data available', () => {
+	it('shows status unknown, not on time, when no status data is available', () => {
 		const result = buildAirportFeatures(MOCK_AIRPORT_PINS, new Map(), MOCK_STATUS_COLORS);
-		expect(result[0].properties?.statusLabel).toBe('On Time');
-		expect(result[0].properties?.color).toBe('#22c55e');
+		expect(result[0].properties?.statusLabel).toBe('Unknown');
+		expect(result[0].properties?.color).toBe('#6b7280');
 		expect(result[0].properties?.weatherSummary).toBe('');
 	});
 

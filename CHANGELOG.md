@@ -4,6 +4,14 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-10-01
+
+### Fixed — airport delays were never shown
+
+- **FAA parser** (`src/lib/server/faa-airport-events.ts`): the NAS Status feed keys events by `airportId` and gives causes as `impactingCondition` (ground stops and delay programs) or `reason` (arrival/departure delays), with delays as numbers. The old reader looked for `airportCode`/`airport` — names guessed at the panel's creation, never in the feed — so every airport read "On Time" even under a ground delay program. Delays now carry numeric `avgMinutes`/`maxMinutes`; closures and free-form NOTAMs carry their text, and a NOTAM is listed as a notice without marking the airport delayed.
+- **No false all-clear:** an FAA read that fails or doesn't parse now shows "Status Unavailable" (map pin: "Unknown"); weather and forecast notes still show.
+- Pinned by tests against a real feed capture from 2026-10-01 (DFW's 79-minute thunderstorm ground delay program).
+
 ## 2026-09-30
 
 ### Added — morning brief, advisory contract and source health in the v2 preview (D1 PR 8)
