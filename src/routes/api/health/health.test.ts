@@ -58,6 +58,7 @@ const staleFeed = (name: string) => ({
 const { GET: getHealth } = await import('./+server');
 const { GET: getFreshness } = await import('../cron/check-freshness/+server');
 const { SOURCE_INVENTORY } = await import('$lib/server/health/inventory');
+const { STRAVA_ENABLED } = await import('$lib/config/strava');
 const { mergeSubsourceFailures } = await import('$lib/server/health/report');
 
 function makeEvent(path: string, authHeader?: string) {
@@ -105,10 +106,10 @@ describe('/api/health', () => {
 		expect(data.summary.total).toBe(SOURCE_INVENTORY.length);
 	});
 
-	it('reports no Strava source while Strava is mothballed', async () => {
+	it('reports a Strava source only while Strava is on', async () => {
 		allFresh();
 		const data = await (await getHealth(publicHealth())).json();
-		expect(JSON.stringify(data)).not.toMatch(/strava/i);
+		expect(/strava/i.test(JSON.stringify(data))).toBe(STRAVA_ENABLED);
 	});
 
 	it('is healthy with 200 when every source is fresh and no subsource fails', async () => {

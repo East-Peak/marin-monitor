@@ -4,7 +4,7 @@ import { derived, writable } from 'svelte/store';
 import { safetyNews, localNews, civicNews, alerts, threeOneOneNews } from '$lib/stores/news';
 import { refresh } from '$lib/stores/refresh';
 import { stravaEvents } from '$lib/stores/strava';
-import { STRAVA_CHYRON_MAX_AGE_MS } from '$lib/config/strava';
+import { STRAVA_CHYRON_MAX_AGE_MS, STRAVA_ENABLED } from '$lib/config/strava';
 import type { TickerItem, TickerCategory, TickerStatus } from '$lib/config/tv';
 import type { NewsItem } from '$lib/types';
 import type { CompositeData } from '$lib/types/composite';
@@ -274,9 +274,9 @@ export const tvTickerItems = derived(
 				items.push(newsToTicker(item, '311'));
 			}
 
-			// Strava KOM/QOM events (max 4, within 48h)
+			// Strava KOM/QOM events (max 4, within 48h); none while Strava is off
 			const now = Date.now();
-			const recentStravaEvents = ($strava.events ?? [])
+			const recentStravaEvents = (STRAVA_ENABLED ? ($strava.events ?? []) : [])
 				.filter((e) => now - new Date(e.detectedAt).getTime() < STRAVA_CHYRON_MAX_AGE_MS)
 				.slice(0, 4);
 

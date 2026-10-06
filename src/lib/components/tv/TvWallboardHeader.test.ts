@@ -1,7 +1,13 @@
 import { render } from '@testing-library/svelte';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { TV_SCREENS } from '$lib/config/tv';
 import TvWallboardHeader from './TvWallboardHeader.svelte';
+
+// Pins the mothballed state; tvScreens(true) pins the leaderboards screen.
+vi.mock('$lib/config/strava', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/config/strava')>()),
+	STRAVA_ENABLED: false
+}));
 
 const props = {
 	paused: false,

@@ -16,6 +16,11 @@ vi.hoisted(() => {
 	});
 });
 vi.mock('$app/environment', () => ({ browser: true, dev: true, building: false, version: 'test' }));
+// These tests pin the mothballed state; v2Sections(true) pins the Strava section.
+vi.mock('$lib/config/strava', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/config/strava')>()),
+	STRAVA_ENABLED: false
+}));
 
 const { loadAllNews, loadStravaData } = vi.hoisted(() => ({
 	loadAllNews: vi.fn(),

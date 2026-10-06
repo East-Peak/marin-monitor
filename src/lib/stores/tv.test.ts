@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- mock store references and partial fixture objects in tests */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { buildIdxTickerItems } from './tv';
 import { get } from 'svelte/store';
 
@@ -33,6 +33,14 @@ vi.mock('$lib/stores/news', () => {
 	};
 });
 
+const stravaFlag = vi.hoisted(() => ({ enabled: false }));
+vi.mock('$lib/config/strava', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/config/strava')>()),
+	get STRAVA_ENABLED() {
+		return stravaFlag.enabled;
+	}
+}));
+
 // Mock the strava store (5th derived input) with empty default
 vi.mock('$lib/stores/strava', () => {
 	// eslint-disable-next-line @typescript-eslint/no-require-imports -- require() is necessary inside vi.mock() factories (hoisted before ESM imports)
@@ -58,6 +66,47 @@ describe('tvTickerItems', () => {
 		const tvModule = await import('./tv');
 		tvTickerItems = tvModule.tvTickerItems;
 		mocks = (await import('$lib/stores/news')) as any;
+	});
+
+	describe('Strava KOM/QOM items', () => {
+		const freshEvent = () => ({
+			type: 'new_kom',
+			segmentId: 1,
+			segmentName: 'Hawk Hill',
+			athlete: 'A. Rider',
+			time: '4:01',
+			effortId: 99,
+			activityId: 7,
+			previous: null,
+			detectedAt: new Date().toISOString()
+		});
+
+		afterEach(async () => {
+			stravaFlag.enabled = false;
+			const strava = (await import('$lib/stores/strava')) as any;
+			strava.__mockStravaEvents.set({ events: [], lastUpdated: '' });
+		});
+
+		async function tickerWithStravaEvent(enabled: boolean) {
+			stravaFlag.enabled = enabled;
+			const strava = (await import('$lib/stores/strava')) as any;
+			strava.__mockStravaEvents.set({ events: [freshEvent()], lastUpdated: 'x' });
+			return get(tvTickerItems);
+		}
+
+		it('never reach the chyron while Strava is off, even if events are loaded', async () => {
+			const items = await tickerWithStravaEvent(false);
+			expect(items.some((i: any) => i.badge === 'KOM')).toBe(false);
+			expect(JSON.stringify(items)).not.toMatch(/strava|KOM/i);
+		});
+
+		it('appear as before when Strava is on', async () => {
+			const items = await tickerWithStravaEvent(true);
+			expect(items.find((i: any) => i.badge === 'KOM')).toMatchObject({
+				text: 'NEW KOM: Hawk Hill — 4:01 by A. Rider',
+				href: 'https://www.strava.com/segments/1'
+			});
+		});
 	});
 
 	it('returns "All clear" fallback when all stores are empty', () => {

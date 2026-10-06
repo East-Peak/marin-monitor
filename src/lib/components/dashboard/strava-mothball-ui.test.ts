@@ -1,26 +1,54 @@
 import { render } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import WireGrid from './WireGrid.svelte';
 import MapControls from '$lib/components/map/MapControls.svelte';
 
-// The regular dashboard (/) while Strava is mothballed: no leaderboards panel in
-// the wire, and no segments toggle on the map.
+// The regular dashboard (/): the wire's leaderboards panel and the map's
+// segments toggle follow the Strava switch, both ways.
 
-describe('regular dashboard without Strava', () => {
+const flag = vi.hoisted(() => ({ enabled: false }));
+vi.mock('$lib/config/strava', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$lib/config/strava')>()),
+	get STRAVA_ENABLED() {
+		return flag.enabled;
+	}
+}));
+
+const renderWire = () => render(WireGrid, { props: { onFeedback: () => {} } }).container;
+const renderMapControls = () =>
+	render(MapControls, {
+		context: new Map([['maplibre-map', { getMap: () => null, mapReady: writable(true) }]])
+	}).container;
+
+describe('regular dashboard with Strava off', () => {
+	beforeEach(() => {
+		flag.enabled = false;
+	});
+
 	it('the wire has no leaderboards slot', () => {
-		const { container } = render(WireGrid, { props: { onFeedback: () => {} } });
-		expect(container.querySelector('.wire-slot-leaderboards')).toBeNull();
-		expect(
-			container.querySelector('#panel-leaderboards, [data-panel-id="leaderboards"]')
-		).toBeNull();
+		expect(renderWire().querySelector('.wire-slot-leaderboards')).toBeNull();
 	});
 
 	it('the map has no Strava segments toggle', () => {
-		const { container } = render(MapControls, {
-			context: new Map([['maplibre-map', { getMap: () => null, mapReady: writable(true) }]])
-		});
+		const container = renderMapControls();
 		expect(container.querySelector('.segments-toggle')).toBeNull();
 		expect(container.innerHTML).not.toMatch(/strava|segments/i);
+	});
+});
+
+describe('regular dashboard with Strava on', () => {
+	beforeEach(() => {
+		flag.enabled = true;
+	});
+
+	it('the wire shows the leaderboards slot as before', () => {
+		expect(renderWire().querySelector('.wire-slot-leaderboards')).not.toBeNull();
+	});
+
+	it('the map shows the Strava segments toggle as before', () => {
+		expect(renderMapControls().querySelector('.segments-toggle')?.getAttribute('title')).toMatch(
+			/Strava segments/
+		);
 	});
 });

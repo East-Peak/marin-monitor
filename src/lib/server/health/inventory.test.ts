@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { STRAVA_ENABLED } from '$lib/config/strava';
 import {
 	ACCEPTED_EXCEPTIONS,
 	KNOWN_SUBSOURCE_FAILURES,
@@ -33,8 +34,9 @@ const EXPECTED_SOURCES = [
 ];
 
 describe('SOURCE_INVENTORY', () => {
-	it('lists exactly the expected sources, in order', () => {
-		expect(SOURCE_INVENTORY.map((s) => s.name)).toEqual(EXPECTED_SOURCES);
+	it('lists exactly the expected sources, in order, and follows the Strava switch', () => {
+		expect(sourceInventory(false).map((s) => s.name)).toEqual(EXPECTED_SOURCES);
+		expect(SOURCE_INVENTORY).toEqual(sourceInventory(STRAVA_ENABLED));
 	});
 
 	it('watches the two Strava sources, after EV Charging, only while Strava is on', () => {
@@ -123,9 +125,9 @@ describe('KNOWN_SUBSOURCE_FAILURES', () => {
 });
 
 describe('ACCEPTED_EXCEPTIONS', () => {
-	it('accepts nothing while Strava is mothballed', () => {
-		expect(ACCEPTED_EXCEPTIONS).toEqual([]);
+	it('accepts nothing with Strava off, and follows the Strava switch', () => {
 		expect(acceptedExceptions(false)).toEqual([]);
+		expect(ACCEPTED_EXCEPTIONS).toEqual(acceptedExceptions(STRAVA_ENABLED));
 		expect(Object.isFrozen(ACCEPTED_EXCEPTIONS)).toBe(true);
 	});
 

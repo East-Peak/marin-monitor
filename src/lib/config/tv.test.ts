@@ -3,9 +3,9 @@ import { TV_SCREENS, CATEGORY_COLORS, tvScreens } from './tv';
 import type { TickerCategory } from './tv';
 
 describe('TV config', () => {
-	it('has 20 screens with Strava on, 19 while it is mothballed', () => {
+	it('has 20 screens with Strava on, 19 with it off', () => {
 		expect(tvScreens(true)).toHaveLength(20);
-		expect(TV_SCREENS).toHaveLength(19);
+		expect(tvScreens(false)).toHaveLength(19);
 	});
 
 	it('all screens have positive duration', () => {
