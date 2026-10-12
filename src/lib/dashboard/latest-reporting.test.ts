@@ -377,6 +377,20 @@ describe('coverage: the snapshot read gates, the reporting feeds decide (Codex r
 		}
 	});
 
+	it('feeds that only aged out are retained with their own time, not "every reporting feed failed" (Codex 9a #2)', () => {
+		const hourAgo = new Date(NOW - H).toISOString();
+		const aged = (items: NewsSnapshotItem[]) => ({
+			...view(items, [{ lastSuccessAt: hourAgo }]),
+			lastSuccessfulScrapeAt: hourAgo
+		});
+		const empty = run(aged([]));
+		expect(empty.coverage).toMatchObject({ kind: 'value', value: [], observedAt: NOW - H });
+		expect(empty.empty).toBeNull();
+		const withRow = run(aged([story({ hoursAgo: 2 })]));
+		expect(withRow.coverage).toMatchObject({ kind: 'value', observedAt: NOW - H });
+		expect(rowsOf(withRow)).toHaveLength(1);
+	});
+
 	it('a retained reporting feed makes it partial and is named; a retained events feed does not count', () => {
 		const v = view(
 			[story({ hoursAgo: 4 })],

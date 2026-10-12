@@ -170,14 +170,24 @@ function feedCoverage<T extends readonly unknown[]>(
 	if (viewM.kind !== 'value') return mapMeasured(viewM, () => shown);
 	if (feeds.length === 0) return measuredUnknown(label, `no ${noun}s in the snapshot`);
 	const fresh = feeds.filter((e) => effectiveState(e, now) === 'ok');
-	if (fresh.length === 0 && shown.length === 0)
+	// Failed means the feed's own read failed; an "ok" feed that merely aged out is retained
+	// (Codex 9a #2).
+	if (shown.length === 0 && feeds.every((e) => e.state !== 'ok'))
 		return measuredUnavailable(label, `every ${noun} failed`);
 	const behind = feeds.length - fresh.length;
 	const retainedAfter =
 		viewM.retainedAfter ??
 		(behind > 0 ? `${behind} of ${feeds.length} ${noun}s not updated` : null);
+	// The oldest fresh feed's own time; with none fresh, the oldest known observation.
 	// A fresh "ok" entry always has a finite observedAt (effectiveState fails closed otherwise).
-	const observedAt = fresh.length ? Math.min(...fresh.map((e) => e.observedAt as number)) : null;
+	const known = feeds.flatMap((e) =>
+		e.observedAt !== null && Number.isFinite(e.observedAt) ? [e.observedAt] : []
+	);
+	const observedAt = fresh.length
+		? Math.min(...fresh.map((e) => e.observedAt as number))
+		: known.length
+			? Math.min(...known)
+			: null;
 	return measuredValue<T>(shown, label, observedAt, retainedAfter);
 }
 
