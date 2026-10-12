@@ -134,18 +134,19 @@
 			<MapProbe />
 			<MapGesturePolicy interactive={expanded || !phone} />
 		</MapContainer>
+		<!-- Phone: over the preview's corner, so it costs no row of its own (§13.3 height). -->
+		<button
+			type="button"
+			class="v2-map-expand"
+			aria-controls="v2-map-canvas"
+			aria-expanded={expanded}
+			data-text-role="label"
+			onclick={() => (expanded = !expanded)}>{expanded ? 'Collapse map' : 'Expand map'}</button
+		>
 	</div>
 	<div class="v2-map-status" data-slot="map-status">
 		<SectionStatus status={data.coverage} {now} />
 	</div>
-	<button
-		type="button"
-		class="v2-map-expand"
-		aria-controls="v2-map-canvas"
-		aria-expanded={expanded}
-		data-text-role="label"
-		onclick={() => (expanded = !expanded)}>{expanded ? 'Collapse map' : 'Expand map'}</button
-	>
 </div>
 
 <style>
@@ -162,7 +163,7 @@
 	@media (max-width: 767px) {
 		/* The preview: compact, controls hidden until expanded (§2.4). */
 		.v2-map-canvas {
-			height: 180px;
+			height: 160px;
 		}
 		.v2-map[data-expanded='true'] .v2-map-canvas {
 			height: 70vh;
@@ -171,14 +172,17 @@
 			display: none;
 		}
 		.v2-map-expand {
+			position: absolute;
+			right: 0.5rem;
+			bottom: 0.5rem;
+			z-index: 2;
 			display: inline-flex;
 			align-items: center;
 			min-height: 2.75rem;
-			margin-top: 0.25rem;
 			padding: 0 0.75rem;
 			border: 1px solid var(--border-light);
 			border-radius: 6px;
-			background: transparent;
+			background: var(--bg);
 			color: var(--text-primary);
 			cursor: pointer;
 		}

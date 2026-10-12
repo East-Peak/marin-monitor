@@ -73,8 +73,12 @@
 	/* The wider picker can wrap the settings gear to the start of a header line, where a
 	   panel anchored to the gear's right edge would open off-screen. On phones the panel
 	   anchors to the header instead and spans its gutters (0,3,0 beats the scoped 0,2,0). */
-	.dash-v2 .v2-header {
+	/* The named picker adds a header row; tighter phone spacing keeps §13.3's height budget.
+	   (0,2,1) beats the header's scoped (0,2,0). */
+	.dash-v2 header.v2-header {
 		position: relative;
+		row-gap: 0.5rem;
+		padding-block: 0.5rem;
 	}
 	.dash-v2 .v2-header .v2-settings {
 		position: static;
