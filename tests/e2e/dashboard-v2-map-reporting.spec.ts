@@ -313,7 +313,10 @@ test.describe('desktop 1440×900', () => {
 		);
 		await page.goto('/');
 		await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
-		await legacy311; // the shared 311 store now holds legacy's issue
+		await legacy311;
+		// Not hollow (Codex 9c #3): the response alone doesn't prove the store commit; legacy's
+		// wire renders the issue from the shared 311 store only once it is committed.
+		await expect(page.getByText(/Pothole/).first()).toBeAttached({ timeout: 30_000 });
 		up = false;
 		await page.evaluate(() => {
 			const a = document.createElement('a');
