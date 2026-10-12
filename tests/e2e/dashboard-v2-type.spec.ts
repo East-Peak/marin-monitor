@@ -65,11 +65,30 @@ async function audit(page: Page): Promise<TextNode[]> {
 }
 
 async function openAll(page: Page) {
-	await page.goto('/?layout=v2');
+	await page.goto('/?layout=v2&probe');
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 	await page.evaluate(() => document.fonts.ready);
 	// The map's own DOM text (layer controls, attribution) is part of the page (PR 9).
 	await expect(page.locator('.v2-map .maplibregl-canvas')).toBeVisible({ timeout: 20_000 });
+	// Audit the settled page, not its loading state (Codex 9b #6): every part settled and the
+	// map drew the latest data revision; Latest reporting shows rows or a terminal status.
+	await page.waitForFunction(
+		() => {
+			const p = (
+				window as unknown as {
+					__v2Probe?: {
+						loading: string[];
+						dataRevision: number;
+						synced: { revision: number } | null;
+					};
+				}
+			).__v2Probe;
+			return Boolean(p && p.loading.length === 0 && p.synced?.revision === p.dataRevision);
+		},
+		undefined,
+		{ timeout: 45_000 }
+	);
+	await expect(page.locator('[data-slot="latest-reporting"]')).not.toContainText('Loading…');
 	// Opening one changes the set, so always take the first still-closed toggle.
 	const closed = page.locator('[data-section-toggle][aria-expanded="false"]');
 	while ((await closed.count()) > 0) await closed.first().click();
