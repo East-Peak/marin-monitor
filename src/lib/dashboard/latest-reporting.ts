@@ -224,10 +224,11 @@ export function latestReportingView(input: {
 	return {
 		coverage,
 		empty,
-		// "Nothing new" (state empty) only where emptyWording allows it; a retained or expired
-		// empty read is "as of" its own time, an unestablished one unavailable (Codex r3 #3).
+		// "Nothing new"/"Nothing for this town" (empty, no-match) only where emptyWording allows
+		// it; a retained or expired empty read is "as of" its own time, an unestablished one
+		// unavailable (Codex r3 #3, 9a #1).
 		presentation:
-			presentation.state === 'empty' && empty === null
+			(presentation.state === 'empty' || presentation.state === 'no-match') && empty === null
 				? {
 						...presentation,
 						state: coverage.kind === 'value' ? 'stale' : 'unavailable',

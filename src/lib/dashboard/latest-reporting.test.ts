@@ -360,6 +360,23 @@ describe('coverage: the snapshot read gates, the reporting feeds decide (Codex r
 		expect(run(view([story({ hoursAgo: 1 })]), 'mill-valley').presentation.state).toBe('no-match');
 	});
 
+	it('a town no-match after a failed refresh or an expired scrape never says "Nothing for this town" (Codex 9a #1)', () => {
+		const v = view([story({ hoursAgo: 1 })]);
+		const failed = run(v, 'mill-valley', [
+			fromSnapshotRead({ ok: false, error: 'timed out', at: NOW }, v),
+			...v.sources.map(fromSnapshotSource)
+		]);
+		const expired = run(
+			{ ...v, lastSuccessfulScrapeAt: new Date(NOW - 2 * H).toISOString() },
+			'mill-valley'
+		);
+		for (const out of [failed, expired]) {
+			expect(out.empty).toBeNull();
+			expect(out.presentation.state).not.toBe('no-match');
+			expect(describePresentation(out.presentation, NOW)).not.toMatch(/Nothing/);
+		}
+	});
+
 	it('a retained reporting feed makes it partial and is named; a retained events feed does not count', () => {
 		const v = view(
 			[story({ hoursAgo: 4 })],
