@@ -381,6 +381,25 @@ test.describe('phone 390×844', () => {
 		const collapse = page.getByRole('button', { name: 'Collapse map' });
 		await expect(collapse).toHaveAttribute('aria-expanded', 'true');
 		await expect.poll(async () => (await canvas.boundingBox())!.height).toBeGreaterThan(500);
+		// The button has a corner of its own: it never covers the attribution, and an open
+		// inspector never hides it (Codex 9c #2).
+		const overlaps = (
+			a: { x: number; y: number; width: number; height: number },
+			b: { x: number; y: number; width: number; height: number }
+		) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+		const attribution = (await page.locator('.v2-map .maplibregl-ctrl-attrib').boundingBox())!;
+		expect(overlaps((await collapse.boundingBox())!, attribution)).toBe(false);
+		await page.evaluate(() =>
+			document.getElementById('v2-map-canvas')!.scrollIntoView({ block: 'start' })
+		);
+		await expect.poll(() => pinAt(page), { timeout: 20_000 }).not.toBeNull();
+		const at = (await pinAt(page))!;
+		await page.mouse.click(at.x, at.y);
+		// Whichever inspector the tap opens (story or feature, by click priority) stays clear of it.
+		const inspector = page.locator('.v2-map aside.inspector, .v2-map aside.feature-inspector');
+		await expect(inspector).toBeVisible();
+		expect(overlaps((await collapse.boundingBox())!, (await inspector.boundingBox())!)).toBe(false);
+		await expect(collapse).toBeVisible();
 		await collapse.click();
 		await expect.poll(async () => (await canvas.boundingBox())!.height).toBeLessThan(260);
 	});

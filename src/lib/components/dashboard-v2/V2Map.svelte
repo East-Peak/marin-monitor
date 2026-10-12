@@ -171,11 +171,25 @@
 		.v2-map[data-expanded='false'] .v2-map-canvas :global(.map-controls) {
 			display: none;
 		}
+		/* The compact attribution opens wide on load: keep it on the row above the button. */
+		.v2-map-canvas :global(.maplibregl-ctrl-bottom-right) {
+			bottom: 3.25rem;
+		}
+		.v2-map-canvas :global(.inspector) {
+			bottom: 3.75rem;
+			max-height: min(360px, calc(100% - 4.25rem));
+		}
+		.v2-map-canvas :global(.feature-inspector) {
+			max-height: calc(100% - 7rem);
+			overflow: auto;
+		}
 		.v2-map-expand {
+			/* Bottom-left: the attribution holds bottom-right, zoom top-right, layers top-left
+			   (Codex 9c #2); above the inspectors, which are lifted clear of it below. */
 			position: absolute;
-			right: 0.5rem;
+			left: 0.5rem;
 			bottom: 0.5rem;
-			z-index: 2;
+			z-index: 31;
 			display: inline-flex;
 			align-items: center;
 			min-height: 2.75rem;
