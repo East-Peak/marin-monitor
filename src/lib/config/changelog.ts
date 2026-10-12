@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-12',
+		title: 'No keyword alerts in the preview',
+		description:
+			'A new automatic check makes sure the dashboard preview never treats a story as an alert just because it contains a word like “fire”. Only official weather advisories appear as alerts there. The regular dashboard is unchanged.'
+	},
+	{
+		date: '2026-10-12',
 		title: 'Preview map and latest reporting',
 		description:
 			'The dashboard preview now shows the map next to the five latest dated stories, each with its source, how long ago it was published, and whether it is about your town or county-wide. On phones the map is a small preview you can expand, and swiping over it scrolls the page. Tapping a pin opens its story without changing your town, ordinary stories never show up as alerts, and anything kept from an earlier refresh is dimmed and says from when. The regular dashboard is unchanged.'

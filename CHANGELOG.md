@@ -6,6 +6,10 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-12
 
+### Added — no-keyword-alerts guard for the v2 preview (D1 PR 9b2)
+
+- **Guard:** an AST check parses every v2 `.ts`/`.svelte` file (nested folders included) and fails if code reads the keyword alert classification (`isAlert`, `alertKeyword`, `containsAlertKeyword`) by identifier, quoted key or element access. Words in comments, strings, template text and URLs ("ALERTCalifornia", Nixle `/alert/` links) pass.
+
 ### Added — map and Latest reporting in the v2 preview (D1 PR 9b)
 
 - **Latest reporting:** the five newest items with a trustworthy publication time (undated, satire, event listings and items more than 5 minutes ahead excluded); with a town selected, up to 3 town items plus 2 county-wide, never padded with stories that name no town. Each row shows source · age · scope; the status line names failing reporting sources.
