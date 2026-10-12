@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-12
 
+### Changed — map and Latest reporting proven in the built app (D1 PR 9c)
+
+- **Phone layout:** the map preview is 160 px with its Expand/Collapse button over the preview's corner, and the phone header is tighter; on a 390×844 phone the third Latest-reporting item now ends at 1,256 px (budget 1,266, §13.3).
+- **Map status:** a town with nothing on the map reads "Nothing for this town" when the other layers merely failed (they are named); only a kept or expired layer withholds it.
+- **Built-app proofs:** e2e for selection and scope (3 town + 2 county-wide, no unlocated padding), no keyword alert affordance or pulse, only owned layers and no airport/traffic/fire requests, kept 311 and quake pins explained in the inspector, pins with every section closed, a collapsed phone preview that never captures scroll, and the height budget — each with a negative control that fails without its guard.
+
 ### Added — no-keyword-alerts guard for the v2 preview (D1 PR 9b2)
 
 - **Guard:** an AST check parses every v2 `.ts`/`.svelte` file (nested folders included) and fails if code reads the keyword alert classification (`isAlert`, `alertKeyword`, `containsAlertKeyword`) by identifier, quoted key or element access. Words in comments, strings, template text and URLs ("ALERTCalifornia", Nixle `/alert/` links) pass.

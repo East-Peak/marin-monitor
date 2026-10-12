@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-12',
+		title: 'Preview map fits phones better',
+		description:
+			'On phones the dashboard preview’s map is a little shorter and its Expand button sits on the map’s corner, so the latest stories start higher on the screen. A town with no stories now says so even when another map source is down, and names the source that failed. The regular dashboard is unchanged.'
+	},
+	{
+		date: '2026-10-12',
 		title: 'No keyword alerts in the preview',
 		description:
 			'A new automatic check makes sure the dashboard preview never treats a story as an alert just because it contains a word like “fire”. Only official weather advisories appear as alerts there. The regular dashboard is unchanged.'
