@@ -431,4 +431,10 @@ describe('createDashboardV2Controller', () => {
 		await c.start();
 		expect(get(c.fixIt)).toBeNull();
 	});
+
+	it('a successful, empty first Fix It read is an empty list, not "never read" (Codex 9a2 #2)', async () => {
+		const c = controller({ newsSources: newsSources({ seeclickfix: async () => [] }) });
+		await c.start();
+		expect(get(c.fixIt)).toEqual([]);
+	});
 });

@@ -260,6 +260,9 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		},
 		onPartSettled: (part, outcome) => {
 			if (!live()) return;
+			// A successful first read with no items commits no category: it is an empty list,
+			// never "not read yet" (Codex 9a2 #2). Items, when any, were committed before this.
+			if (part === 'seeclickfix' && outcome.ok) fixIt.update((items) => items ?? []);
 			parts.update((all) => ({
 				...all,
 				[part]: { outcome, hadSuccess: outcome.ok || (all[part]?.hadSuccess ?? false) }
