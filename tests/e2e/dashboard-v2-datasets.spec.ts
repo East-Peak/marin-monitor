@@ -9,7 +9,8 @@ const ESSENTIAL = [
 	'/api/news/snapshot',
 	'/api/health'
 ];
-const NEVER = /\/api\/(feeds|article|geocode)\b|\/api\/data\/strava/;
+const NEVER =
+	/\/api\/(feeds|article|geocode|calfire|airport-status|traffic\/events)\b|\/api\/data\/strava/;
 
 function record(page: Page): string[] {
 	const seen: string[] = [];
