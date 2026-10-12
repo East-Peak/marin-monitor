@@ -4,6 +4,15 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-10-12
+
+### Added — phone town label, measured values and the reporting model for the v2 preview (D1 PR 9a)
+
+- **Town picker on phones:** the v2 header shows the selected town ("Showing: Mill Valley ▾"), and the button's accessible name says it; legacy `/` keeps its icon-only picker (spec §2.1). With the label shown, the phone settings menu anchors to the header so it stays on screen.
+- **Measured values** (`src/lib/dashboard/measured.ts`): a value is shown only after this page's own successful read, with its own time; an expired or failed read is never "fresh" or "nothing new".
+- **Latest reporting model** (`src/lib/dashboard/latest-reporting.ts`): candidates from the news snapshot's deduplicated stories; county scope from the producer ids of `COUNTY_WIDE_RULE`'s feeds, including merged copies; rows carry source, age and scope, and no alert field.
+- **Tests:** the v2 sections e2e now follows the Strava mothball (five sections; no Strava section or data).
+
 ## 2026-10-01
 
 ### Changed — Strava is paused (mothballed)

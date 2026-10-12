@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-10-12',
+		title: 'Preview town label on phones',
+		description:
+			'On phones the dashboard preview’s town picker now says which town you’re looking at, not just a pin icon. Behind the scenes the preview gets ready for its latest-reporting list: county-wide stories are recognized from their source, and anything the preview can’t vouch for will say so instead of guessing. The regular dashboard is unchanged.'
+	},
+	{
 		date: '2026-10-01',
 		title: 'Strava is paused',
 		description:
