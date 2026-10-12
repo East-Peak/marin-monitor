@@ -6,7 +6,7 @@
 
 	type Handler = { enable(): void; disable(): void };
 	type GestureMap = Record<
-		'dragPan' | 'touchZoomRotate' | 'scrollZoom' | 'doubleClickZoom',
+		'dragPan' | 'touchZoomRotate' | 'touchPitch' | 'scrollZoom' | 'doubleClickZoom',
 		Handler
 	>;
 	let { interactive }: { interactive: boolean } = $props();
@@ -20,7 +20,14 @@
 		if (!$ready) return;
 		const map = getMap();
 		if (!map) return;
-		for (const h of ['dragPan', 'touchZoomRotate', 'scrollZoom', 'doubleClickZoom'] as const) {
+		// touchPitch claims two-finger moves on its own (Codex 9b #5).
+		for (const h of [
+			'dragPan',
+			'touchZoomRotate',
+			'touchPitch',
+			'scrollZoom',
+			'doubleClickZoom'
+		] as const) {
 			if (interactive) map[h].enable();
 			else map[h].disable();
 		}
