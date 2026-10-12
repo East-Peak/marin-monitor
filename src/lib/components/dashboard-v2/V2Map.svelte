@@ -77,6 +77,14 @@
 		const item = visible.find((candidate) => candidate.id === itemId);
 		if (item) apply(pinClickOutcome(item));
 	}
+	/** Collapsing closes any inspector: nothing in the preview may scroll (Codex 9c r2 #1). */
+	function toggleExpanded() {
+		expanded = !expanded;
+		if (!expanded) {
+			inspector = null;
+			feature = null;
+		}
+	}
 	function clearTown() {
 		mapStore.selectTown(null);
 		townFilter.clear();
@@ -141,7 +149,7 @@
 			aria-controls="v2-map-canvas"
 			aria-expanded={expanded}
 			data-text-role="label"
-			onclick={() => (expanded = !expanded)}>{expanded ? 'Collapse map' : 'Expand map'}</button
+			onclick={toggleExpanded}>{expanded ? 'Collapse map' : 'Expand map'}</button
 		>
 	</div>
 	<div class="v2-map-status" data-slot="map-status">
@@ -168,7 +176,9 @@
 		.v2-map[data-expanded='true'] .v2-map-canvas {
 			height: 70vh;
 		}
-		.v2-map[data-expanded='false'] .v2-map-canvas :global(.map-controls) {
+		.v2-map[data-expanded='false'] .v2-map-canvas :global(.map-controls),
+		.v2-map[data-expanded='false'] .v2-map-canvas :global(.inspector),
+		.v2-map[data-expanded='false'] .v2-map-canvas :global(.feature-inspector) {
 			display: none;
 		}
 		/* The compact attribution opens wide on load: keep it on the row above the button. */

@@ -405,6 +405,8 @@ test.describe('phone 390×844', () => {
 		await expect(collapse).toBeVisible();
 		await collapse.click();
 		await expect.poll(async () => (await canvas.boundingBox())!.height).toBeLessThan(260);
+		// Collapsing closes the inspector: nothing in the preview can scroll (Codex 9c r2 #1).
+		await expect(inspector).toHaveCount(0);
 	});
 
 	test('a vertical drag on the collapsed preview scrolls the page and does not pan the map; expanded, the map pans (Codex r1 #13)', async ({
