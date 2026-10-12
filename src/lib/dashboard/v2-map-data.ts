@@ -143,11 +143,13 @@ export function v2MapData(input: {
 		},
 		now
 	);
-	// "Nothing for this town" (no-match) needs every enabled layer established and not kept:
-	// a failed or expired read can't vouch that the town has nothing (the twin of Codex 9a #1).
+	// Every enabled layer read fresh by this owner (the inspector's zero claims; Codex 9b #2).
 	const established = layerCoverage.every((c) => c.kind === 'value' && c.retainedAfter === null);
+	// A kept (retained or expired) layer can't vouch that the town has nothing; a failed layer is
+	// named as failing by the status line, as batch 2's contract has it.
+	const kept = layerCoverage.some((c) => c.kind === 'value' && c.retainedAfter !== null);
 	const vouched =
-		presented.state === 'empty' ? authorized : presented.state !== 'no-match' || established;
+		presented.state === 'empty' ? authorized : presented.state !== 'no-match' || !kept;
 	const coverage: SectionPresentation = vouched
 		? presented
 		: {

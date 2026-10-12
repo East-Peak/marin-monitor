@@ -314,3 +314,18 @@ describe('the inspector and tooltip see only what the map vouches for (Codex 9b 
 		});
 	});
 });
+
+describe('no-match with only failed (not kept) layers stays no-match (batch 2 contract)', () => {
+	it('fresh news for the town, 311 and quakes down: "nothing for this town" with the failures named', () => {
+		const v = view([pinStory('a')]);
+		const d = run({
+			view: v,
+			sources: sources(v, ok, fail('HTTP 503'), false, fail('HTTP 500'), false),
+			town: 'novato'
+		});
+		expect(d.coverage.state).toBe('no-match');
+		expect(d.coverage.failing.map((e) => e.name)).toEqual(
+			expect.arrayContaining(['Fix It Marin (311)'])
+		);
+	});
+});
