@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-12',
+		title: 'Map groundwork for the preview',
+		description:
+			'The shared map can now be driven by the dashboard preview with only the data the preview itself loaded: no keyword alert pulses, airport pins, traffic or places it can’t vouch for, and anything kept after a failed refresh is dimmed with a note saying from when. The regular dashboard and TV maps are unchanged.'
+	},
+	{
+		date: '2026-10-12',
 		title: 'Preview town label on phones',
 		description:
 			'On phones the dashboard preview’s town picker now says which town you’re looking at, not just a pin icon. Behind the scenes the preview gets ready for its latest-reporting list: county-wide stories are recognized from their source, and anything the preview can’t vouch for will say so instead of guessing. The regular dashboard is unchanged.'

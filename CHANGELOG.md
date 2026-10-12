@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-12
 
+### Added — owner-driven map inputs for the v2 preview (D1 PR 9a2)
+
+- **Map inputs:** the shared map can now leave out keyword alert pulses, airport pins, traffic and places, draw only data its owner hands it, and mark kept-after-failure features (dimmed, with an inspector note); it reports what it drew after each sync. The regular dashboard and TV keep reading their stores, unchanged.
+- **Controller:** the v2 controller exposes its applied news snapshot and its own Fix It (311) items (none until its own first successful read).
+- **Earthquakes (v2 only):** a cached copy after a failed USGS refresh counts as a failure, so the preview can mark it as kept; quake and 311 pins carry their item id for that note.
+
 ### Added — phone town label, measured values and the reporting model for the v2 preview (D1 PR 9a)
 
 - **Town picker on phones:** the v2 header shows the selected town ("Showing: Mill Valley ▾"), and the button's accessible name says it; legacy `/` keeps its icon-only picker (spec §2.1). With the label shown, the phone settings menu anchors to the header so it stays on screen.
