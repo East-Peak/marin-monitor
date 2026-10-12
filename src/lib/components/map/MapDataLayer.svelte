@@ -29,7 +29,6 @@
 		isWithinMarinView,
 		buildTownFeatures,
 		buildNewsPinFeatures,
-		buildAlertPulseFeatures,
 		buildEarthquakeFeatures,
 		buildFireIncidentFeatures,
 		buildGasStationFeatures,
@@ -40,6 +39,16 @@
 		refreshAirportPins
 	} from './map-data';
 	import { setupSources } from './map-layers';
+	import {
+		alertPulseFeatures,
+		layerItems,
+		markRetained,
+		optionalReads,
+		placeLayersOn,
+		syncCounts,
+		trafficVisibility,
+		type OwnedLayerData
+	} from './map-layer-switches';
 	import {
 		hoveredFeatureIds,
 		bindInteractiveHover,
@@ -68,16 +77,46 @@
 		onTownHover?: (townSlug: string | null) => void;
 		onPinClick?: (itemId: string) => void;
 		onFeatureClick?: (feature: MapFeatureInspectorData) => void;
+		/** Optional layers (legacy defaults on; the v2 preview passes false for each). */
+		alertPulses?: boolean;
+		airports?: boolean;
+		trafficEvents?: boolean;
+		/** Owner-supplied data: when set, the shared news/311/place stores are not read. */
+		layerData?: OwnedLayerData;
+		/** Called after each sync of owner data (the v2 e2e hook). */
+		onSynced?: (sync: { revision: number; counts: Record<string, number> }) => void;
 	}
 
 	let {
 		earthquakes = [],
 		fireIncidents = [],
+		alertPulses = true,
+		airports = true,
+		trafficEvents = true,
+		layerData,
+		onSynced,
 		onTownClick,
 		onTownHover,
 		onPinClick,
 		onFeatureClick
 	}: Props = $props();
+
+	// Fixed for the component's life: the v2 map is mounted with its switches and never flips them.
+	// svelte-ignore state_referenced_locally
+	const reads = optionalReads({ airports, trafficEvents });
+	const owned = () => layerData;
+	let updateDataTimer: ReturnType<typeof setTimeout> | null = null;
+
+	// Owner data changes re-sync the map (debounced like the store path); legacy is unaffected.
+	$effect(() => {
+		if (!layerData) return;
+		void earthquakes;
+		if (updateDataTimer) clearTimeout(updateDataTimer);
+		updateDataTimer = setTimeout(() => {
+			const m = getMap();
+			if (m?.getSource('towns')) updateData(m);
+		}, 100);
+	});
 
 	const { getMap, mapReady } = getContext<{
 		getMap: () => MapLibreMap | null;
@@ -124,28 +163,17 @@
 
 	function applyTrafficVisibility(map: MapLibreMap) {
 		const { showTrafficCongestion, showTrafficEvents } = get(mapStore);
+		const vis = trafficVisibility(reads.traffic, showTrafficCongestion, showTrafficEvents);
 
 		if (map.getLayer('traffic-congestion-layer')) {
-			map.setLayoutProperty(
-				'traffic-congestion-layer',
-				'visibility',
-				showTrafficCongestion ? 'visible' : 'none'
-			);
+			map.setLayoutProperty('traffic-congestion-layer', 'visibility', vis.congestion);
 		}
 
 		if (map.getLayer('traffic-events-layer')) {
-			map.setLayoutProperty(
-				'traffic-events-layer',
-				'visibility',
-				showTrafficEvents ? 'visible' : 'none'
-			);
+			map.setLayoutProperty('traffic-events-layer', 'visibility', vis.events);
 		}
 		if (map.getLayer('traffic-events-hit-layer')) {
-			map.setLayoutProperty(
-				'traffic-events-hit-layer',
-				'visibility',
-				showTrafficEvents ? 'visible' : 'none'
-			);
+			map.setLayoutProperty('traffic-events-hit-layer', 'visibility', vis.events);
 		}
 	}
 
@@ -244,7 +272,8 @@
 				kind: 'earthquake',
 				title,
 				subtitle: magnitude ? `Magnitude ${magnitude}` : 'Seismic event',
-				source: 'USGS'
+				source: 'USGS',
+				itemId: feature?.properties?.itemId ? String(feature.properties.itemId) : undefined
 			});
 		});
 
@@ -325,7 +354,8 @@
 				subtitle: String(props.address ?? ''),
 				description: String(props.description ?? ''),
 				source: 'Fix It Marin',
-				imageUrl: props.imageUrl ? String(props.imageUrl) : undefined
+				imageUrl: props.imageUrl ? String(props.imageUrl) : undefined,
+				itemId: props.itemId ? String(props.itemId) : undefined
 			});
 		});
 
@@ -440,7 +470,12 @@
 	// -------------------------------------------------------------------
 
 	function updateData(map: MapLibreMap) {
-		const items = get(allNewsItems);
+		const places = placeLayersOn(owned());
+		const items = layerItems(
+			owned(),
+			(d) => d.news,
+			() => get(allNewsItems)
+		);
 		const mapState = get(mapStore);
 		const currentTownFilter = get(townFilter);
 		const activeItems = items.filter((item) => {
@@ -464,11 +499,9 @@
 		}
 
 		// News pins — only show exact coordinates. Town-only items stay in town aggregates.
-		const pinFeatures = buildNewsPinFeatures(
-			activeItems,
-			CATEGORY_TO_LAYER,
-			currentTownFilter,
-			LAYER_COLORS
+		const pinFeatures = markRetained(
+			buildNewsPinFeatures(activeItems, CATEGORY_TO_LAYER, currentTownFilter, LAYER_COLORS),
+			(f) => owned()?.retained.news.has(String(f.id)) ?? false
 		);
 
 		const pinsSource = map.getSource('news-pins') as GeoJSONSource;
@@ -477,7 +510,12 @@
 		}
 
 		// Alert pulses — items with isAlert at their town centroid
-		const alertFeatures = buildAlertPulseFeatures(activeItems, currentTownFilter, TOWN_BY_SLUG);
+		const alertFeatures = alertPulseFeatures(
+			alertPulses,
+			activeItems,
+			currentTownFilter,
+			TOWN_BY_SLUG
+		);
 
 		const alertSource = map.getSource('alert-pulses') as GeoJSONSource;
 		if (alertSource) {
@@ -485,7 +523,10 @@
 		}
 
 		// Earthquakes — use lat/lon from the items if available
-		const quakeFeatures = buildEarthquakeFeatures(earthquakes);
+		const quakeFeatures = markRetained(
+			buildEarthquakeFeatures(earthquakes),
+			() => owned()?.retained.earthquakes ?? false
+		);
 
 		const quakeSource = map.getSource('earthquakes') as GeoJSONSource;
 		if (quakeSource) {
@@ -501,7 +542,7 @@
 		}
 
 		// Gas stations
-		const gasStations = get(currentGasStations);
+		const gasStations = places ? get(currentGasStations) : [];
 		const mapGasVisible = mapState.activeLayers['gas'];
 		const gasFeatures = mapGasVisible
 			? buildGasStationFeatures(gasStations, currentTownFilter)
@@ -527,7 +568,7 @@
 		}
 
 		// EV charging stations (filter to Marin bounds for cached data that may include out-of-county)
-		const evStations = get(currentChargingStations)
+		const evStations = (places ? get(currentChargingStations) : [])
 			.filter((s) => isWithinMarinView(s.lon, s.lat))
 			.filter((s) => !currentTownFilter || findNearestTown(s.lat, s.lon) === currentTownFilter);
 		const mapEvVisible = mapState.activeLayers['ev-charging'];
@@ -561,7 +602,7 @@
 		}
 
 		// Coffee shops
-		const coffeeShops = get(currentCoffeeShops);
+		const coffeeShops = places ? get(currentCoffeeShops) : [];
 		const mapCoffeeVisible = mapState.activeLayers['coffee'];
 		const coffeeFeatures = mapCoffeeVisible
 			? buildCoffeeShopFeatures(coffeeShops, currentTownFilter)
@@ -595,7 +636,7 @@
 		}
 
 		// Fitness studios
-		const fitnessStudios = get(currentFitnessStudios);
+		const fitnessStudios = places ? get(currentFitnessStudios) : [];
 		const mapFitnessVisible = mapState.activeLayers['fitness'];
 		const fitnessFeatures = mapFitnessVisible
 			? buildFitnessStudioFeatures(
@@ -634,10 +675,17 @@
 		}
 
 		// 311 reports (SeeClickFix / Fix It Marin)
-		const threeOneOneItems = get(threeOneOneNews).items ?? [];
+		const threeOneOneItems = layerItems(
+			owned(),
+			(d) => d.threeOneOne,
+			() => get(threeOneOneNews).items ?? []
+		);
 		const map311Visible = mapState.activeLayers['311'];
 		const threeOneOneFeatures = map311Visible
-			? build311ReportFeatures(threeOneOneItems, currentTownFilter)
+			? markRetained(
+					build311ReportFeatures([...threeOneOneItems], currentTownFilter),
+					() => owned()?.retained.threeOneOne ?? false
+				)
 			: [];
 
 		const threeOneOneSource = map.getSource('311-reports') as GeoJSONSource;
@@ -652,6 +700,18 @@
 		}
 
 		applyTrafficVisibility(map);
+
+		const data = owned();
+		if (data)
+			onSynced?.({
+				revision: data.revision,
+				counts: syncCounts({
+					'news-pins': pinFeatures,
+					'alert-pulses': alertFeatures,
+					earthquakes: quakeFeatures,
+					'311-reports': threeOneOneFeatures
+				})
+			});
 	}
 
 	// -------------------------------------------------------------------
@@ -679,7 +739,6 @@
 	let unsubscribeCoffee: (() => void) | null = null;
 	let unsubscribeFitness: (() => void) | null = null;
 	let unsubscribe311: (() => void) | null = null;
-	let updateDataTimer: ReturnType<typeof setTimeout> | null = null;
 
 	onMount(() => {
 		const unsubReady = mapReady.subscribe((ready) => {
@@ -689,20 +748,20 @@
 
 			setupAndBind(map);
 			updateData(map);
-			void refreshTrafficEvents(map);
-			void refreshAirportStatus(map);
+			if (reads.traffic) void refreshTrafficEvents(map);
+			if (reads.airports) void refreshAirportStatus(map);
 
 			removeStyleLoadListener?.();
 			const handleStyleLoad = () => {
 				setupAndBind(map);
 				updateData(map);
-				void refreshTrafficEvents(map);
-				void refreshAirportStatus(map);
+				if (reads.traffic) void refreshTrafficEvents(map);
+				if (reads.airports) void refreshAirportStatus(map);
 			};
 			map.on('style.load', handleStyleLoad);
 			removeStyleLoadListener = () => map.off('style.load', handleStyleLoad);
 
-			if (!trafficRefreshTimer) {
+			if (reads.traffic && !trafficRefreshTimer) {
 				trafficRefreshTimer = setInterval(() => {
 					const m = getMap();
 					if (!m || !m.getSource('traffic-events')) return;
@@ -711,7 +770,7 @@
 			}
 
 			// Re-render when news or map state changes (debounced to avoid rapid redraws)
-			if (!unsubscribeNews) {
+			if (!owned() && !unsubscribeNews) {
 				unsubscribeNews = allNewsItems.subscribe(() => {
 					if (updateDataTimer) clearTimeout(updateDataTimer);
 					updateDataTimer = setTimeout(() => {
@@ -733,7 +792,7 @@
 				});
 			}
 
-			if (!unsubscribeGas) {
+			if (!owned() && !unsubscribeGas) {
 				unsubscribeGas = currentGasStations.subscribe(() => {
 					if (updateDataTimer) clearTimeout(updateDataTimer);
 					updateDataTimer = setTimeout(() => {
@@ -744,7 +803,7 @@
 				});
 			}
 
-			if (!unsubscribeEv) {
+			if (!owned() && !unsubscribeEv) {
 				unsubscribeEv = currentChargingStations.subscribe(() => {
 					if (updateDataTimer) clearTimeout(updateDataTimer);
 					updateDataTimer = setTimeout(() => {
@@ -755,7 +814,7 @@
 				});
 			}
 
-			if (!unsubscribeCoffee) {
+			if (!owned() && !unsubscribeCoffee) {
 				unsubscribeCoffee = currentCoffeeShops.subscribe(() => {
 					if (updateDataTimer) clearTimeout(updateDataTimer);
 					updateDataTimer = setTimeout(() => {
@@ -766,7 +825,7 @@
 				});
 			}
 
-			if (!unsubscribeFitness) {
+			if (!owned() && !unsubscribeFitness) {
 				unsubscribeFitness = currentFitnessStudios.subscribe(() => {
 					if (updateDataTimer) clearTimeout(updateDataTimer);
 					updateDataTimer = setTimeout(() => {
@@ -777,7 +836,7 @@
 				});
 			}
 
-			if (!unsubscribe311) {
+			if (!owned() && !unsubscribe311) {
 				unsubscribe311 = threeOneOneNews.subscribe(() => {
 					if (updateDataTimer) clearTimeout(updateDataTimer);
 					updateDataTimer = setTimeout(() => {

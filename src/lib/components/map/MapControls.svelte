@@ -59,6 +59,11 @@
 		'satire'
 	];
 
+	let { traffic = true, layers }: { traffic?: boolean; layers?: readonly MapLayer[] } = $props();
+	const shownLayers = $derived(
+		layers ? LAYER_ORDER.filter((l) => layers.includes(l)) : LAYER_ORDER
+	);
+
 	function toggleLayer(layer: MapLayer) {
 		mapStore.toggleLayer(layer);
 	}
@@ -78,7 +83,7 @@
 </script>
 
 <div class="map-controls">
-	{#each LAYER_ORDER as layer}
+	{#each shownLayers as layer}
 		<button
 			class="layer-toggle"
 			class:active={$activeLayers[layer]}
@@ -115,18 +120,20 @@
 		</button>
 	{/if}
 
-	<button
-		class="layer-toggle traffic-toggle"
-		class:active={$showTraffic}
-		style:--layer-color={'#f97316'}
-		onclick={toggleTraffic}
-		title={hasTrafficCongestion
-			? 'Traffic overlay (Mapbox congestion + 511 traffic events)'
-			: 'Traffic overlay (511 traffic events only)'}
-	>
-		<span class="layer-dot"></span>
-		<span class="layer-label">Traffic</span>
-	</button>
+	{#if traffic}
+		<button
+			class="layer-toggle traffic-toggle"
+			class:active={$showTraffic}
+			style:--layer-color={'#f97316'}
+			onclick={toggleTraffic}
+			title={hasTrafficCongestion
+				? 'Traffic overlay (Mapbox congestion + 511 traffic events)'
+				: 'Traffic overlay (511 traffic events only)'}
+		>
+			<span class="layer-dot"></span>
+			<span class="layer-label">Traffic</span>
+		</button>
+	{/if}
 
 	{#if $showTraffic}
 		<div class="traffic-legend">

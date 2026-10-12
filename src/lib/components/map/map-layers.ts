@@ -28,6 +28,12 @@ const mapboxToken = MAPBOX_TOKEN.trim();
  * This function is idempotent — if the `towns` source already exists it
  * returns immediately.
  */
+
+/** Kept-after-failure features (property `retained`, set only by an owner) paint dimmed; others are unchanged. */
+export function retainedDim<T>(expr: T): ['case', ['==', ['get', 'retained'], true], number, T] {
+	return ['case', ['==', ['get', 'retained'], true], 0.4, expr];
+}
+
 export function setupSources(map: MapLibreMap): void {
 	// Style swaps remove custom sources/layers. Re-add when missing.
 	if (map.getSource('towns')) return;
@@ -436,7 +442,7 @@ function addLayers(map: MapLibreMap): void {
 			'circle-color': hoverCase('rgba(252, 211, 77, 0.72)', 'rgba(251, 191, 36, 0.5)'),
 			'circle-stroke-width': hoverCase(2.8, 2),
 			'circle-stroke-color': hoverCase('rgba(255, 247, 220, 0.98)', '#f59e0b'),
-			'circle-opacity': hoverCase(0.96, 0.7)
+			'circle-opacity': retainedDim(hoverCase(0.96, 0.7))
 		}
 	});
 
@@ -669,7 +675,7 @@ function addLayers(map: MapLibreMap): void {
 		paint: {
 			'circle-radius': hoverCase(8.5, 5),
 			'circle-color': '#ff6b35',
-			'circle-opacity': hoverCase(0.98, 0.8),
+			'circle-opacity': retainedDim(hoverCase(0.98, 0.8)),
 			'circle-stroke-width': hoverCase(3, 1),
 			'circle-stroke-color': hoverCase('rgba(255, 247, 220, 0.98)', 'rgba(10, 10, 10, 0.8)')
 		}
@@ -712,7 +718,7 @@ function addLayers(map: MapLibreMap): void {
 		paint: {
 			'circle-radius': hoverCase(5.2, 3),
 			'circle-color': ['get', 'color'],
-			'circle-opacity': hoverCase(0.96, 0.7),
+			'circle-opacity': retainedDim(hoverCase(0.96, 0.7)),
 			'circle-stroke-width': hoverCase(2, 0.5),
 			'circle-stroke-color': hoverCase('rgba(255, 247, 220, 0.98)', 'rgba(255, 255, 255, 0.3)')
 		}

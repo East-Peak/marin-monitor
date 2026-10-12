@@ -15,6 +15,8 @@
 		onClose?: () => void;
 		onFocusTown?: () => void;
 		onClearTown?: () => void;
+		/** An owner's per-item provenance line ("Kept from 7:40 AM · refresh failed"); legacy passes none. */
+		noteFor?: (item: NewsItem) => string | null;
 	}
 
 	let {
@@ -29,7 +31,8 @@
 		filterActive = false,
 		onClose,
 		onFocusTown,
-		onClearTown
+		onClearTown,
+		noteFor
 	}: Props = $props();
 
 	let relatedExpanded = $state(false);
@@ -136,6 +139,9 @@
 				</span>
 				<span>{selectedItem.town ?? townName ?? 'Marin County'}</span>
 			</div>
+			{#if noteFor?.(selectedItem)}<p class="inspector-note" data-inspector-note>
+					{noteFor(selectedItem)}
+				</p>{/if}
 		</div>
 	{/if}
 
@@ -185,6 +191,9 @@
 							</span>
 							<span>{item.town ?? townName ?? 'Marin County'}</span>
 						</div>
+						{#if noteFor?.(item)}<p class="inspector-note" data-inspector-note>
+								{noteFor(item)}
+							</p>{/if}
 					</div>
 				{/each}
 				{#if relatedItems.length > 14}
@@ -363,6 +372,11 @@
 		color: var(--accent);
 	}
 
+	.inspector-note {
+		margin: 0.2rem 0 0;
+		color: var(--warning, var(--text-muted));
+		font-size: 0.65rem;
+	}
 	.story-subline {
 		margin-top: 0.2rem;
 		display: flex;

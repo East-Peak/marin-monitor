@@ -21,4 +21,14 @@ describe('exposeMapForProbe', () => {
 		stale();
 		expect(target.__tvProbeMap).toBe(fresh);
 	});
+
+	it('a caller may name its own key (the v2 page uses __v2ProbeMap and __v2Probe)', () => {
+		const target: Record<string, unknown> = {};
+		const value = { id: 'v2' };
+		const cleanup = exposeMapForProbe('?probe', target, value, '__v2ProbeMap');
+		expect(target.__v2ProbeMap).toBe(value);
+		expect('__tvProbeMap' in target).toBe(false);
+		cleanup();
+		expect('__v2ProbeMap' in target).toBe(false);
+	});
 });

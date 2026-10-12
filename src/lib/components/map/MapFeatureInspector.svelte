@@ -57,6 +57,7 @@
 	{#if feature.severity}
 		<div class="feature-severity">{feature.severity}</div>
 	{/if}
+	{#if feature.note}<p class="inspector-note" data-inspector-note>{feature.note}</p>{/if}
 	{#if feature.imageUrl}
 		<img class="feature-image" src={feature.imageUrl} alt={feature.title} loading="lazy" />
 	{/if}
@@ -125,6 +126,12 @@
 		margin-top: 0.2rem;
 		color: var(--text-secondary);
 		font-size: 0.62rem;
+	}
+
+	.inspector-note {
+		margin: 0.2rem 0 0;
+		color: var(--warning, var(--text-muted));
+		font-size: 0.65rem;
 	}
 
 	.feature-severity {

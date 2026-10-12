@@ -152,7 +152,7 @@ export function v2NewsSources(
 		...TV_NEWS_SOURCES,
 		nps: owned('nps', (s) => fetchNpsAlerts({ signal: s })),
 		earthquakes: owned('earthquakes', async (s) =>
-			earthquakesToNewsItems(await fetchEarthquakesOrThrow({ signal: s }))
+			earthquakesToNewsItems(await fetchEarthquakesOrThrow({ signal: s, liveOnly: true }))
 		),
 		transit: owned('transit', async (s) => (await fetchTransitAlerts({ signal: s })).items),
 		'sheriff-blotter': owned('sheriff-blotter', (s) =>
@@ -193,6 +193,10 @@ export interface DashboardV2Controller {
 	ensure(id: string): Promise<void>;
 	earthquakes: Readable<NewsItem[]>;
 	sources: Readable<SourceStatusEntry[]>;
+	/** The applied news snapshot view (Latest reporting and the map read it; D1 PR 9). */
+	snapshot: Readable<NewsSnapshotView | null>;
+	/** This controller's own Fix It (311) items; null until its first successful commit. */
+	fixIt: Readable<NewsItem[] | null>;
 	brief: Readable<BriefState>;
 	advisories: Readable<AdvisoryFeedState>;
 	setLocation(preset: LocationPreset): void;
@@ -220,6 +224,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 	const registry = createDatasetRegistry(defs, deps.signal, { deadlineMs: deps.deadlineMs });
 	const earthquakes = writable<NewsItem[]>([]);
 	const snapshot = writable<NewsSnapshotView | null>(null);
+	const fixIt = writable<NewsItem[] | null>(null);
 	const parts = writable<Partial<Record<TvNewsPart, PartRecord>>>({});
 	const brief = createBriefStore(deps.briefFetchers ?? BRIEF_FETCHERS, deps.signal, {
 		deadlineMs: deps.deadlineMs
@@ -245,6 +250,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		},
 		commit: (category, items, keep) => {
 			if (live()) news.setItems(category, items, { keep, owner: claim?.token });
+			if (live() && category === '311') fixIt.set(items.filter(keep));
 		},
 		onEarthquakes: (items) => {
 			if (live()) earthquakes.set(items);
@@ -312,6 +318,8 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 			return cycle();
 		},
 		ensure: (id) => registry.ensure(id),
+		snapshot: { subscribe: snapshot.subscribe },
+		fixIt: { subscribe: fixIt.subscribe },
 		healthReport: { subscribe: healthReport.subscribe },
 		datasetOutcomes: registry.outcomes,
 		brief: { subscribe: brief.subscribe },

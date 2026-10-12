@@ -19,4 +19,8 @@ export interface MapFeatureInspectorData {
 	severity?: string;
 	source?: string;
 	imageUrl?: string;
+	/** The item a feature stands for (owner-driven maps look up their own provenance by it). */
+	itemId?: string;
+	/** An owner's provenance line, e.g. "Kept from 7:40 AM · HTTP 503". Legacy passes none. */
+	note?: string;
 }

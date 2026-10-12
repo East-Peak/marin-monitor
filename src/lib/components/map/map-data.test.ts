@@ -1181,3 +1181,32 @@ describe('refreshAirportPins with an incomplete response', () => {
 		expect(labels).toEqual(['Unknown', 'Unknown']);
 	});
 });
+
+describe('feature identity for owner notes (Codex r4 #2)', () => {
+	it('quake and 311 features carry their item id', () => {
+		const quake = {
+			id: 'usgs-nc1',
+			title: 'M3.1 - 5 km N of Novato',
+			link: '',
+			timestamp: 0,
+			source: 'USGS',
+			category: 'safety' as const,
+			verification: 'official' as const,
+			lat: 38.15,
+			lon: -122.57
+		};
+		const fix = {
+			id: 'seeclickfix-901',
+			title: 'Pothole · Fifth Ave',
+			link: '',
+			timestamp: 0,
+			source: 'Fix It Marin',
+			category: '311' as const,
+			verification: 'community' as const,
+			lat: 37.97,
+			lon: -122.53
+		};
+		expect(buildEarthquakeFeatures([quake])[0].properties?.itemId).toBe('usgs-nc1');
+		expect(build311ReportFeatures([fix], null)[0].properties?.itemId).toBe('seeclickfix-901');
+	});
+});

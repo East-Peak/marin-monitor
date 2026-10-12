@@ -8,7 +8,7 @@
 import type { NewsItem, EarthquakeData } from '$lib/types';
 import { MARIN_CENTER } from '$lib/config/towns';
 import { logger } from '$lib/config/api';
-import { serviceClient } from '$lib/services/client';
+import { liveData, serviceClient } from '$lib/services/client';
 import type { OwnerOptions } from './fetch-helpers';
 
 interface UsgsFeature {
@@ -35,9 +35,10 @@ interface UsgsResponse {
  * unexpected shape, so a caller that keeps last-good pins can tell a failure
  * from a real "no quakes" (TV slice 3).
  */
-export async function fetchEarthquakesOrThrow({ signal }: OwnerOptions = {}): Promise<
-	EarthquakeData[]
-> {
+export async function fetchEarthquakesOrThrow({
+	signal,
+	liveOnly = false
+}: OwnerOptions & { liveOnly?: boolean } = {}): Promise<EarthquakeData[]> {
 	logger.log('USGS', 'Fetching earthquakes');
 
 	const result = await serviceClient.request<UsgsResponse>('USGS', '/fdsnws/event/1/query', {
@@ -50,13 +51,16 @@ export async function fetchEarthquakesOrThrow({ signal }: OwnerOptions = {}): Pr
 			limit: 10,
 			orderby: 'time'
 		},
-		signal
+		signal,
+		...(liveOnly ? { revalidateInBackground: false } : {})
 	});
-	if (!Array.isArray(result.data?.features)) {
+	// v2 (liveOnly): a cached copy after a failed refresh is a failure, kept and marked by its owner.
+	const data = liveOnly ? liveData(result) : result.data;
+	if (!Array.isArray(data?.features)) {
 		throw new Error('USGS: unexpected response shape');
 	}
 
-	return result.data.features.map((f) => ({
+	return data.features.map((f) => ({
 		id: f.id,
 		magnitude: f.properties.mag,
 		place: f.properties.place,

@@ -404,4 +404,31 @@ describe('createDashboardV2Controller', () => {
 		expect(gas).toMatchObject({ state: 'ok', observedAt: Date.parse(SCRAPED) }); // its own payload, not the report's 2026-09-26
 		expect(get(c.sources).some((e) => e.id === 'dataset:health')).toBe(false);
 	});
+
+	it('exposes the applied snapshot view, and its own Fix It items (null until its first commit)', async () => {
+		const fix = {
+			...story('seeclickfix-1'),
+			category: '311' as const,
+			town: 'San Rafael',
+			townSlug: 'san-rafael'
+		};
+		const c = controller({ newsSources: newsSources({ seeclickfix: async () => [fix] }) });
+		expect(get(c.snapshot)).toBeNull();
+		expect(get(c.fixIt)).toBeNull();
+		await c.start();
+		expect(get(c.snapshot)?.revision).toBe(7);
+		expect(get(c.fixIt)?.map((i) => i.id)).toEqual(['seeclickfix-1']);
+	});
+
+	it('a failed first Fix It read leaves fixIt null: nothing inherited is ever offered', async () => {
+		const c = controller({
+			newsSources: newsSources({
+				seeclickfix: async () => {
+					throw new Error('HTTP 503');
+				}
+			})
+		});
+		await c.start();
+		expect(get(c.fixIt)).toBeNull();
+	});
 });

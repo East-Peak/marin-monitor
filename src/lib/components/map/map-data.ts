@@ -403,6 +403,7 @@ export function buildEarthquakeFeatures(earthquakes: NewsItem[]): GeoJSON.Featur
 			type: 'Feature' as const,
 			id: eq.id,
 			properties: {
+				itemId: eq.id,
 				title: eq.title,
 				magnitude: parseMagnitudeFromTitle(eq.title),
 				timestamp: eq.timestamp
@@ -609,7 +610,8 @@ export function build311ReportFeatures(
 				label: street ? `${category}\n${street}` : category,
 				address: item.locationEvidence ?? '',
 				description: item.description ?? '',
-				imageUrl: item.imageUrl ?? ''
+				imageUrl: item.imageUrl ?? '',
+				itemId: item.id
 			}
 		});
 	}
