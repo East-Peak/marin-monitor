@@ -6,6 +6,11 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-12
 
+### Added — map and Latest reporting in the v2 preview (D1 PR 9b)
+
+- **Latest reporting:** the five newest items with a trustworthy publication time (undated, satire, event listings and items more than 5 minutes ahead excluded); with a town selected, up to 3 town items plus 2 county-wide, never padded with stories that name no town. Each row shows source · age · scope; the status line names failing reporting sources.
+- **Map:** a 3:2 row with Latest reporting on desktop; on phones a preview that expands on tap and doesn't capture page scroll. Pins are present whatever sections are open; a pin never changes the town. The preview map draws only what this page itself loaded and vouches for (news, Fix It 311, earthquakes), dims anything kept after a failed refresh and says from when, and its status line counts the shown layers for the selected town; no keyword alert pulses, airport pins, traffic, or gas/EV/coffee/fitness places. Its own text meets the 12 px floor.
+
 ### Added — owner-driven map inputs for the v2 preview (D1 PR 9a2)
 
 - **Map inputs:** the shared map can now leave out keyword alert pulses, airport pins, traffic and places, draw only data its owner hands it, and mark kept-after-failure features (dimmed, with an inspector note); it reports what it drew after each sync. The regular dashboard and TV keep reading their stores, unchanged.
