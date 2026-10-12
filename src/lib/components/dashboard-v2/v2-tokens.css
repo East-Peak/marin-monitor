@@ -58,3 +58,30 @@
 .dash-v2 .town-picker .picker-empty {
 	font-size: var(--v2-fs-meta);
 }
+
+/* Phone: the picker names the selected town (spec §2.1 "Showing: Mill Valley ▾", §1, §8).
+   The shared TownPicker hides its label at ≤ 720 px (TownPicker.svelte); v2 shows it.
+   Specificity 0,3,0 beats the component's scoped 0,2,0. Legacy `/` is unchanged. */
+@media (max-width: 720px) {
+	.dash-v2 .town-picker .picker-label,
+	.dash-v2 .town-picker .picker-caret {
+		display: inline;
+	}
+	.dash-v2 .town-picker .picker-label {
+		max-width: 9rem;
+	}
+	/* The wider picker can wrap the settings gear to the start of a header line, where a
+	   panel anchored to the gear's right edge would open off-screen. On phones the panel
+	   anchors to the header instead and spans its gutters (0,3,0 beats the scoped 0,2,0). */
+	.dash-v2 .v2-header {
+		position: relative;
+	}
+	.dash-v2 .v2-header .v2-settings {
+		position: static;
+	}
+	.dash-v2 .v2-header .v2-settings-panel {
+		left: 1rem;
+		right: 1rem;
+		width: auto;
+	}
+}
