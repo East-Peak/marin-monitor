@@ -135,7 +135,7 @@
 		</button>
 	{/if}
 
-	{#if $showTraffic}
+	{#if traffic && $showTraffic}
 		<div class="traffic-legend">
 			{#if hasTrafficCongestion}
 				{#each trafficLegendItems as item}

@@ -17,4 +17,12 @@ describe('MapControls', () => {
 		expect(screen.queryByRole('button', { name: /^Gas/ })).toBeNull();
 		expect(screen.getByRole('button', { name: /311 Reports/ })).toBeTruthy();
 	});
+	it('an owner-driven map shows no traffic legend either (Codex 9a2 #3)', () => {
+		render(MapControls, { props: { traffic: false, layers: ['news', '311'] }, context });
+		expect(screen.queryByText('511 traffic events')).toBeNull();
+	});
+	it('legacy default: the traffic legend is shown while traffic is on', () => {
+		render(MapControls, { context });
+		expect(screen.getByText('511 traffic events')).toBeTruthy();
+	});
 });
