@@ -22,7 +22,7 @@ export function pinClickOutcome(item: { id: string; townSlug?: string }): MapCli
 	return { inspector: { mode: 'pin', itemId: item.id, townSlug: item.townSlug ?? null } };
 }
 
-interface InspectorModel {
+export interface InspectorModel {
 	mode: 'town' | 'pin';
 	townSlug: string | null;
 	townName: string | null;

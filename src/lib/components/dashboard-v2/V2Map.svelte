@@ -14,7 +14,6 @@
 	} from '$lib/components/map';
 	import { OWNED_MAP_LAYERS } from '$lib/components/map/map-layer-switches';
 	import {
-		inspectorModel,
 		pinClickOutcome,
 		townClickOutcome,
 		type InspectorState,
@@ -24,7 +23,7 @@
 	import { mapStore, selectedTown } from '$lib/stores/map';
 	import { townFilter } from '$lib/stores/town-filter';
 	import type { MapFeatureInspectorData } from '$lib/types';
-	import type { V2MapData } from '$lib/dashboard/v2-map-data';
+	import { v2FeatureView, v2Inspector, type V2MapData } from '$lib/dashboard/v2-map-data';
 	import { createV2Probe } from '$lib/dashboard/v2-probe';
 	import SectionStatus from './SectionStatus.svelte';
 	import MapProbe from './MapProbe.svelte';
@@ -60,10 +59,11 @@
 
 	let inspector = $state<InspectorState | null>(null);
 	let feature = $state<MapFeatureInspectorData | null>(null);
-	const visible = $derived([...data.layerData.news, ...data.layerData.threeOneOne]);
-	const model = $derived(
-		inspectorModel(inspector, visible, (slug) => TOWN_BY_SLUG[slug]?.name ?? slug)
-	);
+	// Only the enabled, drawable layers; no zero claims without coverage (Codex 9b #2, #3).
+	const visible = $derived(data.inspectable);
+	const model = $derived(v2Inspector(inspector, data, (slug) => TOWN_BY_SLUG[slug]?.name ?? slug));
+	// Re-read on every data change: the kept note follows the latest refresh (Codex 9b #4).
+	const shownFeature = $derived(v2FeatureView(feature, data));
 
 	function apply(outcome: MapClickOutcome) {
 		if (outcome.selectTown !== undefined) {
@@ -102,14 +102,16 @@
 				onTownHover={(slug) => mapStore.hoverTown(slug)}
 				{onPinClick}
 				onFeatureClick={(f) => {
-					// Kept 311/quake features say from when, like news pins (Codex r4 #2).
-					const note = f.itemId ? data.notes.get(f.itemId) : undefined;
-					feature = note ? { ...f, note } : f;
+					// Kept 311/quake features say from when, like news pins (Codex r4 #2; shownFeature).
+					feature = f;
 					inspector = null;
 				}}
 			/>
 			<MapControls traffic={false} layers={OWNED_MAP_LAYERS} />
-			<MapTooltip />
+			<MapTooltip
+				items={data.inspectable}
+				emptyText={data.established ? 'No active stories for this town.' : null}
+			/>
 			{#if model}
 				<MapInspector
 					mode={model.mode}
@@ -126,8 +128,8 @@
 					onFocusTown={focusTown}
 					onClearTown={clearTown}
 				/>
-			{:else if feature}
-				<MapFeatureInspector {feature} onClose={() => (feature = null)} />
+			{:else if shownFeature}
+				<MapFeatureInspector feature={shownFeature} onClose={() => (feature = null)} />
 			{/if}
 			<MapProbe />
 			<MapGesturePolicy interactive={expanded || !phone} />

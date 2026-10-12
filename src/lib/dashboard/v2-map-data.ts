@@ -8,7 +8,12 @@
 import { snapshotItemToNewsItem } from '$lib/api/marin/news-snapshot';
 import { CATEGORY_TO_LAYER } from '$lib/stores/map';
 import type { NewsSnapshotView } from '$lib/news/snapshot';
-import type { MapLayer, NewsItem } from '$lib/types';
+import type { MapFeatureInspectorData, MapLayer, NewsItem } from '$lib/types';
+import {
+	inspectorModel,
+	type InspectorModel,
+	type InspectorState
+} from '$lib/components/map/map-inspection';
 import type { OwnedLayerData } from '$lib/components/map/map-layer-switches';
 import { feedCoverage } from './latest-reporting';
 import { emptyWording, mapMeasured, measuredFromEntry, type Measured } from './measured';
@@ -32,6 +37,10 @@ export interface V2MapData {
 	empty: string | null;
 	layers: Record<V2MapLayerKey, Measured<unknown>['kind']>;
 	loading: string[];
+	/** The enabled layers' drawable news and 311 items: what the inspector and tooltip may show (Codex 9b #1, #3). */
+	inspectable: NewsItem[];
+	/** Every enabled layer read fresh by this owner: only then is "nothing here" a fact (Codex 9b #2). */
+	established: boolean;
 }
 
 const drawable = (i: NewsItem) =>
@@ -136,11 +145,9 @@ export function v2MapData(input: {
 	);
 	// "Nothing for this town" (no-match) needs every enabled layer established and not kept:
 	// a failed or expired read can't vouch that the town has nothing (the twin of Codex 9a #1).
+	const established = layerCoverage.every((c) => c.kind === 'value' && c.retainedAfter === null);
 	const vouched =
-		presented.state === 'empty'
-			? authorized
-			: presented.state !== 'no-match' ||
-				layerCoverage.every((c) => c.kind === 'value' && c.retainedAfter === null);
+		presented.state === 'empty' ? authorized : presented.state !== 'no-match' || established;
 	const coverage: SectionPresentation = vouched
 		? presented
 		: {
@@ -169,8 +176,42 @@ export function v2MapData(input: {
 		coverage,
 		empty,
 		layers: { news: newsM.kind, '311': fixM.kind, earthquakes: quakeM.kind },
+		inspectable: [...newsOn, ...fixOn],
+		established,
 		loading: ['part:snapshot', 'part:seeclickfix', 'part:earthquakes'].filter(
 			(id) => (entry(id)?.state ?? 'loading') === 'loading'
 		)
 	};
+}
+
+/**
+ * The map inspector over what the map vouches for. A town click with no established coverage
+ * opens nothing rather than "0 stories" (the status line already says why; Codex 9b #2).
+ */
+export function v2Inspector(
+	state: InspectorState | null,
+	data: Pick<V2MapData, 'inspectable' | 'established'>,
+	townName: (slug: string) => string
+): InspectorModel | null {
+	const model = inspectorModel(state, data.inspectable, townName);
+	return model && model.mode === 'town' && model.items.length === 0 && !data.established
+		? null
+		: model;
+}
+
+/**
+ * An open feature inspector, re-read against the current data: its kept note follows the
+ * latest refresh, and a 311/quake feature no longer drawn closes (Codex 9b #4).
+ */
+export function v2FeatureView(
+	feature: MapFeatureInspectorData | null,
+	data: Pick<V2MapData, 'layerData' | 'earthquakes' | 'notes'>
+): MapFeatureInspectorData | null {
+	if (!feature?.itemId) return feature;
+	const id = feature.itemId;
+	const drawn = [...data.layerData.threeOneOne, ...data.earthquakes].some((i) => i.id === id);
+	if (!drawn) return null;
+	const note = data.notes.get(id);
+	const { note: _old, ...rest } = feature;
+	return note ? { ...rest, note } : rest;
 }

@@ -14,6 +14,16 @@
 	import { timeAgo } from '$lib/utils';
 	import { pinAgeLabel, townTooltipItems } from './map-story-model';
 
+	let {
+		items: ownedItems,
+		emptyText = 'No active stories for this town.'
+	}: {
+		/** An owner's items (the v2 map); legacy reads the shared news store. */
+		items?: readonly NewsItem[];
+		/** null when the owner can't vouch that an empty town has nothing. */
+		emptyText?: string | null;
+	} = $props();
+
 	let tooltipX = $state(0);
 	let tooltipY = $state(0);
 	let mapWidth = $state(0);
@@ -81,7 +91,7 @@
 		}
 
 		townName = town.name;
-		const items = townTooltipItems($allNewsItems, slug, (item) => {
+		const items = townTooltipItems(ownedItems ?? $allNewsItems, slug, (item) => {
 			const layer = CATEGORY_TO_LAYER[item.category];
 			return Boolean(layer && activeLayers[layer]);
 		});
@@ -215,8 +225,8 @@
 					<div class="tooltip-more">+{townItems.length - 6} more</div>
 				{/if}
 			</div>
-		{:else}
-			<div class="tooltip-empty">No active stories for this town.</div>
+		{:else if emptyText}
+			<div class="tooltip-empty">{emptyText}</div>
 		{/if}
 	</div>
 {/if}

@@ -4,7 +4,7 @@ import type { NewsItem } from '$lib/types';
 import type { SourceStatusEntry } from './source-status';
 import { fromLoaderPart, fromSnapshotRead, fromSnapshotSource } from './source-adapters';
 import { describePresentation } from './source-status';
-import { v2MapData } from './v2-map-data';
+import { v2FeatureView, v2Inspector, v2MapData } from './v2-map-data';
 
 const NOW = Date.parse('2026-10-01T15:00:00Z'); // 8:00 AM PDT
 const H = 3_600_000;
@@ -263,5 +263,54 @@ describe('a town no-match goes through the same gate (the map twin of Codex 9a #
 		expect(d.empty).toBeNull();
 		expect(d.coverage.state).not.toBe('no-match');
 		expect(describePresentation(d.coverage, NOW) ?? '').not.toContain('Nothing');
+	});
+});
+
+describe('the inspector and tooltip see only what the map vouches for (Codex 9b #1–#4)', () => {
+	const name = (slug: string) => slug;
+	it('a switched-off layer’s items are not inspectable (Codex 9b #3)', () => {
+		const v = view([pinStory('a'), pinStory('s', { category: 'safety', categories: ['safety'] })]);
+		const d = run({
+			view: v,
+			fixIt: [fix('seeclickfix-1')],
+			sources: sources(v, ok, ok, true, ok, true),
+			activeLayers: { ...ALL_ON, safety: false, '311': false }
+		});
+		expect(d.inspectable.map((i) => i.id)).toEqual(['a']);
+	});
+	it('after failed first reads a town click opens no "0 stories" inspector (Codex 9b #2)', () => {
+		const d = run({
+			sources: sources(null, fail('read-failed'), fail('HTTP 503'), false, fail('HTTP 500'), false)
+		});
+		expect(d.established).toBe(false);
+		expect(v2Inspector({ mode: 'town', townSlug: 'novato' }, d, name)).toBeNull();
+	});
+	it('with every enabled layer established, an empty town is a real zero', () => {
+		const v = view([pinStory('a')]);
+		const d = run({ view: v, fixIt: [], sources: sources(v, ok, ok, true, ok, true) });
+		expect(d.established).toBe(true);
+		expect(v2Inspector({ mode: 'town', townSlug: 'novato' }, d, name)).toMatchObject({ items: [] });
+	});
+	it('an open feature’s note follows the current data; a feature no longer drawn closes (Codex 9b #4)', () => {
+		const v = view([]);
+		const kept = run({
+			view: v,
+			fixIt: [fix('seeclickfix-1')],
+			sources: sources(v, ok, fail('HTTP 503'), true, ok, true)
+		});
+		const fresh = run({
+			view: v,
+			fixIt: [fix('seeclickfix-1')],
+			sources: sources(v, ok, ok, true, ok, true)
+		});
+		const gone = run({ view: v, fixIt: [], sources: sources(v, ok, ok, true, ok, true) });
+		const f = { kind: '311-report' as const, title: 'Pothole', itemId: 'seeclickfix-1' };
+		expect(v2FeatureView(f, kept)?.note).toMatch(/^Kept from/);
+		expect(v2FeatureView(f, fresh)).toEqual(f);
+		expect(v2FeatureView(f, gone)).toBeNull();
+		expect(v2FeatureView({ kind: 'airport' as const, title: 'SFO' }, gone)).toEqual({
+			kind: 'airport',
+			title: 'SFO'
+		});
 	});
 });
