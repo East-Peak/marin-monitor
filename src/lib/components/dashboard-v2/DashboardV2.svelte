@@ -8,7 +8,18 @@
 	import BriefRow from './BriefRow.svelte';
 	import AdvisoryRow from './AdvisoryRow.svelte';
 	import HealthIndicator from './HealthIndicator.svelte';
-	import { townLocation } from '$lib/stores/town-filter';
+	import { townFilter, townLocation } from '$lib/stores/town-filter';
+	import { readable } from 'svelte/store';
+	import V2Map from './V2Map.svelte';
+	import LatestReporting from './LatestReporting.svelte';
+	import { latestReportingView } from '$lib/dashboard/latest-reporting';
+	import { v2MapData } from '$lib/dashboard/v2-map-data';
+	import { briefPending } from '$lib/dashboard/v2-probe';
+	import type { BriefState } from '$lib/dashboard/brief-store';
+	import { activeLayers } from '$lib/stores/map';
+	import type { SourceStatusEntry } from '$lib/dashboard/source-status';
+	import type { NewsSnapshotView } from '$lib/news/snapshot';
+	import type { NewsItem } from '$lib/types';
 	import { createClock } from '$lib/dashboard/clock';
 	import './v2-tokens.css';
 	import { sectionPrefs } from '$lib/stores/section-prefs';
@@ -29,6 +40,33 @@
 	const lifetime = new AbortController();
 	const controller = browser ? createDashboardV2Controller({ signal: lifetime.signal }) : null;
 	const clock = createClock();
+	// SSR has no controller: empty readables keep the markup stable until hydration.
+	const snapshot = controller?.snapshot ?? readable<NewsSnapshotView | null>(null);
+	const sources = controller?.sources ?? readable<SourceStatusEntry[]>([]);
+	const fixIt = controller?.fixIt ?? readable<NewsItem[] | null>(null);
+	const quakes = controller?.earthquakes ?? readable<NewsItem[]>([]);
+	const briefState = controller?.brief ?? readable<BriefState | null>(null);
+	/** One selection per tick; later sections can read its shownIds. */
+	const latest = $derived(
+		latestReportingView({ view: $snapshot, sources: $sources, town: $townFilter, now: $clock })
+	);
+	/** The map's own data: only what this controller established (Codex r3 #1). */
+	const mapData = $derived(
+		v2MapData({
+			view: $snapshot,
+			fixIt: $fixIt,
+			earthquakes: $quakes,
+			sources: $sources,
+			activeLayers: $activeLayers,
+			town: $townFilter,
+			now: $clock
+		})
+	);
+	/** The probe's settlement list also waits for the brief cards above the map (Codex r4 #3). */
+	const settledData = $derived({
+		...mapData,
+		loading: [...mapData.loading, ...($briefState ? briefPending($briefState) : [])]
+	});
 
 	/** Jump-nav, fragment links and back/forward: open a collapsed target, then focus it (§8). */
 	function jump(hash: string) {
@@ -111,7 +149,12 @@
 			<h2 id="v2-map-title" class="v2-region-title" data-text-role="section-title">
 				Map & latest reporting
 			</h2>
-			<p class="v2-muted" data-text-role="body">{LATER}</p>
+			{#if controller && hydrated}
+				<div class="v2-map-row">
+					<V2Map data={settledData} now={$clock} />
+					<LatestReporting view={latest} now={$clock} />
+				</div>
+			{/if}
 		</section>
 
 		<Section
@@ -201,6 +244,18 @@
 	}
 	.v2-region-title {
 		margin: 0;
+	}
+	.v2-map-row {
+		display: grid;
+		gap: 1rem;
+		margin-top: 0.5rem;
+	}
+	@media (min-width: 768px) {
+		/* Desktop: map and Latest reporting share a 3:2 row (§2.4). */
+		.v2-map-row {
+			grid-template-columns: 3fr 2fr;
+			align-items: start;
+		}
 	}
 	.v2-muted,
 	.v2-footer p {

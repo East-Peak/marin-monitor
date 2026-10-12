@@ -16,6 +16,15 @@ vi.hoisted(() => {
 	});
 });
 vi.mock('$app/environment', () => ({ browser: true, dev: true, building: false, version: 'test' }));
+// MapLibre needs WebGL, which jsdom lacks: the map is proven in the built app (Task 6).
+vi.mock('./V2Map.svelte', async () => ({
+	default: (await import('./__test__/MapStub.svelte')).default
+}));
+/** After vi.resetModules the stub must load against the fresh Svelte runtime, not the cached one. */
+const remockMap = () =>
+	vi.doMock('./V2Map.svelte', async () => ({
+		default: (await import('./__test__/MapStub.svelte')).default
+	}));
 // These tests pin the mothballed state; v2Sections(true) pins the Strava section.
 vi.mock('$lib/config/strava', async (importOriginal) => ({
 	...(await importOriginal<typeof import('$lib/config/strava')>()),
@@ -66,7 +75,23 @@ vi.mock('$lib/dashboard/v2-controller', () => ({
 			refresh: controller.refresh,
 			ensure: controller.ensure,
 			earthquakes: { subscribe: (fn: (v: unknown[]) => void) => (fn([]), () => {}) },
-			sources: { subscribe: (fn: (v: unknown[]) => void) => (fn([]), () => {}) },
+			sources: {
+				subscribe: (fn: (v: unknown[]) => void) => (
+					fn([
+						{
+							id: 'part:snapshot',
+							name: 'News snapshot',
+							state: 'loading',
+							observedAt: null,
+							maxAgeMs: null,
+							detail: null
+						}
+					]),
+					() => {}
+				)
+			},
+			snapshot: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
+			fixIt: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
 			brief: { subscribe: (fn: (v: unknown) => void) => (fn(controller.EMPTY_BRIEF), () => {}) },
 			advisories: {
 				subscribe: (fn: (v: unknown) => void) => (
@@ -90,6 +115,16 @@ vi.mock('$lib/dashboard/v2-controller', () => ({
 import DashboardV2 from './DashboardV2.svelte';
 
 describe('DashboardV2 preview shell', () => {
+	it('fills the map region: the map and Latest reporting, loading honestly, no placeholder (PR 9)', async () => {
+		const { container } = render(DashboardV2);
+		await tick();
+		const region = container.querySelector('section#map')!;
+		expect(region.querySelector('[data-map-stub]')).toBeTruthy();
+		expect(region.querySelector('[data-slot="latest-reporting"]')).toBeTruthy();
+		expect(region.textContent).not.toContain('later release');
+		expect(region.textContent).toContain('Loading…');
+	});
+
 	it('renders exactly one v2 root with the preview badge and a labelled town picker', async () => {
 		const { container } = render(DashboardV2);
 		await tick();
@@ -184,6 +219,7 @@ describe('DashboardV2 town display across hydration', () => {
 		localStorage.clear();
 		if (storedTown) localStorage.setItem('mm_town', storedTown);
 		vi.resetModules();
+		remockMap();
 		const [{ mount, unmount }, { default: Component }] = await Promise.all([
 			import('svelte'),
 			import('./DashboardV2.svelte')
@@ -204,6 +240,7 @@ describe('DashboardV2 town display across hydration', () => {
 
 		localStorage.setItem('mm_town', 'mill-valley');
 		vi.resetModules();
+		remockMap();
 		const [{ flushSync }, { render: renderFresh }, { default: Fresh }] = await Promise.all([
 			import('svelte'),
 			import('@testing-library/svelte'),

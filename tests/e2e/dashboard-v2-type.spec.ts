@@ -68,6 +68,8 @@ async function openAll(page: Page) {
 	await page.goto('/?layout=v2');
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 	await page.evaluate(() => document.fonts.ready);
+	// The map's own DOM text (layer controls, attribution) is part of the page (PR 9).
+	await expect(page.locator('.v2-map .maplibregl-canvas')).toBeVisible({ timeout: 20_000 });
 	// Opening one changes the set, so always take the first still-closed toggle.
 	const closed = page.locator('[data-section-toggle][aria-expanded="false"]');
 	while ((await closed.count()) > 0) await closed.first().click();
@@ -104,6 +106,18 @@ const DISCLOSURES: {
 			await expect(page.locator('[data-health-list]')).toBeVisible();
 		},
 		close: (page) => page.locator('.v2-health-button').click()
+	},
+	{
+		// Phone only: the preview hides the map controls until expanded (desktop has no button).
+		name: 'expanded map',
+		open: async (page) => {
+			const button = page.getByRole('button', { name: 'Expand map' });
+			if (await button.isVisible()) await button.click();
+		},
+		close: async (page) => {
+			const button = page.getByRole('button', { name: 'Collapse map' });
+			if (await button.isVisible()) await button.click();
+		}
 	}
 ];
 

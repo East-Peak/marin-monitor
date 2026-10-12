@@ -160,7 +160,7 @@ function feedNote(entry: SourceStatusEntry | undefined, now: number): string | n
  * (transport success is not coverage). Generic so the map's news layer uses the same rule
  * (Task 4 exports it; Codex r4 #1).
  */
-function feedCoverage<T extends readonly unknown[]>(
+export function feedCoverage<T extends readonly unknown[]>(
 	viewM: Measured<NewsSnapshotView>,
 	feeds: readonly SourceStatusEntry[],
 	shown: T,

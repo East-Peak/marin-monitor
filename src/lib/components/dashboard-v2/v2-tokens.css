@@ -85,3 +85,34 @@
 		width: auto;
 	}
 }
+
+/* The reused map parts keep their look but meet the 12 px floor in v2 (spec §6, §13.4).
+   Scoped under the v2 map: the legacy and TV maps are unchanged. !important beats the
+   map container's own !important attribution rule. Canvas labels (town names) are drawn
+   by MapLibre and checked visually at close-out (§13.4 "SVG/canvas labels checked visually"). */
+.dash-v2
+	.v2-map
+	.v2-map-canvas
+	:is(
+		.map-controls,
+		.map-tooltip,
+		.inspector,
+		.feature-inspector,
+		.inspector-note,
+		.maplibregl-ctrl-attrib
+	),
+.dash-v2
+	.v2-map
+	.v2-map-canvas
+	:is(
+		.map-controls,
+		.map-tooltip,
+		.inspector,
+		.feature-inspector,
+		.inspector-note,
+		.maplibregl-ctrl-attrib
+	)
+	* {
+	font-size: var(--v2-fs-meta) !important;
+	line-height: var(--v2-line-height) !important;
+}
