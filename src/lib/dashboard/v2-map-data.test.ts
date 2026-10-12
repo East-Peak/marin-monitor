@@ -329,3 +329,16 @@ describe('no-match with only failed (not kept) layers stays no-match (batch 2 co
 		);
 	});
 });
+
+describe('kept news still blocks a town no-match when the town filter empties it (Codex 9c #1)', () => {
+	it('retained Mill Valley news, Novato selected, 311 and quakes down: never "nothing for this town"', () => {
+		const v = view([pinStory('a')], NOW - 3 * H, 'retained');
+		const d = run({
+			view: v,
+			sources: sources(v, ok, fail('HTTP 503'), false, fail('HTTP 500'), false),
+			town: 'novato'
+		});
+		expect(d.coverage.state).not.toBe('no-match');
+		expect(describePresentation(d.coverage, NOW) ?? '').not.toContain('Nothing');
+	});
+});

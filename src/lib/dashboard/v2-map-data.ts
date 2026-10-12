@@ -147,7 +147,16 @@ export function v2MapData(input: {
 	const established = layerCoverage.every((c) => c.kind === 'value' && c.retainedAfter === null);
 	// A kept (retained or expired) layer can't vouch that the town has nothing; a failed layer is
 	// named as failing by the status line, as batch 2's contract has it.
-	const kept = layerCoverage.some((c) => c.kind === 'value' && c.retainedAfter !== null);
+	// Retention is judged before the town filter: an empty town view of kept news would read
+	// "every feed failed" and hide that the layer is only kept (Codex 9c #1).
+	const unfiltered: Measured<readonly unknown[]>[] = [
+		...(newsLayerOn
+			? [feedCoverage(newsM, newsFeeds, newsOn, now, { label: 'Map news', noun: 'news feed' })]
+			: []),
+		...(activeLayers['311'] ? [mapMeasured(fixM, () => fixOn)] : []),
+		mapMeasured(quakeM, () => earthquakes)
+	];
+	const kept = unfiltered.some((c) => c.kind === 'value' && c.retainedAfter !== null);
 	const vouched =
 		presented.state === 'empty' ? authorized : presented.state !== 'no-match' || !kept;
 	const coverage: SectionPresentation = vouched
