@@ -215,9 +215,15 @@ test.describe('phone 390×844', () => {
 		await openV2(page);
 		const lastToggle = page.locator('[data-section-toggle]').last();
 		await lastToggle.scrollIntoViewIfNeeded();
-		await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-		const nav = await page.getByRole('navigation', { name: 'Jump to' }).boundingBox();
-		const last = await lastToggle.boundingBox();
-		expect(last!.y + last!.height).toBeLessThanOrEqual(nav!.y);
+		// Sections above may still be growing as their data lands: re-scroll to the bottom on
+		// every check, so the toggle is measured where the page actually ends.
+		await expect
+			.poll(async () => {
+				await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+				const nav = await page.getByRole('navigation', { name: 'Jump to' }).boundingBox();
+				const last = await lastToggle.boundingBox();
+				return last!.y + last!.height - nav!.y;
+			})
+			.toBeLessThanOrEqual(0);
 	});
 });
