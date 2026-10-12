@@ -43,6 +43,27 @@ export function optionalReads(s: Pick<MapLayerSwitches, 'airports' | 'trafficEve
 	return { traffic: s.trafficEvents, airports: s.airports };
 }
 
+const AIRPORT_LAYERS = ['airports-layer', 'airports-hit-layer', 'airports-label'] as const;
+
+/** The parts of a MapLibre map the airport switch touches (a fake in tests). */
+export interface AirportSwitchTarget {
+	getLayer(id: string): unknown;
+	getSource(id: string): { setData(data: GeoJSON.FeatureCollection): unknown } | undefined;
+	setLayoutProperty(id: string, prop: 'visibility', value: 'none'): unknown;
+}
+
+/**
+ * Airports off: clear the pins setupSources seeds ("Loading…") and hide all three layers, so
+ * nothing is drawn or clickable (Codex 9a2 #1). Run after every source setup. On: untouched.
+ */
+export function applyAirportSwitch(map: AirportSwitchTarget, enabled: boolean): void {
+	if (enabled) return;
+	map.getSource('airports')?.setData({ type: 'FeatureCollection', features: [] });
+	for (const id of AIRPORT_LAYERS) {
+		if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none');
+	}
+}
+
 export function trafficVisibility(
 	enabled: boolean,
 	showCongestion: boolean,

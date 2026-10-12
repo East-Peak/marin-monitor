@@ -3,6 +3,7 @@ import type { NewsItem, Town } from '$lib/types';
 import {
 	OWNED_MAP_LAYERS,
 	alertPulseFeatures,
+	applyAirportSwitch,
 	layerItems,
 	markRetained,
 	optionalReads,
@@ -63,6 +64,38 @@ describe('map layer switches (legacy defaults on; v2 switches them off)', () => 
 		});
 		expect(trafficVisibility(false, true, true)).toEqual({ congestion: 'none', events: 'none' });
 		expect(trafficVisibility(true, true, false)).toEqual({ congestion: 'visible', events: 'none' });
+	});
+});
+
+describe('airports switched off draw nothing (Codex 9a2 #1)', () => {
+	const fakeMap = () => {
+		const calls: string[] = [];
+		const layers = new Set(['airports-layer', 'airports-hit-layer', 'airports-label']);
+		return {
+			calls,
+			getLayer: (id: string) => (layers.has(id) ? { id } : undefined),
+			getSource: (id: string) =>
+				id === 'airports'
+					? { setData: (d: GeoJSON.FeatureCollection) => calls.push(`data:${d.features.length}`) }
+					: undefined,
+			setLayoutProperty: (id: string, prop: string, value: string) =>
+				calls.push(`${id}.${prop}=${value}`)
+		};
+	};
+	it('off: the seeded pins are cleared and all three airport layers hidden', () => {
+		const map = fakeMap();
+		applyAirportSwitch(map, false);
+		expect(map.calls).toEqual([
+			'data:0',
+			'airports-layer.visibility=none',
+			'airports-hit-layer.visibility=none',
+			'airports-label.visibility=none'
+		]);
+	});
+	it('on (legacy): untouched', () => {
+		const map = fakeMap();
+		applyAirportSwitch(map, true);
+		expect(map.calls).toEqual([]);
 	});
 });
 

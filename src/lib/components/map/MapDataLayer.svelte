@@ -41,12 +41,14 @@
 	import { setupSources } from './map-layers';
 	import {
 		alertPulseFeatures,
+		applyAirportSwitch,
 		layerItems,
 		markRetained,
 		optionalReads,
 		placeLayersOn,
 		syncCounts,
 		trafficVisibility,
+		type AirportSwitchTarget,
 		type OwnedLayerData
 	} from './map-layer-switches';
 	import {
@@ -461,6 +463,7 @@
 
 	function setupAndBind(map: MapLibreMap) {
 		setupSources(map);
+		applyAirportSwitch(map as unknown as AirportSwitchTarget, reads.airports);
 		bindInteractions(map);
 		applyTrafficVisibility(map);
 	}
