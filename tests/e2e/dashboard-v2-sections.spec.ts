@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
-const ALL = ['getting-around', 'outdoors', 'news', 'cost', 'events', 'strava'] as const;
+// Strava is mothballed (STRAVA_ENABLED = false): its section is not rendered at all.
+const ALL = ['getting-around', 'outdoors', 'news', 'cost', 'events'] as const;
 const toggle = (page: Page, id: string) => page.locator(`[data-section-toggle="${id}"]`);
 
 async function openV2(page: Page, suffix = '') {
@@ -20,7 +21,7 @@ const focusedToggle = (page: Page) =>
 test.describe('desktop 1440×900', () => {
 	test.use({ viewport: { width: 1440, height: 900 } });
 
-	test('opens everything but Strava at once (no accordion), and closed bodies are not mounted', async ({
+	test('opens every section at once (no accordion); the mothballed Strava section is absent', async ({
 		page
 	}) => {
 		await openV2(page);
@@ -29,11 +30,11 @@ test.describe('desktop 1440×900', () => {
 			outdoors: 'true',
 			news: 'true',
 			cost: 'true',
-			events: 'true',
-			strava: 'false'
+			events: 'true'
 		});
-		await expect(page.locator('#section-strava-body')).toBeHidden();
-		expect(await page.locator('#section-strava-body').innerHTML()).not.toContain('<p');
+		await expect(
+			page.locator('[data-section="strava"], [data-section-toggle="strava"]')
+		).toHaveCount(0);
 	});
 
 	test('an explicit toggle is remembered across reloads; a hash open is not saved', async ({
@@ -69,13 +70,15 @@ test.describe('desktop 1440×900', () => {
 		await expect(toggle(page, 'cost')).toHaveAttribute('aria-expanded', 'true');
 	});
 
-	test('opening #strava loads no Strava data (§13.9)', async ({ page }) => {
+	test('a #strava link loads no Strava data and renders no Strava section (§13.9, mothballed)', async ({
+		page
+	}) => {
 		const strava: string[] = [];
 		page.on('request', (r) => {
 			if (/\/api\/data\/strava/.test(r.url())) strava.push(r.url());
 		});
 		await openV2(page, '#strava');
-		await expect(toggle(page, 'strava')).toHaveAttribute('aria-expanded', 'true');
+		await expect(toggle(page, 'strava')).toHaveCount(0);
 		await page.waitForTimeout(2_000);
 		expect(strava).toEqual([]);
 	});
@@ -210,10 +213,11 @@ test.describe('phone 390×844', () => {
 
 	test('the jump-nav never covers the last section toggle', async ({ page }) => {
 		await openV2(page);
-		await toggle(page, 'strava').scrollIntoViewIfNeeded();
+		const lastToggle = page.locator('[data-section-toggle]').last();
+		await lastToggle.scrollIntoViewIfNeeded();
 		await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
 		const nav = await page.getByRole('navigation', { name: 'Jump to' }).boundingBox();
-		const last = await toggle(page, 'strava').boundingBox();
+		const last = await lastToggle.boundingBox();
 		expect(last!.y + last!.height).toBeLessThanOrEqual(nav!.y);
 	});
 });
