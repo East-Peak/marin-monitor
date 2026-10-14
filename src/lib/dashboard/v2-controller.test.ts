@@ -453,6 +453,28 @@ describe('createDashboardV2Controller', () => {
 		expect(get(c.fixIt)?.map((i) => i.id)).toEqual(['seeclickfix-1']);
 	});
 
+	it('a located 311 report with no town in its text is still drawn: the reader already placed it in Marin (Codex code review r3 #1)', async () => {
+		const located: NewsItem = {
+			id: 'seeclickfix-2',
+			title: 'Pothole',
+			description: 'Pothole in road',
+			link: 'https://seeclickfix.com/issues/2',
+			timestamp: NOW - 60_000,
+			source: 'Fix It Marin',
+			category: '311',
+			verification: 'official',
+			lat: 37.97,
+			lon: -122.53
+		};
+		const c = controller({
+			newsSources: newsSources({
+				seeclickfix: async () => ({ items: [located], observedAt: NOW - 60_000 })
+			})
+		});
+		await c.start();
+		expect(get(c.fixIt)?.map((i) => i.id)).toEqual(['seeclickfix-2']);
+	});
+
 	it('a failed first Fix It read leaves fixIt null: nothing inherited is ever offered', async () => {
 		const c = controller({
 			newsSources: newsSources({

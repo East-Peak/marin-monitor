@@ -253,7 +253,9 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		},
 		commit: (category, items, keep) => {
 			if (live()) news.setItems(category, items, { keep, owner: claim?.token });
-			if (live() && category === '311') fixIt.set(items.filter(keep));
+			// v2's own 311 layer takes every report: the reader already placed each in Marin, and the
+			// news-wire text filter would drop a located report whose text names no town (Codex r3 #1).
+			if (live() && category === '311') fixIt.set(items);
 		},
 		onEarthquakes: (items) => {
 			if (live()) earthquakes.set(items);
