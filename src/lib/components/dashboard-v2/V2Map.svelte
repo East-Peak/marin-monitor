@@ -55,7 +55,14 @@
 		revision = untrack(() => revision) + 1;
 	});
 	const layerData = $derived({ ...data.layerData, revision });
-	$effect(() => probe.set({ loading: data.loading, layers: data.layers, dataRevision: revision }));
+	$effect(() =>
+		probe.set({
+			loading: data.loading,
+			layers: data.layers,
+			dataRevision: revision,
+			provenance: data.provenance
+		})
+	);
 
 	let inspector = $state<InspectorState | null>(null);
 	let feature = $state<MapFeatureInspectorData | null>(null);

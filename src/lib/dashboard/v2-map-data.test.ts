@@ -102,13 +102,15 @@ function sources(
 	fixOutcome?: typeof ok | ReturnType<typeof fail>,
 	fixHad = false,
 	quakeOutcome?: typeof ok | ReturnType<typeof fail>,
-	quakeHad = false
+	quakeHad = false,
+	/** The last good read's payload time, for a failure after a success. */
+	obs: { fix?: number | null; quake?: number | null } = {}
 ): SourceStatusEntry[] {
 	return [
 		fromSnapshotRead(read, v),
 		...(v?.sources ?? []).map(fromSnapshotSource),
-		fromLoaderPart('seeclickfix', fixOutcome, fixHad),
-		fromLoaderPart('earthquakes', quakeOutcome, quakeHad)
+		fromLoaderPart('seeclickfix', fixOutcome, fixHad, obs.fix ?? null),
+		fromLoaderPart('earthquakes', quakeOutcome, quakeHad, obs.quake ?? null)
 	];
 }
 const run = (over: Partial<Parameters<typeof v2MapData>[0]>) =>
@@ -288,9 +290,32 @@ describe('the inspector and tooltip see only what the map vouches for (Codex 9b 
 	});
 	it('with every enabled layer established, an empty town is a real zero', () => {
 		const v = view([pinStory('a')]);
-		const d = run({ view: v, fixIt: [], sources: sources(v, ok, ok, true, ok, true) });
+		const d = run({
+			view: v,
+			fixIt: [],
+			sources: sources(v, ok, okAt(NOW - 3 * H), true, okAt(NOW - 60_000), true)
+		});
 		expect(d.established).toBe(true);
 		expect(v2Inspector({ mode: 'town', townSlug: 'novato' }, d, name)).toMatchObject({ items: [] });
+	});
+	it('an untimed (unknown-age) layer never establishes a zero (negative control)', () => {
+		const v = view([pinStory('a')]);
+		const d = run({
+			view: v,
+			fixIt: [],
+			sources: sources(v, ok, ok, true, okAt(NOW - 60_000), true)
+		});
+		expect(d.established).toBe(false);
+		expect(v2Inspector({ mode: 'town', townSlug: 'novato' }, d, name)).toBeNull();
+	});
+	it('a future-dated payload time never establishes a zero', () => {
+		const v = view([pinStory('a')]);
+		const d = run({
+			view: v,
+			fixIt: [],
+			sources: sources(v, ok, okAt(NOW + 10 * 60_000), true, okAt(NOW - 60_000), true)
+		});
+		expect(d.established).toBe(false);
 	});
 	it('an open feature’s note follows the current data; a feature no longer drawn closes (Codex 9b #4)', () => {
 		const v = view([]);
@@ -341,5 +366,56 @@ describe('kept news still blocks a town no-match when the town filter empties it
 		});
 		expect(d.coverage.state).not.toBe('no-match');
 		expect(describePresentation(d.coverage, NOW) ?? '').not.toContain('Nothing');
+	});
+});
+
+describe('311 and quakes carry their payload time (map coverage label)', () => {
+	it('everything loaded with times: coverage ok, no status line', () => {
+		const v = view([pinStory('a')]);
+		const d = run({
+			view: v,
+			fixIt: [fix('seeclickfix-1')],
+			earthquakes: [quake],
+			sources: sources(v, okAt(null), okAt(NOW - 3 * H), true, okAt(NOW - 60_000), true)
+		});
+		expect(d.coverage.state).toBe('ok');
+		expect(describePresentation(d.coverage, NOW)).toBeNull();
+	});
+	it('a kept 311 layer says from when', () => {
+		const v = view([]);
+		const d = run({
+			view: v,
+			fixIt: [fix('seeclickfix-1')],
+			sources: sources(v, ok, fail('HTTP 503'), true, okAt(NOW - 60_000), true, {
+				fix: NOW - 3 * H
+			})
+		});
+		expect(d.notes.get('seeclickfix-1')).toBe('Kept from 5:00 AM · HTTP 503');
+	});
+	it('every layer fresh within its own max age and empty: "Nothing on the map", never "Status unknown"', () => {
+		const v = view([], NOW, 'empty');
+		const d = run({
+			view: v,
+			fixIt: [],
+			earthquakes: [],
+			sources: sources(v, ok, okAt(NOW - 3 * H), true, okAt(NOW - 60_000), true)
+		});
+		expect(d.empty).toBe('Nothing on the map right now');
+		expect(d.coverage.state).toBe('empty');
+	});
+	it('provenance: timed ok reads carry their payload time; an untimed read is unknown; no entry is loading', () => {
+		const v = view([pinStory('a')]);
+		const timed = run({
+			view: v,
+			fixIt: [],
+			sources: sources(v, ok, okAt(NOW - 3 * H), true, okAt(NOW - 60_000), true)
+		});
+		expect(timed.provenance).toEqual({
+			'311': { state: 'ok', observedAt: NOW - 3 * H },
+			earthquakes: { state: 'ok', observedAt: NOW - 60_000 }
+		});
+		const untimed = run({ view: v, fixIt: [], sources: sources(v, ok, ok, true, ok, true) });
+		expect(untimed.provenance['311']).toEqual({ state: 'unknown', observedAt: null });
+		expect(run({}).provenance.earthquakes).toEqual({ state: 'loading', observedAt: null });
 	});
 });

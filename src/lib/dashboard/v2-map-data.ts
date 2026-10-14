@@ -23,10 +23,16 @@ import {
 	effectiveState,
 	presentSection,
 	type SectionPresentation,
+	type SourceEntryState,
 	type SourceStatusEntry
 } from './source-status';
 
 export type V2MapLayerKey = 'news' | '311' | 'earthquakes';
+/** What the map judged each payload-timed part by: its effective state and its payload time. */
+export type V2Provenance = Record<
+	'311' | 'earthquakes',
+	{ state: SourceEntryState; observedAt: number | null }
+>;
 
 export interface V2MapData {
 	layerData: OwnedLayerData;
@@ -39,8 +45,9 @@ export interface V2MapData {
 	loading: string[];
 	/** The enabled layers' drawable news and 311 items: what the inspector and tooltip may show (Codex 9b #1, #3). */
 	inspectable: NewsItem[];
-	/** Every enabled layer read fresh by this owner: only then is "nothing here" a fact (Codex 9b #2). */
+	/** Every enabled layer read fresh by this owner, with a known time: only then is "nothing here" a fact (Codex 9b #2). */
 	established: boolean;
+	provenance: V2Provenance;
 }
 
 const drawable = (i: NewsItem) =>
@@ -52,6 +59,12 @@ function keptNote(m: Measured<unknown>, now: number): string | null {
 	return m.observedAt === null
 		? `Kept from an earlier read (time not reported) · ${m.retainedAfter}`
 		: `Kept from ${formatAsOf(m.observedAt, now)} · ${m.retainedAfter}`;
+}
+
+function provenanceOf(e: SourceStatusEntry | undefined, now: number): V2Provenance['311'] {
+	return e
+		? { state: effectiveState(e, now), observedAt: e.observedAt }
+		: { state: 'loading', observedAt: null };
 }
 
 export function v2MapData(input: {
@@ -124,15 +137,35 @@ export function v2MapData(input: {
 	const shownNews = newsOn.filter(inTown(town));
 	const shownFix = fixOn.filter(inTown(town));
 	// "Nothing on the map" needs every enabled layer's fresh, successful coverage (Codex r4 #1).
-	const layerCoverage: Measured<readonly unknown[]>[] = [
+	// Each layer is judged by its own max age: news by the snapshot's, 311 and quakes by their entry's.
+	const layers: { coverage: Measured<readonly unknown[]>; maxAgeMs: number | null }[] = [
 		...(newsLayerOn
-			? [feedCoverage(newsM, newsFeeds, shownNews, now, { label: 'Map news', noun: 'news feed' })]
+			? [
+					{
+						coverage: feedCoverage(newsM, newsFeeds, shownNews, now, {
+							label: 'Map news',
+							noun: 'news feed'
+						}),
+						maxAgeMs: SNAPSHOT_OBSERVATION_MAX_AGE_MS
+					}
+				]
 			: []),
-		...(activeLayers['311'] ? [mapMeasured(fixM, () => shownFix)] : []),
-		mapMeasured(quakeM, () => earthquakes)
+		...(activeLayers['311']
+			? [
+					{
+						coverage: mapMeasured(fixM, () => shownFix),
+						maxAgeMs: entry('part:seeclickfix')?.maxAgeMs ?? null
+					}
+				]
+			: []),
+		{
+			coverage: mapMeasured(quakeM, () => earthquakes),
+			maxAgeMs: entry('part:earthquakes')?.maxAgeMs ?? null
+		}
 	];
-	const authorized = layerCoverage.every(
-		(c) => emptyWording(c, 'empty', { now, maxAgeMs: SNAPSHOT_OBSERVATION_MAX_AGE_MS }) !== null
+	const layerCoverage = layers.map((l) => l.coverage);
+	const authorized = layers.every(
+		({ coverage, maxAgeMs }) => emptyWording(coverage, 'empty', { now, maxAgeMs }) !== null
 	);
 	const empty = authorized ? 'Nothing on the map right now' : null;
 	const presented = presentSection(
@@ -144,7 +177,9 @@ export function v2MapData(input: {
 		now
 	);
 	// Every enabled layer read fresh by this owner (the inspector's zero claims; Codex 9b #2).
-	const established = layerCoverage.every((c) => c.kind === 'value' && c.retainedAfter === null);
+	const established = layerCoverage.every(
+		(c) => c.kind === 'value' && c.retainedAfter === null && c.observedAt !== null
+	);
 	// A kept (retained or expired) layer can't vouch that the town has nothing; a failed layer is
 	// named as failing by the status line, as batch 2's contract has it.
 	// Retention is judged before the town filter: an empty town view of kept news would read
@@ -189,6 +224,10 @@ export function v2MapData(input: {
 		layers: { news: newsM.kind, '311': fixM.kind, earthquakes: quakeM.kind },
 		inspectable: [...newsOn, ...fixOn],
 		established,
+		provenance: {
+			'311': provenanceOf(entry('part:seeclickfix'), now),
+			earthquakes: provenanceOf(entry('part:earthquakes'), now)
+		},
 		loading: ['part:snapshot', 'part:seeclickfix', 'part:earthquakes'].filter(
 			(id) => (entry(id)?.state ?? 'loading') === 'loading'
 		)

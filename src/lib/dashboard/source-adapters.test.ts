@@ -1,7 +1,8 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { SourceStatus } from '$lib/server/health/evaluate';
 import type { NewsSnapshotView } from '$lib/news/snapshot';
-import type { SourceState } from './source-status';
+import { SOURCE_INVENTORY } from '$lib/server/health/inventory';
+import { describePresentation, presentSection, type SourceState } from './source-status';
 import {
 	datasetEntry,
 	fromHealthSource,
@@ -9,6 +10,7 @@ import {
 	fromLoaderPart,
 	fromSnapshotRead,
 	fromSnapshotSource,
+	PART_OBSERVATION_MAX_AGE_MS,
 	STATUS_AWARE_PARTS,
 	type HealthSourceJson
 } from './source-adapters';
@@ -102,7 +104,7 @@ describe('fromSnapshotRead', () => {
 });
 
 describe('fromLoaderPart (transport success is not freshness; Codex r1 #2)', () => {
-	it('a successful read — even a stale-cache earthquake list or a days-old 311 blob served with HTTP 200 — is unknown, never ok', () => {
+	it('a successful read with no payload time — even a stale-cache earthquake list or a days-old 311 blob served with HTTP 200 — is unknown', () => {
 		for (const part of ['earthquakes', 'seeclickfix'] as const) {
 			expect(fromLoaderPart(part, { ok: true, at: NOW, observedAt: null }, true)).toEqual({
 				id: `part:${part}`,
@@ -250,6 +252,68 @@ describe('the parts that carry a payload time (map coverage label)', () => {
 	it('are exactly the status-aware adapter parts: earthquakes and seeclickfix', () => {
 		expect(new Set([...STATUS_AWARE_PARTS].filter((p) => p !== 'snapshot'))).toEqual(
 			new Set(['earthquakes', 'seeclickfix'])
+		);
+	});
+});
+
+describe('fromLoaderPart reads the payload’s own time (map coverage label)', () => {
+	it('a success with a payload time is ok with its part’s max age', () => {
+		expect(
+			fromLoaderPart('seeclickfix', { ok: true, at: NOW, observedAt: NOW - 3 * 3_600_000 }, true)
+		).toEqual({
+			id: 'part:seeclickfix',
+			name: 'Fix It Marin (311)',
+			state: 'ok',
+			observedAt: NOW - 3 * 3_600_000,
+			maxAgeMs: DAY,
+			detail: null
+		});
+		expect(
+			fromLoaderPart('earthquakes', { ok: true, at: NOW, observedAt: NOW - 60_000 }, true)
+		).toMatchObject({ state: 'ok', observedAt: NOW - 60_000, maxAgeMs: 30 * 60_000 });
+	});
+	it('311’s max age is G0a’s own (pinned to SOURCE_INVENTORY)', () => {
+		const policy = SOURCE_INVENTORY.find((p) => p.name === '311 (SeeClickFix)');
+		expect(PART_OBSERVATION_MAX_AGE_MS.seeclickfix).toBe(policy!.maxAgeDays * DAY);
+	});
+	it('a failure after a success keeps the last good read’s time; a first failure has none', () => {
+		const t = NOW - 2 * 3_600_000;
+		expect(
+			fromLoaderPart('seeclickfix', { ok: false, error: 'HTTP 503', at: NOW }, true, t)
+		).toMatchObject({ state: 'stale', observedAt: t, detail: 'HTTP 503' });
+		expect(
+			fromLoaderPart('earthquakes', { ok: false, error: 'HTTP 503', at: NOW }, false, null)
+		).toMatchObject({ state: 'unavailable', observedAt: null });
+	});
+	it('the status line: timed reads say nothing; an old 311 blob is "out of date", never "unverified"', () => {
+		const ok311 = fromLoaderPart(
+			'seeclickfix',
+			{ ok: true, at: NOW, observedAt: NOW - 3 * 3_600_000 },
+			true
+		);
+		const okQ = fromLoaderPart(
+			'earthquakes',
+			{ ok: true, at: NOW, observedAt: NOW - 60_000 },
+			true
+		);
+		expect(
+			describePresentation(presentSection([ok311, okQ], { total: 2, matching: 2 }, NOW), NOW)
+		).toBeNull();
+		const old311 = fromLoaderPart(
+			'seeclickfix',
+			{ ok: true, at: NOW, observedAt: NOW - 25 * 3_600_000 },
+			true
+		);
+		const line = describePresentation(
+			presentSection([old311, okQ], { total: 2, matching: 2 }, NOW),
+			NOW
+		);
+		expect(line).toBe('Partial coverage · Fix It Marin (311) out of date');
+	});
+	it('negative control: a success with no payload time still reads "unverified"', () => {
+		const e = fromLoaderPart('earthquakes', { ok: true, at: NOW, observedAt: null }, true);
+		expect(describePresentation(presentSection([e], { total: 1, matching: 1 }, NOW), NOW)).toBe(
+			'Partial coverage · USGS earthquakes unverified'
 		);
 	});
 });

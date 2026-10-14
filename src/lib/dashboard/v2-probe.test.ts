@@ -17,8 +17,18 @@ describe('the v2 test hook (Codex r3 #5)', () => {
 			loading: ['part:snapshot'],
 			layers: {},
 			dataRevision: 2,
-			synced: { revision: 2, counts: { 'news-pins': 3 } }
+			synced: { revision: 2, counts: { 'news-pins': 3 } },
+			provenance: {
+				'311': { state: 'loading', observedAt: null },
+				earthquakes: { state: 'loading', observedAt: null }
+			}
 		});
+		const provenance = {
+			'311': { state: 'ok' as const, observedAt: 1 },
+			earthquakes: { state: 'unknown' as const, observedAt: null }
+		};
+		probe.set({ provenance });
+		expect((target.__v2Probe as { provenance: unknown }).provenance).toEqual(provenance);
 		probe.dispose();
 		expect('__v2Probe' in target).toBe(false);
 	});

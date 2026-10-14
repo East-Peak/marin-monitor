@@ -175,6 +175,8 @@ const ADAPTER_PARTS = (Object.keys(PART_NAMES) as TvNewsPart[]).filter(
 interface PartRecord {
 	outcome: PartOutcome;
 	hadSuccess: boolean;
+	/** The last successful read's payload time; a failure leaves it as it was. */
+	observedAt: number | null;
 }
 
 export interface ControllerDeps {
@@ -266,7 +268,11 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 			if (part === 'seeclickfix' && outcome.ok) fixIt.update((items) => items ?? []);
 			parts.update((all) => ({
 				...all,
-				[part]: { outcome, hadSuccess: outcome.ok || (all[part]?.hadSuccess ?? false) }
+				[part]: {
+					outcome,
+					hadSuccess: outcome.ok || (all[part]?.hadSuccess ?? false),
+					observedAt: outcome.ok ? outcome.observedAt : (all[part]?.observedAt ?? null)
+				}
 			}));
 		},
 		now
@@ -281,7 +287,12 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 			fromSnapshotRead($parts.snapshot?.outcome, $snapshot),
 			...($snapshot?.sources ?? []).map(fromSnapshotSource),
 			...ADAPTER_PARTS.map((p) =>
-				fromLoaderPart(p, $parts[p]?.outcome, $parts[p]?.hadSuccess ?? false)
+				fromLoaderPart(
+					p,
+					$parts[p]?.outcome,
+					$parts[p]?.hadSuccess ?? false,
+					$parts[p]?.observedAt ?? null
+				)
 			),
 			...defs
 				.filter((d) => d.id in DATASET_POLICY)

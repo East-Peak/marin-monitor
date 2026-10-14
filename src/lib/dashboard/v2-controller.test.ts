@@ -43,7 +43,8 @@ vi.mock('$lib/api/marin/health-report', async (orig) => ({
 	fetchHealthReport: fetchers.health
 }));
 
-const { createDashboardV2Controller, DATASET_POLICY } = await import('./v2-controller');
+const { createDashboardV2Controller, DATASET_POLICY, V2_MIN_REFRESH_GAP_MS } =
+	await import('./v2-controller');
 const { effectiveState } = await import('./source-status');
 const { gasPriceStore } = await import('$lib/stores/gas-prices');
 const { evChargingStore } = await import('$lib/stores/ev-charging');
@@ -315,6 +316,32 @@ describe('createDashboardV2Controller', () => {
 			maxAgeMs: 2 * 86_400_000
 		});
 		expect(effectiveState(byId['dataset:ev'], clock)).toBe('unknown'); // no scrape time in the payload
+	});
+
+	it('311 and quakes read ok with their payload time; a later failure keeps that time as stale (map coverage label)', async () => {
+		let up = true;
+		const T311 = NOW - 2 * 3_600_000;
+		const c = controller({
+			newsSources: newsSources({
+				seeclickfix: async () => {
+					if (!up) throw new Error('HTTP 503');
+					return { items: [], observedAt: T311 };
+				},
+				earthquakes: async () => ({ items: [], observedAt: NOW - 60_000 })
+			})
+		});
+		await c.start();
+		const entry = (id: string) => get(c.sources).find((e) => e.id === id)!;
+		expect(entry('part:seeclickfix')).toMatchObject({ state: 'ok', observedAt: T311 });
+		expect(effectiveState(entry('part:earthquakes'), NOW)).toBe('ok');
+		up = false;
+		clock += V2_MIN_REFRESH_GAP_MS + 1;
+		await c.refresh({ force: true });
+		expect(entry('part:seeclickfix')).toMatchObject({
+			state: 'stale',
+			observedAt: T311,
+			detail: 'HTTP 503'
+		});
 	});
 
 	it('a destroyed owner writes nothing', async () => {

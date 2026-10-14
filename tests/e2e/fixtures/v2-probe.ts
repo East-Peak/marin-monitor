@@ -5,6 +5,7 @@ export interface V2Probe {
 	layers: Record<string, string>;
 	dataRevision: number;
 	synced: { revision: number; counts: Record<string, number> } | null;
+	provenance: Record<'311' | 'earthquakes', { state: string; observedAt: number | null }>;
 }
 export const probe = (page: Page) =>
 	page.evaluate(() => (window as unknown as { __v2Probe?: V2Probe }).__v2Probe ?? null);

@@ -4,6 +4,8 @@
  * value: a time enters only from the payload that carried the value, a
  * transport success says nothing about data age, and a retained value keeps
  * the time it arrived with. A source that cannot report failure is unknown.
+ * USGS (`metadata.generated`) and 311 (`lastUpdated`) report their payload's
+ * time; a read of either without one is unknown, never ok.
  */
 import type { NewsSnapshotView } from '$lib/news/snapshot';
 import type { PartOutcome, TvNewsPart } from '$lib/components/tv/tv-news';
@@ -13,6 +15,17 @@ export const SNAPSHOT_OBSERVATION_MAX_AGE_MS = 45 * 60_000;
 const DAY_MS = 86_400_000;
 const SWALLOWS = 'failures not reported by this source';
 const NO_AGE = 'fetched; data age not reported';
+
+/**
+ * How old a status-aware part's payload may be and still read ok. 311 is G0a's
+ * own policy (SOURCE_INVENTORY: 1 day; the cron runs every 4 h). USGS: a healthy
+ * page's `generated` is never more than ~11 min old (5-min refresh and client
+ * TTL, 60 s CDN), so 30 min is 4–6 missed cycles.
+ */
+export const PART_OBSERVATION_MAX_AGE_MS = {
+	earthquakes: 30 * 60_000,
+	seeclickfix: DAY_MS
+} as const satisfies Record<'earthquakes' | 'seeclickfix', number>;
 
 export const STATUS_AWARE_PARTS: ReadonlySet<TvNewsPart> = new Set([
 	'snapshot',
@@ -66,17 +79,28 @@ export function fromSnapshotRead(
 	return { ...base, state: view ? 'stale' : 'unavailable', detail: outcome.error };
 }
 
+/**
+ * A loader part's entry. An ok read is ok only with its payload's own time,
+ * judged by its part's max age; a failure after a success is stale with the
+ * last good read's time (`lastGoodObservedAt`, null when that read had none).
+ */
 export function fromLoaderPart(
 	part: Exclude<TvNewsPart, 'snapshot'>,
 	outcome: PartOutcome | undefined,
-	hadSuccess: boolean
+	hadSuccess: boolean,
+	lastGoodObservedAt: number | null = null
 ): SourceStatusEntry {
 	const base = { id: `part:${part}`, name: PART_NAMES[part], observedAt: null, maxAgeMs: null };
 	if (!outcome) return { ...base, state: 'loading', detail: null };
 	if (outcome.ok) {
+		if (outcome.observedAt !== null && (part === 'earthquakes' || part === 'seeclickfix')) {
+			const maxAgeMs = PART_OBSERVATION_MAX_AGE_MS[part];
+			return { ...base, state: 'ok', observedAt: outcome.observedAt, maxAgeMs, detail: null };
+		}
 		return { ...base, state: 'unknown', detail: STATUS_AWARE_PARTS.has(part) ? NO_AGE : SWALLOWS };
 	}
-	return { ...base, state: hadSuccess ? 'stale' : 'unavailable', detail: outcome.error };
+	if (!hadSuccess) return { ...base, state: 'unavailable', detail: outcome.error };
+	return { ...base, state: 'stale', observedAt: lastGoodObservedAt, detail: outcome.error };
 }
 
 // ── Datasets (/api/data/*): provenance is the payload's own scrape time ──────
