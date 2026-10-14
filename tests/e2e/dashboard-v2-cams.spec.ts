@@ -9,8 +9,8 @@ const stubRest = (page: Page) =>
 		/\/api\/(data|nps|transit|airport-status|health|feeds|article|geocode)\b|\/api\/news\/snapshot|earthquake\.usgs\.gov|api\.weather\.gov|tidesandcurrents/,
 		(r) => r.fulfill({ status: 503, body: 'stubbed' })
 	);
-async function open(page: Page) {
-	await page.goto('/?layout=v2');
+async function open(page: Page, waitUntil: 'load' | 'domcontentloaded' = 'load') {
+	await page.goto('/?layout=v2', { waitUntil });
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 }
 const tiles = (page: Page) => page.locator('section#cams [data-camera-id]');
@@ -165,7 +165,9 @@ test.describe('phone 390×844', () => {
 		);
 		const failed = new Set<Request>();
 		page.on('requestfailed', (r) => failed.add(r));
-		await open(page);
+		// The held image delays the window load event; waiting for it would let the loader's own
+		// 8 s deadline cancel the request before the swipe (seen under parallel load).
+		await open(page, 'domcontentloaded');
 		await entered;
 		expect(failed.has(held!)).toBe(false); // not failed before the swipe
 		// The loader's own 8 s deadline must not be what cancels it: swipe within 5 s of entry,
