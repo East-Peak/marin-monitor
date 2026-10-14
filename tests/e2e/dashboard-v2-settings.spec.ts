@@ -28,6 +28,8 @@ test('a malformed v2 key does not break the preview, and Reset sections clears i
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 	await page.getByRole('button', { name: 'Dashboard settings' }).click();
 	await page.getByRole('button', { name: 'Reset sections' }).click();
-	await expect(page.getByRole('status')).toHaveText('Sections reset to defaults.');
+	await expect(page.locator('.v2-settings').getByRole('status')).toHaveText(
+		'Sections reset to defaults.'
+	);
 	expect(await page.evaluate(() => localStorage.getItem('mm_sections_v2'))).toBeNull();
 });

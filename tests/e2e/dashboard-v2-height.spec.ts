@@ -1,9 +1,11 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
 import { SOURCES, reportingSnapshot } from './fixtures/v2-reporting';
 import { probe, settled } from './fixtures/v2-probe';
+import { stubCams } from './fixtures/cams';
 
 /**
- * §13.3 height acceptance, 390×844, 100% UI scale, frozen clock, fonts loaded. Fixtures carry
+ * §13.3 height acceptance, re-ruled for decision 5a (plan-dashboard-d1-cams-strip.md Decision 6),
+ * 390×844, 100% UI scale, frozen clock, fonts loaded. Fixtures carry
  * long titles, an advisory and failure banners (an unreadable advisory, a partial-coverage
  * line, unavailable brief cards). PRs 10–12 add the all-disclosures-open gate here.
  */
@@ -55,17 +57,19 @@ async function stub(page: Page) {
 			])
 		})
 	);
+	await stubCams(page, { lastModified: T0 - 240_000 });
 }
 
 test.describe('phone 390×844', () => {
 	test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 
-	for (const remembered of [false, true]) {
-		test(`the 3rd Latest-reporting item ends ≤ 1,266 px ${remembered ? 'with every section saved open' : 'on a first visit'} (§13.3)`, async ({
+	for (const mode of ['first visit', 'every section saved open', 'every camera down'] as const) {
+		test(`[${mode}] the Cams strip ≤ 220 px and the 3rd Latest-reporting item ≤ 1,266 px without it (§13.3, decision 5a)`, async ({
 			page
 		}) => {
+			if (mode === 'every camera down') test.setTimeout(90_000);
 			await page.clock.install({ time: T0 });
-			if (remembered) {
+			if (mode === 'every section saved open') {
 				await page.addInitScript(() =>
 					localStorage.setItem(
 						'mm_sections_v2',
@@ -84,9 +88,18 @@ test.describe('phone 390×844', () => {
 				);
 			}
 			await stub(page);
+			if (mode === 'every camera down') await stubCams(page, { fail: () => true }); // later route wins
 			await page.goto('/?layout=v2&probe');
 			await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 			await page.evaluate(() => document.fonts.ready);
+			// Two failures need the 10 s retry before the all-down notice (Codex r2 #5).
+			if (mode === 'every camera down') {
+				await expect(page.locator('[data-cams-notice]')).toBeVisible({ timeout: 30_000 });
+			} else {
+				const tile = page.locator('section#cams [data-camera-id]').first();
+				await expect(tile).toBeVisible({ timeout: 30_000 });
+				await expect(tile).toHaveAttribute('data-status', 'live', { timeout: 30_000 });
+			}
 			await settled(page); // every part settled; the map drew the latest revision (Codex r3 #5)
 			// The fixture content that makes the page tall must be on screen before measuring.
 			await expect(page.locator('[data-slot="advisories"]')).toContainText("couldn't be read");
@@ -100,8 +113,17 @@ test.describe('phone 390×844', () => {
 			const bottom = await rows
 				.nth(2)
 				.evaluate((el) => el.getBoundingClientRect().bottom + window.scrollY);
-			console.log(`3rd Latest-reporting item bottom: ${Math.round(bottom)} px (budget 1,266)`);
-			expect(bottom).toBeLessThanOrEqual(1266);
+			// Decision 6: the strip has its own cap; everything else keeps §13.3's 1,266.
+			const strip = await page.evaluate(
+				() =>
+					document.querySelector('section#map')!.getBoundingClientRect().top -
+					document.querySelector('section#cams')!.getBoundingClientRect().top
+			);
+			console.log(
+				`[${mode}] 3rd Latest-reporting item bottom: ${Math.round(bottom)} px; Cams strip ${Math.round(strip)} px; without the strip ${Math.round(bottom - strip)} px (strip ≤ 220; rest ≤ 1,266)`
+			);
+			expect(strip).toBeLessThanOrEqual(220);
+			expect(bottom - strip).toBeLessThanOrEqual(1266);
 		});
 	}
 });
