@@ -473,6 +473,7 @@ describe('a malformed row never lets the blob’s time vouch for its list (Codex
 		[{}],
 		['x'],
 		[{ ...makeIssue(), id: undefined }],
+		[{ ...makeIssue(), id: 0 }],
 		[{ ...makeIssue(), created_at: 'not a date' }],
 		[{ ...makeIssue(), lat: '37.97' }]
 	])('a malformed row (%j) → observedAt null; the legacy items are unchanged', async (bad) => {

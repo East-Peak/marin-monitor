@@ -103,7 +103,7 @@ function ensureProxyUrl(
 const isCoordinate = (v: unknown) => v === null || (typeof v === 'number' && Number.isFinite(v));
 
 /**
- * A row the reader can judge: an id, a dated created_at and coordinates that are numbers or
+ * A row the reader can judge: a positive integer id, a dated created_at and coordinates that are numbers or
  * null. A row filtered only because it lies outside Marin or has no location is well-formed.
  */
 function isWellFormed(issue: unknown): boolean {
@@ -111,6 +111,8 @@ function isWellFormed(issue: unknown): boolean {
 	const i = issue as Partial<Record<keyof SeeClickFixIssue, unknown>>;
 	return (
 		typeof i.id === 'number' &&
+		Number.isInteger(i.id) &&
+		i.id > 0 &&
 		typeof i.created_at === 'string' &&
 		Number.isFinite(new Date(i.created_at).getTime()) &&
 		isCoordinate(i.lat) &&

@@ -101,10 +101,12 @@ export const GET: RequestHandler = async ({ request }) => {
 		if (!Array.isArray(data?.issues)) {
 			throw new Error('SeeClickFix API: response has no issues array');
 		}
-		if (
-			!data.issues.every((i: unknown) => typeof (i as SeeClickFixIssue | null)?.id === 'number')
-		) {
-			throw new Error('SeeClickFix API: an issues row has no numeric id');
+		const hasId = (i: unknown) => {
+			const id: unknown = (i as SeeClickFixIssue | null)?.id;
+			return typeof id === 'number' && Number.isInteger(id) && id > 0;
+		};
+		if (!data.issues.every(hasId)) {
+			throw new Error('SeeClickFix API: an issues row has no positive integer id');
 		}
 		const issues: SeeClickFixIssue[] = data.issues;
 

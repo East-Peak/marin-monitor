@@ -68,3 +68,33 @@ describe('readEarthquakesOrThrow carries the payload’s own time (map coverage 
 		await expect(fetchEarthquakesOrThrow()).resolves.toHaveLength(1);
 	});
 });
+
+describe('a malformed feature never lets metadata.generated vouch for the list (Codex code review r2 #2)', () => {
+	const good = BODY.features[0];
+	it.each([
+		[{ ...good, geometry: { coordinates: [null, null, 5] } }],
+		[{ ...good, geometry: {} }],
+		[{ ...good, properties: { ...good.properties, mag: null } }],
+		[{ ...good, properties: { ...good.properties, time: 'soon' } }],
+		[{ ...good, id: undefined }],
+		[null]
+	])('a malformed feature (%j) → observedAt null; the legacy list is unchanged', async (bad) => {
+		const body = { features: [good, bad], metadata: { generated: GEN } };
+		request.mockResolvedValue({ data: body, fromCache: false });
+		const read = await readEarthquakesOrThrow({ liveOnly: true }).catch((e: Error) => e);
+		const legacy = await fetchEarthquakesOrThrow({ liveOnly: true }).catch((e: Error) => e);
+		if (read instanceof Error) {
+			expect(legacy).toBeInstanceOf(Error); // legacy already rejects it: the read fails closed
+		} else {
+			expect(read.observedAt).toBeNull();
+			expect(read.quakes).toEqual(legacy);
+		}
+	});
+	it('well-formed features keep the time', async () => {
+		request.mockResolvedValue({
+			data: { features: [good, good], metadata: { generated: GEN } },
+			fromCache: false
+		});
+		expect((await readEarthquakesOrThrow({ liveOnly: true })).observedAt).toBe(GEN);
+	});
+});

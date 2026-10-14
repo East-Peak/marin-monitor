@@ -31,7 +31,7 @@ describe('GET /api/cron/sync-311 never stamps a fresh time on a non-answer (map 
 		}
 	);
 
-	it.each([[[{}]], [['x']], [[null]], [[{ id: '1' }]]])(
+	it.each([[[{}]], [['x']], [[null]], [[{ id: '1' }]], [[{ id: 0 }]]])(
 		'an issues array with a row that is not an issue (%j) fails loudly and keeps the last-good blob (Codex code review r1 #1)',
 		async (issues) => {
 			fetchWithTimeout.mockResolvedValue(new Response(JSON.stringify({ issues }), { status: 200 }));

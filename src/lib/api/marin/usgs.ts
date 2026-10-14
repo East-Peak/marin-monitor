@@ -44,6 +44,20 @@ function generatedAt(value: unknown): number | null {
 		: null;
 }
 
+const finite = (v: unknown) => typeof v === 'number' && Number.isFinite(v);
+
+/** A feature the map can draw: an id, a magnitude, a time and a finite lon/lat. */
+function isWellFormed(f: UsgsFeature): boolean {
+	const [lon, lat] = f.geometry.coordinates;
+	return (
+		typeof f.id === 'string' &&
+		finite(f.properties.mag) &&
+		finite(f.properties.time) &&
+		finite(lon) &&
+		finite(lat)
+	);
+}
+
 /**
  * Fetch recent earthquakes near Marin County. Rejects on failure or an
  * unexpected shape, so a caller that keeps last-good pins can tell a failure
@@ -94,7 +108,11 @@ export async function readEarthquakesOrThrow({
 		depth: f.geometry.coordinates[2],
 		url: f.properties.url
 	}));
-	return { quakes, observedAt: generatedAt(data.metadata?.generated) };
+	// A malformed feature is kept as before, but the payload's time can't vouch for the list.
+	const observedAt = data.features.every(isWellFormed)
+		? generatedAt(data.metadata?.generated)
+		: null;
+	return { quakes, observedAt };
 }
 
 /** The swallowing form the dashboard uses: any failure reads as no quakes. */
