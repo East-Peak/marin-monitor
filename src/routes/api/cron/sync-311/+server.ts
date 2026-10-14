@@ -101,6 +101,11 @@ export const GET: RequestHandler = async ({ request }) => {
 		if (!Array.isArray(data?.issues)) {
 			throw new Error('SeeClickFix API: response has no issues array');
 		}
+		if (
+			!data.issues.every((i: unknown) => typeof (i as SeeClickFixIssue | null)?.id === 'number')
+		) {
+			throw new Error('SeeClickFix API: an issues row has no numeric id');
+		}
 		const issues: SeeClickFixIssue[] = data.issues;
 
 		// Download and store photos, rewrite URLs to our blob CDN

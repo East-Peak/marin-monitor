@@ -462,3 +462,40 @@ describe('readSeeClickFixIssues carries the blob’s scrape time (map coverage l
 		}
 	);
 });
+
+describe('a malformed row never lets the blob’s time vouch for its list (Codex code review r1 #1)', () => {
+	beforeEach(() => {
+		vi.restoreAllMocks();
+	});
+	const LAST = '2026-10-13T20:01:07.903Z';
+
+	it.each([
+		[{}],
+		['x'],
+		[{ ...makeIssue(), id: undefined }],
+		[{ ...makeIssue(), created_at: 'not a date' }],
+		[{ ...makeIssue(), lat: '37.97' }]
+	])('a malformed row (%j) → observedAt null; the legacy items are unchanged', async (bad) => {
+		mockFetchSuccess({ issues: [makeIssue({ id: 7 }), bad], lastUpdated: LAST, count: 2 });
+		const { readSeeClickFixIssues, fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const r = await readSeeClickFixIssues();
+		expect(r.observedAt).toBeNull();
+		expect(r.items.map((i) => i.id)).toContain('seeclickfix-7');
+		expect(await fetchSeeClickFixIssues()).toEqual(r.items);
+	});
+
+	it('legitimate exclusions (outside Marin, no location) keep the time', async () => {
+		mockFetchSuccess({
+			issues: [
+				makeIssue({ id: 1, lat: 37.78, lng: -122.42 }),
+				makeIssue({ id: 2, lat: null, lng: null })
+			],
+			lastUpdated: LAST,
+			count: 2
+		});
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
+		const r = await readSeeClickFixIssues();
+		expect(r.items).toEqual([]);
+		expect(r.observedAt).toBe(Date.parse(LAST));
+	});
+});

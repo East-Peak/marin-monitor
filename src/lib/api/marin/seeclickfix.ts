@@ -100,6 +100,24 @@ function ensureProxyUrl(
 	return `/api/data/311-image?id=${issueId}&size=${size}`;
 }
 
+const isCoordinate = (v: unknown) => v === null || (typeof v === 'number' && Number.isFinite(v));
+
+/**
+ * A row the reader can judge: an id, a dated created_at and coordinates that are numbers or
+ * null. A row filtered only because it lies outside Marin or has no location is well-formed.
+ */
+function isWellFormed(issue: unknown): boolean {
+	if (typeof issue !== 'object' || issue === null) return false;
+	const i = issue as Partial<Record<keyof SeeClickFixIssue, unknown>>;
+	return (
+		typeof i.id === 'number' &&
+		typeof i.created_at === 'string' &&
+		Number.isFinite(new Date(i.created_at).getTime()) &&
+		isCoordinate(i.lat) &&
+		isCoordinate(i.lng)
+	);
+}
+
 function issueToNewsItem(issue: SeeClickFixIssue): NewsItem | null {
 	if (!issue.id || !issue.created_at) return null;
 	if (!isInMarinCounty(issue.lat, issue.lng)) return null;
@@ -191,6 +209,10 @@ export async function readSeeClickFixIssues({
 		.sort((a, b) => b.timestamp - a.timestamp);
 
 	logger.log('SEECLICKFIX', `Loaded ${items.length} issues from blob`);
-	const observedAt = typeof data.lastUpdated === 'string' ? parseFeedDate(data.lastUpdated) : null;
+	// A malformed row was dropped, not judged: the blob's time can't vouch for what's left.
+	const observedAt =
+		typeof data.lastUpdated === 'string' && data.issues.every(isWellFormed)
+			? parseFeedDate(data.lastUpdated)
+			: null;
 	return { items, observedAt };
 }

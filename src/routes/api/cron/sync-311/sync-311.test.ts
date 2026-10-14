@@ -31,6 +31,16 @@ describe('GET /api/cron/sync-311 never stamps a fresh time on a non-answer (map 
 		}
 	);
 
+	it.each([[[{}]], [['x']], [[null]], [[{ id: '1' }]]])(
+		'an issues array with a row that is not an issue (%j) fails loudly and keeps the last-good blob (Codex code review r1 #1)',
+		async (issues) => {
+			fetchWithTimeout.mockResolvedValue(new Response(JSON.stringify({ issues }), { status: 200 }));
+			const res = await call();
+			expect(res.status).toBe(500);
+			expect(put).not.toHaveBeenCalled();
+		}
+	);
+
 	it('a genuine empty week (issues: []) is a real success and is written', async () => {
 		fetchWithTimeout.mockResolvedValue(
 			new Response(JSON.stringify({ issues: [] }), { status: 200 })
