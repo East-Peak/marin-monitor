@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-10-13',
+		title: 'Preview map stops crying wolf',
+		description:
+			'The dashboard preview’s map used to say Fix It Marin (311) and USGS earthquakes were “unverified” even when both had loaded fine. Now it checks how old each one’s data really is, and only warns when something is out of date or its age is unknown. A pin kept after a failed refresh says from what time. The regular dashboard and TV are unchanged.'
+	},
+	{
 		date: '2026-10-12',
 		title: 'Preview map fits phones better',
 		description:

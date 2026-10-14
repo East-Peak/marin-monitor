@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { expectNoAlertAffordance } from './fixtures/alert-affordances';
-import { probe, rendered } from './fixtures/v2-probe';
+import { probe, rendered, settled } from './fixtures/v2-probe';
 
 /** Production invariants for PR 9 on real data. Readiness is the ?probe hook, never wording (Codex r3 #5). */
 test.skip(({ baseURL }) => !(baseURL?.startsWith('https://') ?? false), 'production only');
@@ -67,4 +67,82 @@ test('Latest reporting is bounded and labelled; the map draws owned features or 
 	expect(p.synced!.counts['alert-pulses']).toBe(0);
 	await page.waitForTimeout(2_000);
 	expect(unowned).toEqual([]);
+});
+
+type TimedPart = '311' | 'earthquakes';
+const MAX_AGE_MS: Record<TimedPart, number> = { earthquakes: 30 * 60_000, '311': 86_400_000 };
+const FUTURE_SKEW_MS = 5 * 60_000;
+const usgsTime = (v: unknown) =>
+	typeof v === 'number' && v > 0 && Number.isFinite(new Date(v).getTime()) ? v : null;
+const zonedTime = (v: unknown) =>
+	typeof v === 'string' && /(Z|[+-]\d{2}:?\d{2})$/i.test(v) && Number.isFinite(Date.parse(v))
+		? Date.parse(v)
+		: null;
+const iso = (t: number | null) => (t === null ? 'null' : new Date(t).toISOString());
+
+test('311 and quakes: the map judged the browser’s own payload times, and names neither as unverified (map coverage label)', async ({
+	page
+}) => {
+	// The browser's own responses are the evidence (Codex r1 #3, #4); the last body of each wins.
+	const seen: Partial<Record<TimedPart, Promise<{ url: string; time: number | null }>>> = {};
+	page.on('response', (res) => {
+		const url = res.url();
+		const part: TimedPart | null = /earthquake\.usgs\.gov\/fdsnws\/event\/1\/query/.test(url)
+			? 'earthquakes'
+			: new URL(url).pathname === '/api/data/311'
+				? '311'
+				: null;
+		if (!part) return;
+		seen[part] = res
+			.json()
+			.then((body) => ({
+				url,
+				time:
+					part === 'earthquakes'
+						? usgsTime(body?.metadata?.generated)
+						: zonedTime(body?.lastUpdated)
+			}))
+			.catch(() => ({ url, time: null }));
+	});
+	await page.goto('/?layout=v2&probe');
+	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+	const p = await settled(page, 45_000);
+	const at = Date.now();
+	const quake = await seen.earthquakes;
+	const fix = await seen['311'];
+	const container = page.locator('[data-slot="map-status"]');
+	const status =
+		(await container.locator('[data-section-status]').count()) === 0
+			? 'no status line'
+			: await container.innerText();
+	console.log(
+		`live map provenance: usgs url=${quake?.url ?? 'none'} generated=${iso(quake?.time ?? null)} · 311 lastUpdated=${iso(fix?.time ?? null)} · evaluated at=${iso(at)} · map status: "${status}"`
+	);
+
+	const problems: string[] = [];
+	for (const [part, read] of [
+		['earthquakes', quake],
+		['311', fix]
+	] as const) {
+		const why = !read
+			? part === 'earthquakes'
+				? 'no USGS response observed'
+				: 'no 311 response observed'
+			: read.time === null
+				? 'payload time missing or invalid'
+				: read.time - at > FUTURE_SKEW_MS
+					? `payload time ${iso(read.time)} is in the future`
+					: at - read.time > MAX_AGE_MS[part]
+						? `payload time ${iso(read.time)} is older than its max age`
+						: p.provenance[part].state !== 'ok' || p.provenance[part].observedAt !== read.time
+							? `the app judged ${JSON.stringify(p.provenance[part])}, not ok at ${iso(read.time)}`
+							: null;
+		if (why) problems.push(`provenance not proven for ${part}: ${why}`);
+	}
+	expect(problems).toEqual([]);
+	expect(status).not.toContain('Fix It Marin (311): unverified');
+	expect(status).not.toContain('USGS earthquakes: unverified');
+	expect(status).not.toMatch(
+		/(Fix It Marin \(311\)|USGS earthquakes)( unverified|, [^·]*unverified)/
+	);
 });

@@ -4,6 +4,16 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-10-13
+
+### Fixed — map status no longer warns about 311 and earthquakes that loaded fine
+
+- **Cause:** the v2 preview map read every successful 311 and USGS fetch as "unverified" because the time each payload reports was dropped before the status line saw it, so every healthy load showed "Partial coverage · Fix It Marin (311), USGS earthquakes unverified".
+- **Fix:** USGS reads carry `metadata.generated` and 311 reads carry the blob's `lastUpdated`, both validated (a non-date, a zoneless time or an out-of-range number counts as no time). Each is judged by its own max age: 311 by G0a's 1 day, quakes by 30 min. A read with no payload time still reads "unverified". A pin kept after a failed refresh says from when ("Kept from 1:01 PM · HTTP 503").
+- **Map emptiness:** "Nothing on the map right now" judges each layer by its own max age, so a normal few-hours-old 311 blob no longer turns an empty map into "Status unknown". A town click never shows a zero over a layer with no known time.
+- **311 cron:** a 200 response with no `issues` array now fails loudly and keeps the last-good blob, so a non-answer never becomes a fresh "nothing here".
+- The regular dashboard and the TV are unchanged.
+
 ## 2026-10-12
 
 ### Changed — map and Latest reporting proven in the built app (D1 PR 9c)

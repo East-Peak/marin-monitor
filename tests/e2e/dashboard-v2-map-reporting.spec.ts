@@ -45,6 +45,7 @@ const FIX_IT_BLOB = {
 /** One USGS quake near Novato, in the shape fetchEarthquakesOrThrow reads (re-anchor on usgs.ts). */
 const QUAKE_BODY = {
 	type: 'FeatureCollection',
+	metadata: { generated: T0 },
 	features: [
 		{
 			id: 'nc1',
@@ -235,6 +236,34 @@ test.describe('desktop 1440×900', () => {
 		expect(unowned).toEqual([]);
 	});
 
+	test('311 and quakes that load with their payload time are not named in the map status', async ({
+		page
+	}) => {
+		await stub(page, ALL_OF_MARIN, { fixIt: () => true, quakes: () => true });
+		await openV2(page);
+		const p = await settled(page);
+		expect(p.synced!.counts['311-reports']).toBeGreaterThan(0);
+		expect(p.synced!.counts['earthquakes']).toBeGreaterThan(0);
+		const container = page.locator('[data-slot="map-status"]');
+		const text =
+			(await mapStatus(page).count()) === 0 ? 'no status line' : await container.innerText();
+		console.log(`map status: ${text}`);
+		await expect(container).not.toHaveText(/Fix It Marin \(311\)/);
+		await expect(container).not.toHaveText(/USGS earthquakes/);
+	});
+
+	test('negative control: quakes with no payload time still read "unverified"', async ({
+		page
+	}) => {
+		await stub(page, ALL_OF_MARIN, { fixIt: () => true, quakes: () => true });
+		const { metadata: _, ...untimed } = QUAKE_BODY;
+		await page.route(/earthquake\.usgs\.gov/, (r) => json(r, untimed));
+		await openV2(page);
+		const p = await settled(page);
+		expect(p.synced!.counts['earthquakes']).toBeGreaterThan(0);
+		await expect(mapStatus(page)).toContainText('USGS earthquakes unverified');
+	});
+
 	test('success → failure: kept pins are dimmed, say from when, and the status is not fresh (Codex r3 #1)', async ({
 		page
 	}) => {
@@ -257,8 +286,11 @@ test.describe('desktop 1440×900', () => {
 		await expect.poll(() => pinAt(page), { timeout: 20_000 }).not.toBeNull();
 		const at = (await pinAt(page))!;
 		await page.mouse.click(at.x, at.y);
+		console.log(
+			`snapshot kept note: ${await page.locator('[data-inspector-note]').first().innerText()}`
+		);
 		await expect(page.locator('[data-inspector-note]').first()).toHaveText(
-			/^Kept from \d{1,2}:\d{2} [AP]M · /
+			/^Kept from ([A-Z][a-z]{2} \d{1,2}, )?\d{1,2}:\d{2} [AP]M · /
 		);
 	});
 
@@ -296,8 +328,11 @@ test.describe('desktop 1440×900', () => {
 			await page.mouse.click(at.x, at.y);
 			const inspector = page.locator('aside.feature-inspector');
 			await expect(inspector, layer).toBeVisible();
+			console.log(
+				`${layer} kept note: ${await inspector.locator('[data-inspector-note]').innerText()}`
+			);
 			await expect(inspector.locator('[data-inspector-note]'), layer).toHaveText(
-				/^Kept from (\d{1,2}:\d{2} [AP]M|an earlier read \(time not reported\)) · /
+				/^Kept from ([A-Z][a-z]{2} \d{1,2}, )?\d{1,2}:\d{2} [AP]M · /
 			);
 			await inspector.getByRole('button', { name: 'Close inspector' }).click();
 		}
