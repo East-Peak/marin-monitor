@@ -4,6 +4,14 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-10-14
+
+### Added — Cams strip building blocks for the v2 preview (not yet shown)
+
+- `src/lib/dashboard/cam-strip.ts`: the strip's cameras (17 ALERTCalifornia ridge cams, then 4 Caltrans 101 cams; the frozen ABC7 frame and Windy embeds excluded), thumbnail URLs, and the age rule (only a source-provided capture time, amber past 30 min).
+- `src/lib/dashboard/cam-frame-loader.ts`: decode-gated frames; Caltrans frames carry their own `Last-Modified`; cancellable, with a no-age fallback when CORS is unavailable.
+- `CamTile.svelte`: TV's decode gate in a v2 tile — never an undecoded image; "Camera offline" only after two failures; refreshes only while active.
+
 ## 2026-10-13
 
 ### Fixed — map status no longer warns about 311 and earthquakes that loaded fine

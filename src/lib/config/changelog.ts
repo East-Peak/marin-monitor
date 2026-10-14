@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-10-14',
+		title: 'Getting the preview’s cameras ready',
+		description:
+			'Behind the scenes: the dashboard preview gets the pieces for a row of live cameras — ridge cams first, then 101 — that only shows a picture once it has fully loaded and only says how old a picture is when the camera itself says so. Nothing changes on screen yet.'
+	},
+	{
 		date: '2026-10-13',
 		title: 'Preview map stops crying wolf',
 		description:
