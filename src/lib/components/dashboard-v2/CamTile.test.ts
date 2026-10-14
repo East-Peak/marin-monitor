@@ -232,4 +232,22 @@ describe('CamTile', () => {
 		r.unmount();
 		expect(revoke).toHaveBeenCalledWith('blob:2');
 	});
+
+	it('unmounting with a request out aborts it, releases its late frame, and stops the timer (Codex review A)', async () => {
+		let resolve!: (f: LoadedFrame | null) => void;
+		let signal: AbortSignal | undefined;
+		const load = vi.fn<Load>((_u, _c, o) => {
+			signal = o?.signal;
+			return new Promise((r) => (resolve = r));
+		});
+		const r = render(CamTile, { cam: caltrans, active: true, now: T0, load });
+		await flush();
+		r.unmount();
+		expect(signal?.aborted).toBe(true);
+		resolve(frame(T0, 'blob:late'));
+		await flush();
+		expect(revoke).toHaveBeenCalledWith('blob:late');
+		await vi.advanceTimersByTimeAsync(120_000);
+		expect(load).toHaveBeenCalledTimes(1);
+	});
 });
