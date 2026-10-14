@@ -50,4 +50,32 @@ describe('preloadImage', () => {
 		await expect(p).resolves.toBeNull();
 		expect(() => img.onload?.()).not.toThrow();
 	});
+	it('an abort resolves null, stops the download and ignores a late load (v2 Cams strip)', async () => {
+		const life = new AbortController();
+		const p = preloadImage('https://x/a.jpg', 1_000, life.signal);
+		const img = FakeImage.last;
+		life.abort();
+		await expect(p).resolves.toBeNull();
+		expect(img.src).toBe('');
+		expect(img.onload).toBeNull();
+	});
+	it('with a signal, a timeout also stops the download; without one (TV) the src is left as is', async () => {
+		const life = new AbortController();
+		const strip = preloadImage('https://x/s.jpg', 1_000, life.signal);
+		const stripImg = FakeImage.last;
+		const tv = preloadImage('https://x/t.jpg', 1_000);
+		const tvImg = FakeImage.last;
+		vi.advanceTimersByTime(1_001);
+		await expect(strip).resolves.toBeNull();
+		await expect(tv).resolves.toBeNull();
+		expect(stripImg.src).toBe('');
+		expect(tvImg.src).toBe('https://x/t.jpg');
+	});
+	it('an already-aborted signal starts no download', async () => {
+		const life = new AbortController();
+		life.abort();
+		const before = FakeImage.last;
+		await expect(preloadImage('https://x/b.jpg', 1_000, life.signal)).resolves.toBeNull();
+		expect(FakeImage.last).toBe(before);
+	});
 });

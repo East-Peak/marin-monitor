@@ -4,19 +4,36 @@
  * rejects). Callers mount this element itself: a fresh <img src> would refetch
  * once a short max-age expires, even though these bytes are already decoded.
  */
-export function preloadImage(url: string, timeoutMs = 8_000): Promise<HTMLImageElement | null> {
+export function preloadImage(
+	url: string,
+	timeoutMs = 8_000,
+	signal?: AbortSignal
+): Promise<HTMLImageElement | null> {
 	return new Promise((resolve) => {
+		if (signal?.aborted) return resolve(null);
 		const img = new Image();
 		let settled = false;
 		const finish = (ok: boolean) => {
 			if (settled) return;
 			settled = true;
 			clearTimeout(timer);
+			signal?.removeEventListener('abort', onAbort);
 			img.onload = null;
 			img.onerror = null;
 			resolve(ok ? img : null);
 		};
-		const timer = setTimeout(() => finish(false), timeoutMs);
+		// Cancelled (v2 strip only): stop the download too. TV passes no signal.
+		const onAbort = () => {
+			finish(false);
+			img.src = '';
+		};
+		signal?.addEventListener('abort', onAbort, { once: true });
+		const timer = setTimeout(() => {
+			finish(false);
+			// Signal-enabled callers (the v2 strip) also stop a slow download (Codex r4 #2);
+			// TV passes no signal and keeps its exact behaviour.
+			if (signal) img.src = '';
+		}, timeoutMs);
 		img.onload = () => {
 			if (typeof img.decode === 'function') {
 				img.decode().then(
