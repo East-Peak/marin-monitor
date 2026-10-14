@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-14',
+		title: 'Preview temperature stops going blank',
+		description:
+			'The preview’s weather card was sometimes saying “Temperature unknown” because the weather service’s newest report hadn’t been checked yet. It now shows the most recent usable reading from Gnoss Field from the last hour and a half, with its own time. If there isn’t one, it still says so, or marks an older reading out of date. The regular dashboard and TV are unchanged.'
+	},
+	{
+		date: '2026-10-14',
 		title: 'Ridge and traffic cams in the preview',
 		description:
 			'The dashboard preview now opens with a row of live cameras right under the morning brief: the ALERTCalifornia ridge cams first (Mt. Tam, Wolfback, Big Rock, Barnabe, Burdell and more), then the Caltrans cams on 101. Swipe the row on a phone; on a computer use the arrows. A camera that isn’t sending pictures says so instead of showing a broken image, traffic cams say how old their picture is, and tapping a camera opens its full-size picture. The regular dashboard and TV are unchanged.'

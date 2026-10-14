@@ -6,6 +6,13 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-14
 
+### Fixed — the v2 brief's temperature no longer goes blank when NWS's "latest" report is unprocessed
+
+- **Cause:** the Weather card read KDVO's `/observations/latest`, which often serves a not-yet-QC'd copy of the newest report with no temperature (6 of 16 polls on 2026-10-14), while the station's observation list already held the same report with its value. The card then said "Temperature unknown" though Gnoss Field was reporting fine.
+- **Fix:** the card reads KDVO's observation list (8 reports) and shows the newest report with a usable temperature from the last 90 minutes, with that report's own time. If none has one, it shows the newest report as it is: "Temperature unknown" if it has no temperature, or, if the station has gone quiet, its older number marked "out of date". A value QC-flagged rejected, questioned or bad (`X`/`Q`/`B`) is never the headline, and the time, temperature and description always come from the same report.
+- **Store:** a refresh is judged by the list it came from, so a newer list can replace an "unknown" with an older report's value, or replace a value it rejected, while a stale copy of an older list never overwrites the one shown.
+- Legacy `/` and `/tv` take their temperature from the NWS forecast and are unchanged.
+
 ### Added — the Cams strip in the v2 preview
 
 - **Cameras:** an always-open row directly under the brief, above the map: 17 ALERTCalifornia ridge cams (south → north), then 4 Caltrans 101 cams. Phone: one swipe row with the next tile peeking; desktop: five per view with ‹ › buttons. Tapping a tile opens the source's full-size frame.

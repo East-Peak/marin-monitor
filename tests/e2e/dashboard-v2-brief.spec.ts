@@ -52,6 +52,13 @@ const OBSERVATION = {
 		temperature: { value: 15.5, qualityControl: 'V' }
 	}
 };
+const reading = (iso: string, value: number | null, qc: string, text = 'Clear') => ({
+	properties: {
+		timestamp: iso,
+		textDescription: text,
+		temperature: { unitCode: 'wmoUnit:degC', value, qualityControl: qc }
+	}
+});
 const TIDES = {
 	predictions: [
 		// GMT (the v2 fetcher requests time_zone=gmt): 12:41 PM and 7:48 PM PDT.
@@ -94,6 +101,8 @@ async function stubAll(
 		alerts?: (r: Route) => unknown;
 		millValleyHourly?: (r: Route) => unknown;
 		pop?: (i: number) => number | null;
+		latest?: unknown;
+		list?: unknown[];
 	} = {}
 ) {
 	// Everything the brief doesn't test fails fast (and honestly) instead of hitting the network.
@@ -120,7 +129,12 @@ async function stubAll(
 					hourly(() => 70)
 				))
 	);
-	await page.route(/stations\/KDVO\/observations\/latest/, (r) => json(r, OBSERVATION));
+	await page.route(/stations\/KDVO\/observations\/latest/, (r) =>
+		json(r, over.latest ?? OBSERVATION)
+	);
+	await page.route(/stations\/KDVO\/observations\?/, (r) =>
+		json(r, { features: over.list ?? [OBSERVATION] })
+	);
 	await page.route(
 		/api\.weather\.gov\/alerts\/active/,
 		over.alerts ?? ((r) => json(r, { features: [ADVISORY] }))
@@ -150,6 +164,41 @@ test('each brief card answers with its value, scope and time', async ({ page }) 
 	await expect(tide).toContainText('High 6.3 ft · 12:41 PM');
 	await expect(tide).toContainText('Point Reyes · NOAA prediction');
 	await expect(page.locator('main')).not.toContainText(/\bLIVE\b|just now/i);
+});
+
+test('weather: /latest has no temperature, the QC’d list does: the card shows it with that report’s time', async ({
+	page
+}) => {
+	const unprocessed = reading('2026-09-29T14:55:00+00:00', null, 'Z');
+	await stubAll(page, {
+		latest: unprocessed,
+		list: [unprocessed, reading('2026-09-29T14:35:00+00:00', 15.5, 'V')]
+	});
+	await openV2(page);
+	const weather = page.locator('[data-card="weather"]');
+	await expect(weather).toContainText('60°F');
+	await expect(weather).toContainText('Observed at Gnoss Field (Novato) · 7:35 AM');
+	await expect(weather).not.toContainText('Temperature unknown');
+});
+
+test('weather: nothing usable within 90 min → "Temperature unknown" at the newest report’s time (negative control)', async ({
+	page
+}) => {
+	// 13:15Z is 105 min before T0, outside the bound.
+	const newest = reading('2026-09-29T14:55:00+00:00', null, 'Z');
+	await stubAll(page, {
+		latest: newest,
+		list: [
+			newest,
+			reading('2026-09-29T14:35:00+00:00', null, 'Z'),
+			reading('2026-09-29T13:15:00+00:00', 15.5, 'V')
+		]
+	});
+	await openV2(page);
+	const weather = page.locator('[data-card="weather"]');
+	await expect(weather).toContainText('Temperature unknown');
+	await expect(weather).toContainText('Observed at Gnoss Field (Novato) · 7:55 AM');
+	await expect(weather).not.toContainText('60°F');
 });
 
 test('an advisory shows with its Marin scope and leaves at expiry with no refetch', async ({
