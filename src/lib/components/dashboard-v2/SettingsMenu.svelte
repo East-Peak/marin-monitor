@@ -123,7 +123,7 @@
 					checked={!$settings.camerasHidden}
 					onchange={() => settings.toggleCamerasHidden()}
 				/>
-				Show traffic cameras
+				Show cameras
 			</label>
 
 			<button type="button" class="reset" onclick={resetSections}>Reset sections</button>

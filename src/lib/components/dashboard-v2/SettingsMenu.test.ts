@@ -75,7 +75,7 @@ describe('v2 ⚙ settings menu', () => {
 		settings.toggleCamerasHidden();
 		expect(get(settings).camerasHidden).toBe(true);
 		await openMenu();
-		const box = screen.getByLabelText('Show traffic cameras') as HTMLInputElement;
+		const box = screen.getByLabelText('Show cameras') as HTMLInputElement;
 		expect(box.checked).toBe(false);
 		await fireEvent.click(box);
 		expect(get(settings).camerasHidden).toBe(false);

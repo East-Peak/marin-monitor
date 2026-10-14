@@ -1,7 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/svelte';
+import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { writable } from 'svelte/store';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import type { BriefCard, BriefState } from '$lib/dashboard/brief-store';
 import BriefRow from './BriefRow.svelte';
 
@@ -60,9 +60,8 @@ function state(over: Partial<BriefState> = {}): BriefState {
 function renderRow(s: BriefState, now = NOW) {
 	const brief = writable(s);
 	const clock = writable(now);
-	const onjump = vi.fn();
-	const result = render(BriefRow, { props: { brief, now: clock, onjump } });
-	return { ...result, brief, clock, onjump };
+	const result = render(BriefRow, { props: { brief, now: clock } });
+	return { ...result, brief, clock };
 }
 
 describe('BriefRow', () => {
@@ -140,11 +139,9 @@ describe('BriefRow', () => {
 		);
 		expect(document.body.textContent).not.toMatch(/unavailable/);
 	});
-	it('the Getting Around action jumps to its section', async () => {
-		const { onjump } = renderRow(state());
-		const link = screen.getByRole('link', { name: /Traffic cams & map/ });
-		expect(link.getAttribute('href')).toBe('#getting-around');
-		await fireEvent.click(link);
-		expect(onjump).toHaveBeenCalledWith('#getting-around');
+	it('answers only: no navigation card (decision 5a; the Cams strip sits directly below)', () => {
+		renderRow(state());
+		expect(document.querySelector('[data-card="getting-around"]')).toBeNull();
+		expect(screen.queryByRole('link', { name: /Traffic cams/ })).toBeNull();
 	});
 });

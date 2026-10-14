@@ -20,6 +20,11 @@ vi.mock('$app/environment', () => ({ browser: true, dev: true, building: false, 
 vi.mock('./V2Map.svelte', async () => ({
 	default: (await import('./__test__/MapStub.svelte')).default
 }));
+// jsdom has no IntersectionObserver, so every strip tile would be active: nothing may load.
+vi.mock('$lib/dashboard/cam-frame-loader', () => ({
+	loadFrame: vi.fn(() => new Promise(() => {})),
+	releaseFrame: vi.fn()
+}));
 /** After vi.resetModules the stub must load against the fresh Svelte runtime, not the cached one. */
 const remockMap = () =>
 	vi.doMock('./V2Map.svelte', async () => ({
@@ -210,6 +215,18 @@ describe('DashboardV2 preview shell', () => {
 		render(DashboardV2);
 		await tick();
 		expect(screen.getByRole('button', { name: 'Checking sources…' })).toBeTruthy();
+	});
+
+	it('the Cams strip sits right after the brief and right before the map; no Getting Around card', async () => {
+		const { container } = render(DashboardV2);
+		await tick();
+		const main = container.querySelector('.v2-main')!;
+		const order = [...main.children].map((el) => el.id || el.getAttribute('data-slot') || '');
+		const cams = order.indexOf('cams');
+		expect(cams).toBeGreaterThan(0);
+		expect(order[cams - 1]).toBe('brief');
+		expect(order[cams + 1]).toBe('map');
+		expect(container.querySelector('[data-card="getting-around"]')).toBeNull();
 	});
 });
 

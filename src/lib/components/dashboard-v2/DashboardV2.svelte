@@ -6,6 +6,7 @@
 	import Section from './Section.svelte';
 	import JumpNav from './JumpNav.svelte';
 	import BriefRow from './BriefRow.svelte';
+	import CamStrip from './CamStrip.svelte';
 	import AdvisoryRow from './AdvisoryRow.svelte';
 	import HealthIndicator from './HealthIndicator.svelte';
 	import { townFilter, townLocation } from '$lib/stores/town-filter';
@@ -142,7 +143,8 @@
 	<main class="v2-main">
 		{#if controller && hydrated}
 			<AdvisoryRow feed={controller.advisories} now={clock} />
-			<BriefRow brief={controller.brief} now={clock} onjump={navJump} />
+			<BriefRow brief={controller.brief} now={clock} />
+			<CamStrip now={$clock} />
 		{/if}
 
 		<section id="map" class="v2-region" tabindex="-1" aria-labelledby="v2-map-title">

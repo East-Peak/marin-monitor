@@ -5,12 +5,7 @@
 	import { effectiveState, type SourceEntryState } from '$lib/dashboard/source-status';
 	import { nextTide, restOfTodayRainChance } from '$lib/weather/brief';
 
-	let {
-		brief,
-		now,
-		onjump
-	}: { brief: Readable<BriefState>; now: Readable<number>; onjump: (hash: string) => void } =
-		$props();
+	let { brief, now }: { brief: Readable<BriefState>; now: Readable<number> } = $props();
 
 	/** Clock-driven freshness for a card (G1a): nothing stays "ok" past its limit. */
 	function stateOf(card: BriefCard<unknown>, at: number): SourceEntryState {
@@ -103,13 +98,6 @@
 			<p class="v2-warn" data-text-role="meta">{tides.detail}</p>
 		{/if}
 	</article>
-
-	<article class="v2-card v2-card-action" data-card="getting-around" data-state="ok">
-		<h3 class="v2-card-title" data-text-role="label">Getting around</h3>
-		<a href="#getting-around" data-text-role="body" onclick={() => onjump('#getting-around')}
-			>Traffic cams & map →</a
-		>
-	</article>
 </section>
 
 <style>
@@ -138,8 +126,5 @@
 	}
 	.v2-warn {
 		color: var(--warning, var(--text-primary));
-	}
-	.v2-card-action a {
-		color: var(--accent);
 	}
 </style>

@@ -59,7 +59,9 @@ const config = {
 					'https://api.open-meteo.com',
 					'https://data.marincounty.gov',
 					'https://seeclickfix.com',
-					'https://citizen.com'
+					'https://citizen.com',
+					// Caltrans cam frames: Last-Modified for the v2 Cams strip's age (img-src already allows it)
+					'https://cwwp2.dot.ca.gov'
 				],
 				'font-src': ['self', 'https://fonts.gstatic.com'],
 				'frame-src': ['https://webcams.windy.com']
