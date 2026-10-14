@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-14',
+		title: 'Ridge and traffic cams in the preview',
+		description:
+			'The dashboard preview now opens with a row of live cameras right under the morning brief: the ALERTCalifornia ridge cams first (Mt. Tam, Wolfback, Big Rock, Barnabe, Burdell and more), then the Caltrans cams on 101. Swipe the row on a phone; on a computer use the arrows. A camera that isn’t sending pictures says so instead of showing a broken image, traffic cams say how old their picture is, and tapping a camera opens its full-size picture. The regular dashboard and TV are unchanged.'
+	},
+	{
+		date: '2026-10-14',
 		title: 'Getting the preview’s cameras ready',
 		description:
 			'Behind the scenes: the dashboard preview gets the pieces for a row of live cameras — ridge cams first, then 101 — that only shows a picture once it has fully loaded and only says how old a picture is when the camera itself says so. Nothing changes on screen yet.'

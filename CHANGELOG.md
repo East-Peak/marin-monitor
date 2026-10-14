@@ -6,6 +6,14 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-14
 
+### Added — the Cams strip in the v2 preview
+
+- **Cameras:** an always-open row directly under the brief, above the map: 17 ALERTCalifornia ridge cams (south → north), then 4 Caltrans 101 cams. Phone: one swipe row with the next tile peeking; desktop: five per view with ‹ › buttons. Tapping a tile opens the source's full-size frame.
+- **Honest tiles:** a frame shows only once it has decoded; a camera that never delivers reads "Camera offline"; if every camera tried is offline the strip says "No cameras are loading right now." Caltrans tiles show the source's own capture age (`Last-Modified`, now allowed in CSP `connect-src`), amber past 30 minutes; ALERTCalifornia exposes no capture time to browsers, so its tiles claim none.
+- **Bandwidth:** only tiles near the viewport load, once a minute, never while the tab is hidden or the strip is scrolled away; ridge cams use ALERTCalifornia's ~6 KB thumbnails.
+- **Settings:** the ⚙ toggle reads "Show cameras" and hides the whole strip (it says so, with a Show button). The brief's "Traffic cams & map" link is retired; the cams are right below it.
+- **Layout budget:** on a 390×844 phone the strip takes ≤ 220 px and the rest of the page keeps the 1,266 px third-item budget (§13.3, re-ruled for decision 5a), measured healthy and with every camera down.
+
 ### Added — Cams strip building blocks for the v2 preview (not yet shown)
 
 - `src/lib/dashboard/cam-strip.ts`: the strip's cameras (17 ALERTCalifornia ridge cams, then 4 Caltrans 101 cams; the frozen ABC7 frame and Windy embeds excluded), thumbnail URLs, and the age rule (only a source-provided capture time, amber past 30 min).
