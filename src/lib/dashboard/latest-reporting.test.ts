@@ -91,7 +91,7 @@ function view(items: NewsSnapshotItem[], sources: SourceOver[] = [{}]): NewsSnap
 }
 /** The controller's real entries for a view (batch 2 adapters), after a successful read. */
 const entries = (v: NewsSnapshotView) => [
-	fromSnapshotRead({ ok: true, at: NOW }, v),
+	fromSnapshotRead({ ok: true, at: NOW, observedAt: null }, v),
 	...v.sources.map(fromSnapshotSource)
 ];
 const rowsOf = (out: LatestReportingView) =>

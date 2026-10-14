@@ -9,6 +9,7 @@ import {
 	fromLoaderPart,
 	fromSnapshotRead,
 	fromSnapshotSource,
+	STATUS_AWARE_PARTS,
 	type HealthSourceJson
 } from './source-adapters';
 
@@ -88,7 +89,7 @@ describe('fromSnapshotRead', () => {
 		});
 	});
 	it("ok carries the snapshot's own observation time; a failed re-read keeps the applied view as stale", () => {
-		expect(fromSnapshotRead({ ok: true, at: NOW }, view)).toMatchObject({
+		expect(fromSnapshotRead({ ok: true, at: NOW, observedAt: null }, view)).toMatchObject({
 			state: 'ok',
 			observedAt: NOW - 10 * 60_000,
 			maxAgeMs: 45 * 60_000
@@ -103,7 +104,7 @@ describe('fromSnapshotRead', () => {
 describe('fromLoaderPart (transport success is not freshness; Codex r1 #2)', () => {
 	it('a successful read — even a stale-cache earthquake list or a days-old 311 blob served with HTTP 200 — is unknown, never ok', () => {
 		for (const part of ['earthquakes', 'seeclickfix'] as const) {
-			expect(fromLoaderPart(part, { ok: true, at: NOW }, true)).toEqual({
+			expect(fromLoaderPart(part, { ok: true, at: NOW, observedAt: null }, true)).toEqual({
 				id: `part:${part}`,
 				name: part === 'earthquakes' ? 'USGS earthquakes' : 'Fix It Marin (311)',
 				state: 'unknown',
@@ -130,7 +131,7 @@ describe('fromLoaderPart (transport success is not freshness; Codex r1 #2)', () 
 			'police-logs',
 			'supplemental-activity'
 		] as const) {
-			expect(fromLoaderPart(part, { ok: true, at: NOW }, true)).toMatchObject({
+			expect(fromLoaderPart(part, { ok: true, at: NOW, observedAt: null }, true)).toMatchObject({
 				state: 'unknown',
 				detail: 'failures not reported by this source'
 			});
@@ -242,5 +243,13 @@ describe('G0a health JSON (for the health indicator)', () => {
 			state: 'unavailable',
 			detail: 'Part of News feeds'
 		});
+	});
+});
+
+describe('the parts that carry a payload time (map coverage label)', () => {
+	it('are exactly the status-aware adapter parts: earthquakes and seeclickfix', () => {
+		expect(new Set([...STATUS_AWARE_PARTS].filter((p) => p !== 'snapshot'))).toEqual(
+			new Set(['earthquakes', 'seeclickfix'])
+		);
 	});
 });

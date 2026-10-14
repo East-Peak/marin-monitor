@@ -93,7 +93,8 @@ const quake: NewsItem = {
 	lat: 38.15,
 	lon: -122.57
 };
-const ok = { ok: true as const, at: NOW };
+const okAt = (t: number | null) => ({ ok: true as const, at: NOW, observedAt: t });
+const ok = okAt(null);
 const fail = (error: string) => ({ ok: false as const, error, at: NOW });
 function sources(
 	v: NewsSnapshotView | null,

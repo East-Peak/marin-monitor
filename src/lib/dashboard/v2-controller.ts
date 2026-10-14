@@ -19,13 +19,13 @@ import { fetchCoffeeIndexDataWithStatus } from '$lib/api/marin/coffee';
 import { fetchFitnessDataWithStatus } from '$lib/api/marin/fitness';
 import {
 	earthquakesToNewsItems,
-	fetchEarthquakesOrThrow,
 	fetchNpsAlerts,
-	fetchSeeClickFixIssues,
 	fetchSheriffCrimeBlotter,
 	fetchSupplementalActivityFeeds,
 	fetchSupplementalPoliceLogs,
-	fetchTransitAlerts
+	fetchTransitAlerts,
+	readEarthquakesOrThrow,
+	readSeeClickFixIssues
 } from '$lib/api/marin';
 import { boundedOp, DEFAULT_OP_DEADLINE_MS } from '$lib/api/marin/bounded-op';
 import { fetchHealthReport, type HealthReportJson } from '$lib/api/marin/health-report';
@@ -151,9 +151,10 @@ export function v2NewsSources(
 	return {
 		...TV_NEWS_SOURCES,
 		nps: owned('nps', (s) => fetchNpsAlerts({ signal: s })),
-		earthquakes: owned('earthquakes', async (s) =>
-			earthquakesToNewsItems(await fetchEarthquakesOrThrow({ signal: s, liveOnly: true }))
-		),
+		earthquakes: owned('earthquakes', async (s) => {
+			const { quakes, observedAt } = await readEarthquakesOrThrow({ signal: s, liveOnly: true });
+			return { items: earthquakesToNewsItems(quakes), observedAt };
+		}),
 		transit: owned('transit', async (s) => (await fetchTransitAlerts({ signal: s })).items),
 		'sheriff-blotter': owned('sheriff-blotter', (s) =>
 			fetchSheriffCrimeBlotter(undefined, undefined, { signal: s })
@@ -162,7 +163,7 @@ export function v2NewsSources(
 		'supplemental-activity': owned('supplemental-activity', (s) =>
 			fetchSupplementalActivityFeeds({ signal: s })
 		),
-		seeclickfix: owned('seeclickfix', (s) => fetchSeeClickFixIssues({ signal: s }))
+		seeclickfix: owned('seeclickfix', (s) => readSeeClickFixIssues({ signal: s }))
 	};
 }
 

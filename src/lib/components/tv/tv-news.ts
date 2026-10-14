@@ -27,13 +27,13 @@ import { compareByTimestamp } from '$lib/news/order';
 import { isLocallyRelevant } from '$lib/config/relevance';
 import {
 	earthquakesToNewsItems,
-	fetchEarthquakesOrThrow,
 	fetchNpsAlerts,
-	fetchSeeClickFixIssues,
 	fetchSheriffCrimeBlotter,
 	fetchSupplementalActivityFeeds,
 	fetchSupplementalPoliceLogs,
-	fetchTransitAlerts
+	fetchTransitAlerts,
+	readEarthquakesOrThrow,
+	readSeeClickFixIssues
 } from '$lib/api/marin';
 import {
 	fetchNewsSnapshot,
@@ -55,23 +55,40 @@ const ADAPTER_BUCKET = {
 type AdapterPart = keyof typeof ADAPTER_BUCKET;
 export type TvNewsPart = 'snapshot' | AdapterPart;
 type Part = TvNewsPart;
-/** One part's result in one refresh (for per-source status; the TV ignores it). */
-export type PartOutcome = { ok: true; at: number } | { ok: false; error: string; at: number };
+/**
+ * One part's result in one refresh (for per-source status; the TV ignores it).
+ * `at` is the settle clock; `observedAt` is the payload's own time, or null.
+ */
+export type PartOutcome =
+	| { ok: true; at: number; observedAt: number | null }
+	| { ok: false; error: string; at: number };
 type Buckets = Map<NewsCategory, NewsItem[]>;
+
+/** A part's items with the time its payload says it was observed (null when it doesn't say). */
+export interface ObservedItems {
+	items: NewsItem[];
+	observedAt: number | null;
+}
+/** The parts whose payload reports its own time. */
+type ObservedPart = 'earthquakes' | 'seeclickfix';
 
 export type TvNewsSources = {
 	snapshot: (signal: AbortSignal) => Promise<NewsSnapshotResponse>;
-} & Record<AdapterPart, () => Promise<NewsItem[]>>;
+} & Record<Exclude<AdapterPart, ObservedPart>, () => Promise<NewsItem[]>> &
+	Record<ObservedPart, () => Promise<ObservedItems>>;
 
 export const TV_NEWS_SOURCES: TvNewsSources = {
 	snapshot: (signal) => fetchNewsSnapshot({ signal }),
 	nps: () => fetchNpsAlerts(),
-	earthquakes: async () => earthquakesToNewsItems(await fetchEarthquakesOrThrow()),
+	earthquakes: async () => {
+		const { quakes, observedAt } = await readEarthquakesOrThrow();
+		return { items: earthquakesToNewsItems(quakes), observedAt };
+	},
 	transit: async () => (await fetchTransitAlerts()).items,
 	'sheriff-blotter': () => fetchSheriffCrimeBlotter(),
 	'police-logs': () => fetchSupplementalPoliceLogs(),
 	'supplemental-activity': () => fetchSupplementalActivityFeeds(),
-	seeclickfix: () => fetchSeeClickFixIssues()
+	seeclickfix: () => readSeeClickFixIssues()
 };
 
 const ADAPTER_PARTS = Object.keys(ADAPTER_BUCKET) as AdapterPart[];
@@ -188,7 +205,9 @@ export function createTvNewsLoader(deps: {
 		if (failure) problems.push(failure);
 		deps.onPartSettled?.(
 			'snapshot',
-			failure ? { ok: false, error: failure, at: deps.now() } : { ok: true, at: deps.now() }
+			failure
+				? { ok: false, error: failure, at: deps.now() }
+				: { ok: true, at: deps.now(), observedAt: null }
 		);
 		// The callback may dispose or supersede this refresh.
 		if (!live()) return;
@@ -200,9 +219,13 @@ export function createTvNewsLoader(deps: {
 	}
 
 	async function loadAdapter(part: AdapterPart, live: () => boolean, problems: string[]) {
-		let items: NewsItem[];
+		let read: ObservedItems;
 		try {
-			items = await withDeadline(deps.sources[part](), deadlineMs);
+			const value = await withDeadline<NewsItem[] | ObservedItems>(
+				deps.sources[part](),
+				deadlineMs
+			);
+			read = Array.isArray(value) ? { items: value, observedAt: null } : value;
 		} catch (err) {
 			if (live()) {
 				problems.push(`${part}: ${message(err)}`);
@@ -211,10 +234,11 @@ export function createTvNewsLoader(deps: {
 			return;
 		}
 		if (!live()) return;
+		const { items, observedAt } = read;
 		if (part === 'earthquakes') deps.onEarthquakes(items);
 		store(part, adapterBuckets(part, items));
 		// The callbacks above may dispose or supersede this refresh.
-		if (live()) deps.onPartSettled?.(part, { ok: true, at: deps.now() });
+		if (live()) deps.onPartSettled?.(part, { ok: true, at: deps.now(), observedAt });
 	}
 
 	return {

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { get } from 'svelte/store';
 import type { NewsSnapshotItem, NewsSnapshotResponse, NewsSnapshotView } from '$lib/news/snapshot';
 import type { NewsCategory, NewsItem } from '$lib/types';
+import type { ObservedItems } from './tv-news';
 
 vi.mock('$app/environment', () => ({ browser: true, version: 'test' }));
 vi.mock('$lib/services/client', () => ({ serviceClient: { request: vi.fn() } }));
@@ -100,16 +101,18 @@ function deferred<T>() {
 }
 const tick = () => new Promise((r) => setTimeout(r, 0));
 const ids = (items: NewsItem[] | undefined) => (items ?? []).map((i) => i.id);
+/** A status-aware part's read with no payload time. */
+const observed = (items: NewsItem[]): ObservedItems => ({ items, observedAt: null });
 
 const fakes = (): TvNewsSources => ({
 	snapshot: async () => ok(1, []),
 	nps: async () => [],
-	earthquakes: async () => [],
+	earthquakes: async () => observed([]),
 	transit: async () => [],
 	'sheriff-blotter': async () => [],
 	'police-logs': async () => [],
 	'supplemental-activity': async () => [],
-	seeclickfix: async () => []
+	seeclickfix: async () => observed([])
 });
 
 function harness(overrides: Partial<TvNewsSources> = {}, extra: { partDeadlineMs?: number } = {}) {
@@ -169,8 +172,8 @@ describe('createTvNewsLoader — arrival and placement', () => {
 		const snapshot = deferred<NewsSnapshotResponse>();
 		const h = harness({
 			snapshot: () => snapshot.promise,
-			seeclickfix: async () => [adapterItem('seeclickfix-1', '311')],
-			earthquakes: async () => [adapterItem('usgs-1', 'safety')]
+			seeclickfix: async () => observed([adapterItem('seeclickfix-1', '311')]),
+			earthquakes: async () => observed([adapterItem('usgs-1', 'safety')])
 		});
 		const done = h.loader.refresh();
 		await tick();
@@ -180,6 +183,17 @@ describe('createTvNewsLoader — arrival and placement', () => {
 		snapshot.resolve(ok(1, []));
 		expect(await done).toEqual([]);
 		expect(h.applied).toEqual([1]);
+	});
+
+	it('an observed part’s items are committed and passed to onEarthquakes exactly as before (map coverage label)', async () => {
+		const h = harness({
+			seeclickfix: async () => ({ items: [adapterItem('seeclickfix-1', '311')], observedAt: NOW }),
+			earthquakes: async () => ({ items: [adapterItem('usgs-1', 'safety')], observedAt: NOW })
+		});
+		expect(await h.loader.refresh()).toEqual([]);
+		expect(ids(h.committed.get('311'))).toEqual(['seeclickfix-1']);
+		expect(ids(h.committed.get('safety'))).toEqual(['usgs-1']);
+		expect(h.quakes.map(ids)).toEqual([['usgs-1']]);
 	});
 
 	it('places a category-specific copy of each story in every category it appeared in, merged newest-first, undated last', async () => {
@@ -281,10 +295,10 @@ describe('createTvNewsLoader — failures and ownership', () => {
 
 	it('status-aware adapter: failure keeps its last items and is reported; a successful empty clears', async () => {
 		const seeclickfix = vi
-			.fn<() => Promise<NewsItem[]>>()
-			.mockResolvedValueOnce([adapterItem('seeclickfix-1', '311')])
+			.fn<() => Promise<ObservedItems>>()
+			.mockResolvedValueOnce(observed([adapterItem('seeclickfix-1', '311')]))
 			.mockRejectedValueOnce(new Error('HTTP 503'))
-			.mockResolvedValueOnce([]);
+			.mockResolvedValueOnce(observed([]));
 		const h = harness({ seeclickfix });
 		await h.loader.refresh();
 		expect(await h.loader.refresh()).toEqual(['seeclickfix: HTTP 503']);
@@ -351,9 +365,9 @@ describe('createTvNewsLoader — failures and ownership', () => {
 
 	it('a part that never settles is reported at its deadline and the next refresh succeeds (Codex r1 #6)', async () => {
 		const seeclickfix = vi
-			.fn<() => Promise<NewsItem[]>>()
+			.fn<() => Promise<ObservedItems>>()
 			.mockImplementationOnce(() => new Promise(() => {}))
-			.mockResolvedValueOnce([adapterItem('seeclickfix-1', '311')]);
+			.mockResolvedValueOnce(observed([adapterItem('seeclickfix-1', '311')]));
 		const h = harness({ seeclickfix }, { partDeadlineMs: 20 });
 		expect(await h.loader.refresh()).toEqual(['seeclickfix: timed out after 20 ms']);
 		expect(await h.loader.refresh()).toEqual([]);
@@ -409,12 +423,14 @@ describe('createTvNewsLoader — failures and ownership', () => {
 
 	it('real store: a failing status-aware adapter keeps its 311 pins through a successful snapshot', async () => {
 		const seeclickfix = vi
-			.fn<() => Promise<NewsItem[]>>()
+			.fn<() => Promise<ObservedItems>>()
 			// As fetchSeeClickFixIssues builds it: the address resolves a town, the
 			// local anchor the store's relevance rule keeps adapter items by.
-			.mockResolvedValueOnce([
-				{ ...adapterItem('seeclickfix-1', '311'), town: 'San Rafael', townSlug: 'san-rafael' }
-			])
+			.mockResolvedValueOnce(
+				observed([
+					{ ...adapterItem('seeclickfix-1', '311'), town: 'San Rafael', townSlug: 'san-rafael' }
+				])
+			)
 			.mockRejectedValueOnce(new Error('HTTP 503'));
 		const { loader } = storeLoader({ seeclickfix });
 		await loader.refresh();
@@ -455,14 +471,14 @@ describe('createTvNewsLoader — ordering and lifetime', () => {
 
 	it('a disposed loader writes nothing when held responses finally land (Codex r1 #10)', async () => {
 		const snapshot = deferred<NewsSnapshotResponse>();
-		const quakes = deferred<NewsItem[]>();
+		const quakes = deferred<ObservedItems>();
 		const h = harness({ snapshot: () => snapshot.promise, earthquakes: () => quakes.promise });
 		const done = h.loader.refresh();
 		await tick();
 		h.commit.mockClear();
 		h.owner.abort();
 		snapshot.resolve(ok(1, [story('late', ['local'], iso(HOUR))]));
-		quakes.resolve([adapterItem('usgs-late', 'safety')]);
+		quakes.resolve(observed([adapterItem('usgs-late', 'safety')]));
 		expect(await done).toEqual([]);
 		expect(h.commit).not.toHaveBeenCalled();
 		expect(h.quakes).toEqual([]);
@@ -472,15 +488,15 @@ describe('createTvNewsLoader — ordering and lifetime', () => {
 	});
 
 	it('a superseded refresh writes nothing; the newer one wins', async () => {
-		const first = deferred<NewsItem[]>();
+		const first = deferred<ObservedItems>();
 		const seeclickfix = vi
-			.fn<() => Promise<NewsItem[]>>()
+			.fn<() => Promise<ObservedItems>>()
 			.mockImplementationOnce(() => first.promise)
-			.mockResolvedValueOnce([adapterItem('seeclickfix-new', '311')]);
+			.mockResolvedValueOnce(observed([adapterItem('seeclickfix-new', '311')]));
 		const h = harness({ seeclickfix });
 		const older = h.loader.refresh();
 		await h.loader.refresh();
-		first.resolve([adapterItem('seeclickfix-old', '311')]);
+		first.resolve(observed([adapterItem('seeclickfix-old', '311')]));
 		expect(await older).toEqual([]);
 		expect(ids(h.committed.get('311'))).toEqual(['seeclickfix-new']);
 	});

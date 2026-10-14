@@ -23,15 +23,16 @@ const OK_SNAPSHOT: NewsSnapshotResponse = {
 
 function sources(over: Partial<Sources> = {}): Sources {
 	const empty = async () => [];
+	const untimed = async () => ({ items: [], observedAt: null });
 	return {
 		snapshot: async () => OK_SNAPSHOT,
 		nps: empty,
-		earthquakes: empty,
+		earthquakes: untimed,
 		transit: empty,
 		'sheriff-blotter': empty,
 		'police-logs': empty,
 		'supplemental-activity': empty,
-		seeclickfix: empty,
+		seeclickfix: untimed,
 		...over
 	};
 }
@@ -63,7 +64,7 @@ describe('createTvNewsLoader onPartSettled', () => {
 		await l.refresh();
 		const byPart = Object.fromEntries(settled);
 		expect(settled).toHaveLength(8);
-		expect(byPart.nps).toEqual({ ok: true, at: NOW });
+		expect(byPart.nps).toEqual({ ok: true, at: NOW, observedAt: null });
 		expect(byPart.seeclickfix).toEqual({ ok: false, error: 'HTTP 500', at: NOW });
 		expect(byPart.snapshot).toEqual({
 			ok: false,
@@ -72,10 +73,26 @@ describe('createTvNewsLoader onPartSettled', () => {
 		});
 	});
 
+	it('a status-aware part’s ok outcome carries its payload time; other parts report none', async () => {
+		const GEN = NOW - 4 * 60_000;
+		const { l, settled } = loader(
+			sources({
+				earthquakes: async () => ({ items: [], observedAt: GEN }),
+				seeclickfix: async () => ({ items: [], observedAt: null })
+			})
+		);
+		await expect(l.refresh()).resolves.toEqual([]);
+		const outcome = (p: string) => settled.find(([part]) => part === p)?.[1];
+		expect(outcome('earthquakes')).toMatchObject({ ok: true, observedAt: GEN });
+		expect(outcome('seeclickfix')).toMatchObject({ ok: true, observedAt: null });
+		expect(outcome('transit')).toMatchObject({ ok: true, observedAt: null });
+		expect(outcome('snapshot')).toMatchObject({ ok: true, observedAt: null });
+	});
+
 	it('an ok snapshot read settles ok', async () => {
 		const { l, settled } = loader(sources());
 		await l.refresh();
-		expect(Object.fromEntries(settled).snapshot).toEqual({ ok: true, at: NOW });
+		expect(Object.fromEntries(settled).snapshot).toEqual({ ok: true, at: NOW, observedAt: null });
 	});
 
 	it('reports each of the eight parts exactly once per refresh, on every refresh (Codex PR 5 #2)', async () => {

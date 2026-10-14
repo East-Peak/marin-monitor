@@ -90,17 +90,21 @@ const story = (id: string): NewsItem => ({
 	verification: 'local_media'
 });
 
+/** A status-aware part's read with no payload time. */
+const untimedRead = (items: NewsItem[]) => ({ items, observedAt: null });
+
 function newsSources(over: Partial<Sources> = {}): Sources {
 	const empty = async (): Promise<NewsItem[]> => [];
+	const untimed = async () => untimedRead([]);
 	return {
 		snapshot: async () => SNAPSHOT,
 		nps: empty,
-		earthquakes: empty,
+		earthquakes: untimed,
 		transit: empty,
 		'sheriff-blotter': empty,
 		'police-logs': empty,
 		'supplemental-activity': empty,
-		seeclickfix: empty,
+		seeclickfix: untimed,
 		...over
 	};
 }
@@ -285,7 +289,7 @@ describe('createDashboardV2Controller', () => {
 			newsSources: newsSources({
 				seeclickfix: async () => {
 					if (fail) throw new Error('HTTP 500');
-					return [];
+					return untimedRead([]);
 				}
 			})
 		});
@@ -412,7 +416,9 @@ describe('createDashboardV2Controller', () => {
 			town: 'San Rafael',
 			townSlug: 'san-rafael'
 		};
-		const c = controller({ newsSources: newsSources({ seeclickfix: async () => [fix] }) });
+		const c = controller({
+			newsSources: newsSources({ seeclickfix: async () => untimedRead([fix]) })
+		});
 		expect(get(c.snapshot)).toBeNull();
 		expect(get(c.fixIt)).toBeNull();
 		await c.start();
@@ -433,7 +439,9 @@ describe('createDashboardV2Controller', () => {
 	});
 
 	it('a successful, empty first Fix It read is an empty list, not "never read" (Codex 9a2 #2)', async () => {
-		const c = controller({ newsSources: newsSources({ seeclickfix: async () => [] }) });
+		const c = controller({
+			newsSources: newsSources({ seeclickfix: async () => untimedRead([]) })
+		});
 		await c.start();
 		expect(get(c.fixIt)).toEqual([]);
 	});

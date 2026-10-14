@@ -18,7 +18,7 @@ vi.mock('$lib/api/marin/nps', async (orig) => ({
 }));
 vi.mock('$lib/api/marin/usgs', async (orig) => ({
 	...(await orig<object>()),
-	fetchEarthquakesOrThrow: held('earthquakes')
+	readEarthquakesOrThrow: held('earthquakes')
 }));
 vi.mock('$lib/api/marin/transit', async (orig) => ({
 	...(await orig<object>()),
@@ -38,7 +38,7 @@ vi.mock('$lib/api/marin/activity', async (orig) => ({
 }));
 vi.mock('$lib/api/marin/seeclickfix', async (orig) => ({
 	...(await orig<object>()),
-	fetchSeeClickFixIssues: held('seeclickfix')
+	readSeeClickFixIssues: held('seeclickfix')
 }));
 
 const { v2NewsSources } = await import('./v2-controller');

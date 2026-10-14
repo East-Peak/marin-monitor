@@ -2,7 +2,13 @@ export { fetchCategory, fetchAllFeeds, type CategoryFetchResult } from './rss';
 export { fetchForecast, fetchAlerts, fetchWeather } from './nws';
 export { fetchHourlyForecast, type HourlyPeriod } from './nws-hourly';
 export { fetchNpsAlerts } from './nps';
-export { fetchEarthquakes, fetchEarthquakesOrThrow, earthquakesToNewsItems } from './usgs';
+export {
+	fetchEarthquakes,
+	fetchEarthquakesOrThrow,
+	readEarthquakesOrThrow,
+	earthquakesToNewsItems,
+	type EarthquakeRead
+} from './usgs';
 export { fetchTransitAlerts } from './transit';
 export { fetchTidePredictions, fetchHourlyTides } from './tides';
 export { fetchHousingData, type HousingMetric } from './housing';
@@ -20,4 +26,4 @@ export { fetchObservedWeather, type ObservedWeather } from './open-meteo';
 export { fetchGasPriceData } from './gas-prices';
 export { fetchEvChargingData } from './ev-charging';
 export { fetchAirportStatus } from './airport-status';
-export { fetchSeeClickFixIssues } from './seeclickfix';
+export { fetchSeeClickFixIssues, readSeeClickFixIssues } from './seeclickfix';
