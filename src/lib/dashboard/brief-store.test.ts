@@ -8,11 +8,13 @@ const CENTRAL = getLocationById('central-marin');
 const MILL_VALLEY = getLocationById('mill-valley');
 const forecast = (updatedAt: number): HourlyForecast => ({ updatedAt, periods: [] });
 const TIDES: TideEvent[] = [{ atMs: 1, heightFt: 6.3, type: 'H' }];
-const obs = (observedAt: number): ObservedNow => ({
+const obs = (observedAt: number, over: Partial<ObservedNow> = {}): ObservedNow => ({
 	stationName: 'Gnoss Field (Novato)',
 	observedAt,
+	listNewestAt: observedAt,
 	tempF: 60,
-	text: null
+	text: null,
+	...over
 });
 
 function deferred<T>() {
@@ -123,6 +125,69 @@ describe('createBriefStore', () => {
 		await s.load(CENTRAL);
 		await s.load(CENTRAL);
 		expect(get(s).observed.observedAt).toBe(200);
+	});
+
+	it('recovery: a later list whose older report gained a temperature replaces a newer "unknown" (Codex r1 #2)', async () => {
+		let n = 0;
+		const s = createBriefStore(
+			fetchers({
+				observation: vi.fn(async () =>
+					++n === 1 ? obs(200, { tempF: null }) : obs(150, { listNewestAt: 200 })
+				)
+			}),
+			new AbortController().signal
+		);
+		await s.load(CENTRAL);
+		expect(get(s).observed.value).toMatchObject({ observedAt: 200, tempF: null });
+		await s.load(CENTRAL);
+		expect(get(s).observed).toMatchObject({
+			observedAt: 150,
+			value: { observedAt: 150, tempF: 60 },
+			state: 'ok'
+		});
+	});
+
+	it('QC reversal: a later list that rejected the shown report replaces it with its older valid one (Codex r2 #1)', async () => {
+		let n = 0;
+		const s = createBriefStore(
+			fetchers({
+				observation: vi.fn(async () =>
+					++n === 1 ? obs(200, { tempF: 104 }) : obs(150, { listNewestAt: 200 })
+				)
+			}),
+			new AbortController().signal
+		);
+		await s.load(CENTRAL);
+		await s.load(CENTRAL);
+		expect(get(s).observed.value).toMatchObject({ observedAt: 150, tempF: 60 });
+	});
+
+	it('a stale list never resurrects a value the newer list rejected (Codex r3 #1)', async () => {
+		let n = 0;
+		const s = createBriefStore(
+			fetchers({
+				observation: vi.fn(async () =>
+					++n === 1 ? obs(150, { listNewestAt: 200 }) : obs(180, { tempF: 104 })
+				)
+			}),
+			new AbortController().signal
+		);
+		await s.load(CENTRAL);
+		await s.load(CENTRAL);
+		expect(get(s).observed.value).toMatchObject({ observedAt: 150, tempF: 60 });
+	});
+
+	it('a stale copy (its list predates the shown list) never replaces it, unknown or not', async () => {
+		let n = 0;
+		const s = createBriefStore(
+			fetchers({
+				observation: vi.fn(async () => (++n === 1 ? obs(200, { tempF: null }) : obs(150)))
+			}),
+			new AbortController().signal
+		);
+		await s.load(CENTRAL);
+		await s.load(CENTRAL);
+		expect(get(s).observed.value).toMatchObject({ observedAt: 200, tempF: null });
 	});
 
 	it('overlapping loads share one observation request, so an old failure cannot follow a new success (Codex r1 #14)', async () => {

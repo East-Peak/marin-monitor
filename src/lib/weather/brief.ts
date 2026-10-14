@@ -51,9 +51,42 @@ export function restOfTodayRainChance(
 export interface ObservedNow {
 	stationName: string;
 	observedAt: number;
+	/** Newest report the selection considered; provenance for the store's guard (Decision 7). */
+	listNewestAt: number;
 	/** Null when NWS has no value or its QC rejected it. */
 	tempF: number | null;
 	text: string | null;
+}
+
+/** A report stamped further ahead of our clock than this is not believed (as `effectiveState`). */
+const FUTURE_SKEW_MS = 5 * 60_000;
+
+/** One report from a station's observation list. */
+export interface StationReading {
+	observedAt: number;
+	/** Null when the report has no usable temperature. */
+	tempF: number | null;
+	text: string | null;
+}
+
+/**
+ * The report the card shows: the newest with a temperature within
+ * OBSERVATION_MAX_AGE_MS, else the newest as it is (unknown, or old and so
+ * shown out of date). One report supplies every field. `listNewestAt` is the
+ * newest report considered, so the store can recognise a stale copy of the list.
+ */
+export function chooseObservation(
+	readings: readonly StationReading[],
+	now: number
+): { reading: StationReading; listNewestAt: number } | null {
+	const candidates = readings
+		.filter((r) => Number.isFinite(r.observedAt) && r.observedAt <= now + FUTURE_SKEW_MS)
+		.sort((a, b) => b.observedAt - a.observedAt);
+	if (candidates.length === 0) return null;
+	const usable = candidates.find(
+		(r) => r.tempF !== null && now - r.observedAt <= OBSERVATION_MAX_AGE_MS
+	);
+	return { reading: usable ?? candidates[0], listNewestAt: candidates[0].observedAt };
 }
 
 export function celsiusToFahrenheit(c: number): number {

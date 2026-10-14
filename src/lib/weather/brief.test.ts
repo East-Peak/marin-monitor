@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
 	celsiusToFahrenheit,
+	chooseObservation,
 	forecastScope,
 	nextTide,
+	OBSERVATION_MAX_AGE_MS,
 	restOfTodayRainChance,
-	type HourlyPop
+	type HourlyPop,
+	type StationReading
 } from './brief';
 
 const H = 3_600_000;
@@ -78,5 +81,81 @@ describe('tides and helpers', () => {
 	it('converts Celsius observations to whole Fahrenheit', () => {
 		expect(celsiusToFahrenheit(15.5)).toBe(60);
 		expect(celsiusToFahrenheit(-40)).toBe(-40);
+	});
+});
+
+describe('chooseObservation: newest report with a temperature, within the card’s max age', () => {
+	const NOW = Date.parse('2026-10-14T22:46:00Z');
+	const r = (iso: string, tempF: number | null, text: string | null = null): StationReading => ({
+		observedAt: Date.parse(iso),
+		tempF,
+		text
+	});
+	const pick = (rs: StationReading[], now = NOW) => chooseObservation(rs, now)?.reading ?? null;
+	it('the newest report has a temperature: it is the answer', () => {
+		expect(pick([r('2026-10-14T22:15:00Z', 84), r('2026-10-14T21:55:00Z', 84)], NOW)).toEqual(
+			r('2026-10-14T22:15:00Z', 84)
+		);
+	});
+	it('the prod case: newest has none, the one before does → that one, with its own time and text', () => {
+		const picked = pick(
+			[r('2026-10-14T22:15:00Z', null, 'Clear'), r('2026-10-14T21:55:00Z', 84, null)],
+			NOW
+		);
+		expect(picked).toEqual(r('2026-10-14T21:55:00Z', 84, null));
+	});
+	it('order is not trusted', () => {
+		expect(
+			pick(
+				[
+					r('2026-10-14T21:35:00Z', 83),
+					r('2026-10-14T22:15:00Z', null),
+					r('2026-10-14T21:55:00Z', 84)
+				],
+				NOW
+			)?.tempF
+		).toBe(84);
+	});
+	it('exactly at the bound counts; one ms past it does not', () => {
+		const edge = NOW - OBSERVATION_MAX_AGE_MS;
+		const newest = r('2026-10-14T22:15:00Z', null);
+		expect(pick([newest, { observedAt: edge, tempF: 70, text: null }], NOW)?.tempF).toBe(70);
+		expect(pick([newest, { observedAt: edge - 1, tempF: 70, text: null }], NOW)).toEqual(newest);
+	});
+	it('negative control: nothing usable in the window → the newest report, temperature unknown', () => {
+		const newest = r('2026-10-14T22:15:00Z', null, 'Clear');
+		expect(
+			pick([newest, r('2026-10-14T21:55:00Z', null), r('2026-10-14T20:55:00Z', 82)], NOW)
+		).toEqual(newest);
+	});
+	it('the station went quiet: every report is past 90 min → the newest as it is (the card marks it out of date)', () => {
+		const old = r('2026-10-14T20:15:00Z', 80);
+		expect(pick([old, r('2026-10-14T19:55:00Z', 79)], NOW)).toEqual(old);
+		const oldUnknown = r('2026-10-14T20:15:00Z', null);
+		expect(pick([oldUnknown, r('2026-10-14T19:55:00Z', 79)], NOW)).toEqual(oldUnknown);
+	});
+	it('a report from more than 5 min in the future is never chosen', () => {
+		expect(pick([r('2026-10-14T23:15:00Z', 90), r('2026-10-14T22:15:00Z', 84)], NOW)?.tempF).toBe(
+			84
+		);
+		expect(pick([r('2026-10-14T23:15:00Z', 90)], NOW)).toBeNull();
+	});
+	it('listNewestAt is the newest report the rule considered, skew-allowed future included (Codex r3 #2)', () => {
+		expect(
+			chooseObservation([r('2026-10-14T22:15:00Z', null), r('2026-10-14T21:55:00Z', 84)], NOW)
+				?.listNewestAt
+		).toBe(Date.parse('2026-10-14T22:15:00Z'));
+		const soon = r('2026-10-14T22:47:00Z', 84); // now + 1 min: allowed
+		expect(chooseObservation([soon], NOW)).toEqual({
+			reading: soon,
+			listNewestAt: soon.observedAt
+		});
+		expect(
+			chooseObservation([r('2026-10-14T22:52:00Z', 84), r('2026-10-14T22:15:00Z', 84)], NOW)
+				?.listNewestAt
+		).toBe(Date.parse('2026-10-14T22:15:00Z')); // now + 6 min: excluded everywhere
+	});
+	it('no reports → null', () => {
+		expect(pick([], NOW)).toBeNull();
 	});
 });

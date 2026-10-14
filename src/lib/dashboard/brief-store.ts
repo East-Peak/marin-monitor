@@ -126,8 +126,10 @@ export function createBriefStore(
 			const value = await bounded('brief observation', (s) =>
 				fetchers.observation(OBSERVATION_STATION, s)
 			);
+			// List against list: only a copy of the list older than the one already judged is
+			// refused. An equal or newer list is authoritative, even when it picks an older report.
 			patch<ObservedNow>('observed', (c) =>
-				c.value !== null && c.value.observedAt > value.observedAt
+				c.value !== null && c.value.listNewestAt > value.listNewestAt
 					? c
 					: {
 							...c,

@@ -117,6 +117,7 @@ const fakeBrief = () => ({
 	observation: vi.fn(async () => ({
 		stationName: 'Gnoss Field (Novato)',
 		observedAt: NOW,
+		listNewestAt: NOW,
 		tempF: 60,
 		text: null
 	})),

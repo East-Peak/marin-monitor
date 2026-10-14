@@ -27,6 +27,7 @@ function state(over: Partial<BriefState> = {}): BriefState {
 			value: {
 				stationName: 'Gnoss Field (Novato)',
 				observedAt: Date.parse('2026-09-29T14:55:00Z'),
+				listNewestAt: Date.parse('2026-09-29T14:55:00Z'),
 				tempF: 60,
 				text: 'Clear'
 			},

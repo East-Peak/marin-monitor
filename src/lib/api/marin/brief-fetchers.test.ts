@@ -96,33 +96,98 @@ describe('fetchHourlyPopOrThrow', () => {
 
 describe('fetchLatestObservation', () => {
 	const station = { id: 'KDVO', name: 'Gnoss Field (Novato)' };
-	const obs = (temperature: unknown, timestamp: unknown = '2026-09-29T14:55:00+00:00') =>
-		ok({ properties: { timestamp, textDescription: 'Clear', temperature } });
-	it('reads the observation time, converts Celsius and labels our station', async () => {
-		request.mockResolvedValue(obs({ value: 15.5, qualityControl: 'V' }));
-		expect(await fetchLatestObservation(station)).toEqual({
+	const NOW = Date.parse('2026-09-29T15:00:00Z');
+	const feature = (
+		timestamp: unknown,
+		temperature: unknown,
+		textDescription: unknown = 'Clear'
+	) => ({
+		properties: { timestamp, textDescription, temperature }
+	});
+	const list = (...features: unknown[]) => ok({ features });
+
+	it('reads the station’s observation list, converts Celsius and labels our station', async () => {
+		request.mockResolvedValue(
+			list(feature('2026-09-29T14:55:00+00:00', { value: 15.5, qualityControl: 'V' }))
+		);
+		expect(await fetchLatestObservation(station, { now: NOW })).toEqual({
 			stationName: 'Gnoss Field (Novato)',
 			observedAt: Date.parse('2026-09-29T14:55:00Z'),
+			listNewestAt: Date.parse('2026-09-29T14:55:00Z'),
 			tempF: 60,
 			text: 'Clear'
 		});
-		expect(request.mock.calls[0][1]).toBe('/stations/KDVO/observations/latest');
+		expect(request.mock.calls[0][1]).toBe('/stations/KDVO/observations');
+		expect(request.mock.calls[0][2]).toMatchObject({
+			params: { limit: 8 },
+			accept: 'application/geo+json'
+		});
 		const owner = new AbortController();
-		await fetchLatestObservation(station, { signal: owner.signal });
+		await fetchLatestObservation(station, { signal: owner.signal, now: NOW });
 		expect(request.mock.calls[1][2]).toMatchObject({
 			signal: owner.signal,
 			revalidateInBackground: false
 		});
 	});
-	it('a null or QC-rejected temperature is unknown, not a number', async () => {
-		request.mockResolvedValueOnce(obs({ value: null, qualityControl: 'Z' }));
-		expect((await fetchLatestObservation(station)).tempF).toBeNull();
-		request.mockResolvedValueOnce(obs({ value: 40, qualityControl: 'X' }));
-		expect((await fetchLatestObservation(station)).tempF).toBeNull();
+	it('the prod case: newest report unprocessed (null, Z) → the previous QC’d one, with its time', async () => {
+		request.mockResolvedValue(
+			list(
+				feature('2026-09-29T14:55:00+00:00', { value: null, qualityControl: 'Z' }),
+				feature('2026-09-29T14:35:00+00:00', { value: 15.5, qualityControl: 'V' }, '')
+			)
+		);
+		expect(await fetchLatestObservation(station, { now: NOW })).toEqual({
+			stationName: 'Gnoss Field (Novato)',
+			observedAt: Date.parse('2026-09-29T14:35:00Z'),
+			listNewestAt: Date.parse('2026-09-29T14:55:00Z'),
+			tempF: 60,
+			text: null
+		});
 	});
-	it('no timestamp means no observation', async () => {
-		request.mockResolvedValue(obs({ value: 15 }, null));
-		await expect(fetchLatestObservation(station)).rejects.toThrow('missing its timestamp');
+	it.each([['X'], ['Q'], ['B']])(
+		'a %s-flagged temperature is never a headline; the older V one is',
+		async (qc) => {
+			request.mockResolvedValue(
+				list(
+					feature('2026-09-29T14:55:00+00:00', { value: 40, qualityControl: qc }),
+					feature('2026-09-29T14:35:00+00:00', { value: 15.5, qualityControl: 'V' })
+				)
+			);
+			expect((await fetchLatestObservation(station, { now: NOW })).tempF).toBe(60);
+		}
+	);
+	it('a null or QC-rejected temperature with nothing better is unknown, not a number (negative control)', async () => {
+		request.mockResolvedValueOnce(
+			list(feature('2026-09-29T14:55:00+00:00', { value: null, qualityControl: 'Z' }))
+		);
+		expect((await fetchLatestObservation(station, { now: NOW })).tempF).toBeNull();
+		request.mockResolvedValueOnce(
+			list(feature('2026-09-29T14:55:00+00:00', { value: 40, qualityControl: 'X' }))
+		);
+		expect((await fetchLatestObservation(station, { now: NOW })).tempF).toBeNull();
+	});
+	it('negative control: a usable temperature older than 90 min is not used', async () => {
+		request.mockResolvedValue(
+			list(
+				feature('2026-09-29T14:55:00+00:00', { value: null, qualityControl: 'Z' }),
+				feature('2026-09-29T13:15:00+00:00', { value: 15.5, qualityControl: 'V' })
+			)
+		);
+		expect(await fetchLatestObservation(station, { now: NOW })).toMatchObject({
+			observedAt: Date.parse('2026-09-29T14:55:00Z'),
+			tempF: null
+		});
+	});
+	it.each([
+		[{}],
+		[{ features: null }],
+		[{ features: [] }],
+		[{ features: [feature(null, { value: 15 })] }]
+	])('no timestamped report (%j) means no observation', async (body) => {
+		request.mockResolvedValue(ok(body));
+		await expect(fetchLatestObservation(station, { now: NOW })).rejects.toThrow(
+			'missing a timestamp'
+		);
 	});
 });
 
@@ -179,7 +244,11 @@ describe('a cached copy served because the live request failed is a failure, nev
 		[
 			'observation',
 			() => fetchLatestObservation({ id: 'KDVO', name: 'x' }),
-			{ properties: { timestamp: '2026-09-29T14:55:00+00:00', temperature: { value: 15 } } }
+			{
+				features: [
+					{ properties: { timestamp: '2026-09-29T14:55:00+00:00', temperature: { value: 15 } } }
+				]
+			}
 		],
 		['tides', () => fetchTideEventsOrThrow('9415020'), { predictions: [] }]
 	] as const)('%s rejects a stale-fallback or circuit-open result', async (_n, run, body) => {
