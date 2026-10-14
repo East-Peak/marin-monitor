@@ -28,6 +28,20 @@ interface UsgsFeature {
 
 interface UsgsResponse {
 	features: UsgsFeature[];
+	metadata?: { generated?: unknown };
+}
+
+/** A quake list and the moment USGS generated it (ms epoch), or null when the payload doesn't say. */
+export interface EarthquakeRead {
+	quakes: EarthquakeData[];
+	observedAt: number | null;
+}
+
+/** `metadata.generated` only when it is a positive, finite ms epoch that is also a valid date. */
+function generatedAt(value: unknown): number | null {
+	return typeof value === 'number' && value > 0 && Number.isFinite(new Date(value).getTime())
+		? value
+		: null;
 }
 
 /**
@@ -35,10 +49,20 @@ interface UsgsResponse {
  * unexpected shape, so a caller that keeps last-good pins can tell a failure
  * from a real "no quakes" (TV slice 3).
  */
-export async function fetchEarthquakesOrThrow({
+export async function fetchEarthquakesOrThrow(
+	opts: OwnerOptions & { liveOnly?: boolean } = {}
+): Promise<EarthquakeData[]> {
+	return (await readEarthquakesOrThrow(opts)).quakes;
+}
+
+/**
+ * fetchEarthquakesOrThrow, plus the payload's own time. A cached body keeps the
+ * `generated` it arrived with, so this is the data's age, not the fetch's.
+ */
+export async function readEarthquakesOrThrow({
 	signal,
 	liveOnly = false
-}: OwnerOptions & { liveOnly?: boolean } = {}): Promise<EarthquakeData[]> {
+}: OwnerOptions & { liveOnly?: boolean } = {}): Promise<EarthquakeRead> {
 	logger.log('USGS', 'Fetching earthquakes');
 
 	const result = await serviceClient.request<UsgsResponse>('USGS', '/fdsnws/event/1/query', {
@@ -60,7 +84,7 @@ export async function fetchEarthquakesOrThrow({
 		throw new Error('USGS: unexpected response shape');
 	}
 
-	return data.features.map((f) => ({
+	const quakes = data.features.map((f) => ({
 		id: f.id,
 		magnitude: f.properties.mag,
 		place: f.properties.place,
@@ -70,6 +94,7 @@ export async function fetchEarthquakesOrThrow({
 		depth: f.geometry.coordinates[2],
 		url: f.properties.url
 	}));
+	return { quakes, observedAt: generatedAt(data.metadata?.generated) };
 }
 
 /** The swallowing form the dashboard uses: any failure reads as no quakes. */

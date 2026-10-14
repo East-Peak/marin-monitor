@@ -4,7 +4,7 @@ vi.mock('$lib/services/client', async (importOriginal) => ({
 	...(await importOriginal<typeof import('$lib/services/client')>()),
 	serviceClient: { request }
 }));
-import { fetchEarthquakesOrThrow } from './usgs';
+import { fetchEarthquakesOrThrow, readEarthquakesOrThrow } from './usgs';
 
 const BODY = {
 	features: [
@@ -31,5 +31,40 @@ describe('fetchEarthquakesOrThrow liveOnly (v2; Codex r4 #2)', () => {
 		request.mockResolvedValue({ data: BODY, fromCache: 'stale-fallback', error: 'HTTP 503' });
 		await expect(fetchEarthquakesOrThrow({ liveOnly: true })).rejects.toThrow('HTTP 503');
 		expect(request.mock.calls[0][2]).toMatchObject({ revalidateInBackground: false });
+	});
+});
+
+const GEN = Date.parse('2026-10-13T22:55:53Z');
+describe('readEarthquakesOrThrow carries the payload’s own time (map coverage label)', () => {
+	it('observedAt is metadata.generated', async () => {
+		request.mockResolvedValue({
+			data: { ...BODY, metadata: { generated: GEN } },
+			fromCache: false
+		});
+		const r = await readEarthquakesOrThrow({ liveOnly: true });
+		expect(r.observedAt).toBe(GEN);
+		expect(r.quakes).toHaveLength(1);
+	});
+	it.each([
+		[undefined],
+		[{}],
+		[{ generated: 'soon' }],
+		[{ generated: NaN }],
+		[{ generated: 0 }],
+		[{ generated: -1 }],
+		[{ generated: 1e20 }]
+	])(
+		'no usable generated (%j) → observedAt null, never NaN (negative control)',
+		async (metadata) => {
+			request.mockResolvedValue({ data: { ...BODY, metadata }, fromCache: false });
+			expect((await readEarthquakesOrThrow({ liveOnly: true })).observedAt).toBeNull();
+		}
+	);
+	it('fetchEarthquakesOrThrow is unchanged: the quakes only', async () => {
+		request.mockResolvedValue({
+			data: { ...BODY, metadata: { generated: GEN } },
+			fromCache: false
+		});
+		await expect(fetchEarthquakesOrThrow()).resolves.toHaveLength(1);
 	});
 });

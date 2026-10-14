@@ -97,7 +97,11 @@ export const GET: RequestHandler = async ({ request }) => {
 		}
 
 		const data = await response.json();
-		const issues: SeeClickFixIssue[] = data.issues ?? [];
+		// A 200 with no issues array is not an empty week: keep the last-good blob and its time.
+		if (!Array.isArray(data?.issues)) {
+			throw new Error('SeeClickFix API: response has no issues array');
+		}
+		const issues: SeeClickFixIssue[] = data.issues;
 
 		// Download and store photos, rewrite URLs to our blob CDN
 		let photosStored = 0;

@@ -1,5 +1,6 @@
 import { detectTown } from '$lib/config';
 import { logger } from '$lib/config/api';
+import { parseFeedDate } from '$lib/news/feed-date';
 import type { NewsItem } from '$lib/types';
 import { fetchAndRead, type OwnerOptions } from './fetch-helpers';
 
@@ -38,8 +39,14 @@ interface SeeClickFixIssue {
 
 interface SeeClickFixBlobData {
 	issues: SeeClickFixIssue[];
-	lastUpdated: string;
+	lastUpdated?: unknown;
 	count: number;
+}
+
+/** 311 items and the time the cron scraped them (ms epoch), or null when the blob doesn't say. */
+export interface SeeClickFixRead {
+	items: NewsItem[];
+	observedAt: number | null;
 }
 
 function isInMarinCounty(lat: number | null, lng: number | null): boolean {
@@ -144,7 +151,18 @@ function issueToNewsItem(issue: SeeClickFixIssue): NewsItem | null {
  * via Promise.allSettled or try/catch — silently returning `[]` for both
  * caused stale 311 incidents to pin indefinitely during outages.
  */
-export async function fetchSeeClickFixIssues({ signal }: OwnerOptions = {}): Promise<NewsItem[]> {
+export async function fetchSeeClickFixIssues(opts: OwnerOptions = {}): Promise<NewsItem[]> {
+	return (await readSeeClickFixIssues(opts)).items;
+}
+
+/**
+ * fetchSeeClickFixIssues, plus the blob's own `lastUpdated`: the edge may serve
+ * an older body, so only the payload knows how old the data is. A zoneless or
+ * unparseable value is null, never NaN.
+ */
+export async function readSeeClickFixIssues({
+	signal
+}: OwnerOptions = {}): Promise<SeeClickFixRead> {
 	logger.log('SEECLICKFIX', 'Fetching 311 issues from blob');
 
 	// The owner and the deadline stay on the request until the body is read.
@@ -173,5 +191,6 @@ export async function fetchSeeClickFixIssues({ signal }: OwnerOptions = {}): Pro
 		.sort((a, b) => b.timestamp - a.timestamp);
 
 	logger.log('SEECLICKFIX', `Loaded ${items.length} issues from blob`);
-	return items;
+	const observedAt = typeof data.lastUpdated === 'string' ? parseFeedDate(data.lastUpdated) : null;
+	return { items, observedAt };
 }

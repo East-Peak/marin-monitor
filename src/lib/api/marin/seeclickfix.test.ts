@@ -436,3 +436,29 @@ describe('fetchSeeClickFixIssues', () => {
 		expect(requestSignal.aborted).toBe(true);
 	});
 });
+
+describe('readSeeClickFixIssues carries the blob’s scrape time (map coverage label)', () => {
+	beforeEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it('observedAt is the payload’s lastUpdated', async () => {
+		mockFetchSuccess({
+			...makeBlobResponse([makeIssue()]),
+			lastUpdated: '2026-10-13T20:01:07.903Z'
+		});
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
+		const r = await readSeeClickFixIssues();
+		expect(r.observedAt).toBe(Date.parse('2026-10-13T20:01:07.903Z'));
+		expect(r.items).toHaveLength(1);
+	});
+
+	it.each([[undefined], [''], ['yesterday'], ['2026-10-13T20:01:07'], [1791932153000]])(
+		'missing, unparseable or zoneless lastUpdated (%j) → null (negative control)',
+		async (lastUpdated) => {
+			mockFetchSuccess({ ...makeBlobResponse([makeIssue()]), lastUpdated });
+			const { readSeeClickFixIssues } = await import('./seeclickfix');
+			expect((await readSeeClickFixIssues()).observedAt).toBeNull();
+		}
+	);
+});
