@@ -5,7 +5,7 @@
  * feed/article/geocode chain), owns the news store while mounted, and
  * exposes per-source status whose provenance comes from the values.
  */
-import { derived, writable, type Readable } from 'svelte/store';
+import { derived, writable, type Readable, type Writable } from 'svelte/store';
 import { news } from '$lib/stores/news';
 import type { StoreClaim } from '$lib/stores/ownership';
 import { gasPriceStore } from '$lib/stores/gas-prices';
@@ -28,15 +28,23 @@ import {
 	readSeeClickFixIssues
 } from '$lib/api/marin';
 import { boundedOp, DEFAULT_OP_DEADLINE_MS } from '$lib/api/marin/bounded-op';
+import { fetchAirportStatusOrThrow } from '$lib/api/marin/airport-status';
 import { fetchHealthReport, type HealthReportJson } from '$lib/api/marin/health-report';
 import { fetchMarinAdvisories } from '$lib/api/marin/nws-advisories';
 import { fetchHourlyPopOrThrow } from '$lib/api/marin/nws-hourly';
 import { fetchLatestObservation } from '$lib/api/marin/nws-observation';
 import { fetchTideEventsOrThrow } from '$lib/api/marin/tides';
+import {
+	fetchTrafficCorridorsOrThrow,
+	type TrafficCorridorsData
+} from '$lib/api/marin/traffic-corridors';
+import type { TransitAgencyRead } from '$lib/api/marin/transit';
+import type { AirportStatusData } from '$lib/types/airport';
 import type { LocationPreset } from '$lib/config/locations';
 import type { AdvisoryFeedState, ParsedAlerts } from '$lib/weather/advisories';
 import { createAdvisoryFeed } from './advisory-feed';
 import { createBriefStore, type BriefFetchers, type BriefState } from './brief-store';
+import { AIRPORT_MAX_AGE_MS, TRAFFIC_MAX_AGE_MS, type TransitState } from './getting-around';
 import {
 	createTvNewsLoader,
 	TV_NEWS_SOURCES,
@@ -129,6 +137,41 @@ export const INVENTORY_DATASETS: readonly DatasetDef[] = [
 	})
 ];
 
+/** Getting Around's details (§13.7): loaded through ensure() when the section opens, then each cycle. */
+function detailDatasets(
+	airport: Writable<AirportStatusData | null>,
+	traffic: Writable<TrafficCorridorsData | null>
+): DatasetDef[] {
+	return [
+		dataset<AirportStatusData>({
+			id: 'airport',
+			name: 'FAA airport status',
+			tier: 'detail',
+			load: async (signal) => ({
+				ok: true,
+				data: await fetchAirportStatusOrThrow({ signal }),
+				dataSource: 'live'
+			}),
+			commit: (d) => airport.set(d),
+			observedAtOf: (d) => d.lastUpdated,
+			maxAgeMs: AIRPORT_MAX_AGE_MS
+		}),
+		dataset<TrafficCorridorsData>({
+			id: 'traffic',
+			name: '511 traffic',
+			tier: 'detail',
+			load: async (signal) => ({
+				ok: true,
+				data: await fetchTrafficCorridorsOrThrow({ signal }),
+				dataSource: 'live'
+			}),
+			commit: (d) => traffic.set(d),
+			observedAtOf: (d) => d.checkedAt,
+			maxAgeMs: TRAFFIC_MAX_AGE_MS
+		})
+	];
+}
+
 export const BRIEF_FETCHERS: BriefFetchers = {
 	hourly: (lat, lon, signal) => fetchHourlyPopOrThrow(lat, lon, { signal }),
 	observation: (station, signal) => fetchLatestObservation(station, { signal }),
@@ -142,7 +185,10 @@ export const BRIEF_FETCHERS: BriefFetchers = {
  */
 export function v2NewsSources(
 	signal: AbortSignal,
-	{ deadlineMs = DEFAULT_OP_DEADLINE_MS }: { deadlineMs?: number } = {}
+	{
+		deadlineMs = DEFAULT_OP_DEADLINE_MS,
+		onTransit
+	}: { deadlineMs?: number; onTransit?: (reads: readonly TransitAgencyRead[]) => void } = {}
 ): TvNewsSources {
 	const owned =
 		<T>(part: string, run: (s: AbortSignal) => Promise<T>) =>
@@ -155,7 +201,12 @@ export function v2NewsSources(
 			const { quakes, observedAt } = await readEarthquakesOrThrow({ signal: s, liveOnly: true });
 			return { items: earthquakesToNewsItems(quakes), observedAt };
 		}),
-		transit: owned('transit', async (s) => (await fetchTransitAlerts({ signal: s })).items),
+		transit: owned('transit', async (s) => {
+			const read = await fetchTransitAlerts({ signal: s });
+			// A read cut short by its deadline or the owner didn't check every agency: not published.
+			if (!s.aborted) onTransit?.(read.agencies);
+			return read.items;
+		}),
 		'sheriff-blotter': owned('sheriff-blotter', (s) =>
 			fetchSheriffCrimeBlotter(undefined, undefined, { signal: s })
 		),
@@ -205,11 +256,19 @@ export interface DashboardV2Controller {
 	setLocation(preset: LocationPreset): void;
 	healthReport: Readable<HealthReportJson | null>;
 	datasetOutcomes: Readable<Readonly<Record<string, DatasetFetch>>>;
+	/** Each transit agency's last complete read (null until the first) and the latest read's error. */
+	transit: Readable<TransitState>;
+	/** Getting Around's details, loaded through ensure('airport' | 'traffic'). */
+	airport: Readable<AirportStatusData | null>;
+	traffic: Readable<TrafficCorridorsData | null>;
 }
 
 export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Controller {
 	const now = deps.now ?? Date.now;
 	const healthReport = writable<HealthReportJson | null>(null);
+	const airport = writable<AirportStatusData | null>(null);
+	const traffic = writable<TrafficCorridorsData | null>(null);
+	const transit = writable<TransitState>({ reads: null, error: null });
 	// /api/health feeds the header indicator only; it never re-dates a dataset (Codex r1 #3).
 	const defs = deps.datasets ?? [
 		...ESSENTIAL_DATASETS,
@@ -222,6 +281,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 			observedAtOf: () => null,
 			maxAgeMs: null
 		}),
+		...detailDatasets(airport, traffic),
 		...INVENTORY_DATASETS
 	];
 	const registry = createDatasetRegistry(defs, deps.signal, { deadlineMs: deps.deadlineMs });
@@ -246,7 +306,13 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 	// every write re-checks it.
 	const live = () => !deps.signal.aborted;
 	const newsLoader = createTvNewsLoader({
-		sources: deps.newsSources ?? v2NewsSources(deps.signal),
+		sources:
+			deps.newsSources ??
+			v2NewsSources(deps.signal, {
+				onTransit: (reads) => {
+					if (live()) transit.set({ reads, error: null });
+				}
+			}),
 		signal: deps.signal,
 		reset: () => {
 			claim = news.claim();
@@ -265,6 +331,8 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		},
 		onPartSettled: (part, outcome) => {
 			if (!live()) return;
+			if (part === 'transit' && !outcome.ok)
+				transit.update((t) => ({ ...t, error: outcome.error }));
 			// A successful first read with no items commits no category: it is an empty list,
 			// never "not read yet" (Codex 9a2 #2). Items, when any, were committed before this.
 			if (part === 'seeclickfix' && outcome.ok) fixIt.update((items) => items ?? []);
@@ -311,6 +379,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		lastCycleAt = now();
 		running = Promise.all([
 			registry.refresh('essential'),
+			registry.refresh('detail'),
 			newsLoader.refresh(),
 			advisories.refresh(),
 			location ? brief.load(location) : undefined
@@ -338,6 +407,9 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		snapshot: { subscribe: snapshot.subscribe },
 		fixIt: { subscribe: fixIt.subscribe },
 		healthReport: { subscribe: healthReport.subscribe },
+		transit: { subscribe: transit.subscribe },
+		airport: { subscribe: airport.subscribe },
+		traffic: { subscribe: traffic.subscribe },
 		datasetOutcomes: registry.outcomes,
 		brief: { subscribe: brief.subscribe },
 		advisories: { subscribe: advisories.subscribe },

@@ -143,6 +143,17 @@ describe('createDatasetRegistry', () => {
 		expect(strava.load).toHaveBeenCalledTimes(2);
 	});
 
+	it('details load only when ensured, then refresh with their tier (Getting Around, §13.7)', async () => {
+		const airport = def('airport', 'detail');
+		const r = createDatasetRegistry([airport.d], new AbortController().signal);
+		await r.refresh('essential');
+		await r.refresh('detail');
+		expect(airport.load).not.toHaveBeenCalled();
+		await r.ensure('airport');
+		await r.refresh('detail');
+		expect(airport.load).toHaveBeenCalledTimes(2);
+	});
+
 	it('after the owner aborts: no commit, no outcome, no new load, and the load saw the abort', async () => {
 		const gas = def('gas');
 		const held = deferred<FetchResult<Payload>>();

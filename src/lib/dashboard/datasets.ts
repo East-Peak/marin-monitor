@@ -4,6 +4,7 @@
  * The owner (the v2 controller) loads datasets, never the panel that shows
  * them, so map pins don't depend on which sections are open.
  * - essential: brief/map essentials, loaded at start and on every refresh;
+ * - detail: a section's details, loaded through ensure() when it opens, then refreshed with its tier;
  * - inventory: full inventories, loaded only through an explicit ensure().
  * One bounded request per dataset at a time. A failure never overwrites the
  * store: its last good value stays, with the observation time it came with.
@@ -14,7 +15,7 @@ import type { FetchResult } from '$lib/api/marin/data-fetcher';
 import type { DatasetFetch } from './source-adapters';
 import { parseObservedAt } from './source-status';
 
-export type DatasetTier = 'essential' | 'inventory';
+export type DatasetTier = 'essential' | 'detail' | 'inventory';
 
 export interface DatasetDef<T = unknown> {
 	id: string;

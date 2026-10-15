@@ -15,7 +15,9 @@ const fetchers = vi.hoisted(() => ({
 	coffee: vi.fn(),
 	fitness: vi.fn(),
 	strava: vi.fn(),
-	health: vi.fn()
+	health: vi.fn(),
+	airport: vi.fn(),
+	traffic: vi.fn()
 }));
 // Keep every other export real: $lib/api/marin/index.ts re-exports these modules.
 vi.mock('$lib/api/marin/gas-prices', async (orig) => ({
@@ -41,6 +43,14 @@ vi.mock('$lib/stores/strava', async (orig) => ({
 vi.mock('$lib/api/marin/health-report', async (orig) => ({
 	...(await orig<object>()),
 	fetchHealthReport: fetchers.health
+}));
+vi.mock('$lib/api/marin/airport-status', async (orig) => ({
+	...(await orig<object>()),
+	fetchAirportStatusOrThrow: fetchers.airport
+}));
+vi.mock('$lib/api/marin/traffic-corridors', async (orig) => ({
+	...(await orig<object>()),
+	fetchTrafficCorridorsOrThrow: fetchers.traffic
 }));
 
 const { createDashboardV2Controller, DATASET_POLICY, V2_MIN_REFRESH_GAP_MS } =
@@ -164,6 +174,12 @@ beforeEach(() => {
 	fetchers.fitness.mockResolvedValue(
 		live({ current: { studios: [{ id: 'f1' }], lastSuccessfulScrapeAt: SCRAPED }, history: [] })
 	);
+	fetchers.airport.mockResolvedValue({ airports: [], lastUpdated: '2026-09-29T17:58:00.000Z' });
+	fetchers.traffic.mockResolvedValue({
+		checkedAt: '2026-09-29T17:59:00.000Z',
+		upstreamCount: 40,
+		events: []
+	});
 	for (const s of [gasPriceStore, evChargingStore, coffeeIndexStore, fitnessStore]) {
 		s.set({ current: null, history: [] } as never);
 	}
@@ -494,5 +510,48 @@ describe('createDashboardV2Controller', () => {
 		});
 		await c.start();
 		expect(get(c.fixIt)).toEqual([]);
+	});
+
+	it('Getting Around details load only through ensure, once, then with every cycle (§13.7)', async () => {
+		const c = controller();
+		await c.start();
+		expect(fetchers.airport).not.toHaveBeenCalled();
+		expect(fetchers.traffic).not.toHaveBeenCalled();
+		await Promise.all([c.ensure('airport'), c.ensure('airport'), c.ensure('traffic')]);
+		expect(fetchers.airport).toHaveBeenCalledTimes(1);
+		expect(fetchers.airport.mock.calls[0][0]).toEqual({ signal: expect.any(AbortSignal) });
+		expect(get(c.airport)?.lastUpdated).toBe('2026-09-29T17:58:00.000Z');
+		expect(get(c.traffic)?.upstreamCount).toBe(40);
+		expect(get(c.datasetOutcomes).airport).toEqual({
+			kind: 'live',
+			observedAt: Date.parse('2026-09-29T17:58:00.000Z')
+		});
+		expect(get(c.datasetOutcomes).traffic).toEqual({
+			kind: 'live',
+			observedAt: Date.parse('2026-09-29T17:59:00.000Z')
+		});
+		expect(
+			get(c.sources).some((s) => s.id === 'dataset:airport' || s.id === 'dataset:traffic')
+		).toBe(false);
+		clock += V2_MIN_REFRESH_GAP_MS + 1;
+		await c.refresh();
+		expect(fetchers.airport).toHaveBeenCalledTimes(2);
+		expect(fetchers.traffic).toHaveBeenCalledTimes(2);
+	});
+
+	it('a failed detail refresh keeps the last value, retained with its own time', async () => {
+		const c = controller();
+		await c.start();
+		await c.ensure('airport');
+		fetchers.airport.mockRejectedValueOnce(new Error('HTTP 502'));
+		clock += V2_MIN_REFRESH_GAP_MS + 1;
+		await c.refresh();
+		expect(get(c.airport)).not.toBeNull();
+		expect(get(c.datasetOutcomes).airport).toEqual({
+			kind: 'failed',
+			error: 'HTTP 502',
+			retained: true,
+			observedAt: Date.parse('2026-09-29T17:58:00.000Z')
+		});
 	});
 });

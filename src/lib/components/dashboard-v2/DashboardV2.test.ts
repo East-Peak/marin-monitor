@@ -97,6 +97,11 @@ vi.mock('$lib/dashboard/v2-controller', () => ({
 			},
 			snapshot: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
 			fixIt: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
+			transit: {
+				subscribe: (fn: (v: unknown) => void) => (fn({ reads: null, error: null }), () => {})
+			},
+			airport: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
+			traffic: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
 			brief: { subscribe: (fn: (v: unknown) => void) => (fn(controller.EMPTY_BRIEF), () => {}) },
 			advisories: {
 				subscribe: (fn: (v: unknown) => void) => (
