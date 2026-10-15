@@ -108,7 +108,7 @@ describe('GettingAround', () => {
 		expect(foot('transit').textContent).toBe(
 			'511 · updated 2 min ago · 2 more · All transit alerts (511) ↗'
 		);
-		expect(foot('roads').textContent).toBe('Live traffic map (511) ↗');
+		expect(foot('roads').textContent).toBe('Traffic map (511) ↗'); // never "live": the spec bans it unless an observation time justifies it
 		expect(foot('airports').textContent).toBe('FAA · checked 3 min ago · FAA status ↗');
 		expect(
 			['transit', 'roads', 'airports'].map((k) => foot(k).querySelector('a')!.getAttribute('href'))

@@ -64,7 +64,7 @@
 		'Marin roads & the airport routes',
 		view.roads,
 		LINKS.traffic,
-		'Live traffic map (511)'
+		'Traffic map (511)'
 	)}
 	{@render block(
 		'transit',
