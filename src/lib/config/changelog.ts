@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-15',
+		title: 'Getting around in the preview: airports, roads and transit',
+		description:
+			'The dashboard preview’s Getting Around section now answers three questions: is SFO or OAK delayed (FAA), is anything listed on Marin roads or the main routes to the airports (101, 19th Ave, 280 and 380 to SFO; 580, 80 and 880 to OAK, from 511), and what transit alerts 511 lists (Marin Transit’s, plus any for Golden Gate, SMART or the Angel Island ferry, each with a link to the agency’s own alerts page). Each part says how fresh it is and never claims an all-clear it can’t back up. A “Getting around” link under the morning brief jumps to it. The regular dashboard and TV are unchanged.'
+	},
+	{
+		date: '2026-10-15',
 		title: 'Preview travel section built, not yet shown',
 		description:
 			'Behind the scenes: the preview’s Getting Around section is built — airports, roads to SFO and OAK, and Marin transit — and it only says “no delays” or “no alerts” when the reading behind it is complete and current. It isn’t on the page yet.'

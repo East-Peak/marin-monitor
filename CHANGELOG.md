@@ -6,6 +6,14 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-15
 
+### Added — Getting Around in the v2 preview
+
+- **Airports:** SFO and OAK from the FAA (via `/api/airport-status`): "No delays reported", "Ground delay, avg 45 min, up to 90 min", closures and notices; a failed FAA read is "FAA status unavailable", never on time. "FAA · checked N min ago".
+- **Roads:** 511 incidents on Marin roads and the routes to SFO (US-101, CA-1/19th Ave, I-280, I-380) and OAK (I-580, I-80, I-880), from `/api/traffic/corridors`; most severe first, with the route, severity and age; "No incidents listed…" only after a complete, fresh read. Three shown, then the 511 traffic map.
+- **Transit:** 511's alerts per agency, each line linking to the agency's own alerts page. Marin Transit: "N alerts listed", "511 lists no alerts" only on a fresh, timed feed, "Alerts unavailable" on failure. Golden Gate Transit and Ferry, SMART and the Angel Island ferry: alerts 511 lists are shown, but an empty or failed 511 list makes no claim ("See goldengate.org ↗"), because on 2026-10-14 511 was empty while goldengate.org listed alerts. Alert rows link only to their own page.
+- **Loading:** the section is closed by default on phones; airports and roads load only when it opens. Its header names any failing source.
+- **Brief:** a compact "Getting around: airports, roads & transit →" link restores the entry point the Cams strip retired (phone budget re-measured).
+
 ### Added — Getting Around section for the v2 preview (part 1, not yet shown)
 
 - `src/lib/dashboard/getting-around.ts`: the section's model. Airports (SFO, OAK) from the FAA fields only ("Ground delay, avg 45 min, up to 90 min"; "FAA status unavailable" for `unknown`); roads grouped Route to SFO / Route to OAK / Marin with 511's own kind and severity; Marin Transit from 511, and Golden Gate, SMART and Angel Island linking to their own pages (511's empty lists aren't trusted for them). "No delays reported", "511 lists no alerts" and "No incidents listed by 511 on these roads" appear only for a complete, timed, current read; otherwise the line says out of date, not verified or unavailable.
