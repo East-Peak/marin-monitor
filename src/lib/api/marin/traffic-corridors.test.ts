@@ -44,7 +44,10 @@ describe('fetchTrafficCorridorsOrThrow', () => {
 		['an unknown severity', { ...GOOD, events: [{ ...GOOD.events[0], severity: 'Unknown' }] }, 200],
 		['no events array', { ...GOOD, events: null }, 200],
 		['no unreadable count', { ...GOOD, unreadable: undefined }, 200],
-		['no certainty flag', { ...GOOD, events: [{ ...GOOD.events[0], certain: undefined }] }, 200]
+		['no certainty flag', { ...GOOD, events: [{ ...GOOD.events[0], certain: undefined }] }, 200],
+		['a negative unreadable count (Codex A2 #1)', { ...GOOD, unreadable: -1 }, 200],
+		['a fractional unreadable count', { ...GOOD, unreadable: 0.5 }, 200],
+		['a negative upstream count', { ...GOOD, upstreamCount: -40 }, 200]
 	])('throws on %s, never returns a guess', async (_name, body, status) => {
 		respond(body, status);
 		await expect(fetchTrafficCorridorsOrThrow()).rejects.toThrow();

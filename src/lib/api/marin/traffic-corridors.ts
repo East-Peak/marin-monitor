@@ -20,6 +20,8 @@ const SEVERITIES: Record<NonNullable<CorridorEvent['severity']>, true> = {
 };
 const isRecord = (v: unknown): v is Record<string, unknown> =>
 	typeof v === 'object' && v !== null && !Array.isArray(v);
+/** A count of records: a negative or fractional one would read as "nothing unreadable". */
+const isCount = (v: unknown) => Number.isSafeInteger(v) && (v as number) >= 0;
 const isEvent = (e: unknown) =>
 	isRecord(e) &&
 	typeof e.id === 'string' &&
@@ -41,8 +43,8 @@ export async function fetchTrafficCorridorsOrThrow({
 	if (
 		!isRecord(body) ||
 		typeof body.checkedAt !== 'string' ||
-		typeof body.upstreamCount !== 'number' ||
-		typeof body.unreadable !== 'number' ||
+		!isCount(body.upstreamCount) ||
+		!isCount(body.unreadable) ||
 		!Array.isArray(body.events) ||
 		!body.events.every(isEvent)
 	) {
