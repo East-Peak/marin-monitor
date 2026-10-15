@@ -1,8 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-vi.mock('./fetch-helpers', () => ({
-	fetchWithTimeout: vi.fn()
-}));
+vi.mock('./fetch-helpers', () => {
+	const fetchWithTimeout = vi.fn();
+	return {
+		fetchWithTimeout,
+		// The body is read by the same call; the tests' fake responses flow through `read`.
+		fetchAndRead: vi.fn(
+			(url: string, options: RequestInit | undefined, read: (r: Response) => Promise<unknown>) =>
+				fetchWithTimeout(url, options).then(read)
+		)
+	};
+});
 
 vi.mock('$lib/config/api', () => ({
 	logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn() }
@@ -196,6 +204,55 @@ describe('fetchTransitAlerts', () => {
 
 		expect(result.items).toEqual([]);
 		expect(result.errors).toHaveLength(5);
+	});
+
+	it('reports each agency in order: its own alerts in feed order, its feed time, or its failure (v2)', async () => {
+		const linked = makeAlertEntity({
+			id: 'a1',
+			header: 'Route 35 detour',
+			url: 'https://marintransit.gov/35',
+			routes: ['35']
+		});
+		const unsafe = makeAlertEntity({
+			id: 'a2',
+			header: 'Night closure',
+			url: 'javascript:alert(1)'
+		});
+		const plain = makeAlertEntity({ id: 'a3', header: 'Stop moved' });
+		mockFetch
+			.mockResolvedValueOnce(makeResponse(null, false, 503)) // GG
+			.mockResolvedValueOnce(makeResponse(makeGtfsResponse([]))) // GF
+			.mockResolvedValueOnce(makeResponse(makeGtfsResponse([linked, unsafe, plain]))) // MA
+			.mockRejectedValueOnce(new Error('Network down')) // SA
+			.mockResolvedValueOnce(makeResponse({ Entities: [] })); // AF: no Header
+		const promise = fetchTransitAlerts();
+		await vi.advanceTimersByTimeAsync(3000);
+		const { agencies, items } = await promise;
+		expect(agencies).toEqual([
+			{
+				id: 'GG',
+				name: 'Golden Gate Transit',
+				alerts: null,
+				observedAt: null,
+				error: 'Golden Gate Transit: Transit proxy failed for GG: 503'
+			},
+			{ id: 'GF', name: 'Golden Gate Ferry', alerts: [], observedAt: 1711900000000, error: null },
+			{
+				id: 'MA',
+				name: 'Marin Transit',
+				alerts: [
+					{ id: '511-MA-a1', title: 'Route 35 detour (35)', url: 'https://marintransit.gov/35' },
+					{ id: '511-MA-a2', title: 'Night closure', url: null },
+					{ id: '511-MA-a3', title: 'Stop moved', url: null }
+				],
+				observedAt: 1711900000000,
+				error: null
+			},
+			{ id: 'SA', name: 'SMART', alerts: null, observedAt: null, error: 'SMART: Network down' },
+			{ id: 'AF', name: 'Angel Island Ferry', alerts: [], observedAt: null, error: null }
+		]);
+		// The legacy shape is untouched: the unsafe link still falls back as before.
+		expect(items.find((i) => i.id === '511-MA-a2')?.link).toBe('javascript:alert(1)');
 	});
 
 	it('uses fallback URL when alert has no Url', async () => {

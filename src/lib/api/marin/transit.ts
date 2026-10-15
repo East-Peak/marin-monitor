@@ -14,10 +14,10 @@
 
 import type { NewsItem } from '$lib/types';
 import { logger } from '$lib/config/api';
-import { fetchWithTimeout, type OwnerOptions } from './fetch-helpers';
+import { fetchAndRead, type OwnerOptions } from './fetch-helpers';
 
 /** Marin-relevant transit agencies */
-const MARIN_AGENCIES = [
+export const MARIN_AGENCIES = [
 	{ id: 'GG', name: 'Golden Gate Transit' },
 	{ id: 'GF', name: 'Golden Gate Ferry' },
 	{ id: 'MA', name: 'Marin Transit' },
@@ -50,8 +50,42 @@ interface GtfsAlertEntity {
 }
 
 interface GtfsResponse {
-	Header: { Timestamp: number };
+	Header?: { Timestamp?: number };
 	Entities: GtfsAlertEntity[];
+}
+
+/** One 511 alert as v2 shows it: its own words and its own link, nothing invented. */
+interface TransitAlertRow {
+	id: string;
+	title: string;
+	/** The alert's own http(s) link, or null: never a guessed page. */
+	url: string | null;
+}
+
+/** One agency's read, for v2's Getting Around: alerts in feed order and the feed's own time, or the failure. */
+export interface TransitAgencyRead {
+	id: string;
+	name: string;
+	/** null when this agency's read failed. */
+	alerts: TransitAlertRow[] | null;
+	/** GTFS-RT `Header.Timestamp` (epoch ms); null when the feed carries none. */
+	observedAt: number | null;
+	error: string | null;
+}
+
+const httpUrl = (url: string | undefined): string | null =>
+	url && /^https?:\/\//i.test(url) ? url : null;
+const feedTime = (seconds: unknown): number | null =>
+	typeof seconds === 'number' && Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : null;
+
+/** The alert's header plus its routes, exactly as the legacy item title reads. */
+function alertTitle(alert: GtfsAlertEntity['Alert']): string {
+	const header = alert.HeaderText?.Translations?.[0]?.Text || 'Service Alert';
+	const routes = (alert.InformedEntities || [])
+		.filter((ie) => ie.RouteId)
+		.map((ie) => ie.RouteId)
+		.filter((v, i, a) => a.indexOf(v) === i); // dedupe
+	return routes.length > 0 ? `${header} (${routes.join(', ')})` : header;
 }
 
 /**
@@ -61,26 +95,38 @@ async function fetchAgencyAlerts(
 	agencyId: string,
 	agencyName: string,
 	signal?: AbortSignal
-): Promise<{ items: NewsItem[]; error?: string }> {
+): Promise<{
+	items: NewsItem[];
+	alerts: TransitAlertRow[] | null;
+	observedAt: number | null;
+	error?: string;
+}> {
 	try {
 		logger.log('511', `Fetching ${agencyName} alerts`);
 		const proxyUrl = `/api/transit?agency=${agencyId}`;
-		const proxyResponse = await fetchWithTimeout(proxyUrl, {
-			headers: { Accept: 'application/json' },
-			signal
-		});
-		if (!proxyResponse.ok) {
-			throw new Error(`Transit proxy failed for ${agencyId}: ${proxyResponse.status}`);
-		}
-		const data: GtfsResponse = await proxyResponse.json();
+		const data = await fetchAndRead<GtfsResponse>(
+			proxyUrl,
+			{ headers: { Accept: 'application/json' }, signal },
+			async (proxyResponse) => {
+				if (!proxyResponse.ok)
+					throw new Error(`Transit proxy failed for ${agencyId}: ${proxyResponse.status}`);
+				return (await proxyResponse.json()) as GtfsResponse;
+			}
+		);
 
 		return {
-			items: data.Entities.map((entity) => entityToNewsItem(entity, agencyId, agencyName))
+			items: data.Entities.map((entity) => entityToNewsItem(entity, agencyId, agencyName)),
+			alerts: data.Entities.map((entity) => ({
+				id: `511-${agencyId}-${entity.Id}`,
+				title: alertTitle(entity.Alert),
+				url: httpUrl(entity.Alert.Url?.Translations?.[0]?.Text)
+			})),
+			observedAt: feedTime(data.Header?.Timestamp)
 		};
 	} catch (error) {
 		const msg = `${agencyName}: ${(error as Error).message}`;
 		logger.warn('511', msg);
-		return { items: [], error: msg };
+		return { items: [], alerts: null, observedAt: null, error: msg };
 	}
 }
 
@@ -89,17 +135,8 @@ async function fetchAgencyAlerts(
  */
 function entityToNewsItem(entity: GtfsAlertEntity, agencyId: string, agencyName: string): NewsItem {
 	const alert = entity.Alert;
-	const header = alert.HeaderText?.Translations?.[0]?.Text || 'Service Alert';
 	const description = alert.DescriptionText?.Translations?.[0]?.Text;
 	const url = alert.Url?.Translations?.[0]?.Text;
-
-	// Get affected routes
-	const routes = (alert.InformedEntities || [])
-		.filter((ie) => ie.RouteId)
-		.map((ie) => ie.RouteId)
-		.filter((v, i, a) => a.indexOf(v) === i); // dedupe
-
-	const routeStr = routes.length > 0 ? ` (${routes.join(', ')})` : '';
 
 	// Determine timestamp from active periods
 	const activePeriod = alert.ActivePeriods?.[0];
@@ -111,7 +148,7 @@ function entityToNewsItem(entity: GtfsAlertEntity, agencyId: string, agencyName:
 
 	return {
 		id: `511-${agencyId}-${entity.Id}`,
-		title: `${header}${routeStr}`,
+		title: alertTitle(alert),
 		link: url || `https://511.org/transit/service-alerts`,
 		timestamp,
 		description: description?.slice(0, 300),
@@ -130,9 +167,11 @@ function entityToNewsItem(entity: GtfsAlertEntity, agencyId: string, agencyName:
 export async function fetchTransitAlerts({ signal }: OwnerOptions = {}): Promise<{
 	items: NewsItem[];
 	errors: string[];
+	agencies: TransitAgencyRead[];
 }> {
 	const allItems: NewsItem[] = [];
 	const errors: string[] = [];
+	const agencies: TransitAgencyRead[] = [];
 
 	for (let i = 0; i < MARIN_AGENCIES.length; i++) {
 		if (signal?.aborted) break;
@@ -141,8 +180,23 @@ export async function fetchTransitAlerts({ signal }: OwnerOptions = {}): Promise
 			const result = await fetchAgencyAlerts(agency.id, agency.name, signal);
 			allItems.push(...result.items);
 			if (result.error) errors.push(result.error);
+			agencies.push({
+				id: agency.id,
+				name: agency.name,
+				alerts: result.alerts,
+				observedAt: result.observedAt,
+				error: result.error ?? null
+			});
 		} catch (err) {
-			errors.push((err as Error).message || 'Unknown error');
+			const msg = (err as Error).message || 'Unknown error';
+			errors.push(msg);
+			agencies.push({
+				id: agency.id,
+				name: agency.name,
+				alerts: null,
+				observedAt: null,
+				error: msg
+			});
 		}
 		// Small delay between requests to avoid rate limiting
 		if (i < MARIN_AGENCIES.length - 1 && !signal?.aborted) {
@@ -154,5 +208,5 @@ export async function fetchTransitAlerts({ signal }: OwnerOptions = {}): Promise
 	allItems.sort((a, b) => b.timestamp - a.timestamp);
 
 	logger.log('511', `Total transit alerts: ${allItems.length}`);
-	return { items: allItems, errors };
+	return { items: allItems, errors, agencies };
 }
