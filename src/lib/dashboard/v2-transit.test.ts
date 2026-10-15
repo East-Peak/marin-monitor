@@ -11,6 +11,7 @@ vi.mock('$lib/api/marin/transit', async (orig) => ({
 	fetchTransitAlerts
 }));
 const { createDashboardV2Controller, v2NewsSources } = await import('./v2-controller');
+const { DEFAULT_OP_DEADLINE_MS } = await import('$lib/api/marin/bounded-op');
 
 const READS: TransitAgencyRead[] = [
 	{
@@ -111,6 +112,34 @@ describe("v2's transit part (Getting Around)", () => {
 		fetchTransitAlerts.mockRejectedValueOnce(new Error('timed out'));
 		clock += 61_000;
 		await c.refresh();
+		expect(get(c.transit)).toEqual({ reads: READS, error: expect.stringContaining('timed out') });
+	});
+
+	it("an expired controller read keeps its reads, carries the deadline's error, and its late answer changes nothing (Codex A2 #2)", async () => {
+		vi.useFakeTimers();
+		fetchTransitAlerts.mockResolvedValueOnce(read());
+		const owner = new AbortController();
+		owners.push(owner);
+		let clock = 0;
+		const c = createDashboardV2Controller({
+			signal: owner.signal,
+			now: () => clock,
+			fetchAdvisories: async () => ({ advisories: [], unreadable: 0 })
+		});
+		const started = c.start();
+		await vi.runAllTimersAsync();
+		await started;
+		expect(get(c.transit)).toEqual({ reads: READS, error: null });
+
+		let finish!: (v: unknown) => void;
+		fetchTransitAlerts.mockImplementation(() => new Promise((r) => (finish = r)));
+		clock += 61_000;
+		const refreshed = c.refresh();
+		await vi.advanceTimersByTimeAsync(DEFAULT_OP_DEADLINE_MS);
+		await refreshed;
+		expect(get(c.transit)).toEqual({ reads: READS, error: expect.stringContaining('timed out') });
+		finish(read([{ ...READS[0], alerts: [] }]));
+		await vi.runAllTimersAsync();
 		expect(get(c.transit)).toEqual({ reads: READS, error: expect.stringContaining('timed out') });
 	});
 });
