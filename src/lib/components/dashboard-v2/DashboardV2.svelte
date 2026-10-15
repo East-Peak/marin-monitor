@@ -8,6 +8,7 @@
 	import BriefRow from './BriefRow.svelte';
 	import CamStrip from './CamStrip.svelte';
 	import AdvisoryRow from './AdvisoryRow.svelte';
+	import GettingAround from './GettingAround.svelte';
 	import HealthIndicator from './HealthIndicator.svelte';
 	import { townFilter, townLocation } from '$lib/stores/town-filter';
 	import { readable } from 'svelte/store';
@@ -17,6 +18,10 @@
 	import { v2MapData } from '$lib/dashboard/v2-map-data';
 	import { briefPending } from '$lib/dashboard/v2-probe';
 	import type { BriefState } from '$lib/dashboard/brief-store';
+	import { gettingAroundView, type TransitState } from '$lib/dashboard/getting-around';
+	import type { DatasetFetch } from '$lib/dashboard/source-adapters';
+	import type { TrafficCorridorsData } from '$lib/api/marin/traffic-corridors';
+	import type { AirportStatusData } from '$lib/types/airport';
 	import { activeLayers } from '$lib/stores/map';
 	import type { SourceStatusEntry } from '$lib/dashboard/source-status';
 	import type { NewsSnapshotView } from '$lib/news/snapshot';
@@ -47,6 +52,27 @@
 	const fixIt = controller?.fixIt ?? readable<NewsItem[] | null>(null);
 	const quakes = controller?.earthquakes ?? readable<NewsItem[]>([]);
 	const briefState = controller?.brief ?? readable<BriefState | null>(null);
+	const transitState = controller?.transit ?? readable<TransitState>({ reads: null, error: null });
+	const airport = controller?.airport ?? readable<AirportStatusData | null>(null);
+	const traffic = controller?.traffic ?? readable<TrafficCorridorsData | null>(null);
+	const outcomes =
+		controller?.datasetOutcomes ?? readable<Readonly<Record<string, DatasetFetch>>>({});
+	/** Getting Around's one view per tick; closed, its header still reads transit (Decision 9). */
+	const around = $derived(
+		gettingAroundView({
+			transit: $transitState,
+			airport: $airport,
+			traffic: $traffic,
+			outcomes: $outcomes,
+			open: $open['getting-around'],
+			now: $clock
+		})
+	);
+	/** The section's body mounts on open: its details load then (§13.7). */
+	function openAround() {
+		void controller?.ensure('airport');
+		void controller?.ensure('traffic');
+	}
 	/** One selection per tick; later sections can read its shownIds. */
 	const latest = $derived(
 		latestReportingView({ view: $snapshot, sources: $sources, town: $townFilter, now: $clock })
@@ -143,7 +169,7 @@
 	<main class="v2-main">
 		{#if controller && hydrated}
 			<AdvisoryRow feed={controller.advisories} now={clock} />
-			<BriefRow brief={controller.brief} now={clock} />
+			<BriefRow brief={controller.brief} now={clock} onjump={navJump} />
 			<CamStrip now={$clock} />
 		{/if}
 
@@ -164,8 +190,14 @@
 			title="Getting Around"
 			open={$open['getting-around']}
 			ontoggle={(id) => sections.toggle(id)}
+			status={controller && hydrated ? around.status : null}
+			now={$clock}
 		>
-			<p class="v2-muted" data-text-role="body">{LATER}</p>
+			{#if controller && hydrated}
+				<GettingAround view={around} onopen={openAround} />
+			{:else}
+				<p class="v2-muted" data-text-role="meta">Loading…</p>
+			{/if}
 		</Section>
 
 		<div id="sections" class="v2-sections" tabindex="-1" aria-label="Sections">

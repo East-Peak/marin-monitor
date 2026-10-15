@@ -5,7 +5,12 @@
 	import { effectiveState, type SourceEntryState } from '$lib/dashboard/source-status';
 	import { nextTide, restOfTodayRainChance } from '$lib/weather/brief';
 
-	let { brief, now }: { brief: Readable<BriefState>; now: Readable<number> } = $props();
+	let {
+		brief,
+		now,
+		onjump
+	}: { brief: Readable<BriefState>; now: Readable<number>; onjump?: (hash: string) => void } =
+		$props();
 
 	/** Clock-driven freshness for a card (G1a): nothing stays "ok" past its limit. */
 	function stateOf(card: BriefCard<unknown>, at: number): SourceEntryState {
@@ -98,9 +103,29 @@
 			<p class="v2-warn" data-text-role="meta">{tides.detail}</p>
 		{/if}
 	</article>
+	<a
+		class="v2-brief-link"
+		data-brief-link="getting-around"
+		data-text-role="label"
+		href="#getting-around"
+		onclick={() => onjump?.('#getting-around')}>Getting around: airports, roads &amp; transit →</a
+	>
 </section>
 
 <style>
+	.v2-brief-link {
+		/* An action, not an answer card (§2.3): one compact full-width line under the cards. */
+		flex: 1 1 100%;
+		display: inline-flex;
+		align-items: center;
+		min-height: 2.75rem;
+		color: var(--accent);
+		text-decoration: none;
+	}
+	.v2-brief-link:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
 	.v2-brief {
 		display: flex;
 		flex-wrap: wrap; /* a wrapping row: no swipe-hidden answers (§8) */

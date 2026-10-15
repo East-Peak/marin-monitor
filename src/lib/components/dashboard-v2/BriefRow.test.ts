@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { writable } from 'svelte/store';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { BriefCard, BriefState } from '$lib/dashboard/brief-store';
 import BriefRow from './BriefRow.svelte';
 
@@ -58,10 +58,10 @@ function state(over: Partial<BriefState> = {}): BriefState {
 	};
 }
 
-function renderRow(s: BriefState, now = NOW) {
+function renderRow(s: BriefState, now = NOW, onjump?: (hash: string) => void) {
 	const brief = writable(s);
 	const clock = writable(now);
-	const result = render(BriefRow, { props: { brief, now: clock } });
+	const result = render(BriefRow, { props: { brief, now: clock, onjump } });
 	return { ...result, brief, clock };
 }
 
@@ -144,5 +144,15 @@ describe('BriefRow', () => {
 		renderRow(state());
 		expect(document.querySelector('[data-card="getting-around"]')).toBeNull();
 		expect(screen.queryByRole('link', { name: /Traffic cams/ })).toBeNull();
+	});
+
+	it('the Getting around link opens its section (the entry point the Cams strip retired); it is not a card', async () => {
+		const onjump = vi.fn();
+		renderRow(state(), NOW, onjump);
+		const link = screen.getByRole('link', { name: /^Getting around: airports, roads & transit/ });
+		expect(link.getAttribute('href')).toBe('#getting-around');
+		expect(link.closest('[data-card]')).toBeNull();
+		await fireEvent.click(link);
+		expect(onjump).toHaveBeenCalledWith('#getting-around');
 	});
 });

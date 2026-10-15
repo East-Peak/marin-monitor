@@ -125,6 +125,16 @@ vi.mock('$lib/dashboard/v2-controller', () => ({
 import DashboardV2 from './DashboardV2.svelte';
 
 describe('DashboardV2 preview shell', () => {
+	it('Getting Around shows its parts, not a placeholder, and asks for its details when open', async () => {
+		const { container } = render(DashboardV2);
+		await tick();
+		const ga = container.querySelector('section#getting-around')!;
+		expect(ga.textContent).not.toContain('later release');
+		expect(ga.querySelector('[data-slot="getting-around"]')).toBeTruthy();
+		expect(controller.ensure).toHaveBeenCalledWith('airport');
+		expect(controller.ensure).toHaveBeenCalledWith('traffic');
+	});
+
 	it('fills the map region: the map and Latest reporting, loading honestly, no placeholder (PR 9)', async () => {
 		const { container } = render(DashboardV2);
 		await tick();
