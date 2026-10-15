@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-15',
+		title: 'The preview fills a desktop screen',
+		description:
+			'On a computer, the dashboard preview now uses the full width of the window: the morning brief in one row, a taller map beside Latest reporting, and all the cameras in a wall under the map, grouped by area (South, Central, West and North Marin, then the 101 traffic cams). Sections are always open on desktop. Phones and tablets are unchanged, and so are the regular dashboard and TV.'
+	},
+	{
+		date: '2026-10-15',
 		title: 'Getting around in the preview: airports, roads and transit',
 		description:
 			'The dashboard preview’s Getting Around section now answers three questions: is SFO or OAK delayed (FAA), is anything listed on Marin roads or the main routes to the airports (101, 19th Ave, 280 and 380 to SFO; 580, 80 and 880 to OAK, from 511), and what transit alerts 511 lists (Marin Transit’s, plus any for Golden Gate, SMART or the Angel Island ferry, each with a link to the agency’s own alerts page). Each part says how fresh it is and never claims an all-clear it can’t back up. A “Getting around” link under the morning brief jumps to it. The regular dashboard and TV are unchanged.'

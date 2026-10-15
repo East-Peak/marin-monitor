@@ -6,6 +6,13 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-15
 
+### Changed — Desktop frame for the v2 preview
+
+- **Full width:** at 1024 px and wider the preview runs edge to edge up to 2,240 px, with a gutter of `clamp(16px, 2.2vw, 44px)` (the approved desktop mockup).
+- **Brief and map:** from 1280 px the brief is one row (Weather 5fr · Next tide 4fr · a third slot 3fr) and the map shares a 3:2 row with Latest reporting. The map is 500 px tall at desktop widths and 540 px from 1700 px. Below 1280 px both stack in one column.
+- **Cam wall:** on desktop the Cams strip becomes a wall under the map, grouped by area: South Marin (4 of 6 columns, its first camera a 2×2 tile), then Central, West and North Marin, then the 101 traffic cams. A camera with no area goes into a final "Other" group and is never dropped. Tiles keep the strip's decode gate (a tile shows a picture only once it has decoded) and load only with the wall near the screen.
+- **Sections:** on desktop they are always open on a 12-column grid, with a plain heading and no toggle, and a close saved on a smaller screen is ignored there. Phones and tablets (below 1024 px) keep collapsible, remembered sections and the swipeable strip, so the phone layout is unchanged.
+
 ### Added — Getting Around in the v2 preview
 
 - **Airports:** SFO and OAK from the FAA (via `/api/airport-status`): "No delays reported", "Ground delay, avg 45 min, up to 90 min", closures and notices; a failed FAA read is "FAA status unavailable", never on time. "FAA · checked N min ago".
