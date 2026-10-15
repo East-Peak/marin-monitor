@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-10-15',
+		title: 'Travel data for the preview, part 1',
+		description:
+			'Behind the scenes: the dashboard preview’s server can now read 511’s complete list of traffic incidents (filtered to Marin and the routes to SFO and OAK), and each transit agency’s own alerts with the time its feed was updated. Nothing changes on screen yet.'
+	},
+	{
 		date: '2026-10-14',
 		title: 'Preview temperature stops going blank',
 		description:

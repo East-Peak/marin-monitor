@@ -4,6 +4,13 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-10-15
+
+### Added — Getting Around data for the v2 preview (part 1, not yet shown)
+
+- `/api/traffic/corridors`: 511's complete traffic event list (it follows 511's paging inside one 8 s deadline; a partial list is a 502, never served), filtered to Marin and the SFO/OAK routes in `src/lib/config/traffic-corridors.ts` (US-101, CA-1/19th Ave, I-280 and I-380 to SFO; I-580, I-80 and I-880 to OAK). Long-term construction excluded; incidents always kept; an event that can't be placed is kept and marked, and a record that can't be read is counted, never hidden.
+- `fetchTransitAlerts` also reports each agency's own read: alerts in feed order with their own links only, the GTFS-RT feed time, or the failure; its body is now read under the owner's lifetime. Legacy items are unchanged.
+
 ## 2026-10-14
 
 ### Fixed — the v2 brief's temperature no longer goes blank when NWS's "latest" report is unprocessed
