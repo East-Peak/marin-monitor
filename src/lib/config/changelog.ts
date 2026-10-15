@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-15',
+		title: 'Preview travel section built, not yet shown',
+		description:
+			'Behind the scenes: the preview’s Getting Around section is built — airports, roads to SFO and OAK, and Marin transit — and it only says “no delays” or “no alerts” when the reading behind it is complete and current. It isn’t on the page yet.'
+	},
+	{
+		date: '2026-10-15',
 		title: 'Getting the preview’s travel answers ready',
 		description:
 			'Behind the scenes: the dashboard preview can now read FAA status for SFO and OAK and the filtered 511 traffic list, but only once you open Getting Around, and it keeps each transit agency’s own alerts from the read it already makes. Nothing changes on screen yet.'

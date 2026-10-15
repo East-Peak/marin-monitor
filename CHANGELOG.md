@@ -6,6 +6,11 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-15
 
+### Added — Getting Around section for the v2 preview (part 1, not yet shown)
+
+- `src/lib/dashboard/getting-around.ts`: the section's model. Airports (SFO, OAK) from the FAA fields only ("Ground delay, avg 45 min, up to 90 min"; "FAA status unavailable" for `unknown`); roads grouped Route to SFO / Route to OAK / Marin with 511's own kind and severity; Marin Transit from 511, and Golden Gate, SMART and Angel Island linking to their own pages (511's empty lists aren't trusted for them). "No delays reported", "511 lists no alerts" and "No incidents listed by 511 on these roads" appear only for a complete, timed, current read; otherwise the line says out of date, not verified or unavailable.
+- `GettingAround.svelte`: the three parts, three rows each with "N more" links out to 511 and the FAA, and each part's source time. Not mounted yet.
+
 ### Added — Getting Around data for the v2 preview (part 2, not yet shown)
 
 - Checked fetchers for `/api/airport-status` and `/api/traffic/corridors` (anything outside the expected shape throws; the section will show it as unavailable). Both load only when Getting Around opens (a new "detail" dataset tier), then refresh with every 5-minute cycle, each value carrying its own time (FAA response time; 511 check time).
