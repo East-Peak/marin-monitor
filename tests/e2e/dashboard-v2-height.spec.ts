@@ -179,6 +179,14 @@ test.describe('phone 390×844', () => {
 					timeout: 15_000
 				});
 				await expect(ga.locator('[data-line="OAK"]')).toContainText('Ground delay');
+				// Every section really is open before the document is measured (Codex B2 #3); Strava
+				// renders only when enabled, so every toggle on the page is checked too.
+				for (const id of ['getting-around', 'outdoors', 'news', 'cost', 'events'])
+					await expect(page.locator(`[data-section-toggle="${id}"]`), id).toHaveAttribute(
+						'aria-expanded',
+						'true'
+					);
+				await expect(page.locator('[data-section-toggle][aria-expanded="false"]')).toHaveCount(0);
 				const doc = await page.evaluate(() => document.documentElement.scrollHeight);
 				console.log(`[${mode}] document ${doc} px (≤ 5,064, Getting Around populated)`);
 				expect(doc).toBeLessThanOrEqual(5064);
