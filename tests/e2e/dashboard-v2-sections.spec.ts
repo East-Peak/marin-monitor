@@ -18,8 +18,9 @@ const focusedToggle = (page: Page) =>
 		() => (document.activeElement as HTMLElement | null)?.dataset.sectionToggle ?? null
 	);
 
-test.describe('desktop 1440×900', () => {
-	test.use({ viewport: { width: 1440, height: 900 } });
+// Below 1024 sections collapse and remember; the toggle behaviour is pinned at tablet width.
+test.describe('tablet 900×900', () => {
+	test.use({ viewport: { width: 900, height: 900 } });
 
 	test('opens every section at once (no accordion); the mothballed Strava section is absent', async ({
 		page
@@ -81,6 +82,24 @@ test.describe('desktop 1440×900', () => {
 		await expect(toggle(page, 'strava')).toHaveCount(0);
 		await page.waitForTimeout(2_000);
 		expect(strava).toEqual([]);
+	});
+});
+
+test.describe('desktop 1440×900', () => {
+	test.use({ viewport: { width: 1440, height: 900 } });
+
+	test('sections are always open with no toggles; a close saved at tablet width is ignored', async ({
+		page
+	}) => {
+		await page.addInitScript(() =>
+			localStorage.setItem('mm_sections_v2', JSON.stringify({ version: 2, open: { news: false } }))
+		);
+		await openV2(page);
+		await expect(page.locator('[data-section-toggle]')).toHaveCount(0);
+		for (const id of ALL) {
+			await expect(page.locator(`[data-section="${id}"]`)).toHaveAttribute('data-open', 'true');
+		}
+		await expect(page.locator('[data-section="strava"]')).toHaveCount(0);
 	});
 });
 

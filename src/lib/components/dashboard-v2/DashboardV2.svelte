@@ -7,6 +7,7 @@
 	import JumpNav from './JumpNav.svelte';
 	import BriefRow from './BriefRow.svelte';
 	import CamStrip from './CamStrip.svelte';
+	import CamWall from './CamWall.svelte';
 	import AdvisoryRow from './AdvisoryRow.svelte';
 	import GettingAround from './GettingAround.svelte';
 	import HealthIndicator from './HealthIndicator.svelte';
@@ -32,13 +33,16 @@
 	import { createSectionOpenState } from '$lib/dashboard/section-open';
 	import { openAndFocus } from '$lib/dashboard/fragment-nav';
 	import { createDashboardV2Controller, V2_REFRESH_MS } from '$lib/dashboard/v2-controller';
-	import { sectionFromHash } from '$lib/dashboard/section-prefs';
+	import { isDesktopViewport, sectionFromHash } from '$lib/dashboard/section-prefs';
 	import { V2_SECTIONS } from '$lib/dashboard/v2-sections';
 
 	const LATER = 'This part of the preview arrives in a later release.';
 
 	// SSR renders "false"; tests and later sections use this to know the page is interactive.
 	let hydrated = $state(false);
+	let innerWidth = $state(0);
+	/** ≥1024: sections always open, the cam wall under the map. Phone and tablet keep the strip. */
+	const desktop = $derived(hydrated && isDesktopViewport(innerWidth));
 	const sections = createSectionOpenState(sectionPrefs);
 	const open = sections.open;
 
@@ -64,7 +68,7 @@
 			airport: $airport,
 			traffic: $traffic,
 			outcomes: $outcomes,
-			open: $open['getting-around'],
+			open: desktop || $open['getting-around'],
 			now: $clock
 		})
 	);
@@ -134,6 +138,8 @@
 	});
 </script>
 
+<svelte:window bind:innerWidth />
+
 <svelte:head>
 	<title>Marin Monitor — dashboard preview</title>
 	<meta name="robots" content="noindex" />
@@ -170,7 +176,9 @@
 		{#if controller && hydrated}
 			<AdvisoryRow feed={controller.advisories} now={clock} />
 			<BriefRow brief={controller.brief} now={clock} onjump={navJump} />
-			<CamStrip now={$clock} />
+			{#if !desktop}
+				<CamStrip now={$clock} />
+			{/if}
 		{/if}
 
 		<section id="map" class="v2-region" tabindex="-1" aria-labelledby="v2-map-title">
@@ -185,13 +193,18 @@
 			{/if}
 		</section>
 
+		{#if desktop}
+			<CamWall now={$clock} />
+		{/if}
+
 		<Section
 			id="getting-around"
 			title="Getting Around"
-			open={$open['getting-around']}
+			open={desktop || $open['getting-around']}
 			ontoggle={(id) => sections.toggle(id)}
 			status={controller && hydrated ? around.status : null}
 			now={$clock}
+			collapsible={!desktop}
 		>
 			{#if controller && hydrated}
 				<GettingAround view={around} onopen={openAround} />
@@ -205,8 +218,10 @@
 				<Section
 					id={s.id}
 					title={s.title}
-					open={$open[s.id]}
+					open={desktop || $open[s.id]}
 					ontoggle={(id) => sections.toggle(id)}
+					collapsible={!desktop}
+					class="v2-span-12"
 				>
 					<p class="v2-muted" data-text-role="body">{LATER}</p>
 				</Section>
@@ -225,6 +240,9 @@
 
 <style>
 	.dash-v2 {
+		/* Layout tokens from the approved desktop mockup (desktop-v2-mockup.html). */
+		--v2-gap: 14px;
+		--v2-gutter: clamp(16px, 2.2vw, 44px);
 		min-height: 100vh;
 		background: var(--bg);
 		color: var(--text-primary);
@@ -284,11 +302,30 @@
 		gap: 1rem;
 		margin-top: 0.5rem;
 	}
-	@media (min-width: 768px) {
-		/* Desktop: map and Latest reporting share a 3:2 row (§2.4). */
+	@media (min-width: 1280px) {
+		/* Desktop: map and Latest reporting share a 3:2 row (§2.4); narrower, they stack. */
 		.v2-map-row {
 			grid-template-columns: 3fr 2fr;
+			gap: var(--v2-gap);
 			align-items: start;
+		}
+	}
+	@media (min-width: 1024px) {
+		/* Desktop runs full width to 2,240 px; sections sit on a 12-column grid, always open. */
+		.v2-header {
+			padding: 0.75rem var(--v2-gutter);
+		}
+		.v2-main {
+			max-width: 2240px;
+			padding: 0 var(--v2-gutter) 3rem;
+		}
+		.v2-sections {
+			display: grid;
+			grid-template-columns: repeat(12, minmax(0, 1fr));
+			gap: 28px var(--v2-gap);
+		}
+		.v2-sections > :global(.v2-span-12) {
+			grid-column: span 12;
 		}
 	}
 	.v2-muted,

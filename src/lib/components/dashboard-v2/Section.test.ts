@@ -21,7 +21,9 @@ const partial: SectionPresentation = {
 	]
 };
 
-function renderSection(props: Partial<{ open: boolean; status: SectionPresentation | null }> = {}) {
+function renderSection(
+	props: Partial<{ open: boolean; status: SectionPresentation | null; collapsible: boolean }> = {}
+) {
 	const ontoggle = vi.fn();
 	const result = render(Section, {
 		props: {
@@ -34,7 +36,7 @@ function renderSection(props: Partial<{ open: boolean; status: SectionPresentati
 			...props
 		}
 	});
-	return { ...result, ontoggle, toggle: screen.getByRole('button', { name: /News & Civic/ }) };
+	return { ...result, ontoggle, toggle: screen.queryByRole('button', { name: /News & Civic/ })! };
 }
 
 describe('Section', () => {
@@ -68,5 +70,13 @@ describe('Section', () => {
 		expect(screen.getByText('Marin IJ: unavailable (HTTP 503)')).toBeTruthy();
 		await rerender({ open: true, status: partial });
 		expect(screen.getByText('Partial coverage · Marin IJ unavailable')).toBeTruthy();
+	});
+	it('collapsible=false renders a heading, no toggle button, body mounted', () => {
+		const { container } = renderSection({ open: true, collapsible: false });
+		expect(screen.getByRole('heading', { level: 2, name: 'News & Civic' })).toBeTruthy();
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(container.querySelector('[aria-expanded]')).toBeNull();
+		expect(screen.getByTestId('body')).toBeTruthy();
+		expect(document.getElementById('section-news-body')?.hidden).toBe(false);
 	});
 });

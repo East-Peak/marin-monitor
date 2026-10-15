@@ -223,8 +223,9 @@ test.describe('phone 390×844', () => {
 	});
 });
 
-test.describe('desktop 1440', () => {
-	test.use({ viewport: { width: 1440, height: 900 } });
+// Below 1024 the strip is the carousel; at desktop widths the wall replaces it (Goal 1).
+test.describe('tablet 900', () => {
+	test.use({ viewport: { width: 900, height: 900 } });
 
 	test('five fully in view; at most seven load; › scrolls one view', async ({ page }) => {
 		await stubRest(page);
@@ -239,6 +240,24 @@ test.describe('desktop 1440', () => {
 		const x0 = await row.evaluate((el) => el.scrollLeft);
 		await page.getByRole('button', { name: 'Next cameras' }).click();
 		await expect.poll(() => row.evaluate((el) => el.scrollLeft)).toBeGreaterThan(x0 + 500);
+	});
+});
+
+test.describe('desktop 1440', () => {
+	test.use({ viewport: { width: 1440, height: 900 } });
+
+	test('the wall replaces the strip: no carousel or pager; every tile decodes once in view', async ({
+		page
+	}) => {
+		await stubRest(page);
+		await stubCams(page);
+		await open(page);
+		await expect(page.locator('.cams-row')).toHaveCount(0);
+		await expect(page.getByRole('button', { name: 'Next cameras' })).toHaveCount(0);
+		await page.locator('[data-slot="cam-wall"]').scrollIntoViewIfNeeded();
+		await expect(tiles(page)).toHaveCount(21);
+		await expect(page.locator('section#cams [data-status="live"]')).toHaveCount(21);
+		expect(await undecodedImages(page.locator('section#cams'))).toBe(0);
 	});
 
 	test("Caltrans tiles read the source's own capture age; ridge tiles claim none", async ({

@@ -175,6 +175,16 @@
 	.v2-map-expand {
 		display: none;
 	}
+	@media (min-width: 1024px) {
+		.v2-map-canvas {
+			height: 500px;
+		}
+	}
+	@media (min-width: 1700px) {
+		.v2-map-canvas {
+			height: 540px;
+		}
+	}
 	@media (max-width: 767px) {
 		/* The preview: compact, controls hidden until expanded (§2.4). */
 		.v2-map-canvas {

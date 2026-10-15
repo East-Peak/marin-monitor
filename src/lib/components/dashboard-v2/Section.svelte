@@ -11,6 +11,8 @@
 		ontoggle,
 		status = null,
 		now = Date.now(),
+		collapsible = true,
+		class: className = '',
 		children
 	}: {
 		id: SectionId;
@@ -19,41 +21,50 @@
 		ontoggle: (id: SectionId) => void;
 		status?: SectionPresentation | null;
 		now?: number;
+		/** False on desktop: a plain heading over an always-mounted body (no disclosure). */
+		collapsible?: boolean;
+		/** Grid placement from the owner (e.g. a span class). */
+		class?: string;
 		children: Snippet;
 	} = $props();
 
 	const bodyId = $derived(`section-${id}-body`);
+	const shown = $derived(open || !collapsible);
 </script>
 
 <section
-	class="v2-section"
+	class="v2-section {className}"
 	{id}
 	tabindex="-1"
 	data-section={id}
-	data-open={open ? 'true' : 'false'}
+	data-open={shown ? 'true' : 'false'}
 >
 	<div class="v2-section-header">
 		<h2 class="v2-section-heading">
-			<button
-				type="button"
-				class="v2-section-toggle"
-				data-section-toggle={id}
-				data-text-role="section-title"
-				aria-expanded={open}
-				aria-controls={bodyId}
-				onclick={() => ontoggle(id)}
-			>
-				<span class="v2-section-chevron" aria-hidden="true">{open ? '▾' : '▸'}</span>
-				{title}
-			</button>
+			{#if !collapsible}
+				<span class="v2-section-title" data-text-role="section-title">{title}</span>
+			{:else}
+				<button
+					type="button"
+					class="v2-section-toggle"
+					data-section-toggle={id}
+					data-text-role="section-title"
+					aria-expanded={open}
+					aria-controls={bodyId}
+					onclick={() => ontoggle(id)}
+				>
+					<span class="v2-section-chevron" aria-hidden="true">{open ? '▾' : '▸'}</span>
+					{title}
+				</button>
+			{/if}
 		</h2>
 		{#if status}
 			<SectionStatus {status} {now} />
 		{/if}
 	</div>
 	<!-- Lazy: the body mounts only while open, so closed sections start no work (§7). -->
-	<div class="v2-section-body" id={bodyId} hidden={!open}>
-		{#if open}
+	<div class="v2-section-body" id={bodyId} hidden={!shown}>
+		{#if shown}
 			{@render children()}
 		{/if}
 	</div>
@@ -76,6 +87,12 @@
 	.v2-section-heading {
 		margin: 0;
 		font: inherit;
+	}
+	.v2-section-title {
+		display: inline-flex;
+		align-items: center;
+		min-height: 2.75rem;
+		color: var(--text-primary);
 	}
 	.v2-section-toggle {
 		display: inline-flex;

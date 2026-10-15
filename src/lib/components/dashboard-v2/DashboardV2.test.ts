@@ -63,8 +63,12 @@ const controller = vi.hoisted(() => ({
 		])
 	)
 }));
+/** jsdom's window is 1024 wide (desktop); a test that needs another width sets it first. */
+const atWidth = (w: number) =>
+	Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: w });
 // Earlier tests in this file render DashboardV2 too: reset every captured call per test (Codex r1 #11).
 beforeEach(() => {
+	atWidth(1024);
 	controller.start.mockClear();
 	controller.setLocation.mockClear();
 	controller.refresh.mockClear();
@@ -201,7 +205,8 @@ describe('DashboardV2 preview shell', () => {
 		expect(container.textContent).not.toMatch(/strava|segment leaderboard/i);
 	});
 
-	it('every section toggle is a real disclosure button', async () => {
+	it('tablet (900): every section toggle is a real disclosure button', async () => {
+		atWidth(900);
 		render(DashboardV2);
 		await tick();
 		for (const name of [
@@ -215,6 +220,23 @@ describe('DashboardV2 preview shell', () => {
 			expect(button.getAttribute('aria-expanded')).toMatch(/^(true|false)$/);
 			expect(button.getAttribute('aria-controls')).toMatch(/^section-.+-body$/);
 		}
+	});
+
+	it('desktop (1440): sections are always open, with headings and no disclosure buttons', async () => {
+		atWidth(1440);
+		const { container } = render(DashboardV2);
+		await tick();
+		expect(container.querySelectorAll('[data-section] [aria-expanded]')).toHaveLength(0);
+		for (const name of [
+			'Getting Around',
+			'Outdoors & Conditions',
+			'News & Civic',
+			'Cost & Character',
+			'Events & Sports'
+		]) {
+			expect(screen.getByRole('heading', { level: 2, name })).toBeTruthy();
+		}
+		expect(container.querySelectorAll('[data-section][data-open="false"]')).toHaveLength(0);
 	});
 
 	it('tells the controller where the brief is for: the current town preset, on mount', async () => {
@@ -232,7 +254,8 @@ describe('DashboardV2 preview shell', () => {
 		expect(screen.getByRole('button', { name: 'Checking sources…' })).toBeTruthy();
 	});
 
-	it('the Cams strip sits right after the brief and right before the map; no Getting Around card', async () => {
+	it('tablet (900): the Cams strip sits right after the brief and right before the map; no Getting Around card', async () => {
+		atWidth(900);
 		const { container } = render(DashboardV2);
 		await tick();
 		const main = container.querySelector('.v2-main')!;
@@ -242,6 +265,17 @@ describe('DashboardV2 preview shell', () => {
 		expect(order[cams - 1]).toBe('brief');
 		expect(order[cams + 1]).toBe('map');
 		expect(container.querySelector('[data-card="getting-around"]')).toBeNull();
+	});
+
+	it('desktop (1440): no strip; the cam wall sits right after the map', async () => {
+		atWidth(1440);
+		const { container } = render(DashboardV2);
+		await tick();
+		const main = container.querySelector('.v2-main')!;
+		const order = [...main.children].map((el) => el.getAttribute('data-slot') || el.id || '');
+		expect(container.querySelector('.cams-row')).toBeNull();
+		expect(order[order.indexOf('map') + 1]).toBe('cam-wall');
+		expect(order.indexOf('brief') + 1).toBe(order.indexOf('map'));
 	});
 });
 

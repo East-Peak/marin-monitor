@@ -3,6 +3,7 @@ import {
 	SECTION_IDS,
 	defaultSectionOpen,
 	emptySectionPrefs,
+	isDesktopViewport,
 	isPhoneViewport,
 	parseSectionPrefs,
 	resolveSectionOpen,
@@ -13,6 +14,7 @@ import {
 } from './section-prefs';
 
 const DESKTOP = 1440;
+const TABLET = 900;
 const PHONE = 390;
 
 describe('parseSectionPrefs', () => {
@@ -73,19 +75,19 @@ describe('defaults and precedence', () => {
 	it('desktop starts every section open except Strava', () => {
 		for (const id of SECTION_IDS) expect(defaultSectionOpen(id, DESKTOP)).toBe(id !== 'strava');
 	});
-	it('hash target > explicit saved choice > viewport default', () => {
+	it('hash target > explicit saved choice > viewport default (phone and tablet)', () => {
 		const savedClosed = withSectionOpen(emptySectionPrefs(), 'news', false);
 		expect(
-			resolveSectionOpen('news', { hashTarget: 'news', prefs: savedClosed, viewportWidth: DESKTOP })
+			resolveSectionOpen('news', { hashTarget: 'news', prefs: savedClosed, viewportWidth: TABLET })
 		).toBe(true);
 		expect(
-			resolveSectionOpen('news', { hashTarget: null, prefs: savedClosed, viewportWidth: DESKTOP })
+			resolveSectionOpen('news', { hashTarget: null, prefs: savedClosed, viewportWidth: TABLET })
 		).toBe(false);
 		expect(
 			resolveSectionOpen('news', {
 				hashTarget: null,
 				prefs: emptySectionPrefs(),
-				viewportWidth: DESKTOP
+				viewportWidth: TABLET
 			})
 		).toBe(true);
 		const savedOpen = withSectionOpen(emptySectionPrefs(), 'cost', true);
@@ -95,6 +97,23 @@ describe('defaults and precedence', () => {
 		expect(
 			resolveSectionOpen('strava', {
 				hashTarget: 'news',
+				prefs: emptySectionPrefs(),
+				viewportWidth: DESKTOP
+			})
+		).toBe(false);
+	});
+	it('desktop (≥1024) opens every non-Strava section even when the user saved it closed', () => {
+		expect(isDesktopViewport(1023)).toBe(false);
+		expect(isDesktopViewport(1024)).toBe(true);
+		const prefs = withSectionOpen(emptySectionPrefs(), 'news', false);
+		const at = (viewportWidth: number) =>
+			resolveSectionOpen('news', { hashTarget: null, prefs, viewportWidth });
+		expect(at(DESKTOP)).toBe(true);
+		expect(at(PHONE)).toBe(false);
+		expect(at(TABLET)).toBe(false);
+		expect(
+			resolveSectionOpen('strava', {
+				hashTarget: null,
 				prefs: emptySectionPrefs(),
 				viewportWidth: DESKTOP
 			})

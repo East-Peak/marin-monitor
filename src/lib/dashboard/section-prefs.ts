@@ -20,6 +20,8 @@ export type SectionId = (typeof SECTION_IDS)[number];
 export const SECTION_PREFS_KEY = 'mm_sections_v2';
 /** Phone is anything narrower than 768 CSS px. */
 export const PHONE_MAX_WIDTH = 767;
+/** Desktop starts at 1024 CSS px: sections are always open there (between: tablet). */
+export const DESKTOP_MIN_WIDTH = 1024;
 
 export interface SectionPrefs {
 	version: 2;
@@ -82,6 +84,10 @@ export function isPhoneViewport(width: number): boolean {
 	return width <= PHONE_MAX_WIDTH;
 }
 
+export function isDesktopViewport(width: number): boolean {
+	return width >= DESKTOP_MIN_WIDTH;
+}
+
 /** Phone: everything closed. Desktop: everything open except Strava (spec §2.7, §13.10). */
 export function defaultSectionOpen(id: SectionId, viewportWidth: number): boolean {
 	if (isPhoneViewport(viewportWidth)) return false;
@@ -94,8 +100,12 @@ export function sectionFromHash(hash: string): SectionId | null {
 	return isSectionId(id) ? id : null;
 }
 
-/** Precedence (spec §13.5): hash target > explicit saved choice > viewport default. */
+/**
+ * Desktop: every section but Strava is open, whatever was saved (sections don't collapse there).
+ * Phone and tablet (spec §13.5): hash target > explicit saved choice > viewport default.
+ */
 export function resolveSectionOpen(id: SectionId, ctx: SectionOpenContext): boolean {
+	if (id !== 'strava' && isDesktopViewport(ctx.viewportWidth)) return true;
 	if (ctx.hashTarget === id) return true;
 	const saved = ctx.prefs.open[id];
 	if (saved !== undefined) return saved;

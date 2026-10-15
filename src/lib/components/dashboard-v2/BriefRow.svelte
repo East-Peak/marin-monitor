@@ -132,6 +132,23 @@
 		gap: 0.75rem;
 		margin: 0.75rem 0;
 	}
+	@media (min-width: 768px) {
+		/* Tablet and narrow desktop: one card per row (the mockup's ≤1279 fallback). */
+		.v2-brief {
+			display: grid;
+			grid-template-columns: 1fr;
+		}
+	}
+	@media (min-width: 1280px) {
+		/* Desktop: Weather 5fr · Next tide 4fr · a third slot 3fr (desktop-v2-mockup.html). */
+		.v2-brief {
+			grid-template-columns: 5fr 4fr 3fr;
+			gap: var(--v2-gap, 14px);
+		}
+		.v2-brief-link {
+			align-self: start;
+		}
+	}
 	.v2-card {
 		flex: 1 1 14rem;
 		padding: var(--v2-card-padding);
