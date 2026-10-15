@@ -6,6 +6,15 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-15
 
+### Added — Outdoors & Conditions with charts in the v2 preview
+
+- **Next 24 hours:** a temperature curve with the high and low labelled and a "now" line, hourly chance-of-rain bars ("0% every hour" only when all 24 hours are forecast at 0%; a missing hour draws nothing and is counted), the temperature range, peak rain and warmest day, and a 6-day high/low strip. All of it comes from the NWS hourly forecast the brief already loads, so there is no extra daily-forecast request.
+- **Tides:** a 48 h curve through NOAA's high/low predictions with each high and low marked, plus the next four.
+- **Surf · Point Reyes:** wave height and period over 48 h from the Open-Meteo marine forecast, labelled as a forecast, not a buoy.
+- **Air, fire & ground:** air quality reads "Unavailable · no AQI feed connected"; wildfire reads "None near" only after both CAL FIRE and NIFC answer, and a failure says unavailable (unreported acreage or containment is named, never 0); earthquakes count every M2+ within 100 km over 7 days and name the largest, and a failed read is "Unknown", never 0.
+- **Source lines:** every card ends with its source and when it was issued or checked, or why it couldn't be read.
+- **Layout:** from 1280 px Outdoors sits beside Getting Around (7 and 5 of 12 columns); from 1024 to 1279 px they stack. Phones and tablets keep the collapsible section, with the charts inside it when opened.
+
 ### Changed — Desktop frame for the v2 preview
 
 - **Full width:** at 1024 px and wider the preview runs edge to edge up to 2,240 px, with a gutter of `clamp(16px, 2.2vw, 44px)` (the approved desktop mockup).

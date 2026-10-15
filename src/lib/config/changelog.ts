@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-15',
+		title: 'Outdoors & Conditions, with charts, in the preview',
+		description:
+			'The dashboard preview’s Outdoors section now charts the next 24 hours (temperature and hourly chance of rain), a 6-day high/low strip, the tides for two days, and Point Reyes surf from a marine forecast. A short list covers wildfire near Marin, earthquakes in the last 7 days, and air quality, which is unavailable until a new feed is connected. Every card says where its numbers come from and when, and a reading that failed says so instead of showing zero. On a computer it sits beside Getting Around. The regular dashboard and TV are unchanged.'
+	},
+	{
+		date: '2026-10-15',
 		title: 'The preview fills a desktop screen',
 		description:
 			'On a computer, the dashboard preview now uses the full width of the window: the morning brief in one row, a taller map beside Latest reporting, and all the cameras in a wall under the map, grouped by area (South, Central, West and North Marin, then the 101 traffic cams). Sections are always open on desktop. Phones and tablets are unchanged, and so are the regular dashboard and TV.'
