@@ -6,6 +6,11 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-15
 
+### Added — Getting Around data for the v2 preview (part 2, not yet shown)
+
+- Checked fetchers for `/api/airport-status` and `/api/traffic/corridors` (anything outside the expected shape throws; the section will show it as unavailable). Both load only when Getting Around opens (a new "detail" dataset tier), then refresh with every 5-minute cycle, each value carrying its own time (FAA response time; 511 check time).
+- The v2 controller keeps each transit agency's read from its one existing transit request (no new 511 requests), and a failed or timed-out read reaches the view instead of leaving the last one looking current.
+
 ### Added — Getting Around data for the v2 preview (part 1, not yet shown)
 
 - `/api/traffic/corridors`: 511's complete traffic event list (it follows 511's paging inside one 8 s deadline; a partial list is a 502, never served), filtered to Marin and the SFO/OAK routes in `src/lib/config/traffic-corridors.ts` (US-101, CA-1/19th Ave, I-280 and I-380 to SFO; I-580, I-80 and I-880 to OAK). Long-term construction excluded; incidents always kept; an event that can't be placed is kept and marked, and a record that can't be read is counted, never hidden.
