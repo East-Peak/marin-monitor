@@ -50,7 +50,7 @@ function toReading(feature: unknown): StationReading | null {
 
 export async function fetchLatestObservation(
 	station: { id: string; name: string },
-	{ signal, now = Date.now() }: OwnerOptions & { now?: number } = {}
+	{ signal, now }: OwnerOptions & { now?: number } = {}
 ): Promise<ObservedNow> {
 	const result = await serviceClient.request<NwsObservationList>(
 		'NWS',
@@ -66,7 +66,8 @@ export async function fetchLatestObservation(
 	const readings = (Array.isArray(features) ? features : [])
 		.map(toReading)
 		.filter((r): r is StationReading => r !== null);
-	const picked = chooseObservation(readings, now);
+	// Judge the age bound when the list arrives, not when the request left (Codex code r1 #1).
+	const picked = chooseObservation(readings, now ?? Date.now());
 	if (!picked) throw new Error('NWS observations missing a timestamp');
 	return { stationName: station.name, ...picked.reading, listNewestAt: picked.listNewestAt };
 }

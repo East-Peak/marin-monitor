@@ -54,9 +54,11 @@ test('production weather card agrees with the browser’s own KDVO observation l
 }) => {
 	const list = new Promise<{ url: string; body: { features?: unknown } }>((resolve) => {
 		page.on('response', async (response) => {
-			if (!/stations\/KDVO\/observations\?/.test(response.url())) return;
+			// Only a successful list is provenance; a failed attempt the client retried is not (Codex code r1 #2).
+			if (!/stations\/KDVO\/observations\?/.test(response.url()) || !response.ok()) return;
 			try {
-				resolve({ url: response.url(), body: await response.json() });
+				const body = await response.json();
+				if (Array.isArray(body?.features)) resolve({ url: response.url(), body });
 			} catch {
 				// Not a JSON body; keep waiting for one.
 			}

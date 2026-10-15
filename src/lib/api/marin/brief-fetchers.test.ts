@@ -178,6 +178,25 @@ describe('fetchLatestObservation', () => {
 			tempF: null
 		});
 	});
+	it('the 90-min bound is judged when the list arrives, not when the request left (Codex code r1 #1)', async () => {
+		vi.useFakeTimers({ toFake: ['Date'] });
+		try {
+			vi.setSystemTime(NOW); // 13:30:05Z is 89m55s old now…
+			request.mockImplementation(async () => {
+				vi.setSystemTime(NOW + 10_000); // …and 90m05s old when the list lands.
+				return list(
+					feature('2026-09-29T14:55:00+00:00', { value: null, qualityControl: 'Z' }),
+					feature('2026-09-29T13:30:05+00:00', { value: 15.5, qualityControl: 'V' })
+				);
+			});
+			expect(await fetchLatestObservation(station)).toMatchObject({
+				observedAt: Date.parse('2026-09-29T14:55:00Z'),
+				tempF: null
+			});
+		} finally {
+			vi.useRealTimers();
+		}
+	});
 	it.each([
 		[{}],
 		[{ features: null }],
