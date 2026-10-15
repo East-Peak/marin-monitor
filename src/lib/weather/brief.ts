@@ -15,6 +15,8 @@ export interface HourlyPop {
 	endMs: number;
 	/** Probability of precipitation in percent; null = NWS gave none. */
 	pop: number | null;
+	/** Forecast temperature in °F; null = NWS gave none. */
+	temperatureF: number | null;
 }
 
 export interface HourlyForecast {

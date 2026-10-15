@@ -14,7 +14,12 @@ const H = 3_600_000;
 /** Hourly periods from `startIso`, one per value. */
 function hours(startIso: string, pops: (number | null)[]): HourlyPop[] {
 	const start = Date.parse(startIso);
-	return pops.map((pop, i) => ({ startMs: start + i * H, endMs: start + (i + 1) * H, pop }));
+	return pops.map((pop, i) => ({
+		startMs: start + i * H,
+		endMs: start + (i + 1) * H,
+		pop,
+		temperatureF: null
+	}));
 }
 
 describe('restOfTodayRainChance (§13.9)', () => {

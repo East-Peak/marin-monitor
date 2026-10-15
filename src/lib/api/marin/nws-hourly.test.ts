@@ -1,11 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { RequestResult } from '$lib/services/client';
 
-vi.mock('$lib/services/client', () => ({ serviceClient: { request: vi.fn() } }));
+vi.mock('$lib/services/client', async (orig) => ({
+	...(await orig<object>()),
+	serviceClient: { request: vi.fn() }
+}));
 vi.mock('./nws-common', () => ({ getGridPoint: vi.fn() }));
 vi.mock('$lib/config/api', () => ({ logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn() } }));
 
-import { fetchHourlyForecast, fetchDailyRainForecast } from './nws-hourly';
+import { fetchHourlyForecast, fetchDailyRainForecast, fetchHourlyPopOrThrow } from './nws-hourly';
 import { serviceClient } from '$lib/services/client';
 import { getGridPoint } from './nws-common';
 import { logger } from '$lib/config/api';
@@ -62,4 +65,43 @@ describe('NWS hourly/QPF owner signal (dashboard spec §13.6; Codex PR1 C2)', ()
 			expect(vi.mocked(logger.warn)).not.toHaveBeenCalled();
 		});
 	}
+});
+
+describe('v2 hourly reader (desktop Goal 2)', () => {
+	const at = (h: number) => `2026-10-15T${String(h).padStart(2, '0')}:00:00-07:00`;
+	const period = (
+		h: number,
+		temperature: unknown,
+		unit: string,
+		pop: number | null | undefined
+	) => ({
+		startTime: at(h),
+		endTime: at(h + 1),
+		temperature,
+		temperatureUnit: unit,
+		...(pop === undefined ? {} : { probabilityOfPrecipitation: { value: pop } })
+	});
+
+	it('v2 reader keeps temperatures and leaves a missing probabilityOfPrecipitation null', async () => {
+		mockRequest.mockResolvedValue({
+			data: {
+				properties: {
+					periods: [
+						period(8, 61, 'F', 0),
+						period(9, 20, 'C', undefined),
+						period(10, null, 'F', null)
+					]
+				}
+			},
+			fromCache: false
+		} as RequestResult<never>);
+
+		const { periods } = await fetchHourlyPopOrThrow(38, -122.5);
+
+		expect(periods.map((p) => [p.temperatureF, p.pop])).toEqual([
+			[61, 0],
+			[68, null],
+			[null, null]
+		]);
+	});
 });

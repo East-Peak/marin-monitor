@@ -17,7 +17,10 @@ const fetchers = vi.hoisted(() => ({
 	strava: vi.fn(),
 	health: vi.fn(),
 	airport: vi.fn(),
-	traffic: vi.fn()
+	traffic: vi.fn(),
+	marine: vi.fn(),
+	fires: vi.fn(),
+	quakesWeek: vi.fn()
 }));
 // Keep every other export real: $lib/api/marin/index.ts re-exports these modules.
 vi.mock('$lib/api/marin/gas-prices', async (orig) => ({
@@ -47,6 +50,18 @@ vi.mock('$lib/api/marin/health-report', async (orig) => ({
 vi.mock('$lib/api/marin/airport-status', async (orig) => ({
 	...(await orig<object>()),
 	fetchAirportStatusOrThrow: fetchers.airport
+}));
+vi.mock('$lib/api/marin/marine', async (orig) => ({
+	...(await orig<object>()),
+	readMarineForecastOrThrow: fetchers.marine
+}));
+vi.mock('$lib/api/marin/calfire', async (orig) => ({
+	...(await orig<object>()),
+	readFireIncidentsOrThrow: fetchers.fires
+}));
+vi.mock('$lib/api/marin/usgs', async (orig) => ({
+	...(await orig<object>()),
+	readEarthquakesWeekOrThrow: fetchers.quakesWeek
 }));
 vi.mock('$lib/api/marin/traffic-corridors', async (orig) => ({
 	...(await orig<object>()),
@@ -180,6 +195,9 @@ beforeEach(() => {
 		upstreamCount: 40,
 		events: []
 	});
+	fetchers.marine.mockResolvedValue({ points: [], checkedAt: NOW - 60_000 });
+	fetchers.fires.mockResolvedValue({ fires: [], checkedAt: NOW - 60_000 });
+	fetchers.quakesWeek.mockResolvedValue({ quakes: [], observedAt: NOW - 120_000 });
 	for (const s of [gasPriceStore, evChargingStore, coffeeIndexStore, fitnessStore]) {
 		s.set({ current: null, history: [] } as never);
 	}
@@ -537,6 +555,22 @@ describe('createDashboardV2Controller', () => {
 		await c.refresh();
 		expect(fetchers.airport).toHaveBeenCalledTimes(2);
 		expect(fetchers.traffic).toHaveBeenCalledTimes(2);
+	});
+
+	it('Outdoors reads (marine, fires, 7-day quakes) load only through ensure, with their own times', async () => {
+		const c = controller();
+		await c.start();
+		for (const f of [fetchers.marine, fetchers.fires, fetchers.quakesWeek])
+			expect(f).not.toHaveBeenCalled();
+		await Promise.all(['marine', 'fires', 'quakes-week'].map((id) => c.ensure(id)));
+		expect(get(c.marine)).toEqual({ points: [], checkedAt: NOW - 60_000 });
+		expect(get(c.fires)?.fires).toEqual([]);
+		expect(get(c.quakesWeek)?.observedAt).toBe(NOW - 120_000);
+		expect(get(c.datasetOutcomes)['quakes-week']).toEqual({
+			kind: 'live',
+			observedAt: NOW - 120_000
+		});
+		expect(get(c.datasetOutcomes).fires).toEqual({ kind: 'live', observedAt: NOW - 60_000 });
 	});
 
 	it('a failed detail refresh keeps the last value, retained with its own time', async () => {

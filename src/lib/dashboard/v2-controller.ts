@@ -29,6 +29,9 @@ import {
 } from '$lib/api/marin';
 import { boundedOp, DEFAULT_OP_DEADLINE_MS } from '$lib/api/marin/bounded-op';
 import { fetchAirportStatusOrThrow } from '$lib/api/marin/airport-status';
+import { readFireIncidentsOrThrow, type FireRead } from '$lib/api/marin/calfire';
+import { readMarineForecastOrThrow, type MarineForecastRead } from '$lib/api/marin/marine';
+import { readEarthquakesWeekOrThrow, type EarthquakeRead } from '$lib/api/marin/usgs';
 import { fetchHealthReport, type HealthReportJson } from '$lib/api/marin/health-report';
 import { fetchMarinAdvisories } from '$lib/api/marin/nws-advisories';
 import { fetchHourlyPopOrThrow } from '$lib/api/marin/nws-hourly';
@@ -45,6 +48,7 @@ import type { AdvisoryFeedState, ParsedAlerts } from '$lib/weather/advisories';
 import { createAdvisoryFeed } from './advisory-feed';
 import { createBriefStore, type BriefFetchers, type BriefState } from './brief-store';
 import { AIRPORT_MAX_AGE_MS, TRAFFIC_MAX_AGE_MS, type TransitState } from './getting-around';
+import { OUTDOORS_DATASETS, OUTDOORS_MAX_AGE_MS } from './outdoors';
 import {
 	createTvNewsLoader,
 	TV_NEWS_SOURCES,
@@ -172,6 +176,57 @@ function detailDatasets(
 	];
 }
 
+const isoOrNull = (ms: number | null) => (ms === null ? null : new Date(ms).toISOString());
+
+/** Outdoors' detail reads (desktop Goal 2): loaded through ensure() when the section opens. */
+function outdoorsDatasets(stores: OutdoorsStores): DatasetDef[] {
+	const D = OUTDOORS_DATASETS;
+	return [
+		dataset<MarineForecastRead>({
+			...D.marine,
+			tier: 'detail',
+			load: async (signal) => ({
+				ok: true,
+				data: await readMarineForecastOrThrow({ signal }),
+				dataSource: 'live'
+			}),
+			commit: (d) => stores.marine.set(d),
+			observedAtOf: (d) => isoOrNull(d.checkedAt),
+			maxAgeMs: OUTDOORS_MAX_AGE_MS
+		}),
+		dataset<FireRead>({
+			...D.fires,
+			tier: 'detail',
+			load: async (signal) => ({
+				ok: true,
+				data: await readFireIncidentsOrThrow({ signal }),
+				dataSource: 'live'
+			}),
+			commit: (d) => stores.fires.set(d),
+			observedAtOf: (d) => isoOrNull(d.checkedAt),
+			maxAgeMs: OUTDOORS_MAX_AGE_MS
+		}),
+		dataset<EarthquakeRead>({
+			...D.quakes,
+			tier: 'detail',
+			load: async (signal) => ({
+				ok: true,
+				data: await readEarthquakesWeekOrThrow({ signal }),
+				dataSource: 'live'
+			}),
+			commit: (d) => stores.quakesWeek.set(d),
+			observedAtOf: (d) => isoOrNull(d.observedAt),
+			maxAgeMs: OUTDOORS_MAX_AGE_MS
+		})
+	];
+}
+
+interface OutdoorsStores {
+	marine: Writable<MarineForecastRead | null>;
+	fires: Writable<FireRead | null>;
+	quakesWeek: Writable<EarthquakeRead | null>;
+}
+
 export const BRIEF_FETCHERS: BriefFetchers = {
 	hourly: (lat, lon, signal) => fetchHourlyPopOrThrow(lat, lon, { signal }),
 	observation: (station, signal) => fetchLatestObservation(station, { signal }),
@@ -261,6 +316,10 @@ export interface DashboardV2Controller {
 	/** Getting Around's details, loaded through ensure('airport' | 'traffic'). */
 	airport: Readable<AirportStatusData | null>;
 	traffic: Readable<TrafficCorridorsData | null>;
+	/** Outdoors' details, loaded through ensure(OUTDOORS_DATASETS.*.id). */
+	marine: Readable<MarineForecastRead | null>;
+	fires: Readable<FireRead | null>;
+	quakesWeek: Readable<EarthquakeRead | null>;
 }
 
 export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Controller {
@@ -269,6 +328,11 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 	const airport = writable<AirportStatusData | null>(null);
 	const traffic = writable<TrafficCorridorsData | null>(null);
 	const transit = writable<TransitState>({ reads: null, error: null });
+	const outdoors: OutdoorsStores = {
+		marine: writable(null),
+		fires: writable(null),
+		quakesWeek: writable(null)
+	};
 	// /api/health feeds the header indicator only; it never re-dates a dataset (Codex r1 #3).
 	const defs = deps.datasets ?? [
 		...ESSENTIAL_DATASETS,
@@ -282,6 +346,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 			maxAgeMs: null
 		}),
 		...detailDatasets(airport, traffic),
+		...outdoorsDatasets(outdoors),
 		...INVENTORY_DATASETS
 	];
 	const registry = createDatasetRegistry(defs, deps.signal, { deadlineMs: deps.deadlineMs });
@@ -410,6 +475,9 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		transit: { subscribe: transit.subscribe },
 		airport: { subscribe: airport.subscribe },
 		traffic: { subscribe: traffic.subscribe },
+		marine: { subscribe: outdoors.marine.subscribe },
+		fires: { subscribe: outdoors.fires.subscribe },
+		quakesWeek: { subscribe: outdoors.quakesWeek.subscribe },
 		datasetOutcomes: registry.outcomes,
 		brief: { subscribe: brief.subscribe },
 		advisories: { subscribe: advisories.subscribe },

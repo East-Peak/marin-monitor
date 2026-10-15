@@ -12,7 +12,7 @@ vi.mock('$lib/geo/proximity', () => ({
 	isNearMarin: vi.fn()
 }));
 
-import { fetchFireIncidents } from './calfire';
+import { fetchFireIncidents, readFireIncidentsOrThrow } from './calfire';
 import { fetchWithTimeout } from './fetch-helpers';
 import { isNearMarin } from '$lib/geo/proximity';
 
@@ -283,5 +283,42 @@ describe('fetchFireIncidents', () => {
 		const result = await fetchFireIncidents();
 
 		expect(result[0].url).toBe('https://www.fire.ca.gov/incidents');
+	});
+});
+
+describe('readFireIncidentsOrThrow (v2 Outdoors: a failure is never "none near")', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+		mockIsNearMarin.mockReturnValue(true);
+	});
+
+	it('throws when either upstream fails, instead of an empty list', async () => {
+		mockFetch
+			.mockResolvedValueOnce(makeResponse({ features: [] }))
+			.mockResolvedValueOnce(makeResponse({}, false, 503));
+		await expect(readFireIncidentsOrThrow({ now: () => 1_000 })).rejects.toThrow(/503/);
+
+		mockFetch
+			.mockRejectedValueOnce(new Error('offline'))
+			.mockResolvedValueOnce(makeResponse({ features: [] }));
+		await expect(readFireIncidentsOrThrow({ now: () => 1_000 })).rejects.toThrow(/offline/);
+	});
+
+	it('an ArcGIS error body is a failure too', async () => {
+		mockFetch
+			.mockResolvedValueOnce(makeResponse({ features: [] }))
+			.mockResolvedValueOnce(makeResponse({ error: { message: 'bad field' } }));
+		await expect(readFireIncidentsOrThrow({ now: () => 1_000 })).rejects.toThrow(/bad field/);
+	});
+
+	it('both upstreams answered: the near fires, stamped with the read time, and the owner signal', async () => {
+		mockFetch
+			.mockResolvedValueOnce(makeResponse({ features: [makeCalFireFeature({ name: 'Dunn' })] }))
+			.mockResolvedValueOnce(makeResponse({ features: [] }));
+		const owner = new AbortController();
+		const read = await readFireIncidentsOrThrow({ signal: owner.signal, now: () => 1_000 });
+		expect(read.fires.map((f) => f.name)).toEqual(['Dunn']);
+		expect(read.checkedAt).toBe(1_000);
+		expect(mockFetch.mock.calls.every(([, init]) => init?.signal === owner.signal)).toBe(true);
 	});
 });

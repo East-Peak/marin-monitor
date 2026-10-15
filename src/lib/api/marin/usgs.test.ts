@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { EarthquakeData } from '$lib/types';
 
 // Mock serviceClient before importing the module
-vi.mock('$lib/services/client', () => ({
+vi.mock('$lib/services/client', async (orig) => ({
+	...(await orig<object>()),
 	serviceClient: {
 		request: vi.fn()
 	}
@@ -16,7 +17,12 @@ vi.mock('$lib/config/towns', () => ({
 	MARIN_CENTER: { lat: 37.9735, lon: -122.5311 }
 }));
 
-import { fetchEarthquakes, fetchEarthquakesOrThrow, earthquakesToNewsItems } from './usgs';
+import {
+	fetchEarthquakes,
+	fetchEarthquakesOrThrow,
+	earthquakesToNewsItems,
+	readEarthquakesWeekOrThrow
+} from './usgs';
 import { serviceClient } from '$lib/services/client';
 
 const mockRequest = vi.mocked(serviceClient.request);
@@ -217,5 +223,43 @@ describe('fetchEarthquakesOrThrow (status-aware; the TV keeps last-good pins on 
 		const owner = new AbortController();
 		await fetchEarthquakesOrThrow({ signal: owner.signal });
 		expect(mockRequest.mock.calls[0][2]).toMatchObject({ signal: owner.signal });
+	});
+});
+
+describe('readEarthquakesWeekOrThrow (v2 Outdoors: 7 days, not the newest 10)', () => {
+	const DAY = 86_400_000;
+	const now = Date.parse('2026-10-15T15:20:00Z');
+	const feature = (id: string, time: number, mag = 2.4) => ({
+		id,
+		properties: { mag, place: 'near Novato', time, url: 'u', title: 't', type: 'earthquake' },
+		geometry: { coordinates: [-122.5, 38.1, 7] }
+	});
+
+	it('queries from 7 days back (on the hour) with no limit, and drops quakes before the window', async () => {
+		mockRequest.mockResolvedValueOnce({
+			data: {
+				features: [feature('new', now - DAY), feature('old', now - 7 * DAY - 10 * 60_000)],
+				metadata: { generated: now - 60_000 }
+			},
+			fromCache: false
+		} as never);
+
+		const read = await readEarthquakesWeekOrThrow({ now: () => now });
+
+		const params = mockRequest.mock.calls[0][2]?.params as Record<string, unknown>;
+		expect(params.starttime).toBe('2026-10-08T15:00:00Z');
+		expect(params).not.toHaveProperty('limit');
+		expect(params).toMatchObject({ minmagnitude: 2, maxradiuskm: 100 });
+		expect(read.quakes.map((q) => q.id)).toEqual(['new']);
+		expect(read.observedAt).toBe(now - 60_000);
+	});
+
+	it('a cached copy after a failed refresh is a failure, not a count', async () => {
+		mockRequest.mockResolvedValueOnce({
+			data: { features: [] },
+			fromCache: 'fallback',
+			error: 'HTTP 503'
+		} as never);
+		await expect(readEarthquakesWeekOrThrow({ now: () => now })).rejects.toThrow(/503/);
 	});
 });

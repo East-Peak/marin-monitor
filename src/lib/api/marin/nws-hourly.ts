@@ -187,14 +187,26 @@ interface NwsHourlyPopResponse {
 		periods?: Array<{
 			startTime: string;
 			endTime: string;
+			temperature?: number | null;
+			temperatureUnit?: string;
 			probabilityOfPrecipitation?: { value: number | null };
 		}>;
 	};
 }
 
+const finiteOrNull = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+
+/** NWS hourly temperatures are °F for US points; a °C period is converted, never guessed. */
+function fahrenheit(p: { temperature?: number | null; temperatureUnit?: string }): number | null {
+	const t = finiteOrNull(p.temperature);
+	if (t === null) return null;
+	if (p.temperatureUnit === 'F') return t;
+	return p.temperatureUnit === 'C' ? Math.round((t * 9) / 5 + 32) : null;
+}
+
 /**
- * v2 brief: the hourly forecast with a nullable PoP (missing is unknown,
- * never 0%) and the forecast's own update time. Throws on failure.
+ * v2 brief: the hourly forecast with a nullable PoP and temperature (missing
+ * is unknown, never 0) and the forecast's own update time. Throws on failure.
  * fetchHourlyForecast (legacy) is unchanged.
  */
 export async function fetchHourlyPopOrThrow(
@@ -218,9 +230,7 @@ export async function fetchHourlyPopOrThrow(
 		const endMs = parseFeedDate(p.endTime);
 		if (startMs === null || endMs === null || endMs <= startMs) return [];
 		const value = p.probabilityOfPrecipitation?.value;
-		return [
-			{ startMs, endMs, pop: typeof value === 'number' && Number.isFinite(value) ? value : null }
-		];
+		return [{ startMs, endMs, pop: finiteOrNull(value), temperatureF: fahrenheit(p) }];
 	});
 	return {
 		updatedAt: typeof props.updateTime === 'string' ? parseFeedDate(props.updateTime) : null,

@@ -19,7 +19,12 @@ const card = <T>(over: Partial<BriefCard<T>>): BriefCard<T> => ({
 });
 function periods(pops: (number | null)[]) {
 	const start = Date.parse('2026-09-29T14:00:00Z');
-	return pops.map((pop, i) => ({ startMs: start + i * H, endMs: start + (i + 1) * H, pop }));
+	return pops.map((pop, i) => ({
+		startMs: start + i * H,
+		endMs: start + (i + 1) * H,
+		pop,
+		temperatureF: null
+	}));
 }
 function state(over: Partial<BriefState> = {}): BriefState {
 	return {

@@ -50,12 +50,14 @@ describe('fetchHourlyPopOrThrow', () => {
 				{
 					startMs: Date.parse('2026-09-29T15:00:00Z'),
 					endMs: Date.parse('2026-09-29T16:00:00Z'),
-					pop: 20
+					pop: 20,
+					temperatureF: 60
 				},
 				{
 					startMs: Date.parse('2026-09-29T16:00:00Z'),
 					endMs: Date.parse('2026-09-29T17:00:00Z'),
-					pop: null
+					pop: null,
+					temperatureF: 60
 				}
 			]
 		});
