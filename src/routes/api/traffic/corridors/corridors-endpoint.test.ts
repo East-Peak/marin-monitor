@@ -174,9 +174,16 @@ describe('GET /api/traffic/corridors', () => {
 		expect([ids(json), json.unreadable]).toEqual([['511.org/1563727'], 1]);
 	});
 
-	it('never echoes the key', async () => {
-		fetchMock.mockResolvedValueOnce(page([incident]));
-		const { json } = await call();
-		expect(JSON.stringify(json)).not.toContain('test-key');
+	it('never echoes the key: not after following a key-bearing next_url, not when 511 fails with the URL (Codex A1 #1)', async () => {
+		fetchMock.mockResolvedValueOnce(page([sonoma], NEXT)).mockResolvedValueOnce(page([incident]));
+		const served = JSON.stringify((await call()).json);
+		fetchMock.mockImplementation(async (url) => {
+			throw new Error(`request failed: ${String(url)}`);
+		});
+		const failed = JSON.stringify((await call()).json);
+		for (const body of [served, failed]) {
+			expect(body).not.toContain('test-key');
+			expect(body).not.toContain('api_key');
+		}
 	});
 });
