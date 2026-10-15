@@ -17,7 +17,8 @@ test.skip(
 
 const T0 = Math.floor(Date.now() / 1000) * 1000;
 const MV_POINT = { lat: 37.906, lon: -122.545 };
-const UNOWNED = /\/api\/(calfire|airport-status|traffic\/events)\b/;
+// airport-status is owned by Getting Around (its spec pins one request open, none closed).
+const UNOWNED = /\/api\/(calfire|traffic\/events)\b/;
 let unowned: string[] = [];
 const json = (route: Route, body: unknown, status = 200) =>
 	route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });

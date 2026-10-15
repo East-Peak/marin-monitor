@@ -92,6 +92,9 @@ async function openAll(page: Page) {
 	// Opening one changes the set, so always take the first still-closed toggle.
 	const closed = page.locator('[data-section-toggle][aria-expanded="false"]');
 	while ((await closed.count()) > 0) await closed.first().click();
+	await expect(page.locator('section#getting-around')).not.toContainText(/Loading/, {
+		timeout: 30_000
+	}); // its details load on open (Codex r1 #9)
 }
 
 /** The reused disclosures carry text too (Codex r1 #12): audit each one open. PR 8 adds the health list here. */

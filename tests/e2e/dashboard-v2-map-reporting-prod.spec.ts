@@ -10,8 +10,8 @@ test('Latest reporting is bounded and labelled; the map draws owned features or 
 }) => {
 	const unowned: string[] = [];
 	page.on('request', (r) => {
-		if (/^\/api\/(calfire|airport-status|traffic\/events)$/.test(new URL(r.url()).pathname))
-			unowned.push(r.url());
+		// airport-status is owned by Getting Around (its spec pins one request open, none closed).
+		if (/^\/api\/(calfire|traffic\/events)$/.test(new URL(r.url()).pathname)) unowned.push(r.url());
 	});
 	await page.goto('/?layout=v2&probe');
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();

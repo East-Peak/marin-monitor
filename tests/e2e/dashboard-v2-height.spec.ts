@@ -7,7 +7,7 @@ import { stubCams } from './fixtures/cams';
  * §13.3 height acceptance, re-ruled for decision 5a (plan-dashboard-d1-cams-strip.md Decision 6),
  * 390×844, 100% UI scale, frozen clock, fonts loaded. Fixtures carry
  * long titles, an advisory and failure banners (an unreadable advisory, a partial-coverage
- * line, unavailable brief cards). PRs 10–12 add the all-disclosures-open gate here.
+ * line, unavailable brief cards). Getting Around adds the all-disclosures-open gate (whole document, Getting Around populated).
  */
 test.skip(({ baseURL }) => baseURL?.startsWith('https://') ?? false, 'stubbed');
 
@@ -38,7 +38,7 @@ const UNREADABLE = { properties: { ...ADVISORY.properties, id: 'urn:broken', exp
 
 async function stub(page: Page) {
 	await page.route(
-		/\/api\/(data|nps|transit|airport-status|health|feeds|article|geocode)\b|earthquake\.usgs\.gov|api\.weather\.gov\/(points|gridpoints|stations)|tidesandcurrents/,
+		/\/api\/(data|nps|transit|airport-status|traffic|health|feeds|article|geocode)\b|earthquake\.usgs\.gov|api\.weather\.gov\/(points|gridpoints|stations)|tidesandcurrents/,
 		(r) => r.fulfill({ status: 503, body: 'stubbed' })
 	);
 	await page.route(/api\.weather\.gov\/alerts\/active/, (r) =>
@@ -88,6 +88,52 @@ test.describe('phone 390×844', () => {
 				);
 			}
 			await stub(page);
+			if (mode === 'every section saved open') {
+				await page.route(/\/api\/transit\?/, (r) =>
+					json(r, {
+						Header: { Timestamp: Math.floor((T0 - 120_000) / 1000) },
+						Entities: Array.from({ length: 4 }, (_, i) => ({
+							Id: `h${i}`,
+							Alert: { HeaderText: { Translations: [{ Text: LONG(`bus detour ${i}`) }] } }
+						}))
+					})
+				);
+				await page.route('**/api/airport-status', (r) =>
+					json(r, {
+						lastUpdated: iso(T0 - 180_000),
+						airports: ['SFO', 'OAK'].map((code) => ({
+							code,
+							icao: `K${code}`,
+							name: code,
+							status: 'ground-delay',
+							delays: [
+								{ type: 'ground-delay', avgMinutes: 45, maxMinutes: 90 },
+								{ type: 'notice' }
+							],
+							weather: null,
+							forecastNotes: [],
+							tsa: null
+						}))
+					})
+				);
+				await page.route('**/api/traffic/corridors', (r) =>
+					json(r, {
+						checkedAt: iso(T0 - 60_000),
+						upstreamCount: 40,
+						unreadable: 0,
+						events: Array.from({ length: 4 }, (_, i) => ({
+							id: `511.org/h${i}`,
+							group: 'to-oak',
+							certain: true,
+							kind: 'Traffic Collision',
+							road: 'I-580',
+							where: LONG(`lane ${i}`),
+							severity: 'Major',
+							reportedAt: iso(T0 - 600_000)
+						}))
+					})
+				);
+			}
 			if (mode === 'every camera down') await stubCams(page, { fail: () => true }); // later route wins
 			await page.goto('/?layout=v2&probe');
 			await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
@@ -101,6 +147,7 @@ test.describe('phone 390×844', () => {
 				await expect(tile).toHaveAttribute('data-status', 'live', { timeout: 30_000 });
 			}
 			await settled(page); // every part settled; the map drew the latest revision (Codex r3 #5)
+			await expect(page.locator('[data-brief-link="getting-around"]')).toBeVisible(); // Decision 7: measured with the link
 			// The fixture content that makes the page tall must be on screen before measuring.
 			await expect(page.locator('[data-slot="advisories"]')).toContainText("couldn't be read");
 			await expect(page.locator('[data-slot="latest-reporting"]')).toContainText(
@@ -124,6 +171,18 @@ test.describe('phone 390×844', () => {
 			);
 			expect(strip).toBeLessThanOrEqual(220);
 			expect(bottom - strip).toBeLessThanOrEqual(1266);
+			if (mode === 'every section saved open') {
+				// §13.3: with every disclosure open the whole document is ≤ 5,064 (no strip exemption: Codex r1 #8).
+				const ga = page.locator('section#getting-around');
+				await expect(ga.locator('[data-ga="roads"] [data-row]')).toHaveCount(3);
+				await expect(ga.locator('[data-ga="transit"] [data-row]')).toHaveCount(3, {
+					timeout: 15_000
+				});
+				await expect(ga.locator('[data-line="OAK"]')).toContainText('Ground delay');
+				const doc = await page.evaluate(() => document.documentElement.scrollHeight);
+				console.log(`[${mode}] document ${doc} px (≤ 5,064, Getting Around populated)`);
+				expect(doc).toBeLessThanOrEqual(5064);
+			}
 		});
 	}
 });

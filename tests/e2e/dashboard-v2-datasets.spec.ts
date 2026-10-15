@@ -9,8 +9,7 @@ const ESSENTIAL = [
 	'/api/news/snapshot',
 	'/api/health'
 ];
-const NEVER =
-	/\/api\/(feeds|article|geocode|calfire|airport-status|traffic\/events)\b|\/api\/data\/strava/;
+const NEVER = /\/api\/(feeds|article|geocode|calfire|traffic\/events)\b|\/api\/data\/strava/;
 
 function record(page: Page): string[] {
 	const seen: string[] = [];
@@ -33,6 +32,8 @@ test('v2 loads each essential exactly once, never the feed chain or Strava', asy
 		.toBe(true);
 	await page.waitForTimeout(3_000);
 	for (const path of ESSENTIAL) expect(count(seen, path), path).toBe(1);
+	for (const path of ['/api/airport-status', '/api/traffic/corridors'])
+		expect(count(seen, path), `${path} (Getting Around open on desktop)`).toBe(1);
 	expect(seen.filter((u) => NEVER.test(u))).toEqual([]);
 });
 
