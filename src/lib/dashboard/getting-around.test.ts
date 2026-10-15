@@ -321,6 +321,17 @@ describe('gettingAroundView', () => {
 		expect(meta({ observedAt: NOW + 60 * MIN })).toBe('511 · time unknown');
 		expect(meta({ observedAt: null })).toBe('511 · time unknown');
 		expect(meta({ observedAt: NOW - 4 * MIN })).toBe('511 · updated 4 min ago');
+		// Two claiming feeds: an older valid time must not mask the other's future one (Codex B1 #1).
+		const twoFeeds = reads({
+			GG: {
+				alerts: [{ id: '511-GG-1', title: 'Route 101 detour', url: null }],
+				observedAt: NOW - 10 * MIN
+			},
+			MA: { observedAt: NOW + 60 * MIN }
+		});
+		expect(
+			gettingAroundView(input({ transit: { reads: twoFeeds, error: null } })).transit.meta
+		).toBe('511 · time unknown');
 	});
 
 	it('details while loading, after a first failure, and retained after a failed refresh', () => {
