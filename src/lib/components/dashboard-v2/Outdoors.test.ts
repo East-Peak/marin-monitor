@@ -117,6 +117,35 @@ describe('Outdoors', () => {
 		expect(ground.querySelector('[data-card-source]')?.textContent).toContain('HTTP 500');
 	});
 
+	it('a rain window with a missing hour never says "dry all day" (Codex desk2 #3)', () => {
+		const periods = forecast.periods.map((p, i) => (i === 1 ? { ...p, pop: null } : p));
+		const gappy: BriefState = {
+			...brief,
+			forecast: { ...brief.forecast, value: { ...forecast, periods } }
+		};
+		const { container } = render(Outdoors, {
+			view: outdoorsView(input({ brief: gappy })),
+			now: NOW,
+			onopen: vi.fn()
+		});
+		expect(container.textContent).not.toContain('dry all day');
+	});
+
+	it('a missing temperature breaks the line; the high marker sits at its own hour (Codex desk2 #4)', () => {
+		const periods = forecast.periods.map((p, i) => (i === 3 ? { ...p, temperatureF: null } : p));
+		const gappy: BriefState = {
+			...brief,
+			forecast: { ...brief.forecast, value: { ...forecast, periods } }
+		};
+		const { container } = render(Outdoors, {
+			view: outdoorsView(input({ brief: gappy })),
+			now: NOW,
+			onopen: vi.fn()
+		});
+		const line = container.querySelector('[data-card="forecast"] [data-temp-line]')!;
+		expect(line.getAttribute('d')!.match(/M/g)).toHaveLength(2);
+	});
+
 	it('mounting is opening: it asks its owner for the detail reads', () => {
 		const onopen = vi.fn();
 		render(Outdoors, { view: outdoorsView(input()), now: NOW, onopen });

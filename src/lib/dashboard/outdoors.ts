@@ -5,7 +5,7 @@
  * A missing hour, failed read or unvouched empty list is never shown as 0 or "none".
  */
 import type { EarthquakeData } from '$lib/types';
-import type { FireIncident, FireRead } from '$lib/api/marin/calfire';
+import type { FireRead, V2Fire } from '$lib/api/marin/calfire';
 import type { MarineForecastRead } from '$lib/api/marin/marine';
 import type { EarthquakeRead } from '$lib/api/marin/usgs';
 import type { HourlyForecast, HourlyPop, TideEvent } from '$lib/weather/brief';
@@ -40,18 +40,29 @@ export interface TempSeries {
 	low: { f: number; atMs: number } | null;
 }
 
-/** The next 24 forecast hours (an hour that has ended is not "next"), in time order. */
-function next24(periods: readonly HourlyPop[], now: number): HourlyPop[] {
-	return periods
-		.filter((p) => p.endMs > now)
-		.sort((a, b) => a.startMs - b.startMs)
-		.slice(0, HOURS_SHOWN);
+const H = 3_600_000;
+
+/**
+ * 24 clock-hour slots from the current hour (Pacific is a whole-hour offset of UTC).
+ * A slot the response has no period for is null, so a gap can't hide or pull in hour 25.
+ */
+function next24(
+	periods: readonly HourlyPop[],
+	now: number
+): { atMs: number; p: HourlyPop | null }[] {
+	const byStart = new Map(periods.map((p) => [p.startMs, p]));
+	const start = Math.floor(now / H) * H;
+	return Array.from({ length: HOURS_SHOWN }, (_, i) => {
+		const atMs = start + i * H;
+		const p = byStart.get(atMs);
+		return { atMs, p: p && p.endMs === atMs + H ? p : null };
+	});
 }
 
 export function tempSeries(periods: readonly HourlyPop[], now: number): TempSeries | null {
 	const window = next24(periods, now);
-	if (window.length === 0) return null;
-	const hours = window.map((p) => ({ atMs: p.startMs, f: p.temperatureF }));
+	if (window.every((s) => s.p === null)) return null;
+	const hours = window.map(({ atMs, p }) => ({ atMs, f: p?.temperatureF ?? null }));
 	let high: TempSeries['high'] = null;
 	let low: TempSeries['low'] = null;
 	for (const { atMs, f } of hours) {
@@ -65,17 +76,19 @@ export function tempSeries(periods: readonly HourlyPop[], now: number): TempSeri
 export interface RainSeries {
 	bars: (number | null)[];
 	meta: string;
+	/** Every one of the 24 hours forecast, each at 0%: the only case that may read as dry. */
+	allDry: boolean;
 }
 
 export function rainSeries(periods: readonly HourlyPop[], now: number): RainSeries {
-	const bars = next24(periods, now).map((p) => p.pop);
+	const bars = next24(periods, now).map(({ p }) => p?.pop ?? null);
 	const known = bars.filter((b): b is number => b !== null);
-	if (known.length === 0) return { bars, meta: 'no rain chance forecast' };
+	if (known.length === 0) return { bars, meta: 'no rain chance forecast', allDry: false };
 	const peak = Math.max(...known);
 	const missing = bars.length - known.length;
-	if (missing === 0 && peak === 0) return { bars, meta: '0% every hour' };
+	if (missing === 0 && peak === 0) return { bars, meta: '0% every hour', allDry: true };
 	const gap = missing ? ` · ${missing} ${missing === 1 ? 'hour' : 'hours'} not forecast` : '';
-	return { bars, meta: `peak ${peak}%${gap}` };
+	return { bars, meta: `peak ${peak}%${gap}`, allDry: false };
 }
 
 export interface DayRange {
@@ -116,7 +129,10 @@ export function dailyRange(periods: readonly HourlyPop[], now: number): DayRange
 		}));
 }
 
-/** A cosine curve through the hi/lo predictions, sampled every `stepMs`, each event exact. */
+/**
+ * A cosine curve through the hi/lo predictions on one uniform grid from the first event,
+ * every `stepMs`, so a chart's index is time. An event on the grid is exact.
+ */
 export function tideCurve(
 	events: readonly TideEvent[],
 	stepMs: number
@@ -124,19 +140,17 @@ export function tideCurve(
 	const sorted = [...events].sort((a, b) => a.atMs - b.atMs);
 	if (sorted.length < 2) return [];
 	const curve: { atMs: number; ft: number }[] = [];
-	for (let i = 0; i < sorted.length - 1; i++) {
+	let i = 0;
+	for (let t = sorted[0].atMs; t <= sorted[sorted.length - 1].atMs; t += stepMs) {
+		while (sorted[i + 1].atMs < t) i++;
 		const a = sorted[i];
 		const b = sorted[i + 1];
-		for (let t = a.atMs; t < b.atMs; t += stepMs) {
-			const x = (t - a.atMs) / (b.atMs - a.atMs);
-			curve.push({
-				atMs: t,
-				ft: a.heightFt + ((b.heightFt - a.heightFt) * (1 - Math.cos(Math.PI * x))) / 2
-			});
-		}
+		const x = (t - a.atMs) / (b.atMs - a.atMs);
+		curve.push({
+			atMs: t,
+			ft: a.heightFt + ((b.heightFt - a.heightFt) * (1 - Math.cos(Math.PI * x))) / 2
+		});
 	}
-	const last = sorted[sorted.length - 1];
-	curve.push({ atMs: last.atMs, ft: last.heightFt });
 	return curve;
 }
 
@@ -176,14 +190,27 @@ export function quakesRow(m: Measured<readonly EarthquakeData[]>, opts: Freshnes
 	};
 }
 
-export function wildfireRow(m: Measured<readonly FireIncident[]>, opts: Freshness): GroundRow {
+export function wildfireRow(m: Measured<readonly V2Fire[]>, opts: Freshness): GroundRow {
 	const other = notAList(m, 'None near', opts, 'Unavailable');
 	if (other || m.kind !== 'value') return other ?? { value: 'Unavailable', detail: null };
-	const f = m.value.reduce((a, x) => (x.acres > a.acres ? x : a));
+	// "Largest" only among fires that report acreage; with none reported, the first is named as is.
+	const sized = m.value.filter((x) => x.acres !== null);
+	const f = sized.length
+		? sized.reduce((a, x) => ((x.acres ?? 0) > (a.acres ?? 0) ? x : a))
+		: m.value[0];
+	const lead = !sized.length
+		? ''
+		: sized.length < m.value.length
+			? 'Largest reported: '
+			: 'Largest: ';
 	const where = f.county ? `, ${f.county} Co.` : '';
+	const acres =
+		f.acres === null ? 'acreage not reported' : `${f.acres.toLocaleString('en-US')} acres`;
+	const contained =
+		f.containment === null ? 'containment not reported' : `${f.containment}% contained`;
 	return {
 		value: `${m.value.length} active near`,
-		detail: `Largest: ${f.name}${where}, ${f.acres.toLocaleString('en-US')} acres, ${f.containment}% contained`
+		detail: `${lead}${f.name}${where}, ${acres}, ${contained}`
 	};
 }
 
@@ -232,7 +259,7 @@ export interface OutdoorsView {
 	};
 	surf: { measured: Measured<MarineForecastRead>; view: SurfView };
 	ground: {
-		fires: Measured<FireIncident[]>;
+		fires: Measured<V2Fire[]>;
 		quakes: Measured<EarthquakeData[]>;
 		wildfire: GroundRow;
 		quake: GroundRow;

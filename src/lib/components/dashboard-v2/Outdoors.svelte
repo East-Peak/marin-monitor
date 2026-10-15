@@ -18,29 +18,67 @@
 	const clock = (ms: number) => formatAsOf(ms, ms).replace(':00', '');
 
 	const temp = $derived(view.forecast.temp);
-	/** Only forecast hours with a temperature are drawn; a gap is named in the meta line. */
-	const tempKnown = $derived(temp?.hours.filter((h) => h.f !== null) ?? []);
-	const tempMissing = $derived((temp?.hours.length ?? 0) - tempKnown.length);
+	/** 24 clock-hour slots: the chart's index is the hour, and a missing hour breaks the line. */
+	const tempHours = $derived(temp?.hours ?? []);
+	const tempMissing = $derived(tempHours.filter((h) => h.f === null).length);
+	/** Gaps take a neighbour's value for the scale only; they are never drawn. */
+	const tempForScale = $derived.by(() => {
+		let last: number | null = tempHours.find((h) => h.f !== null)?.f ?? null;
+		return tempHours.map((h) => (last = h.f ?? last) ?? 0);
+	});
 	const tempChart = $derived(
 		buildChart({
 			...TEMP,
 			accentColor: '#ef4444',
-			data: tempKnown.map((h) => ({ value: h.f as number, label: clock(h.atMs) }))
+			data: tempForScale.map((value) => ({ value }))
 		})
 	);
+	/** Runs of consecutive known hours; one run is the usual, gap-free case. */
+	const tempRuns = $derived.by(() => {
+		const runs: number[][] = [];
+		tempHours.forEach((h, i) => {
+			if (h.f === null) return;
+			const run = runs.at(-1);
+			if (run && run.at(-1) === i - 1) run.push(i);
+			else runs.push([i]);
+		});
+		return runs;
+	});
+	const tempInnerH = TEMP.height - TEMP.margins.top - TEMP.margins.bottom;
+	const pt = (i: number) =>
+		`${tempChart!.xScale(i)},${tempChart!.yScale(tempHours[i].f as number)}`;
+	const tempLine = $derived(
+		!tempChart
+			? ''
+			: tempMissing === 0
+				? tempChart.linePath
+				: tempRuns.map((r) => r.map((i, k) => `${k ? 'L' : 'M'}${pt(i)}`).join('')).join('')
+	);
+	const tempArea = $derived(
+		!tempChart
+			? ''
+			: tempMissing === 0
+				? tempChart.areaPath
+				: tempRuns
+						.map(
+							(r) =>
+								`M${tempChart.xScale(r[0])},${tempInnerH}${r.map((i) => `L${pt(i)}`).join('')}L${tempChart.xScale(r.at(-1)!)},${tempInnerH}Z`
+						)
+						.join('')
+	);
 	const xOfTime = (atMs: number) => {
-		if (!tempChart || tempKnown.length < 2) return null;
-		const i = (atMs - tempKnown[0].atMs) / H;
-		return i < 0 || i > tempKnown.length - 1 ? null : tempChart.xScale(i);
+		if (!tempChart || tempHours.length < 2) return null;
+		const i = (atMs - tempHours[0].atMs) / H;
+		return i < 0 || i > tempHours.length - 1 ? null : tempChart.xScale(i);
 	};
-	const tempMark = (p: { f: number; atMs: number } | null) =>
-		tempChart && p
-			? { x: xOfTime(p.atMs) ?? 0, y: tempChart.yScale(p.f), f: p.f, atMs: p.atMs }
-			: null;
+	const tempMark = (p: { f: number; atMs: number } | null) => {
+		const x = p ? xOfTime(p.atMs) : null;
+		return tempChart && p && x !== null ? { x, y: tempChart.yScale(p.f), ...p } : null;
+	};
 	const highMark = $derived(tempMark(temp?.high ?? null));
 	const lowMark = $derived(tempMark(temp?.low ?? null));
 	const nowX = $derived(xOfTime(now));
-	const tempTicks = $derived(tempKnown.flatMap((h, i) => (i % 3 === 0 ? [{ i, h }] : [])));
+	const tempTicks = $derived(tempHours.flatMap((h, i) => (i % 3 === 0 ? [{ i, h }] : [])));
 
 	const rain = $derived(view.forecast.rain);
 	const rainInnerW = W - RAIN.left - RAIN.right;
@@ -125,8 +163,8 @@
 					</linearGradient>
 				</defs>
 				<g transform="translate({TEMP.margins.left},{TEMP.margins.top})">
-					<path d={tempChart.areaPath} fill="url(#out-temp-fill)" />
-					<path d={tempChart.linePath} fill="none" stroke="#f59e0b" stroke-width="2.4" />
+					<path d={tempArea} fill="url(#out-temp-fill)" />
+					<path d={tempLine} data-temp-line fill="none" stroke="#f59e0b" stroke-width="2.4" />
 					{#if nowX !== null}
 						<line class="now" x1={nowX} x2={nowX} y1="-8" y2={TEMP.height - 40} />
 					{/if}
@@ -190,7 +228,7 @@
 					<div class="v" data-text-role="value">
 						{Number.isFinite(peakRain) ? `${peakRain}%` : '—'}
 					</div>
-					<div class="s" data-text-role="meta">{peakRain === 0 ? 'dry all day' : 'next 24 h'}</div>
+					<div class="s" data-text-role="meta">{rain?.allDry ? 'dry all day' : 'next 24 h'}</div>
 				</div>
 				{#if warmest}
 					<div class="stat">

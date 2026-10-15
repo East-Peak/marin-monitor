@@ -27,6 +27,18 @@ export interface FireIncident {
 	isActive: boolean;
 }
 
+/** v2's incident: acreage and containment stay null when the upstream doesn't report them. */
+export type V2Fire = Omit<FireIncident, 'acres' | 'containment'> & {
+	acres: number | null;
+	containment: number | null;
+};
+
+/** A 200 whose body has no features array establishes nothing about fires. */
+function featuresOf<T>(data: { features?: unknown }, label: string): T[] {
+	if (!Array.isArray(data?.features)) throw new Error(`${label} response has no features array`);
+	return data.features as T[];
+}
+
 const CALFIRE_URL = '/api/calfire';
 
 /** Bounding box of isNearMarin's 80 km circle (~111 km/° lat, ~85 km/° lon). */
@@ -92,7 +104,7 @@ interface NifcFeature {
 }
 
 /** Active CAL FIRE incidents near Marin County; throws on any failure. */
-async function readCalFire(signal?: AbortSignal): Promise<FireIncident[]> {
+async function readCalFire(signal?: AbortSignal): Promise<V2Fire[]> {
 	const response = await fetchWithTimeout(CALFIRE_URL, {
 		headers: { Accept: 'application/json' },
 		signal
@@ -103,7 +115,7 @@ async function readCalFire(signal?: AbortSignal): Promise<FireIncident[]> {
 	}
 
 	const data = await response.json();
-	const features: CalFireFeature[] = data.features ?? [];
+	const features = featuresOf<CalFireFeature>(data, 'CAL FIRE');
 
 	return features
 		.filter((f) => {
@@ -116,8 +128,8 @@ async function readCalFire(signal?: AbortSignal): Promise<FireIncident[]> {
 			name: f.properties.Name,
 			location: f.properties.Location,
 			county: f.properties.County,
-			acres: f.properties.AcresBurned ?? 0,
-			containment: f.properties.PercentContained ?? 0,
+			acres: f.properties.AcresBurned ?? null,
+			containment: f.properties.PercentContained ?? null,
 			lat: f.geometry!.coordinates[1],
 			lon: f.geometry!.coordinates[0],
 			startDate: new Date(f.properties.Started).getTime(),
@@ -129,7 +141,7 @@ async function readCalFire(signal?: AbortSignal): Promise<FireIncident[]> {
 }
 
 /** Active NIFC/WFIGS (federal) incidents near Marin; throws on any failure. */
-async function readNifc(signal?: AbortSignal): Promise<FireIncident[]> {
+async function readNifc(signal?: AbortSignal): Promise<V2Fire[]> {
 	const response = await fetchWithTimeout(NIFC_URL, {
 		headers: { Accept: 'application/json' },
 		signal
@@ -142,7 +154,7 @@ async function readNifc(signal?: AbortSignal): Promise<FireIncident[]> {
 	const data = await response.json();
 	// ArcGIS reports query errors (e.g. a renamed field) as HTTP 200 + `error`.
 	if (data.error) throw new Error(`NIFC query rejected: ${data.error.message}`);
-	const features: NifcFeature[] = data.features ?? [];
+	const features = featuresOf<NifcFeature>(data, 'NIFC');
 
 	return features
 		.filter((f) => f.geometry != null && isNearMarin(f.geometry.y, f.geometry.x))
@@ -151,8 +163,8 @@ async function readNifc(signal?: AbortSignal): Promise<FireIncident[]> {
 			name: f.attributes.IncidentName,
 			location: f.attributes.POOCounty ?? '',
 			county: f.attributes.POOCounty ?? '',
-			acres: f.attributes.IncidentSize ?? f.attributes.DiscoveryAcres ?? 0,
-			containment: f.attributes.PercentContained ?? 0,
+			acres: f.attributes.IncidentSize ?? f.attributes.DiscoveryAcres ?? null,
+			containment: f.attributes.PercentContained ?? null,
 			lat: f.geometry!.y,
 			lon: f.geometry!.x,
 			startDate: f.attributes.FireDiscoveryDateTime ?? Date.now(),
@@ -163,13 +175,14 @@ async function readNifc(signal?: AbortSignal): Promise<FireIncident[]> {
 		}));
 }
 
-/** The legacy, swallowing form: a failure reads as no incidents. */
-async function swallowing(
-	label: string,
-	read: () => Promise<FireIncident[]>
-): Promise<FireIncident[]> {
+/** The legacy, swallowing form: a failure reads as no incidents, an unreported metric as 0. */
+async function swallowing(label: string, read: () => Promise<V2Fire[]>): Promise<FireIncident[]> {
 	try {
-		return await read();
+		return (await read()).map((f) => ({
+			...f,
+			acres: f.acres ?? 0,
+			containment: f.containment ?? 0
+		}));
 	} catch (error) {
 		logger.warn(label, `Fetch failed: ${(error as Error).message}`);
 		return [];
@@ -203,7 +216,7 @@ async function fetchFireIncidentsInner(): Promise<FireIncident[]> {
 
 /** A fire read the v2 dashboard can vouch for, stamped with the time it was checked. */
 export interface FireRead {
-	fires: FireIncident[];
+	fires: V2Fire[];
 	checkedAt: number;
 }
 
@@ -219,7 +232,7 @@ export async function readFireIncidentsOrThrow({
 	return { fires: mergeIncidents(calfire, nifc), checkedAt: now() };
 }
 
-function mergeIncidents(calfire: FireIncident[], nifc: FireIncident[]): FireIncident[] {
+function mergeIncidents<F extends { lat: number; lon: number }>(calfire: F[], nifc: F[]): F[] {
 	// Deduplicate: prefer CAL FIRE data, drop NIFC if within 5km of a CAL FIRE incident
 	const combined = [...calfire];
 	for (const nifcFire of nifc) {

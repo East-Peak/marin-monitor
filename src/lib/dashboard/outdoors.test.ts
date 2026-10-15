@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { HourlyPop, TideEvent } from '$lib/weather/brief';
 import type { EarthquakeData } from '$lib/types';
-import type { FireIncident } from '$lib/api/marin/calfire';
+import type { V2Fire } from '$lib/api/marin/calfire';
 import { measuredLoading, measuredUnavailable, measuredValue } from './measured';
 import {
 	AIR_QUALITY,
@@ -45,8 +45,19 @@ describe('tempSeries', () => {
 
 	it('a missing temperature stays missing and is never the low', () => {
 		const series = tempSeries(hours([60, null, 62]), NOW)!;
-		expect(series.hours.map((h) => h.f)).toEqual([60, null, 62]);
+		expect(series.hours.slice(0, 3).map((h) => h.f)).toEqual([60, null, 62]);
 		expect(series.low).toEqual({ f: 60, atMs: HOUR0 });
+	});
+
+	it('the window is 24 clock hours: an absent hour is a null slot, and nothing past 24 h fills in (Codex desk2 #5)', () => {
+		const p = hours(Array.from({ length: 30 }, () => 60));
+		const gappy = [...p.slice(0, 1), ...p.slice(2)]; // hour 1 missing from the response
+		const series = tempSeries(gappy, NOW)!;
+		expect(series.hours).toHaveLength(24);
+		expect(series.hours.map((h) => h.atMs)).toEqual(
+			Array.from({ length: 24 }, (_, i) => HOUR0 + i * H)
+		);
+		expect(series.hours[1].f).toBeNull();
 	});
 
 	it('no periods → null', () => {
@@ -55,16 +66,32 @@ describe('tempSeries', () => {
 });
 
 describe('rainSeries', () => {
+	const day = (pops: (number | null)[]) =>
+		hours(
+			Array.from({ length: 24 }, () => 60),
+			Array.from({ length: 24 }, (_, i) => (i < pops.length ? pops[i] : 0))
+		);
 	it('rain: all-zero hours → "0% every hour"; a null pop stays null, not 0%', () => {
-		expect(rainSeries(hours([60, 60, 60], [0, 0, 0]), NOW)).toEqual({
-			bars: [0, 0, 0],
-			meta: '0% every hour'
+		expect(rainSeries(day([]), NOW)).toEqual({
+			bars: Array.from({ length: 24 }, () => 0),
+			meta: '0% every hour',
+			allDry: true
 		});
-		const gappy = rainSeries(hours([60, 60, 60], [0, null, 30]), NOW);
-		expect(gappy.bars).toEqual([0, null, 30]);
+		const gappy = rainSeries(day([0, null, 30]), NOW);
+		expect(gappy.bars.slice(0, 3)).toEqual([0, null, 30]);
 		expect(gappy.meta).toBe('peak 30% · 1 hour not forecast');
-		expect(rainSeries(hours([60, 60], [0, null]), NOW).meta).toBe('peak 0% · 1 hour not forecast');
+		const dryButGappy = rainSeries(day([0, null]), NOW);
+		expect(dryButGappy.meta).toBe('peak 0% · 1 hour not forecast');
+		expect(dryButGappy.allDry).toBe(false);
 		expect(rainSeries(hours([60], [null]), NOW).meta).toBe('no rain chance forecast');
+	});
+
+	it('an hour absent from the response is not "0% every hour" (Codex desk2 #5)', () => {
+		const p = day([]);
+		const series = rainSeries([...p.slice(0, 1), ...p.slice(2)], NOW);
+		expect(series.bars[1]).toBeNull();
+		expect(series.meta).toBe('peak 0% · 1 hour not forecast');
+		expect(series.allDry).toBe(false);
 	});
 });
 
@@ -139,7 +166,7 @@ describe('quakesRow', () => {
 	});
 });
 
-const fire = (name: string, acres: number, containment: number): FireIncident => ({
+const fire = (name: string, acres: number | null, containment: number | null): V2Fire => ({
 	id: name,
 	name,
 	location: '',
@@ -159,7 +186,7 @@ describe('wildfireRow', () => {
 	const opts = { now: NOW, maxAgeMs: 30 * 60_000 };
 	it('wildfire "None near" only for an ok, timed read; failed upstream → unavailable', () => {
 		expect(wildfireRow(measuredValue([], 'CAL FIRE', NOW - 60_000), opts).value).toBe('None near');
-		expect(wildfireRow(measuredValue<FireIncident[]>([], 'CAL FIRE', null), opts).value).not.toBe(
+		expect(wildfireRow(measuredValue<V2Fire[]>([], 'CAL FIRE', null), opts).value).not.toBe(
 			'None near'
 		);
 		const failed = wildfireRow(measuredUnavailable('CAL FIRE', 'NIFC API failed: 503'), opts);
@@ -174,6 +201,17 @@ describe('wildfireRow', () => {
 		);
 		expect(row.value).toBe('2 active near');
 		expect(row.detail).toBe('Largest: Big, Sonoma Co., 1,200 acres, 40% contained');
+	});
+
+	it('unknown acreage or containment is named as unknown, never 0 (Codex desk2 #2)', () => {
+		const row = wildfireRow(measuredValue([fire('Quiet', null, null)], 'CAL FIRE', NOW), opts);
+		expect(row.detail).toBe('Quiet, Sonoma Co., acreage not reported, containment not reported');
+		expect(row.detail).not.toMatch(/\b0\b/);
+		const mixed = wildfireRow(
+			measuredValue([fire('Unknown', null, 10), fire('Known', 5, 50)], 'CAL FIRE', NOW),
+			opts
+		);
+		expect(mixed.detail).toBe('Largest reported: Known, Sonoma Co., 5 acres, 50% contained');
 	});
 });
 
@@ -215,5 +253,19 @@ describe('tideCurve', () => {
 		expect(curve[3].ft).toBeCloseTo(3);
 		expect(curve.every((p) => p.ft <= 5 && p.ft >= 1)).toBe(true);
 		expect(tideCurve(events.slice(0, 1), H)).toEqual([]);
+	});
+
+	it('samples one uniform time grid, so an event off the grid cannot shift later ones (Codex desk2 #6)', () => {
+		const step = 20 * 60_000;
+		const events: TideEvent[] = [
+			{ atMs: HOUR0, heightFt: 1, type: 'L' },
+			{ atMs: HOUR0 + 6 * H + 10 * 60_000, heightFt: 5, type: 'H' },
+			{ atMs: HOUR0 + 12 * H + 20 * 60_000, heightFt: 1, type: 'L' }
+		];
+		const curve = tideCurve(events, step);
+		expect(curve.every((p, i) => p.atMs === HOUR0 + i * step)).toBe(true);
+		const at = (ms: number) => curve.find((p) => p.atMs === ms)!.ft;
+		expect(at(HOUR0 + 12 * H + 20 * 60_000)).toBeCloseTo(1);
+		expect(at(HOUR0 + 6 * H)).toBeGreaterThan(4.9); // next to the high, off-grid by 10 min
 	});
 });

@@ -304,6 +304,27 @@ describe('readFireIncidentsOrThrow (v2 Outdoors: a failure is never "none near")
 		await expect(readFireIncidentsOrThrow({ now: () => 1_000 })).rejects.toThrow(/offline/);
 	});
 
+	it('a 200 body without a features array is a failure, not an empty read (Codex desk2 #1)', async () => {
+		mockFetch
+			.mockResolvedValueOnce(makeResponse({}))
+			.mockResolvedValueOnce(makeResponse({ features: [] }));
+		await expect(readFireIncidentsOrThrow({ now: () => 1_000 })).rejects.toThrow(/features/);
+		mockFetch
+			.mockResolvedValueOnce(makeResponse({ features: [] }))
+			.mockResolvedValueOnce(makeResponse({}));
+		await expect(readFireIncidentsOrThrow({ now: () => 1_000 })).rejects.toThrow(/features/);
+	});
+
+	it('keeps unknown acreage and containment as null for v2 (legacy keeps its 0) (Codex desk2 #2)', async () => {
+		mockFetch
+			.mockResolvedValueOnce(
+				makeResponse({ features: [makeCalFireFeature({ acres: null, containment: null })] })
+			)
+			.mockResolvedValueOnce(makeResponse({ features: [] }));
+		const [f] = (await readFireIncidentsOrThrow({ now: () => 1_000 })).fires;
+		expect([f.acres, f.containment]).toEqual([null, null]);
+	});
+
 	it('an ArcGIS error body is a failure too', async () => {
 		mockFetch
 			.mockResolvedValueOnce(makeResponse({ features: [] }))
