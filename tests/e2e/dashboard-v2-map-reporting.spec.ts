@@ -18,7 +18,7 @@ test.skip(
 const T0 = Math.floor(Date.now() / 1000) * 1000;
 const MV_POINT = { lat: 37.906, lon: -122.545 };
 // airport-status is owned by Getting Around (its spec pins one request open, none closed).
-const UNOWNED = /\/api\/(calfire|traffic\/events)\b/;
+const UNOWNED = /\/api\/traffic\/events\b/;
 let unowned: string[] = [];
 const json = (route: Route, body: unknown, status = 200) =>
 	route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
@@ -66,7 +66,7 @@ async function stub(
 	gates: { snapshot?: () => boolean; fixIt?: () => boolean; quakes?: () => boolean } = {}
 ) {
 	await page.route(
-		/\/api\/(data|nps|transit|health|feeds|article|geocode)\b|earthquake\.usgs\.gov|api\.weather\.gov|tidesandcurrents/,
+		/\/api\/(data|nps|transit|health|feeds|article|geocode|calfire)\b|earthquake\.usgs\.gov|api\.weather\.gov|tidesandcurrents/,
 		(r) => r.fulfill({ status: 503, body: 'stubbed' })
 	);
 	await page.route(UNOWNED, (r) => {

@@ -19,6 +19,53 @@ async function open(page: Page) {
 	await page.goto('/?layout=v2');
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 }
+/** Outdoors' reads with real shapes (Goal 2): NWS points + hourly, marine, fires, USGS 7 d. */
+async function stubOutdoors(page: Page) {
+	const H = 3_600_000;
+	const hour0 = Math.floor(Date.now() / H) * H;
+	const json = (body: unknown) => ({
+		status: 200,
+		contentType: 'application/json',
+		body: JSON.stringify(body)
+	});
+	await page.route(/api\.weather\.gov\/points\//, (r) =>
+		r.fulfill(json({ properties: { gridId: 'MTR', gridX: 83, gridY: 115 } }))
+	);
+	await page.route(/api\.weather\.gov\/gridpoints\/MTR\/83,115\/forecast\/hourly/, (r) =>
+		r.fulfill(
+			json({
+				properties: {
+					updateTime: new Date(hour0 - H).toISOString(),
+					periods: Array.from({ length: 72 }, (_, i) => ({
+						startTime: new Date(hour0 + i * H).toISOString(),
+						endTime: new Date(hour0 + (i + 1) * H).toISOString(),
+						temperature: 55 + Math.round(12 * Math.sin((i / 24) * 2 * Math.PI)),
+						temperatureUnit: 'F',
+						probabilityOfPrecipitation: { value: i % 7 === 0 ? 20 : 0 }
+					}))
+				}
+			})
+		)
+	);
+	await page.route(/marine-api\.open-meteo\.com/, (r) =>
+		r.fulfill(
+			json({
+				hourly: {
+					time: Array.from({ length: 72 }, (_, i) => (hour0 + i * H) / 1000),
+					wave_height: Array.from({ length: 72 }, (_, i) => 4 + Math.sin(i / 6)),
+					wave_period: Array.from({ length: 72 }, () => 12),
+					wave_direction: Array.from({ length: 72 }, () => 250)
+				}
+			})
+		)
+	);
+	await page.route(/\/api\/calfire|services3\.arcgis\.com/, (r) =>
+		r.fulfill(json({ features: [] }))
+	);
+	await page.route(/earthquake\.usgs\.gov/, (r) =>
+		r.fulfill(json({ features: [], metadata: { generated: Date.now() } }))
+	);
+}
 const box = async (page: Page, sel: string) => (await page.locator(sel).first().boundingBox())!;
 
 for (const width of [1440, 2000]) {
@@ -97,6 +144,34 @@ test.describe('desktop 1700+', () => {
 	});
 });
 
+test.describe('desktop 1440: Outdoors beside Getting Around (Goal 2)', () => {
+	test.use({ viewport: { width: 1440, height: 1000 } });
+
+	test('Outdoors and Getting Around share a row; the temperature chart has a path', async ({
+		page
+	}) => {
+		await stubRest(page);
+		await stubOutdoors(page);
+		await stubCams(page);
+		await page.goto('/?layout=v2');
+		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+		const out = await box(page, '#outdoors');
+		const ga = await box(page, '#getting-around');
+		expect(Math.abs(out.y - ga.y)).toBeLessThanOrEqual(4);
+		expect(out.x).toBeLessThan(ga.x);
+		expect(out.width).toBeGreaterThan(ga.width);
+		const path = page.locator('#outdoors [data-card="forecast"] svg path').first();
+		await expect(path).toHaveAttribute('d', /\S/);
+		await expect(page.locator('#outdoors [data-card-source]')).toHaveCount(4);
+		await expect(page.locator('#outdoors [data-card="ground"]')).toContainText('None near');
+		await expect(page.locator('#outdoors [data-card="surf"]')).toContainText(
+			'Open-Meteo marine forecast'
+		);
+		const dir = process.env.SHOTS_DIR;
+		if (dir) await page.locator('#outdoors').screenshot({ path: `${dir}/outdoors-1440.png` });
+	});
+});
+
 test.describe('very wide 2600', () => {
 	test.use({ viewport: { width: 2600, height: 1000 } });
 	test('the page stops at 2,240 px', async ({ page }) => {
@@ -125,6 +200,18 @@ test.describe('narrow desktop 1100 (the mockup ≤1279 fallbacks)', () => {
 		expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
 			1100
 		);
+	});
+});
+
+test.describe('narrow desktop 1100: Outdoors and Getting Around stack (Goal 2)', () => {
+	test.use({ viewport: { width: 1100, height: 1000 } });
+
+	test('Getting Around above Outdoors, both full width', async ({ page }) => {
+		await open(page);
+		const out = await box(page, '#outdoors');
+		const ga = await box(page, '#getting-around');
+		expect(out.y).toBeGreaterThan(ga.y + ga.height - 1);
+		expect(Math.abs(out.width - ga.width)).toBeLessThanOrEqual(2);
 	});
 });
 

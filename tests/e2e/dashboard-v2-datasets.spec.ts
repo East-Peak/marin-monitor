@@ -9,7 +9,8 @@ const ESSENTIAL = [
 	'/api/news/snapshot',
 	'/api/health'
 ];
-const NEVER = /\/api\/(feeds|article|geocode|calfire|traffic\/events)\b|\/api\/data\/strava/;
+// /api/calfire is Outdoors' own wildfire read (desktop Goal 2), counted below; never the legacy chain.
+const NEVER = /\/api\/(feeds|article|geocode|traffic\/events)\b|\/api\/data\/strava/;
 
 function record(page: Page): string[] {
 	const seen: string[] = [];
@@ -34,6 +35,7 @@ test('v2 loads each essential exactly once, never the feed chain or Strava', asy
 	for (const path of ESSENTIAL) expect(count(seen, path), path).toBe(1);
 	for (const path of ['/api/airport-status', '/api/traffic/corridors'])
 		expect(count(seen, path), `${path} (Getting Around open on desktop)`).toBe(1);
+	expect(count(seen, '/api/calfire'), '/api/calfire (Outdoors open on desktop)').toBe(1);
 	expect(seen.filter((u) => NEVER.test(u))).toEqual([]);
 });
 

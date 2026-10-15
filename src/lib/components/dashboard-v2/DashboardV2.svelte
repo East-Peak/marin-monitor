@@ -10,6 +10,7 @@
 	import CamWall from './CamWall.svelte';
 	import AdvisoryRow from './AdvisoryRow.svelte';
 	import GettingAround from './GettingAround.svelte';
+	import Outdoors from './Outdoors.svelte';
 	import HealthIndicator from './HealthIndicator.svelte';
 	import { townFilter, townLocation } from '$lib/stores/town-filter';
 	import { readable } from 'svelte/store';
@@ -20,6 +21,10 @@
 	import { briefPending } from '$lib/dashboard/v2-probe';
 	import type { BriefState } from '$lib/dashboard/brief-store';
 	import { gettingAroundView, type TransitState } from '$lib/dashboard/getting-around';
+	import { OUTDOORS_DATASETS, outdoorsView } from '$lib/dashboard/outdoors';
+	import type { MarineForecastRead } from '$lib/api/marin/marine';
+	import type { FireRead } from '$lib/api/marin/calfire';
+	import type { EarthquakeRead } from '$lib/api/marin/usgs';
 	import type { DatasetFetch } from '$lib/dashboard/source-adapters';
 	import type { TrafficCorridorsData } from '$lib/api/marin/traffic-corridors';
 	import type { AirportStatusData } from '$lib/types/airport';
@@ -59,6 +64,9 @@
 	const transitState = controller?.transit ?? readable<TransitState>({ reads: null, error: null });
 	const airport = controller?.airport ?? readable<AirportStatusData | null>(null);
 	const traffic = controller?.traffic ?? readable<TrafficCorridorsData | null>(null);
+	const marine = controller?.marine ?? readable<MarineForecastRead | null>(null);
+	const fires = controller?.fires ?? readable<FireRead | null>(null);
+	const quakesWeek = controller?.quakesWeek ?? readable<EarthquakeRead | null>(null);
 	const outcomes =
 		controller?.datasetOutcomes ?? readable<Readonly<Record<string, DatasetFetch>>>({});
 	/** Getting Around's one view per tick; closed, its header still reads transit (Decision 9). */
@@ -77,6 +85,24 @@
 		void controller?.ensure('airport');
 		void controller?.ensure('traffic');
 	}
+	/** Outdoors reads the brief's own forecast and tides, plus its three detail reads. */
+	const outdoors = $derived(
+		outdoorsView({
+			brief: $briefState,
+			marine: $marine,
+			fires: $fires,
+			quakes: $quakesWeek,
+			outcomes: $outcomes,
+			now: $clock
+		})
+	);
+	function openOutdoors() {
+		for (const d of Object.values(OUTDOORS_DATASETS)) void controller?.ensure(d.id);
+	}
+	/** Below the map, in page order; Outdoors is rendered on its own (desktop pairs it with Getting Around). */
+	const restSections = V2_SECTIONS.filter((s) => s.id !== 'outdoors');
+	const outdoorsTitle =
+		V2_SECTIONS.find((s) => s.id === 'outdoors')?.title ?? 'Outdoors & Conditions';
 	/** One selection per tick; later sections can read its shownIds. */
 	const latest = $derived(
 		latestReportingView({ view: $snapshot, sources: $sources, town: $townFilter, now: $clock })
@@ -197,24 +223,58 @@
 			<CamWall now={$clock} />
 		{/if}
 
-		<Section
-			id="getting-around"
-			title="Getting Around"
-			open={desktop || $open['getting-around']}
-			ontoggle={(id) => sections.toggle(id)}
-			status={controller && hydrated ? around.status : null}
-			now={$clock}
-			collapsible={!desktop}
-		>
-			{#if controller && hydrated}
-				<GettingAround view={around} onopen={openAround} />
-			{:else}
-				<p class="v2-muted" data-text-role="meta">Loading…</p>
-			{/if}
-		</Section>
+		{#snippet gettingAroundSection(cls: string)}
+			<Section
+				id="getting-around"
+				title="Getting Around"
+				open={desktop || $open['getting-around']}
+				ontoggle={(id) => sections.toggle(id)}
+				status={controller && hydrated ? around.status : null}
+				now={$clock}
+				collapsible={!desktop}
+				class={cls}
+			>
+				{#if controller && hydrated}
+					<GettingAround view={around} onopen={openAround} />
+				{:else}
+					<p class="v2-muted" data-text-role="meta">Loading…</p>
+				{/if}
+			</Section>
+		{/snippet}
+		{#snippet outdoorsSection(cls: string)}
+			<Section
+				id="outdoors"
+				title={outdoorsTitle}
+				open={desktop || $open.outdoors}
+				ontoggle={(id) => sections.toggle(id)}
+				status={controller && hydrated ? outdoors.status : null}
+				now={$clock}
+				collapsible={!desktop}
+				class={cls}
+			>
+				{#if controller && hydrated}
+					<Outdoors view={outdoors} now={$clock} onopen={openOutdoors} />
+				{:else}
+					<p class="v2-muted" data-text-role="meta">Loading…</p>
+				{/if}
+			</Section>
+		{/snippet}
+
+		{#if desktop}
+			<!-- Desktop: Outdoors (span 7) beside Getting Around (span 5); stacked below 1280 px. -->
+			<div class="v2-pair">
+				{@render gettingAroundSection('v2-a-ga')}
+				{@render outdoorsSection('v2-a-out')}
+			</div>
+		{:else}
+			{@render gettingAroundSection('')}
+		{/if}
 
 		<div id="sections" class="v2-sections" tabindex="-1" aria-label="Sections">
-			{#each V2_SECTIONS as s (s.id)}
+			{#if !desktop}
+				{@render outdoorsSection('v2-span-12')}
+			{/if}
+			{#each restSections as s (s.id)}
 				<Section
 					id={s.id}
 					title={s.title}
@@ -324,8 +384,31 @@
 			grid-template-columns: repeat(12, minmax(0, 1fr));
 			gap: 28px var(--v2-gap);
 		}
-		.v2-sections > :global(.v2-span-12) {
+		.v2-sections > :global(.v2-span-12),
+		.v2-pair > :global(.v2-a-out),
+		.v2-pair > :global(.v2-a-ga) {
 			grid-column: span 12;
+		}
+		.v2-pair {
+			display: grid;
+			grid-template-columns: repeat(12, minmax(0, 1fr));
+			gap: 28px var(--v2-gap);
+			margin-bottom: 28px;
+		}
+	}
+	@media (min-width: 1280px) {
+		/* The mockup's .a-out / .a-ga: Outdoors on the left, Getting Around beside it (DOM keeps GA first). */
+		.v2-pair > :global(.v2-a-out) {
+			grid-column: 1 / span 7;
+			grid-row: 1;
+		}
+		.v2-pair > :global(.v2-a-ga) {
+			grid-column: 8 / span 5;
+			grid-row: 1;
+		}
+		/* In the narrow column Getting Around's three parts stack. */
+		.v2-pair > :global(.v2-a-ga .ga) {
+			grid-template-columns: minmax(0, 1fr);
 		}
 	}
 	.v2-muted,
