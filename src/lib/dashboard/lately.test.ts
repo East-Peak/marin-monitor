@@ -81,6 +81,21 @@ describe('Marin Lately band (Goal 4)', () => {
 		expect(out.latest).toBeNull();
 	});
 
+	it('a failed Lately feed in a good snapshot is unavailable, never "No pieces" (Codex desk4 #3)', () => {
+		const v = snapshotView(
+			NOW,
+			[story(NOW)],
+			[{}, { ...LATELY_FEED, status: 'failed', lastError: 'HTTP 500', lastSuccessAt: null }]
+		);
+		const out = latelyView({ view: v, sources: snapshotEntries(v, NOW), now: NOW });
+		expect(out.empty).toBeNull();
+		expect(out.source.kind).toBe('unavailable');
+		const missing = snapshotView(NOW, [story(NOW)]);
+		const gone = latelyView({ view: missing, sources: snapshotEntries(missing, NOW), now: NOW });
+		expect(gone.empty).toBeNull();
+		expect(gone.source.kind).toBe('unknown');
+	});
+
 	it('a failed snapshot read is unavailable: no pieces, no "no pieces" claim', () => {
 		const out = latelyView({
 			view: null,

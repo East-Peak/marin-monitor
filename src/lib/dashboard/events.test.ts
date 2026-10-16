@@ -42,6 +42,24 @@ describe('Events & Sports (Goal 4)', () => {
 		expect(total).toBe(3);
 	});
 
+	it('only a future time can be a show start: a listing stamped at scrape time never counts (Codex desk4 #1)', () => {
+		const out = eventsView({
+			activity: [ev('shows', NOW - 2 * H, 'Sausalito Seahorse calendar'), ev('shows', NOW + 3 * D)],
+			outcomes: live,
+			now: NOW
+		});
+		if (out.shows.kind !== 'value') throw new Error('expected a value');
+		expect(out.shows.value.days[0].count).toBe(0);
+		expect(out.shows.value.total).toBe(1);
+	});
+
+	it('no dated shows: no "0 listed" and no "0 upcoming" (Codex desk4 #2)', () => {
+		const out = eventsView({ activity: [ev('shows', NOW - 2 * H)], outcomes: live, now: NOW });
+		if (out.shows.kind !== 'value') throw new Error('expected a value');
+		expect(out.shows.value.total).toBeNull();
+		expect(out.upcoming).toBeNull();
+	});
+
 	it('empty day is 0 bucket rendered blank', () => {
 		const out = eventsView({ activity: [ev('shows', NOW + 2 * D)], outcomes: live, now: NOW });
 		if (out.shows.kind !== 'value') throw new Error('expected a value');

@@ -19,8 +19,10 @@ export const GET: RequestHandler = async () => {
 		}
 	);
 
+	// A rate limit is a failed read, not "no alerts"; the edge still holds it for 5 minutes.
 	if (response.status === 429) {
 		return json([], {
+			status: 429,
 			headers: { 'Cache-Control': 'public, max-age=300' }
 		});
 	}

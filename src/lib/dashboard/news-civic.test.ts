@@ -171,6 +171,49 @@ describe('News & Civic (Goal 4)', () => {
 		expect(down.police.kind).toBe('unavailable');
 	});
 
+	it('"nothing beyond the five" only for fresh, complete coverage (Codex desk4 #5)', () => {
+		const five = snapshotView(
+			NOW,
+			Array.from({ length: 5 }, (_, i) => story(NOW, { hoursAgo: i + 1 })),
+			[{}]
+		);
+		const sources = [...snapshotEntries(five, NOW), ok311];
+		const shownIds = latestReportingView({ view: five, sources, town: null, now: NOW }).shownIds;
+		expect(newsCivicView(input({ view: five, sources, shownIds })).wireEmpty).toBe(
+			'Nothing beyond the five above'
+		);
+		const partial = snapshotView(NOW, five.items, [
+			{},
+			{ id: 'kqed-news', name: 'KQED News', status: 'failed', lastError: 'HTTP 500' }
+		]);
+		const pSources = [...snapshotEntries(partial, NOW), ok311];
+		const out = newsCivicView(
+			input({
+				view: partial,
+				sources: pSources,
+				shownIds: latestReportingView({ view: partial, sources: pSources, town: null, now: NOW })
+					.shownIds
+			})
+		);
+		expect(out.wireEmpty).toBeNull();
+	});
+
+	it("311 days stop at the payload's own day: a stale read never invents empty days (Codex desk4 #6)", () => {
+		const stale311 = fromLoaderPart(
+			'seeclickfix',
+			{ ok: false, error: 'HTTP 503', at: NOW },
+			true,
+			NOW - 3 * D
+		);
+		const inp = input({ fixIt: [issue('Trees', NOW - 4 * D, 1), issue('Trees', NOW - 3 * D, 2)] });
+		const out = newsCivicView({
+			...inp,
+			sources: [...inp.sources.filter((e) => e.id !== 'part:seeclickfix'), stale311]
+		});
+		if (out.fixIt.kind !== 'value') throw new Error('expected the retained value');
+		expect(out.fixIt.value.days.map((d) => d.count)).toEqual([1, 1]);
+	});
+
 	it('an unread snapshot leaves the wire loading, not empty', () => {
 		const out = newsCivicView(input({ view: null, sources: [ok311] }));
 		expect(out.wire.kind).toBe('loading');

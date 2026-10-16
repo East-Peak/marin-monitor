@@ -85,8 +85,11 @@ export function latelyView(input: {
 	const source: Measured<unknown> = feed
 		? measuredFromEntry(feed, pieces, FEED_LABEL, now)
 		: measuredUnknown(FEED_LABEL, 'not in the news snapshot');
-	if (pieces.length === 0)
-		return { pieces, latest: null, empty: 'No pieces from the feed.', source };
+	if (pieces.length === 0) {
+		// Only the feed's own fresh, successful read can say it holds nothing (Codex desk4 #3).
+		const fresh = source.kind === 'value' && source.retainedAfter === null;
+		return { pieces, latest: null, empty: fresh ? 'No pieces from the feed.' : null, source };
+	}
 
 	const { text, quiet } = latestWording(pieces[0].publishedAt, now);
 	const marked =

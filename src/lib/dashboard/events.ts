@@ -48,9 +48,10 @@ export interface RaceRow {
 }
 
 export interface EventsView {
-	shows: Measured<{ days: ShowDay[]; total: number; next: ShowRow[] }>;
+	/** `total` is null with no dated show: the feed can't vouch for an empty calendar. */
+	shows: Measured<{ days: ShowDay[]; total: number | null; next: ShowRow[] }>;
 	races: Measured<RaceRow[]>;
-	/** Everything dated from now on, for the header; null without a read. */
+	/** Everything dated from now on, for the header; null without a read or with none. */
 	upcoming: number | null;
 	status: SectionPresentation;
 }
@@ -85,15 +86,22 @@ function showDays(shows: readonly NewsItem[], now: number): ShowDay[] {
 	return days;
 }
 
+/**
+ * Only a time still ahead can be a show's start: the producer stamps a venue's calendar page
+ * with its fetch time and an RSS post with its publication time, both already past
+ * (Codex desk4 #1).
+ */
+const isUpcoming = (i: NewsItem, now: number) => Number.isFinite(i.timestamp) && i.timestamp >= now;
+
 function showsOf(items: readonly NewsItem[], now: number) {
-	const shows = items.filter((i) => i.category === 'shows' && Number.isFinite(i.timestamp));
+	const shows = items.filter((i) => i.category === 'shows' && isUpcoming(i, now));
 	const days = showDays(shows, now);
 	const inStrip = new Set(days.map((d) => d.key));
+	const total = shows.filter((s) => inStrip.has(pacificDate(s.timestamp))).length;
 	return {
 		days,
-		total: shows.filter((s) => inStrip.has(pacificDate(s.timestamp))).length,
-		next: shows
-			.filter((s) => s.timestamp >= now)
+		total: total || null,
+		next: [...shows]
 			.sort((a, b) => a.timestamp - b.timestamp)
 			.slice(0, SHOWS_LISTED)
 			.map((s) => ({
@@ -109,7 +117,7 @@ function showsOf(items: readonly NewsItem[], now: number) {
 
 function racesOf(items: readonly NewsItem[], now: number): RaceRow[] {
 	return items
-		.filter((i) => RACE_CATEGORIES.has(i.category) && i.timestamp >= now)
+		.filter((i) => RACE_CATEGORIES.has(i.category) && isUpcoming(i, now))
 		.sort((a, b) => a.timestamp - b.timestamp)
 		.slice(0, RACES_LISTED)
 		.map((r) => ({
@@ -138,9 +146,7 @@ export function eventsView(input: {
 		shows,
 		races,
 		upcoming:
-			read.kind === 'value'
-				? read.value.filter((i) => Number.isFinite(i.timestamp) && i.timestamp >= now).length
-				: null,
+			read.kind === 'value' ? read.value.filter((i) => isUpcoming(i, now)).length || null : null,
 		status: presentSection([entry], { total: valued, matching: valued }, now)
 	};
 }

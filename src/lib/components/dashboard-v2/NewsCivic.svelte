@@ -37,7 +37,9 @@
 				{/each}
 			</ul>
 		{:else if wire}
-			<p class="empty" data-text-role="body">Nothing beyond the five above</p>
+			{#if view.wireEmpty}
+				<p class="empty" data-text-role="body">{view.wireEmpty}</p>
+			{/if}
 		{:else}
 			<p class="empty" data-text-role="body">{notShown(view.wire)}</p>
 		{/if}

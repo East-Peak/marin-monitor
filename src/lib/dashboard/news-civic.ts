@@ -16,9 +16,14 @@ import {
 	toReportingRow,
 	type ReportingRow
 } from './latest-reporting';
-import { mapMeasured, measuredFromEntry, type Measured } from './measured';
+import { emptyWording, mapMeasured, measuredFromEntry, type Measured } from './measured';
 import { PACIFIC, nextDate, pacificDate } from './pacific-time';
-import { datasetEntry, fromSnapshotSource, type DatasetFetch } from './source-adapters';
+import {
+	SNAPSHOT_OBSERVATION_MAX_AGE_MS,
+	datasetEntry,
+	fromSnapshotSource,
+	type DatasetFetch
+} from './source-adapters';
 import {
 	effectiveState,
 	presentSection,
@@ -48,7 +53,7 @@ export interface FixItDay {
 
 export interface FixItSummary {
 	count: number;
-	/** Oldest to newest Pacific day, through today; a day with no reports is 0. */
+	/** Oldest Pacific day through the payload's own day; a day with no reports in it is 0. */
 	days: FixItDay[];
 	types: { type: string; count: number }[];
 	recent: { id: string; type: string; place: string; age: string; link: string }[];
@@ -65,6 +70,8 @@ export interface NewsCivicView {
 	/** The snapshot's feeds that read OK now, for the header; null before a snapshot. */
 	feeds: { ok: number; total: number } | null;
 	wire: Measured<readonly ReportingRow[]>;
+	/** "Nothing beyond the five above", only for a fresh, complete, empty wire (Codex desk4 #5). */
+	wireEmpty: string | null;
 	fixIt: Measured<FixItSummary>;
 	police: Measured<readonly CivicRow[]>;
 	parks: Measured<readonly CivicRow[]>;
@@ -88,7 +95,15 @@ function splitIssue(title: string): { type: string; place: string } {
 		: { type: title.slice(0, at), place: title.slice(at + 3) };
 }
 
-export function fixItSummary(items: readonly NewsItem[], now: number): FixItSummary {
+/**
+ * `observedAt` is the payload's own time: days after it were never read, so the strip
+ * stops there rather than filling them with 0 (Codex desk4 #6).
+ */
+export function fixItSummary(
+	items: readonly NewsItem[],
+	now: number,
+	observedAt: number | null
+): FixItSummary {
 	const dated = items.filter((i) => Number.isFinite(i.timestamp));
 	const byDay = new Map<string, number>();
 	const byType = new Map<string, number>();
@@ -101,8 +116,9 @@ export function fixItSummary(items: readonly NewsItem[], now: number): FixItSumm
 	const keys = [...byDay.keys()].sort();
 	const days: FixItDay[] = [];
 	if (keys.length) {
-		const today = pacificDate(now);
-		const last = keys.at(-1)! > today ? keys.at(-1)! : today;
+		const newest = keys.at(-1)!;
+		const read = observedAt === null ? newest : pacificDate(observedAt);
+		const last = read > newest ? read : newest;
 		for (let key = keys[0]; key <= last; key = nextDate(key))
 			days.push({ key, label: labelOf(key), count: byDay.get(key) ?? 0 });
 	}
@@ -175,9 +191,9 @@ export function newsCivicView(input: {
 	const wire = feedCoverage(viewM, feeds, rows as readonly ReportingRow[], now, REPORTING_FEEDS);
 
 	const fixItEntry = sources.find((e) => e.id === 'part:seeclickfix');
-	const fixIt = mapMeasured(
-		measuredFromEntry(fixItEntry, input.fixIt, 'Fix It Marin (SeeClickFix)', now),
-		(items) => fixItSummary(items, now)
+	const fixItRead = measuredFromEntry(fixItEntry, input.fixIt, 'Fix It Marin (SeeClickFix)', now);
+	const fixIt = mapMeasured(fixItRead, (items) =>
+		fixItSummary(items, now, fixItRead.kind === 'value' ? fixItRead.observedAt : null)
 	);
 	const D = CIVIC_DATASETS;
 	const policeEntry = datasetEntry(D.police.id, D.police.name, input.outcomes[D.police.id], null);
@@ -200,6 +216,10 @@ export function newsCivicView(input: {
 				}
 			: null,
 		wire,
+		wireEmpty: emptyWording(wire, 'Nothing beyond the five above', {
+			now,
+			maxAgeMs: SNAPSHOT_OBSERVATION_MAX_AGE_MS
+		}),
 		fixIt,
 		police,
 		parks,

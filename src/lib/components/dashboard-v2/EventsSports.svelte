@@ -31,7 +31,9 @@
 		<article class="card" data-card="shows">
 			<div class="card-head">
 				<h3 class="card-title" data-text-role="label">Shows, next 10 days</h3>
-				<span class="meta" data-text-role="meta">{shows.total} listed</span>
+				{#if shows.total}
+					<span class="meta" data-text-role="meta">{shows.total} listed</span>
+				{/if}
 			</div>
 			<!-- A day with no shows is a blank, flat bar: never a "0". -->
 			<div class="days" role="img" aria-label="Shows per day, today first" data-text-role="meta">
