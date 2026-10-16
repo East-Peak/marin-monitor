@@ -6,6 +6,17 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-15
 
+### Added — News & Civic, Events & Sports and Marin Lately in the v2 preview
+
+- **More from the wire:** the next twelve stories after the five in Latest reporting, never repeating them. "Nothing beyond the five above" appears only when every reporting feed is current.
+- **311 · Fix It Marin:** reports per day, oldest first. The strip stops at the feed's own update day, so a stale read never invents empty days. Also the six most-reported issue types and the three newest reports. A failed read says "Unavailable", never 0.
+- **Police & parks:** the newest police log entries and National Park Service alerts, each from its own read. An NPS rate limit is now reported as a failure instead of "no alerts".
+- **Events & Sports:** shows over the next ten days, with a day that has none drawn as a blank bar rather than "0". Then the next five shows and the race calendar. Only times still ahead count, so a venue's calendar page or a news post is never mistaken for tonight's show. A failed read says so in one card.
+- **Marin Lately:** a full-width satire band with up to six pieces. It says how long the feed has been quiet, computed from its newest piece (on Oct 15: Jan 7, quiet for 9 months). Subscriber notices are left out.
+- **Data sources:** a footer line for each source in the health report, with its status and as-of time.
+- **News & Civic header:** reads "N of M feeds OK".
+- **Where:** on desktop News & Civic sits beside Events & Sports (7 and 5 of 12 columns from 1280 px), after Cost and the Lately band. Phones and tablets get the same News (with Lately) and Events content inside their collapsible sections. Cost and the sources footer stay desktop-only, so the phone stays inside its height budget.
+
 ### Added — Cost & Character in the v2 preview (desktop)
 
 - **Cost of being Marin:** the composite index with its change against the previous weekly reading, a weekly trend with the base-100 line, tier bars centred on 100 (right is pricier than baseline, left cheaper; a tier more than 20 points out pins at the edge), and "N weekly readings since …".

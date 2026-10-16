@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-15',
+		title: 'News, events and Marin Lately in the preview',
+		description:
+			'The dashboard preview now continues the news after Latest reporting with twelve more stories. It also shows Fix It Marin (311) reports by day with the most common issues, recent police log entries and park alerts, shows over the next ten days with the next five listed, and the race calendar. Marin Lately gets its own satire band, which says honestly that the feed has been quiet since January. On a computer, News sits beside Events under Cost, with a list of every data source and how fresh it is at the bottom. Anything that couldn’t be read says so instead of showing zero. The regular dashboard and TV are unchanged.'
+	},
+	{
+		date: '2026-10-15',
 		title: 'Cost & Character in the preview, and the gas 7-day change fixed',
 		description:
 			'On a computer, the dashboard preview’s Cost & Character section now shows the Cost of being Marin index with its weekly trend and tiers, the itemized Marin Number, gas prices with the low–high band and the cheapest stations, and a tile for each sub-index (coffee, cappuccino, groceries, wine, fitness, school, housing, gas, and the Rivian, dog, ski pass and camp lines) with a trend line or “No history yet”. A reading that failed says so instead of showing $0. Also fixed on the regular dashboard: the gas panel’s 7-day change was comparing against a July reading; it now compares against the reading a week ago.'
