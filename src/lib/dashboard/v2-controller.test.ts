@@ -26,7 +26,10 @@ const fetchers = vi.hoisted(() => ({
 	grocery: vi.fn(),
 	wine: vi.fn(),
 	school: vi.fn(),
-	housing: vi.fn()
+	housing: vi.fn(),
+	activity: vi.fn(),
+	police: vi.fn(),
+	nps: vi.fn()
 }));
 // Keep every other export real: $lib/api/marin/index.ts re-exports these modules.
 vi.mock('$lib/api/marin/gas-prices', async (orig) => ({
@@ -93,6 +96,18 @@ vi.mock('$lib/api/marin/housing', async (orig) => ({
 	...(await orig<object>()),
 	fetchHousingDataWithStatus: fetchers.housing
 }));
+vi.mock('$lib/api/marin/activity', async (orig) => ({
+	...(await orig<object>()),
+	fetchActivityDataWithStatus: fetchers.activity
+}));
+vi.mock('$lib/api/marin/police-logs', async (orig) => ({
+	...(await orig<object>()),
+	fetchPoliceLogsDataWithStatus: fetchers.police
+}));
+vi.mock('$lib/api/marin/nps', async (orig) => ({
+	...(await orig<object>()),
+	fetchNpsAlertsWithStatus: fetchers.nps
+}));
 vi.mock('$lib/api/marin/traffic-corridors', async (orig) => ({
 	...(await orig<object>()),
 	fetchTrafficCorridorsOrThrow: fetchers.traffic
@@ -102,6 +117,8 @@ const { createDashboardV2Controller, DATASET_POLICY, V2_MIN_REFRESH_GAP_MS } =
 	await import('./v2-controller');
 const { effectiveState } = await import('./source-status');
 const { COST_DATASETS } = await import('./cost');
+const { CIVIC_DATASETS } = await import('./news-civic');
+const { EVENTS_DATASETS } = await import('./events');
 const { gasPriceStore } = await import('$lib/stores/gas-prices');
 const { evChargingStore } = await import('$lib/stores/ev-charging');
 const { coffeeIndexStore } = await import('$lib/stores/coffee');
@@ -243,6 +260,8 @@ beforeEach(() => {
 			dataSource: 'live'
 		});
 	fetchers.housing.mockResolvedValue({ ok: true, data: [], dataSource: 'live' });
+	for (const f of [fetchers.activity, fetchers.police, fetchers.nps])
+		f.mockResolvedValue({ ok: true, data: [], dataSource: 'live' });
 	for (const s of [gasPriceStore, evChargingStore, coffeeIndexStore, fitnessStore]) {
 		s.set({ current: null, history: [] } as never);
 	}
@@ -626,6 +645,26 @@ describe('createDashboardV2Controller', () => {
 		});
 		// Housing's payload carries no time of its own (G0a dates it by upload).
 		expect(get(c.datasetOutcomes).housing).toEqual({ kind: 'live', observedAt: null });
+	});
+
+	it('News & Civic and Events reads (police, NPS, activity) load only through ensure; a failure is carried, not emptied', async () => {
+		const c = controller();
+		await c.start();
+		const own = [fetchers.activity, fetchers.police, fetchers.nps];
+		for (const f of own) expect(f).not.toHaveBeenCalled();
+		fetchers.police.mockResolvedValue({ ok: false, error: 'HTTP 503', fallback: [] });
+		const ids = [CIVIC_DATASETS.police.id, CIVIC_DATASETS.nps.id, EVENTS_DATASETS.activity.id];
+		await Promise.all(ids.map((id) => c.ensure(id)));
+		for (const f of own) expect(f).toHaveBeenCalledTimes(1);
+		expect(get(c.civic)).toEqual({ police: null, nps: [], activity: [] });
+		expect(get(c.datasetOutcomes).police).toEqual({
+			kind: 'failed',
+			error: 'HTTP 503',
+			retained: false,
+			observedAt: null
+		});
+		// The payloads carry no time of their own.
+		expect(get(c.datasetOutcomes).activity).toEqual({ kind: 'live', observedAt: null });
 	});
 
 	it('Outdoors reads (marine, fires, 7-day quakes) load only through ensure, with their own times', async () => {

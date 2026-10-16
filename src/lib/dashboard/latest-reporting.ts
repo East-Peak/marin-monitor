@@ -133,10 +133,10 @@ export interface LatestReportingView {
 	shownIds: ReadonlySet<string>;
 }
 
-const REPORTING_FEEDS = { label: 'Reporting feeds', noun: 'reporting feed' };
+export const REPORTING_FEEDS = { label: 'Reporting feeds', noun: 'reporting feed' };
 
 /** The status entries of the snapshot's reporting feeds (never the read itself). */
-function reportingFeeds(
+export function reportingFeeds(
 	view: NewsSnapshotView | null,
 	sources: readonly SourceStatusEntry[]
 ): SourceStatusEntry[] {

@@ -50,6 +50,11 @@ import { createBriefStore, type BriefFetchers, type BriefState } from './brief-s
 import { AIRPORT_MAX_AGE_MS, TRAFFIC_MAX_AGE_MS, type TransitState } from './getting-around';
 import { OUTDOORS_DATASETS, OUTDOORS_MAX_AGE_MS } from './outdoors';
 import { COST_DATASETS, costMaxAgeMs } from './cost';
+import { CIVIC_DATASETS } from './news-civic';
+import { EVENTS_DATASETS } from './events';
+import { fetchActivityDataWithStatus } from '$lib/api/marin/activity';
+import { fetchPoliceLogsDataWithStatus } from '$lib/api/marin/police-logs';
+import { fetchNpsAlertsWithStatus, type NpsAlert } from '$lib/api/marin/nps';
 import { fetchCompositeDataWithStatus } from '$lib/api/marin/composite';
 import { fetchCappuccinoDataWithStatus } from '$lib/api/marin/cappuccino';
 import { fetchGroceryBasketDataWithStatus } from '$lib/api/marin/grocery-basket';
@@ -270,6 +275,35 @@ function costDatasets(store: Writable<CostReads>): DatasetDef[] {
 	];
 }
 
+/** News & Civic's police and parks reads and Events' calendar (desktop Goal 4). */
+export interface CivicReads {
+	police: NewsItem[] | null;
+	nps: NpsAlert[] | null;
+	activity: NewsItem[] | null;
+}
+
+/** Loaded through ensure() when News & Civic or Events opens; the payloads carry no time of their own. */
+function civicDatasets(store: Writable<CivicReads>): DatasetDef[] {
+	const def = <K extends keyof CivicReads>(
+		key: K,
+		meta: { id: string; name: string },
+		load: (signal: AbortSignal) => Promise<FetchResult<NonNullable<CivicReads[K]>>>
+	) =>
+		dataset<NonNullable<CivicReads[K]>>({
+			...meta,
+			tier: 'detail',
+			load,
+			commit: (d) => store.update((all) => ({ ...all, [key]: d })),
+			observedAtOf: () => null,
+			maxAgeMs: null
+		});
+	return [
+		def('police', CIVIC_DATASETS.police, (signal) => fetchPoliceLogsDataWithStatus({ signal })),
+		def('nps', CIVIC_DATASETS.nps, (signal) => fetchNpsAlertsWithStatus({ signal })),
+		def('activity', EVENTS_DATASETS.activity, (signal) => fetchActivityDataWithStatus({ signal }))
+	];
+}
+
 interface OutdoorsStores {
 	marine: Writable<MarineForecastRead | null>;
 	fires: Writable<FireRead | null>;
@@ -371,6 +405,8 @@ export interface DashboardV2Controller {
 	quakesWeek: Readable<EarthquakeRead | null>;
 	/** Cost & Character's own reads, loaded through ensure(COST_DATASETS.*.id). */
 	cost: Readable<CostReads>;
+	/** News & Civic's and Events' own reads, loaded through ensure(CIVIC_DATASETS / EVENTS_DATASETS). */
+	civic: Readable<CivicReads>;
 }
 
 export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Controller {
@@ -392,6 +428,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		school: null,
 		housing: null
 	});
+	const civic = writable<CivicReads>({ police: null, nps: null, activity: null });
 	// /api/health feeds the header indicator only; it never re-dates a dataset (Codex r1 #3).
 	const defs = deps.datasets ?? [
 		...ESSENTIAL_DATASETS,
@@ -407,6 +444,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		...detailDatasets(airport, traffic),
 		...outdoorsDatasets(outdoors),
 		...costDatasets(cost),
+		...civicDatasets(civic),
 		...INVENTORY_DATASETS
 	];
 	const registry = createDatasetRegistry(defs, deps.signal, { deadlineMs: deps.deadlineMs });
@@ -539,6 +577,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		fires: { subscribe: outdoors.fires.subscribe },
 		quakesWeek: { subscribe: outdoors.quakesWeek.subscribe },
 		cost: { subscribe: cost.subscribe },
+		civic: { subscribe: civic.subscribe },
 		datasetOutcomes: registry.outcomes,
 		brief: { subscribe: brief.subscribe },
 		advisories: { subscribe: advisories.subscribe },

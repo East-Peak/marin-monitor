@@ -114,15 +114,20 @@ function dedupeAndOrder(pool: readonly NewsItem[]): ReportingEntry[] {
 	);
 }
 
+/** Every eligible item, deduplicated, in the shared order (newest first, then priority, then id). */
+export function orderedReporting(items: readonly NewsItem[], now: number): ReportingEntry[] {
+	return dedupeAndOrder(items.filter((item) => isEligibleReporting(item, now)));
+}
+
 export function selectLatestReporting(
 	items: readonly NewsItem[],
 	options: LatestReportingOptions
 ): ReportingEntry[] {
 	const { town, now, rule = COUNTY_WIDE_RULE } = options;
-	const eligible = items.filter((item) => isEligibleReporting(item, now));
 
 	// All of Marin: the newest dated eligible items from any source.
-	if (town === null) return dedupeAndOrder(eligible).slice(0, reportingSlots(rule));
+	if (town === null) return orderedReporting(items, now).slice(0, reportingSlots(rule));
+	const eligible = items.filter((item) => isEligibleReporting(item, now));
 
 	// A town: that town's items plus county-scoped ones; unlocated never pads.
 	const entries = dedupeAndOrder(

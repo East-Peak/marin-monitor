@@ -33,11 +33,15 @@ export function parsePacificWallTime(value: string): number | null {
 	return parseFeedDate(value.replace(' ', 'T'), PACIFIC);
 }
 
+/** The calendar day after a `YYYY-MM-DD` date (date arithmetic only; no clock or zone). */
+export function nextDate(date: string): string {
+	const [y, m, d] = date.split('-').map(Number);
+	return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+}
+
 export function pacificMidnightAfter(ms: number): number {
-	const [y, m, d] = pacificDate(ms).split('-').map(Number);
-	const next = new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
 	// US DST transitions happen at 02:00, so local midnight always exists.
-	return parsePacificWallTime(`${next}T00:00`) as number;
+	return parsePacificWallTime(`${nextDate(pacificDate(ms))}T00:00`) as number;
 }
 
 export function formatAsOf(ms: number, now: number): string {

@@ -13,8 +13,9 @@
 import type { NewsItem } from '$lib/types';
 import { logger } from '$lib/config/api';
 import { fetchAndRead, type OwnerOptions } from './fetch-helpers';
+import { createDataFetcherWithStatus } from './data-fetcher';
 
-interface NpsAlert {
+export interface NpsAlert {
 	id: string;
 	title: string;
 	description: string;
@@ -24,7 +25,7 @@ interface NpsAlert {
 	lastIndexedDate: string;
 }
 
-const PARK_NAMES: Record<string, string> = {
+export const PARK_NAMES: Record<string, string> = {
 	pore: 'Point Reyes',
 	muwo: 'Muir Woods',
 	goga: 'Golden Gate NRA'
@@ -63,3 +64,10 @@ export async function fetchNpsAlerts({ signal }: OwnerOptions = {}): Promise<New
 		return [];
 	}
 }
+
+/** v2's parks read: the raw alerts, with a failed read reported as one (never "no alerts"). */
+export const fetchNpsAlertsWithStatus = createDataFetcherWithStatus<NpsAlert[]>(
+	'/api/nps/alerts',
+	'NPS',
+	[]
+);
