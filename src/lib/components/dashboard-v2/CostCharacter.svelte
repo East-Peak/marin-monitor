@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { buildChart } from '$lib/utils/chart';
 	import { PACIFIC } from '$lib/dashboard/pacific-time';
-	import { signed, type CostView, type SubIndexTile } from '$lib/dashboard/cost';
+	import { axisTicks, signed, type CostView, type SubIndexTile } from '$lib/dashboard/cost';
 	import type { Measured } from '$lib/dashboard/measured';
 	import CardSource from './CardSource.svelte';
 
@@ -11,8 +11,8 @@
 	// Section.svelte mounts this body only while the section is open: mounting is opening (§7).
 	onMount(() => onopen());
 
-	const TREND = { width: 520, height: 200, margins: { top: 10, right: 8, bottom: 18, left: 34 } };
-	const GAS = { width: 520, height: 200, margins: { top: 10, right: 10, bottom: 20, left: 44 } };
+	const TREND = { width: 640, height: 220, margins: { top: 10, right: 8, bottom: 18, left: 34 } };
+	const GAS = { width: 720, height: 240, margins: { top: 10, right: 10, bottom: 20, left: 44 } };
 	const SPARK = { width: 220, height: 44, margins: { top: 6, right: 5, bottom: 4, left: 2 } };
 	/** The mockup's colours: tier categories, then the Marin Number's stack. */
 	const TIER_COLOR: Record<string, string> = {
@@ -95,15 +95,17 @@
 			.join('');
 		return `${top}${bottom}Z`;
 	});
-	const gasTicks = $derived(
-		gasChart && gas
-			? [0, Math.floor((gas.series.length - 1) / 2), gas.series.length - 1].map((i) => ({
-					i,
-					x: gasChart.xScale(i),
-					label: day(gas.series[i].atMs)
-				}))
-			: []
-	);
+	const gasTicks = $derived.by(() => {
+		if (!gasChart || !gas) return [];
+		const idx = axisTicks(gas.series.length);
+		// The first and last labels sit inside the plot, never clipped at its edges.
+		return idx.map((i, k) => ({
+			i,
+			x: gasChart.xScale(i),
+			label: day(gas.series[i].atMs),
+			anchor: k === 0 ? 'start' : k === idx.length - 1 ? 'end' : 'middle'
+		}));
+	});
 	const notes = $derived(
 		gas
 			? [
@@ -261,7 +263,7 @@
 								>{usd(gasChart.yMin)}</text
 							>
 							{#each gasTicks as t (t.i)}
-								<text x={t.x} y={GAS.height - GAS.margins.top - 4} text-anchor="middle"
+								<text x={t.x} y={GAS.height - GAS.margins.top - 4} text-anchor={t.anchor}
 									>{t.label}</text
 								>
 							{/each}
@@ -364,7 +366,10 @@
 							No history yet{t.noHistoryReason ? ` · ${t.noHistoryReason}` : ''}
 						</div>
 					{/if}
-					<CardSource lines={[{ measured: t.measured, untimed: t.untimed }]} {now} />
+					<CardSource
+						lines={[{ measured: t.measured, untimed: t.untimed, muted: t.muted }]}
+						{now}
+					/>
 				</div>
 			{/each}
 		</div>
@@ -389,6 +394,33 @@
 		}
 		.cost-top > .gas {
 			grid-column: span 2;
+		}
+	}
+	/* The mockup's 1280–1699 gas card: chart beside the stats and stations, source across the foot. */
+	@media (min-width: 1280px) and (max-width: 1699px) {
+		.cost-top > .gas {
+			display: grid;
+			grid-template-columns: 3fr 2fr;
+			grid-template-areas: 'h h' 'c s' 'c r' 'f f';
+			column-gap: 22px;
+			align-items: start;
+		}
+		.gas > .card-head {
+			grid-area: h;
+		}
+		.gas > .chart,
+		.gas > .empty {
+			grid-area: c;
+		}
+		.gas > .stats {
+			grid-area: s;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.gas > .rows {
+			grid-area: r;
+		}
+		.gas > :global(.src) {
+			grid-area: f;
 		}
 	}
 	@media (min-width: 1700px) {
@@ -584,15 +616,11 @@
 	.rows li:last-child {
 		border-bottom: 0;
 	}
+	/* Cost renders from 1024 px: four across, six from 1700 (plan Goal 3). */
 	.idx {
 		display: grid;
 		gap: var(--v2-gap, 14px);
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
-	@media (min-width: 1280px) {
-		.idx {
-			grid-template-columns: repeat(4, minmax(0, 1fr));
-		}
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
 	@media (min-width: 1700px) {
 		.idx {

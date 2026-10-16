@@ -7,6 +7,8 @@
 		verb?: string;
 		/** Shown in place of a time when the source has none to give (e.g. a tide prediction). */
 		untimed?: string;
+		/** No freshness claim (a fixed estimate, a maintained list): a neutral dot, never green. */
+		muted?: boolean;
 	}
 </script>
 
@@ -43,8 +45,8 @@
 		}
 	}
 
-	const tone = (m: Measured<unknown>) =>
-		m.kind === 'loading'
+	const tone = ({ measured: m, muted }: SourceLine) =>
+		m.kind === 'loading' || (muted && m.kind === 'value' && m.retainedAfter === null)
 			? 'static'
 			: m.kind !== 'value' || m.retainedAfter !== null
 				? 'stale'
@@ -53,9 +55,7 @@
 
 <p class="src" data-card-source data-text-role="meta">
 	{#each lines as line, i (i)}
-		<span class="st {tone(line.measured)}" data-source-state={line.measured.kind}
-			>{describe(line)}</span
-		>
+		<span class="st {tone(line)}" data-source-state={line.measured.kind}>{describe(line)}</span>
 	{/each}
 	{#each notes as note, i (i)}
 		<span class="note">{note}</span>

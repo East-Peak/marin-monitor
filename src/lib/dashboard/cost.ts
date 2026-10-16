@@ -175,6 +175,8 @@ export interface SubIndexTile {
 	measured: Measured<unknown>;
 	/** A source line for a value with no time of its own (e.g. the latest month published). */
 	untimed?: string;
+	/** No freshness claim: the source line shows no time and no green dot. */
+	muted: boolean;
 }
 
 const usd = (n: number, dec = 2) =>
@@ -193,7 +195,9 @@ interface TileSpec<T> {
 	/** Values oldest first; nulls are dropped, never drawn as 0. */
 	series: ((v: T) => (number | null)[]) | null;
 	noHistoryReason?: string;
-	untimed?: (v: T) => string;
+	untimed?: (v: T) => string | undefined;
+	/** The source can't vouch for when the value was true (a fixed estimate, a maintained list). */
+	muted?: (v: T) => boolean;
 }
 
 function tile<T>(spec: TileSpec<T>): SubIndexTile {
@@ -213,13 +217,18 @@ function tile<T>(spec: TileSpec<T>): SubIndexTile {
 			detail: m.kind === 'loading' ? null : m.reason,
 			spark: null,
 			noHistory: false,
-			noHistoryReason: null
+			noHistoryReason: null,
+			muted: false
 		};
 	}
+	const muted = spec.muted?.(m.value) ?? false;
 	const points = spec.series ? spec.series(m.value).filter((n): n is number => n !== null) : [];
 	const spark = points.length >= 2 ? points : null;
 	return {
 		...base,
+		// A muted value keeps its read's status but never shows that read's time as its own.
+		measured: muted ? { ...m, observedAt: null } : m,
+		muted,
 		kind: 'value',
 		value: spec.value(m.value),
 		detail: spec.detail(m.value),
@@ -231,17 +240,26 @@ function tile<T>(spec: TileSpec<T>): SubIndexTile {
 }
 
 const monthName = (month: string) =>
-	new Date(`${month}T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
+	new Date(`${month}T12:00:00Z`).toLocaleDateString('en-US', {
+		month: 'short',
+		year: 'numeric',
+		timeZone: 'UTC'
+	});
 
-/** Composite line items with a live source of their own but no published history yet. */
+/** Start, middle and end of `n` points, each index once (two points are two ticks). */
+export function axisTicks(n: number): number[] {
+	return n <= 0 ? [] : [...new Set([0, Math.floor((n - 1) / 2), n - 1])];
+}
+
+/** Composite line items with a source of their own but no published history yet. */
 const COMPOSITE_ITEM_TILES = [
 	{
 		id: 'rivian-lease',
 		title: 'Rivian R1S lease',
 		color: '#10b981',
-		detail: 'R1S payment, live quote'
+		detail: 'R1S payment'
 	},
-	{ id: 'dog-walker', title: 'The Dog', color: '#84cc16', detail: 'Dog walker rates, monthly' },
+	{ id: 'dog-walker', title: 'The Dog', color: '#84cc16', detail: 'Walker + upkeep, monthly' },
 	{ id: 'ikon-pass', title: 'Ikon Pass', color: '#06b6d4', detail: 'Ski season, amortized' },
 	{ id: 'camp-prices', title: 'Summer camp', color: '#eab308', detail: '2 kids, amortized' }
 ] as const;
@@ -385,7 +403,8 @@ export function costView(input: CostInput): CostView {
 			id: 'school',
 			title: 'School tuition',
 			color: '#3b82f6',
-			measured: read(entries.school, withCurrent(input.school), 'School sites, monthly'),
+			// The cron recomputes a maintained list: its run time is not when tuition was checked.
+			measured: read(entries.school, withCurrent(input.school), 'Maintained tuition list'),
 			value: (d) => `$${Math.round(d.current!.cumulativeK12 / 1000)}k`,
 			detail: (d) => {
 				const high = d.current!.tiers.find((t) => t.level === 'high');
@@ -393,7 +412,9 @@ export function costView(input: CostInput): CostView {
 					? `K–12 private, cumulative · high school ${usd0(high.avgTuition)}/yr`
 					: 'K–12 private, cumulative';
 			},
-			series: (d) => readings(d.current, d.history).map((h) => h.cumulativeK12)
+			series: (d) => readings(d.current, d.history).map((h) => h.cumulativeK12),
+			untimed: () => 'reference prices, recomputed monthly',
+			muted: () => true
 		}),
 		tile({
 			id: 'housing',
@@ -414,7 +435,9 @@ export function costView(input: CostInput): CostView {
 			},
 			series: (d) =>
 				[...d].sort((a, b) => a.month.localeCompare(b.month)).map((m) => m.medianPrice),
-			untimed: (d) => `latest month published: ${monthName(latestHome(d)!.month)}`
+			// Redfin's months carry no read time, so the latest month is the only date it can claim.
+			untimed: (d) => `latest month published: ${monthName(latestHome(d)!.month)}`,
+			muted: () => true
 		}),
 		tile({
 			id: 'gas',
@@ -434,9 +457,17 @@ export function costView(input: CostInput): CostView {
 				...t,
 				measured: item(t.id),
 				value: (i) => (i ? `${usd0(i.monthly)}/mo` : 'Unknown'),
-				detail: (i) => (i ? t.detail : 'not in this week’s composite'),
+				// The builder fills a missing scrape with a fixed default and marks it static.
+				detail: (i) =>
+					!i
+						? 'not in this week’s composite'
+						: i.source === 'static'
+							? `${t.detail} · fixed estimate`
+							: t.detail,
 				series: null,
-				noHistoryReason: 'Current price only; history isn’t published yet'
+				noHistoryReason: 'Current price only; history isn’t published yet',
+				untimed: (i) => (i?.source === 'static' ? 'fixed estimate in the composite' : undefined),
+				muted: (i) => i?.source === 'static'
 			})
 		)
 	];

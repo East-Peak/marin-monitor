@@ -4,7 +4,7 @@ import type { CompositeData, CompositeSnapshot } from '$lib/types/composite';
 import type { GasPriceData, GasPriceSnapshot } from '$lib/types/gas';
 import type { FitnessData } from '$lib/types/fitness';
 import type { DatasetFetch } from './source-adapters';
-import { COST_DATASETS, compositeView, costView, tierBar, type CostInput } from './cost';
+import { COST_DATASETS, axisTicks, compositeView, costView, tierBar, type CostInput } from './cost';
 
 const NOW = Date.parse('2026-10-15T18:00:00Z');
 const DAY = 86_400_000;
@@ -214,6 +214,111 @@ describe('cost model', () => {
 		expect(gas.diesel).toBe(6.6);
 		expect(gas.premium).toBe(6.9);
 		expect(gas.series[0].atMs).toBeLessThan(gas.series.at(-1)!.atMs);
+	});
+
+	it('axis ticks: start, middle and end, never a repeated index (two readings → two ticks)', () => {
+		expect(axisTicks(50)).toEqual([0, 24, 49]);
+		expect(axisTicks(3)).toEqual([0, 1, 2]);
+		expect(axisTicks(2)).toEqual([0, 1]);
+		expect(axisTicks(1)).toEqual([0]);
+		expect(axisTicks(0)).toEqual([]);
+	});
+
+	it('a composite item the builder filled with its fixed default is an estimate, not a live quote', () => {
+		const snap = composite(NOW - DAY, 100.6);
+		snap.marinNumber.items[0] = { ...snap.marinNumber.items[0], source: 'static' };
+		const view = costView(
+			input({
+				composite: { current: snap, history: [] },
+				outcomes: { [COST_DATASETS.composite.id]: live() }
+			})
+		);
+		const rivian = view.tiles.find((t) => t.id === 'rivian-lease')!;
+		expect(rivian.detail).toContain('fixed estimate');
+		expect(rivian.detail).not.toContain('live');
+		expect(rivian.muted).toBe(true);
+		expect(rivian.measured.kind === 'value' && rivian.measured.observedAt).toBeNull();
+		// A live item keeps the composite's time, and says that is where it comes from.
+		snap.marinNumber.items[0] = { ...snap.marinNumber.items[0], source: 'live' };
+		const liveTile = costView(
+			input({
+				composite: { current: snap, history: [] },
+				outcomes: { [COST_DATASETS.composite.id]: live() }
+			})
+		).tiles.find((t) => t.id === 'rivian-lease')!;
+		expect(liveTile.muted).toBe(false);
+		expect(liveTile.measured.source).toMatch(/composite/i);
+	});
+
+	it('housing and school make no freshness claim they cannot back: month with year; reference prices', () => {
+		const housing = [
+			{
+				month: '2025-05-01',
+				medianPrice: 1_500_000,
+				medianPpsf: null,
+				inventory: null,
+				daysOnMarket: null,
+				homesSold: null
+			},
+			{
+				month: '2026-05-01',
+				medianPrice: 1_600_000,
+				medianPpsf: null,
+				inventory: null,
+				daysOnMarket: null,
+				homesSold: null
+			}
+		];
+		const school = {
+			current: {
+				timestamp: iso(NOW - DAY),
+				lastSuccessfulScrapeAt: iso(NOW - DAY),
+				medianHouseholdIncome: 145000,
+				incomeSource: 'ACS',
+				incomeYear: '2024',
+				tiers: [],
+				schools: [],
+				cumulativeK12: 698998
+			},
+			history: []
+		};
+		const view = costView(
+			input({
+				housing,
+				school,
+				outcomes: {
+					[COST_DATASETS.housing.id]: { kind: 'live', observedAt: null },
+					[COST_DATASETS.school.id]: live()
+				}
+			})
+		);
+		const home = view.tiles.find((t) => t.id === 'housing')!;
+		expect(home.untimed).toContain('May 2026');
+		expect(home.muted).toBe(true);
+		const tuition = view.tiles.find((t) => t.id === 'school')!;
+		expect(tuition.muted).toBe(true);
+		expect(tuition.measured.kind === 'value' && tuition.measured.observedAt).toBeNull();
+		expect(tuition.untimed).toMatch(/reference/i);
+	});
+
+	it('the dog line is the whole dog, not the walker alone', () => {
+		const view = costView(
+			input({
+				composite: {
+					current: {
+						...composite(NOW - DAY, 100),
+						marinNumber: {
+							total: 794,
+							annualized: 9528,
+							items: [{ label: 'The Dog', monthly: 794, source: 'live', sourceIndex: 'dog-walker' }]
+						}
+					},
+					history: []
+				},
+				outcomes: { [COST_DATASETS.composite.id]: live() }
+			})
+		);
+		expect(view.tiles.find((t) => t.id === 'dog-walker')!.detail).toMatch(/walker \+ upkeep/i);
 	});
 
 	it('freshness policies are G0a’s own (pinned to SOURCE_INVENTORY)', () => {

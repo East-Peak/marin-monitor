@@ -246,6 +246,18 @@ test.describe('desktop 1440: Cost & Character (Goal 3)', () => {
 	});
 });
 
+test.describe('narrow desktop 1100: Cost tiles four across (Goal 3)', () => {
+	test.use({ viewport: { width: 1100, height: 1000 } });
+
+	test('the sub-index tiles are four across below 1700 px', async ({ page }) => {
+		await open(page);
+		const cols = await page
+			.locator('#cost .idx')
+			.evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length);
+		expect(cols).toBe(4);
+	});
+});
+
 test.describe('very wide 2600', () => {
 	test.use({ viewport: { width: 2600, height: 1000 } });
 	test('the page stops at 2,240 px', async ({ page }) => {
