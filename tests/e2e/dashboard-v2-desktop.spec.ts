@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { stubCams } from './fixtures/cams';
+import { SOURCES, reportingSnapshot } from './fixtures/v2-reporting';
 
 /**
  * Desktop frame (plan-dashboard-desktop Goal 1): full width to 2,240 px, sections always
@@ -245,6 +246,131 @@ test.describe('desktop 1440: Cost & Character (Goal 3)', () => {
 		if (dir) await cost.screenshot({ path: `${dir}/cost-1440.png` });
 	});
 });
+
+/** News & Civic, Events and Marin Lately reads with real shapes (Goal 4). */
+async function stubCivic(page: Page) {
+	const H = 3_600_000;
+	const now = Date.now();
+	const json = (body: unknown) => ({
+		status: 200,
+		contentType: 'application/json',
+		body: JSON.stringify(body)
+	});
+	const stories = Array.from({ length: 20 }, (_, i) => ({
+		slug: `w${i}`,
+		title: `Marin story number ${i + 1} on the county wire`,
+		source: i % 2 ? SOURCES.ij : SOURCES.ptReyes,
+		hoursAgo: i + 1
+	}));
+	const lately = [
+		{ slug: 'promo', title: 'Quick Update for Our Subscribers', hoursAgo: 280 * 24 },
+		{ slug: 'l1', title: 'Mother Nature Actually Kind of a Bitch', hoursAgo: 281 * 24 },
+		{ slug: 'l2', title: 'Northern Spotted Owl Misgendered', hoursAgo: 490 * 24 }
+	].map((l) => ({ ...l, source: SOURCES.lately }));
+	await page.route('**/api/news/snapshot', (r) =>
+		r.fulfill({
+			status: 200,
+			contentType: 'application/json',
+			body: reportingSnapshot(now, [...stories, ...lately])
+		})
+	);
+	const iso = (ms: number) => new Date(ms).toISOString();
+	await page.route(/\/api\/data\/311\b/, (r) =>
+		r.fulfill(
+			json({
+				lastUpdated: iso(now - H),
+				count: 4,
+				issues: ['Illegal Dumping', 'Illegal Dumping', 'Trees', 'Sidewalks'].map((summary, i) => ({
+					id: 900 + i,
+					status: 'Acknowledged',
+					summary,
+					description: 'x',
+					lat: 37.97,
+					lng: -122.53,
+					address: `${i + 1} Fourth St, San Rafael, CA`,
+					created_at: iso(now - (i * 30 + 2) * H),
+					html_url: `https://seeclickfix.com/issues/${900 + i}`
+				}))
+			})
+		)
+	);
+	const item = (id: string, title: string, category: string, at: number, source: string) => ({
+		id,
+		title,
+		link: `https://events.example/${id}`,
+		pubDate: iso(at),
+		timestamp: at,
+		source,
+		category,
+		verification: 'official'
+	});
+	await page.route(/\/api\/data\/activity\b/, (r) =>
+		r.fulfill(
+			json([
+				item('s1', 'Jazz Night | Sweetwater', 'shows', now + 5 * H, 'Sweetwater Music Hall'),
+				item('s2', 'Bluegrass Brunch', 'shows', now + 50 * H, 'Rancho Nicasio'),
+				item('s3', 'Film Night', 'shows', now + 100 * H, 'Osher Marin JCC'),
+				item(
+					'r1',
+					'Dipsea Race 2027 · Sunday, June 13, 2027',
+					'endurance',
+					now + 240 * 24 * H,
+					'Dipsea Race'
+				)
+			])
+		)
+	);
+	await page.route(/\/api\/data\/police-logs\b/, (r) =>
+		r.fulfill(json([item('p1', 'ROAD CLOSURE: Grant Ave', 'safety', now - 2 * H, 'Novato PD')]))
+	);
+}
+
+for (const width of [1440, 2000]) {
+	test.describe(`desktop ${width}: News & Civic, Events, Marin Lately (Goal 4)`, () => {
+		test.use({ viewport: { width, height: 1000 } });
+
+		test('News and Events share a row; Lately spans the grid; no "later" placeholder', async ({
+			page
+		}) => {
+			await stubRest(page);
+			await stubCivic(page);
+			await stubCams(page);
+			await page.goto('/?layout=v2');
+			await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+			const news = await box(page, '#news');
+			const events = await box(page, '#events');
+			expect(Math.abs(news.y - events.y)).toBeLessThanOrEqual(4);
+			expect(news.x).toBeLessThan(events.x);
+			expect(news.width).toBeGreaterThan(events.width);
+			const grid = await box(page, '#sections');
+			const lately = await box(page, '[data-slot="lately"]');
+			expect(Math.abs(lately.width - grid.width)).toBeLessThanOrEqual(2);
+			// Between Cost and News, as in the mockup.
+			expect(lately.y).toBeGreaterThan((await box(page, '#cost')).y);
+			expect(lately.y + lately.height).toBeLessThanOrEqual(news.y);
+			await expect(page.getByText(/later release/)).toHaveCount(0);
+
+			await expect(page.locator('#news [data-section-meta]')).toHaveText(/^\d+ of \d+ feeds OK$/);
+			await expect(page.locator('#news [data-wire-row]')).toHaveCount(12);
+			await expect(page.locator('#news [data-card="fixit"] [data-day]').first()).toBeVisible();
+			await expect(page.locator('#events [data-show-day]')).toHaveCount(10);
+			await expect(page.locator('[data-slot="lately"]')).toContainText(
+				'the feed has been quiet for 9 months'
+			);
+			await expect(page.locator('[data-slot="lately"]')).not.toContainText('Subscribers');
+			await expect(page.locator('[data-slot="sources-footer"]')).toBeVisible();
+
+			const dir = process.env.SHOTS_DIR;
+			if (dir) {
+				await page
+					.locator('[data-slot="lately"]')
+					.screenshot({ path: `${dir}/lately-${width}.png` });
+				await page.locator('#news').screenshot({ path: `${dir}/news-${width}.png` });
+				await page.locator('#events').screenshot({ path: `${dir}/events-${width}.png` });
+			}
+		});
+	});
+}
 
 test.describe('narrow desktop 1100: Cost tiles four across (Goal 3)', () => {
 	test.use({ viewport: { width: 1100, height: 1000 } });

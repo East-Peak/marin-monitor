@@ -10,6 +10,7 @@
 		open,
 		ontoggle,
 		status = null,
+		meta = null,
 		now = Date.now(),
 		collapsible = true,
 		class: className = '',
@@ -20,6 +21,8 @@
 		open: boolean;
 		ontoggle: (id: SectionId) => void;
 		status?: SectionPresentation | null;
+		/** A short header aside, beside the status (e.g. "9 of 10 feeds OK"). */
+		meta?: string | null;
 		now?: number;
 		/** False on desktop: a plain heading over an always-mounted body (no disclosure). */
 		collapsible?: boolean;
@@ -58,6 +61,9 @@
 				</button>
 			{/if}
 		</h2>
+		{#if meta}
+			<span class="v2-section-meta" data-section-meta data-text-role="meta">{meta}</span>
+		{/if}
 		{#if status}
 			<SectionStatus {status} {now} />
 		{/if}

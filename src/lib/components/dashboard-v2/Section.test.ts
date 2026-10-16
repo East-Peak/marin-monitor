@@ -22,7 +22,12 @@ const partial: SectionPresentation = {
 };
 
 function renderSection(
-	props: Partial<{ open: boolean; status: SectionPresentation | null; collapsible: boolean }> = {}
+	props: Partial<{
+		open: boolean;
+		status: SectionPresentation | null;
+		collapsible: boolean;
+		meta: string | null;
+	}> = {}
 ) {
 	const ontoggle = vi.fn();
 	const result = render(Section, {
@@ -71,6 +76,18 @@ describe('Section', () => {
 		await rerender({ open: true, status: partial });
 		expect(screen.getByText('Partial coverage · Marin IJ unavailable')).toBeTruthy();
 	});
+	it('a header meta line (e.g. "9 of 10 feeds OK") shows open or closed, outside the toggle', () => {
+		const { container, toggle } = renderSection({ meta: '9 of 10 feeds OK' });
+		const meta = container.querySelector('[data-section-meta]');
+		expect(meta?.textContent).toBe('9 of 10 feeds OK');
+		expect(meta?.getAttribute('data-text-role')).toBe('meta');
+		expect(toggle.textContent).not.toContain('feeds OK');
+	});
+
+	it('no meta, no meta line', () => {
+		expect(renderSection().container.querySelectorAll('[data-section-meta]')).toHaveLength(0);
+	});
+
 	it('collapsible=false renders a heading, no toggle button, body mounted', () => {
 		const { container } = renderSection({ open: true, collapsible: false });
 		expect(screen.getByRole('heading', { level: 2, name: 'News & Civic' })).toBeTruthy();

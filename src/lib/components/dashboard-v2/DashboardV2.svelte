@@ -12,6 +12,14 @@
 	import GettingAround from './GettingAround.svelte';
 	import Outdoors from './Outdoors.svelte';
 	import CostCharacter from './CostCharacter.svelte';
+	import NewsCivic from './NewsCivic.svelte';
+	import EventsSports from './EventsSports.svelte';
+	import LatelyBand from './LatelyBand.svelte';
+	import SourcesFooter from './SourcesFooter.svelte';
+	import { CIVIC_DATASETS, newsCivicView } from '$lib/dashboard/news-civic';
+	import { EVENTS_DATASETS, eventsView } from '$lib/dashboard/events';
+	import { latelyView } from '$lib/dashboard/lately';
+	import type { HealthReportJson } from '$lib/api/marin/health-report';
 	import HealthIndicator from './HealthIndicator.svelte';
 	import { townFilter, townLocation } from '$lib/stores/town-filter';
 	import { readable } from 'svelte/store';
@@ -24,7 +32,7 @@
 	import { gettingAroundView, type TransitState } from '$lib/dashboard/getting-around';
 	import { OUTDOORS_DATASETS, outdoorsView } from '$lib/dashboard/outdoors';
 	import { COST_DATASETS, costView } from '$lib/dashboard/cost';
-	import type { CostReads } from '$lib/dashboard/v2-controller';
+	import type { CivicReads, CostReads } from '$lib/dashboard/v2-controller';
 	import { gasPriceStore } from '$lib/stores/gas-prices';
 	import { coffeeIndexStore } from '$lib/stores/coffee';
 	import { fitnessStore } from '$lib/stores/fitness';
@@ -45,7 +53,7 @@
 	import { openAndFocus } from '$lib/dashboard/fragment-nav';
 	import { createDashboardV2Controller, V2_REFRESH_MS } from '$lib/dashboard/v2-controller';
 	import { isDesktopViewport, sectionFromHash } from '$lib/dashboard/section-prefs';
-	import { V2_SECTIONS } from '$lib/dashboard/v2-sections';
+	import { V2_SECTIONS, type V2Section } from '$lib/dashboard/v2-sections';
 
 	const LATER = 'This part of the preview arrives in a later release.';
 
@@ -131,12 +139,56 @@
 	}
 	/** Below the map, in page order; Outdoors is rendered on its own (desktop pairs it with Getting Around). */
 	const restSections = V2_SECTIONS.filter((s) => s.id !== 'outdoors');
+	/** Desktop follows the mockup: Cost, then the Lately band, then News beside Events. */
+	const DESKTOP_ORDER = ['cost', 'news', 'events', 'strava'];
+	const desktopSections = DESKTOP_ORDER.flatMap((id) => restSections.filter((s) => s.id === id));
 	const outdoorsTitle =
 		V2_SECTIONS.find((s) => s.id === 'outdoors')?.title ?? 'Outdoors & Conditions';
 	/** One selection per tick; later sections can read its shownIds. */
 	const latest = $derived(
 		latestReportingView({ view: $snapshot, sources: $sources, town: $townFilter, now: $clock })
 	);
+	const civicReads =
+		controller?.civic ?? readable<CivicReads>({ police: null, nps: null, activity: null });
+	const healthReport = controller?.healthReport ?? readable<HealthReportJson | null>(null);
+	/** News & Civic continues Latest reporting's selection, so the wire never repeats it. */
+	const newsCivic = $derived(
+		newsCivicView({
+			view: $snapshot,
+			sources: $sources,
+			shownIds: latest.shownIds,
+			fixIt: $fixIt,
+			police: $civicReads.police,
+			nps: $civicReads.nps,
+			outcomes: $outcomes,
+			now: $clock
+		})
+	);
+	const events = $derived(
+		eventsView({ activity: $civicReads.activity, outcomes: $outcomes, now: $clock })
+	);
+	const lately = $derived(latelyView({ view: $snapshot, sources: $sources, now: $clock }));
+	function openNews() {
+		for (const d of Object.values(CIVIC_DATASETS)) void controller?.ensure(d.id);
+	}
+	function openEvents() {
+		for (const d of Object.values(EVENTS_DATASETS)) void controller?.ensure(d.id);
+	}
+	const ready = $derived(!!controller && hydrated);
+	function statusOf(id: string) {
+		if (!ready) return null;
+		if (id === 'news') return newsCivic.status;
+		if (id === 'events') return events.status;
+		if (id === 'cost' && desktop) return cost.status;
+		return null;
+	}
+	function metaOf(id: string): string | null {
+		if (!ready) return null;
+		if (id === 'news' && newsCivic.feeds)
+			return `${newsCivic.feeds.ok} of ${newsCivic.feeds.total} feeds OK`;
+		if (id === 'events' && events.upcoming !== null) return `${events.upcoming} upcoming`;
+		return null;
+	}
 	/** The map's own data: only what this controller established (Codex r3 #1). */
 	const mapData = $derived(
 		v2MapData({
@@ -290,6 +342,40 @@
 			</Section>
 		{/snippet}
 
+		{#snippet restSection(s: V2Section)}
+			<Section
+				id={s.id}
+				title={s.title}
+				open={desktop || $open[s.id]}
+				ontoggle={(id) => sections.toggle(id)}
+				collapsible={!desktop}
+				class={desktop && s.id === 'news'
+					? 'v2-a-news'
+					: desktop && s.id === 'events'
+						? 'v2-a-ev'
+						: 'v2-span-12'}
+				status={statusOf(s.id)}
+				meta={metaOf(s.id)}
+				now={$clock}
+			>
+				{#if ready && s.id === 'news'}
+					<NewsCivic view={newsCivic} now={$clock} onopen={openNews} />
+					{#if !desktop}
+						<LatelyBand view={lately} now={$clock} />
+					{/if}
+				{:else if ready && s.id === 'events'}
+					<EventsSports view={events} now={$clock} onopen={openEvents} />
+				{:else if ready && s.id === 'cost' && desktop}
+					<!-- Cost's content is desktop-only for now: the phone keeps its height budget (§13.3). -->
+					<CostCharacter view={cost} now={$clock} onopen={openCost} />
+				{:else if !ready && (s.id === 'news' || s.id === 'events')}
+					<p class="v2-muted" data-text-role="meta">Loading…</p>
+				{:else}
+					<p class="v2-muted" data-text-role="body">{LATER}</p>
+				{/if}
+			</Section>
+		{/snippet}
+
 		{#if desktop}
 			<!-- Desktop: Outdoors (span 7) beside Getting Around (span 5); stacked below 1280 px. -->
 			<div class="v2-pair">
@@ -304,28 +390,20 @@
 			{#if !desktop}
 				{@render outdoorsSection('v2-span-12')}
 			{/if}
-			{#each restSections as s (s.id)}
-				<Section
-					id={s.id}
-					title={s.title}
-					open={desktop || $open[s.id]}
-					ontoggle={(id) => sections.toggle(id)}
-					collapsible={!desktop}
-					class="v2-span-12"
-					status={s.id === 'cost' && desktop && controller ? cost.status : null}
-					now={$clock}
-				>
-					<!-- Cost's content is desktop-only for now: the phone keeps its height budget (§13.3). -->
-					{#if s.id === 'cost' && desktop && controller}
-						<CostCharacter view={cost} now={$clock} onopen={openCost} />
-					{:else}
-						<p class="v2-muted" data-text-role="body">{LATER}</p>
-					{/if}
-				</Section>
+			{#each desktop ? desktopSections : restSections as s (s.id)}
+				{#if desktop && s.id === 'news' && ready}
+					<!-- The mockup's Lately band: full width, between Cost and News. -->
+					<div class="v2-span-12"><LatelyBand view={lately} now={$clock} /></div>
+				{/if}
+				{@render restSection(s)}
 			{/each}
 		</div>
 
 		<footer class="v2-footer">
+			<!-- Desktop only, like Cost: the phone has the header's health indicator and its height budget (§13.3). -->
+			{#if ready && controller && desktop}
+				<SourcesFooter report={healthReport} outcomes={controller.datasetOutcomes} now={$clock} />
+			{/if}
 			<p data-text-role="meta">
 				An early preview of the redesigned dashboard. The regular dashboard is unchanged.
 			</p>
@@ -422,6 +500,8 @@
 			gap: 28px var(--v2-gap);
 		}
 		.v2-sections > :global(.v2-span-12),
+		.v2-sections > :global(.v2-a-news),
+		.v2-sections > :global(.v2-a-ev),
 		.v2-pair > :global(.v2-a-out),
 		.v2-pair > :global(.v2-a-ga) {
 			grid-column: span 12;
@@ -442,6 +522,13 @@
 		.v2-pair > :global(.v2-a-ga) {
 			grid-column: 8 / span 5;
 			grid-row: 1;
+		}
+		/* The mockup's .c-news / .c-ev: News & Civic (span 7) beside Events & Sports (span 5). */
+		.v2-sections > :global(.v2-a-news) {
+			grid-column: span 7;
+		}
+		.v2-sections > :global(.v2-a-ev) {
+			grid-column: span 5;
 		}
 		/* In the narrow column Getting Around's three parts stack. */
 		.v2-pair > :global(.v2-a-ga .ga) {

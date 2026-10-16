@@ -186,7 +186,8 @@ describe('DashboardV2 preview shell', () => {
 		expect(controller.created[0].aborted).toBe(true);
 	});
 
-	it('renders the shell: map region, Getting Around under it, then four sections in order', async () => {
+	it('renders the shell: map region, Getting Around under it, then four sections in order (tablet 900)', async () => {
+		atWidth(900);
 		const { container } = render(DashboardV2);
 		await tick();
 		expect(container.querySelector('section#map')).toBeTruthy();
@@ -196,6 +197,16 @@ describe('DashboardV2 preview shell', () => {
 		expect(order).toEqual(['getting-around', 'outdoors', 'news', 'cost', 'events']);
 		expect(container.querySelector('#sections [data-section="getting-around"]')).toBeNull();
 		expect(screen.getByRole('navigation', { name: 'Jump to' })).toBeTruthy();
+	});
+
+	it('desktop (1440) follows the mockup: Cost, the Lately band, then News beside Events (Goal 4)', async () => {
+		atWidth(1440);
+		const { container } = render(DashboardV2);
+		await tick();
+		const order = [
+			...container.querySelectorAll('#sections [data-section], #sections [data-slot="lately"]')
+		].map((el) => el.getAttribute('data-section') ?? el.getAttribute('data-slot'));
+		expect(order).toEqual(['cost', 'lately', 'news', 'events']);
 	});
 
 	it('shows nothing of Strava while it is mothballed', async () => {
