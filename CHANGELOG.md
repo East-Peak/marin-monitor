@@ -6,6 +6,18 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-15
 
+### Added — Cost & Character in the v2 preview (desktop)
+
+- **Cost of being Marin:** the composite index with its change against the previous weekly reading, a weekly trend with the base-100 line, tier bars centred on 100 (right is pricier than baseline, left cheaper; a tier more than 20 points out pins at the edge), and "N weekly readings since …".
+- **The Marin Number:** the monthly total and its yearly figure, a stacked bar, and every line item tagged live or static, Rivian included.
+- **Gas prices · regular:** the county average with its low–high band; average, 7-day change, cheapest and station count; the three cheapest stations and the priciest; diesel and premium on the source line.
+- **The sub-indexes:** twelve tiles (four across, six from 1700 px), each with a sparkline or "No history yet" when its source has fewer than two readings, and its own source line. A read that failed says "Unavailable" with the reason, never $0.
+- **Where:** desktop (1024 px and wider). Phones and tablets keep the placeholder for now, so the phone layout is unchanged.
+
+### Fixed — Gas 7-day change
+
+- The regular dashboard's gas panel compared today's average with a July reading (the 42nd-oldest snapshot) and called it the 7-day change: on Oct 15 it showed +0.759 when the week's real change was −0.222. It now compares with the newest reading at least 7 days old, and shows "—" ("Not enough history") when there isn't one. The preview's gas card uses the same calculation.
+
 ### Added — Outdoors & Conditions with charts in the v2 preview
 
 - **Next 24 hours:** a temperature curve with the high and low labelled and a "now" line, hourly chance-of-rain bars ("0% every hour" only when all 24 hours are forecast at 0%; a missing hour draws nothing and is counted), the temperature range, peak rain and warmest day, and a 6-day high/low strip. All of it comes from the NWS hourly forecast the brief already loads, so there is no extra daily-forecast request.

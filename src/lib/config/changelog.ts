@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-15',
+		title: 'Cost & Character in the preview, and the gas 7-day change fixed',
+		description:
+			'On a computer, the dashboard preview’s Cost & Character section now shows the Cost of being Marin index with its weekly trend and tiers, the itemized Marin Number, gas prices with the low–high band and the cheapest stations, and a tile for each sub-index (coffee, cappuccino, groceries, wine, fitness, school, housing, gas, and the Rivian, dog, ski pass and camp lines) with a trend line or “No history yet”. A reading that failed says so instead of showing $0. Also fixed on the regular dashboard: the gas panel’s 7-day change was comparing against a July reading; it now compares against the reading a week ago.'
+	},
+	{
+		date: '2026-10-15',
 		title: 'Outdoors & Conditions, with charts, in the preview',
 		description:
 			'The dashboard preview’s Outdoors section now charts the next 24 hours (temperature and hourly chance of rain), a 6-day high/low strip, the tides for two days, and Point Reyes surf from a marine forecast. A short list covers wildfire near Marin, earthquakes in the last 7 days, and air quality, which is unavailable until a new feed is connected. Every card says where its numbers come from and when, and a reading that failed says so instead of showing zero. On a computer it sits beside Getting Around. The regular dashboard and TV are unchanged.'
