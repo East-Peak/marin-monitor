@@ -21,6 +21,7 @@ const fetchers = vi.hoisted(() => ({
 	marine: vi.fn(),
 	fires: vi.fn(),
 	quakesWeek: vi.fn(),
+	air: vi.fn(),
 	composite: vi.fn(),
 	cappuccino: vi.fn(),
 	grocery: vi.fn(),
@@ -71,6 +72,10 @@ vi.mock('$lib/api/marin/calfire', async (orig) => ({
 vi.mock('$lib/api/marin/usgs', async (orig) => ({
 	...(await orig<object>()),
 	readEarthquakesWeekOrThrow: fetchers.quakesWeek
+}));
+vi.mock('$lib/api/marin/airnow', async (orig) => ({
+	...(await orig<object>()),
+	readAirQualityOrThrow: fetchers.air
 }));
 vi.mock('$lib/api/marin/composite', async (orig) => ({
 	...(await orig<object>()),
@@ -246,6 +251,7 @@ beforeEach(() => {
 	fetchers.marine.mockResolvedValue({ points: [], checkedAt: NOW - 60_000 });
 	fetchers.fires.mockResolvedValue({ fires: [], checkedAt: NOW - 60_000 });
 	fetchers.quakesWeek.mockResolvedValue({ quakes: [], observedAt: NOW - 120_000 });
+	fetchers.air.mockResolvedValue({ reading: null, checkedAt: NOW - 60_000 });
 	const scraped = (iso: string) => ({ timestamp: iso, lastSuccessfulScrapeAt: iso });
 	for (const f of [
 		fetchers.composite,
@@ -681,6 +687,39 @@ describe('createDashboardV2Controller', () => {
 			observedAt: NOW - 120_000
 		});
 		expect(get(c.datasetOutcomes).fires).toEqual({ kind: 'live', observedAt: NOW - 60_000 });
+	});
+
+	it("air quality loads only through ensure, timed by AirNow's observation hour", async () => {
+		const observedAt = NOW - 2 * 3_600_000;
+		const read = {
+			reading: {
+				aqi: 14,
+				category: 'Good',
+				color: '#00e400',
+				pollutant: 'OZONE',
+				area: 'San Rafael',
+				observedAt,
+				timestamp: NOW - 60_000
+			},
+			checkedAt: NOW - 60_000
+		};
+		fetchers.air.mockResolvedValue(read);
+		const c = controller();
+		await c.start();
+		expect(fetchers.air).not.toHaveBeenCalled();
+		await c.ensure('air-quality');
+		expect(get(c.airQuality)).toEqual(read);
+		expect(get(c.datasetOutcomes)['air-quality']).toEqual({ kind: 'live', observedAt });
+	});
+
+	it('a read with no current AQI is timed by when we checked', async () => {
+		const c = controller();
+		await c.start();
+		await c.ensure('air-quality');
+		expect(get(c.datasetOutcomes)['air-quality']).toEqual({
+			kind: 'live',
+			observedAt: NOW - 60_000
+		});
 	});
 
 	it('a failed detail refresh keeps the last value, retained with its own time', async () => {

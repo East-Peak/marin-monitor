@@ -3,9 +3,12 @@ import type { HourlyPop, TideEvent } from '$lib/weather/brief';
 import type { EarthquakeData } from '$lib/types';
 import type { V2Fire } from '$lib/api/marin/calfire';
 import { measuredLoading, measuredUnavailable, measuredValue } from './measured';
+import type { AirQualityData } from '$lib/types';
 import {
-	AIR_QUALITY,
+	AIR_MAX_AGE_MS,
+	AIR_SOURCE,
 	SURF_SOURCE,
+	airRow,
 	dailyRange,
 	quakesRow,
 	rainSeries,
@@ -235,9 +238,62 @@ describe('surf and air', () => {
 		expect(view.current).toEqual({ waveFt: 4.3, periodS: 12, directionDeg: 250 });
 		expect(view.heights).toEqual([4.3, null]);
 	});
+});
 
-	it('air quality is always "Unavailable" with the reason', () => {
-		expect(AIR_QUALITY).toEqual({ value: 'Unavailable', detail: 'no AQI feed connected' });
+describe('airRow', () => {
+	const reading: AirQualityData = {
+		aqi: 14,
+		category: 'Good',
+		color: '#00e400',
+		pollutant: 'OZONE',
+		area: 'San Rafael',
+		observedAt: NOW - H,
+		timestamp: NOW
+	};
+
+	it('a reading shows its AQI and category, with the pollutant and area', () => {
+		expect(airRow(measuredValue<AirQualityData | null>(reading, AIR_SOURCE, NOW - H))).toEqual({
+			value: '14 · Good',
+			detail: 'OZONE · San Rafael'
+		});
+	});
+
+	it('a failed read is "Unavailable" with its reason, never a number', () => {
+		expect(airRow(measuredUnavailable(AIR_SOURCE, 'AirNow failed: 502'))).toEqual({
+			value: 'Unavailable',
+			detail: 'AirNow failed: 502'
+		});
+	});
+
+	it('a read with no current observation is "Unavailable", never clean air', () => {
+		expect(airRow(measuredValue<AirQualityData | null>(null, AIR_SOURCE, NOW))).toEqual({
+			value: 'Unavailable',
+			detail: 'no current reading'
+		});
+	});
+
+	it('a reading kept after a failed refresh is "Unavailable" with the reason and the last reading (Codex)', () => {
+		expect(
+			airRow(
+				measuredValue<AirQualityData | null>(reading, AIR_SOURCE, NOW - H, 'AirNow failed: 502')
+			)
+		).toEqual({ value: 'Unavailable', detail: 'AirNow failed: 502 · last read 14 · Good' });
+	});
+
+	it('a reading with no observation time is "Unavailable": its freshness cannot be vouched for (Codex)', () => {
+		expect(
+			airRow(
+				measuredValue<AirQualityData | null>({ ...reading, observedAt: null }, AIR_SOURCE, null)
+			)
+		).toEqual({ value: 'Unavailable', detail: 'observation time not reported' });
+	});
+
+	it('loading is loading', () => {
+		expect(airRow(measuredLoading(AIR_SOURCE))).toEqual({ value: 'Loading…', detail: null });
+	});
+
+	it('the hourly observation is allowed to be hours old before it reads out of date', () => {
+		expect(AIR_MAX_AGE_MS).toBeGreaterThanOrEqual(2 * H);
 	});
 });
 

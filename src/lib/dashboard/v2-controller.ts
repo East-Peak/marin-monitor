@@ -31,6 +31,7 @@ import { boundedOp, DEFAULT_OP_DEADLINE_MS } from '$lib/api/marin/bounded-op';
 import { fetchAirportStatusOrThrow } from '$lib/api/marin/airport-status';
 import { readFireIncidentsOrThrow, type FireRead } from '$lib/api/marin/calfire';
 import { readMarineForecastOrThrow, type MarineForecastRead } from '$lib/api/marin/marine';
+import { readAirQualityOrThrow, type AirQualityRead } from '$lib/api/marin/airnow';
 import { readEarthquakesWeekOrThrow, type EarthquakeRead } from '$lib/api/marin/usgs';
 import { fetchHealthReport, type HealthReportJson } from '$lib/api/marin/health-report';
 import { fetchMarinAdvisories } from '$lib/api/marin/nws-advisories';
@@ -48,7 +49,7 @@ import type { AdvisoryFeedState, ParsedAlerts } from '$lib/weather/advisories';
 import { createAdvisoryFeed } from './advisory-feed';
 import { createBriefStore, type BriefFetchers, type BriefState } from './brief-store';
 import { AIRPORT_MAX_AGE_MS, TRAFFIC_MAX_AGE_MS, type TransitState } from './getting-around';
-import { OUTDOORS_DATASETS, OUTDOORS_MAX_AGE_MS } from './outdoors';
+import { AIR_MAX_AGE_MS, OUTDOORS_DATASETS, OUTDOORS_MAX_AGE_MS } from './outdoors';
 import { COST_DATASETS, costMaxAgeMs } from './cost';
 import { CIVIC_DATASETS } from './news-civic';
 import { EVENTS_DATASETS } from './events';
@@ -230,6 +231,19 @@ function outdoorsDatasets(stores: OutdoorsStores): DatasetDef[] {
 			commit: (d) => stores.quakesWeek.set(d),
 			observedAtOf: (d) => isoOrNull(d.observedAt),
 			maxAgeMs: OUTDOORS_MAX_AGE_MS
+		}),
+		dataset<AirQualityRead>({
+			...D.air,
+			tier: 'detail',
+			load: async (signal) => ({
+				ok: true,
+				data: await readAirQualityOrThrow({ signal }),
+				dataSource: 'live'
+			}),
+			commit: (d) => stores.airQuality.set(d),
+			// The observation's own hour; with no reading, only our check has a time.
+			observedAtOf: (d) => isoOrNull(d.reading ? d.reading.observedAt : d.checkedAt),
+			maxAgeMs: AIR_MAX_AGE_MS
 		})
 	];
 }
@@ -308,6 +322,7 @@ interface OutdoorsStores {
 	marine: Writable<MarineForecastRead | null>;
 	fires: Writable<FireRead | null>;
 	quakesWeek: Writable<EarthquakeRead | null>;
+	airQuality: Writable<AirQualityRead | null>;
 }
 
 export const BRIEF_FETCHERS: BriefFetchers = {
@@ -403,6 +418,7 @@ export interface DashboardV2Controller {
 	marine: Readable<MarineForecastRead | null>;
 	fires: Readable<FireRead | null>;
 	quakesWeek: Readable<EarthquakeRead | null>;
+	airQuality: Readable<AirQualityRead | null>;
 	/** Cost & Character's own reads, loaded through ensure(COST_DATASETS.*.id). */
 	cost: Readable<CostReads>;
 	/** News & Civic's and Events' own reads, loaded through ensure(CIVIC_DATASETS / EVENTS_DATASETS). */
@@ -418,7 +434,8 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 	const outdoors: OutdoorsStores = {
 		marine: writable(null),
 		fires: writable(null),
-		quakesWeek: writable(null)
+		quakesWeek: writable(null),
+		airQuality: writable(null)
 	};
 	const cost = writable<CostReads>({
 		composite: null,
@@ -576,6 +593,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		marine: { subscribe: outdoors.marine.subscribe },
 		fires: { subscribe: outdoors.fires.subscribe },
 		quakesWeek: { subscribe: outdoors.quakesWeek.subscribe },
+		airQuality: { subscribe: outdoors.airQuality.subscribe },
 		cost: { subscribe: cost.subscribe },
 		civic: { subscribe: civic.subscribe },
 		datasetOutcomes: registry.outcomes,

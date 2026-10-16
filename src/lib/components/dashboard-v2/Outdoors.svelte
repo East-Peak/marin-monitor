@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { buildChart } from '$lib/utils/chart';
-	import { AIR_QUALITY, type OutdoorsView } from '$lib/dashboard/outdoors';
+	import type { OutdoorsView } from '$lib/dashboard/outdoors';
 	import { formatAsOf } from '$lib/dashboard/pacific-time';
 	import CardSource from './CardSource.svelte';
 
@@ -118,6 +118,8 @@
 			: []
 	);
 	const tideNowX = $derived(tideX(now));
+
+	const airReading = $derived(view.ground.air.kind === 'value' ? view.ground.air.value : null);
 
 	const surf = $derived(view.surf.view);
 	const surfKnown = $derived(surf.heights.filter((h): h is number => h !== null));
@@ -337,9 +339,13 @@
 			<h3 class="card-title" data-text-role="label">Air, fire & ground</h3>
 			<ul class="rows" data-text-role="label">
 				<li data-row="air">
-					<span>Air quality</span><span class="muted"
-						>{AIR_QUALITY.value} · {AIR_QUALITY.detail}</span
+					<span>Air quality</span><span class:muted={!airReading}
+						>{#if airReading}<i class="aqi-dot" style:background={airReading.color}></i>{/if}{view
+							.ground.airRow.value}</span
 					>
+					{#if view.ground.airRow.detail}
+						<span class="meta wide" data-text-role="meta">{view.ground.airRow.detail}</span>
+					{/if}
 				</li>
 				<li data-row="wildfire">
 					<span>Wildfire</span><span class:ok={view.ground.wildfire.value === 'None near'}
@@ -357,7 +363,11 @@
 				</li>
 			</ul>
 			<CardSource
-				lines={[{ measured: view.ground.fires, verb: 'checked' }, { measured: view.ground.quakes }]}
+				lines={[
+					{ measured: view.ground.air },
+					{ measured: view.ground.fires, verb: 'checked' },
+					{ measured: view.ground.quakes }
+				]}
 				{now}
 			/>
 		</article>
@@ -497,5 +507,12 @@
 	}
 	.ok {
 		color: var(--green, #10b981);
+	}
+	.aqi-dot {
+		display: inline-block;
+		width: 0.6em;
+		height: 0.6em;
+		margin-right: 0.4em;
+		border-radius: 50%;
 	}
 </style>

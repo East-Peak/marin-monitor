@@ -8,7 +8,7 @@
 
 import type { AirQualityData } from '$lib/types';
 import { logger } from '$lib/config/api';
-import { fetchWithTimeout } from './fetch-helpers';
+import { fetchWithTimeout, type OwnerOptions } from './fetch-helpers';
 
 /**
  * Fetch current AQI for Marin County area.
@@ -31,4 +31,24 @@ export async function fetchAirQuality(): Promise<AirQualityData | null> {
 		logger.warn('AirNow', `AQI fetch failed: ${(error as Error).message}`);
 		return null;
 	}
+}
+
+/** A v2 read: the current reading (null when AirNow has none this hour) and when we checked. */
+export interface AirQualityRead {
+	reading: AirQualityData | null;
+	checkedAt: number;
+}
+
+/** v2 Outdoors: the current AQI, or a throw the card reports as its reason. */
+export async function readAirQualityOrThrow({
+	signal,
+	now = Date.now
+}: OwnerOptions & { now?: () => number } = {}): Promise<AirQualityRead> {
+	const response = await fetchWithTimeout('/api/air-quality', {
+		headers: { Accept: 'application/json' },
+		signal
+	});
+	if (response.status === 204) return { reading: null, checkedAt: now() };
+	if (!response.ok) throw new Error(`AirNow failed: ${response.status}`);
+	return { reading: (await response.json()) as AirQualityData, checkedAt: now() };
 }

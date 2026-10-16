@@ -4,6 +4,14 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-10-16
+
+### Fixed — Air quality reads again
+
+- AirNow retired the endpoint `/api/air-quality` used (`/aq/observation/latLong/current/`, HTTP 410 since Oct 1), so every AQI display had been blank. The route now reads `/aq/observation/current/ziplatlong/` and reports the worst pollutant's NowCast AQI, its category, the reporting area and the hour AirNow observed it. A service error or an unreadable payload is now a 502 that isn't cached, never "no reading".
+- **Preview, Outdoors · Air, fire & ground:** the Air quality row shows the AQI and category (e.g. "14 · Good", with a category-coloured dot), plus the pollutant and area. Its source line reads "AirNow · as of 4:00 AM". A failed read says "Unavailable" with the reason. So does a reading kept after a failed refresh (with the last value noted) or one with no observation time; none of them shows a number as current. A reading stays current for 3 hours, since AirNow posts each hour late.
+- The regular dashboard's Environment panel and the TV Conditions card use the same route, so they show AQI again.
+
 ## 2026-10-15
 
 ### Added — News & Civic, Events & Sports and Marin Lately in the v2 preview

@@ -20,7 +20,7 @@ async function open(page: Page) {
 	await page.goto('/?layout=v2');
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 }
-/** Outdoors' reads with real shapes (Goal 2): NWS points + hourly, marine, fires, USGS 7 d. */
+/** Outdoors' reads with real shapes (Goal 2): NWS points + hourly, marine, fires, USGS 7 d, AQI. */
 async function stubOutdoors(page: Page) {
 	const H = 3_600_000;
 	const hour0 = Math.floor(Date.now() / H) * H;
@@ -65,6 +65,19 @@ async function stubOutdoors(page: Page) {
 	);
 	await page.route(/earthquake\.usgs\.gov/, (r) =>
 		r.fulfill(json({ features: [], metadata: { generated: Date.now() } }))
+	);
+	await page.route(/\/api\/air-quality\b/, (r) =>
+		r.fulfill(
+			json({
+				aqi: 14,
+				category: 'Good',
+				color: '#00e400',
+				pollutant: 'OZONE',
+				area: 'San Rafael',
+				observedAt: hour0 - H,
+				timestamp: Date.now()
+			})
+		)
 	);
 }
 const box = async (page: Page, sel: string) => (await page.locator(sel).first().boundingBox())!;
@@ -165,6 +178,10 @@ test.describe('desktop 1440: Outdoors beside Getting Around (Goal 2)', () => {
 		await expect(path).toHaveAttribute('d', /\S/);
 		await expect(page.locator('#outdoors [data-card-source]')).toHaveCount(4);
 		await expect(page.locator('#outdoors [data-card="ground"]')).toContainText('None near');
+		await expect(page.locator('#outdoors [data-row="air"]')).toContainText('14 · Good');
+		await expect(page.locator('#outdoors [data-card="ground"] [data-card-source]')).toContainText(
+			'AirNow · as of'
+		);
 		await expect(page.locator('#outdoors [data-card="surf"]')).toContainText(
 			'Open-Meteo marine forecast'
 		);

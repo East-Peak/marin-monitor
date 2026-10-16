@@ -55,7 +55,20 @@ function input(over: Partial<OutdoorsInput> = {}): OutdoorsInput {
 		},
 		fires: { fires: [], checkedAt: NOW - 60_000 },
 		quakes: { quakes: [], observedAt: NOW - 120_000 },
+		air: {
+			reading: {
+				aqi: 14,
+				category: 'Good',
+				color: '#00e400',
+				pollutant: 'OZONE',
+				area: 'San Rafael',
+				observedAt: Date.parse('2026-10-15T14:00:00Z'),
+				timestamp: NOW - 60_000
+			},
+			checkedAt: NOW - 60_000
+		},
 		outcomes: {
+			'air-quality': { kind: 'live', observedAt: Date.parse('2026-10-15T14:00:00Z') },
 			marine: { kind: 'live', observedAt: NOW - 60_000 },
 			fires: { kind: 'live', observedAt: NOW - 60_000 },
 			'quakes-week': { kind: 'live', observedAt: NOW - 120_000 }
@@ -87,7 +100,40 @@ describe('Outdoors', () => {
 		expect(container.textContent).toContain('0% every hour');
 		expect(container.textContent).toContain('None near');
 		expect(container.textContent).toContain('None in 7 days');
-		expect(container.textContent).toContain('Unavailable · no AQI feed connected');
+		const air = container.querySelector('[data-card="ground"] [data-row="air"]');
+		expect(air?.textContent).toContain('14 · Good');
+		expect(air?.textContent).toContain('OZONE · San Rafael');
+		expect(container.querySelector('[data-card="ground"] [data-card-source]')?.textContent).toMatch(
+			/AirNow · as of 7:00 AM/
+		);
+	});
+
+	it('a failed air read says unavailable with its reason, never an AQI', () => {
+		const { container } = render(Outdoors, {
+			view: outdoorsView(
+				input({
+					air: null,
+					outcomes: {
+						...input().outcomes,
+						'air-quality': {
+							kind: 'failed',
+							error: 'AirNow failed: 502',
+							retained: false,
+							observedAt: null
+						}
+					}
+				})
+			),
+			now: NOW,
+			onopen: vi.fn()
+		});
+		const air = container.querySelector('[data-card="ground"] [data-row="air"]')!;
+		expect(air.textContent).toContain('Unavailable');
+		expect(air.textContent).toContain('AirNow failed: 502');
+		expect(air.textContent).not.toMatch(/\d+ · Good/);
+		expect(container.querySelector('[data-card="ground"] [data-card-source]')?.textContent).toMatch(
+			/AirNow · unavailable \(AirNow failed: 502\)/
+		);
 	});
 
 	it('a failed read shows its reason in the source line and never a 0', () => {

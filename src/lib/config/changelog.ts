@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-10-16',
+		title: 'Air quality is back',
+		description:
+			'AirNow switched off the feed the dashboard used for air quality on October 1, so AQI had gone blank everywhere. It now reads AirNow’s current feed. In the dashboard preview’s Outdoors section, the Air quality line shows the AQI and its category (for example “14 · Good”), which pollutant it is and where it was measured, with the hour AirNow observed it. If the reading can’t be fetched, it says “Unavailable” and why, instead of showing an old number. The regular dashboard and TV show AQI again too.'
+	},
+	{
 		date: '2026-10-15',
 		title: 'News, events and Marin Lately in the preview',
 		description:

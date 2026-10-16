@@ -1,36 +1,12 @@
 import { json } from '@sveltejs/kit';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import { getAirnowApiKey } from '$lib/server/api-keys';
+import { airQualityFromObservations } from '$lib/server/airnow';
 import type { RequestHandler } from './$types';
 import { MARIN_CENTER } from '$lib/config/towns';
 
-interface AirNowObservation {
-	ParameterName: string;
-	AQI: number;
-	Category: {
-		Number: number;
-		Name: string;
-	};
-}
-
-function aqiColor(categoryNumber: number): string {
-	switch (categoryNumber) {
-		case 1:
-			return '#00e400';
-		case 2:
-			return '#ffff00';
-		case 3:
-			return '#ff7e00';
-		case 4:
-			return '#ff0000';
-		case 5:
-			return '#8f3f97';
-		case 6:
-			return '#7e0023';
-		default:
-			return '#999999';
-	}
-}
+const AIRNOW_CURRENT = 'https://www.airnowapi.org/aq/observation/current/ziplatlong/';
+const NO_STORE = { 'Cache-Control': 'no-store' };
 
 export const GET: RequestHandler = async () => {
 	const apiKey = getAirnowApiKey();
@@ -46,36 +22,22 @@ export const GET: RequestHandler = async () => {
 		API_KEY: apiKey
 	});
 
-	const response = await fetchWithTimeout(
-		`https://www.airnowapi.org/aq/observation/latLong/current/?${params.toString()}`,
-		{
+	let reading;
+	try {
+		const response = await fetchWithTimeout(`${AIRNOW_CURRENT}?${params}`, {
 			headers: { Accept: 'application/json' }
-		}
-	);
-
-	if (!response.ok) {
-		return json(null, { status: response.status, headers: { 'Cache-Control': 'no-store' } });
+		});
+		if (!response.ok) throw new Error(`AirNow HTTP ${response.status}`);
+		reading = airQualityFromObservations(await response.json(), Date.now());
+	} catch (error) {
+		return json({ error: (error as Error).message }, { status: 502, headers: NO_STORE });
 	}
 
-	const observations = (await response.json()) as AirNowObservation[];
-	if (!observations.length) {
+	if (!reading) {
 		return new Response(null, {
 			status: 204,
 			headers: { 'Cache-Control': 'public, max-age=300' }
 		});
 	}
-
-	const worst = observations.reduce((a, b) => (a.AQI >= b.AQI ? a : b));
-	return json(
-		{
-			aqi: worst.AQI,
-			category: worst.Category.Name,
-			color: aqiColor(worst.Category.Number),
-			pollutant: worst.ParameterName,
-			timestamp: Date.now()
-		},
-		{
-			headers: { 'Cache-Control': 'public, max-age=300' }
-		}
-	);
+	return json(reading, { headers: { 'Cache-Control': 'public, max-age=300' } });
 };

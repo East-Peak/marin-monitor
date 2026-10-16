@@ -155,6 +155,11 @@ export interface AirQualityData {
 	category: string;
 	color: string;
 	pollutant: string;
+	/** AirNow's reporting area (e.g. "San Rafael"), or null when it names none. */
+	area: string | null;
+	/** When AirNow observed it (the hour's start), or null when its time can't be read. */
+	observedAt: number | null;
+	/** When our server read it. */
 	timestamp: number;
 }
 

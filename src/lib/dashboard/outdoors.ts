@@ -1,10 +1,11 @@
 /**
  * Outdoors & Conditions (desktop Goal 2): a pure view over the brief's own
- * hourly forecast and tides (no extra NWS or NOAA request) and three
- * status-bearing detail reads (Open-Meteo marine, CAL FIRE + NIFC, USGS 7 d).
+ * hourly forecast and tides (no extra NWS or NOAA request) and four
+ * status-bearing detail reads (Open-Meteo marine, CAL FIRE + NIFC, USGS 7 d, AirNow).
  * A missing hour, failed read or unvouched empty list is never shown as 0 or "none".
  */
-import type { EarthquakeData } from '$lib/types';
+import type { AirQualityData, EarthquakeData } from '$lib/types';
+import type { AirQualityRead } from '$lib/api/marin/airnow';
 import type { FireRead, V2Fire } from '$lib/api/marin/calfire';
 import type { MarineForecastRead } from '$lib/api/marin/marine';
 import type { EarthquakeRead } from '$lib/api/marin/usgs';
@@ -16,14 +17,17 @@ import { datasetEntry, type DatasetFetch } from './source-adapters';
 import { presentSection, type SectionPresentation, type SourceStatusEntry } from './source-status';
 
 export const SURF_SOURCE = 'Open-Meteo marine forecast';
-export const AIR_QUALITY = { value: 'Unavailable', detail: 'no AQI feed connected' } as const;
+export const AIR_SOURCE = 'AirNow';
 
 /** Each read refreshes with the page (5 min); 30 min is several missed cycles. */
 export const OUTDOORS_MAX_AGE_MS = 30 * 60_000;
+/** AirNow observes hourly and posts each hour late: a reading is current for a few hours. */
+export const AIR_MAX_AGE_MS = 3 * 3_600_000;
 export const OUTDOORS_DATASETS = {
 	marine: { id: 'marine', name: SURF_SOURCE },
 	fires: { id: 'fires', name: 'CAL FIRE + NIFC incidents' },
-	quakes: { id: 'quakes-week', name: 'USGS earthquakes, 7 days' }
+	quakes: { id: 'quakes-week', name: 'USGS earthquakes, 7 days' },
+	air: { id: 'air-quality', name: 'AirNow current AQI' }
 } as const;
 
 const HOURS_SHOWN = 24;
@@ -214,6 +218,19 @@ export function wildfireRow(m: Measured<readonly V2Fire[]>, opts: Freshness): Gr
 	};
 }
 
+/** The worst pollutant's AQI and category; anything short of a reading is "Unavailable" and why. */
+export function airRow(m: Measured<AirQualityData | null>): GroundRow {
+	if (m.kind === 'loading') return { value: 'Loading…', detail: null };
+	if (m.kind !== 'value') return { value: 'Unavailable', detail: m.reason };
+	if (!m.value) return { value: 'Unavailable', detail: 'no current reading' };
+	const { aqi, category, pollutant, area, observedAt } = m.value;
+	// A health number is shown only while current: a kept or untimed reading isn't vouched for.
+	if (m.retainedAfter !== null)
+		return { value: 'Unavailable', detail: `${m.retainedAfter} · last read ${aqi} · ${category}` };
+	if (observedAt === null) return { value: 'Unavailable', detail: 'observation time not reported' };
+	return { value: `${aqi} · ${category}`, detail: area ? `${pollutant} · ${area}` : pollutant };
+}
+
 export interface SurfView {
 	current: { waveFt: number; periodS: number | null; directionDeg: number | null } | null;
 	/** Significant wave height for the next 48 hours; a missing hour stays null. */
@@ -239,6 +256,7 @@ export interface OutdoorsInput {
 	marine: MarineForecastRead | null;
 	fires: FireRead | null;
 	quakes: EarthquakeRead | null;
+	air: AirQualityRead | null;
 	outcomes: Readonly<Record<string, DatasetFetch>>;
 	now: number;
 }
@@ -261,8 +279,10 @@ export interface OutdoorsView {
 	ground: {
 		fires: Measured<V2Fire[]>;
 		quakes: Measured<EarthquakeData[]>;
+		air: Measured<AirQualityData | null>;
 		wildfire: GroundRow;
 		quake: GroundRow;
+		airRow: GroundRow;
 	};
 	status: SectionPresentation;
 }
@@ -302,7 +322,8 @@ export function outdoorsView(input: OutdoorsInput): OutdoorsView {
 			D.quakes.name,
 			input.outcomes[D.quakes.id],
 			OUTDOORS_MAX_AGE_MS
-		)
+		),
+		air: datasetEntry(D.air.id, D.air.name, input.outcomes[D.air.id], AIR_MAX_AGE_MS)
 	};
 	const forecast = measuredFromEntry(
 		entries.forecast,
@@ -325,10 +346,16 @@ export function outdoorsView(input: OutdoorsInput): OutdoorsView {
 		measuredFromEntry(entries.quakes, input.quakes, 'USGS, within 100 km', now),
 		(r) => r.quakes
 	);
+	const air = mapMeasured(
+		measuredFromEntry(entries.air, input.air, AIR_SOURCE, now),
+		(r) => r.reading
+	);
 	const periods = forecast.kind === 'value' ? forecast.value.periods : [];
 	const tideEvents = tides.kind === 'value' ? tides.value : [];
 	const all = Object.values(entries);
-	const valued = [forecast, tides, marine, fires, quakes].filter((m) => m.kind === 'value').length;
+	const valued = [forecast, tides, marine, fires, quakes, air].filter(
+		(m) => m.kind === 'value'
+	).length;
 	return {
 		forecast: {
 			measured: forecast,
@@ -350,8 +377,10 @@ export function outdoorsView(input: OutdoorsInput): OutdoorsView {
 		ground: {
 			fires,
 			quakes,
+			air,
 			wildfire: wildfireRow(fires, fresh),
-			quake: quakesRow(quakes, fresh)
+			quake: quakesRow(quakes, fresh),
+			airRow: airRow(air)
 		},
 		status: presentSection(all, { total: valued, matching: valued }, now)
 	};

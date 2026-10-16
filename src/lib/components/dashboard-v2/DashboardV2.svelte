@@ -38,6 +38,7 @@
 	import { fitnessStore } from '$lib/stores/fitness';
 	import type { MarineForecastRead } from '$lib/api/marin/marine';
 	import type { FireRead } from '$lib/api/marin/calfire';
+	import type { AirQualityRead } from '$lib/api/marin/airnow';
 	import type { EarthquakeRead } from '$lib/api/marin/usgs';
 	import type { DatasetFetch } from '$lib/dashboard/source-adapters';
 	import type { TrafficCorridorsData } from '$lib/api/marin/traffic-corridors';
@@ -81,6 +82,7 @@
 	const marine = controller?.marine ?? readable<MarineForecastRead | null>(null);
 	const fires = controller?.fires ?? readable<FireRead | null>(null);
 	const quakesWeek = controller?.quakesWeek ?? readable<EarthquakeRead | null>(null);
+	const airQuality = controller?.airQuality ?? readable<AirQualityRead | null>(null);
 	const outcomes =
 		controller?.datasetOutcomes ?? readable<Readonly<Record<string, DatasetFetch>>>({});
 	/** Getting Around's one view per tick; closed, its header still reads transit (Decision 9). */
@@ -99,13 +101,14 @@
 		void controller?.ensure('airport');
 		void controller?.ensure('traffic');
 	}
-	/** Outdoors reads the brief's own forecast and tides, plus its three detail reads. */
+	/** Outdoors reads the brief's own forecast and tides, plus its four detail reads. */
 	const outdoors = $derived(
 		outdoorsView({
 			brief: $briefState,
 			marine: $marine,
 			fires: $fires,
 			quakes: $quakesWeek,
+			air: $airQuality,
 			outcomes: $outcomes,
 			now: $clock
 		})

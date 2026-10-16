@@ -2,8 +2,8 @@
  * Tests for the AirNow/AQI client adapter
  *
  * Tests: response parsing, error handling, empty responses.
- * The color mapping / category / pollutant logic lives in the server route
- * (+server.ts) and is tested via aqiColor unit tests below.
+ * The color mapping / category / pollutant logic lives in $lib/server/airnow
+ * and is tested there.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { AirQualityData } from '$lib/types';
@@ -36,6 +36,8 @@ function sampleAirQualityData(overrides: Partial<AirQualityData> = {}): AirQuali
 		category: 'Good',
 		color: '#00e400',
 		pollutant: 'PM2.5',
+		area: 'San Rafael',
+		observedAt: null,
 		timestamp: Date.now(),
 		...overrides
 	};
@@ -271,64 +273,47 @@ describe('fetchAirQuality (client adapter)', () => {
 	});
 });
 
-// ── aqiColor unit tests ──────────────────────────────────────────────
-// The aqiColor function lives in the server route but isn't exported.
-// We replicate its logic here to ensure the color mapping is correct.
-// If aqiColor is ever extracted to a shared module, replace this with an import.
-
-function aqiColor(categoryNumber: number): string {
-	switch (categoryNumber) {
-		case 1:
-			return '#00e400';
-		case 2:
-			return '#ffff00';
-		case 3:
-			return '#ff7e00';
-		case 4:
-			return '#ff0000';
-		case 5:
-			return '#8f3f97';
-		case 6:
-			return '#7e0023';
-		default:
-			return '#999999';
-	}
-}
-
-describe('aqiColor (AQI color mapping)', () => {
-	it('returns green (#00e400) for category 1 (Good)', () => {
-		expect(aqiColor(1)).toBe('#00e400');
+// ── v2 owner read ────────────────────────────────────────────────────
+describe('readAirQualityOrThrow (v2 Outdoors)', () => {
+	const originalFetch = globalThis.fetch;
+	afterEach(() => {
+		globalThis.fetch = originalFetch;
 	});
 
-	it('returns yellow (#ffff00) for category 2 (Moderate)', () => {
-		expect(aqiColor(2)).toBe('#ffff00');
+	it('returns the reading and when it was checked', async () => {
+		const data = sampleAirQualityData({ area: 'San Rafael', observedAt: 1_700_000_000_000 });
+		globalThis.fetch = vi.fn().mockResolvedValue(mockFetchResponse(data));
+		const { readAirQualityOrThrow } = await import('./airnow');
+		expect(await readAirQualityOrThrow({ now: () => 42 })).toEqual({
+			reading: data,
+			checkedAt: 42
+		});
 	});
 
-	it('returns orange (#ff7e00) for category 3 (Unhealthy for Sensitive Groups)', () => {
-		expect(aqiColor(3)).toBe('#ff7e00');
+	it('204 is a successful read with no current reading', async () => {
+		globalThis.fetch = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+		const { readAirQualityOrThrow } = await import('./airnow');
+		expect(await readAirQualityOrThrow({ now: () => 42 })).toEqual({
+			reading: null,
+			checkedAt: 42
+		});
 	});
 
-	it('returns red (#ff0000) for category 4 (Unhealthy)', () => {
-		expect(aqiColor(4)).toBe('#ff0000');
+	it('a failed read throws with its status, so the card can say why', async () => {
+		globalThis.fetch = vi.fn().mockResolvedValue(new Response('x', { status: 502 }));
+		const { readAirQualityOrThrow } = await import('./airnow');
+		await expect(readAirQualityOrThrow()).rejects.toThrow('AirNow failed: 502');
 	});
 
-	it('returns purple (#8f3f97) for category 5 (Very Unhealthy)', () => {
-		expect(aqiColor(5)).toBe('#8f3f97');
-	});
-
-	it('returns maroon (#7e0023) for category 6 (Hazardous)', () => {
-		expect(aqiColor(6)).toBe('#7e0023');
-	});
-
-	it('returns grey (#999999) for unknown category 0', () => {
-		expect(aqiColor(0)).toBe('#999999');
-	});
-
-	it('returns grey (#999999) for unknown category 7', () => {
-		expect(aqiColor(7)).toBe('#999999');
-	});
-
-	it('returns grey (#999999) for negative category', () => {
-		expect(aqiColor(-1)).toBe('#999999');
+	it("passes the owner's signal through", async () => {
+		const owner = new AbortController();
+		owner.abort();
+		globalThis.fetch = vi.fn((_url: string, init?: RequestInit) =>
+			init?.signal?.aborted
+				? Promise.reject(new DOMException('Aborted', 'AbortError'))
+				: Promise.resolve(mockFetchResponse(sampleAirQualityData()))
+		) as typeof fetch;
+		const { readAirQualityOrThrow } = await import('./airnow');
+		await expect(readAirQualityOrThrow({ signal: owner.signal })).rejects.toThrow();
 	});
 });
