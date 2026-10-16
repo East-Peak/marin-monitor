@@ -8,6 +8,7 @@
  */
 import {
 	MARIN_AGENCIES,
+	timingAt,
 	type TransitAgencyRead,
 	type TransitAlertRow
 } from '$lib/api/marin/transit';
@@ -64,8 +65,8 @@ export interface Line {
 }
 interface Row {
 	id: string;
-	/** A short chip before the title: "to SFO", "Marin", "toward Marin" (roads only). */
-	tag: string | null;
+	/** Chips before the title, independent (design §1): "Marin", "to SFO" / "toward Marin" (roads only). */
+	tags: string[];
 	title: string;
 	/** The item's own page, or null (never a guessed one). */
 	url: string | null;
@@ -265,7 +266,11 @@ function roads(
 			at !== null && at - now <= FUTURE_SKEW_MS ? `reported ${formatItemAge(at, now)}` : null;
 		return {
 			id: e.id,
-			tag: e.trip ? TRIP_LABEL[e.trip] : e.marin ? 'Marin' : e.corridor ? 'toward Marin' : null,
+			// An unplaced event names no corridor beyond "location unconfirmed" (Codex GA-v2 #2).
+			tags: [
+				e.marin ? 'Marin' : null,
+				e.trip ? TRIP_LABEL[e.trip] : e.corridor && e.certain ? 'toward Marin' : null
+			].filter((t): t is string => t !== null),
 			title: [e.road, short(e.where)].filter(Boolean).join(' '),
 			url: null,
 			meta: [
@@ -341,11 +346,11 @@ function stopName(a: TransitAlertRow): string {
 	const m = /^(NB|SB|EB|WB)\s+(.+)$/.exec(name);
 	return m ? `${m[2]} ${m[1]}` : name;
 }
-const unverified = (alerts: TransitAlertRow[]) =>
-	alerts.some((a) => a.timing === 'unverified') ? 'timing unverified' : null;
+const unverified = (alerts: TransitAlertRow[], now: number) =>
+	alerts.some((a) => timingAt(a.periods, now) === 'unverified') ? 'timing unverified' : null;
 const row = (id: string, title: string, url: string | null, meta: (string | null)[]): Row => ({
 	id,
-	tag: null,
+	tags: [],
 	title,
 	url,
 	meta: meta.filter(Boolean).join(' · '),
@@ -353,7 +358,12 @@ const row = (id: string, title: string, url: string | null, meta: (string | null
 });
 
 /** One group row (calls 2–3): "Night Closure · 7 stops: Terra Linda SB, Lucky Dr, …", one member's words as the example. */
-function groupRow(agencyName: string, prefix: string, members: TransitAlertRow[]): Row {
+function groupRow(
+	agencyName: string,
+	prefix: string,
+	members: TransitAlertRow[],
+	now: number
+): Row {
 	const stops = new Set(members.flatMap((a) => a.stopIds)).size || members.length;
 	const names = members.map(stopName).filter(Boolean);
 	const listed = names.length > GROUP_NAMES ? [...names.slice(0, GROUP_NAMES), '…'] : names;
@@ -363,17 +373,18 @@ function groupRow(agencyName: string, prefix: string, members: TransitAlertRow[]
 		members[0].id,
 		`${prefix} · ${stops} stops${listed.length ? `: ${listed.join(', ')}` : ''}`,
 		members.find((a) => a.url !== null)?.url ?? null,
+		// The qualification before the alert's words: the clamp may hide their end (Codex GA-v2 #5).
 		[
 			agencyName,
-			example ? `e.g. ${exampleName ? `${exampleName}: ` : ''}${example.description}` : null,
-			unverified(members)
+			unverified(members, now),
+			example ? `e.g. ${exampleName ? `${exampleName}: ` : ''}${example.description}` : null
 		]
 	);
 }
 
-function summaries(agencyName: string, alerts: TransitAlertRow[]): Summary[] {
+function summaries(agencyName: string, alerts: TransitAlertRow[], now: number): Summary[] {
 	const kept = alerts.filter(
-		(a) => a.timing !== 'not-now' && !PROMO_HEADLINES.includes(a.headline.trim())
+		(a) => timingAt(a.periods, now) !== 'not-now' && !PROMO_HEADLINES.includes(a.headline.trim())
 	);
 	const groups = new Map<string, TransitAlertRow[]>();
 	for (const a of kept) {
@@ -387,14 +398,14 @@ function summaries(agencyName: string, alerts: TransitAlertRow[]): Summary[] {
 		if (members.length >= 2) {
 			// The group stands at its first member's place in the feed.
 			if (members[0] === a)
-				out.push({ row: groupRow(agencyName, prefix!, members), alerts: members.length });
+				out.push({ row: groupRow(agencyName, prefix!, members, now), alerts: members.length });
 			continue;
 		}
 		out.push({
 			row: row(a.id, a.headline.trim(), a.url, [
 				agencyName,
-				a.description && clip(a.description, 140),
-				unverified([a])
+				unverified([a], now),
+				a.description && clip(a.description, 140)
 			]),
 			alerts: 1
 		});
@@ -402,9 +413,9 @@ function summaries(agencyName: string, alerts: TransitAlertRow[]): Summary[] {
 	return out;
 }
 
-/** One agency's alerts as rows: promos and not-now dropped, same-prefix alerts grouped. */
-export function transitRows(agencyName: string, alerts: TransitAlertRow[]): Row[] {
-	return summaries(agencyName, alerts).map((s) => s.row);
+/** One agency's alerts as rows at `now`: promos and not-now dropped, same-prefix alerts grouped. */
+export function transitRows(agencyName: string, alerts: TransitAlertRow[], now: number): Row[] {
+	return summaries(agencyName, alerts, now).map((s) => s.row);
 }
 
 function agencyText(state: SourceEntryState, count: number | null): string {
@@ -456,7 +467,7 @@ function transit(t: TransitState, now: number): Built {
 		const state = effectiveState(entry, now);
 		entries.push(entry);
 		if (read?.alerts) claims.push(read);
-		const own = read?.alerts ? summaries(agency.name, read.alerts) : [];
+		const own = read?.alerts ? summaries(agency.name, read.alerts, now) : [];
 		shown.push(...own);
 		// ok implies a read with a list (agencyEntry); everything else keeps its own words.
 		if (state === 'ok' && read!.alerts!.length === 0) {

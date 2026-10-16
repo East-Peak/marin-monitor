@@ -24,7 +24,7 @@ const READS: TransitAgencyRead[] = [
 				headline: 'Route 35 detour',
 				description: null,
 				stopIds: [],
-				timing: 'now',
+				periods: [],
 				url: null
 			}
 		],

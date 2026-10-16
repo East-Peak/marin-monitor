@@ -1,4 +1,6 @@
 /** v2's Getting Around roads: /api/traffic/corridors, checked. */
+import { outboundOf } from '$lib/config/traffic-corridors';
+import { onTrip } from '$lib/traffic/corridors';
 import type { CorridorEvent } from '$lib/traffic/corridors';
 import { fetchJson, type OwnerOptions } from './fetch-helpers';
 
@@ -39,16 +41,23 @@ const isTagged = (e: Record<string, unknown>) =>
 	typeof e.closed === 'boolean' &&
 	(e.lanes === null || (typeof e.lanes === 'string' && Object.hasOwn(LANES, e.lanes)));
 
+/** 511's direction words leading `where` ("Eastbound and Westbound east of …"); null when none. */
+const DIRECTION = /^(?:North|South|East|West)bound(?: and (?:North|South|East|West)bound)?\b/;
+
 /**
  * The pre-v2 shape (one `group`), as a CDN copy can still serve it for a few minutes after a deploy:
- * read as tags. It carries no direction, so the trip matches (design call 1: no direction counts).
+ * read as tags. Its direction is the start of `where` (Codex GA-v2 #1); none matches (call 1). A
+ * trip needs a confirmed place, as on the server (Codex GA-v2 #2).
  */
 function fromGroup(e: Record<string, unknown>): Record<string, unknown> | null {
 	const { group, ...rest } = e;
 	if (group !== 'marin' && !(typeof group === 'string' && Object.hasOwn(CORRIDORS, group)))
 		return null;
-	const on = group === 'marin' ? null : group;
-	return { ...rest, marin: group === 'marin', corridor: on, trip: on, closed: false, lanes: null };
+	const corridor = group === 'marin' ? null : (group as NonNullable<CorridorEvent['corridor']>);
+	const outbound = corridor && typeof e.road === 'string' ? outboundOf(corridor, e.road) : null;
+	const direction = typeof e.where === 'string' ? (DIRECTION.exec(e.where)?.[0] ?? null) : null;
+	const trip = outbound && e.certain === true && onTrip(direction, outbound) ? corridor : null;
+	return { ...rest, marin: group === 'marin', corridor, trip, closed: false, lanes: null };
 }
 
 function readEvent(e: unknown): CorridorEvent | null {

@@ -16,7 +16,7 @@ vi.mock('$lib/config/api', () => ({
 	logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn() }
 }));
 
-import { fetchTransitAlerts } from './transit';
+import { fetchTransitAlerts, timingAt } from './transit';
 import { fetchWithTimeout } from './fetch-helpers';
 
 const mockFetch = vi.mocked(fetchWithTimeout);
@@ -247,7 +247,7 @@ describe('fetchTransitAlerts', () => {
 						headline: 'Route 35 detour',
 						description: null,
 						stopIds: [],
-						timing: 'now', // no active period: GTFS-RT says always active
+						periods: [],
 						url: 'https://marintransit.gov/35'
 					},
 					{
@@ -256,7 +256,7 @@ describe('fetchTransitAlerts', () => {
 						headline: 'Night closure',
 						description: null,
 						stopIds: [],
-						timing: 'now',
+						periods: [],
 						url: null
 					},
 					{
@@ -265,7 +265,7 @@ describe('fetchTransitAlerts', () => {
 						headline: 'Stop moved',
 						description: null,
 						stopIds: [],
-						timing: 'now',
+						periods: [],
 						url: null
 					}
 				],
@@ -325,7 +325,7 @@ describe('fetchTransitAlerts', () => {
 			description:
 				'Due to construction, this stop will be closed from 8pm to 6am the next day from 10/12 to 10/16.',
 			stopIds: ['42112', '40268'],
-			timing: 'now'
+			periods: [{ start: (READ_AT - 60) * 1000, end: (READ_AT + 60) * 1000 }]
 		});
 		const [blank] = await maAlerts([
 			live([], { DescriptionText: { Translations: [{ Text: '', Language: 'en' }] } })
@@ -333,25 +333,43 @@ describe('fetchTransitAlerts', () => {
 		expect(blank.description).toBeNull();
 	});
 
-	it('inverted period → timing unverified; readable periods none containing the read time → not-now', async () => {
-		const timing = async (periods: { Start?: number; End?: number }[]) =>
-			(await maAlerts([live(periods)]))[0].timing;
-		// The live 2026-10-16 night closures: every End before its Start.
+	it('inverted period → timing unverified; readable periods none containing now → not-now; judged by the clock passed in (Codex GA-v2 #4)', () => {
+		const T = READ_AT * 1000;
+		const H = 3_600_000;
+		// The live 2026-10-16 night closures: every end before its start.
 		expect(
-			await timing([
-				{ Start: 1792119600, End: 1792069200 },
-				{ Start: 1792206000, End: 1792155600 }
-			])
+			timingAt(
+				[
+					{ start: 1792119600_000, end: 1792069200_000 },
+					{ start: 1792206000_000, end: 1792155600_000 }
+				],
+				T
+			)
 		).toBe('unverified');
-		expect(await timing([{ Start: READ_AT + 3600, End: READ_AT + 7200 }])).toBe('not-now');
-		expect(await timing([{ Start: READ_AT - 3600 }])).toBe('now'); // open-ended
+		expect(timingAt([{ start: T + H, end: T + 2 * H }], T)).toBe('not-now');
+		expect(timingAt([{ start: T - H, end: null }], T)).toBe('now'); // open-ended
+		expect(timingAt([], T)).toBe('now'); // no period: GTFS-RT says always active
 		expect(
-			await timing([
-				{ Start: READ_AT + 3600, End: READ_AT + 7200 },
-				{ Start: READ_AT - 60, End: READ_AT + 60 }
-			])
+			timingAt(
+				[
+					{ start: T + H, end: T + 2 * H },
+					{ start: T - 60_000, end: T + 60_000 }
+				],
+				T
+			)
 		).toBe('now');
-		expect(await timing([{ Start: READ_AT + 3600, End: READ_AT + 7200 }, {}])).toBe('unverified');
+		expect(
+			timingAt(
+				[
+					{ start: T + H, end: T + 2 * H },
+					{ start: null, end: null }
+				],
+				T
+			)
+		).toBe('unverified');
+		// Starting a minute after the feed was read: in effect two minutes later.
+		const later = [{ start: T + 60_000, end: T + H }];
+		expect([timingAt(later, T), timingAt(later, T + 120_000)]).toEqual(['not-now', 'now']);
 	});
 
 	it('uses fallback URL when alert has no Url', async () => {

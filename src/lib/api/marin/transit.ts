@@ -65,12 +65,8 @@ export interface TransitAlertRow {
 	description: string | null;
 	/** Distinct stop IDs, in feed order. */
 	stopIds: string[];
-	/**
-	 * The active periods against the feed's time: a period containing it → now; every period
-	 * readable and none containing it → not-now; any period inverted (End ≤ Start) or unreadable →
-	 * unverified. No period at all means always active (GTFS-RT).
-	 */
-	timing: 'now' | 'not-now' | 'unverified';
+	/** 511's active periods (epoch ms; null where 511 sends none), judged by the reader's clock (timingAt). */
+	periods: { start: number | null; end: number | null }[];
 	/** The alert's own http(s) link, or null: never a guessed page. */
 	url: string | null;
 }
@@ -103,24 +99,34 @@ function alertTitle(alert: GtfsAlertEntity['Alert']): string {
 
 const isTime = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v > 0;
 
-function timingAt(
-	periods: GtfsAlertEntity['Alert']['ActivePeriods'],
-	at: number
-): TransitAlertRow['timing'] {
-	if (!periods?.length) return 'now';
+/**
+ * Whether an alert is in effect at `now` (epoch ms), by the reader's clock, not the feed's (Codex
+ * GA-v2 #4): a period containing now → now; every period readable and none containing it → not-now;
+ * any period without a start, or inverted (end ≤ start) → unverified. No period: always (GTFS-RT).
+ */
+export function timingAt(
+	periods: TransitAlertRow['periods'],
+	now: number
+): 'now' | 'not-now' | 'unverified' {
+	if (periods.length === 0) return 'now';
 	let readable = true;
-	for (const p of periods) {
-		const end = p.End === undefined ? Infinity : p.End;
-		if (!isTime(p.Start) || !(isTime(end) || end === Infinity) || end <= p.Start) {
+	for (const { start, end } of periods) {
+		const until = end ?? Infinity;
+		if (
+			start === null ||
+			!isTime(start) ||
+			!(until === Infinity || isTime(until)) ||
+			until <= start
+		) {
 			readable = false;
 			continue;
 		}
-		if (p.Start <= at && at < end) return 'now';
+		if (start <= now && now < until) return 'now';
 	}
 	return readable ? 'not-now' : 'unverified';
 }
 
-function alertRow(entity: GtfsAlertEntity, agencyId: string, at: number): TransitAlertRow {
+function alertRow(entity: GtfsAlertEntity, agencyId: string): TransitAlertRow {
 	const alert = entity.Alert;
 	return {
 		id: `511-${agencyId}-${entity.Id}`,
@@ -130,7 +136,10 @@ function alertRow(entity: GtfsAlertEntity, agencyId: string, at: number): Transi
 		stopIds: distinct(
 			(alert.InformedEntities ?? []).flatMap((ie) => (ie.StopId ? [ie.StopId] : []))
 		),
-		timing: timingAt(alert.ActivePeriods, at),
+		periods: (alert.ActivePeriods ?? []).map((p) => ({
+			start: typeof p.Start === 'number' ? p.Start * 1000 : null,
+			end: typeof p.End === 'number' ? p.End * 1000 : null
+		})),
 		url: httpUrl(alert.Url?.Translations?.[0]?.Text)
 	};
 }
@@ -161,13 +170,10 @@ async function fetchAgencyAlerts(
 			}
 		);
 
-		const observedAt = feedTime(data.Header?.Timestamp);
-		// "In effect" is judged at the feed's own time; without one, at ours.
-		const at = (observedAt ?? Date.now()) / 1000;
 		return {
 			items: data.Entities.map((entity) => entityToNewsItem(entity, agencyId, agencyName)),
-			alerts: data.Entities.map((entity) => alertRow(entity, agencyId, at)),
-			observedAt
+			alerts: data.Entities.map((entity) => alertRow(entity, agencyId)),
+			observedAt: feedTime(data.Header?.Timestamp)
 		};
 	} catch (error) {
 		const msg = `${agencyName}: ${(error as Error).message}`;

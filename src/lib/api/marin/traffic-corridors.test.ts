@@ -79,17 +79,50 @@ describe('fetchTrafficCorridorsOrThrow', () => {
 		respond(body, status);
 		await expect(fetchTrafficCorridorsOrThrow()).rejects.toThrow();
 	});
-	it('reads a legacy single-group event as tags: no direction known, so the trip matches (call 1)', async () => {
+	it("reads a legacy single-group event as tags, its trip from 511's direction words in `where` (Codex GA-v2 #1)", async () => {
 		respond({
 			...GOOD,
 			events: [
-				LEGACY,
-				{ ...LEGACY, id: '511.org/2', group: 'marin', road: 'Sir Francis Drake Blvd' }
+				LEGACY, // I-580 Westbound: toward Marin
+				{
+					...LEGACY,
+					id: '511.org/2',
+					group: 'to-sfo',
+					road: 'US-101',
+					where: 'Southbound at Cesar Chavez'
+				},
+				{
+					...LEGACY,
+					id: '511.org/3',
+					group: 'to-sfo',
+					road: 'US-101',
+					where: 'Northbound at Cesar Chavez'
+				},
+				{
+					...LEGACY,
+					id: '511.org/4',
+					group: 'to-oak',
+					where: 'Eastbound and Westbound at Castro St'
+				},
+				{ ...LEGACY, id: '511.org/5', group: 'to-oak', where: 'at Castro St' }, // no direction: matches
+				{
+					...LEGACY,
+					id: '511.org/6',
+					group: 'to-oak',
+					where: 'Eastbound at Castro St',
+					certain: false
+				},
+				{ ...LEGACY, id: '511.org/7', group: 'marin', road: 'Sir Francis Drake Blvd' }
 			]
 		});
 		const { events } = await fetchTrafficCorridorsOrThrow();
 		expect(events.map((e) => [e.marin, e.corridor, e.trip, e.closed, e.lanes])).toEqual([
+			[false, 'to-oak', null, false, null],
+			[false, 'to-sfo', 'to-sfo', false, null],
+			[false, 'to-sfo', null, false, null],
 			[false, 'to-oak', 'to-oak', false, null],
+			[false, 'to-oak', 'to-oak', false, null],
+			[false, 'to-oak', null, false, null], // unplaced: no trip claim
 			[true, null, null, false, null]
 		]);
 		expect(events[0]).not.toHaveProperty('group');

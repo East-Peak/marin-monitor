@@ -129,7 +129,7 @@ function corridorOf(roads: readonly string[], at: [number, number] | null): Plac
 }
 
 /** On the trip when 511's direction is the outbound one, names both ways ("… and …"), or is empty. */
-const onTrip = (direction: string | null, outbound: string) =>
+export const onTrip = (direction: string | null, outbound: string) =>
 	direction === null || direction.includes(outbound) || direction.includes(' and ');
 
 function whereOf(road: Record<string, unknown> | undefined): string {
@@ -178,8 +178,9 @@ export function corridorEvents(events: readonly unknown[], now: number): Corrido
 		if (status === 'ARCHIVED') continue;
 		const subtypes = texts(e.event_subtypes);
 		const roadRecords = Array.isArray(e.roads) ? e.roads.filter(isRecord) : [];
-		const closed = roadRecords.some((r) => r.state === 'CLOSED');
-		if (subtypes.includes(LONG_TERM) && !closed) continue;
+		const longTerm = subtypes.includes(LONG_TERM);
+		// Long-term work returns only when it closes a road (call 6); which road is checked below.
+		if (longTerm && !roadRecords.some((r) => r.state === 'CLOSED')) continue;
 		if (type !== 'INCIDENT' && inEffect(e.schedule, now) === false) continue;
 		const roads = roadRecords.flatMap((r) => {
 			const name = text(r.name);
@@ -208,8 +209,12 @@ export function corridorEvents(events: readonly unknown[], now: number): Corrido
 				const name = text(r.name);
 				return name !== null && baseRoad(name) === road;
 			}) ?? roadRecords[0];
+		// The consequence is the shown road's own (Codex GA-v2 #3): another road's closure isn't it.
+		const closed = shown?.state === 'CLOSED';
+		if (longTerm && !closed) continue;
+		// A trip claim needs a confirmed place on the route (Codex GA-v2 #2).
 		const trip =
-			placed !== null && onTrip(text(shown?.direction), placed.outbound) ? placed.corridor : null;
+			placed?.certain && onTrip(text(shown?.direction), placed.outbound) ? placed.corridor : null;
 		const severity = SEVERITIES.find((s) => s === e.severity) ?? null;
 		const created = typeof e.created === 'string' ? (parseFeedDate(e.created) ?? NaN) : NaN;
 		kept.push({

@@ -79,6 +79,11 @@ export const AIRPORT_ROUTES: readonly {
 	}
 ];
 
+/** The direction out of Marin on a corridor's road ("Eastbound" for I-580 to OAK); null when it isn't one. */
+export const outboundOf = (corridor: Corridor, road: string): Direction | null =>
+	AIRPORT_ROUTES.find((r) => r.corridor === corridor)?.segments.find((s) => s.road === road)
+		?.outbound ?? null;
+
 /** 511's county name for Marin (`areas[].name`). */
 export const MARIN_AREA = 'Marin';
 

@@ -23,13 +23,14 @@ const AGENCIES = [
 	['AF', 'Angel Island Ferry']
 ] as const;
 function reads(
-	over: Partial<Record<string, Partial<TransitAgencyRead>>> = {}
+	over: Partial<Record<string, Partial<TransitAgencyRead>>> = {},
+	at = NOW
 ): TransitAgencyRead[] {
 	return AGENCIES.map(([id, name]) => ({
 		id,
 		name,
 		alerts: [],
-		observedAt: NOW - 2 * MIN,
+		observedAt: at - 2 * MIN,
 		error: null,
 		...over[id]
 	}));
@@ -44,7 +45,7 @@ const alert = (
 	headline,
 	description: null,
 	stopIds: [],
-	timing: 'now',
+	periods: [],
 	url: null,
 	...over
 });
@@ -54,7 +55,8 @@ const alerts = (n: number, agency = 'MA') =>
 			url: i === 0 ? 'https://marintransit.gov/a' : null
 		})
 	);
-/** The 9 live Marin Transit alerts of 2026-10-16 ~4 AM (fixtures-getting-around-2026-10-16/MA.json), timed at the feed. */
+/** The 9 live Marin Transit alerts of 2026-10-16 ~4 AM (fixtures-getting-around-2026-10-16/MA.json), read at LIVE. */
+const LIVE = 1792149658000;
 const MA_LIVE: TransitAlertRow[] = [
 	{
 		id: '511-MA-1181972814',
@@ -62,7 +64,12 @@ const MA_LIVE: TransitAlertRow[] = [
 		headline: 'Nighttime bus pad closures. Visit marintransit.gov for details.',
 		description: null,
 		stopIds: [],
-		timing: 'now',
+		periods: [
+			{
+				start: 1791216120000,
+				end: 1792251900000
+			}
+		],
 		url: null
 	},
 	{
@@ -72,7 +79,12 @@ const MA_LIVE: TransitAlertRow[] = [
 		description:
 			'Clipper offers a variety of discounts to save you money on Marin Transit—making it easy to get around for less. Visit marintransit.gov for more information. \r\n-\r\n¡Ahorre dinero con Clipper! Clipper ofrece diversos descuentos para que ahorre en Marin Transit, facilitándole desplazarse por menos dinero. Visite marintransit.gov para obtener más información.',
 		stopIds: [],
-		timing: 'now',
+		periods: [
+			{
+				start: 1791995460000,
+				end: 1801416660000
+			}
+		],
 		url: 'https://marintransit.gov/clipper'
 	},
 	{
@@ -82,7 +94,28 @@ const MA_LIVE: TransitAlertRow[] = [
 		description:
 			'Due to construction, this stop will be closed from 8pm to 6am the next day from 10/12 to 10/16.',
 		stopIds: ['42112'],
-		timing: 'unverified',
+		periods: [
+			{
+				start: 1791860400000,
+				end: 1791810000000
+			},
+			{
+				start: 1791946800000,
+				end: 1791896400000
+			},
+			{
+				start: 1792033200000,
+				end: 1791982800000
+			},
+			{
+				start: 1792119600000,
+				end: 1792069200000
+			},
+			{
+				start: 1792206000000,
+				end: 1792155600000
+			}
+		],
 		url: null
 	},
 	{
@@ -92,7 +125,44 @@ const MA_LIVE: TransitAlertRow[] = [
 		description:
 			'Due to the West End Block Party, stops between 4th St & E St and 4th St & Ida St will not be served between 5pm and 11pm every Friday between 8/21 and 10/16.',
 		stopIds: ['40424', '40422', '40421'],
-		timing: 'now',
+		periods: [
+			{
+				start: 1787270400000,
+				end: 1787356800000
+			},
+			{
+				start: 1787875200000,
+				end: 1787961600000
+			},
+			{
+				start: 1788480000000,
+				end: 1788566400000
+			},
+			{
+				start: 1789084800000,
+				end: 1789171200000
+			},
+			{
+				start: 1789689600000,
+				end: 1789776000000
+			},
+			{
+				start: 1790294400000,
+				end: 1790380800000
+			},
+			{
+				start: 1790899200000,
+				end: 1790985600000
+			},
+			{
+				start: 1791504000000,
+				end: 1791590400000
+			},
+			{
+				start: 1792108800000,
+				end: 1792195200000
+			}
+		],
 		url: null
 	},
 	{
@@ -102,7 +172,28 @@ const MA_LIVE: TransitAlertRow[] = [
 		description:
 			'Due to construction, this stop will be closed from 10pm to 7am the next day from 10/12 to 10/16.',
 		stopIds: ['40268'],
-		timing: 'unverified',
+		periods: [
+			{
+				start: 1791867600000,
+				end: 1791813600000
+			},
+			{
+				start: 1791954000000,
+				end: 1791900000000
+			},
+			{
+				start: 1792040400000,
+				end: 1791986400000
+			},
+			{
+				start: 1792126800000,
+				end: 1792072800000
+			},
+			{
+				start: 1792213200000,
+				end: 1792159200000
+			}
+		],
 		url: null
 	},
 	{
@@ -112,7 +203,28 @@ const MA_LIVE: TransitAlertRow[] = [
 		description:
 			'Due to construction, this stop will be closed after 7pm to 7am the next day from 10/12 to 10/16.',
 		stopIds: ['42027'],
-		timing: 'unverified',
+		periods: [
+			{
+				start: 1791856800000,
+				end: 1791813600000
+			},
+			{
+				start: 1791943200000,
+				end: 1791900000000
+			},
+			{
+				start: 1792029600000,
+				end: 1791986400000
+			},
+			{
+				start: 1792116000000,
+				end: 1792072800000
+			},
+			{
+				start: 1792202400000,
+				end: 1792159200000
+			}
+		],
 		url: null
 	},
 	{
@@ -122,7 +234,28 @@ const MA_LIVE: TransitAlertRow[] = [
 		description:
 			'Due to construction, this stop will not be served from 8pm to 6am the next day from 10/12 to 10/16.',
 		stopIds: ['40581', '40580'],
-		timing: 'unverified',
+		periods: [
+			{
+				start: 1791860400000,
+				end: 1791810000000
+			},
+			{
+				start: 1791946800000,
+				end: 1791896400000
+			},
+			{
+				start: 1792033200000,
+				end: 1791982800000
+			},
+			{
+				start: 1792119600000,
+				end: 1792069200000
+			},
+			{
+				start: 1792206000000,
+				end: 1792155600000
+			}
+		],
 		url: null
 	},
 	{
@@ -132,7 +265,28 @@ const MA_LIVE: TransitAlertRow[] = [
 		description:
 			'Due to construction, this stop will be closed from 8pm to 6am the next day from 10/12 to 10/16.',
 		stopIds: ['40606'],
-		timing: 'unverified',
+		periods: [
+			{
+				start: 1791860400000,
+				end: 1791810000000
+			},
+			{
+				start: 1791946800000,
+				end: 1791896400000
+			},
+			{
+				start: 1792033200000,
+				end: 1791982800000
+			},
+			{
+				start: 1792119600000,
+				end: 1792069200000
+			},
+			{
+				start: 1792206000000,
+				end: 1792155600000
+			}
+		],
 		url: null
 	},
 	{
@@ -142,7 +296,28 @@ const MA_LIVE: TransitAlertRow[] = [
 		description:
 			'Due to construction, this stop will be closed from 8pm to 7am the next day from 10/12 to 10/16,',
 		stopIds: ['40607'],
-		timing: 'unverified',
+		periods: [
+			{
+				start: 1791860400000,
+				end: 1791813600000
+			},
+			{
+				start: 1791946800000,
+				end: 1791900000000
+			},
+			{
+				start: 1792033200000,
+				end: 1791986400000
+			},
+			{
+				start: 1792119600000,
+				end: 1792072800000
+			},
+			{
+				start: 1792206000000,
+				end: 1792159200000
+			}
+		],
 		url: null
 	}
 ];
@@ -187,6 +362,15 @@ function input(over: Partial<GettingAroundInput> = {}): GettingAroundInput {
 		...over
 	};
 }
+/** Every read as of LIVE (the live MA fixture's own read time). */
+const liveInput = (over: Partial<Record<string, Partial<TransitAgencyRead>>>) =>
+	input({
+		now: LIVE,
+		transit: { reads: reads(over, LIVE), error: null },
+		airport: { ...AIRPORTS, lastUpdated: new Date(LIVE - 3 * MIN).toISOString() },
+		traffic: { ...TRAFFIC, checkedAt: new Date(LIVE - MIN).toISOString() },
+		outcomes: { airport: live(LIVE - 3 * MIN), traffic: live(LIVE - MIN) }
+	});
 const said = (lines: Line[]) => lines.map((l) => `${l.label} · ${l.text}`);
 const header = (i: GettingAroundInput) => describePresentation(gettingAroundView(i).status, NOW);
 const ALL_CLEAR =
@@ -197,7 +381,7 @@ const everything = (i: GettingAroundInput) => {
 		.flatMap((p) => [
 			...said(p.lines),
 			p.note ?? '',
-			...p.rows.flatMap((r) => [r.tag ?? '', r.title, r.meta]),
+			...p.rows.flatMap((r) => [...r.tags, r.title, r.meta]),
 			p.scope ?? '',
 			p.meta ?? ''
 		])
@@ -534,22 +718,23 @@ describe('gettingAroundView', () => {
 			ev('c', { closed: true, trip: null, certain: false, kind: 'Roadwork', where: '' }),
 			ev('d', { reportedAt: new Date(NOW + 24 * 60 * MIN).toISOString() })
 		]);
-		expect(v.rows.map((r) => [r.tag, r.title, r.meta, r.tone])).toEqual([
+		expect(v.rows.map((r) => [r.tags, r.title, r.meta, r.tone])).toEqual([
 			[
-				'to SFO',
+				['Marin', 'to SFO'], // independent tags (design §1): both
 				'US-101 SB between I-580 W and Tamalpais Dr', // 511's direction, as the design's "I-280 NB"
 				'Traffic Collision · some lanes closed · Major · reported 25 min ago',
 				'major'
 			],
-			['Marin', 'Sir Francis Drake Blvd', 'Traffic Hazard · severity unknown', 'unknown'],
+			[['Marin'], 'Sir Francis Drake Blvd', 'Traffic Hazard · severity unknown', 'unknown'],
 			[
-				'toward Marin',
+				[], // unplaced: no corridor claim beyond "location unconfirmed"
 				'I-580',
 				'Roadwork · road closed · Moderate · location unconfirmed · reported 25 min ago',
 				'closed'
 			]
 		]);
 		expect([v.more, v.note]).toEqual([1, null]);
+		expect(view([ev('ret', { trip: null })]).rows[0].tags).toEqual(['toward Marin']);
 		expect(
 			view([ev('both', { where: 'Eastbound and Westbound east of Bohemian Hwy' })]).rows[0].title
 		).toBe('I-580 EB and WB east of Bohemian Hwy');
@@ -612,46 +797,56 @@ describe('gettingAroundView', () => {
 
 describe('transitRows (Marin Transit, live 2026-10-16)', () => {
 	it('groups six Night Closure alerts into one row, 7 stops, Terra Linda SB first, quoting its description', () => {
-		const rows = transitRows('Marin Transit', MA_LIVE);
+		const rows = transitRows('Marin Transit', MA_LIVE, LIVE);
 		expect(rows.map((r) => r.title)).toEqual([
 			'Nighttime bus pad closures. Visit marintransit.gov for details.',
 			'Night Closure · 7 stops: Terra Linda SB, Lucky Dr, Terra Linda NB, …',
 			'West End Block Party'
 		]);
 		expect(rows[1].meta).toBe(
-			'Marin Transit · e.g. Terra Linda SB: Due to construction, this stop will be closed from 8pm to 6am the next day from 10/12 to 10/16. · timing unverified'
+			'Marin Transit · timing unverified · e.g. Terra Linda SB: Due to construction, this stop will be closed from 8pm to 6am the next day from 10/12 to 10/16.'
 		);
 		expect(rows[2].meta).toBe(
 			'Marin Transit · Due to the West End Block Party, stops between 4th St & E St and 4th St & Ida St will not be served between 5pm and 11pm every Friday…'
 		);
-		expect(rows.every((r) => r.tag === null && r.tone === null)).toBe(true);
+		expect(rows.every((r) => r.tags.length === 0 && r.tone === null)).toBe(true);
 	});
 
 	it('drops Save Money with Clipper!', () => {
 		expect(PROMO_HEADLINES).toEqual(['Save Money with Clipper!']);
 		expect(
-			transitRows('Marin Transit', [alert('p', '  Save Money with Clipper! ')]).map((r) => r.title)
+			transitRows('Marin Transit', [alert('p', '  Save Money with Clipper! ')], NOW).map(
+				(r) => r.title
+			)
 		).toEqual([]);
 	});
 
 	it('keeps an unlisted promo-like headline', () => {
 		expect(
-			transitRows('Marin Transit', [alert('e', 'Ride free on Earth Day')]).map((r) => r.title)
+			transitRows('Marin Transit', [alert('e', 'Ride free on Earth Day')], NOW).map((r) => r.title)
 		).toEqual(['Ride free on Earth Day']);
 	});
 
 	it('drops not-now alerts; a single " - " headline is not a group; no stop IDs counts alerts', () => {
 		expect(
-			transitRows('SMART', [
-				alert('a', 'Delay - Novato', { timing: 'not-now' }),
-				alert('b', 'Delay - Petaluma'),
-				alert('c', 'Bike car closed')
-			]).map((r) => r.title)
+			transitRows(
+				'SMART',
+				[
+					alert('a', 'Delay - Novato', {
+						periods: [{ start: NOW + 60 * MIN, end: NOW + 120 * MIN }]
+					}),
+					alert('b', 'Delay - Petaluma'),
+					alert('c', 'Bike car closed')
+				],
+				NOW
+			).map((r) => r.title)
 		).toEqual(['Delay - Petaluma', 'Bike car closed']);
 		expect(
-			transitRows('SMART', [alert('a', 'Delay - Novato'), alert('b', 'Delay - NB Petaluma')]).map(
-				(r) => [r.title, r.meta]
-			)
+			transitRows(
+				'SMART',
+				[alert('a', 'Delay - Novato'), alert('b', 'Delay - NB Petaluma')],
+				NOW
+			).map((r) => [r.title, r.meta])
 		).toEqual([['Delay · 2 stops: Novato, Petaluma NB', 'SMART']]);
 	});
 });
@@ -659,15 +854,10 @@ describe('transitRows (Marin Transit, live 2026-10-16)', () => {
 describe('Getting Around v2: transit summaries', () => {
 	it('12 alerts → 3 rows and more counts alerts', () => {
 		const v = gettingAroundView(
-			input({
-				transit: {
-					reads: reads({
-						MA: { alerts: MA_LIVE },
-						SA: { alerts: [alert('s1', 'Delay - Novato'), alert('s2', 'Delay - Petaluma')] },
-						AF: { alerts: [alert('f1', 'Ferry full'), alert('f2', 'Dock repair')] }
-					}),
-					error: null
-				}
+			liveInput({
+				MA: { alerts: MA_LIVE },
+				SA: { alerts: [alert('s1', 'Delay - Novato'), alert('s2', 'Delay - Petaluma')] },
+				AF: { alerts: [alert('f1', 'Ferry full'), alert('f2', 'Dock repair')] }
 			})
 		).transit;
 		// 9 live MA (1 promo dropped → 8), 2 SMART (one group row), 2 Angel Island: 12 alerts, 6 rows.
@@ -677,9 +867,7 @@ describe('Getting Around v2: transit summaries', () => {
 	});
 
 	it('GG GF SA AF empty → one no-511 line, goldengate.org once', () => {
-		const v = gettingAroundView(
-			input({ transit: { reads: reads({ MA: { alerts: MA_LIVE } }), error: null } })
-		).transit;
+		const v = gettingAroundView(liveInput({ MA: { alerts: MA_LIVE } })).transit;
 		expect(v.lines).toEqual([
 			{
 				id: 'no-511',
@@ -709,10 +897,26 @@ describe('Getting Around v2: transit summaries', () => {
 		expect(v.lines.find((l) => l.id === 'no-511')!.label).not.toContain('Marin Transit');
 	});
 
+	it("judges 'in effect' by the view's clock, not the feed's: an alert that began after the read shows (Codex GA-v2 #4)", () => {
+		const began = alert('b', 'Bridge lane closed', {
+			periods: [{ start: NOW - MIN, end: NOW + 60 * MIN }]
+		});
+		const v = gettingAroundView(
+			input({
+				transit: {
+					reads: reads({ MA: { alerts: [began], observedAt: NOW - 2 * MIN } }),
+					error: null
+				}
+			})
+		).transit;
+		expect(v.rows.map((r) => r.title)).toEqual(['Bridge lane closed']);
+		expect(said(v.lines).join('\n')).not.toContain('No disruptions listed');
+	});
+
 	it("never says tonight / on time / vs usual / don't publish (all view text, every fixture)", () => {
 		const fixtures: GettingAroundInput[] = [
 			input(),
-			input({ transit: { reads: reads({ MA: { alerts: MA_LIVE } }), error: null } }),
+			liveInput({ MA: { alerts: MA_LIVE } }),
 			input({ transit: { reads: null, error: 'transit: HTTP 503' } }),
 			input({ transit: { reads: reads(), error: 'transit: timed out' } }),
 			input({ outcomes: {}, airport: null, traffic: null }),

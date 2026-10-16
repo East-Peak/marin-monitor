@@ -255,9 +255,9 @@ async function heavyCheck(page: Page) {
 	const roads = s.locator('[data-ga="roads"] [data-row]');
 	await expect(roads).toHaveCount(3);
 	await expect(roads.first()).toHaveAttribute('data-tone', 'closed');
-	await expect(roads.first().locator('[data-ga-tag]')).toHaveText('to SFO');
+	await expect(roads.first().locator('[data-ga-tag]')).toHaveText(['Marin', 'to SFO']);
 	await expect(roads.first()).toContainText('road closed');
-	await expect(roads.nth(2).locator('[data-ga-tag]')).toHaveText('Marin');
+	await expect(roads.nth(2).locator('[data-ga-tag]')).toHaveText(['Marin', 'toward Marin']); // return direction
 	await expect(s.locator('[data-ga="roads"] [data-ga-foot]')).toContainText('3 more');
 	await expect(s).not.toContainText(/tonight|on time|vs usual|don't publish/i);
 	await expect(s).not.toContainText('Clipper');
@@ -270,7 +270,8 @@ async function openV2(page: Page, hash = '') {
 }
 const section = (page: Page) => page.locator('section#getting-around');
 const status = (page: Page) => section(page).locator('[data-section-status]');
-const ALL_CLEAR = /511 lists no alerts|No incidents listed|No delays reported|on time/i;
+const ALL_CLEAR =
+	/No alerts on 511|No disruptions listed|reports no incidents|No airport-wide delays|511 lists no alerts|No incidents listed|No delays reported|on time/i;
 
 test.describe('desktop 1440×900', () => {
 	test.use({ viewport: { width: 1440, height: 900 } });
@@ -448,6 +449,26 @@ test.describe('phone 390×844', () => {
 			`open Getting Around @390, heavy: ${Math.round(height)} px (≤ ${BEFORE_390.heavy})`
 		);
 		expect(height).toBeLessThanOrEqual(BEFORE_390.heavy);
+	});
+
+	test('a grouped night closure with unverified timing says so where the clamp still shows it (Codex GA-v2 #5)', async ({
+		page
+	}) => {
+		await stub(page, { transit: { MA: (r) => json(r, gtfs(HEAVY_MA.slice(2))) } });
+		await openV2(page, '#getting-around');
+		const row = section(page).locator('[data-ga="transit"] [data-row]').first();
+		await expect(row).toContainText('Night Closure · 6 stops', { timeout: 15_000 });
+		const visible = await row.locator('.ga-meta').evaluate((meta) => {
+			const node = meta.firstChild!;
+			const at = node.textContent!.indexOf('timing unverified');
+			const range = document.createRange();
+			range.setStart(node, at);
+			range.setEnd(node, at + 'timing unverified'.length);
+			const word = range.getBoundingClientRect();
+			const box = meta.getBoundingClientRect();
+			return at >= 0 && word.height > 0 && word.bottom <= box.bottom + 0.5;
+		});
+		expect(visible).toBe(true);
 	});
 
 	test('12 transit alerts across 3 agencies, today\'s roads and airports: ≤ 3 rows + "N more", no taller than today\'s section (review focus 5)', async ({

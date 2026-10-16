@@ -366,3 +366,43 @@ describe('corridorEvents: independent tags, direction, closures (Getting Around 
 		]);
 	});
 });
+
+describe('corridorEvents: no claim the placement or the road cannot back (Codex GA-v2 #2, #3)', () => {
+	it('an unplaced route event names its corridor but gets no trip tag, whatever its direction', () => {
+		const [e] = corridorEvents(
+			[
+				ev('US-101 S', [0, 0], {
+					geography: null,
+					areas: [{ name: 'San Mateo' }],
+					roads: [{ name: 'US-101 S', direction: 'Southbound' }]
+				})
+			],
+			NOW
+		).events;
+		expect([e.corridor, e.certain, e.trip]).toEqual(['to-sfo', false, null]);
+	});
+
+	it("another road's closure is not the shown road's: not closed, not ranked first, and long-term work stays hidden", () => {
+		const mixed = (over: Record<string, unknown> = {}) =>
+			roadwork({ name: 'US-101 S', direction: 'Southbound' }, CORTE_MADERA, {
+				roads: [
+					{ name: 'US-101 S', direction: 'Southbound', state: 'SOME_LANES_CLOSED' },
+					{ name: 'Tamalpais Dr', state: 'CLOSED' }
+				],
+				...over
+			});
+		const { events } = corridorEvents(
+			[
+				mixed(),
+				mixed({
+					event_subtypes: ['Long-term construction'],
+					schedule: { intervals: ['2025-09-24T04:01Z/2026-11-30T16:59Z'] }
+				})
+			],
+			NOW
+		);
+		expect(events.map((e) => [e.road, e.closed, e.lanes])).toEqual([
+			['US-101', false, 'some lanes closed']
+		]);
+	});
+});

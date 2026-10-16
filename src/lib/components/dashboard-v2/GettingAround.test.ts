@@ -66,10 +66,10 @@ const VIEW: GettingAroundView = {
 				title: 'Route 35 detour',
 				url: 'https://marintransit.gov/35',
 				meta: 'Marin Transit',
-				tag: null,
+				tags: [],
 				tone: null
 			},
-			{ id: 'r2', title: 'Stop moved', url: null, meta: 'Marin Transit', tag: null, tone: null }
+			{ id: 'r2', title: 'Stop moved', url: null, meta: 'Marin Transit', tags: [], tone: null }
 		],
 		more: 2,
 		meta: '511 · updated 2 min ago'
@@ -141,19 +141,22 @@ describe('GettingAround', () => {
 				rows: [
 					{
 						id: 'e1',
-						tag: 'to SFO',
+						tags: ['Marin', 'to SFO'],
 						title: 'US-101 Southbound between I-580 W and Tamalpais Dr',
 						url: null,
 						meta: 'Roadwork · some lanes closed · Major · reported 25 min ago',
 						tone: 'major'
 					},
-					{ id: 'e2', tag: null, title: 'I-580', url: null, meta: 'Roadwork', tone: null }
+					{ id: 'e2', tags: [], title: 'I-580', url: null, meta: 'Roadwork', tone: null }
 				]
 			})
 		});
 		const row = c.querySelector('[data-row="e1"]')!;
 		expect(row.getAttribute('data-tone')).toBe('major');
-		expect(row.querySelector('[data-ga-tag]')!.textContent).toBe('to SFO');
+		expect([...row.querySelectorAll('[data-ga-tag]')].map((t) => t.textContent)).toEqual([
+			'Marin',
+			'to SFO'
+		]);
 		expect(row.querySelector('[data-ga-dot]')!.getAttribute('aria-hidden')).toBe('true');
 		expect(row.textContent).toContain('Major');
 		const plain = c.querySelector('[data-row="e2"]')!;

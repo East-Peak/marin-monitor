@@ -45,10 +45,14 @@
 					<li class="ga-row" data-row={row.id} data-tone={row.tone}>
 						<span class="ga-head" data-text-role="body"
 							>{#if row.tone}<span class="ga-dot" data-ga-dot aria-hidden="true"
-								></span>{/if}{#if row.tag}<span class="ga-tag" data-ga-tag data-text-role="meta"
-									>{row.tag}</span
-								>{' '}{/if}{#if row.url}<a href={row.url} target="_blank" rel="noopener noreferrer"
-									>{row.title}</a
+								></span>{/if}{#each row.tags as tag (tag)}<span
+									class="ga-tag"
+									data-ga-tag
+									data-text-role="meta">{tag}</span
+								>{' '}{/each}{#if row.url}<a
+									href={row.url}
+									target="_blank"
+									rel="noopener noreferrer">{row.title}</a
 								>{:else}{row.title}{/if}</span
 						>
 						<span
