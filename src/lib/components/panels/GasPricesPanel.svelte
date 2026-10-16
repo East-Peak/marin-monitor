@@ -7,6 +7,7 @@
 	import { townFilter, selectedTownObj } from '$lib/stores/town-filter';
 	import { findNearestTown } from '$lib/geo';
 	import { buildChart, type ChartPaths } from '$lib/utils/chart';
+	import { gasChangeOverDays } from '$lib/utils/gas-change';
 	import type { GasPriceData, GasStation } from '$lib/types/gas';
 
 	type HoverState = { index: number; x: number } | null;
@@ -84,11 +85,7 @@
 
 		const displayAvg = $townFilter ? filteredAvg : current.avgRegular;
 
-		const sevenDaysAgo = history.length >= 42 ? history[41] : history[history.length - 1];
-		const priceDelta =
-			current.avgRegular !== null && sevenDaysAgo?.avgRegular !== null
-				? current.avgRegular - sevenDaysAgo.avgRegular
-				: null;
+		const priceDelta = gasChangeOverDays(data.history, current, 7);
 
 		const cheapest = cheapestStations[0];
 		const cheapestPrice = cheapest?.fuelPrices.find((fp) => fp.type === 'REGULAR_UNLEADED')?.price;
@@ -102,14 +99,13 @@
 			},
 			{
 				label: '7-Day Change',
-				value:
-					priceDelta !== null ? `${priceDelta >= 0 ? '+' : ''}${priceDelta.toFixed(3)}` : 'N/A',
+				value: priceDelta !== null ? `${priceDelta >= 0 ? '+' : ''}${priceDelta.toFixed(3)}` : '—',
 				detail:
 					priceDelta !== null
 						? priceDelta <= 0
 							? 'Prices trending down'
 							: 'Prices trending up'
-						: 'Not enough history yet',
+						: 'Not enough history',
 				tone:
 					priceDelta !== null
 						? priceDelta <= 0
