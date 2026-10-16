@@ -28,6 +28,7 @@
 	import SectionStatus from './SectionStatus.svelte';
 	import MapProbe from './MapProbe.svelte';
 	import MapGesturePolicy from './MapGesturePolicy.svelte';
+	import V2MapNav from './V2MapNav.svelte';
 
 	let { data, now }: { data: V2MapData; now: number } = $props();
 
@@ -96,6 +97,12 @@
 		mapStore.selectTown(null);
 		townFilter.clear();
 	}
+	/** "All of Marin": no town, nothing inspected; V2MapNav then flies to the county view. */
+	function resetToMarin() {
+		inspector = null;
+		feature = null;
+		clearTown();
+	}
 	function focusTown() {
 		if (!model?.townSlug) return;
 		mapStore.selectTown(model.townSlug);
@@ -146,6 +153,12 @@
 			{:else if shownFeature}
 				<MapFeatureInspector feature={shownFeature} onClose={() => (feature = null)} />
 			{/if}
+			<V2MapNav
+				town={$townFilter}
+				activeLayers={$mapStore.activeLayers}
+				layers={data.layers}
+				onReset={resetToMarin}
+			/>
 			<MapProbe />
 			<MapGesturePolicy interactive={expanded || !phone} />
 		</MapContainer>

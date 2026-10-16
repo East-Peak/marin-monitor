@@ -2,7 +2,8 @@
 	import { onMount, onDestroy, setContext } from 'svelte';
 	import { get, writable } from 'svelte/store';
 	import type { Snippet } from 'svelte';
-	import type { LngLatBoundsLike, Map as MapLibreMap } from 'maplibre-gl';
+	import type { Map as MapLibreMap } from 'maplibre-gl';
+	import { fitMarinOverview } from './map-overview';
 	import { MAP_DEFAULT } from '$lib/config';
 	import { settings } from '$lib/stores';
 	import type { ThemeMode } from '$lib/stores/settings';
@@ -52,18 +53,7 @@
 		map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
 
 		map.on('load', () => {
-			// Fixed default overview tuned to show the full county context while keeping detail.
-			const marinOverviewBounds: LngLatBoundsLike = [
-				[-123.08, 37.76],
-				[-122.26, 38.38]
-			];
-
-			map?.fitBounds(marinOverviewBounds, {
-				padding: { top: 12, right: 12, bottom: 12, left: 12 },
-				maxZoom: 9.1,
-				duration: 0
-			});
-
+			if (map) fitMarinOverview(map, 0);
 			mapReady.set(true);
 		});
 
