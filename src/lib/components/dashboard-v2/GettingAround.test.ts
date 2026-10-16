@@ -18,8 +18,22 @@ const SCOPE =
 const VIEW: GettingAroundView = {
 	airports: part({
 		lines: [
-			{ id: 'SFO', label: 'SFO', text: 'Ground delay, avg 45 min', state: 'ok', url: null },
-			{ id: 'OAK', label: 'OAK', text: 'FAA status unavailable', state: 'unavailable', url: null }
+			{
+				id: 'SFO',
+				label: 'SFO',
+				text: 'Ground delay, avg 45 min',
+				state: 'ok',
+				url: null,
+				links: []
+			},
+			{
+				id: 'OAK',
+				label: 'OAK',
+				text: 'FAA status unavailable',
+				state: 'unavailable',
+				url: null,
+				links: []
+			}
 		],
 		meta: 'FAA · checked 3 min ago'
 	}),
@@ -31,18 +45,28 @@ const VIEW: GettingAroundView = {
 				label: 'Golden Gate Transit',
 				text: 'See goldengate.org',
 				state: 'reference',
-				url: 'https://www.goldengate.org/service-alerts/'
+				url: 'https://www.goldengate.org/service-alerts/',
+				links: []
 			},
-			{ id: 'MA', label: 'Marin Transit', text: '4 alerts listed', state: 'ok', url: null }
+			{
+				id: 'MA',
+				label: 'Marin Transit',
+				text: '4 alerts listed',
+				state: 'ok',
+				url: null,
+				links: []
+			}
 		],
 		rows: [
 			{
 				id: 'r1',
 				title: 'Route 35 detour',
 				url: 'https://marintransit.gov/35',
-				meta: 'Marin Transit'
+				meta: 'Marin Transit',
+				tag: null,
+				tone: null
 			},
-			{ id: 'r2', title: 'Stop moved', url: null, meta: 'Marin Transit' }
+			{ id: 'r2', title: 'Stop moved', url: null, meta: 'Marin Transit', tag: null, tone: null }
 		],
 		more: 2,
 		meta: '511 · updated 2 min ago'

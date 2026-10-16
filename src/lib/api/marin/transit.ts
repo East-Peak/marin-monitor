@@ -55,9 +55,22 @@ interface GtfsResponse {
 }
 
 /** One 511 alert as v2 shows it: its own words and its own link, nothing invented. */
-interface TransitAlertRow {
+export interface TransitAlertRow {
 	id: string;
+	/** The header plus its routes, as the legacy item title reads. */
 	title: string;
+	/** The header alone ("Night Closure - SB Terra Linda"). */
+	headline: string;
+	/** What the alert says it means; null when 511 sends none. */
+	description: string | null;
+	/** Distinct stop IDs, in feed order. */
+	stopIds: string[];
+	/**
+	 * The active periods against the feed's time: a period containing it → now; every period
+	 * readable and none containing it → not-now; any period inverted (End ≤ Start) or unreadable →
+	 * unverified. No period at all means always active (GTFS-RT).
+	 */
+	timing: 'now' | 'not-now' | 'unverified';
 	/** The alert's own http(s) link, or null: never a guessed page. */
 	url: string | null;
 }
@@ -77,15 +90,49 @@ const httpUrl = (url: string | undefined): string | null =>
 	url && /^https?:\/\//i.test(url) ? url : null;
 const feedTime = (seconds: unknown): number | null =>
 	typeof seconds === 'number' && Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : null;
+const distinct = <T>(xs: T[]) => xs.filter((v, i, a) => a.indexOf(v) === i);
 
 /** The alert's header plus its routes, exactly as the legacy item title reads. */
 function alertTitle(alert: GtfsAlertEntity['Alert']): string {
 	const header = alert.HeaderText?.Translations?.[0]?.Text || 'Service Alert';
-	const routes = (alert.InformedEntities || [])
-		.filter((ie) => ie.RouteId)
-		.map((ie) => ie.RouteId)
-		.filter((v, i, a) => a.indexOf(v) === i); // dedupe
+	const routes = distinct(
+		(alert.InformedEntities || []).filter((ie) => ie.RouteId).map((ie) => ie.RouteId)
+	);
 	return routes.length > 0 ? `${header} (${routes.join(', ')})` : header;
+}
+
+const isTime = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v > 0;
+
+function timingAt(
+	periods: GtfsAlertEntity['Alert']['ActivePeriods'],
+	at: number
+): TransitAlertRow['timing'] {
+	if (!periods?.length) return 'now';
+	let readable = true;
+	for (const p of periods) {
+		const end = p.End === undefined ? Infinity : p.End;
+		if (!isTime(p.Start) || !(isTime(end) || end === Infinity) || end <= p.Start) {
+			readable = false;
+			continue;
+		}
+		if (p.Start <= at && at < end) return 'now';
+	}
+	return readable ? 'not-now' : 'unverified';
+}
+
+function alertRow(entity: GtfsAlertEntity, agencyId: string, at: number): TransitAlertRow {
+	const alert = entity.Alert;
+	return {
+		id: `511-${agencyId}-${entity.Id}`,
+		title: alertTitle(alert),
+		headline: alert.HeaderText?.Translations?.[0]?.Text || 'Service Alert',
+		description: alert.DescriptionText?.Translations?.[0]?.Text?.trim() || null,
+		stopIds: distinct(
+			(alert.InformedEntities ?? []).flatMap((ie) => (ie.StopId ? [ie.StopId] : []))
+		),
+		timing: timingAt(alert.ActivePeriods, at),
+		url: httpUrl(alert.Url?.Translations?.[0]?.Text)
+	};
 }
 
 /**
@@ -114,14 +161,13 @@ async function fetchAgencyAlerts(
 			}
 		);
 
+		const observedAt = feedTime(data.Header?.Timestamp);
+		// "In effect" is judged at the feed's own time; without one, at ours.
+		const at = (observedAt ?? Date.now()) / 1000;
 		return {
 			items: data.Entities.map((entity) => entityToNewsItem(entity, agencyId, agencyName)),
-			alerts: data.Entities.map((entity) => ({
-				id: `511-${agencyId}-${entity.Id}`,
-				title: alertTitle(entity.Alert),
-				url: httpUrl(entity.Alert.Url?.Translations?.[0]?.Text)
-			})),
-			observedAt: feedTime(data.Header?.Timestamp)
+			alerts: data.Entities.map((entity) => alertRow(entity, agencyId, at)),
+			observedAt
 		};
 	} catch (error) {
 		const msg = `${agencyName}: ${(error as Error).message}`;

@@ -17,7 +17,17 @@ const READS: TransitAgencyRead[] = [
 	{
 		id: 'MA',
 		name: 'Marin Transit',
-		alerts: [{ id: '511-MA-1', title: 'Route 35 detour', url: null }],
+		alerts: [
+			{
+				id: '511-MA-1',
+				title: 'Route 35 detour',
+				headline: 'Route 35 detour',
+				description: null,
+				stopIds: [],
+				timing: 'now',
+				url: null
+			}
+		],
 		observedAt: 1,
 		error: null
 	}

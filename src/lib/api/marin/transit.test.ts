@@ -241,9 +241,33 @@ describe('fetchTransitAlerts', () => {
 				id: 'MA',
 				name: 'Marin Transit',
 				alerts: [
-					{ id: '511-MA-a1', title: 'Route 35 detour (35)', url: 'https://marintransit.gov/35' },
-					{ id: '511-MA-a2', title: 'Night closure', url: null },
-					{ id: '511-MA-a3', title: 'Stop moved', url: null }
+					{
+						id: '511-MA-a1',
+						title: 'Route 35 detour (35)',
+						headline: 'Route 35 detour',
+						description: null,
+						stopIds: [],
+						timing: 'now', // no active period: GTFS-RT says always active
+						url: 'https://marintransit.gov/35'
+					},
+					{
+						id: '511-MA-a2',
+						title: 'Night closure',
+						headline: 'Night closure',
+						description: null,
+						stopIds: [],
+						timing: 'now',
+						url: null
+					},
+					{
+						id: '511-MA-a3',
+						title: 'Stop moved',
+						headline: 'Stop moved',
+						description: null,
+						stopIds: [],
+						timing: 'now',
+						url: null
+					}
 				],
 				observedAt: 1711900000000,
 				error: null
@@ -253,6 +277,81 @@ describe('fetchTransitAlerts', () => {
 		]);
 		// The legacy shape is untouched: the unsafe link still falls back as before.
 		expect(items.find((i) => i.id === '511-MA-a2')?.link).toBe('javascript:alert(1)');
+	});
+
+	/** One live Marin Transit entity (fixtures-getting-around-2026-10-16/MA.json), feed time 1792149658. */
+	const READ_AT = 1792149658;
+	const live = (
+		periods: { Start?: number; End?: number }[],
+		over: Record<string, unknown> = {}
+	) => ({
+		Id: 'MA_Night Closure - SB Terra Linda-1791823141476',
+		Alert: {
+			ActivePeriods: periods,
+			InformedEntities: [
+				{ AgencyId: 'MA', Trip: null, StopId: '42112' },
+				{ AgencyId: 'MA', Trip: null, StopId: '42112' },
+				{ AgencyId: 'MA', Trip: null, StopId: '40268' }
+			],
+			HeaderText: { Translations: [{ Text: 'Night Closure - SB Terra Linda', Language: 'en' }] },
+			DescriptionText: {
+				Translations: [
+					{
+						Text: ' Due to construction, this stop will be closed from 8pm to 6am the next day from 10/12 to 10/16. ',
+						Language: 'en'
+					}
+				]
+			},
+			...over
+		}
+	});
+	async function maAlerts(entities: unknown[]) {
+		mockFetch.mockImplementation(async (url) =>
+			makeResponse(
+				String(url).endsWith('MA')
+					? { Header: { Timestamp: READ_AT }, Entities: entities }
+					: makeGtfsResponse([])
+			)
+		);
+		const promise = fetchTransitAlerts();
+		await vi.advanceTimersByTimeAsync(3000);
+		return (await promise).agencies.find((a) => a.id === 'MA')!.alerts!;
+	}
+
+	it('keeps headline, description, distinct stop IDs (v2: the description explains a night closure)', async () => {
+		const [a] = await maAlerts([live([{ Start: READ_AT - 60, End: READ_AT + 60 }])]);
+		expect(a).toMatchObject({
+			headline: 'Night Closure - SB Terra Linda',
+			description:
+				'Due to construction, this stop will be closed from 8pm to 6am the next day from 10/12 to 10/16.',
+			stopIds: ['42112', '40268'],
+			timing: 'now'
+		});
+		const [blank] = await maAlerts([
+			live([], { DescriptionText: { Translations: [{ Text: '', Language: 'en' }] } })
+		]);
+		expect(blank.description).toBeNull();
+	});
+
+	it('inverted period → timing unverified; readable periods none containing the read time → not-now', async () => {
+		const timing = async (periods: { Start?: number; End?: number }[]) =>
+			(await maAlerts([live(periods)]))[0].timing;
+		// The live 2026-10-16 night closures: every End before its Start.
+		expect(
+			await timing([
+				{ Start: 1792119600, End: 1792069200 },
+				{ Start: 1792206000, End: 1792155600 }
+			])
+		).toBe('unverified');
+		expect(await timing([{ Start: READ_AT + 3600, End: READ_AT + 7200 }])).toBe('not-now');
+		expect(await timing([{ Start: READ_AT - 3600 }])).toBe('now'); // open-ended
+		expect(
+			await timing([
+				{ Start: READ_AT + 3600, End: READ_AT + 7200 },
+				{ Start: READ_AT - 60, End: READ_AT + 60 }
+			])
+		).toBe('now');
+		expect(await timing([{ Start: READ_AT + 3600, End: READ_AT + 7200 }, {}])).toBe('unverified');
 	});
 
 	it('uses fallback URL when alert has no Url', async () => {
