@@ -14,7 +14,7 @@ const part = (over: Partial<Part> = {}): Part => ({
 	...over
 });
 const SCOPE =
-	'Marin roads; 101, 19th Ave, 280 and 380 to SFO; 580, 80 and 880 to OAK. Long-term construction not shown.';
+	'Marin roads; 101, 19th Ave, 280 and 380 to SFO; 580, 80 and 880 to OAK. Long-term construction shown only when it closes a road.';
 const VIEW: GettingAroundView = {
 	airports: part({
 		lines: [
@@ -41,19 +41,22 @@ const VIEW: GettingAroundView = {
 	transit: part({
 		lines: [
 			{
-				id: 'GG',
-				label: 'Golden Gate Transit',
-				text: 'See goldengate.org',
+				id: 'no-511',
+				label: 'Golden Gate Transit, Golden Gate Ferry, SMART',
+				text: 'No alerts on 511; check the agencies',
 				state: 'reference',
-				url: 'https://www.goldengate.org/service-alerts/',
-				links: []
+				url: null,
+				links: [
+					{ label: 'goldengate.org', url: 'https://www.goldengate.org/service-alerts/' },
+					{ label: 'sonomamarintrain.org', url: 'https://www.sonomamarintrain.org/' }
+				]
 			},
 			{
-				id: 'MA',
-				label: 'Marin Transit',
-				text: '4 alerts listed',
-				state: 'ok',
-				url: null,
+				id: 'AF',
+				label: 'Angel Island Ferry',
+				text: 'Alerts unavailable',
+				state: 'unavailable',
+				url: 'https://angelislandferry.com/',
 				links: []
 			}
 		],
@@ -83,12 +86,17 @@ describe('GettingAround', () => {
 		expect(onopen).toHaveBeenCalledTimes(1);
 	});
 
-	it('airports, then roads, then transit, each line with its own words and state', () => {
+	it('roads, then transit, then airports (design: road problems first), each line with its own words and state', () => {
 		const c = show();
 		expect([...c.querySelectorAll('[data-ga]')].map((p) => p.getAttribute('data-ga'))).toEqual([
-			'airports',
 			'roads',
-			'transit'
+			'transit',
+			'airports'
+		]);
+		expect([...c.querySelectorAll('.ga-title')].map((t) => t.textContent)).toEqual([
+			'Roads: Marin & the airport routes',
+			'Transit',
+			'Airports'
 		]);
 		const oak = c.querySelector('[data-line="OAK"]')!;
 		expect([oak.textContent, oak.getAttribute('data-state')]).toEqual([
@@ -104,14 +112,58 @@ describe('GettingAround', () => {
 		expect(c.querySelector('[data-ga="roads"]')!.getAttribute('data-part-state')).toBe(
 			'unavailable'
 		);
-		// A linked agency's line makes no claim; it opens the agency's page (Decision 6).
-		const gg = c.querySelector('[data-line="GG"]')!;
-		expect(gg.textContent).toBe('Golden Gate Transit · See goldengate.org ↗');
+		// A failed agency read keeps its own line, linking to the agency's page.
+		const af = c.querySelector('[data-line="AF"]')!;
+		expect([af.textContent, af.getAttribute('data-state')]).toEqual([
+			'Angel Island Ferry · Alerts unavailable ↗',
+			'unavailable'
+		]);
+		expect(af.querySelector('a')!.getAttribute('href')).toBe('https://angelislandferry.com/');
+	});
+
+	it('no-511 line lists each agency link once, inline after its words', () => {
+		const line = show().querySelector('[data-line="no-511"]')!;
+		expect(line.textContent).toBe(
+			'Golden Gate Transit, Golden Gate Ferry, SMART · No alerts on 511; check the agencies: goldengate.org ↗, sonomamarintrain.org ↗'
+		);
+		expect([...line.querySelectorAll('a')].map((a) => [a.getAttribute('href'), a.target])).toEqual([
+			['https://www.goldengate.org/service-alerts/', '_blank'],
+			['https://www.sonomamarintrain.org/', '_blank']
+		]);
+	});
+
+	it('renders tag chip and data-tone: the dot only adds to the severity the meta says in words', () => {
+		const c = show({
+			...VIEW,
+			roads: part({
+				scope: SCOPE,
+				state: 'ok',
+				rows: [
+					{
+						id: 'e1',
+						tag: 'to SFO',
+						title: 'US-101 Southbound between I-580 W and Tamalpais Dr',
+						url: null,
+						meta: 'Roadwork · some lanes closed · Major · reported 25 min ago',
+						tone: 'major'
+					},
+					{ id: 'e2', tag: null, title: 'I-580', url: null, meta: 'Roadwork', tone: null }
+				]
+			})
+		});
+		const row = c.querySelector('[data-row="e1"]')!;
+		expect(row.getAttribute('data-tone')).toBe('major');
+		expect(row.querySelector('[data-ga-tag]')!.textContent).toBe('to SFO');
+		expect(row.querySelector('[data-ga-dot]')!.getAttribute('aria-hidden')).toBe('true');
+		expect(row.textContent).toContain('Major');
+		const plain = c.querySelector('[data-row="e2"]')!;
 		expect([
-			gg.querySelector('a')!.getAttribute('href'),
-			gg.querySelector('a')!.getAttribute('target')
-		]).toEqual(['https://www.goldengate.org/service-alerts/', '_blank']);
-		expect(c.querySelector('[data-line="MA"] a')).toBeNull();
+			plain.hasAttribute('data-tone'),
+			plain.querySelector('[data-ga-tag], [data-ga-dot]')
+		]).toEqual([false, null]);
+		// Transit's meta (the alert's own words) is clamped to two lines; roads' isn't.
+		expect(c.querySelectorAll('[data-ga="transit"] .ga-meta[data-clamp]')).toHaveLength(2);
+		expect(c.querySelectorAll('[data-ga="roads"] [data-clamp]')).toHaveLength(0);
 	});
 
 	it("a row links only to the item's own page, in a new tab; without one it is plain text", () => {

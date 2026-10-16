@@ -537,7 +537,7 @@ describe('gettingAroundView', () => {
 		expect(v.rows.map((r) => [r.tag, r.title, r.meta, r.tone])).toEqual([
 			[
 				'to SFO',
-				'US-101 Southbound between I-580 W and Tamalpais Dr',
+				'US-101 SB between I-580 W and Tamalpais Dr', // 511's direction, as the design's "I-280 NB"
 				'Traffic Collision · some lanes closed · Major · reported 25 min ago',
 				'major'
 			],
@@ -550,6 +550,9 @@ describe('gettingAroundView', () => {
 			]
 		]);
 		expect([v.more, v.note]).toEqual([1, null]);
+		expect(
+			view([ev('both', { where: 'Eastbound and Westbound east of Bohemian Hwy' })]).rows[0].title
+		).toBe('I-580 EB and WB east of Bohemian Hwy');
 		// No "reported 1 min ago" for a time tomorrow (Codex r4 #4).
 		expect(
 			view([ev('d', { reportedAt: new Date(NOW + 24 * 60 * MIN).toISOString() })]).rows[0].meta

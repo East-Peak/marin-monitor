@@ -238,6 +238,9 @@ function airports(
 // ── Roads ─────────────────────────────────────────────────────────────────
 
 const TONE = { Major: 'major', Moderate: 'moderate', Minor: 'minor' } as const;
+/** 511's direction words as the road signs say them ("Southbound" → "SB"): the title fits a phone line. */
+const short = (where: string) =>
+	where.replace(/\b(North|South|East|West)bound\b/g, (_, d: string) => `${d[0]}B`);
 
 function roads(
 	fetch: DatasetFetch | undefined,
@@ -263,7 +266,7 @@ function roads(
 		return {
 			id: e.id,
 			tag: e.trip ? TRIP_LABEL[e.trip] : e.marin ? 'Marin' : e.corridor ? 'toward Marin' : null,
-			title: [e.road, e.where].filter(Boolean).join(' '),
+			title: [e.road, short(e.where)].filter(Boolean).join(' '),
 			url: null,
 			meta: [
 				e.kind,

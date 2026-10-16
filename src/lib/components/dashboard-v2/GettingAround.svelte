@@ -10,6 +10,7 @@
 	const moreLabel = (p: Part, label: string) => `${p.more ? `${p.more} more · ` : ''}${label} ↗`;
 </script>
 
+<!-- Transit's meta is the alert's own words: clamped to two lines; the row's title says what it is. -->
 {#snippet block(key: string, title: string, p: Part, href: string, label: string)}
 	<div class="ga-part" data-ga={key} data-part-state={p.state}>
 		<h3 class="ga-title" data-text-role="label">{title}</h3>
@@ -25,7 +26,12 @@
 								href={line.url}
 								target="_blank"
 								rel="noopener noreferrer">{line.text} ↗</a
-							>{:else}<span class="ga-text">{line.text}</span>{/if}
+							>{:else}<span class="ga-text">{line.text}</span
+							>{/if}{#each line.links as link, i (link.url)}{i ? ', ' : ': '}<a
+								href={link.url}
+								target="_blank"
+								rel="noopener noreferrer">{link.label} ↗</a
+							>{/each}
 					</li>
 				{/each}
 			</ul>
@@ -36,15 +42,20 @@
 		{#if p.rows.length}
 			<ul class="ga-list">
 				{#each p.rows as row (row.id)}
-					<li class="ga-row" data-row={row.id}>
-						{#if row.url}
-							<a href={row.url} target="_blank" rel="noopener noreferrer" data-text-role="body"
-								>{row.title}</a
-							>
-						{:else}
-							<span data-text-role="body">{row.title}</span>
-						{/if}
-						<span class="ga-meta" data-text-role="meta">{row.meta}</span>
+					<li class="ga-row" data-row={row.id} data-tone={row.tone}>
+						<span class="ga-head" data-text-role="body"
+							>{#if row.tone}<span class="ga-dot" data-ga-dot aria-hidden="true"
+								></span>{/if}{#if row.tag}<span class="ga-tag" data-ga-tag data-text-role="meta"
+									>{row.tag}</span
+								>{' '}{/if}{#if row.url}<a href={row.url} target="_blank" rel="noopener noreferrer"
+									>{row.title}</a
+								>{:else}{row.title}{/if}</span
+						>
+						<span
+							class="ga-meta"
+							data-text-role="meta"
+							data-clamp={key === 'transit' ? '' : undefined}>{row.meta}</span
+						>
 					</li>
 				{/each}
 			</ul>
@@ -57,22 +68,17 @@
 	</div>
 {/snippet}
 
+<!-- Road problems first: there is no drive-time source yet (design 2026-10-16). -->
 <div class="ga" data-slot="getting-around">
-	{@render block('airports', 'Airports', view.airports, LINKS.faa, 'FAA status')}
 	{@render block(
 		'roads',
-		'Marin roads & the airport routes',
+		'Roads: Marin & the airport routes',
 		view.roads,
 		LINKS.traffic,
 		'Traffic map (511)'
 	)}
-	{@render block(
-		'transit',
-		'Transit service alerts',
-		view.transit,
-		LINKS.transit,
-		'All transit alerts (511)'
-	)}
+	{@render block('transit', 'Transit', view.transit, LINKS.transit, 'All transit alerts (511)')}
+	{@render block('airports', 'Airports', view.airports, LINKS.faa, 'FAA status')}
 </div>
 
 <style>
@@ -114,6 +120,39 @@
 	}
 	.ga-label {
 		font-weight: 600;
+	}
+	.ga-tag {
+		display: inline-block;
+		margin-right: 0.125rem;
+		padding: 0 0.375rem;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		color: var(--text-muted);
+		white-space: nowrap;
+	}
+	.ga-dot {
+		display: inline-block;
+		width: 0.5rem;
+		height: 0.5rem;
+		margin-right: 0.375rem;
+		border-radius: 50%;
+		vertical-align: 0.1em;
+		background: var(--text-muted);
+	}
+	[data-tone='closed'] .ga-dot,
+	[data-tone='major'] .ga-dot {
+		background: var(--danger);
+	}
+	[data-tone='moderate'] .ga-dot,
+	[data-tone='unknown'] .ga-dot {
+		background: var(--warning);
+	}
+	.ga-meta[data-clamp] {
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		overflow: hidden;
 	}
 	.ga-line[data-state='unavailable'] .ga-text,
 	.ga-line[data-state='stale'] .ga-text,

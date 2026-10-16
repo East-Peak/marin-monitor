@@ -13,13 +13,28 @@ const json = (r: Route, body: unknown, status = 200) =>
 	r.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
 const down = (r: Route) => r.fulfill({ status: 503, body: 'down' });
 
-const gtfs = (alerts: { id: string; title: string; url?: string }[], at = T0 - 2 * MIN) => ({
+interface Alert {
+	id: string;
+	title: string;
+	url?: string;
+	description?: string;
+	stops?: string[];
+	/** Epoch ms pairs; omitted = always active. */
+	periods?: [number, number][];
+}
+const gtfs = (alerts: Alert[], at = T0 - 2 * MIN) => ({
 	Header: { GtfsRealtimeVersion: '1.0', Timestamp: Math.floor(at / 1000) },
 	Entities: alerts.map((a) => ({
 		Id: a.id,
 		Alert: {
 			HeaderText: { Translations: [{ Text: a.title }] },
-			...(a.url ? { Url: { Translations: [{ Text: a.url }] } } : {})
+			...(a.url ? { Url: { Translations: [{ Text: a.url }] } } : {}),
+			...(a.description ? { DescriptionText: { Translations: [{ Text: a.description }] } } : {}),
+			InformedEntities: (a.stops ?? []).map((StopId) => ({ AgencyId: 'MA', StopId })),
+			ActivePeriods: (a.periods ?? []).map(([s, e]) => ({
+				Start: Math.floor(s / 1000),
+				End: Math.floor(e / 1000)
+			}))
 		}
 	}))
 });
@@ -50,6 +65,18 @@ const AIRPORTS = {
 		airport('OAK', { status: 'unknown' })
 	]
 };
+const event = (over: Record<string, unknown>) => ({
+	marin: false,
+	corridor: 'to-oak',
+	trip: 'to-oak',
+	closed: false,
+	lanes: null,
+	certain: true,
+	kind: 'Traffic Hazard',
+	severity: 'Moderate',
+	reportedAt: iso(T0 - 25 * MIN),
+	...over
+});
 const TRAFFIC = {
 	checkedAt: iso(T0 - MIN),
 	upstreamCount: 40,
@@ -57,7 +84,11 @@ const TRAFFIC = {
 	events: [
 		{
 			id: '511.org/1',
-			group: 'to-oak',
+			marin: false,
+			corridor: 'to-oak',
+			trip: 'to-oak',
+			closed: false,
+			lanes: null,
 			certain: true,
 			kind: 'Traffic Hazard',
 			road: 'I-580',
@@ -67,7 +98,11 @@ const TRAFFIC = {
 		},
 		{
 			id: '511.org/2',
-			group: 'to-sfo',
+			marin: false,
+			corridor: 'to-sfo',
+			trip: 'to-sfo',
+			closed: false,
+			lanes: null,
 			certain: true,
 			kind: 'Traffic Hazard',
 			road: 'US-101',
@@ -77,6 +112,103 @@ const TRAFFIC = {
 		}
 	]
 };
+
+/**
+ * A disruption-heavy day, shaped like 2026-10-16's live reads: Marin Transit's six night closures
+ * (inverted active periods), a block party and the Clipper promo; Golden Gate and SMART alerts too
+ * (12 shown alerts across 3 agencies); six road events, a closure and unknown severities among them.
+ */
+const H = 60 * MIN;
+const NIGHT = (stop: string, id: string, hours: string): Alert => ({
+	id: `nc-${id}`,
+	title: `Night Closure - ${stop}`,
+	description: `Due to construction, this stop will be closed from ${hours} the next day from 10/12 to 10/16.`,
+	stops: [id],
+	periods: [[T0 + H, T0 - H]]
+});
+const HEAVY_MA: Alert[] = [
+	{ id: 'pad', title: 'Nighttime bus pad closures. Visit marintransit.gov for details.' },
+	{ id: 'clipper', title: 'Save Money with Clipper!', url: 'https://marintransit.gov/clipper' },
+	NIGHT('SB Terra Linda', '42112', '8pm to 6am'),
+	{
+		id: 'westend',
+		title: 'West End Block Party',
+		description:
+			'Due to the West End Block Party, stops between 4th St & E St and 4th St & Ida St will not be served between 5pm and 11pm every Friday between 8/21 and 10/16.',
+		stops: ['40424', '40422', '40421'],
+		periods: [[T0 - H, T0 + H]]
+	},
+	NIGHT('Lucky Dr', '40268', '10pm to 7am'),
+	NIGHT('NB Terra Linda', '42027', 'after 7pm to 7am'),
+	NIGHT('N San Pedro Rd', '40581', '8pm to 6am'),
+	NIGHT('Lucas Valley Rd', '40606', '8pm to 6am'),
+	NIGHT('Smith Ranch Rd', '40607', '8pm to 7am')
+];
+const HEAVY_GG: Alert[] = [
+	{ id: 'g1', title: 'Route 101 detour in San Rafael', description: 'Buses use 2nd St.' },
+	{ id: 'g2', title: 'Larkspur ferry: 10:40 AM sailing cancelled' }
+];
+const HEAVY_SA: Alert[] = [
+	{ id: 's1', title: 'Delay - Novato', description: 'Trains 15 minutes late.' },
+	{ id: 's2', title: 'Delay - Petaluma' }
+];
+const HEAVY_TRAFFIC = {
+	...TRAFFIC,
+	events: [
+		event({
+			id: 'h-closed',
+			marin: true,
+			corridor: 'to-sfo',
+			trip: 'to-sfo',
+			closed: true,
+			kind: 'Roadwork',
+			road: 'US-101',
+			where: 'Southbound between I-580 W and Tamalpais Dr',
+			severity: null
+		}),
+		event({
+			id: 'h-major',
+			kind: 'Traffic Collision',
+			road: 'I-580',
+			where: 'Eastbound at Castro St',
+			lanes: 'some lanes closed',
+			severity: 'Major'
+		}),
+		event({
+			id: 'h-unknown',
+			marin: true,
+			corridor: 'to-sfo',
+			trip: null,
+			kind: 'Roadwork',
+			road: 'US-101',
+			where: 'Northbound between Tamalpais Dr and I-580 W',
+			lanes: 'some lanes closed',
+			severity: null
+		}),
+		...['a', 'b', 'c'].map((k) =>
+			event({
+				id: `h-${k}`,
+				road: 'I-280',
+				where: `Southbound at exit ${k}`,
+				corridor: 'to-sfo',
+				trip: 'to-sfo'
+			})
+		)
+	]
+};
+const heavy = {
+	transit: {
+		GG: (r: Route) => json(r, gtfs(HEAVY_GG)),
+		MA: (r: Route) => json(r, gtfs(HEAVY_MA)),
+		SA: (r: Route) => json(r, gtfs(HEAVY_SA))
+	},
+	traffic: (r: Route) => json(r, HEAVY_TRAFFIC)
+};
+/**
+ * The open section at 390×844 before v2, measured on HEAD 07d456f (Progress log, 2026-10-16): on
+ * today's default stub, and on the disruption-heavy day above with the same data.
+ */
+const BEFORE_390 = { today: 803, heavy: 873 };
 
 type Handler = (r: Route) => unknown;
 async function stub(
@@ -109,6 +241,28 @@ function requests(page: Page, path: string): string[] {
 	});
 	return seen;
 }
+/** The disruption-heavy day at any width: capped rows, worst road first, plain words only. */
+async function heavyCheck(page: Page) {
+	await stub(page, heavy);
+	await openV2(page, '#getting-around');
+	const s = section(page);
+	const transit = s.locator('[data-ga="transit"] [data-row]');
+	await expect(transit).toHaveCount(3, { timeout: 15_000 });
+	await expect(transit.nth(0)).toContainText('Route 101 detour in San Rafael');
+	await expect(s.locator('[data-ga="transit"] [data-ga-foot]')).toContainText(
+		'9 more · All transit alerts (511) ↗'
+	); // 12 shown alerts (the promo dropped), 3 in the preview
+	const roads = s.locator('[data-ga="roads"] [data-row]');
+	await expect(roads).toHaveCount(3);
+	await expect(roads.first()).toHaveAttribute('data-tone', 'closed');
+	await expect(roads.first().locator('[data-ga-tag]')).toHaveText('to SFO');
+	await expect(roads.first()).toContainText('road closed');
+	await expect(roads.nth(2).locator('[data-ga-tag]')).toHaveText('Marin');
+	await expect(s.locator('[data-ga="roads"] [data-ga-foot]')).toContainText('3 more');
+	await expect(s).not.toContainText(/tonight|on time|vs usual|don't publish/i);
+	await expect(s).not.toContainText('Clipper');
+	return s;
+}
 async function openV2(page: Page, hash = '') {
 	await page.clock.install({ time: T0 });
 	await page.goto(`/?layout=v2${hash}`);
@@ -138,37 +292,35 @@ test.describe('desktop 1440×900', () => {
 		);
 		const roads = s.locator('[data-ga="roads"] [data-row]');
 		await expect(roads).toHaveCount(2);
-		await expect(roads.first()).toContainText(
-			'Traffic Hazard · I-580 Westbound east of Central Ave'
+		await expect(roads.first()).toContainText('to OAK');
+		await expect(roads.first()).toContainText('I-580 WB east of Central Ave');
+		await expect(roads.first()).toContainText('Traffic Hazard · Moderate · reported 25 min ago');
+		// 511's empty lists share one line, each agency's page linked once; a failed read says so.
+		await expect(s.locator('[data-line="no-511"]')).toHaveText(
+			'Golden Gate Transit, Golden Gate Ferry, Angel Island Ferry · No alerts on 511; check the agencies: goldengate.org ↗, angelislandferry.com ↗',
+			{ timeout: 15_000 }
 		);
-		await expect(roads.first()).toContainText('Route to OAK · Moderate · reported 25 min ago');
-		await expect(s.locator('[data-line="MA"]')).toHaveText('Marin Transit · 4 alerts listed ↗', {
-			timeout: 15_000
-		});
-		// 511's empty or failed lists for Golden Gate and SMART make no claim: their lines link out (Decision 6).
-		await expect(s.locator('[data-line="GG"]')).toHaveText(
-			'Golden Gate Transit · See goldengate.org ↗'
-		);
-		await expect(s.locator('[data-line="GG"] a')).toHaveAttribute(
-			'href',
-			'https://www.goldengate.org/service-alerts/'
-		);
-		await expect(s.locator('[data-line="SA"]')).toHaveText('SMART · See sonomamarintrain.org ↗');
+		await expect(s.locator('[data-line="SA"]')).toHaveText('SMART · Alerts unavailable ↗');
+		await expect(s.locator('[data-line="MA"]')).toHaveCount(0); // its alerts are the rows
 		const rows = s.locator('[data-ga="transit"] [data-row]');
 		await expect(rows).toHaveCount(3);
 		await expect(rows.nth(0).locator('a')).toHaveAttribute(
 			'href',
 			'https://marintransit.gov/closures'
 		);
+		await expect(rows.nth(1)).toContainText('Night Closure · 2 stops: Terra Linda SB, Lucky Dr');
 		await expect(rows.nth(1).locator('a')).toHaveCount(0);
-		await expect(s.locator('[data-ga="transit"] [data-ga-foot]')).toContainText(
-			'1 more · All transit alerts (511) ↗'
+		await expect(s.locator('[data-ga="transit"] [data-ga-foot]')).toHaveText(
+			/· All transit alerts \(511\) ↗$/
 		);
+		await expect(s.locator('[data-ga="transit"] [data-ga-foot]')).not.toContainText('more');
 		await expect(s.locator('[data-ga="roads"] [data-ga-foot] a')).toHaveAttribute(
 			'href',
 			'https://511.org/alerts/traffic'
 		);
-		await expect(status(page)).toHaveText('Partial coverage · FAA status for OAK unavailable');
+		await expect(status(page)).toHaveText(
+			'Partial coverage · FAA status for OAK, SMART unavailable'
+		);
 		await page.waitForTimeout(2_000);
 		expect(airportReqs).toHaveLength(1);
 		expect(trafficReqs).toHaveLength(1);
@@ -185,17 +337,19 @@ test.describe('desktop 1440×900', () => {
 		});
 		await openV2(page);
 		const s = section(page);
-		await expect(s.locator('[data-line="MA"]')).toHaveText(
-			'Marin Transit · 511 lists no alerts ↗',
+		await expect(s.locator('[data-ga="transit"] [data-line]')).toHaveText(
+			[
+				'Golden Gate Transit, Golden Gate Ferry, Marin Transit, SMART, Angel Island Ferry · No alerts on 511; check the agencies: goldengate.org ↗, marintransit.gov ↗, sonomamarintrain.org ↗, angelislandferry.com ↗'
+			],
 			{ timeout: 15_000 }
 		);
-		await expect(
-			s.locator('[data-ga="transit"] [data-line]').filter({ hasText: '511 lists no alerts' })
-		).toHaveCount(1); // only where 511 is trusted
 		await expect(s.locator('[data-ga="roads"] [data-ga-note]')).toHaveText(
-			'No incidents listed by 511 on these roads'
+			"511 reports no incidents on these roads · congestion isn't measured"
 		);
-		await expect(s.locator('[data-line="SFO"]')).toHaveText('SFO · No delays reported');
+		await expect(s.locator('[data-ga="airports"] [data-ga-note]')).toHaveText(
+			'No airport-wide delays at SFO or OAK'
+		);
+		await expect(s.locator('[data-ga="airports"] [data-line]')).toHaveCount(0);
 		await expect(status(page)).toHaveCount(0);
 	});
 
@@ -216,9 +370,15 @@ test.describe('desktop 1440×900', () => {
 		await expect(s.locator('[data-line="MA"]')).toHaveAttribute('data-state', 'unavailable', {
 			timeout: 15_000
 		});
-		await expect(s.locator('[data-ga="transit"] [data-state="reference"]')).toHaveCount(4); // linked agencies: no claim either way
+		// Every agency's failed read says so, on its own line; none folds into "No alerts on 511".
+		await expect(s.locator('[data-ga="transit"] [data-state="unavailable"]')).toHaveCount(5);
+		await expect(s.locator('[data-line="no-511"]')).toHaveCount(0);
 		await expect(status(page)).toHaveText(/^Source unavailable · /);
 		await expect(s).not.toContainText(ALL_CLEAR);
+	});
+
+	test('disruption-heavy fixture: 3 road rows, 3 transit rows, no "tonight"', async ({ page }) => {
+		await heavyCheck(page);
 	});
 
 	test('an unreadable traffic list with nothing kept is "not verified" and its part says so (Codex r2 #5)', async ({
@@ -244,7 +404,8 @@ test.describe('phone 390×844', () => {
 		const trafficReqs = requests(page, '/api/traffic/corridors');
 		await openV2(page);
 		await expect(section(page)).toHaveAttribute('data-open', 'false');
-		await expect(status(page)).toHaveText('Source unavailable · Marin Transit', {
+		// The other agencies read fine, so failing Marin Transit (and the stub's SMART) is partial coverage.
+		await expect(status(page)).toHaveText('Partial coverage · Marin Transit, SMART unavailable', {
 			timeout: 15_000
 		});
 		await page.waitForTimeout(2_000);
@@ -275,6 +436,51 @@ test.describe('phone 390×844', () => {
 			() => document.documentElement.scrollWidth - window.innerWidth
 		);
 		expect(overflow).toBeLessThanOrEqual(1);
+	});
+
+	test('disruption-heavy fixture at 390: 3 road rows, 3 transit rows, no "tonight"; no taller than before on the same data', async ({
+		page
+	}) => {
+		const s = await heavyCheck(page);
+		await page.evaluate(() => document.fonts.ready);
+		const height = await s.evaluate((el) => el.getBoundingClientRect().height);
+		console.log(
+			`open Getting Around @390, heavy: ${Math.round(height)} px (≤ ${BEFORE_390.heavy})`
+		);
+		expect(height).toBeLessThanOrEqual(BEFORE_390.heavy);
+	});
+
+	test('12 transit alerts across 3 agencies, today\'s roads and airports: ≤ 3 rows + "N more", no taller than today\'s section (review focus 5)', async ({
+		page
+	}) => {
+		await stub(page, { transit: heavy.transit });
+		await openV2(page, '#getting-around');
+		const s = section(page);
+		await expect(s.locator('[data-ga="transit"] [data-row]')).toHaveCount(3, { timeout: 15_000 });
+		await expect(s.locator('[data-ga="transit"] [data-ga-foot]')).toContainText('9 more');
+		await expect(s.locator('[data-ga="roads"] [data-row]')).toHaveCount(2);
+		await page.evaluate(() => document.fonts.ready);
+		const height = await s.evaluate((el) => el.getBoundingClientRect().height);
+		console.log(
+			`open Getting Around @390, 12 alerts: ${Math.round(height)} px (≤ ${BEFORE_390.today})`
+		);
+		expect(height).toBeLessThanOrEqual(BEFORE_390.today);
+	});
+
+	test("open section at 390 is no taller than the baseline (today's default stub)", async ({
+		page
+	}) => {
+		await stub(page);
+		await openV2(page, '#getting-around');
+		const s = section(page);
+		await expect(s.locator('[data-ga="transit"] [data-row]')).toHaveCount(3, { timeout: 15_000 });
+		await expect(s.locator('[data-ga="roads"] [data-row]')).toHaveCount(2);
+		await page.evaluate(() => document.fonts.ready);
+		const height = await s.evaluate((el) => el.getBoundingClientRect().height);
+		console.log(
+			`open Getting Around @390, default: ${Math.round(height)} px (≤ ${BEFORE_390.today})`
+		);
+		expect(height).toBeLessThanOrEqual(BEFORE_390.today);
 	});
 
 	test('populated, with long words: every text node is classified at ≥ 12 px; no horizontal overflow at 100% or 150% (Codex r1 #9)', async ({
