@@ -278,3 +278,14 @@ describe('buildChart — two data points', () => {
 		expect(result.axisLabels.x[2].index).toBe(1);
 	});
 });
+
+describe('buildChart — include', () => {
+	it('widens the y domain to cover values that are not plotted (a band, a baseline)', () => {
+		const data = [{ value: 6 }, { value: 6.4 }];
+		const result = buildChart(makeConfig({ data, include: [5.5, 7, 100] }))!;
+		expect(result.yMin).toBeLessThan(5.5);
+		expect(result.yMax).toBeGreaterThan(100);
+		const plain = buildChart(makeConfig({ data }))!;
+		expect(plain.yMin).toBeGreaterThan(5.5);
+	});
+});

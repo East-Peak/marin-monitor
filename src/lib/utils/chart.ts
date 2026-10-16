@@ -27,6 +27,8 @@ export interface ChartConfig {
 	margins?: ChartMargins;
 	accentColor: string;
 	data: ChartDataPoint[];
+	/** Values the y domain must cover without being plotted (a low–high band, a baseline). */
+	include?: readonly number[];
 }
 
 interface ChartDot {
@@ -75,7 +77,7 @@ export function buildChart(config: ChartConfig): ChartPaths | null {
 
 	// --- Scales -----------------------------------------------------------
 
-	const values = data.map((d) => d.value);
+	const values = [...data.map((d) => d.value), ...(config.include ?? [])];
 	const rawMin = Math.min(...values);
 	const rawMax = Math.max(...values);
 

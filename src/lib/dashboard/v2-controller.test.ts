@@ -20,7 +20,13 @@ const fetchers = vi.hoisted(() => ({
 	traffic: vi.fn(),
 	marine: vi.fn(),
 	fires: vi.fn(),
-	quakesWeek: vi.fn()
+	quakesWeek: vi.fn(),
+	composite: vi.fn(),
+	cappuccino: vi.fn(),
+	grocery: vi.fn(),
+	wine: vi.fn(),
+	school: vi.fn(),
+	housing: vi.fn()
 }));
 // Keep every other export real: $lib/api/marin/index.ts re-exports these modules.
 vi.mock('$lib/api/marin/gas-prices', async (orig) => ({
@@ -63,6 +69,30 @@ vi.mock('$lib/api/marin/usgs', async (orig) => ({
 	...(await orig<object>()),
 	readEarthquakesWeekOrThrow: fetchers.quakesWeek
 }));
+vi.mock('$lib/api/marin/composite', async (orig) => ({
+	...(await orig<object>()),
+	fetchCompositeDataWithStatus: fetchers.composite
+}));
+vi.mock('$lib/api/marin/cappuccino', async (orig) => ({
+	...(await orig<object>()),
+	fetchCappuccinoDataWithStatus: fetchers.cappuccino
+}));
+vi.mock('$lib/api/marin/grocery-basket', async (orig) => ({
+	...(await orig<object>()),
+	fetchGroceryBasketDataWithStatus: fetchers.grocery
+}));
+vi.mock('$lib/api/marin/wine-index', async (orig) => ({
+	...(await orig<object>()),
+	fetchWineIndexDataWithStatus: fetchers.wine
+}));
+vi.mock('$lib/api/marin/school-tuition', async (orig) => ({
+	...(await orig<object>()),
+	fetchSchoolTuitionDataWithStatus: fetchers.school
+}));
+vi.mock('$lib/api/marin/housing', async (orig) => ({
+	...(await orig<object>()),
+	fetchHousingDataWithStatus: fetchers.housing
+}));
 vi.mock('$lib/api/marin/traffic-corridors', async (orig) => ({
 	...(await orig<object>()),
 	fetchTrafficCorridorsOrThrow: fetchers.traffic
@@ -71,6 +101,7 @@ vi.mock('$lib/api/marin/traffic-corridors', async (orig) => ({
 const { createDashboardV2Controller, DATASET_POLICY, V2_MIN_REFRESH_GAP_MS } =
 	await import('./v2-controller');
 const { effectiveState } = await import('./source-status');
+const { COST_DATASETS } = await import('./cost');
 const { gasPriceStore } = await import('$lib/stores/gas-prices');
 const { evChargingStore } = await import('$lib/stores/ev-charging');
 const { coffeeIndexStore } = await import('$lib/stores/coffee');
@@ -198,6 +229,20 @@ beforeEach(() => {
 	fetchers.marine.mockResolvedValue({ points: [], checkedAt: NOW - 60_000 });
 	fetchers.fires.mockResolvedValue({ fires: [], checkedAt: NOW - 60_000 });
 	fetchers.quakesWeek.mockResolvedValue({ quakes: [], observedAt: NOW - 120_000 });
+	const scraped = (iso: string) => ({ timestamp: iso, lastSuccessfulScrapeAt: iso });
+	for (const f of [
+		fetchers.composite,
+		fetchers.cappuccino,
+		fetchers.grocery,
+		fetchers.wine,
+		fetchers.school
+	])
+		f.mockResolvedValue({
+			ok: true,
+			data: { current: scraped(new Date(NOW - 86_400_000).toISOString()), history: [] },
+			dataSource: 'live'
+		});
+	fetchers.housing.mockResolvedValue({ ok: true, data: [], dataSource: 'live' });
 	for (const s of [gasPriceStore, evChargingStore, coffeeIndexStore, fitnessStore]) {
 		s.set({ current: null, history: [] } as never);
 	}
@@ -555,6 +600,32 @@ describe('createDashboardV2Controller', () => {
 		await c.refresh();
 		expect(fetchers.airport).toHaveBeenCalledTimes(2);
 		expect(fetchers.traffic).toHaveBeenCalledTimes(2);
+	});
+
+	it('Cost reads (composite and the sub-indexes) load only through ensure, timed by their own scrape', async () => {
+		const c = controller();
+		await c.start();
+		const costFetchers = [
+			fetchers.composite,
+			fetchers.cappuccino,
+			fetchers.grocery,
+			fetchers.wine,
+			fetchers.school,
+			fetchers.housing
+		];
+		for (const f of costFetchers) expect(f).not.toHaveBeenCalled();
+		await Promise.all(Object.values(COST_DATASETS).map((d) => c.ensure(d.id)));
+		for (const f of costFetchers) expect(f).toHaveBeenCalledTimes(1);
+		expect(get(c.cost).composite?.current?.timestamp).toBe(
+			new Date(NOW - 86_400_000).toISOString()
+		);
+		expect(get(c.cost).housing).toEqual([]);
+		expect(get(c.datasetOutcomes).composite).toEqual({
+			kind: 'live',
+			observedAt: NOW - 86_400_000
+		});
+		// Housing's payload carries no time of its own (G0a dates it by upload).
+		expect(get(c.datasetOutcomes).housing).toEqual({ kind: 'live', observedAt: null });
 	});
 
 	it('Outdoors reads (marine, fires, 7-day quakes) load only through ensure, with their own times', async () => {

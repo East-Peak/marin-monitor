@@ -49,6 +49,19 @@ import { createAdvisoryFeed } from './advisory-feed';
 import { createBriefStore, type BriefFetchers, type BriefState } from './brief-store';
 import { AIRPORT_MAX_AGE_MS, TRAFFIC_MAX_AGE_MS, type TransitState } from './getting-around';
 import { OUTDOORS_DATASETS, OUTDOORS_MAX_AGE_MS } from './outdoors';
+import { COST_DATASETS, costMaxAgeMs } from './cost';
+import { fetchCompositeDataWithStatus } from '$lib/api/marin/composite';
+import { fetchCappuccinoDataWithStatus } from '$lib/api/marin/cappuccino';
+import { fetchGroceryBasketDataWithStatus } from '$lib/api/marin/grocery-basket';
+import { fetchWineIndexDataWithStatus } from '$lib/api/marin/wine-index';
+import { fetchSchoolTuitionDataWithStatus } from '$lib/api/marin/school-tuition';
+import { fetchHousingDataWithStatus, type HousingMetric } from '$lib/api/marin/housing';
+import type { FetchResult } from '$lib/api/marin/data-fetcher';
+import type { CompositeData } from '$lib/types/composite';
+import type { CoffeeData } from '$lib/types/coffee';
+import type { GroceryBasketData } from '$lib/types/grocery';
+import type { WineIndexData } from '$lib/types/wine';
+import type { SchoolIndexData } from '$lib/types/school';
 import {
 	createTvNewsLoader,
 	TV_NEWS_SOURCES,
@@ -59,6 +72,7 @@ import {
 import type { NewsSnapshotView } from '$lib/news/snapshot';
 import type { NewsItem } from '$lib/types';
 import { createDatasetRegistry, dataset, type DatasetDef } from './datasets';
+import { DATASET_POLICY } from './dataset-policy';
 import {
 	PART_NAMES,
 	datasetEntry,
@@ -73,13 +87,7 @@ export const V2_REFRESH_MS = 5 * 60_000;
 export const V2_MIN_REFRESH_GAP_MS = 60_000;
 const DAY_MS = 86_400_000;
 
-/** Each map dataset's G0a policy (SOURCE_INVENTORY; a test pins them equal). */
-export const DATASET_POLICY = {
-	gas: { healthName: 'Gas Prices', maxAgeDays: 2 },
-	ev: { healthName: 'EV Charging', maxAgeDays: 2 },
-	coffee: { healthName: 'Marin Coffee Index', maxAgeDays: 10 },
-	fitness: { healthName: 'Fitness', maxAgeDays: 45 }
-} as const;
+export { DATASET_POLICY };
 type PolicyId = keyof typeof DATASET_POLICY;
 const maxAge = (id: PolicyId) => DATASET_POLICY[id].maxAgeDays * DAY_MS;
 /** Provenance travels with the value: the payload's own scrape time. */
@@ -221,6 +229,47 @@ function outdoorsDatasets(stores: OutdoorsStores): DatasetDef[] {
 	];
 }
 
+/** Cost & Character's own reads (gas, coffee and fitness are already essentials). */
+export interface CostReads {
+	composite: CompositeData | null;
+	cappuccino: CoffeeData | null;
+	grocery: GroceryBasketData | null;
+	wine: WineIndexData | null;
+	school: SchoolIndexData | null;
+	housing: HousingMetric[] | null;
+}
+
+/** Cost's detail reads (desktop Goal 3): loaded through ensure() when the section opens. */
+function costDatasets(store: Writable<CostReads>): DatasetDef[] {
+	const def = <K extends keyof CostReads>(
+		key: K,
+		load: (signal: AbortSignal) => Promise<FetchResult<NonNullable<CostReads[K]>>>,
+		observedAtOf: (d: NonNullable<CostReads[K]>) => unknown
+	) =>
+		dataset<NonNullable<CostReads[K]>>({
+			id: COST_DATASETS[key].id,
+			name: COST_DATASETS[key].name,
+			tier: 'detail',
+			load,
+			commit: (d) => store.update((all) => ({ ...all, [key]: d })),
+			observedAtOf,
+			maxAgeMs: costMaxAgeMs(key)
+		});
+	return [
+		def('composite', (signal) => fetchCompositeDataWithStatus({ signal }), scrapedAt),
+		def('cappuccino', (signal) => fetchCappuccinoDataWithStatus({ signal }), scrapedAt),
+		def('grocery', (signal) => fetchGroceryBasketDataWithStatus({ signal }), scrapedAt),
+		def('wine', (signal) => fetchWineIndexDataWithStatus({ signal }), scrapedAt),
+		def('school', (signal) => fetchSchoolTuitionDataWithStatus({ signal }), scrapedAt),
+		// Redfin's months carry no read time; G0a dates the blob by upload, which v2 can't see.
+		def(
+			'housing',
+			() => fetchHousingDataWithStatus(),
+			() => null
+		)
+	];
+}
+
 interface OutdoorsStores {
 	marine: Writable<MarineForecastRead | null>;
 	fires: Writable<FireRead | null>;
@@ -320,6 +369,8 @@ export interface DashboardV2Controller {
 	marine: Readable<MarineForecastRead | null>;
 	fires: Readable<FireRead | null>;
 	quakesWeek: Readable<EarthquakeRead | null>;
+	/** Cost & Character's own reads, loaded through ensure(COST_DATASETS.*.id). */
+	cost: Readable<CostReads>;
 }
 
 export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Controller {
@@ -333,6 +384,14 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		fires: writable(null),
 		quakesWeek: writable(null)
 	};
+	const cost = writable<CostReads>({
+		composite: null,
+		cappuccino: null,
+		grocery: null,
+		wine: null,
+		school: null,
+		housing: null
+	});
 	// /api/health feeds the header indicator only; it never re-dates a dataset (Codex r1 #3).
 	const defs = deps.datasets ?? [
 		...ESSENTIAL_DATASETS,
@@ -347,6 +406,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		}),
 		...detailDatasets(airport, traffic),
 		...outdoorsDatasets(outdoors),
+		...costDatasets(cost),
 		...INVENTORY_DATASETS
 	];
 	const registry = createDatasetRegistry(defs, deps.signal, { deadlineMs: deps.deadlineMs });
@@ -478,6 +538,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		marine: { subscribe: outdoors.marine.subscribe },
 		fires: { subscribe: outdoors.fires.subscribe },
 		quakesWeek: { subscribe: outdoors.quakesWeek.subscribe },
+		cost: { subscribe: cost.subscribe },
 		datasetOutcomes: registry.outcomes,
 		brief: { subscribe: brief.subscribe },
 		advisories: { subscribe: advisories.subscribe },
