@@ -55,8 +55,11 @@ export function showMarinReset(
 const inView = (n: number) => (n === 0 ? 'none in view' : `${n} in view`);
 
 function storyCount(towns: InView['towns'], town: string | null, townName: (s: string) => string) {
-	const chosen = town === null ? undefined : towns.find((t) => t.slug === town);
-	if (chosen) return `${chosen.total} in the ${townName(chosen.slug)} circle`;
+	// With a town chosen every other circle is dimmed: only the chosen one counts.
+	if (town !== null) {
+		const chosen = towns.find((t) => t.slug === town);
+		return chosen ? `${chosen.total} in the ${townName(town)} circle` : inView(0);
+	}
 	const lit = towns.filter((t) => t.total > 0);
 	const total = lit.reduce((sum, t) => sum + t.total, 0);
 	if (total === 0) return inView(0);

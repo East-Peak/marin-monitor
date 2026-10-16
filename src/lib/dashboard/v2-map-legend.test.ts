@@ -75,8 +75,8 @@ describe('mapLegend (what each layer shows at this zoom)', () => {
 	it('with a town chosen, counts that town’s circle by name', () => {
 		expect(legend({ town: 'san-rafael' })[0].count).toBe('10 in the San Rafael circle');
 	});
-	it('a chosen town whose circle is out of view falls back to the view count', () => {
-		expect(legend({ town: 'fairfax' })[0].count).toBe('12 in view, in 2 town circles');
+	it('a chosen town whose circle is out of view counts none: other circles are dimmed (live 2026-10-16)', () => {
+		expect(legend({ town: 'fairfax' })[0].count).toBe('none in view');
 	});
 	it('one circle and no stories read in the singular / as none', () => {
 		const one: InView = { towns: [{ slug: 'san-rafael', total: 1 }], fixIt: 1, quakes: 1 };
