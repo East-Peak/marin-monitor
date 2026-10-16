@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-16',
+		title: 'A way back to all of Marin, and a map key',
+		description:
+			'In the dashboard preview, after you click into a town on the map, an “All of Marin” button in the corner takes you back to the county view and clears the town. The map also says what each layer shows: stories are placed by town, one circle per town, because they name a town and not a street. Only Fix It Marin reports and earthquakes have exact spots. Counts tell you how many of each are in view.'
+	},
+	{
+		date: '2026-10-16',
 		title: 'Getting Around, rebuilt for a quick look before you leave',
 		description:
 			'In the dashboard preview, Getting Around now starts with road problems on Marin roads and the routes to SFO and OAK, at most three, worst first, each saying where it is and what it means (“US-101 SB between I-580 W and Tamalpais Dr · Roadwork · some lanes closed”). Chips say whether it is in Marin and whether it is on your way to the airport, or on the way back. Transit groups related alerts into one line that explains itself (“Night Closure · 7 stops …” with the stop’s own description) and drops the Clipper ad. Agencies 511 shows nothing for share one line linking to their own pages. Airports are one line while both are clear.'

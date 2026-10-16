@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-16
 
+### Added — A way back to all of Marin on the v2 map, and a key for what it shows
+
+- **"All of Marin"** sits in the map's bottom-left corner whenever a town is chosen or the map has moved off the county view. It clears the town (the "Showing" picker goes back to All of Marin) and returns the map to the same county view it opens on.
+- **The map now says what each layer shows.** Stories (news, safety, civic, activity, housing, Marin Lately) carry a town, not a street address, so each town gets one circle sized by its stories. Only Fix It Marin reports and earthquakes have exact spots. The key under the button lists each layer that's switched on, how it's placed and how many are in view ("Stories · 10 in the San Rafael circle", "Fix It Marin · 44 in view"). A layer that hasn't loaded gives no count.
+- Why: zoomed into San Rafael with every layer on, the map looked like it showed only Fix It Marin. On Oct 16 all 10 San Rafael stories were in the one red circle at the town centre, and no news story had a street location.
+
 ### Changed — Getting Around in the v2 preview answers "can I get there?"
 
 - **Roads come first** and say where and what in plain words: the road and 511's location (direction as the signs say it, e.g. "US-101 SB between I-580 W and Tamalpais Dr"), then the kind, the lane consequence ("some lanes closed", "road closed"), the severity in words ("severity unknown" when 511 doesn't say) and how long ago it was reported. A colored dot adds to the severity; it never replaces the words. At most 3, worst first: full closures, then Major, unknown, Moderate, Minor.
