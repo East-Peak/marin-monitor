@@ -172,6 +172,80 @@ test.describe('desktop 1440: Outdoors beside Getting Around (Goal 2)', () => {
 	});
 });
 
+/** Cost's reads with real shapes (Goal 3): a gas week of 4-hourly readings, fitness with history. */
+async function stubCost(page: Page) {
+	const H = 3_600_000;
+	const now = Date.now();
+	const json = (body: unknown) => ({
+		status: 200,
+		contentType: 'application/json',
+		body: JSON.stringify(body)
+	});
+	const gas = (i: number) => ({
+		timestamp: new Date(now - i * 4 * H).toISOString(),
+		lastSuccessfulScrapeAt: new Date(now - i * 4 * H).toISOString(),
+		stationCount: 2,
+		avgRegular: 6.3 + i * 0.002,
+		avgMidgrade: null,
+		avgPremium: 6.9,
+		avgDiesel: 6.6,
+		minRegular: 5.8,
+		maxRegular: 6.9,
+		stations: [5.9, 6.4].map((price, k) => ({
+			placeId: `p${k}`,
+			name: `Station ${k}`,
+			address: `${k} Main St, San Rafael`,
+			lat: 37.97,
+			lon: -122.53,
+			fuelPrices: [{ type: 'REGULAR_UNLEADED', price }]
+		}))
+	});
+	const history = Array.from({ length: 50 }, (_, i) => gas(i));
+	await page.route(/\/api\/data\/gas-prices\b/, (r) =>
+		r.fulfill(json({ current: history[0], history }))
+	);
+	const fit = (daysAgo: number, median: number) => ({
+		timestamp: new Date(now - daysAgo * 24 * H).toISOString(),
+		lastSuccessfulScrapeAt: new Date(now - daysAgo * 24 * H).toISOString(),
+		studioCount: 16,
+		medianPrice: median,
+		avgPrice: median,
+		minPrice: 20,
+		maxPrice: 45,
+		medianByType: { yoga: 30 },
+		studios: []
+	});
+	await page.route(/\/api\/data\/fitness\b/, (r) =>
+		r.fulfill(json({ current: fit(1, 32), history: [fit(1, 32), fit(31, 31), fit(61, 30)] }))
+	);
+}
+
+test.describe('desktop 1440: Cost & Character (Goal 3)', () => {
+	test.use({ viewport: { width: 1440, height: 1000 } });
+
+	test('the gas card shows a real 7-day change; sparklines render; failed reads say so', async ({
+		page
+	}) => {
+		await stubRest(page);
+		await stubCost(page);
+		await stubCams(page);
+		await page.goto('/?layout=v2');
+		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+		const cost = page.locator('#cost');
+		const change = cost.locator('[data-card="gas"] [data-stat="change7"] [data-text-role="value"]');
+		await expect(change).toHaveText(/^[+−-]\$0\.\d{3}$|—/);
+		await expect(change).toHaveText('−$0.084');
+		expect(await cost.locator('[data-spark] path').count()).toBeGreaterThanOrEqual(1);
+		// The composite and the other sub-indexes are stubbed down: never $0.
+		await expect(cost.locator('[data-card="composite"]')).toContainText('Unavailable');
+		await expect(cost.locator('[data-tile="school"]')).toContainText('Unavailable');
+		await expect(cost.locator('[data-card-source]').first()).toBeVisible();
+		await expect(cost).not.toContainText('later release');
+		const dir = process.env.SHOTS_DIR;
+		if (dir) await cost.screenshot({ path: `${dir}/cost-1440.png` });
+	});
+});
+
 test.describe('very wide 2600', () => {
 	test.use({ viewport: { width: 2600, height: 1000 } });
 	test('the page stops at 2,240 px', async ({ page }) => {

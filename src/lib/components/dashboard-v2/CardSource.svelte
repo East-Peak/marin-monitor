@@ -13,7 +13,16 @@
 <script lang="ts">
 	import { formatAsOf } from '$lib/dashboard/pacific-time';
 
-	let { lines, now }: { lines: SourceLine[]; now: number } = $props();
+	let {
+		lines,
+		now,
+		notes = []
+	}: {
+		lines: SourceLine[];
+		now: number;
+		/** Plain asides on the same line (e.g. the other fuels' prices), after the sources. */
+		notes?: string[];
+	} = $props();
 
 	/** One card's provenance: source, then its time or why there is none. Never a bare value. */
 	function describe({ measured: m, verb = 'as of', untimed }: SourceLine): string {
@@ -47,6 +56,9 @@
 		<span class="st {tone(line.measured)}" data-source-state={line.measured.kind}
 			>{describe(line)}</span
 		>
+	{/each}
+	{#each notes as note, i (i)}
+		<span class="note">{note}</span>
 	{/each}
 </p>
 

@@ -11,6 +11,7 @@
 	import AdvisoryRow from './AdvisoryRow.svelte';
 	import GettingAround from './GettingAround.svelte';
 	import Outdoors from './Outdoors.svelte';
+	import CostCharacter from './CostCharacter.svelte';
 	import HealthIndicator from './HealthIndicator.svelte';
 	import { townFilter, townLocation } from '$lib/stores/town-filter';
 	import { readable } from 'svelte/store';
@@ -22,6 +23,11 @@
 	import type { BriefState } from '$lib/dashboard/brief-store';
 	import { gettingAroundView, type TransitState } from '$lib/dashboard/getting-around';
 	import { OUTDOORS_DATASETS, outdoorsView } from '$lib/dashboard/outdoors';
+	import { COST_DATASETS, costView } from '$lib/dashboard/cost';
+	import type { CostReads } from '$lib/dashboard/v2-controller';
+	import { gasPriceStore } from '$lib/stores/gas-prices';
+	import { coffeeIndexStore } from '$lib/stores/coffee';
+	import { fitnessStore } from '$lib/stores/fitness';
 	import type { MarineForecastRead } from '$lib/api/marin/marine';
 	import type { FireRead } from '$lib/api/marin/calfire';
 	import type { EarthquakeRead } from '$lib/api/marin/usgs';
@@ -98,6 +104,30 @@
 	);
 	function openOutdoors() {
 		for (const d of Object.values(OUTDOORS_DATASETS)) void controller?.ensure(d.id);
+	}
+	const costReads =
+		controller?.cost ??
+		readable<CostReads>({
+			composite: null,
+			cappuccino: null,
+			grocery: null,
+			wine: null,
+			school: null,
+			housing: null
+		});
+	/** Cost reads the owner's gas, coffee and fitness essentials plus its own detail reads. */
+	const cost = $derived(
+		costView({
+			...$costReads,
+			gas: $gasPriceStore,
+			coffee: $coffeeIndexStore,
+			fitness: $fitnessStore,
+			outcomes: $outcomes,
+			now: $clock
+		})
+	);
+	function openCost() {
+		for (const d of Object.values(COST_DATASETS)) void controller?.ensure(d.id);
 	}
 	/** Below the map, in page order; Outdoors is rendered on its own (desktop pairs it with Getting Around). */
 	const restSections = V2_SECTIONS.filter((s) => s.id !== 'outdoors');
@@ -282,8 +312,15 @@
 					ontoggle={(id) => sections.toggle(id)}
 					collapsible={!desktop}
 					class="v2-span-12"
+					status={s.id === 'cost' && desktop && controller ? cost.status : null}
+					now={$clock}
 				>
-					<p class="v2-muted" data-text-role="body">{LATER}</p>
+					<!-- Cost's content is desktop-only for now: the phone keeps its height budget (§13.3). -->
+					{#if s.id === 'cost' && desktop && controller}
+						<CostCharacter view={cost} now={$clock} onopen={openCost} />
+					{:else}
+						<p class="v2-muted" data-text-role="body">{LATER}</p>
+					{/if}
 				</Section>
 			{/each}
 		</div>
