@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-16',
+		title: 'Getting Around, rebuilt for a quick look before you leave',
+		description:
+			'In the dashboard preview, Getting Around now starts with road problems on Marin roads and the routes to SFO and OAK, at most three, worst first, each saying where it is and what it means (“US-101 SB between I-580 W and Tamalpais Dr · Roadwork · some lanes closed”). Chips say whether it is in Marin and whether it is on your way to the airport, or on the way back. Transit groups related alerts into one line that explains itself (“Night Closure · 7 stops …” with the stop’s own description) and drops the Clipper ad. Agencies 511 shows nothing for share one line linking to their own pages. Airports are one line while both are clear.'
+	},
+	{
+		date: '2026-10-16',
 		title: 'Air quality is back',
 		description:
 			'AirNow switched off the feed the dashboard used for air quality on October 1, so AQI had gone blank everywhere. It now reads AirNow’s current feed. In the dashboard preview’s Outdoors section, the Air quality line shows the AQI and its category (for example “14 · Good”), which pollutant it is and where it was measured, with the hour AirNow observed it. If the reading can’t be fetched, it says “Unavailable” and why, instead of showing an old number. The regular dashboard and TV show AQI again too.'

@@ -6,6 +6,14 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-16
 
+### Changed — Getting Around in the v2 preview answers "can I get there?"
+
+- **Roads come first** and say where and what in plain words: the road and 511's location (direction as the signs say it, e.g. "US-101 SB between I-580 W and Tamalpais Dr"), then the kind, the lane consequence ("some lanes closed", "road closed"), the severity in words ("severity unknown" when 511 doesn't say) and how long ago it was reported. A colored dot adds to the severity; it never replaces the words. At most 3, worst first: full closures, then Major, unknown, Moderate, Minor.
+- **Marin and the airport trips are separate chips.** Roadwork on 101 in Corte Madera is both "Marin" and "to SFO". The trip chip appears only when 511's direction is the way out of Marin (101/280/380 south to SFO, 580 east then 80/880 to OAK). The return direction says "toward Marin", and an event 511 gives no point for claims no trip at all. Long-term construction shows only when it closes the road.
+- **Transit summarizes instead of listing headlines.** Alerts that share a headline prefix become one row ("Night Closure · 7 stops: Terra Linda SB, Lucky Dr, Terra Linda NB, …") with one stop's own description as the example. Other alerts show their headline with a short excerpt. "Timing unverified" appears when 511's active periods don't add up. Alerts not in effect now, and the named Clipper promotion, are left out. "N more" counts alerts. Agencies 511 lists nothing for share one line, "No alerts on 511; check the agencies", with each agency's page linked once. A failed read says unavailable.
+- **Airports:** one line, "No airport-wide delays at SFO or OAK", while both are plainly clear; the detail returns when either isn't.
+- Nothing on the page says "on time", "tonight" or "no delays" unless a fresh, complete read backs it. The phone page with everything open is shorter than before (4,835 px; the budget is 5,064).
+
 ### Fixed — Air quality reads again
 
 - AirNow retired the endpoint `/api/air-quality` used (`/aq/observation/latLong/current/`, HTTP 410 since Oct 1), so every AQI display had been blank. The route now reads `/aq/observation/current/ziplatlong/` and reports the worst pollutant's NowCast AQI, its category, the reporting area and the hour AirNow observed it. A service error or an unreadable payload is now a 502 that isn't cached, never "no reading".
