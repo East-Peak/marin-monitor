@@ -101,7 +101,7 @@ describe('gettingAroundView', () => {
 		]);
 		expect(v.roads.note).toBe('No incidents listed by 511 on these roads');
 		expect(v.roads.scope).toBe(
-			'Marin roads; 101, 19th Ave, 280 and 380 to SFO; 580, 80 and 880 to OAK. Long-term construction not shown.'
+			'Marin roads; 101, 19th Ave, 280 and 380 to SFO; 580, 80 and 880 to OAK. Long-term construction shown only when it closes a road.'
 		);
 		expect(said(v.airports.lines)).toEqual([
 			'SFO · No delays reported',
@@ -380,7 +380,11 @@ describe('gettingAroundView', () => {
 	it("roads: 511's words, its route (or 'location unconfirmed'), severity and age; previewed 3 in the server's order", () => {
 		const ev = (id: string, over: Partial<TrafficCorridorsData['events'][number]> = {}) => ({
 			id,
-			group: 'to-oak' as const,
+			marin: false,
+			corridor: 'to-oak' as const,
+			trip: 'to-oak' as 'to-oak' | 'to-sfo' | null,
+			closed: false,
+			lanes: null,
 			certain: true,
 			kind: 'Traffic Hazard',
 			road: 'I-580',
@@ -396,13 +400,21 @@ describe('gettingAroundView', () => {
 					events: [
 						ev('a'),
 						ev('b', {
-							group: 'marin',
+							marin: true,
+							corridor: null,
+							trip: null,
 							road: 'Sir Francis Drake Blvd',
 							where: '',
 							severity: null,
 							reportedAt: null
 						}),
-						ev('c', { certain: false, group: 'to-sfo', road: 'US-101', where: '' }),
+						ev('c', {
+							certain: false,
+							corridor: 'to-sfo',
+							trip: 'to-sfo',
+							road: 'US-101',
+							where: ''
+						}),
 						ev('d', { reportedAt: new Date(NOW + 24 * 60 * MIN).toISOString() })
 					]
 				}
@@ -411,13 +423,10 @@ describe('gettingAroundView', () => {
 		expect(v.roads.rows.map((r) => [r.title, r.meta])).toEqual([
 			[
 				'Traffic Hazard · I-580 Westbound east of Central Ave',
-				'Route to OAK · Moderate · reported 25 min ago'
+				'to OAK · Moderate · reported 25 min ago'
 			],
 			['Traffic Hazard · Sir Francis Drake Blvd', 'Marin'],
-			[
-				'Traffic Hazard · US-101',
-				'Route to SFO (location unconfirmed) · Moderate · reported 25 min ago'
-			]
+			['Traffic Hazard · US-101', 'to SFO (location unconfirmed) · Moderate · reported 25 min ago']
 		]);
 		expect([v.roads.more, v.roads.note]).toEqual([1, null]);
 		const future = gettingAroundView(
@@ -428,7 +437,7 @@ describe('gettingAroundView', () => {
 				}
 			})
 		);
-		expect(future.roads.rows[0].meta).toBe('Route to OAK · Moderate'); // no "reported 1 min ago" for a time tomorrow
+		expect(future.roads.rows[0].meta).toBe('to OAK · Moderate'); // no "reported 1 min ago" for a time tomorrow
 		expect(v.roads.rows.every((r) => r.url === null)).toBe(true);
 	});
 });

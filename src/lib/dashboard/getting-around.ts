@@ -7,7 +7,7 @@
  */
 import { MARIN_AGENCIES, type TransitAgencyRead } from '$lib/api/marin/transit';
 import type { TrafficCorridorsData } from '$lib/api/marin/traffic-corridors';
-import { GROUP_LABEL, ROAD_SCOPE } from '$lib/config/traffic-corridors';
+import { ROAD_SCOPE, TRIP_LABEL } from '$lib/config/traffic-corridors';
 import type {
 	AirportOperationalStatus,
 	AirportStatus,
@@ -235,9 +235,8 @@ function roads(
 		// A future report time is not "1 min ago" (Codex r4 #4): it is left out.
 		const age =
 			at !== null && at - now <= FUTURE_SKEW_MS ? `reported ${formatItemAge(at, now)}` : null;
-		const where = e.certain
-			? GROUP_LABEL[e.group]
-			: `${GROUP_LABEL[e.group]} (location unconfirmed)`;
+		const tag = e.trip ? TRIP_LABEL[e.trip] : e.marin ? 'Marin' : 'toward Marin';
+		const where = e.certain ? tag : `${tag} (location unconfirmed)`;
 		return {
 			id: e.id,
 			title: [`${e.kind} · ${e.road}`, e.where].filter(Boolean).join(' '),

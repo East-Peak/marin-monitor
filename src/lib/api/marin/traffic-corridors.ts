@@ -1,5 +1,4 @@
 /** v2's Getting Around roads: /api/traffic/corridors, checked. */
-import type { CorridorGroup } from '$lib/config/traffic-corridors';
 import type { CorridorEvent } from '$lib/traffic/corridors';
 import { fetchJson, type OwnerOptions } from './fetch-helpers';
 
@@ -12,7 +11,14 @@ export interface TrafficCorridorsData {
 	events: CorridorEvent[];
 }
 
-const GROUPS: Record<CorridorGroup, true> = { 'to-sfo': true, 'to-oak': true, marin: true };
+const CORRIDORS: Record<NonNullable<CorridorEvent['corridor']>, true> = {
+	'to-sfo': true,
+	'to-oak': true
+};
+const LANES: Record<NonNullable<CorridorEvent['lanes']>, true> = {
+	'some lanes closed': true,
+	'one lane alternating': true
+};
 const SEVERITIES: Record<NonNullable<CorridorEvent['severity']>, true> = {
 	Major: true,
 	Moderate: true,
@@ -22,33 +28,63 @@ const isRecord = (v: unknown): v is Record<string, unknown> =>
 	typeof v === 'object' && v !== null && !Array.isArray(v);
 /** A count of records: a negative or fractional one would read as "nothing unreadable". */
 const isCount = (v: unknown) => Number.isSafeInteger(v) && (v as number) >= 0;
-const isEvent = (e: unknown) =>
-	isRecord(e) &&
-	typeof e.id === 'string' &&
-	typeof e.kind === 'string' &&
-	typeof e.road === 'string' &&
-	typeof e.where === 'string' &&
-	typeof e.certain === 'boolean' &&
-	typeof e.group === 'string' &&
-	Object.hasOwn(GROUPS, e.group) &&
-	(e.severity === null ||
-		(typeof e.severity === 'string' && Object.hasOwn(SEVERITIES, e.severity))) &&
-	(e.reportedAt === null || typeof e.reportedAt === 'string');
+const corridor = (v: unknown) =>
+	v === null || (typeof v === 'string' && Object.hasOwn(CORRIDORS, v));
+const isTagged = (e: Record<string, unknown>) =>
+	typeof e.marin === 'boolean' &&
+	corridor(e.corridor) &&
+	corridor(e.trip) &&
+	(e.trip === null || e.trip === e.corridor) &&
+	(e.marin || e.corridor !== null) &&
+	typeof e.closed === 'boolean' &&
+	(e.lanes === null || (typeof e.lanes === 'string' && Object.hasOwn(LANES, e.lanes)));
+
+/**
+ * The pre-v2 shape (one `group`), as a CDN copy can still serve it for a few minutes after a deploy:
+ * read as tags. It carries no direction, so the trip matches (design call 1: no direction counts).
+ */
+function fromGroup(e: Record<string, unknown>): Record<string, unknown> | null {
+	const { group, ...rest } = e;
+	if (group !== 'marin' && !(typeof group === 'string' && Object.hasOwn(CORRIDORS, group)))
+		return null;
+	const on = group === 'marin' ? null : group;
+	return { ...rest, marin: group === 'marin', corridor: on, trip: on, closed: false, lanes: null };
+}
+
+function readEvent(e: unknown): CorridorEvent | null {
+	if (
+		!isRecord(e) ||
+		typeof e.id !== 'string' ||
+		typeof e.kind !== 'string' ||
+		typeof e.road !== 'string' ||
+		typeof e.where !== 'string' ||
+		typeof e.certain !== 'boolean' ||
+		!(
+			e.severity === null ||
+			(typeof e.severity === 'string' && Object.hasOwn(SEVERITIES, e.severity))
+		) ||
+		!(e.reportedAt === null || typeof e.reportedAt === 'string')
+	)
+		return null;
+	const tagged = 'group' in e && !('marin' in e) ? fromGroup(e) : e;
+	return tagged && isTagged(tagged) ? (tagged as unknown as CorridorEvent) : null;
+}
 
 export async function fetchTrafficCorridorsOrThrow({
 	signal
 }: OwnerOptions = {}): Promise<TrafficCorridorsData> {
 	// The server's own deadline is 8 s for every 511 page; 12 s leaves room for the response.
 	const body = await fetchJson<unknown>('/api/traffic/corridors', { signal }, 12_000);
+	const events = isRecord(body) && Array.isArray(body.events) ? body.events.map(readEvent) : null;
 	if (
 		!isRecord(body) ||
 		typeof body.checkedAt !== 'string' ||
 		!isCount(body.upstreamCount) ||
 		!isCount(body.unreadable) ||
-		!Array.isArray(body.events) ||
-		!body.events.every(isEvent)
+		events === null ||
+		!events.every((e) => e !== null)
 	) {
 		throw new Error('traffic corridors: unexpected response');
 	}
-	return body as unknown as TrafficCorridorsData;
+	return { ...(body as unknown as TrafficCorridorsData), events: events as CorridorEvent[] };
 }

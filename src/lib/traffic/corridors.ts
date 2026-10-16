@@ -1,6 +1,8 @@
 /**
- * Which 511 traffic events Getting Around shows: active, not long-term construction, in effect now
- * (incidents always), on Marin roads or the routes to SFO and OAK (config/traffic-corridors.ts).
+ * Which 511 traffic events Getting Around shows: active, in effect now (incidents always), on Marin
+ * roads or the routes to SFO and OAK (config/traffic-corridors.ts); long-term construction only when
+ * it closes a road. Marin and the corridor are independent tags (101 in Corte Madera is both); the
+ * trip tag needs 511's direction to be the way out of Marin (design calls 1, 5, 6, 7).
  * Pure; the server applies it to 511's complete list. Nothing is classified by keywords: the kind
  * and the severity are 511's own. An event that can't be placed is kept and marked uncertain;
  * a record that can't be read is counted, so the caller never mistakes it for "nothing listed".
@@ -9,13 +11,21 @@ import {
 	AIRPORT_ROUTES,
 	MARIN_AREA,
 	type Bbox,
-	type CorridorGroup
+	type Corridor
 } from '$lib/config/traffic-corridors';
 import { parseFeedDate } from '$lib/news/feed-date';
 
 export interface CorridorEvent {
 	id: string;
-	group: CorridorGroup;
+	/** 511's `areas` include Marin. */
+	marin: boolean;
+	/** On a route segment, either direction. */
+	corridor: Corridor | null;
+	/** = corridor when 511's direction is the way out of Marin, names both ways, or is empty. */
+	trip: Corridor | null;
+	/** A road of the event is fully closed (511 `state: CLOSED`). */
+	closed: boolean;
+	lanes: (typeof LANES)[keyof typeof LANES] | null;
 	/** false when 511 gave no usable point for a route-road event: it may be off the route. */
 	certain: boolean;
 	/** 511's words: the first subtype ("Traffic Collision"), else the event type ("Incident"). */
@@ -37,6 +47,13 @@ export interface CorridorRead {
 
 const LONG_TERM = 'Long-term construction';
 const SEVERITIES = ['Major', 'Moderate', 'Minor'] as const;
+/** Ranks: a closure first; unknown severity (511's "Unknown") is not treated as minor (call 5). */
+const RANK = { closed: 0, Major: 1, unknown: 2, Moderate: 3, Minor: 4 } as const;
+/** 511's lane states, as consequence words. */
+const LANES = {
+	SOME_LANES_CLOSED: 'some lanes closed',
+	SINGLE_LANE_ALTERNATING: 'one lane alternating'
+} as const;
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
 	typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -89,24 +106,31 @@ function inEffect(schedule: unknown, now: number): boolean | null {
 	return allRead ? false : null;
 }
 
-/** The route a road list belongs to (any road, Codex r1 #4), else Marin by county; null = outside. */
-function placeOf(
-	roads: readonly string[],
-	areas: readonly string[],
-	at: [number, number] | null
-): { group: CorridorGroup; certain: boolean; road: string } | null {
-	let uncertain: { group: CorridorGroup; certain: boolean; road: string } | null = null;
+interface Placed {
+	corridor: Corridor;
+	/** The segment's direction of travel from Marin. */
+	outbound: string;
+	certain: boolean;
+	road: string;
+}
+
+/** The route a road list is on (any road, Codex r1 #4): in a segment's box, else unplaced on its road. */
+function corridorOf(roads: readonly string[], at: [number, number] | null): Placed | null {
+	let uncertain: Placed | null = null;
 	for (const route of AIRPORT_ROUTES) {
 		for (const s of route.segments) {
 			if (!roads.includes(s.road)) continue;
-			if (at === null) uncertain ??= { group: route.group, certain: false, road: s.road };
-			else if (inBox(at, s.bbox)) return { group: route.group, certain: true, road: s.road };
+			const found = { corridor: route.corridor, outbound: s.outbound, road: s.road };
+			if (at === null) uncertain ??= { ...found, certain: false };
+			else if (inBox(at, s.bbox)) return { ...found, certain: true };
 		}
 	}
-	if (areas.includes(MARIN_AREA))
-		return { group: 'marin', certain: true, road: roads[0] ?? MARIN_AREA };
 	return uncertain;
 }
+
+/** On the trip when 511's direction is the outbound one, names both ways ("… and …"), or is empty. */
+const onTrip = (direction: string | null, outbound: string) =>
+	direction === null || direction.includes(outbound) || direction.includes(' and ');
 
 function whereOf(road: Record<string, unknown> | undefined): string {
 	if (!road) return '';
@@ -153,9 +177,10 @@ export function corridorEvents(events: readonly unknown[], now: number): Corrido
 		}
 		if (status === 'ARCHIVED') continue;
 		const subtypes = texts(e.event_subtypes);
-		if (subtypes.includes(LONG_TERM)) continue;
-		if (type !== 'INCIDENT' && inEffect(e.schedule, now) === false) continue;
 		const roadRecords = Array.isArray(e.roads) ? e.roads.filter(isRecord) : [];
+		const closed = roadRecords.some((r) => r.state === 'CLOSED');
+		if (subtypes.includes(LONG_TERM) && !closed) continue;
+		if (type !== 'INCIDENT' && inEffect(e.schedule, now) === false) continue;
 		const roads = roadRecords.flatMap((r) => {
 			const name = text(r.name);
 			return name === null ? [] : [baseRoad(name)];
@@ -170,35 +195,51 @@ export function corridorEvents(events: readonly unknown[], now: number): Corrido
 		const malformed =
 			(Array.isArray(e.roads) ? e.roads.length : 0) !== roads.length ||
 			(Array.isArray(e.areas) ? e.areas.length : 0) !== areas.length;
-		const place = placeOf(roads, areas, pointOf(e.geography));
-		if (place === null) {
+		const marin = areas.includes(MARIN_AREA);
+		const placed = corridorOf(roads, pointOf(e.geography));
+		if (!marin && placed === null) {
 			// Without a county we can't say it is outside Marin; without a road, that it is off the routes.
 			if (areas.length === 0 || roads.length === 0 || malformed) unreadable += 1;
 			continue;
 		}
-		const matched = roadRecords.find((r) => {
-			const name = text(r.name);
-			return name !== null && baseRoad(name) === place.road;
-		});
+		const road = placed?.road ?? roads[0] ?? MARIN_AREA;
+		const shown =
+			roadRecords.find((r) => {
+				const name = text(r.name);
+				return name !== null && baseRoad(name) === road;
+			}) ?? roadRecords[0];
+		const trip =
+			placed !== null && onTrip(text(shown?.direction), placed.outbound) ? placed.corridor : null;
 		const severity = SEVERITIES.find((s) => s === e.severity) ?? null;
 		const created = typeof e.created === 'string' ? (parseFeedDate(e.created) ?? NaN) : NaN;
 		kept.push({
 			event: {
 				id,
-				group: place.group,
-				certain: place.certain,
+				marin,
+				corridor: placed?.corridor ?? null,
+				trip,
+				closed,
+				lanes: LANES[shown?.state as keyof typeof LANES] ?? null,
+				certain: placed?.certain ?? true,
 				kind: subtypes[0] ?? kindOf(type),
-				road: place.road,
-				where: whereOf(matched ?? roadRecords[0]),
+				road,
+				where: whereOf(shown),
 				severity,
 				reportedAt: Number.isFinite(created) ? new Date(created).toISOString() : null
 			},
-			rank: severity === null ? SEVERITIES.length : SEVERITIES.indexOf(severity),
+			rank: closed ? RANK.closed : RANK[severity ?? 'unknown'],
 			created: Number.isFinite(created) ? created : 0
 		});
 	}
 	return {
-		events: kept.sort((a, b) => a.rank - b.rank || b.created - a.created).map((k) => k.event),
+		events: kept
+			.sort(
+				(a, b) =>
+					a.rank - b.rank ||
+					Number(b.event.trip !== null) - Number(a.event.trip !== null) ||
+					b.created - a.created
+			)
+			.map((k) => k.event),
 		unreadable
 	};
 }

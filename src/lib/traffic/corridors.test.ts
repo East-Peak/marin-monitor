@@ -19,8 +19,11 @@ function ev(road: string, [lng, lat]: [number, number], over: Record<string, unk
 		...over
 	};
 }
+/** The corridor an event is on, else Marin (the old single group, now read from independent tags). */
 const groups = (events: unknown[]) =>
-	corridorEvents(events, NOW).events.map((e) => `${e.group}${e.certain ? '' : '?'} ${e.road}`);
+	corridorEvents(events, NOW).events.map(
+		(e) => `${e.corridor ?? (e.marin ? 'marin' : '-')}${e.certain ? '' : '?'} ${e.road}`
+	);
 const work = (intervals: unknown, over: Record<string, unknown> = {}) =>
 	ev('US-101 N', [-122.52, 37.9], {
 		areas: [{ name: 'Marin' }],
@@ -40,10 +43,14 @@ describe('corridorEvents (Getting Around roads)', () => {
 			NOW
 		);
 		expect(unreadable).toBe(0);
-		expect(events.map((e) => e.group)).toEqual(['to-oak', 'to-sfo']);
+		expect(events.map((e) => e.corridor)).toEqual(['to-oak', 'to-sfo']);
 		expect(events[0]).toEqual({
 			id: expect.any(String),
-			group: 'to-oak',
+			marin: false,
+			corridor: 'to-oak',
+			trip: null, // westbound on 580 is toward Marin
+			closed: false,
+			lanes: null,
 			certain: true,
 			kind: 'Traffic Hazard',
 			road: 'I-580',
@@ -76,11 +83,14 @@ describe('corridorEvents (Getting Around roads)', () => {
 			['I-880 S', [-122.28, 37.8]], // Downtown Oakland
 			['I-880 S', [-122.195, 37.735]] // Hegenberger (OAK)
 		];
-		expect(groups(points.map(([road, at]) => ev(road, at)))).toEqual(
-			points.map(
-				([road]) =>
-					`${/^(US-101|CA-1|I-280|I-380)\b/.test(road) ? 'to-sfo' : 'to-oak'} ${road.replace(/ [NSEW]$/, '')}`
-			)
+		// Order is the ranking's (trip-tagged first), not the itinerary's: compare as a multiset.
+		expect(groups(points.map(([road, at]) => ev(road, at))).sort()).toEqual(
+			points
+				.map(
+					([road]) =>
+						`${/^(US-101|CA-1|I-280|I-380)\b/.test(road) ? 'to-sfo' : 'to-oak'} ${road.replace(/ [NSEW]$/, '')}`
+				)
+				.sort()
 		);
 	});
 
@@ -189,7 +199,7 @@ describe('corridorEvents (Getting Around roads)', () => {
 		expect(corridorEvents([one, { ...one, severity: 'Major' }], NOW).unreadable).toBe(1);
 	});
 
-	it("most severe first, then newest; 511's own words; 'between' when it gives from and to", () => {
+	it("most severe first, unknown before Moderate (call 5), then newest; 511's own words; 'between' when it gives from and to", () => {
 		const { events } = corridorEvents(
 			[
 				ev('I-280 S', [-122.45, 37.7], { severity: 'Minor', created: '2026-10-14T22:50Z' }),
@@ -209,11 +219,150 @@ describe('corridorEvents (Getting Around roads)', () => {
 		);
 		expect(events.map((e) => [e.severity, e.reportedAt])).toEqual([
 			['Major', '2026-10-14T21:00:00.000Z'],
+			[null, null],
 			['Minor', '2026-10-14T22:55:00.000Z'],
-			['Minor', '2026-10-14T22:50:00.000Z'],
-			[null, null]
+			['Minor', '2026-10-14T22:50:00.000Z']
 		]);
 		expect(events[0].where).toBe('Southbound between Daly City and San Bruno');
-		expect(events[3].kind).toBe('Incident');
+		expect(events[1].kind).toBe('Incident');
+	});
+});
+
+/** Live 511 shapes of 2026-10-16 (fixtures-getting-around-2026-10-16/traffic.json): roadwork with a road `state`. */
+const roadwork = (
+	road: { name: string; direction?: string; state?: string; from?: string; to?: string },
+	at: [number, number],
+	over: Record<string, unknown> = {}
+) =>
+	ev(road.name, at, {
+		event_type: 'CONSTRUCTION',
+		event_subtypes: ['Roadwork'],
+		severity: 'Unknown',
+		schedule: { intervals: ['2026-10-14T22:00Z/2026-10-15T13:59Z'] },
+		areas: [{ name: 'Marin' }],
+		roads: [{ '+article': 'between', state: 'SOME_LANES_CLOSED', ...road }],
+		...over
+	});
+const CORTE_MADERA: [number, number] = [-122.516002, 37.932177];
+const tags = (events: unknown[]) =>
+	corridorEvents(events, NOW).events.map((e) => [e.marin, e.corridor, e.trip]);
+
+describe('corridorEvents: independent tags, direction, closures (Getting Around v2)', () => {
+	it('tags a Corte Madera US-101 S event as Marin and to SFO', () => {
+		expect(
+			tags([
+				roadwork(
+					{
+						name: 'US-101 S',
+						direction: 'Southbound',
+						from: 'I-580 W',
+						to: 'Tamalpais Dr'
+					},
+					CORTE_MADERA
+				)
+			])
+		).toEqual([[true, 'to-sfo', 'to-sfo']]);
+	});
+
+	it('a US-101 N event in Marin is Marin, corridor to-sfo, trip null', () => {
+		expect(
+			tags([
+				roadwork(
+					{
+						name: 'US-101 N',
+						direction: 'Northbound',
+						from: 'Tamalpais Dr',
+						to: 'I-580 W'
+					},
+					CORTE_MADERA
+				)
+			])
+		).toEqual([[true, 'to-sfo', null]]);
+	});
+
+	it('"Eastbound and Westbound" on I-580 is trip to-oak', () => {
+		expect(
+			tags([
+				ev('I-580 W', [-122.43, 37.935], {
+					roads: [{ name: 'I-580 W', direction: 'Eastbound and Westbound', from: 'Castro St' }]
+				})
+			])
+		).toEqual([[false, 'to-oak', 'to-oak']]);
+	});
+
+	it('empty direction matches the trip', () => {
+		expect(
+			tags([
+				ev('I-380', [-122.44, 37.632], { roads: [{ name: 'I-380', from: 'I-280' }] }),
+				ev('I-880 N', [-122.28, 37.8], {
+					roads: [{ name: 'I-880 N', direction: '', from: 'Broadway' }]
+				})
+			]).map(([, , trip]) => trip)
+		).toEqual(['to-sfo', 'to-oak']);
+	});
+
+	it('long-term construction with a CLOSED road is kept, with SOME_LANES_CLOSED it is skipped', () => {
+		const longTerm = (state: string) =>
+			roadwork({ name: 'US-101 S', direction: 'Southbound', state }, CORTE_MADERA, {
+				event_subtypes: ['Long-term construction'],
+				schedule: { intervals: ['2025-09-24T04:01Z/2026-11-30T16:59Z'] }
+			});
+		const { events } = corridorEvents([longTerm('CLOSED'), longTerm('SOME_LANES_CLOSED')], NOW);
+		expect(events.map((e) => [e.kind, e.closed])).toEqual([['Long-term construction', true]]);
+	});
+
+	it('ranks closed, Major, unknown, Moderate, Minor; trip before Marin-only at equal rank', () => {
+		const at = (id: string, over: Record<string, unknown>, direction = 'Southbound') =>
+			ev('US-101 S', CORTE_MADERA, {
+				id,
+				areas: [{ name: 'Marin' }],
+				roads: [{ name: direction === 'Southbound' ? 'US-101 S' : 'US-101 N', direction }],
+				created: '2026-10-14T22:00Z',
+				...over
+			});
+		const { events } = corridorEvents(
+			[
+				at('minor', { severity: 'Minor' }),
+				at('moderate', { severity: 'Moderate' }),
+				at(
+					'unknown-marin-only',
+					{ severity: 'Unknown', created: '2026-10-14T22:30Z' },
+					'Northbound'
+				),
+				at('unknown-trip', { severity: 'Unknown' }),
+				at('major', { severity: 'Major' }),
+				at('closed', {
+					severity: 'Minor',
+					roads: [{ name: 'US-101 S', direction: 'Southbound', state: 'CLOSED' }]
+				})
+			],
+			NOW
+		);
+		expect(events.map((e) => e.id)).toEqual([
+			'closed',
+			'major',
+			'unknown-trip',
+			'unknown-marin-only',
+			'moderate',
+			'minor'
+		]);
+	});
+
+	it('SOME_LANES_CLOSED sets lanes "some lanes closed"; SINGLE_LANE_ALTERNATING "one lane alternating"', () => {
+		const { events } = corridorEvents(
+			[
+				roadwork({ name: 'US-101 S', direction: 'Southbound' }, CORTE_MADERA),
+				roadwork(
+					{ name: 'US-101 N', direction: 'Northbound', state: 'SINGLE_LANE_ALTERNATING' },
+					CORTE_MADERA,
+					{ created: '2026-10-14T22:00Z' }
+				)
+			],
+			NOW
+		);
+		expect(events.map((e) => [e.lanes, e.closed])).toEqual([
+			['some lanes closed', false],
+			['one lane alternating', false]
+		]);
 	});
 });
