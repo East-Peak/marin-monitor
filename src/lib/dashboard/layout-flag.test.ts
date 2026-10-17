@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+	DEFAULT_DASHBOARD_LAYOUT,
 	PRIVATE_DASHBOARD_CACHE,
 	PUBLIC_DASHBOARD_CACHE,
 	PUBLIC_V2_DASHBOARD_CACHE,
@@ -13,6 +14,14 @@ const at = (path: string) => new URL(path, 'https://marinmonitor.com');
 const layoutOf = (path: string, d?: DashboardLayout) => resolveDashboardLayout(at(path), d).layout;
 
 describe('resolveDashboardLayout', () => {
+	it('defaults to v2 since the flip (DASH-FLIP2)', () => {
+		expect(DEFAULT_DASHBOARD_LAYOUT).toBe('v2');
+		expect(resolveDashboardLayout(at('/'))).toEqual({ layout: 'v2', explicit: false });
+		expect(resolveDashboardLayout(at('/?layout=legacy'))).toEqual({
+			layout: 'legacy',
+			explicit: true
+		});
+	});
 	it('?layout=v2 selects v2, case- and whitespace-insensitively, under either default', () => {
 		for (const d of ['legacy', 'v2'] as const) {
 			expect(resolveDashboardLayout(at('/?layout=v2'), d)).toEqual({

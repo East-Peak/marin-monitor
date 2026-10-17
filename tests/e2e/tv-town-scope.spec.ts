@@ -33,9 +33,10 @@ test.describe('TV has its own transient scope', () => {
 		await page.keyboard.press('m');
 		await expect(page).toHaveURL(/\/tv$/);
 		await tvReady(page);
+		// TV Escape goes to /, which is v2 since the flip (DASH-FLIP2); the town carries over.
 		await page.keyboard.press('Escape');
 		await expect(page).toHaveURL(/\/$/);
-		await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
+		await expect(page.locator('[data-layout="v2"]')).toBeVisible();
 		await expect(pickerLabel(page)).toHaveText('Mill Valley');
 		expect(await page.evaluate(() => localStorage.getItem('mm_town'))).toBe('mill-valley');
 	});
@@ -80,7 +81,7 @@ test.describe('TV forces dark without saving it', () => {
 		expect(await shownTheme(page)).toBe('dark');
 		await page.keyboard.press('Escape');
 		await expect(page).toHaveURL(/\/$/);
-		await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
+		await expect(page.locator('[data-layout="v2"]')).toBeVisible();
 		await expect.poll(() => shownTheme(page)).toBe('light');
 		expect(await savedTheme(page)).toBe('"light"');
 	});

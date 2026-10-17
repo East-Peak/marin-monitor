@@ -40,6 +40,18 @@ for (const [name, viewport] of [
 	});
 }
 
+test('the default / is v2 with the seeded news in its HTML, publicly cached and indexable', async ({
+	request
+}) => {
+	const res = await request.get('/');
+	expect(res.headers()['cache-control']).toBe('s-maxage=60, stale-while-revalidate=300');
+	const html = await res.text();
+	expect(html).toContain('data-layout="v2"');
+	expect(html).toContain('San Rafael council approves Canal housing plan');
+	expect(html).not.toContain('noindex');
+	expect(html).not.toContain('rel="canonical"');
+});
+
 test('a saved town: hydration adopts the county-wide server rows, then the list narrows once', async ({
 	page
 }) => {

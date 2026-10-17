@@ -12,8 +12,8 @@ export interface DashboardLayoutChoice {
 	explicit: boolean;
 }
 
-/** Pre-flip default. The D1 default flip (PR 15) changes this one constant. */
-export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = 'legacy';
+/** The D1 default flip (PR 15, DASH-FLIP2). Rollback: set this back to 'legacy'. */
+export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = 'v2';
 
 export const PUBLIC_DASHBOARD_CACHE = 's-maxage=120, stale-while-revalidate=300';
 export const PUBLIC_V2_DASHBOARD_CACHE = 's-maxage=60, stale-while-revalidate=300';

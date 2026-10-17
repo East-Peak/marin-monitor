@@ -51,12 +51,18 @@ test.describe('dashboard layout flag', () => {
 		expect(errors).toEqual([]);
 	});
 
-	test('the default page is still the legacy dashboard and still loads data', async ({ page }) => {
+	test('the default page is v2, starts no legacy loaders, and the old dashboard is one link away', async ({
+		page
+	}) => {
 		const data = recordRequests(page, DATA_REQUEST);
 		await page.goto('/');
-		await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
+		await v2Hydrated(page);
 		await expect(page.locator('[data-layout]')).toHaveCount(1);
-		await expect.poll(() => data.length, { timeout: 15_000 }).toBeGreaterThan(0);
+		await page.waitForTimeout(3_000);
+		expect(data.filter((u) => LEGACY_ONLY.test(u))).toEqual([]);
+		await page.getByRole('link', { name: 'Old dashboard' }).click();
+		await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
+		await expect(page).toHaveURL(/\?layout=legacy$/);
 	});
 
 	test('server HTML already carries the resolved layout (no client-side switch)', async ({

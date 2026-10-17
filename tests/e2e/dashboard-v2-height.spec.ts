@@ -135,7 +135,7 @@ test.describe('phone 390×844', () => {
 				);
 			}
 			if (mode === 'every camera down') await stubCams(page, { fail: () => true }); // later route wins
-			await page.goto('/?layout=v2&probe');
+			await page.goto('/?probe');
 			await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 			await page.evaluate(() => document.fonts.ready);
 			// Two failures need the 10 s retry before the all-down notice (Codex r2 #5).
@@ -208,7 +208,7 @@ test('the height measurement waits for a delayed brief card', async ({ page }) =
 		await held;
 		await r.fulfill({ status: 503, body: 'down' });
 	});
-	await page.goto('/?layout=v2&probe');
+	await page.goto('/?probe');
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 	// Every map source settles, but the brief's forecast card is still pending: not settled.
 	await expect

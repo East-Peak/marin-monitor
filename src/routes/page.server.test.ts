@@ -41,12 +41,17 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe('dashboard page load', () => {
-	it('renders legacy by default, publicly cacheable, with the legacy prefetch', async () => {
+	it('renders v2 by default, publicly cacheable once seeded, without the legacy prefetch', async () => {
 		const { ev, headers } = event('/');
-		const data = await load(ev);
-		expect(data).toEqual({ layout: 'legacy', explicit: false, bootstrap: BOOT });
-		expect(headers['Cache-Control']).toBe('s-maxage=120, stale-while-revalidate=300');
-		expect(loadLegacyBootstrap).toHaveBeenCalledOnce();
+		expect(await load(ev)).toMatchObject({ layout: 'v2', explicit: false, snapshot: VIEW });
+		expect(headers['Cache-Control']).toBe('s-maxage=60, stale-while-revalidate=300');
+		expect(loadLegacyBootstrap).not.toHaveBeenCalled();
+	});
+	it('the default v2 without a snapshot is private, no-store', async () => {
+		readNewsSnapshot.mockResolvedValue({ status: 'unavailable', reason: 'missing' });
+		const { ev, headers } = event('/');
+		expect(await load(ev)).toMatchObject({ layout: 'v2', snapshot: null });
+		expect(headers['Cache-Control']).toBe('private, no-store');
 	});
 	it('?layout=v2 is private and never starts the legacy prefetch', async () => {
 		const { ev, headers } = event('/?layout=v2');
@@ -62,10 +67,15 @@ describe('dashboard page load', () => {
 			expect(headers['Cache-Control']).toBe('private, no-store');
 		}
 	});
-	it('a failed prefetch still renders legacy (bootstrap null)', async () => {
+	it('?layout=legacy runs the legacy prefetch; a failed one still renders legacy', async () => {
+		const { ev } = event('/?layout=legacy');
+		expect(await load(ev)).toEqual({ layout: 'legacy', explicit: true, bootstrap: BOOT });
 		loadLegacyBootstrap.mockResolvedValue(null);
-		const { ev } = event('/');
-		expect(await load(ev)).toEqual({ layout: 'legacy', explicit: false, bootstrap: null });
+		expect(await load(event('/?layout=legacy').ev)).toEqual({
+			layout: 'legacy',
+			explicit: true,
+			bootstrap: null
+		});
 	});
 });
 
@@ -114,7 +124,7 @@ describe('v2 server-rendered first paint (DASH-FLIP1)', () => {
 	});
 
 	it('the legacy layout never reads the snapshot', async () => {
-		await load(event('/').ev);
+		await load(event('/?layout=legacy').ev);
 		expect(readNewsSnapshot).not.toHaveBeenCalled();
 	});
 });
