@@ -164,11 +164,14 @@ test.describe('TV Screen Content', () => {
 	});
 
 	test('Driveway card shows vehicle data', async ({ page }) => {
-		const marker = page.getByRole('heading', { name: 'The Marin Driveway' });
-		const found = await navigateToScreen(page, marker);
-		expect(found).toBe(true);
-
-		await page.waitForTimeout(1000);
+		// Go to the screen by its state, then wait for its data: the heading only renders once the
+		// data loads, so advancing until it shows rolls past a screen still loading under load.
+		const screen = page.locator('[data-screen-id="driveway"]');
+		await screen.click();
+		await expect(screen).toHaveAttribute('aria-current', 'true');
+		await expect(page.getByRole('heading', { name: 'The Marin Driveway' })).toBeVisible({
+			timeout: 10000
+		});
 		await page.screenshot({ path: 'tests/e2e/screenshots/tv-driveway.png' });
 
 		await expect(page.locator('text=Registration Stats').first()).toBeVisible({ timeout: 10000 });

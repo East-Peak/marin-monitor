@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { SETTLED_HEALTH_LABEL } from '../../src/lib/dashboard/health-labels';
 import { formatAsOf } from '../../src/lib/dashboard/pacific-time';
+import { FRESHNESS_CLAIM, LIVE_BADGE } from './fixtures/freshness-claims';
 
 test.skip(({ baseURL }) => !baseURL?.startsWith('https://'), 'production readback only');
 
@@ -30,7 +31,9 @@ test('production brief: every card answers or says why not; nothing says LIVE or
 			/^(loading|ok|stale|unavailable|unknown)$/
 		);
 	}
-	expect(await page.locator('main').innerText()).not.toMatch(/\bLIVE\b|just now|all clear/i);
+	const text = await page.locator('main').innerText();
+	expect(text).not.toMatch(LIVE_BADGE);
+	expect(text).not.toMatch(FRESHNESS_CLAIM);
 });
 
 interface Report {

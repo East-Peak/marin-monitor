@@ -5,7 +5,7 @@
  * without waiting on news; an unavailable snapshot shows as DEGRADED.
  * Pins are read from MapLibre (queryRenderedFeatures via the ?probe hook).
  */
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page, type Request } from '@playwright/test';
 import { snapshotEnvelope } from './fixtures/news-snapshot';
 
 const CHAIN = /\/api\/(feeds|article|geocode)(\?|$)/;
@@ -27,7 +27,7 @@ type Probe = { chain: string[]; snapshotServed: boolean };
 
 async function setup(
 	page: Page,
-	snapshot: { status: number; body: string; delayMs?: number }
+	snapshot: { status: number; body: string; heldUntil?: Promise<void> }
 ): Promise<Probe> {
 	const probe: Probe = { chain: [], snapshotServed: false };
 	await page.addInitScript(() => {
@@ -52,7 +52,7 @@ async function setup(
 		probe.chain.push(route.request().url());
 	});
 	await page.route('**/api/news/snapshot', async (route) => {
-		if (snapshot.delayMs) await new Promise((r) => setTimeout(r, snapshot.delayMs));
+		await snapshot.heldUntil;
 		probe.snapshotServed = true;
 		await route
 			.fulfill({ status: snapshot.status, contentType: 'application/json', body: snapshot.body })
@@ -127,15 +127,33 @@ test.describe('TV reads the news snapshot — built app', () => {
 	test('311 pins render on the visible county slide while the snapshot is still pending', async ({
 		page
 	}) => {
+		// The snapshot is held open, so pins seen while its request is still in flight prove they
+		// don't wait on news; no wall-clock budget to trip under load. In flight, not merely
+		// unserved: the client gives up after 10 s, and pins after that abort would prove nothing
+		// (Codex E2E-TIDY #1).
+		let release!: () => void;
 		const probe = await setup(page, {
 			status: 200,
 			body: snapshotEnvelope([{ title: STORY, hoursAgo: 1, slug: 'oysters' }]),
-			delayMs: 20_000
+			heldUntil: new Promise((r) => (release = r))
 		});
-		await page.goto('/tv?probe=1');
-		await expect.poll(() => rendered311(page), { timeout: 10_000 }).not.toBeNull();
-		expect(await rendered311(page)).toBeLessThan(7_000);
-		expect(probe.snapshotServed).toBe(false);
+		let snapshotInFlight = false;
+		const isSnapshot = (r: Request) => new URL(r.url()).pathname === '/api/news/snapshot';
+		page.on('request', (r) => isSnapshot(r) && (snapshotInFlight = true));
+		page.on('requestfailed', (r) => isSnapshot(r) && (snapshotInFlight = false));
+		page.on('requestfinished', (r) => isSnapshot(r) && (snapshotInFlight = false));
+		try {
+			await page.goto('/tv?probe=1');
+			// In flight is read after the pins are seen, so they rendered before it settled.
+			await expect
+				.poll(async () => (await rendered311(page)) !== null && snapshotInFlight, {
+					timeout: 10_000
+				})
+				.toBe(true);
+			expect(probe.snapshotServed).toBe(false);
+		} finally {
+			release();
+		}
 	});
 
 	test('an unavailable snapshot is DEGRADED on every refresh and keeps the TV running (pins, last-good headline, no NaN)', async ({

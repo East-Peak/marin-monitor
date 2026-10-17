@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
+import { FRESHNESS_CLAIM, LIVE_BADGE } from './fixtures/freshness-claims';
 
 test.skip(
 	({ baseURL }) => baseURL?.startsWith('https://') ?? false,
@@ -151,6 +152,14 @@ test.beforeEach(async ({ page }) => {
 	await page.clock.install({ time: T0 });
 });
 
+test('the LIVE check is case-sensitive: an honest "Live menus" label passes, a LIVE badge fails', () => {
+	expect('Cost · Live menus · unavailable (HTTP 503)').not.toMatch(LIVE_BADGE);
+	expect('Weather LIVE 60°F').toMatch(LIVE_BADGE);
+	expect('Cost · Live menus · unavailable (HTTP 503)').not.toMatch(FRESHNESS_CLAIM);
+	expect('Updated Just now').toMatch(FRESHNESS_CLAIM);
+	expect('Advisories: All clear').toMatch(FRESHNESS_CLAIM);
+});
+
 test('each brief card answers with its value, scope and time', async ({ page }) => {
 	await stubAll(page);
 	await openV2(page);
@@ -163,7 +172,9 @@ test('each brief card answers with its value, scope and time', async ({ page }) 
 	const tide = page.locator('[data-card="tide"]');
 	await expect(tide).toContainText('High 6.3 ft · 12:41 PM');
 	await expect(tide).toContainText('Point Reyes · NOAA prediction');
-	await expect(page.locator('main')).not.toContainText(/\bLIVE\b|just now/i);
+	// Rendered text: a CSS-uppercased "live" is still a LIVE badge.
+	await expect(page.locator('main')).not.toContainText(LIVE_BADGE, { useInnerText: true });
+	await expect(page.locator('main')).not.toContainText(FRESHNESS_CLAIM);
 });
 
 test('weather: /latest has no temperature, the QC’d list does: the card shows it with that report’s time', async ({

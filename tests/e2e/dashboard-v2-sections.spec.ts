@@ -18,6 +18,11 @@ const focusedToggle = (page: Page) =>
 		() => (document.activeElement as HTMLElement | null)?.dataset.sectionToggle ?? null
 	);
 
+const focusableCount = (page: Page) =>
+	page.evaluate(
+		() => document.querySelectorAll('a[href], button, input, select, textarea, [tabindex]').length
+	);
+
 // Below 1024 sections collapse and remember; the toggle behaviour is pinned at tablet width.
 test.describe('tablet 900×900', () => {
 	test.use({ viewport: { width: 900, height: 900 } });
@@ -60,8 +65,14 @@ test.describe('tablet 900×900', () => {
 
 	test('keyboard: Tab reaches a toggle, Enter and Space operate it', async ({ page }) => {
 		await openV2(page);
-		// Real Tab navigation from the top of the page, not .focus() (Codex PR 7 #3).
-		for (let i = 0; i < 60 && (await focusedToggle(page)) !== 'cost'; i++) {
+		// Real Tab navigation from the top of the page, not .focus() (Codex PR 7 #3). Live data
+		// keeps adding links ahead of Cost, so the bound is the page's own focusable count, not a
+		// fixed number: one Tab cycle visits each at most once.
+		for (
+			let i = 0;
+			i < (await focusableCount(page)) && (await focusedToggle(page)) !== 'cost';
+			i++
+		) {
 			await page.keyboard.press('Tab');
 		}
 		expect(await focusedToggle(page)).toBe('cost');
