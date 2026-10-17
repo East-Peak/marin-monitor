@@ -587,9 +587,7 @@ export function gettingAroundCard(
 	const road: CardItem =
 		r.state === 'ok'
 			? {
-					text: events.length
-						? `${plural(marin, 'incident')} on Marin roads${routes ? ` · ${routes} on airport routes` : ''}`
-						: '511 lists no incidents on Marin roads',
+					text: `${marin ? `${plural(marin, 'incident')} on Marin roads` : '511 lists no incidents on Marin roads'}${routes ? ` · ${routes} on airport routes` : ''}`,
 					state: 'ok'
 				}
 			: {

@@ -1027,3 +1027,27 @@ describe('gettingAroundCard transit count (MAPX1, Codex #6)', () => {
 		expect(items.at(-1)).toEqual({ text: 'Marin Transit: 1 alert on 511', state: 'ok' });
 	});
 });
+
+describe('gettingAroundCard road wording (MAPX1 live look)', () => {
+	it('none in Marin but some on the airport routes reads as such, never "0 incidents"', () => {
+		const ev = (id: string) => ({
+			id,
+			marin: false,
+			corridor: 'to-sfo' as const,
+			trip: 'to-sfo' as const,
+			closed: false,
+			lanes: null,
+			certain: true,
+			kind: 'Roadwork',
+			road: 'I-280',
+			where: 'Northbound',
+			severity: 'Minor' as const,
+			reportedAt: new Date(NOW - 5 * MIN).toISOString()
+		});
+		const i = input({ traffic: { ...TRAFFIC, events: [ev('a'), ev('b')] } });
+		expect(gettingAroundCard(gettingAroundView(i), i)[2]).toEqual({
+			text: '511 lists no incidents on Marin roads · 2 on airport routes',
+			state: 'ok'
+		});
+	});
+});
