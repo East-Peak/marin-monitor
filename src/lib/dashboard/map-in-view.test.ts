@@ -153,3 +153,40 @@ describe('inViewItems', () => {
 		expect(s.note).toBe('Kept from 7:00 AM · read failed');
 	});
 });
+
+describe('inViewItems: the data layers (MAPX2b)', () => {
+	it('lists each drawn point under its layer, with its detail and kept note', () => {
+		const out = inViewItems({
+			news: [],
+			threeOneOne: [],
+			earthquakes: [],
+			town: null,
+			towns: {},
+			layers: [
+				{
+					id: 'gas',
+					kept: 'Kept from 7:00 AM · HTTP 503',
+					points: [
+						{
+							id: 'p1',
+							lon: -122.53,
+							lat: 37.97,
+							title: 'Shell',
+							at: null,
+							props: {},
+							detail: { title: 'Shell', meta: [], paragraphs: [], source: null }
+						}
+					]
+				}
+			]
+		});
+		expect(out).toEqual([
+			expect.objectContaining({
+				id: 'gas:p1',
+				layer: 'gas',
+				title: 'Shell',
+				note: 'Kept from 7:00 AM · HTTP 503'
+			})
+		]);
+	});
+});

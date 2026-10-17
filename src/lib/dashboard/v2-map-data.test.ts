@@ -151,6 +151,14 @@ describe('the v2 map draws only what this owner established (Codex r3 #1)', () =
 		});
 		expect(d.coverage.state).toBe('unavailable');
 		expect(d.loading).toEqual([]);
+		// The layer panel's as-of (MAPX2b): no time for a read that failed.
+		expect(d.asOf).toEqual({ news: null, '311': null, earthquakes: null });
+	});
+
+	it('a value read carries its own as-of time for the layer panel (MAPX2b)', () => {
+		const v = view([pinStory('a')], NOW - 20 * 60_000);
+		const d = run({ view: v, sources: sources(v, { ok: true, view: v } as never) });
+		expect(d.asOf.news).toBe(NOW - 20 * 60_000);
 	});
 });
 

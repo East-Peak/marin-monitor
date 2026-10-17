@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { featureSelection, flyTarget, resolveSelection } from './map-selection';
+import { clickSelection, featureSelection, flyTarget, resolveSelection } from './map-selection';
 import type { InViewItem } from './map-in-view';
 
 const item = (id: string, lon = -122.5, lat = 37.9): InViewItem => ({
@@ -45,5 +45,25 @@ describe('resolveSelection', () => {
 	it('drops back to the list when the item leaves the data', () => {
 		expect(resolveSelection([item('news:a')], 'news:b')).toBeNull();
 		expect(resolveSelection([item('news:a')], null)).toBeNull();
+	});
+});
+
+describe('the data layers (MAPX2b)', () => {
+	it.each([
+		['traffic-events', 'traffic:511.org/1'],
+		['fire-incidents', 'fire:511.org/1'],
+		['gas-stations', 'gas:511.org/1'],
+		['ev-charging-stations', 'ev:511.org/1'],
+		['coffee-shops', 'coffee:511.org/1']
+	])('a hovered %s feature names its row', (source, id) => {
+		expect(featureSelection({ source, properties: { itemId: '511.org/1' } })).toBe(id);
+	});
+	it('a click passes its id through, namespaced by the feature kind', () => {
+		expect(clickSelection({ kind: 'traffic-event', itemId: 'x' })).toBe('traffic:x');
+		expect(clickSelection({ kind: 'gas-station', itemId: 'p1' })).toBe('gas:p1');
+		expect(clickSelection({ kind: '311-report', itemId: 's' })).toBe('311:s');
+		expect(clickSelection({ kind: 'earthquake', itemId: 'q' })).toBe('quake:q');
+		expect(clickSelection({ kind: 'landmark', itemId: 'l' })).toBeNull();
+		expect(clickSelection({ kind: 'fire-incident' })).toBeNull();
 	});
 });

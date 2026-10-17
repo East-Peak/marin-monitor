@@ -6,6 +6,7 @@
  */
 import type { Detail } from '$lib/components/dashboard-v2/DetailContent.svelte';
 import type { NewsItem } from '$lib/types';
+import type { DataLayerView } from './v2-map-layers';
 
 export type InViewLayer = 'news' | '311' | 'quake' | 'traffic' | 'fire' | 'gas' | 'ev' | 'coffee';
 /** List order: one group per layer. */
@@ -80,6 +81,8 @@ export function inViewItems(input: {
 	towns: Readonly<Record<string, TownPoint>>;
 	notes?: ReadonlyMap<string, string>;
 	formatTime?: (ms: number) => string;
+	/** The drawn data layers (MAPX2b): their points as they are on the map. */
+	layers?: readonly Pick<DataLayerView, 'id' | 'points' | 'kept'>[];
 }): InViewItem[] {
 	const { towns, town, notes } = input;
 	const time = (i: NewsItem) => {
@@ -149,5 +152,17 @@ export function inViewItems(input: {
 			}
 		);
 	}
+	for (const layer of input.layers ?? [])
+		for (const p of layer.points)
+			out.push({
+				id: selectionId(layer.id, p.id),
+				layer: layer.id,
+				title: p.title,
+				at: p.at,
+				lon: p.lon,
+				lat: p.lat,
+				detail: p.detail,
+				note: layer.kept
+			});
 	return out;
 }

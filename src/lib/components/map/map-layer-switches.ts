@@ -20,6 +20,45 @@ export interface OwnedLayerData {
 	threeOneOne: readonly NewsItem[];
 	/** What was kept after a failure: news per item id; 311 and quakes per part. */
 	retained: { news: ReadonlySet<string>; threeOneOne: boolean; earthquakes: boolean };
+	/** v2's data layers (MAPX2b), drawn as given: each empty when off or unavailable. */
+	places?: Readonly<Record<OwnedPlace, readonly GeoJSON.Feature[]>>;
+}
+
+/** Each owned data layer's shared MapLibre source. */
+export const OWNED_PLACE_SOURCES = {
+	traffic: 'traffic-events',
+	fire: 'fire-incidents',
+	gas: 'gas-stations',
+	ev: 'ev-charging-stations',
+	coffee: 'coffee-shops'
+} as const;
+export type OwnedPlace = keyof typeof OWNED_PLACE_SOURCES;
+
+/** The parts of a MapLibre map the owned places touch (a fake in tests). */
+export interface PlacesTarget {
+	getStyle(): { layers?: readonly { id: string; source?: unknown }[] } | undefined;
+	getSource(id: string): { setData(data: GeoJSON.FeatureCollection): unknown } | undefined;
+	setLayoutProperty(id: string, prop: 'visibility', value: 'visible'): unknown;
+}
+
+/**
+ * Draw v2's data layers from the owner's features and show every layer on their sources (an
+ * empty list draws nothing; the owner says why). Returns each source's feature count.
+ */
+export function applyOwnedPlaces(
+	map: PlacesTarget,
+	places: NonNullable<OwnedLayerData['places']>
+): Record<string, number> {
+	const counts: Record<string, number> = {};
+	const layers = map.getStyle()?.layers ?? [];
+	for (const [place, source] of Object.entries(OWNED_PLACE_SOURCES)) {
+		const features = [...places[place as OwnedPlace]];
+		map.getSource(source)?.setData({ type: 'FeatureCollection', features });
+		for (const l of layers)
+			if (l.source === source) map.setLayoutProperty(l.id, 'visibility', 'visible');
+		counts[source] = features.length;
+	}
+	return counts;
 }
 
 export const OWNED_MAP_LAYERS: readonly MapLayer[] = [

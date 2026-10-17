@@ -39,6 +39,7 @@
 		refreshAirportPins
 	} from './map-data';
 	import { setupSources } from './map-layers';
+	import { applyV2Paint } from './v2-paint';
 	import {
 		alertPulseFeatures,
 		applyAirportSwitch,
@@ -49,7 +50,9 @@
 		syncCounts,
 		trafficVisibility,
 		type AirportSwitchTarget,
-		type OwnedLayerData
+		type OwnedLayerData,
+		applyOwnedPlaces,
+		type PlacesTarget
 	} from './map-layer-switches';
 	import {
 		hoveredFeatureIds,
@@ -85,6 +88,8 @@
 		trafficEvents?: boolean;
 		/** Owner-supplied data: when set, the shared news/311/place stores are not read. */
 		layerData?: OwnedLayerData;
+		/** v2 desktop's own town and 311 paint (MAPX2b); off, the shared style. */
+		v2Paint?: boolean;
 		/** Called after each sync of owner data (the v2 e2e hook). */
 		onSynced?: (sync: { revision: number; counts: Record<string, number> }) => void;
 	}
@@ -96,6 +101,7 @@
 		airports = true,
 		trafficEvents = true,
 		layerData,
+		v2Paint = false,
 		onSynced,
 		onTownClick,
 		onTownHover,
@@ -107,6 +113,16 @@
 	// svelte-ignore state_referenced_locally
 	const reads = optionalReads({ airports, trafficEvents });
 	const owned = () => layerData;
+	let restorePaint: (() => void) | null = null;
+	$effect(() => {
+		const m = getMap();
+		if (!m?.getLayer('towns-layer')) return;
+		if (v2Paint && !restorePaint) restorePaint = applyV2Paint(m);
+		else if (!v2Paint && restorePaint) {
+			restorePaint();
+			restorePaint = null;
+		}
+	});
 	let updateDataTimer: ReturnType<typeof setTimeout> | null = null;
 
 	// Owner data changes re-sync the map (debounced like the store path); legacy is unaffected.
@@ -165,6 +181,12 @@
 
 	function applyTrafficVisibility(map: MapLibreMap) {
 		const { showTrafficCongestion, showTrafficEvents } = get(mapStore);
+		// v2's owned 511 events are shown by applyOwnedPlaces; its congestion tiles have no status.
+		if (owned()?.places) {
+			if (map.getLayer('traffic-congestion-layer'))
+				map.setLayoutProperty('traffic-congestion-layer', 'visibility', 'none');
+			return;
+		}
 		const vis = trafficVisibility(reads.traffic, showTrafficCongestion, showTrafficEvents);
 
 		if (map.getLayer('traffic-congestion-layer')) {
@@ -261,7 +283,8 @@
 				title,
 				subtitle: `${eventType} \u00b7 ${severity}`,
 				severity,
-				source: String(feature?.properties?.source ?? '511 Traffic')
+				source: String(feature?.properties?.source ?? '511 Traffic'),
+				itemId: feature?.properties?.itemId ? String(feature.properties.itemId) : undefined
 			});
 		});
 
@@ -290,7 +313,8 @@
 				title: name,
 				subtitle: price ? `Regular: ${price}` : 'Price unavailable',
 				description: address,
-				source: 'Google Places'
+				source: 'Google Places',
+				itemId: feature?.properties?.itemId ? String(feature.properties.itemId) : undefined
 			});
 		});
 
@@ -307,7 +331,8 @@
 				title: name,
 				subtitle: [network, level].filter(Boolean).join(' \u00b7 '),
 				description: [connectors, pricing].filter(Boolean).join('\n'),
-				source: 'NREL AFDC'
+				source: 'NREL AFDC',
+				itemId: feature?.properties?.itemId ? String(feature.properties.itemId) : undefined
 			});
 		});
 
@@ -326,7 +351,8 @@
 				subtitle:
 					price && headlineLabel ? `${headlineLabel}: ${price}` : price ? price : statusLabel,
 				description: [address, menuSummary].filter(Boolean).join('\n'),
-				source: 'Marin Coffee Index'
+				source: 'Marin Coffee Index',
+				itemId: feature?.properties?.itemId ? String(feature.properties.itemId) : undefined
 			});
 		});
 
@@ -373,7 +399,8 @@
 				title: `${name} Fire`,
 				subtitle: `${acres.toLocaleString()} acres \u00b7 ${containment}% contained`,
 				description: url ? `Details: ${url}` : undefined,
-				source: String(feature?.properties?.source ?? 'CAL FIRE')
+				source: String(feature?.properties?.source ?? 'CAL FIRE'),
+				itemId: feature?.properties?.itemId ? String(feature.properties.itemId) : undefined
 			});
 		});
 
@@ -464,6 +491,9 @@
 	function setupAndBind(map: MapLibreMap) {
 		setupSources(map);
 		applyAirportSwitch(map as unknown as AirportSwitchTarget, reads.airports);
+		// v2 desktop repaints towns and 311 (MAPX2b); phone, legacy and /tv keep the shared style.
+		// After a style swap the layers are new, so their shared paint is what restore keeps.
+		restorePaint = v2Paint ? applyV2Paint(map) : null;
 		bindInteractions(map);
 		applyTrafficVisibility(map);
 	}
@@ -705,15 +735,21 @@
 		applyTrafficVisibility(map);
 
 		const data = owned();
+		const placeCounts = data?.places
+			? applyOwnedPlaces(map as unknown as PlacesTarget, data.places)
+			: {};
 		if (data)
 			onSynced?.({
 				revision: data.revision,
-				counts: syncCounts({
-					'news-pins': pinFeatures,
-					'alert-pulses': alertFeatures,
-					earthquakes: quakeFeatures,
-					'311-reports': threeOneOneFeatures
-				})
+				counts: {
+					...syncCounts({
+						'news-pins': pinFeatures,
+						'alert-pulses': alertFeatures,
+						earthquakes: quakeFeatures,
+						'311-reports': threeOneOneFeatures
+					}),
+					...placeCounts
+				}
 			});
 	}
 

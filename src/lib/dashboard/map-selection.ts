@@ -9,8 +9,30 @@ import { selectionId, type InViewItem, type InViewLayer } from './map-in-view';
 const SOURCES: Readonly<Record<string, { layer: InViewLayer; key: string }>> = {
 	'news-pins': { layer: 'news', key: 'id' },
 	'311-reports': { layer: '311', key: 'itemId' },
-	earthquakes: { layer: 'quake', key: 'itemId' }
+	earthquakes: { layer: 'quake', key: 'itemId' },
+	'traffic-events': { layer: 'traffic', key: 'itemId' },
+	'fire-incidents': { layer: 'fire', key: 'itemId' },
+	'gas-stations': { layer: 'gas', key: 'itemId' },
+	'ev-charging-stations': { layer: 'ev', key: 'itemId' },
+	'coffee-shops': { layer: 'coffee', key: 'itemId' }
 };
+
+/** The map's click payload kinds that name a listed item. */
+const KINDS: Readonly<Record<string, InViewLayer>> = {
+	'311-report': '311',
+	earthquake: 'quake',
+	'traffic-event': 'traffic',
+	'fire-incident': 'fire',
+	'gas-station': 'gas',
+	'ev-charging-station': 'ev',
+	'coffee-shop': 'coffee'
+};
+
+/** A feature click's selection: its own id, namespaced by its kind (null when it names none). */
+export function clickSelection(f: { kind: string; itemId?: string }): string | null {
+	const layer = KINDS[f.kind];
+	return layer && f.itemId ? selectionId(layer, f.itemId) : null;
+}
 
 export function featureSelection(feature: {
 	source: string;

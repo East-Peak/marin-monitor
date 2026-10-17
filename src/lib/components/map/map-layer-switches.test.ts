@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { NewsItem, Town } from '$lib/types';
 import {
+	applyOwnedPlaces,
 	OWNED_MAP_LAYERS,
 	alertPulseFeatures,
 	applyAirportSwitch,
@@ -140,5 +141,53 @@ describe('owner-supplied layer data (Codex r3 #1)', () => {
 			'alert-pulses': 0,
 			'alert-pulses:retained': 0
 		});
+	});
+});
+
+describe('owned data layers (MAPX2b)', () => {
+	const point = (id: string): GeoJSON.Feature => ({
+		type: 'Feature',
+		properties: { itemId: id },
+		geometry: { type: 'Point', coordinates: [-122.5, 37.9] }
+	});
+	function fakeMap() {
+		const data: Record<string, unknown> = {};
+		const vis: Record<string, string> = {};
+		const layers = [
+			{ id: 'traffic-events-layer', source: 'traffic-events' },
+			{ id: 'traffic-events-hit-layer', source: 'traffic-events' },
+			{ id: 'gas-stations-layer', source: 'gas-stations' },
+			{ id: 'gas-stations-label', source: 'gas-stations' },
+			{ id: 'fire-incidents-layer', source: 'fire-incidents' },
+			{ id: 'ev-charging-stations-layer', source: 'ev-charging-stations' },
+			{ id: 'coffee-shops-layer', source: 'coffee-shops' }
+		];
+		return {
+			data,
+			vis,
+			getStyle: () => ({ layers }),
+			getSource: (id: string) => ({ setData: (d: unknown) => (data[id] = d) }),
+			setLayoutProperty: (id: string, _p: 'visibility', v: string) => (vis[id] = v)
+		};
+	}
+	it('draws each layer from the owner, never a shared store, and shows its layers', () => {
+		const map = fakeMap();
+		const counts = applyOwnedPlaces(map, {
+			traffic: [point('a'), point('b')],
+			fire: [],
+			gas: [point('g')],
+			ev: [],
+			coffee: []
+		});
+		expect(counts).toEqual({
+			'traffic-events': 2,
+			'fire-incidents': 0,
+			'gas-stations': 1,
+			'ev-charging-stations': 0,
+			'coffee-shops': 0
+		});
+		expect((map.data['traffic-events'] as GeoJSON.FeatureCollection).features).toHaveLength(2);
+		expect(map.vis['gas-stations-label']).toBe('visible');
+		expect(map.vis['traffic-events-hit-layer']).toBe('visible');
 	});
 });

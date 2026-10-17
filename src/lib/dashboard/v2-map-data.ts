@@ -42,6 +42,8 @@ export interface V2MapData {
 	/** "Nothing on the map right now" only when emptyWording authorizes every enabled layer (Codex r4 #1). */
 	empty: string | null;
 	layers: Record<V2MapLayerKey, Measured<unknown>['kind']>;
+	/** Each layer's as-of time when its read is a value (the layer panel, MAPX2b). */
+	asOf: Record<V2MapLayerKey, number | null>;
 	loading: string[];
 	/** The enabled layers' drawable news and 311 items: what the inspector and tooltip may show (Codex 9b #1, #3). */
 	inspectable: NewsItem[];
@@ -222,6 +224,11 @@ export function v2MapData(input: {
 		coverage,
 		empty,
 		layers: { news: newsM.kind, '311': fixM.kind, earthquakes: quakeM.kind },
+		asOf: {
+			news: newsM.kind === 'value' ? newsM.observedAt : null,
+			'311': fixM.kind === 'value' ? fixM.observedAt : null,
+			earthquakes: quakeM.kind === 'value' ? quakeM.observedAt : null
+		},
 		inspectable: [...newsOn, ...fixOn],
 		established,
 		provenance: {
