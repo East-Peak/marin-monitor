@@ -1,5 +1,6 @@
 <!-- src/routes/+page.svelte -->
 <script lang="ts">
+	import DashboardHead from '$lib/components/dashboard/DashboardHead.svelte';
 	import LegacyDashboard from '$lib/components/dashboard/LegacyDashboard.svelte';
 	import DashboardV2 from '$lib/components/dashboard-v2/DashboardV2.svelte';
 	import type { PageData } from './$types';
@@ -8,6 +9,8 @@
 	// so the legacy loaders (onMount in LegacyDashboard) never start under v2.
 	let { data }: { data: PageData } = $props();
 </script>
+
+<DashboardHead choice={{ layout: data.layout, explicit: data.explicit }} />
 
 {#if data.layout === 'v2'}
 	<DashboardV2 snapshot={data.snapshot} renderedAt={data.renderedAt} />

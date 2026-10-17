@@ -13,7 +13,7 @@ test('UI scale chosen in the v2 ⚙ menu carries to the legacy dashboard; v2 sec
 	await page.getByLabel('UI scale').selectOption('120');
 	await expect.poll(() => page.evaluate(() => document.documentElement.style.zoom)).toBe('120%');
 
-	await page.goto('/');
+	await page.goto('/?layout=legacy');
 	await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
 	expect(await page.evaluate(() => document.documentElement.style.zoom)).toBe('120%');
 	expect(await page.evaluate(() => localStorage.getItem('mm_sections_v2'))).toBeNull();

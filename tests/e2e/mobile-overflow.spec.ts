@@ -5,7 +5,7 @@ test.describe('mobile horizontal overflow', () => {
 	test.use({ viewport: { width: 393, height: 844 } });
 
 	test('page does not scroll horizontally at iPhone width', async ({ page }) => {
-		await page.goto('/');
+		await page.goto('/?layout=legacy');
 		await page.waitForSelector('.signal-layout', { timeout: 10_000 });
 		// Give panels a moment to hydrate
 		await page.waitForTimeout(500);
@@ -19,7 +19,7 @@ test.describe('mobile horizontal overflow', () => {
 	});
 
 	test('signal-layout does not overflow its container', async ({ page }) => {
-		await page.goto('/');
+		await page.goto('/?layout=legacy');
 		await page.waitForSelector('.signal-layout', { timeout: 10_000 });
 		await page.waitForTimeout(500);
 

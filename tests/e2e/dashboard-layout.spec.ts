@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { DEFAULT_DASHBOARD_LAYOUT } from '../../src/lib/dashboard/layout-flag';
 
 /** Requests only the legacy dashboard's loaders make (news, weather, datasets, Strava). */
 const DATA_REQUEST = /\/api\/|api\.weather\.gov|earthquake\.usgs\.gov|tidesandcurrents\.noaa\.gov/;
@@ -64,14 +65,14 @@ test.describe('dashboard layout flag', () => {
 		const v2 = await (await request.get('/?layout=v2')).text();
 		expect(v2).toContain('data-layout="v2"');
 		expect(v2).not.toContain('data-layout="legacy"');
-		const legacy = await (await request.get('/')).text();
+		const legacy = await (await request.get('/?layout=legacy')).text();
 		expect(legacy).toContain('data-layout="legacy"');
 		expect(legacy).not.toContain('data-layout="v2"');
 	});
 
 	// Origin headers only. Vercel strips s-maxage from client-visible responses, so the
 	// deployed-CDN assertions live in dashboard-cache.spec.ts (production only).
-	test('origin cache-control headers hold whichever layout is requested first', async ({
+	test('origin cache-control: only the default layout is public, whichever is requested first', async ({
 		request,
 		baseURL
 	}) => {
@@ -79,28 +80,54 @@ test.describe('dashboard layout flag', () => {
 			baseURL?.startsWith('https://') ?? false,
 			'origin headers are asserted against the local server only'
 		);
-		for (const order of [
-			['/', '/?layout=v2'],
-			['/?layout=v2', '/']
-		]) {
+		// This server has no SSR news seed, so a default v2 is private too (DASH-FLIP1);
+		// the seeded public header is asserted on the SSR server (dashboard-v2-ssr.spec.ts).
+		const defaultCache =
+			DEFAULT_DASHBOARD_LAYOUT === 'legacy'
+				? 's-maxage=120, stale-while-revalidate=300'
+				: 'private, no-store';
+		const expected: Record<string, [string, string]> = {
+			'/': [defaultCache, DEFAULT_DASHBOARD_LAYOUT],
+			'/?layout=v2': ['private, no-store', 'v2'],
+			'/?layout=legacy': ['private, no-store', 'legacy']
+		};
+		for (const order of [Object.keys(expected), Object.keys(expected).reverse()]) {
 			for (const path of order) {
 				const res = await request.get(path);
-				const cacheControl = res.headers()['cache-control'];
-				const html = await res.text();
-				if (path.includes('layout=v2')) {
-					expect(cacheControl).toBe('private, no-store');
-					expect(html).toContain('data-layout="v2"');
-				} else {
-					expect(cacheControl).toContain('s-maxage=120');
-					expect(html).toContain('data-layout="legacy"');
-				}
+				const [cache, layout] = expected[path];
+				expect(res.headers()['cache-control'], path).toBe(cache);
+				expect(await res.text(), path).toContain(`data-layout="${layout}"`);
 			}
 		}
 		// Client navigation fetches __data.json; it follows the same policy.
-		const v2Data = await request.get('/__data.json?layout=v2');
-		expect(v2Data.headers()['cache-control']).toBe('private, no-store');
-		const legacyData = await request.get('/__data.json');
-		expect(legacyData.headers()['cache-control']).toContain('s-maxage=120');
+		for (const [path, [cache]] of Object.entries(expected)) {
+			const data = await request.get(path.replace('/', '/__data.json'));
+			expect(data.headers()['cache-control'], `${path} data`).toBe(cache);
+		}
+	});
+
+	test('meta: the default is indexable; each ?layout override is noindex, v2’s canonical to /', async ({
+		request
+	}) => {
+		const head = async (path: string) => {
+			const html = await (await request.get(path)).text();
+			return html.slice(0, html.indexOf('</head>'));
+		};
+		for (const path of ['/', '/?layout=v2', '/?layout=legacy']) {
+			const h = await head(path);
+			expect(h, path).toContain('<title>Marin Monitor</title>');
+			expect(h, path).toContain('property="og:title" content="Marin Monitor"');
+			expect(h, path).toContain('name="twitter:card" content="summary"');
+			expect(h, path).toMatch(/name="description" content="Everything happening in Marin County/);
+		}
+		expect(await head('/')).not.toContain('noindex');
+		expect(await head('/')).not.toContain('rel="canonical"');
+		expect(await head('/?layout=v2')).toContain('name="robots" content="noindex"');
+		expect(await head('/?layout=v2')).toMatch(
+			/<link rel="canonical" href="https:\/\/marinmonitor\.com\/"\/?>/
+		);
+		expect(await head('/?layout=legacy')).toContain('name="robots" content="noindex"');
+		expect(await head('/?layout=legacy')).not.toContain('rel="canonical"');
 	});
 
 	test('client navigation v2 → legacy → v2, then back/forward, keeps exactly one layout', async ({
@@ -113,12 +140,13 @@ test.describe('dashboard layout flag', () => {
 		});
 
 		const legacyFeeds = recordRequests(page, FEED_REQUEST);
-		await expect(page.locator('meta[name="robots"][content="noindex"]')).toHaveCount(1);
-		await page.getByRole('link', { name: 'Leave preview' }).click();
+		await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
+		await page.getByRole('link', { name: 'Old dashboard' }).click();
 		await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
 		await expect(page.locator('[data-layout]')).toHaveCount(1);
-		// The preview's noindex must not linger on the indexable legacy page.
-		await expect(page.locator('meta[name="robots"][content="noindex"]')).toHaveCount(0);
+		// v2's canonical must not linger on the legacy override; both overrides stay noindex.
+		await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
+		await expect(page.locator('meta[name="robots"][content="noindex"]')).toHaveCount(1);
 		await expect(page).toHaveTitle('Marin Monitor');
 		// Let legacy start its refresh cycle, so requests it issues later cannot be mistaken for v2 leaks.
 		await expect.poll(() => legacyFeeds.length, { timeout: 15_000 }).toBeGreaterThan(0);

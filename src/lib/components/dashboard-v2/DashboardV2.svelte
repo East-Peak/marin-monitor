@@ -57,7 +57,7 @@
 	import { isDesktopViewport, sectionFromHash } from '$lib/dashboard/section-prefs';
 	import { V2_SECTIONS, type V2Section } from '$lib/dashboard/v2-sections';
 
-	const LATER = 'This part of the preview arrives in a later release.';
+	const LATER = 'This part arrives in a later release.';
 
 	let {
 		snapshot: serverSnapshot = null,
@@ -276,11 +276,6 @@
 
 <svelte:window bind:innerWidth />
 
-<svelte:head>
-	<title>Marin Monitor — dashboard preview</title>
-	<meta name="robots" content="noindex" />
-</svelte:head>
-
 <div
 	class="dash-v2"
 	id="top"
@@ -289,7 +284,7 @@
 	data-hydrated={hydrated ? 'true' : 'false'}
 >
 	<header class="v2-header">
-		<a class="v2-logo" href="/?layout=v2" data-text-role="brand">Marin Monitor</a>
+		<a class="v2-logo" href="/" data-text-role="brand">Marin Monitor</a>
 		<div class="v2-scope" role="group" aria-labelledby="v2-scope-label">
 			<span class="v2-scope-label" id="v2-scope-label" data-text-role="label">Showing:</span>
 			<span data-text-role="control"><TownPicker /></span>
@@ -297,7 +292,6 @@
 		<span data-text-role="control"
 			><SettingsMenu onreset={() => sections.clearTransient(window.innerWidth)} /></span
 		>
-		<span class="v2-badge" data-text-role="meta">v2 preview</span>
 		{#if controller && hydrated}
 			<HealthIndicator
 				report={controller.healthReport}
@@ -305,7 +299,8 @@
 				now={clock}
 			/>
 		{/if}
-		<a class="v2-leave" href="/" data-text-role="label">Leave preview</a>
+		<!-- The rollback layout stays reachable until legacy is retired (DASH-FLIP2). -->
+		<a class="v2-old" href="/?layout=legacy" data-text-role="label">Old dashboard</a>
 	</header>
 
 	<main class="v2-main">
@@ -435,9 +430,6 @@
 			{#if ready && controller && desktop}
 				<SourcesFooter report={healthReport} outcomes={controller.datasetOutcomes} now={$clock} />
 			{/if}
-			<p data-text-role="meta">
-				An early preview of the redesigned dashboard. The regular dashboard is unchanged.
-			</p>
 		</footer>
 	</main>
 
@@ -474,18 +466,12 @@
 		gap: 0.5rem;
 	}
 	.v2-scope-label,
-	.v2-leave,
+	.v2-old,
 	.v2-muted,
 	.v2-footer {
 		color: var(--text-muted);
 	}
-	.v2-badge {
-		padding: 2px 8px;
-		border: 1px solid var(--accent);
-		border-radius: 999px;
-		color: var(--accent);
-	}
-	.v2-leave {
+	.v2-old {
 		margin-left: auto;
 	}
 	.v2-main {
@@ -566,8 +552,7 @@
 			grid-template-columns: minmax(0, 1fr);
 		}
 	}
-	.v2-muted,
-	.v2-footer p {
+	.v2-muted {
 		margin: 0.25rem 0 0;
 	}
 	.v2-footer {

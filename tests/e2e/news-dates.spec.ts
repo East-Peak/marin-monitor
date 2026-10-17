@@ -27,7 +27,7 @@ test('undated, future-dated and updated-only feed entries stay visible as "undat
 	);
 	await page.addInitScript(() => localStorage.setItem('mm_onboardingComplete', 'true'));
 
-	await page.goto('/');
+	await page.goto('/?layout=legacy');
 	const row = (title: string) => page.locator('.news-item', { hasText: title }).first();
 	await expect(row('Mill Valley dated story')).toBeVisible({ timeout: 20_000 });
 	await expect(row('Mill Valley dated story').locator('.item-time')).toHaveText('2h');

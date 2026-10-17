@@ -347,7 +347,7 @@ test.describe('desktop 1440×900', () => {
 		const legacy311 = page.waitForResponse(
 			(r) => new URL(r.url()).pathname === '/api/data/311' && r.status() === 200
 		);
-		await page.goto('/');
+		await page.goto('/?layout=legacy');
 		await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
 		await legacy311;
 		// Not hollow (Codex 9c #3): the response alone doesn't prove the store commit; legacy's

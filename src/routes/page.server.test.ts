@@ -44,7 +44,7 @@ describe('dashboard page load', () => {
 	it('renders legacy by default, publicly cacheable, with the legacy prefetch', async () => {
 		const { ev, headers } = event('/');
 		const data = await load(ev);
-		expect(data).toEqual({ layout: 'legacy', bootstrap: BOOT });
+		expect(data).toEqual({ layout: 'legacy', explicit: false, bootstrap: BOOT });
 		expect(headers['Cache-Control']).toBe('s-maxage=120, stale-while-revalidate=300');
 		expect(loadLegacyBootstrap).toHaveBeenCalledOnce();
 	});
@@ -55,16 +55,17 @@ describe('dashboard page load', () => {
 		expect(headers['Cache-Control']).toBe('private, no-store');
 		expect(loadLegacyBootstrap).not.toHaveBeenCalled();
 	});
-	it('?layout=legacy and ?layout=edit render legacy', async () => {
+	it('?layout=legacy and ?layout=edit render legacy, explicit and private', async () => {
 		for (const path of ['/?layout=legacy', '/?layout=edit']) {
-			const { ev } = event(path);
-			expect((await load(ev)).layout).toBe('legacy');
+			const { ev, headers } = event(path);
+			expect(await load(ev)).toMatchObject({ layout: 'legacy', explicit: true });
+			expect(headers['Cache-Control']).toBe('private, no-store');
 		}
 	});
 	it('a failed prefetch still renders legacy (bootstrap null)', async () => {
 		loadLegacyBootstrap.mockResolvedValue(null);
 		const { ev } = event('/');
-		expect(await load(ev)).toEqual({ layout: 'legacy', bootstrap: null });
+		expect(await load(ev)).toEqual({ layout: 'legacy', explicit: false, bootstrap: null });
 	});
 });
 
@@ -75,6 +76,7 @@ describe('v2 server-rendered first paint (DASH-FLIP1)', () => {
 		const { ev } = event('/?layout=v2');
 		expect(await load(ev)).toEqual({
 			layout: 'v2',
+			explicit: true,
 			bootstrap: null,
 			snapshot: VIEW,
 			renderedAt: Date.parse('2026-10-17T12:03:00.000Z')

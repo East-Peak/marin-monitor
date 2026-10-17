@@ -37,7 +37,7 @@ test('a destroyed legacy controller starts no further work (debounce, timers, vi
 		})
 	);
 
-	await page.goto('/');
+	await page.goto('/?layout=legacy');
 	await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
 	const heldUrl = (re: RegExp) => held.some((r) => re.test(r.request().url()));
 	await expect.poll(() => heldUrl(/\/api\/feeds\?/), { timeout: 15_000 }).toBe(true);
@@ -98,7 +98,7 @@ test('a destroyed legacy controller starts no further work (debounce, timers, vi
 	// legacy, before the new controller's (held) feed requests could answer.
 	await page.evaluate(() => {
 		const a = document.createElement('a');
-		a.href = '/';
+		a.href = '/?layout=legacy';
 		document.querySelector('[data-layout="v2"]')!.append(a);
 		a.click();
 	});
@@ -121,7 +121,7 @@ test('legacy panels start no request after teardown (NWS grid chains, tide retri
 		held.push(route); // hold each panel's first hop until the legacy dashboard is gone
 	});
 
-	await page.goto('/');
+	await page.goto('/?layout=legacy');
 	await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
 	const heldUrl = (re: RegExp) => held.some((r) => re.test(r.request().url()));
 	await expect.poll(() => heldUrl(/\/points\//), { timeout: 15_000 }).toBe(true);

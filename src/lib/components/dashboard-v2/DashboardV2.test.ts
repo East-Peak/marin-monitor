@@ -166,20 +166,24 @@ describe('DashboardV2 preview shell', () => {
 		expect(region.textContent).toContain('Loading…');
 	});
 
-	it('renders exactly one v2 root with the preview badge and a labelled town picker', async () => {
+	it('renders exactly one v2 root, no longer badged as a preview, with a labelled town picker', async () => {
 		const { container } = render(DashboardV2);
 		await tick();
 		expect(container.querySelectorAll('[data-layout]')).toHaveLength(1);
 		const root = container.querySelector('[data-layout="v2"]');
 		expect(root?.getAttribute('data-hydrated')).toBe('true');
-		expect(screen.getByText('v2 preview')).toBeTruthy();
+		expect(screen.queryByText('v2 preview')).toBeNull();
+		expect(root?.textContent).not.toMatch(/preview/i);
 		expect(screen.getByText('Showing:')).toBeTruthy();
 		expect(screen.getByRole('button', { name: /All of Marin/ })).toBeTruthy();
 	});
 
-	it('offers a way back to the current dashboard', () => {
+	it('the logo goes home and the old dashboard stays one link away', () => {
 		render(DashboardV2);
-		expect(screen.getByRole('link', { name: 'Leave preview' }).getAttribute('href')).toBe('/');
+		expect(screen.getByRole('link', { name: 'Marin Monitor' }).getAttribute('href')).toBe('/');
+		expect(screen.getByRole('link', { name: 'Old dashboard' }).getAttribute('href')).toBe(
+			'/?layout=legacy'
+		);
 	});
 
 	it('never starts the legacy news or Strava loaders', async () => {

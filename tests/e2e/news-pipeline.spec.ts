@@ -82,7 +82,7 @@ test.describe('shared news pipeline — built app', () => {
 		page
 	}) => {
 		await setup(page);
-		await page.goto('/');
+		await page.goto('/?layout=legacy');
 		await expectDashboardWire(page);
 		await expect(page.locator('body')).not.toContainText(/NaN[dhm]\b/);
 	});
@@ -101,7 +101,7 @@ test.describe('shared news pipeline — built app', () => {
 
 	test('a failed parser chunk reloads the page once, then the news appears', async ({ page }) => {
 		const loads = await setup(page, 1);
-		await page.goto('/');
+		await page.goto('/?layout=legacy');
 		await expectDashboardWire(page);
 		expect(loads.count).toBe(2);
 	});
@@ -110,7 +110,7 @@ test.describe('shared news pipeline — built app', () => {
 		page
 	}) => {
 		const loads = await setup(page, Infinity);
-		await page.goto('/');
+		await page.goto('/?layout=legacy');
 		await expect.poll(() => loads.count, { timeout: 15_000 }).toBe(2);
 		await page.waitForTimeout(8_000);
 		expect(loads.count).toBe(2);

@@ -1,11 +1,7 @@
 import type { ServerLoadEvent } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { loadLegacyBootstrap } from '$lib/dashboard/bootstrap';
-import {
-	dashboardCacheControl,
-	PRIVATE_DASHBOARD_CACHE,
-	resolveDashboardLayout
-} from '$lib/dashboard/layout-flag';
+import { dashboardCacheControl, resolveDashboardLayout } from '$lib/dashboard/layout-flag';
 import type { NewsSnapshotView } from '$lib/news/snapshot';
 import { snapshotBlobApi } from '$lib/server/news/fixture-blob-api';
 import { readNewsSnapshot } from '$lib/server/news/read-snapshot';
@@ -35,18 +31,17 @@ async function readSnapshotForFirstPaint(): Promise<NewsSnapshotView | null> {
 export async function load({ url, setHeaders }: ServerLoadEvent) {
 	// Reading url.searchParams makes SvelteKit re-run this load when ?layout changes
 	// during client navigation, so the page data always matches the URL.
-	const layout = resolveDashboardLayout(url);
+	const choice = resolveDashboardLayout(url);
+	const { layout, explicit } = choice;
 
-	// The v2 preview never starts the legacy prefetch (spec §13.6). Its news arrives in the
+	// v2 never starts the legacy prefetch (spec §13.6). Its news arrives in the
 	// HTML when the snapshot reads in time; otherwise the client loads it, as before.
 	if (layout === 'v2') {
 		const snapshot = await readSnapshotForFirstPaint();
 		// Headers follow the read: a failed read is never edge-cached as an empty first paint.
-		setHeaders({
-			'Cache-Control': snapshot ? dashboardCacheControl(layout) : PRIVATE_DASHBOARD_CACHE
-		});
-		return { layout, bootstrap: null, snapshot, renderedAt: Date.now() };
+		setHeaders({ 'Cache-Control': dashboardCacheControl(choice, snapshot !== null) });
+		return { layout, explicit, bootstrap: null, snapshot, renderedAt: Date.now() };
 	}
-	setHeaders({ 'Cache-Control': dashboardCacheControl(layout) });
-	return { layout, bootstrap: await loadLegacyBootstrap() };
+	setHeaders({ 'Cache-Control': dashboardCacheControl(choice) });
+	return { layout, explicit, bootstrap: await loadLegacyBootstrap() };
 }

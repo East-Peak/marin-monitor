@@ -43,10 +43,10 @@ test.describe('phone 390×844', () => {
 		await page.getByRole('button', { name: 'Reset sections' }).click({ timeout: 5_000 });
 	});
 
-	test('legacy guard: / keeps its icon-only phone picker (the fix is v2-scoped)', async ({
+	test('legacy guard: ?layout=legacy keeps its icon-only phone picker (the fix is v2-scoped)', async ({
 		page
 	}) => {
-		await page.goto('/');
+		await page.goto('/?layout=legacy');
 		await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
 		await expect(page.locator('.picker-trigger .picker-label').first()).toBeHidden();
 	});

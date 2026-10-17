@@ -1,5 +1,6 @@
 // tests/e2e/dashboard-cache.spec.ts
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { DEFAULT_DASHBOARD_LAYOUT } from '../../src/lib/dashboard/layout-flag';
 
 test.skip(
 	({ baseURL }) => !baseURL?.startsWith('https://'),
@@ -23,30 +24,46 @@ async function probe(request: APIRequestContext, path: string) {
 	return { cache: res.headers()['x-vercel-cache'] ?? '', layouts: layoutsIn(await res.text()) };
 }
 
+/** The default (no ?layout) and the two explicit overrides, as HTML and as client-navigation data. */
+type Entry = 'default' | Layout;
+const LAYOUT_OF: Record<Entry, Layout> = {
+	default: DEFAULT_DASHBOARD_LAYOUT,
+	legacy: 'legacy',
+	v2: 'v2'
+};
+
 function urls(cb: string) {
 	return {
-		legacy: [`/?cb=${cb}`, `/__data.json?cb=${cb}&x-sveltekit-invalidated=01`],
+		default: [`/?cb=${cb}`, `/__data.json?cb=${cb}&x-sveltekit-invalidated=01`],
+		legacy: [
+			`/?cb=${cb}&layout=legacy`,
+			`/__data.json?cb=${cb}&layout=legacy&x-sveltekit-invalidated=01`
+		],
 		v2: [`/?cb=${cb}&layout=v2`, `/__data.json?cb=${cb}&layout=v2&x-sveltekit-invalidated=01`]
-	} satisfies Record<Layout, string[]>;
+	} satisfies Record<Entry, string[]>;
 }
 
-for (const first of ['legacy', 'v2'] as const) {
+for (const first of ['default', 'legacy', 'v2'] as const) {
 	test(`HTML and __data.json keep their layout when ${first} warms the edge first`, async ({
 		request
 	}) => {
 		const u = urls(`${Date.now()}-${first}`);
-		const order: Layout[] = first === 'legacy' ? ['legacy', 'v2'] : ['v2', 'legacy'];
-		for (const layout of order) {
-			for (const path of u[layout]) {
+		const order: Entry[] = [
+			first,
+			...(['default', 'legacy', 'v2'] as const).filter((e) => e !== first)
+		];
+		for (const entry of order) {
+			for (const path of u[entry]) {
 				const a = await probe(request, path);
 				const b = await probe(request, path);
-				expect(a.layouts, path).toEqual([layout]);
-				expect(b.layouts, path).toEqual([layout]);
-				if (layout === 'v2') {
+				expect(a.layouts, path).toEqual([LAYOUT_OF[entry]]);
+				expect(b.layouts, path).toEqual([LAYOUT_OF[entry]]);
+				if (entry === 'default') {
+					// Only the default is edge-cached (a default v2 needs its snapshot read, DASH-FLIP1).
+					expect(EDGE_HIT, `${path} second fetch should be edge-cached`).toContain(b.cache);
+				} else {
 					expect(EDGE_HIT, `${path} must never be served from the edge`).not.toContain(a.cache);
 					expect(EDGE_HIT, `${path} must never be served from the edge`).not.toContain(b.cache);
-				} else {
-					expect(EDGE_HIT, `${path} second fetch should be edge-cached`).toContain(b.cache);
 				}
 			}
 		}
@@ -61,7 +78,7 @@ async function clientNavDataUrls(page: Page): Promise<{ v2: string; legacy: stri
 	await page.addInitScript(() => localStorage.setItem('mm_onboardingComplete', 'true'));
 	await page.goto(`/?layout=v2&cb=${Date.now()}`);
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
-	await page.getByRole('link', { name: 'Leave preview' }).click();
+	await page.getByRole('link', { name: 'Old dashboard' }).click();
 	await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
 	await page.evaluate(() => {
 		const a = document.createElement('a');
@@ -71,13 +88,13 @@ async function clientNavDataUrls(page: Page): Promise<{ v2: string; legacy: stri
 	});
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 	const v2 = seen.find((u) => u.includes('layout=v2'));
-	const legacy = seen.find((u) => !u.includes('layout=v2'));
+	const legacy = seen.find((u) => u.includes('layout=legacy'));
 	expect(v2, 'client navigation to v2 fetched __data.json').toBeTruthy();
 	expect(legacy, 'client navigation to legacy fetched __data.json').toBeTruthy();
 	return { v2: v2!, legacy: legacy! };
 }
 
-test('the real client-navigation data URLs are layout-correct and v2 is never edge-served', async ({
+test('the real client-navigation data URLs are layout-correct and never edge-served', async ({
 	page,
 	request
 }) => {
@@ -88,5 +105,6 @@ test('the real client-navigation data URLs are layout-correct and v2 is never ed
 		expect(EDGE_HIT).not.toContain(d2.cache);
 		const dl = await probe(request, legacy);
 		expect(dl.layouts).toEqual(['legacy']);
+		expect(EDGE_HIT).not.toContain(dl.cache);
 	}
 });

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 async function saveTown(page: Page, slug: string) {
-	await page.goto('/');
+	await page.goto('/?layout=legacy');
 	await page.evaluate((s) => {
 		localStorage.setItem('mm_onboardingComplete', 'true');
 		localStorage.setItem('mm_town', s);
@@ -42,7 +42,7 @@ test.describe('TV has its own transient scope', () => {
 });
 
 async function saveLightTheme(page: Page) {
-	await page.goto('/');
+	await page.goto('/?layout=legacy');
 	await page.evaluate(() => {
 		localStorage.setItem('mm_onboardingComplete', 'true');
 		localStorage.setItem('mm_theme', '"light"');
@@ -64,7 +64,7 @@ test.describe('TV forces dark without saving it', () => {
 		await page.reload();
 		await tvReady(page);
 		expect(await savedTheme(page)).toBe('"light"');
-		await page.goto('/');
+		await page.goto('/?layout=legacy');
 		await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
 		await expect.poll(() => shownTheme(page)).toBe('light');
 		expect(await savedTheme(page)).toBe('"light"');
