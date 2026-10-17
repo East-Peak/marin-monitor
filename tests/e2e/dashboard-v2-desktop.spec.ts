@@ -119,7 +119,7 @@ for (const width of [1440, 2000]) {
 test.describe('desktop 1440: the frame', () => {
 	test.use({ viewport: { width: 1440, height: 1000 } });
 
-	test('brief is three columns and the map is 500 px tall', async ({ page }) => {
+	test('brief is three columns and the map is 62vh tall (MAPX2)', async ({ page }) => {
 		await open(page);
 		const cols = await page
 			.locator('[data-slot="brief"]')
@@ -128,7 +128,8 @@ test.describe('desktop 1440: the frame', () => {
 		// 5fr · 4fr · 3fr
 		expect(cols[0] / cols[2]).toBeCloseTo(5 / 3, 1);
 		expect(cols[1] / cols[2]).toBeCloseTo(4 / 3, 1);
-		expect(Math.round((await box(page, '.v2-map-canvas')).height)).toBe(500);
+		// clamp(520px, 62vh, 820px) at 1000 px high.
+		expect(Math.round((await box(page, '.v2-map-canvas')).height)).toBe(620);
 	});
 
 	test('South Marin leads the wall at 4 of 6 columns, its first tile a 2×2 block', async ({
@@ -151,10 +152,10 @@ test.describe('desktop 1440: the frame', () => {
 });
 
 test.describe('desktop 1700+', () => {
-	test.use({ viewport: { width: 1800, height: 1000 } });
-	test('the map is 540 px tall', async ({ page }) => {
+	test.use({ viewport: { width: 1800, height: 1400 } });
+	test('the map stops at 820 px tall (MAPX2 clamp)', async ({ page }) => {
 		await open(page);
-		expect(Math.round((await box(page, '.v2-map-canvas')).height)).toBe(540);
+		expect(Math.round((await box(page, '.v2-map-canvas')).height)).toBe(820);
 	});
 });
 

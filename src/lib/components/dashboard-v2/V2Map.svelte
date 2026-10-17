@@ -1,7 +1,8 @@
 <!-- The v2 map (§2.4, Decision 3): owner-supplied layers only (news, 311, earthquakes), kept
      features dimmed and explained, a status line for every enabled layer's source, and a
-     test hook under ?probe. Phone: a compact preview that expands on tap. A pin never
-     changes the global town; only an explicit town choice does. -->
+     test hook under ?probe. Desktop (≥1024): a docked in-view list replaces the popups (MAPX2).
+     Phone: a compact preview that expands on tap. A pin never changes the global town; only
+     an explicit town choice does. -->
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
 	import {
@@ -29,11 +30,23 @@
 	import MapProbe from './MapProbe.svelte';
 	import MapGesturePolicy from './MapGesturePolicy.svelte';
 	import V2MapNav from './V2MapNav.svelte';
+	import InViewPanel from './InViewPanel.svelte';
+	import InViewSync from './InViewSync.svelte';
+	import {
+		inView,
+		inViewItems,
+		selectionId,
+		visibleBounds,
+		type Bounds
+	} from '$lib/dashboard/map-in-view';
+	import { flyTarget, resolveSelection } from '$lib/dashboard/map-selection';
+	import { formatAsOf } from '$lib/dashboard/pacific-time';
 
 	let { data, now }: { data: V2MapData; now: number } = $props();
 
 	let expanded = $state(false);
 	let phone = $state(false);
+	let desktop = $state(false);
 	const probe = createV2Probe(
 		typeof location === 'undefined' ? '' : location.search,
 		(typeof window === 'undefined' ? {} : window) as unknown as Record<string, unknown>
@@ -43,8 +56,13 @@
 		phone = mq.matches;
 		const follow = (e: MediaQueryListEvent) => (phone = e.matches);
 		mq.addEventListener('change', follow);
+		const wide = window.matchMedia('(min-width: 1024px)');
+		desktop = wide.matches;
+		const followWide = (e: MediaQueryListEvent) => (desktop = e.matches);
+		wide.addEventListener('change', followWide);
 		return () => {
 			mq.removeEventListener('change', follow);
+			wide.removeEventListener('change', followWide);
 			probe.dispose();
 		};
 	});
@@ -73,15 +91,59 @@
 	// Re-read on every data change: the kept note follows the latest refresh (Codex 9b #4).
 	const shownFeature = $derived(v2FeatureView(feature, data));
 
+	// Desktop's in-view list (MAPX2): recomputed on a settled move and on every data, layer,
+	// town or freshness change (all of which arrive as a new `data`).
+	const fixIds = $derived(new Set(data.layerData.threeOneOne.map((i) => i.id)));
+	const allItems = $derived(
+		inViewItems({
+			news: data.inspectable.filter((i) => !fixIds.has(i.id)),
+			threeOneOne: data.inspectable.filter((i) => fixIds.has(i.id)),
+			earthquakes: data.earthquakes,
+			town: $townFilter,
+			towns: TOWN_BY_SLUG,
+			notes: data.notes,
+			formatTime: (ms) => formatAsOf(ms, now)
+		})
+	);
+	let view = $state<{ bounds: Bounds; width: number } | null>(null);
+	let collapsed = $state(false);
+	let canvasEl = $state<HTMLElement | null>(null);
+	let selectedId = $state<string | null>(null);
+	let hoveredId = $state<string | null>(null);
+	let flight = $state<[number, number] | null>(null);
+	/** The panel's share of the map's right edge, measured, so nothing listed hides under it. */
+	let panelPx = $state(0);
+	$effect(() => {
+		void view?.width;
+		const panel = desktop && !collapsed ? canvasEl?.querySelector('[data-detail-panel]') : null;
+		panelPx =
+			panel && canvasEl
+				? Math.max(0, canvasEl.getBoundingClientRect().right - panel.getBoundingClientRect().left)
+				: 0;
+	});
+	const listed = $derived(
+		view ? inView(allItems, visibleBounds(view.bounds, view.width, panelPx)) : []
+	);
+	const selected = $derived(resolveSelection(allItems, selectedId));
+	const ring = $derived(flyTarget(allItems, hoveredId ?? selectedId ?? ''));
+	function select(id: string) {
+		if (!resolveSelection(allItems, id)) return;
+		selectedId = id;
+		collapsed = false;
+		flight = flyTarget(allItems, id);
+	}
+
 	function apply(outcome: MapClickOutcome) {
 		if (outcome.selectTown !== undefined) {
 			mapStore.selectTown(outcome.selectTown);
 			townFilter.select(outcome.selectTown);
 		}
+		if (desktop) return;
 		inspector = outcome.inspector;
 		feature = null;
 	}
 	function onPinClick(itemId: string) {
+		if (desktop) return select(selectionId('news', itemId));
 		const item = visible.find((candidate) => candidate.id === itemId);
 		if (item) apply(pinClickOutcome(item));
 	}
@@ -111,7 +173,7 @@
 </script>
 
 <div class="v2-map" data-expanded={expanded ? 'true' : 'false'}>
-	<div class="v2-map-canvas" id="v2-map-canvas" data-text-role="control">
+	<div class="v2-map-canvas" id="v2-map-canvas" data-text-role="control" bind:this={canvasEl}>
 		<MapContainer>
 			<MapDataLayer
 				earthquakes={data.earthquakes}
@@ -124,6 +186,12 @@
 				onTownHover={(slug) => mapStore.hoverTown(slug)}
 				{onPinClick}
 				onFeatureClick={(f) => {
+					if (desktop) {
+						const layer =
+							f.kind === '311-report' ? '311' : f.kind === 'earthquake' ? 'quake' : null;
+						if (layer && f.itemId) select(selectionId(layer, f.itemId));
+						return;
+					}
 					// Kept 311/quake features say from when, like news pins (Codex r4 #2; shownFeature).
 					feature = f;
 					inspector = null;
@@ -134,7 +202,15 @@
 				items={data.inspectable}
 				emptyText={data.established ? 'No active stories for this town.' : null}
 			/>
-			{#if model}
+			{#if desktop}
+				<InViewSync
+					{panelPx}
+					highlight={ring}
+					flyTo={flight}
+					onbounds={(bounds, width) => (view = { bounds, width })}
+					onhover={(id) => (hoveredId = id)}
+				/>
+			{:else if model}
 				<MapInspector
 					mode={model.mode}
 					townName={model.townName}
@@ -162,6 +238,19 @@
 			<MapProbe />
 			<MapGesturePolicy interactive={expanded || !phone} />
 		</MapContainer>
+		{#if desktop}
+			<InViewPanel
+				items={listed}
+				{selected}
+				hovered={hoveredId}
+				{collapsed}
+				emptyText={data.established ? 'Nothing on the map in this view.' : null}
+				ontoggle={() => (collapsed = !collapsed)}
+				onselect={select}
+				onhover={(id) => (hoveredId = id)}
+				onback={() => (selectedId = null)}
+			/>
+		{/if}
 		<!-- Phone: over the preview's corner, so it costs no row of its own (§13.3 height). -->
 		<button
 			type="button"
@@ -189,15 +278,12 @@
 		display: none;
 	}
 	@media (min-width: 1024px) {
+		/* Full width (MAPX2): the map is the page's centre. */
 		.v2-map-canvas {
-			height: 500px;
+			height: clamp(520px, 62vh, 820px);
 		}
 	}
-	@media (min-width: 1700px) {
-		.v2-map-canvas {
-			height: 540px;
-		}
-	}
+
 	@media (max-width: 767px) {
 		/* The preview: compact, controls hidden until expanded (§2.4). */
 		.v2-map-canvas {

@@ -47,4 +47,15 @@
 	.v2-latest-list li:last-child {
 		border-bottom: 0;
 	}
+	@media (min-width: 1024px) {
+		/* Under the full-width map (MAPX2): one row of five. */
+		.v2-latest-list {
+			display: grid;
+			grid-template-columns: repeat(5, minmax(0, 1fr));
+			gap: var(--v2-gap);
+		}
+		.v2-latest-list li {
+			border-bottom: 0;
+		}
+	}
 </style>

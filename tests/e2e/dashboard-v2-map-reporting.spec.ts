@@ -295,7 +295,7 @@ test.describe('desktop 1440×900', () => {
 		);
 	});
 
-	test('success → failure: kept 311 and quake pins open an inspector that says so (Codex r4 #2)', async ({
+	test('success → failure: kept 311 and quake pins open a detail that says so (Codex r4 #2; MAPX2 panel)', async ({
 		page
 	}) => {
 		let up = true;
@@ -327,15 +327,16 @@ test.describe('desktop 1440×900', () => {
 			await expect.poll(() => pinAt(page, layer), { timeout: 20_000 }).not.toBeNull();
 			const at = (await pinAt(page, layer))!;
 			await page.mouse.click(at.x, at.y);
-			const inspector = page.locator('aside.feature-inspector');
-			await expect(inspector, layer).toBeVisible();
+			// Desktop: the detail opens in the docked in-view panel, not a popup (MAPX2).
+			const inspector = page.locator('[data-detail-panel]');
+			await expect(inspector.locator('[data-detail]'), layer).toBeVisible();
 			console.log(
 				`${layer} kept note: ${await inspector.locator('[data-inspector-note]').innerText()}`
 			);
 			await expect(inspector.locator('[data-inspector-note]'), layer).toHaveText(
 				/^Kept from ([A-Z][a-z]{2} \d{1,2}, )?\d{1,2}:\d{2} [AP]M · /
 			);
-			await inspector.getByRole('button', { name: 'Close inspector' }).click();
+			await inspector.getByRole('button', { name: '← Back to list' }).click();
 		}
 	});
 
@@ -388,14 +389,19 @@ test.describe('desktop 1440×900', () => {
 		await expect(mapStatus(page)).not.toContainText('Nothing new');
 	});
 
-	test('a pin opens the inspector and never changes the town (§2.4)', async ({ page }) => {
+	test('a pin opens its detail in the in-view panel and never changes the town (§2.4, MAPX2)', async ({
+		page
+	}) => {
 		await stub(page, ALL_OF_MARIN);
 		await openV2(page);
 		await settled(page);
 		await expect.poll(() => pinAt(page), { timeout: 20_000 }).not.toBeNull();
 		const at = (await pinAt(page))!;
 		await page.mouse.click(at.x, at.y);
-		await expect(page.getByRole('complementary', { name: 'Map story inspector' })).toBeVisible();
+		await expect(
+			page.getByRole('complementary', { name: 'In view' }).locator('[data-detail]')
+		).toBeVisible();
+		await expect(page.locator('aside.inspector, aside.feature-inspector')).toHaveCount(0);
 		await expect(page.locator('[data-layout="v2"] .picker-trigger')).toHaveText(/All of Marin/);
 		expect(await page.evaluate(() => localStorage.getItem('mm_town'))).toBeNull();
 	});

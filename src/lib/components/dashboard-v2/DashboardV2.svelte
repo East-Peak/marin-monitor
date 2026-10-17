@@ -530,14 +530,6 @@
 		gap: 1rem;
 		margin-top: 0.5rem;
 	}
-	@media (min-width: 1280px) {
-		/* Desktop: map and Latest reporting share a 3:2 row (§2.4); narrower, they stack. */
-		.v2-map-row {
-			grid-template-columns: 3fr 2fr;
-			gap: var(--v2-gap);
-			align-items: start;
-		}
-	}
 	@media (min-width: 1024px) {
 		/* Desktop runs full width to 2,240 px; sections sit on a 12-column grid, always open. */
 		.v2-header {
