@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-17
 
+### Changed — The redesigned dashboard is now the default
+
+- **The redesigned dashboard is now the default.** The old one stays at marinmonitor.com/?layout=legacy for now; the header's "Old dashboard" link goes there. `/tv` is unchanged.
+- `/` carries the old dashboard's title, description and link-preview tags, is indexable, and is edge-cached for 60 s once its news snapshot reads in time (otherwise it isn't cached at all). `?layout=v2`, `?layout=legacy` and `?layout=edit` still work, are never edge-cached and are `noindex`; `?layout=v2` names `/` as its canonical page.
+- The "preview" badge and footer note are gone. Rolling back is one constant (`DEFAULT_DASHBOARD_LAYOUT`).
+
 ### Changed — The v2 preview arrives with its news already on the page
 
 - **Latest reporting is in the page's HTML.** The server reads the published news snapshot (at most 1.2 s) and renders the five Latest-reporting items with their ages, so a slow phone, a link preview or a crawler sees news before any script runs. If the read fails or runs out of time, the page loads news in the browser as before and is never cached; it never says "no reports".
