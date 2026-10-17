@@ -10,7 +10,7 @@
 </script>
 
 {#if data.layout === 'v2'}
-	<DashboardV2 />
+	<DashboardV2 snapshot={data.snapshot} renderedAt={data.renderedAt} />
 {:else}
 	<LegacyDashboard bootstrap={data.bootstrap} />
 {/if}

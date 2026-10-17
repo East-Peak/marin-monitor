@@ -3,45 +3,32 @@
 	import CardSource from './CardSource.svelte';
 
 	let { view, now }: { view: LatelyView; now: number } = $props();
-
-	const shownText = $derived(
-		view.source.kind === 'loading'
-			? 'Loading…'
-			: view.source.kind === 'unknown'
-				? 'Unverified'
-				: 'Unavailable'
-	);
 </script>
 
-<!-- Satire, clearly labelled (CLAUDE.md): its own band, never mixed into the news. -->
+<!-- Satire, clearly labelled (CLAUDE.md): its own band, never mixed into the news.
+     The page renders it only while it has a recent piece (lately.ts). -->
 <section class="lately" data-slot="lately" aria-labelledby="lately-title">
 	<div class="head">
 		<h2 id="lately-title" data-text-role="section-title">Marin Lately</h2>
 		<p class="meta" data-text-role="meta">
 			Satire. Unconfirmed reports from the county’s least reliable newsroom.
 		</p>
-		{#if view.latest}
-			<p class="meta warn" data-lately-latest data-text-role="meta">{view.latest}</p>
-		{/if}
-		<CardSource lines={[{ measured: view.source }]} {now} />
-	</div>
-	{#if view.pieces.length}
-		<ol>
-			{#each view.pieces as p (p.id)}
-				<li>
-					<a href={p.link} target="_blank" rel="noopener" data-text-role="body">{p.title}</a>
-					{#if p.summary}
-						<p data-text-role="label">{p.summary}</p>
-					{/if}
-				</li>
-			{/each}
-		</ol>
-	{:else}
-		<p class="empty" data-text-role="body">
-			{view.empty ?? shownText}
+		<p class="meta" data-lately-latest data-text-role="meta">
+			{view.latest}
 			<a href={LATELY_LINK} target="_blank" rel="noopener">marinlately.com</a>
 		</p>
-	{/if}
+		<CardSource lines={[{ measured: view.source }]} {now} />
+	</div>
+	<ol>
+		{#each view.pieces as p (p.id)}
+			<li>
+				<a href={p.link} target="_blank" rel="noopener" data-text-role="body">{p.title}</a>
+				{#if p.summary}
+					<p data-text-role="label">{p.summary}</p>
+				{/if}
+			</li>
+		{/each}
+	</ol>
 </section>
 
 <style>
@@ -64,14 +51,9 @@
 		margin: 0;
 		color: var(--pink, #ec4899);
 	}
-	.meta,
-	.empty {
+	.meta {
 		margin: 0;
 		color: var(--text-muted);
-	}
-	.warn {
-		margin-top: 6px;
-		color: var(--yellow, #f59e0b);
 	}
 	ol {
 		display: grid;

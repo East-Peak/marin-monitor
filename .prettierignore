@@ -37,3 +37,6 @@ docs/superpowers/
 
 # Captured third-party markup, kept verbatim (not valid standalone HTML).
 src/lib/server/__fixtures__/
+
+# Written by src/lib/server/news/snapshot-fixture.test.ts
+tests/e2e/fixtures/news-snapshot-producer.json

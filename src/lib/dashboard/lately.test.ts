@@ -35,76 +35,72 @@ const run = (items = [] as ReturnType<typeof piece>[]) => {
 
 beforeEach(resetStories);
 
-describe('Marin Lately band (Goal 4)', () => {
-	it('quiet-for wording from newest item (Jan 2026 item at Oct 15 → "quiet for 9 months")', () => {
-		const out = run([
-			piece('Northern Spotted Owl Misgendered', '2025-06-11T18:00:35.000Z'),
-			piece('Mother Nature Actually Kind of a Bitch', '2026-01-07T20:00:33.000Z')
-		]);
-		expect(out.latest).toBe('Latest piece Jan 7, 2026: the feed has been quiet for 9 months.');
-		expect(out.pieces.map((p) => p.title)).toEqual([
-			'Mother Nature Actually Kind of a Bitch',
-			'Northern Spotted Owl Misgendered'
-		]);
-		// The band's source is marked stale while the feed is quiet.
-		expect(out.source.kind).toBe('value');
-		if (out.source.kind === 'value') expect(out.source.retainedAfter).toMatch(/9 months/);
+const DAY = 86_400_000;
+const iso = (ms: number) => new Date(ms).toISOString();
+
+describe('Marin Lately band (Goal 4; DASH-FLIP1 gate)', () => {
+	it('newest piece exactly 30 days old → shown', () => {
+		const out = run([piece('Edge Satire', iso(NOW - 30 * DAY))]);
+		expect(out?.pieces.map((p) => p.title)).toEqual(['Edge Satire']);
 	});
 
-	it('a piece this month is not "quiet"', () => {
+	it('newest piece 31 days old → hidden: no band, no "quiet" text', () => {
+		expect(run([piece('Old Satire', iso(NOW - 31 * DAY))])).toBeNull();
+		// Today's feed: the newest piece is Jan 7, 2026.
+		expect(
+			run([
+				piece('Northern Spotted Owl Misgendered', '2025-06-11T18:00:35.000Z'),
+				piece('Mother Nature Actually Kind of a Bitch', '2026-01-07T20:00:33.000Z')
+			])
+		).toBeNull();
+	});
+
+	it('no pieces → hidden', () => {
+		expect(run([])).toBeNull();
+	});
+
+	it('a recent piece shows its date, never a "quiet" claim', () => {
 		const out = run([piece('Fresh Satire', '2026-10-10T18:00:00.000Z')]);
-		expect(out.latest).toBe('Latest piece Oct 10, 2026.');
-		if (out.source.kind === 'value') expect(out.source.retainedAfter).toBeNull();
+		expect(out?.latest).toBe('Latest piece Oct 10, 2026.');
+		if (out?.source.kind === 'value') expect(out.source.retainedAfter).toBeNull();
 	});
 
 	it('drops subscriber-promo items', () => {
 		const out = run([
-			piece('Quick Update for Our Subscribers', '2026-01-08T23:30:38.000Z'),
-			piece('Mother Nature Actually Kind of a Bitch', '2026-01-07T20:00:33.000Z')
+			piece('Quick Update for Our Subscribers', '2026-10-12T23:30:38.000Z'),
+			piece('Mother Nature Actually Kind of a Bitch', '2026-10-07T20:00:33.000Z')
 		]);
-		expect(out.pieces.map((p) => p.title)).toEqual(['Mother Nature Actually Kind of a Bitch']);
-		expect(out.latest).toMatch(/^Latest piece Jan 7, 2026/);
+		expect(out?.pieces.map((p) => p.title)).toEqual(['Mother Nature Actually Kind of a Bitch']);
+		expect(out?.latest).toBe('Latest piece Oct 7, 2026.');
+		// A promo alone is no piece: hidden.
+		expect(run([piece('Quick Update for Our Subscribers', '2026-10-12T23:30:38.000Z')])).toBeNull();
 	});
 
 	it('at most six pieces, newest first', () => {
 		const out = run(
-			Array.from({ length: 9 }, (_, i) => piece(`Piece ${i}`, `2025-0${i + 1}-15T18:00:00.000Z`))
+			Array.from({ length: 9 }, (_, i) => piece(`Piece ${i}`, iso(NOW - (i + 1) * DAY)))
 		);
-		expect(out.pieces).toHaveLength(6);
-		expect(out.pieces[0].title).toBe('Piece 8');
+		expect(out?.pieces).toHaveLength(6);
+		expect(out?.pieces[0].title).toBe('Piece 0');
 	});
 
-	it('empty → "No pieces from the feed"', () => {
-		const out = run([]);
-		expect(out.pieces).toEqual([]);
-		expect(out.empty).toBe('No pieces from the feed.');
-		expect(out.latest).toBeNull();
-	});
-
-	it('a failed Lately feed in a good snapshot is unavailable, never "No pieces" (Codex desk4 #3)', () => {
+	it('a failed Lately feed carries its own status beside a recent piece', () => {
 		const v = snapshotView(
 			NOW,
-			[story(NOW)],
-			[{}, { ...LATELY_FEED, status: 'failed', lastError: 'HTTP 500', lastSuccessAt: null }]
+			[story(NOW), piece('Fresh Satire', '2026-10-10T18:00:00.000Z')],
+			[{}, { ...LATELY_FEED, status: 'retained', lastError: 'HTTP 500' }]
 		);
 		const out = latelyView({ view: v, sources: snapshotEntries(v, NOW), now: NOW });
-		expect(out.empty).toBeNull();
-		expect(out.source.kind).toBe('unavailable');
-		const missing = snapshotView(NOW, [story(NOW)]);
-		const gone = latelyView({ view: missing, sources: snapshotEntries(missing, NOW), now: NOW });
-		expect(gone.empty).toBeNull();
-		expect(gone.source.kind).toBe('unknown');
+		expect(out?.pieces).toHaveLength(1);
+		expect(out?.source.kind).toBe('value');
 	});
 
-	it('a failed snapshot read is unavailable: no pieces, no "no pieces" claim', () => {
+	it('a failed snapshot read → hidden', () => {
 		const out = latelyView({
 			view: null,
 			sources: [fromSnapshotRead({ ok: false, error: 'HTTP 503', at: NOW }, null)],
 			now: NOW
 		});
-		expect(out.source.kind).toBe('unavailable');
-		expect(out.pieces).toEqual([]);
-		expect(out.empty).toBeNull();
-		expect(out.latest).toBeNull();
+		expect(out).toBeNull();
 	});
 });

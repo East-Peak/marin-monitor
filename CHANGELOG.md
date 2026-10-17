@@ -4,6 +4,15 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-10-17
+
+### Changed — The v2 preview arrives with its news already on the page
+
+- **Latest reporting is in the page's HTML.** The server reads the published news snapshot (at most 1.2 s) and renders the five Latest-reporting items with their ages, so a slow phone, a link preview or a crawler sees news before any script runs. If the read fails or runs out of time, the page loads news in the browser as before and is never cached; it never says "no reports".
+- The browser starts from the same snapshot and the same clock as the server, so nothing flashes or re-dates on load. A later snapshot replaces it; an older one never does. The map's pins come from the same snapshot when the map starts.
+- A saved town applies right after the page loads: the server's page is county-wide for everyone, then the list narrows once.
+- **Marin Lately shows only when it has something recent.** The band appears while its newest piece is at most 30 days old; otherwise it's gone, with no heading and no "quiet for N months" note. Today (newest piece Jan 7) it's hidden.
+
 ## 2026-10-16
 
 ### Added — A way back to all of Marin on the v2 map, and a key for what it shows

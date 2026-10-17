@@ -15,7 +15,9 @@
  * - Last-good: a failing part keeps its previous value. Only status-aware
  *   parts can fail (snapshot, seeclickfix, earthquakes); the other adapters
  *   swallow failures as before (out of scope; see the slice-3 plan).
- * - Order: snapshots move forward by (generatedAt, revision).
+ * - Order: snapshots move forward by (generatedAt, revision). A loader may start
+ *   from an initial view (the dashboard's server-rendered one); it is applied at
+ *   creation and held to the same order. The TV passes none.
  * - Lifetime: after the owner's signal aborts, or once a newer refresh has
  *   started, nothing is written; every part is bounded by a deadline.
  * - Relevance: snapshot stories were judged by the producer with article
@@ -157,6 +159,8 @@ export function createTvNewsLoader(deps: {
 	commit: (category: NewsCategory, items: NewsItem[], keep: (item: NewsItem) => boolean) => void;
 	onEarthquakes: (items: NewsItem[]) => void;
 	onSnapshotApplied?: (view: NewsSnapshotView) => void;
+	/** Applied at creation, before any read; later reads must be newer to replace it. */
+	initial?: NewsSnapshotView | null;
 	/** Called once per part per live refresh, never after disposal or supersession. */
 	onPartSettled?: (part: TvNewsPart, outcome: PartOutcome) => void;
 	now: () => number;
@@ -240,6 +244,8 @@ export function createTvNewsLoader(deps: {
 		// The callbacks above may dispose or supersede this refresh.
 		if (live()) deps.onPartSettled?.(part, { ok: true, at: deps.now(), observedAt });
 	}
+
+	if (deps.initial) apply(deps.initial);
 
 	return {
 		async refresh() {

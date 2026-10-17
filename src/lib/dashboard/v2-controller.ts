@@ -85,6 +85,7 @@ import {
 	fromLoaderPart,
 	fromSnapshotRead,
 	fromSnapshotSource,
+	seededSnapshotOutcome,
 	type DatasetFetch
 } from './source-adapters';
 import type { SourceStatusEntry } from './source-status';
@@ -392,6 +393,8 @@ export interface ControllerDeps {
 	deadlineMs?: number;
 	briefFetchers?: BriefFetchers;
 	fetchAdvisories?: (signal: AbortSignal) => Promise<ParsedAlerts>;
+	/** The server-rendered snapshot (DASH-FLIP1): the starting view, held to the loader's order. */
+	initialSnapshot?: NewsSnapshotView | null;
 }
 
 export interface DashboardV2Controller {
@@ -466,9 +469,15 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 	];
 	const registry = createDatasetRegistry(defs, deps.signal, { deadlineMs: deps.deadlineMs });
 	const earthquakes = writable<NewsItem[]>([]);
-	const snapshot = writable<NewsSnapshotView | null>(null);
+	const seed = deps.initialSnapshot ?? null;
+	const snapshot = writable<NewsSnapshotView | null>(seed);
 	const fixIt = writable<NewsItem[] | null>(null);
-	const parts = writable<Partial<Record<TvNewsPart, PartRecord>>>({});
+	// A seeded read is ok as of the snapshot's own generatedAt, never the request time.
+	const parts = writable<Partial<Record<TvNewsPart, PartRecord>>>(
+		seed
+			? { snapshot: { outcome: seededSnapshotOutcome(seed), hadSuccess: true, observedAt: null } }
+			: {}
+	);
 	const brief = createBriefStore(deps.briefFetchers ?? BRIEF_FETCHERS, deps.signal, {
 		deadlineMs: deps.deadlineMs
 	});
@@ -494,6 +503,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 				}
 			}),
 		signal: deps.signal,
+		initial: seed,
 		reset: () => {
 			claim = news.claim();
 		},

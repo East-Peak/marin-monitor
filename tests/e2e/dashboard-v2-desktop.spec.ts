@@ -280,9 +280,10 @@ async function stubCivic(page: Page) {
 		hoursAgo: i + 1
 	}));
 	const lately = [
-		{ slug: 'promo', title: 'Quick Update for Our Subscribers', hoursAgo: 280 * 24 },
-		{ slug: 'l1', title: 'Mother Nature Actually Kind of a Bitch', hoursAgo: 281 * 24 },
-		{ slug: 'l2', title: 'Northern Spotted Owl Misgendered', hoursAgo: 490 * 24 }
+		// The band shows only with a piece ≤ 30 days old (DASH-FLIP1).
+		{ slug: 'promo', title: 'Quick Update for Our Subscribers', hoursAgo: 2 * 24 },
+		{ slug: 'l1', title: 'Mother Nature Actually Kind of a Bitch', hoursAgo: 3 * 24 },
+		{ slug: 'l2', title: 'Northern Spotted Owl Misgendered', hoursAgo: 40 * 24 }
 	].map((l) => ({ ...l, source: SOURCES.lately }));
 	await page.route('**/api/news/snapshot', (r) =>
 		r.fulfill({
@@ -372,8 +373,9 @@ for (const width of [1440, 2000]) {
 			await expect(page.locator('#news [data-card="fixit"] [data-day]').first()).toBeVisible();
 			await expect(page.locator('#events [data-show-day]')).toHaveCount(10);
 			await expect(page.locator('[data-slot="lately"]')).toContainText(
-				'the feed has been quiet for 9 months'
+				'Mother Nature Actually Kind of a Bitch'
 			);
+			await expect(page.locator('[data-slot="lately"]')).not.toContainText('quiet');
 			await expect(page.locator('[data-slot="lately"]')).not.toContainText('Subscribers');
 			await expect(page.locator('[data-slot="sources-footer"]')).toBeVisible();
 

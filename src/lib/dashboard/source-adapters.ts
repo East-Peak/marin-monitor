@@ -80,6 +80,22 @@ export function fromSnapshotRead(
 }
 
 /**
+ * The snapshot a page arrived with (DASH-FLIP1's SSR read): an ok read dated by the
+ * snapshot's own generatedAt, never the request time.
+ */
+export function seededSnapshotOutcome(view: NewsSnapshotView): PartOutcome {
+	return { ok: true, at: Date.parse(view.generatedAt), observedAt: null };
+}
+
+/** The snapshot entries SSR and the seeded controller both derive (so hydration matches). */
+export function seededSnapshotEntries(view: NewsSnapshotView): SourceStatusEntry[] {
+	return [
+		fromSnapshotRead(seededSnapshotOutcome(view), view),
+		...view.sources.map(fromSnapshotSource)
+	];
+}
+
+/**
  * A loader part's entry. An ok read is ok only with its payload's own time,
  * judged by its part's max age; a failure after a success is stale with the
  * last good read's time (`lastGoodObservedAt`, null when that read had none).

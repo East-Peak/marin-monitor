@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.hoisted(() => {
 	const data = new Map<string, string>();
@@ -43,6 +43,7 @@ const { loadAllNews, loadStravaData } = vi.hoisted(() => ({
 vi.mock('$lib/api/marin/load-all', () => ({ loadAllNews }));
 vi.mock('$lib/stores/strava', () => ({ loadStravaData }));
 const controller = vi.hoisted(() => ({
+	seededEntries: (() => []) as (v: NewsSnapshotView) => unknown[],
 	start: vi.fn(async () => {}),
 	refresh: vi.fn(async () => {}),
 	ensure: vi.fn(async () => {}),
@@ -75,10 +76,18 @@ beforeEach(() => {
 	controller.ensure.mockClear();
 	controller.created.length = 0;
 });
-vi.mock('$lib/dashboard/v2-controller', () => ({
+vi.mock('$lib/dashboard/v2-controller', async () => ({
 	V2_REFRESH_MS: 300_000,
-	createDashboardV2Controller: ({ signal }: { signal: AbortSignal }) => {
+	createDashboardV2Controller: ({
+		signal,
+		initialSnapshot
+	}: {
+		signal: AbortSignal;
+		initialSnapshot?: NewsSnapshotView | null;
+	}) => {
 		controller.created.push(signal);
+		// The real controller's seeded contract: the view, and its read ok as of generatedAt.
+		const seeded = initialSnapshot ? controller.seededEntries(initialSnapshot) : null;
 		return {
 			start: controller.start,
 			refresh: controller.refresh,
@@ -86,20 +95,24 @@ vi.mock('$lib/dashboard/v2-controller', () => ({
 			earthquakes: { subscribe: (fn: (v: unknown[]) => void) => (fn([]), () => {}) },
 			sources: {
 				subscribe: (fn: (v: unknown[]) => void) => (
-					fn([
-						{
-							id: 'part:snapshot',
-							name: 'News snapshot',
-							state: 'loading',
-							observedAt: null,
-							maxAgeMs: null,
-							detail: null
-						}
-					]),
+					fn(
+						seeded ?? [
+							{
+								id: 'part:snapshot',
+								name: 'News snapshot',
+								state: 'loading',
+								observedAt: null,
+								maxAgeMs: null,
+								detail: null
+							}
+						]
+					),
 					() => {}
 				)
 			},
-			snapshot: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
+			snapshot: {
+				subscribe: (fn: (v: unknown) => void) => (fn(initialSnapshot ?? null), () => {})
+			},
 			fixIt: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
 			transit: {
 				subscribe: (fn: (v: unknown) => void) => (fn({ reads: null, error: null }), () => {})
@@ -127,6 +140,10 @@ vi.mock('$lib/dashboard/v2-controller', () => ({
 }));
 
 import DashboardV2 from './DashboardV2.svelte';
+import type { NewsSnapshotView } from '$lib/news/snapshot';
+import { seededSnapshotEntries } from '$lib/dashboard/source-adapters';
+import { snapshotView, story } from '$lib/dashboard/__fixtures__/snapshot-view';
+controller.seededEntries = seededSnapshotEntries;
 
 describe('DashboardV2 preview shell', () => {
 	it('Getting Around shows its parts, not a placeholder, and asks for its details when open', async () => {
@@ -201,12 +218,27 @@ describe('DashboardV2 preview shell', () => {
 
 	it('desktop (1440) follows the mockup: Cost, the Lately band, then News beside Events (Goal 4)', async () => {
 		atWidth(1440);
-		const { container } = render(DashboardV2);
+		const now = Date.now();
+		const recent = story(now, {
+			sourceId: 'marin-lately',
+			source: 'Marin Lately',
+			category: 'satire',
+			categories: ['satire'],
+			verification: 'satire',
+			hoursAgo: 24
+		});
+		const snapshot = snapshotView(now, [story(now), recent]);
+		const order = (c: HTMLElement) =>
+			[...c.querySelectorAll('#sections [data-section], #sections [data-slot="lately"]')].map(
+				(el) => el.getAttribute('data-section') ?? el.getAttribute('data-slot')
+			);
+		const { container } = render(DashboardV2, { props: { snapshot, renderedAt: now } });
 		await tick();
-		const order = [
-			...container.querySelectorAll('#sections [data-section], #sections [data-slot="lately"]')
-		].map((el) => el.getAttribute('data-section') ?? el.getAttribute('data-slot'));
-		expect(order).toEqual(['cost', 'lately', 'news', 'events']);
+		expect(order(container)).toEqual(['cost', 'lately', 'news', 'events']);
+		// With nothing recent the featured band is absent: no heading, no "quiet" text (DASH-FLIP1).
+		const quiet = render(DashboardV2);
+		await tick();
+		expect(order(quiet.container)).toEqual(['cost', 'news', 'events']);
 	});
 
 	it('shows nothing of Strava while it is mothballed', async () => {
@@ -327,5 +359,46 @@ describe('DashboardV2 town display across hydration', () => {
 		flushSync();
 		expect(container.querySelector('.picker-label')?.textContent).toBe('Mill Valley');
 		localStorage.clear();
+	});
+});
+
+describe('server-rendered first paint (DASH-FLIP1)', () => {
+	const R = Date.parse('2026-10-17T18:00:00Z');
+	const DAY = 86_400_000;
+	afterEach(() => vi.useRealTimers());
+
+	it('Latest reporting renders from the server snapshot, county-wide', async () => {
+		const view = snapshotView(
+			R,
+			[1, 2, 3].map((h) => story(R, { hoursAgo: h }))
+		);
+		const { container } = render(DashboardV2, { props: { snapshot: view, renderedAt: R } });
+		await tick();
+		expect(container.querySelectorAll('[data-reporting-row]')).toHaveLength(3);
+	});
+
+	it('one clock: Lately 30 days minus 1 minute old at renderedAt is shown though the browser is 3 min later; the first tick moves to real time', async () => {
+		vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+		vi.setSystemTime(R + 3 * 60_000);
+		const lately = story(R, {
+			sourceId: 'marin-lately',
+			source: 'Marin Lately',
+			category: 'satire',
+			categories: ['satire'],
+			verification: 'satire',
+			title: 'Edge Satire',
+			hoursAgo: (30 * DAY - 60_000) / 3_600_000
+		});
+		const view = snapshotView(
+			R,
+			[story(R), lately],
+			[{}, { id: 'marin-lately', name: 'Marin Lately', category: 'satire', verification: 'satire' }]
+		);
+		const { container } = render(DashboardV2, { props: { snapshot: view, renderedAt: R } });
+		await tick();
+		expect(container.querySelector('[data-slot="lately"]')?.textContent).toContain('Edge Satire');
+		vi.advanceTimersByTime(30_000);
+		await tick();
+		expect(container.querySelector('[data-slot="lately"]')).toBeNull();
 	});
 });

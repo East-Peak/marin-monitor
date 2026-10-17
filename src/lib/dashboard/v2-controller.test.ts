@@ -129,6 +129,8 @@ const { evChargingStore } = await import('$lib/stores/ev-charging');
 const { coffeeIndexStore } = await import('$lib/stores/coffee');
 const { fitnessStore } = await import('$lib/stores/fitness');
 const { news } = await import('$lib/stores/news');
+const { seededSnapshotEntries } = await import('./source-adapters');
+const { snapshotView, story: snapshotStory } = await import('./__fixtures__/snapshot-view');
 type Deps = Parameters<typeof createDashboardV2Controller>[0];
 type Sources = NonNullable<Deps['newsSources']>;
 
@@ -735,6 +737,49 @@ describe('createDashboardV2Controller', () => {
 			error: 'HTTP 502',
 			retained: true,
 			observedAt: Date.parse('2026-09-29T17:58:00.000Z')
+		});
+	});
+
+	describe('seeded with the server-rendered snapshot (DASH-FLIP1)', () => {
+		const at = (ms: number, title: string, revision: number) => ({
+			...snapshotView(ms, [snapshotStory(ms, { title, id: `point-reyes-light:${title}` })]),
+			revision
+		});
+		const SEED = at(NOW - 5 * 60_000, 'seed', 7);
+		const ids = () => news.getItems('local').map((i) => i.id);
+		const answering = (view: ReturnType<typeof at>) =>
+			newsSources({ snapshot: async () => ({ status: 'ok', snapshot: view }) });
+
+		it('the initial view is there without a fetch: the view, the shared news store and an ok status dated by the snapshot', () => {
+			const read = vi.fn(async () => SNAPSHOT);
+			const c = controller({ initialSnapshot: SEED, newsSources: newsSources({ snapshot: read }) });
+			expect(get(c.snapshot)).toBe(SEED);
+			expect(ids()).toContain('point-reyes-light:seed');
+			const entries = get(c.sources);
+			for (const e of seededSnapshotEntries(SEED))
+				expect(entries.find((x) => x.id === e.id)).toEqual(e);
+			expect(entries.find((e) => e.id === 'part:snapshot')?.state).toBe('ok');
+			expect(read).not.toHaveBeenCalled();
+		});
+
+		it('an older client response replaces neither the controller view nor the shared news stores', async () => {
+			const c = controller({
+				initialSnapshot: SEED,
+				newsSources: answering(at(NOW - 20 * 60_000, 'older', 9))
+			});
+			await c.start();
+			expect(get(c.snapshot)).toBe(SEED);
+			expect(ids()).toContain('point-reyes-light:seed');
+			expect(ids()).not.toContain('point-reyes-light:older');
+		});
+
+		it('a newer client response replaces both', async () => {
+			const newer = at(NOW, 'newer', 8);
+			const c = controller({ initialSnapshot: SEED, newsSources: answering(newer) });
+			await c.start();
+			expect(get(c.snapshot)).toBe(newer);
+			expect(ids()).toContain('point-reyes-light:newer');
+			expect(ids()).not.toContain('point-reyes-light:seed');
 		});
 	});
 });

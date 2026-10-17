@@ -1,0 +1,334 @@
+{
+	"schemaVersion": 1,
+	"revision": 1,
+	"generatedAt": "2026-09-28T20:00:00.000Z",
+	"lastSuccessfulScrapeAt": "2026-09-28T20:00:00.000Z",
+	"sources": [
+		{
+			"id": "point-reyes-light",
+			"name": "Point Reyes Light",
+			"category": "local",
+			"verification": "local_media",
+			"lastAttemptAt": "2026-09-28T20:00:00.000Z",
+			"status": "ok",
+			"lastSuccessAt": "2026-09-28T20:00:00.000Z",
+			"lastError": null,
+			"consecutiveFailures": 0,
+			"itemCount": 5,
+			"items": [
+				{
+					"id": "point-reyes-light:san-rafael-housing",
+					"sourceId": "point-reyes-light",
+					"source": "Point Reyes Light",
+					"category": "local",
+					"verification": "local_media",
+					"title": "San Rafael council approves Canal housing plan",
+					"link": "https://www.ptreyeslight.com/news/san-rafael-housing/",
+					"canonicalUrl": "https://ptreyeslight.com/news/san-rafael-housing",
+					"summary": "San Rafael council approves Canal housing plan.",
+					"publishedAtRaw": "Mon, 28 Sep 2026 19:00:00 GMT",
+					"publishedAtSource": "rss:pubDate",
+					"publishedAtAssumedZone": null,
+					"publishedAt": "2026-09-28T19:00:00.000Z",
+					"publishedAtStatus": "valid",
+					"eventAt": null,
+					"eventAtSource": null,
+					"updatedAt": null,
+					"town": {
+						"name": "San Rafael",
+						"slug": "san-rafael",
+						"source": "title-match"
+					},
+					"point": null,
+					"topics": [
+						"HOUSING"
+					],
+					"fetchedAt": "2026-09-28T20:00:00.000Z"
+				},
+				{
+					"id": "point-reyes-light:mill-valley-trail",
+					"sourceId": "point-reyes-light",
+					"source": "Point Reyes Light",
+					"category": "local",
+					"verification": "local_media",
+					"title": "Mill Valley opens new trail access on Mount Tamalpais",
+					"link": "https://www.ptreyeslight.com/news/mill-valley-trail/",
+					"canonicalUrl": "https://ptreyeslight.com/news/mill-valley-trail",
+					"summary": "Mill Valley opens new trail access on Mount Tamalpais.",
+					"publishedAtRaw": "Mon, 28 Sep 2026 18:00:00 GMT",
+					"publishedAtSource": "rss:pubDate",
+					"publishedAtAssumedZone": null,
+					"publishedAt": "2026-09-28T18:00:00.000Z",
+					"publishedAtStatus": "valid",
+					"eventAt": null,
+					"eventAtSource": null,
+					"updatedAt": null,
+					"town": {
+						"name": "Mill Valley",
+						"slug": "mill-valley",
+						"source": "title-match"
+					},
+					"point": null,
+					"topics": [
+						"ENVIRONMENT"
+					],
+					"fetchedAt": "2026-09-28T20:00:00.000Z"
+				},
+				{
+					"id": "point-reyes-light:novato-schools",
+					"sourceId": "point-reyes-light",
+					"source": "Point Reyes Light",
+					"category": "local",
+					"verification": "local_media",
+					"title": "Novato schools add later start times",
+					"link": "https://www.ptreyeslight.com/news/novato-schools/",
+					"canonicalUrl": "https://ptreyeslight.com/news/novato-schools",
+					"summary": "Novato schools add later start times.",
+					"publishedAtRaw": "Mon, 28 Sep 2026 17:00:00 GMT",
+					"publishedAtSource": "rss:pubDate",
+					"publishedAtAssumedZone": null,
+					"publishedAt": "2026-09-28T17:00:00.000Z",
+					"publishedAtStatus": "valid",
+					"eventAt": null,
+					"eventAtSource": null,
+					"updatedAt": null,
+					"town": {
+						"name": "Novato",
+						"slug": "novato",
+						"source": "title-match"
+					},
+					"point": null,
+					"topics": [
+						"SCHOOLS"
+					],
+					"fetchedAt": "2026-09-28T20:00:00.000Z"
+				},
+				{
+					"id": "point-reyes-light:sausalito-ferry",
+					"sourceId": "point-reyes-light",
+					"source": "Point Reyes Light",
+					"category": "local",
+					"verification": "local_media",
+					"title": "Sausalito ferry schedule changes this week",
+					"link": "https://www.ptreyeslight.com/news/sausalito-ferry/",
+					"canonicalUrl": "https://ptreyeslight.com/news/sausalito-ferry",
+					"summary": "Sausalito ferry schedule changes this week.",
+					"publishedAtRaw": "Mon, 28 Sep 2026 16:00:00 GMT",
+					"publishedAtSource": "rss:pubDate",
+					"publishedAtAssumedZone": null,
+					"publishedAt": "2026-09-28T16:00:00.000Z",
+					"publishedAtStatus": "valid",
+					"eventAt": null,
+					"eventAtSource": null,
+					"updatedAt": null,
+					"town": {
+						"name": "Sausalito",
+						"slug": "sausalito",
+						"source": "title-match"
+					},
+					"point": null,
+					"topics": [
+						"TRAFFIC"
+					],
+					"fetchedAt": "2026-09-28T20:00:00.000Z"
+				},
+				{
+					"id": "point-reyes-light:point-reyes-water",
+					"sourceId": "point-reyes-light",
+					"source": "Point Reyes Light",
+					"category": "local",
+					"verification": "local_media",
+					"title": "Point Reyes Station water main repair finished",
+					"link": "https://www.ptreyeslight.com/news/point-reyes-water/",
+					"canonicalUrl": "https://ptreyeslight.com/news/point-reyes-water",
+					"summary": "Point Reyes Station water main repair finished.",
+					"publishedAtRaw": "Mon, 28 Sep 2026 15:00:00 GMT",
+					"publishedAtSource": "rss:pubDate",
+					"publishedAtAssumedZone": null,
+					"publishedAt": "2026-09-28T15:00:00.000Z",
+					"publishedAtStatus": "valid",
+					"eventAt": null,
+					"eventAtSource": null,
+					"updatedAt": null,
+					"town": {
+						"name": "Point Reyes Station",
+						"slug": "point-reyes",
+						"source": "title-match"
+					},
+					"point": null,
+					"topics": [
+						"ENVIRONMENT"
+					],
+					"fetchedAt": "2026-09-28T20:00:00.000Z"
+				}
+			]
+		}
+	],
+	"items": [
+		{
+			"id": "point-reyes-light:san-rafael-housing",
+			"sourceId": "point-reyes-light",
+			"source": "Point Reyes Light",
+			"category": "local",
+			"verification": "local_media",
+			"title": "San Rafael council approves Canal housing plan",
+			"link": "https://www.ptreyeslight.com/news/san-rafael-housing/",
+			"canonicalUrl": "https://ptreyeslight.com/news/san-rafael-housing",
+			"summary": "San Rafael council approves Canal housing plan.",
+			"publishedAtRaw": "Mon, 28 Sep 2026 19:00:00 GMT",
+			"publishedAtSource": "rss:pubDate",
+			"publishedAtAssumedZone": null,
+			"publishedAt": "2026-09-28T19:00:00.000Z",
+			"publishedAtStatus": "valid",
+			"eventAt": null,
+			"eventAtSource": null,
+			"updatedAt": null,
+			"town": {
+				"name": "San Rafael",
+				"slug": "san-rafael",
+				"source": "title-match"
+			},
+			"point": null,
+			"topics": [
+				"HOUSING"
+			],
+			"fetchedAt": "2026-09-28T20:00:00.000Z",
+			"categories": [
+				"local"
+			],
+			"alsoReportedBy": []
+		},
+		{
+			"id": "point-reyes-light:mill-valley-trail",
+			"sourceId": "point-reyes-light",
+			"source": "Point Reyes Light",
+			"category": "local",
+			"verification": "local_media",
+			"title": "Mill Valley opens new trail access on Mount Tamalpais",
+			"link": "https://www.ptreyeslight.com/news/mill-valley-trail/",
+			"canonicalUrl": "https://ptreyeslight.com/news/mill-valley-trail",
+			"summary": "Mill Valley opens new trail access on Mount Tamalpais.",
+			"publishedAtRaw": "Mon, 28 Sep 2026 18:00:00 GMT",
+			"publishedAtSource": "rss:pubDate",
+			"publishedAtAssumedZone": null,
+			"publishedAt": "2026-09-28T18:00:00.000Z",
+			"publishedAtStatus": "valid",
+			"eventAt": null,
+			"eventAtSource": null,
+			"updatedAt": null,
+			"town": {
+				"name": "Mill Valley",
+				"slug": "mill-valley",
+				"source": "title-match"
+			},
+			"point": null,
+			"topics": [
+				"ENVIRONMENT"
+			],
+			"fetchedAt": "2026-09-28T20:00:00.000Z",
+			"categories": [
+				"local"
+			],
+			"alsoReportedBy": []
+		},
+		{
+			"id": "point-reyes-light:novato-schools",
+			"sourceId": "point-reyes-light",
+			"source": "Point Reyes Light",
+			"category": "local",
+			"verification": "local_media",
+			"title": "Novato schools add later start times",
+			"link": "https://www.ptreyeslight.com/news/novato-schools/",
+			"canonicalUrl": "https://ptreyeslight.com/news/novato-schools",
+			"summary": "Novato schools add later start times.",
+			"publishedAtRaw": "Mon, 28 Sep 2026 17:00:00 GMT",
+			"publishedAtSource": "rss:pubDate",
+			"publishedAtAssumedZone": null,
+			"publishedAt": "2026-09-28T17:00:00.000Z",
+			"publishedAtStatus": "valid",
+			"eventAt": null,
+			"eventAtSource": null,
+			"updatedAt": null,
+			"town": {
+				"name": "Novato",
+				"slug": "novato",
+				"source": "title-match"
+			},
+			"point": null,
+			"topics": [
+				"SCHOOLS"
+			],
+			"fetchedAt": "2026-09-28T20:00:00.000Z",
+			"categories": [
+				"local"
+			],
+			"alsoReportedBy": []
+		},
+		{
+			"id": "point-reyes-light:sausalito-ferry",
+			"sourceId": "point-reyes-light",
+			"source": "Point Reyes Light",
+			"category": "local",
+			"verification": "local_media",
+			"title": "Sausalito ferry schedule changes this week",
+			"link": "https://www.ptreyeslight.com/news/sausalito-ferry/",
+			"canonicalUrl": "https://ptreyeslight.com/news/sausalito-ferry",
+			"summary": "Sausalito ferry schedule changes this week.",
+			"publishedAtRaw": "Mon, 28 Sep 2026 16:00:00 GMT",
+			"publishedAtSource": "rss:pubDate",
+			"publishedAtAssumedZone": null,
+			"publishedAt": "2026-09-28T16:00:00.000Z",
+			"publishedAtStatus": "valid",
+			"eventAt": null,
+			"eventAtSource": null,
+			"updatedAt": null,
+			"town": {
+				"name": "Sausalito",
+				"slug": "sausalito",
+				"source": "title-match"
+			},
+			"point": null,
+			"topics": [
+				"TRAFFIC"
+			],
+			"fetchedAt": "2026-09-28T20:00:00.000Z",
+			"categories": [
+				"local"
+			],
+			"alsoReportedBy": []
+		},
+		{
+			"id": "point-reyes-light:point-reyes-water",
+			"sourceId": "point-reyes-light",
+			"source": "Point Reyes Light",
+			"category": "local",
+			"verification": "local_media",
+			"title": "Point Reyes Station water main repair finished",
+			"link": "https://www.ptreyeslight.com/news/point-reyes-water/",
+			"canonicalUrl": "https://ptreyeslight.com/news/point-reyes-water",
+			"summary": "Point Reyes Station water main repair finished.",
+			"publishedAtRaw": "Mon, 28 Sep 2026 15:00:00 GMT",
+			"publishedAtSource": "rss:pubDate",
+			"publishedAtAssumedZone": null,
+			"publishedAt": "2026-09-28T15:00:00.000Z",
+			"publishedAtStatus": "valid",
+			"eventAt": null,
+			"eventAtSource": null,
+			"updatedAt": null,
+			"town": {
+				"name": "Point Reyes Station",
+				"slug": "point-reyes",
+				"source": "title-match"
+			},
+			"point": null,
+			"topics": [
+				"ENVIRONMENT"
+			],
+			"fetchedAt": "2026-09-28T20:00:00.000Z",
+			"categories": [
+				"local"
+			],
+			"alsoReportedBy": []
+		}
+	]
+}

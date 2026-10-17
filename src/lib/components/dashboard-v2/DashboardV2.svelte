@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { browser } from '$app/environment';
 	import TownPicker from '$lib/components/layout/TownPicker.svelte';
 	import SettingsMenu from './SettingsMenu.svelte';
@@ -53,26 +53,51 @@
 	import { createSectionOpenState } from '$lib/dashboard/section-open';
 	import { openAndFocus } from '$lib/dashboard/fragment-nav';
 	import { createDashboardV2Controller, V2_REFRESH_MS } from '$lib/dashboard/v2-controller';
+	import { seededSnapshotEntries } from '$lib/dashboard/source-adapters';
 	import { isDesktopViewport, sectionFromHash } from '$lib/dashboard/section-prefs';
 	import { V2_SECTIONS, type V2Section } from '$lib/dashboard/v2-sections';
 
 	const LATER = 'This part of the preview arrives in a later release.';
+
+	let {
+		snapshot: serverSnapshot = null,
+		renderedAt
+	}: {
+		/** The server's snapshot read (DASH-FLIP1); null when it failed or ran out of time. */
+		snapshot?: NewsSnapshotView | null;
+		/** The server's render time: SSR and hydration share one clock. */
+		renderedAt?: number;
+	} = $props();
+	// Read once: the page's first paint, not a prop that later drives anything.
+	const seed = untrack(() => serverSnapshot);
 
 	// SSR renders "false"; tests and later sections use this to know the page is interactive.
 	let hydrated = $state(false);
 	let innerWidth = $state(0);
 	/** ≥1024: sections always open, the cam wall under the map. Phone and tablet keep the strip. */
 	const desktop = $derived(hydrated && isDesktopViewport(innerWidth));
+	/**
+	 * The saved town is read from storage at module init, which SSR cannot see: Latest reporting
+	 * and the map are county-wide until mount, then narrow once (SSR output is never personalized).
+	 */
+	const scopeTown = $derived(hydrated ? $townFilter : null);
 	const sections = createSectionOpenState(sectionPrefs);
 	const open = sections.open;
 
 	// The one owner of this page's data (spec §13.7); aborted when the page goes away.
 	const lifetime = new AbortController();
-	const controller = browser ? createDashboardV2Controller({ signal: lifetime.signal }) : null;
-	const clock = createClock();
-	// SSR has no controller: empty readables keep the markup stable until hydration.
-	const snapshot = controller?.snapshot ?? readable<NewsSnapshotView | null>(null);
-	const sources = controller?.sources ?? readable<SourceStatusEntry[]>([]);
+	const controller = browser
+		? createDashboardV2Controller({ signal: lifetime.signal, initialSnapshot: seed })
+		: null;
+	const clock = createClock(
+		undefined,
+		undefined,
+		untrack(() => renderedAt)
+	);
+	// SSR has no controller: the server's snapshot (or nothing) keeps the markup stable until hydration.
+	const snapshot = controller?.snapshot ?? readable<NewsSnapshotView | null>(seed);
+	const sources =
+		controller?.sources ?? readable<SourceStatusEntry[]>(seed ? seededSnapshotEntries(seed) : []);
 	const fixIt = controller?.fixIt ?? readable<NewsItem[] | null>(null);
 	const quakes = controller?.earthquakes ?? readable<NewsItem[]>([]);
 	const briefState = controller?.brief ?? readable<BriefState | null>(null);
@@ -149,7 +174,7 @@
 		V2_SECTIONS.find((s) => s.id === 'outdoors')?.title ?? 'Outdoors & Conditions';
 	/** One selection per tick; later sections can read its shownIds. */
 	const latest = $derived(
-		latestReportingView({ view: $snapshot, sources: $sources, town: $townFilter, now: $clock })
+		latestReportingView({ view: $snapshot, sources: $sources, town: scopeTown, now: $clock })
 	);
 	const civicReads =
 		controller?.civic ?? readable<CivicReads>({ police: null, nps: null, activity: null });
@@ -200,7 +225,7 @@
 			earthquakes: $quakes,
 			sources: $sources,
 			activeLayers: $activeLayers,
-			town: $townFilter,
+			town: scopeTown,
 			now: $clock
 		})
 	);
@@ -296,9 +321,12 @@
 			<h2 id="v2-map-title" class="v2-region-title" data-text-role="section-title">
 				Map & latest reporting
 			</h2>
-			{#if controller && hydrated}
+			{#if ready || seed}
+				<!-- With the server's snapshot, Latest reporting is in the HTML; the map is client-only. -->
 				<div class="v2-map-row">
-					<V2Map data={settledData} now={$clock} />
+					{#if ready}
+						<V2Map data={settledData} now={$clock} />
+					{/if}
 					<LatestReporting view={latest} now={$clock} />
 				</div>
 			{/if}
@@ -363,7 +391,7 @@
 			>
 				{#if ready && s.id === 'news'}
 					<NewsCivic view={newsCivic} now={$clock} onopen={openNews} />
-					{#if !desktop}
+					{#if !desktop && lately}
 						<LatelyBand view={lately} now={$clock} />
 					{/if}
 				{:else if ready && s.id === 'events'}
@@ -394,7 +422,7 @@
 				{@render outdoorsSection('v2-span-12')}
 			{/if}
 			{#each desktop ? desktopSections : restSections as s (s.id)}
-				{#if desktop && s.id === 'news' && ready}
+				{#if desktop && s.id === 'news' && ready && lately}
 					<!-- The mockup's Lately band: full width, between Cost and News. -->
 					<div class="v2-span-12"><LatelyBand view={lately} now={$clock} /></div>
 				{/if}

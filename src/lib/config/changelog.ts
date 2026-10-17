@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-10-17',
+		title: 'The preview shows the news as soon as it opens',
+		description:
+			'The dashboard preview now arrives with its five latest news items already on the page, with how long ago each was published, instead of filling in after a moment. That helps on slow phones and in link previews. If the news can’t be read quickly, the page loads it as before. Marin Lately now appears only when it has published something in the last 30 days; for now it’s hidden, since its last piece was in January.'
+	},
+	{
 		date: '2026-10-16',
 		title: 'A way back to all of Marin, and a map key',
 		description:
