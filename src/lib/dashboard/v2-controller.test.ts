@@ -762,6 +762,21 @@ describe('createDashboardV2Controller', () => {
 			expect(read).not.toHaveBeenCalled();
 		});
 
+		it('the seeded status is dated by the snapshot’s own generatedAt, never its scrape or the request time', () => {
+			const seed = {
+				...SEED,
+				generatedAt: '2026-09-29T17:50:00.000Z',
+				lastSuccessfulScrapeAt: '2026-09-29T17:40:00.000Z'
+			};
+			clock = Date.parse('2026-09-29T18:00:00.000Z');
+			const c = controller({ initialSnapshot: seed });
+			const read = get(c.sources).find((e) => e.id === 'part:snapshot');
+			expect(read).toMatchObject({
+				state: 'ok',
+				observedAt: Date.parse('2026-09-29T17:50:00.000Z')
+			});
+		});
+
 		it('an older client response replaces neither the controller view nor the shared news stores', async () => {
 			const c = controller({
 				initialSnapshot: SEED,

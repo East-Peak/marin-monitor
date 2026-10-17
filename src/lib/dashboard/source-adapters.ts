@@ -68,10 +68,12 @@ export function fromSnapshotRead(
 	outcome: PartOutcome | undefined,
 	view: NewsSnapshotView | null
 ): SourceStatusEntry {
+	// A seeded read carries the snapshot's generatedAt; a client read reports none.
+	const seededAt = outcome?.ok ? outcome.observedAt : null;
 	const base = {
 		id: 'part:snapshot',
 		name: PART_NAMES.snapshot,
-		observedAt: view ? parseObservedAt(view.lastSuccessfulScrapeAt) : null,
+		observedAt: seededAt ?? (view ? parseObservedAt(view.lastSuccessfulScrapeAt) : null),
 		maxAgeMs: SNAPSHOT_OBSERVATION_MAX_AGE_MS
 	};
 	if (!outcome) return { ...base, state: 'loading', detail: null };
@@ -84,7 +86,8 @@ export function fromSnapshotRead(
  * snapshot's own generatedAt, never the request time.
  */
 export function seededSnapshotOutcome(view: NewsSnapshotView): PartOutcome {
-	return { ok: true, at: Date.parse(view.generatedAt), observedAt: null };
+	const generatedAt = Date.parse(view.generatedAt);
+	return { ok: true, at: generatedAt, observedAt: generatedAt };
 }
 
 /** The snapshot entries SSR and the seeded controller both derive (so hydration matches). */
