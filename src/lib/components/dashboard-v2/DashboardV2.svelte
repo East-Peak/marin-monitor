@@ -63,7 +63,11 @@
 	import { openAndFocus } from '$lib/dashboard/fragment-nav';
 	import { createDashboardV2Controller, V2_REFRESH_MS } from '$lib/dashboard/v2-controller';
 	import { seededSnapshotEntries } from '$lib/dashboard/source-adapters';
-	import { isDesktopViewport, sectionFromHash } from '$lib/dashboard/section-prefs';
+	import {
+		isDesktopViewport,
+		isPhoneViewport,
+		sectionFromHash
+	} from '$lib/dashboard/section-prefs';
 	import { V2_SECTIONS, type V2Section } from '$lib/dashboard/v2-sections';
 
 	const LATER = 'This part arrives in a later release.';
@@ -85,6 +89,8 @@
 	let innerWidth = $state(0);
 	/** ≥1024: sections always open, the cam wall under the map. Phone and tablet keep the strip. */
 	const desktop = $derived(hydrated && isDesktopViewport(innerWidth));
+	/** ≥768: the jump row under the header (HARMONIZE1); the phone keeps its bottom bar. */
+	const wide = $derived(hydrated && !isPhoneViewport(innerWidth));
 	/**
 	 * The saved town is read from storage at module init, which SSR cannot see: Latest reporting
 	 * and the map are county-wide until mount, then narrow once (SSR output is never personalized).
@@ -133,7 +139,7 @@
 			now: $clock
 		})
 	);
-	/** The desktop brief's status card: the same view, one line per part (MAPX1). */
+	/** The brief's Getting Around status: desktop's card, the phone's line (MAPX1, HARMONIZE1). */
 	const aroundCard = $derived(
 		gettingAroundCard(around, { transit: $transitState, traffic: $traffic, now: $clock })
 	);
@@ -358,7 +364,7 @@
 		<a class="v2-old" href="/?layout=legacy" data-text-role="label">Old dashboard</a>
 	</header>
 
-	{#if desktop}
+	{#if wide}
 		<div class="v2-jump-row"><JumpNav desktop onjump={navJump} /></div>
 	{/if}
 
@@ -374,7 +380,7 @@
 					onjump={navJump}
 				/>
 			{:else}
-				<BriefRow brief={controller.brief} now={clock} onjump={navJump} />
+				<BriefRow brief={controller.brief} now={clock} around={aroundCard} onjump={navJump} />
 			{/if}
 			{#if !desktop}
 				<CamStrip now={$clock} />
@@ -502,7 +508,9 @@
 		</footer>
 	</main>
 
-	<JumpNav onjump={navJump} />
+	{#if !wide}
+		<JumpNav onjump={navJump} />
+	{/if}
 </div>
 
 <style>

@@ -152,6 +152,7 @@ vi.mock('$lib/dashboard/v2-controller', async () => ({
 }));
 
 import DashboardV2 from './DashboardV2.svelte';
+import { NAV_TARGETS } from '$lib/dashboard/fragment-nav';
 import type { NewsSnapshotView } from '$lib/news/snapshot';
 import { seededSnapshotEntries } from '$lib/dashboard/source-adapters';
 import { snapshotView, story } from '$lib/dashboard/__fixtures__/snapshot-view';
@@ -355,6 +356,29 @@ describe('DashboardV2 preview shell', () => {
 		expect(controller.ensure).not.toHaveBeenCalledWith('marine');
 	});
 
+	it('every jump target lands on an element of the page, at phone, tablet and desktop widths (HARMONIZE1)', async () => {
+		for (const w of [390, 820, 1440]) {
+			atWidth(w);
+			const { container, unmount } = render(DashboardV2);
+			await tick();
+			for (const t of NAV_TARGETS)
+				expect(container.querySelector(t.hash), `${w}: ${t.hash}`).not.toBeNull();
+			unmount();
+		}
+	});
+	it('tablet (820) has the jump row; the phone (390) line is the Getting Around status, transit only while closed (HARMONIZE1)', async () => {
+		atWidth(820);
+		const tablet = render(DashboardV2);
+		await tick();
+		expect(tablet.container.querySelector('nav.v2-jump-desk')).not.toBeNull();
+		tablet.unmount();
+		atWidth(390);
+		const { container } = render(DashboardV2);
+		await tick();
+		const line = container.querySelector('[data-brief-link="getting-around"]')!;
+		expect(line.textContent).toContain('Marin Transit');
+		expect(line.textContent).not.toMatch(/airport|SFO|traffic|roads/i);
+	});
 	it('resized from desktop to phone, the page stops asking for the desktop detail (Codex #4)', async () => {
 		atWidth(1440);
 		render(DashboardV2);

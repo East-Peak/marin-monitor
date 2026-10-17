@@ -3,6 +3,7 @@ import { tick } from 'svelte';
 import { writable } from 'svelte/store';
 import { describe, expect, it, vi } from 'vitest';
 import type { BriefCard, BriefState } from '$lib/dashboard/brief-store';
+import type { CardItem } from '$lib/dashboard/getting-around';
 import BriefRow from './BriefRow.svelte';
 
 const NOW = Date.parse('2026-09-29T15:00:00Z'); // 8:00 AM PDT
@@ -65,10 +66,15 @@ function state(over: Partial<BriefState> = {}): BriefState {
 	};
 }
 
-function renderRow(s: BriefState, now = NOW, onjump?: (hash: string) => void) {
+function renderRow(
+	s: BriefState,
+	now = NOW,
+	onjump?: (hash: string) => void,
+	around: CardItem[] = []
+) {
 	const brief = writable(s);
 	const clock = writable(now);
-	const result = render(BriefRow, { props: { brief, now: clock, onjump } });
+	const result = render(BriefRow, { props: { brief, now: clock, around, onjump } });
 	return { ...result, brief, clock };
 }
 
@@ -159,12 +165,37 @@ describe('BriefRow', () => {
 		expect(screen.queryByRole('link', { name: /Traffic cams/ })).toBeNull();
 	});
 
-	it('the Getting around link opens its section (the entry point the Cams strip retired); it is not a card', async () => {
+	it('the Getting around line puts qualified items first, so its clip only ever hides plain ones (HARMONIZE1, Codex #2)', () => {
+		renderRow(state(), NOW, undefined, [
+			{ text: 'SFO no delays', state: 'ok' },
+			{ text: 'Traffic out of date', state: 'stale' },
+			{ text: 'Marin Transit: 511 lists no alerts', state: 'reference' },
+			{ text: 'Airport status unavailable', state: 'unavailable' }
+		]);
+		const parts = document.querySelectorAll('[data-brief-link="getting-around"] [data-state]');
+		expect([...parts].map((e) => e.textContent)).toEqual([
+			'Traffic out of date',
+			'Airport status unavailable',
+			'SFO no delays',
+			'Marin Transit: 511 lists no alerts'
+		]);
+	});
+	it('the Getting around line: the status card items on one line, a link that opens its section (HARMONIZE1)', async () => {
 		const onjump = vi.fn();
-		renderRow(state(), NOW, onjump);
-		const link = screen.getByRole('link', { name: /^Getting around: airports, roads & transit/ });
+		renderRow(state(), NOW, onjump, [
+			{ text: 'SFO no delays', state: 'ok' },
+			{ text: '511 lists no incidents on Marin roads', state: 'ok' },
+			{ text: 'Marin Transit: 511 lists no alerts', state: 'reference' }
+		]);
+		const link = screen.getByRole('link', { name: /^Getting around/ });
 		expect(link.getAttribute('href')).toBe('#getting-around');
 		expect(link.closest('[data-card]')).toBeNull();
+		expect(link.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+			'Getting around SFO no delays · 511 lists no incidents on Marin roads · Marin Transit: 511 lists no alerts →'
+		);
+		expect(
+			[...link.querySelectorAll('[data-state]')].map((e) => e.getAttribute('data-state'))
+		).toEqual(['ok', 'ok', 'reference']);
 		await fireEvent.click(link);
 		expect(onjump).toHaveBeenCalledWith('#getting-around');
 	});

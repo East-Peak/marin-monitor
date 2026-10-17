@@ -6,6 +6,11 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-17
 
+### Changed — The phone and tablet say what desktop says
+
+- **On the phone, the "Getting around" line under the brief now shows status**, in the desktop card's own words, instead of a bare link: for example "Marin Transit: 511 lists no alerts". It is still one tap to the section. Airports and roads join the line once the section has been opened (the phone loads them only then). Anything out of date or unverified comes first, so a cut-off line never hides a warning.
+- **Tablets (768–1023 px) get the jump row** under the header: Map · Getting around · Outdoors · News · Cost · Events. Before, they had no jump navigation at all. The phone keeps its bottom bar.
+
 ### Changed — A full-width desktop map with an "In view" list and more layers
 
 - **The map spans the page** on desktop, 62% of the window's height (520–820 px). Latest reporting sits under it as one row of five headlines. That row is still the content the page arrives with, and what the phone shows.

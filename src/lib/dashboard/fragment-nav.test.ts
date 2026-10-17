@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { JUMP_TARGETS, openAndFocus } from './fragment-nav';
+import { DESKTOP_JUMP_TARGETS, JUMP_TARGETS, NAV_TARGETS, openAndFocus } from './fragment-nav';
 
 beforeEach(() => {
 	document.body.innerHTML = `
@@ -38,5 +38,17 @@ describe('openAndFocus (spec §8)', () => {
 	});
 	it('the jump targets are Top · Map · News · Sections', () => {
 		expect(JUMP_TARGETS.map((t) => t.label)).toEqual(['Top', 'Map', 'News', 'Sections']);
+	});
+	it('both navs come from one ordered list (HARMONIZE1): each is its slice of NAV_TARGETS', () => {
+		expect(JUMP_TARGETS).toEqual(NAV_TARGETS.filter((t) => t.on.includes('phone')));
+		expect(DESKTOP_JUMP_TARGETS).toEqual(NAV_TARGETS.filter((t) => t.on.includes('wide')));
+		expect(DESKTOP_JUMP_TARGETS.map((t) => t.label)).toEqual([
+			'Map',
+			'Getting around',
+			'Outdoors',
+			'News',
+			'Cost',
+			'Events'
+		]);
 	});
 });

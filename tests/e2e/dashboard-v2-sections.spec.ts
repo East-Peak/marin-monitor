@@ -115,6 +115,27 @@ test.describe('desktop 1440×900', () => {
 	});
 });
 
+// Tablet gets the jump row under the header, the phone's bottom bar stays ≤767 (HARMONIZE1).
+test.describe('tablet 820×1180', () => {
+	test.use({ viewport: { width: 820, height: 1180 }, hasTouch: true });
+
+	test('exactly one jump nav is visible, and its Outdoors link opens and focuses a collapsed section', async ({
+		page
+	}) => {
+		await openV2(page);
+		const navs = page.getByRole('navigation', { name: 'Jump to' });
+		await expect(navs).toHaveCount(1);
+		await expect(navs).toBeVisible();
+		await expect(navs).toHaveClass(/v2-jump-desk/);
+		await toggle(page, 'outdoors').click();
+		await expect(toggle(page, 'outdoors')).toHaveAttribute('aria-expanded', 'false');
+		await navs.getByRole('link', { name: 'Outdoors' }).click();
+		await expect(page).toHaveURL(/#outdoors$/);
+		await expect(toggle(page, 'outdoors')).toHaveAttribute('aria-expanded', 'true');
+		await expect.poll(() => focusedToggle(page)).toBe('outdoors');
+	});
+});
+
 test.describe('phone 390×844', () => {
 	test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 

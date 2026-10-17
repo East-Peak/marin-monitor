@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Readable } from 'svelte/store';
 	import type { BriefCard, BriefState } from '$lib/dashboard/brief-store';
+	import type { CardItem } from '$lib/dashboard/getting-around';
 	import { formatAsOf } from '$lib/dashboard/pacific-time';
 	import { effectiveState, type SourceEntryState } from '$lib/dashboard/source-status';
 	import { nextTide, restOfTodayRainChance } from '$lib/weather/brief';
@@ -8,9 +9,15 @@
 	let {
 		brief,
 		now,
+		around = [],
 		onjump
-	}: { brief: Readable<BriefState>; now: Readable<number>; onjump?: (hash: string) => void } =
-		$props();
+	}: {
+		brief: Readable<BriefState>;
+		now: Readable<number>;
+		/** Getting Around's status: the desktop card's items, of the parts the phone has read (HARMONIZE1). */
+		around?: CardItem[];
+		onjump?: (hash: string) => void;
+	} = $props();
 
 	/** Clock-driven freshness for a card (G1a): nothing stays "ok" past its limit. */
 	function stateOf(card: BriefCard<unknown>, at: number): SourceEntryState {
@@ -36,6 +43,12 @@
 		forecast.value ? restOfTodayRainChance(forecast.value.periods, $now) : null
 	);
 	const tide = $derived(tides.value ? nextTide(tides.value, $now) : null);
+	/** One clipped line: what it can't vouch for leads, so the clip only ever hides plain items. */
+	const QUALIFIED: readonly SourceEntryState[] = ['stale', 'unknown', 'unavailable'];
+	const aroundLine = $derived([
+		...around.filter((i) => QUALIFIED.includes(i.state)),
+		...around.filter((i) => !QUALIFIED.includes(i.state))
+	]);
 	const tideState = $derived<SourceEntryState>(
 		tides.value !== null && tide === null ? 'unavailable' : stateOf(tides, $now)
 	);
@@ -106,10 +119,17 @@
 	<a
 		class="v2-brief-link"
 		data-brief-link="getting-around"
-		data-text-role="label"
 		href="#getting-around"
-		onclick={() => onjump?.('#getting-around')}>Getting around: airports, roads &amp; transit →</a
+		onclick={() => onjump?.('#getting-around')}
 	>
+		<span class="v2-brief-link-title" data-text-role="label">Getting around</span>
+		<span class="v2-brief-link-parts" data-text-role="meta"
+			>{#each aroundLine as item, i (i)}{#if i}{' · '}{/if}<span data-state={item.state}
+					>{item.text}</span
+				>{/each}</span
+		>
+		<span aria-hidden="true" data-text-role="label">→</span>
+	</a>
 </section>
 
 <style>
@@ -118,9 +138,28 @@
 		flex: 1 1 100%;
 		display: inline-flex;
 		align-items: center;
+		gap: 0.5rem;
+		min-width: 0;
 		min-height: 2.75rem;
 		color: var(--accent);
 		text-decoration: none;
+	}
+	.v2-brief-link-title {
+		flex: none;
+	}
+	.v2-brief-link-parts {
+		/* One line, the desktop card's words; the end ellipsized, the arrow always shown. */
+		flex: 1 1 auto;
+		min-width: 0;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+		color: var(--text-primary);
+	}
+	.v2-brief-link-parts [data-state='unavailable'],
+	.v2-brief-link-parts [data-state='stale'],
+	.v2-brief-link-parts [data-state='unknown'] {
+		color: var(--warning, var(--text-primary));
 	}
 	.v2-brief-link:focus-visible {
 		outline: 2px solid var(--accent);

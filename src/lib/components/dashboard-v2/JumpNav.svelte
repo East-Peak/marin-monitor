@@ -42,8 +42,8 @@
 	.v2-jump-desk a:focus-visible {
 		color: var(--text-primary);
 	}
-	@media (max-width: 1023px) {
-		/* The render boundary's CSS half: desktop only. */
+	@media (max-width: 767px) {
+		/* The render boundary's CSS half: tablet and desktop only (HARMONIZE1). */
 		.v2-jump-desk {
 			display: none;
 		}

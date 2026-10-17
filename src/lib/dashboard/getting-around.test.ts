@@ -1015,6 +1015,15 @@ describe("gettingAroundCard (MAPX1: the brief's status card)", () => {
 	});
 });
 
+describe('gettingAroundCard on the phone (HARMONIZE1)', () => {
+	it('a part the page has not read says nothing: closed, only transit (always read) is said', () => {
+		const i = input({ open: false });
+		expect(gettingAroundCard(gettingAroundView(i), i)).toEqual([
+			{ text: 'Marin Transit: 511 lists no alerts', state: 'reference' }
+		]);
+	});
+});
+
 describe('gettingAroundCard transit count (MAPX1, Codex #6)', () => {
 	it('counts what the section shows: a promotion is not an alert', () => {
 		const i = input({
