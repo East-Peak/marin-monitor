@@ -59,11 +59,11 @@ beforeEach(() => {
 describe('sectionPrefs store', () => {
 	it('starts empty when nothing is stored, and when the stored value is malformed', async () => {
 		let { sectionPrefs } = await import('./section-prefs');
-		expect(get(sectionPrefs)).toEqual({ version: 2, open: {} });
+		expect(get(sectionPrefs)).toEqual({ version: 3, open: {}, layers: {} });
 		storage.setItem('mm_sections_v2', '{oops');
 		vi.resetModules();
 		({ sectionPrefs } = await import('./section-prefs'));
-		expect(get(sectionPrefs)).toEqual({ version: 2, open: {} });
+		expect(get(sectionPrefs)).toEqual({ version: 3, open: {}, layers: {} });
 	});
 
 	it('reads valid stored prefs', async () => {
@@ -80,7 +80,9 @@ describe('sectionPrefs store', () => {
 		sectionPrefs.setOpen('strava', true);
 		const after = storage.snapshot();
 		expect(v1Only(after)).toEqual(before);
-		expect(after.mm_sections_v2).toBe('{"version":2,"open":{"news":false,"strava":true}}');
+		expect(after.mm_sections_v2).toBe(
+			'{"version":3,"open":{"news":false,"strava":true},"layers":{}}'
+		);
 	});
 
 	it('is idempotent: repeating a choice leaves identical storage', async () => {
@@ -96,14 +98,25 @@ describe('sectionPrefs store', () => {
 		const { sectionPrefs } = await import('./section-prefs');
 		sectionPrefs.setOpen('news', false);
 		sectionPrefs.reset();
-		expect(get(sectionPrefs)).toEqual({ version: 2, open: {} });
+		expect(get(sectionPrefs)).toEqual({ version: 3, open: {}, layers: {} });
 		expect(storage.snapshot()).toEqual(V1);
+	});
+
+	it('"reset" keeps the map layer choices (they are not section choices)', async () => {
+		const { sectionPrefs } = await import('./section-prefs');
+		sectionPrefs.setLayer('traffic', false);
+		sectionPrefs.setOpen('news', false);
+		sectionPrefs.reset();
+		expect(get(sectionPrefs)).toEqual({ version: 3, open: {}, layers: { traffic: false } });
+		expect(storage.snapshot().mm_sections_v2).toBe(
+			'{"version":3,"open":{},"layers":{"traffic":false}}'
+		);
 	});
 
 	it('works in memory and never throws when storage is denied', async () => {
 		storage.deny(true);
 		const { sectionPrefs } = await import('./section-prefs');
-		expect(get(sectionPrefs)).toEqual({ version: 2, open: {} });
+		expect(get(sectionPrefs)).toEqual({ version: 3, open: {}, layers: {} });
 		expect(() => sectionPrefs.setOpen('news', false)).not.toThrow();
 		expect(get(sectionPrefs).open).toEqual({ news: false });
 		expect(() => sectionPrefs.reset()).not.toThrow();

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	SECTION_IDS,
+	withLayerOn,
 	defaultSectionOpen,
 	emptySectionPrefs,
 	isDesktopViewport,
@@ -38,7 +39,11 @@ describe('parseSectionPrefs', () => {
 			version: 2,
 			open: { news: false, cost: true, bogus: true, strava: 'yes', outdoors: 0 }
 		});
-		expect(parseSectionPrefs(raw)).toEqual({ version: 2, open: { news: false, cost: true } });
+		expect(parseSectionPrefs(raw)).toEqual({
+			version: 3,
+			open: { news: false, cost: true },
+			layers: {}
+		});
 	});
 	it('ignores v1 panel flags entirely (old disabled panels never hide v2 sections)', () => {
 		const v1Panels = JSON.stringify({ outdoors: false, cameras: false, housing: false });
@@ -50,8 +55,9 @@ describe('serializeSectionPrefs', () => {
 	it('is idempotent: parse(serialize(p)) round-trips and re-serializes byte-identically', () => {
 		const samples: SectionPrefs[] = [
 			emptySectionPrefs(),
-			{ version: 2, open: { strava: true, news: false } },
-			{ version: 2, open: { cost: false, 'getting-around': true, outdoors: true } }
+			{ version: 3, open: { strava: true, news: false }, layers: {} },
+			{ version: 3, open: { cost: false, 'getting-around': true, outdoors: true }, layers: {} },
+			{ version: 3, open: {}, layers: { traffic: false, ev: true, satire: true } }
 		];
 		for (const p of samples) {
 			const once = serializeSectionPrefs(p);
@@ -60,9 +66,37 @@ describe('serializeSectionPrefs', () => {
 		}
 	});
 	it('writes keys in SECTION_IDS order regardless of insertion order', () => {
-		expect(serializeSectionPrefs({ version: 2, open: { strava: true, news: false } })).toBe(
-			'{"version":2,"open":{"news":false,"strava":true}}'
-		);
+		expect(
+			serializeSectionPrefs({ version: 3, open: { strava: true, news: false }, layers: {} })
+		).toBe('{"version":3,"open":{"news":false,"strava":true},"layers":{}}');
+	});
+});
+
+describe('map layer choices (MAPX2b, version 3)', () => {
+	it('migrates stored version 2 prefs: section choices kept, no layer choices yet', () => {
+		expect(parseSectionPrefs('{"version":2,"open":{"news":false}}')).toEqual({
+			version: 3,
+			open: { news: false },
+			layers: {}
+		});
+	});
+	it('keeps known layer choices and drops unknown ids and non-booleans one by one', () => {
+		const raw = JSON.stringify({
+			version: 3,
+			open: {},
+			layers: { traffic: false, coffee: true, airports: true, gas: 'no' }
+		});
+		expect(parseSectionPrefs(raw).layers).toEqual({ traffic: false, coffee: true });
+	});
+	it('a version 3 value with a malformed layers field keeps its section choices', () => {
+		expect(parseSectionPrefs('{"version":3,"open":{"cost":true},"layers":[]}')).toEqual({
+			version: 3,
+			open: { cost: true },
+			layers: {}
+		});
+	});
+	it('withLayerOn records one explicit choice', () => {
+		expect(withLayerOn(emptySectionPrefs(), 'ev', true).layers).toEqual({ ev: true });
 	});
 });
 

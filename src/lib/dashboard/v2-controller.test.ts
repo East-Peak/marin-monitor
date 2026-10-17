@@ -293,6 +293,18 @@ describe('createDashboardV2Controller', () => {
 		}
 	});
 
+	it('the map reads gas, EV and coffee from its own stores, never a shared one (MAPX2b)', async () => {
+		const c = controller();
+		expect(get(c.places.gas)).toBeNull();
+		// Another owner's value in the shared store is not the map's.
+		gasPriceStore.set({ current: { stations: [{ placeId: 'stale' }] }, history: [] } as never);
+		expect(get(c.places.gas)).toBeNull();
+		await c.start();
+		expect(get(c.places.gas)?.current).not.toBeNull();
+		expect(get(c.places.ev)?.current).not.toBeNull();
+		expect(get(c.places.coffee)?.current).not.toBeNull();
+	});
+
 	it('the dataset freshness policy is G0a’s own (pinned to SOURCE_INVENTORY)', () => {
 		for (const { healthName, maxAgeDays } of Object.values(DATASET_POLICY)) {
 			const policy = SOURCE_INVENTORY.find((p) => p.name === healthName);

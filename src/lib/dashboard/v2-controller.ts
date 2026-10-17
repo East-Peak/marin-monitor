@@ -67,7 +67,9 @@ import { fetchSchoolTuitionDataWithStatus } from '$lib/api/marin/school-tuition'
 import { fetchHousingDataWithStatus, type HousingMetric } from '$lib/api/marin/housing';
 import type { FetchResult } from '$lib/api/marin/data-fetcher';
 import type { CompositeData } from '$lib/types/composite';
-import type { CoffeeData } from '$lib/types/coffee';
+import type { CoffeeData, CoffeeIndexData } from '$lib/types/coffee';
+import type { EvChargingData } from '$lib/types/ev-charging';
+import type { GasPriceData } from '$lib/types/gas';
 import type { GroceryBasketData } from '$lib/types/grocery';
 import type { WineIndexData } from '$lib/types/wine';
 import type { SchoolIndexData } from '$lib/types/school';
@@ -104,44 +106,63 @@ const maxAge = (id: PolicyId) => DATASET_POLICY[id].maxAgeDays * DAY_MS;
 const scrapedAt = (d: { current: { lastSuccessfulScrapeAt?: string | null } | null }) =>
 	d.current?.lastSuccessfulScrapeAt;
 
-export const ESSENTIAL_DATASETS: readonly DatasetDef[] = [
-	dataset({
-		id: 'gas',
-		name: 'Gas prices',
-		tier: 'essential',
-		load: (signal) => fetchGasPriceDataWithStatus({ signal }),
-		commit: (d) => gasPriceStore.set(d),
-		observedAtOf: scrapedAt,
-		maxAgeMs: maxAge('gas')
-	}),
-	dataset({
-		id: 'ev',
-		name: 'EV charging',
-		tier: 'essential',
-		load: (signal) => fetchEvChargingDataWithStatus({ signal }),
-		commit: (d) => evChargingStore.set(d),
-		observedAtOf: scrapedAt,
-		maxAgeMs: maxAge('ev')
-	}),
-	dataset({
-		id: 'coffee',
-		name: 'Coffee index',
-		tier: 'essential',
-		load: (signal) => fetchCoffeeIndexDataWithStatus({ signal }),
-		commit: (d) => coffeeIndexStore.set(d),
-		observedAtOf: scrapedAt,
-		maxAgeMs: maxAge('coffee')
-	}),
-	dataset({
-		id: 'fitness',
-		name: 'Fitness drop-ins',
-		tier: 'essential',
-		load: (signal) => fetchFitnessDataWithStatus({ signal }),
-		commit: (d) => fitnessStore.set(d),
-		observedAtOf: scrapedAt,
-		maxAgeMs: maxAge('fitness')
-	})
-];
+/** The map's own copies of the place datasets (MAPX2b): it never reads the shared stores. */
+export interface PlaceStores {
+	gas: Writable<GasPriceData | null>;
+	ev: Writable<EvChargingData | null>;
+	coffee: Writable<CoffeeIndexData | null>;
+}
+
+/** Brief/map essentials. Gas, EV and coffee also fill the shared stores the Cost section reads. */
+function essentialDatasets(places: PlaceStores): DatasetDef[] {
+	return [
+		dataset({
+			id: 'gas',
+			name: 'Gas prices',
+			tier: 'essential',
+			load: (signal) => fetchGasPriceDataWithStatus({ signal }),
+			commit: (d) => {
+				gasPriceStore.set(d);
+				places.gas.set(d);
+			},
+			observedAtOf: scrapedAt,
+			maxAgeMs: maxAge('gas')
+		}),
+		dataset({
+			id: 'ev',
+			name: 'EV charging',
+			tier: 'essential',
+			load: (signal) => fetchEvChargingDataWithStatus({ signal }),
+			commit: (d) => {
+				evChargingStore.set(d);
+				places.ev.set(d);
+			},
+			observedAtOf: scrapedAt,
+			maxAgeMs: maxAge('ev')
+		}),
+		dataset({
+			id: 'coffee',
+			name: 'Coffee index',
+			tier: 'essential',
+			load: (signal) => fetchCoffeeIndexDataWithStatus({ signal }),
+			commit: (d) => {
+				coffeeIndexStore.set(d);
+				places.coffee.set(d);
+			},
+			observedAtOf: scrapedAt,
+			maxAgeMs: maxAge('coffee')
+		}),
+		dataset({
+			id: 'fitness',
+			name: 'Fitness drop-ins',
+			tier: 'essential',
+			load: (signal) => fetchFitnessDataWithStatus({ signal }),
+			commit: (d) => fitnessStore.set(d),
+			observedAtOf: scrapedAt,
+			maxAgeMs: maxAge('fitness')
+		})
+	];
+}
 
 /** Full inventories: loaded only on browse. Nothing in D1 browses Strava (§13.9). */
 export const INVENTORY_DATASETS: readonly DatasetDef[] = [
@@ -425,6 +446,10 @@ export interface DashboardV2Controller {
 	/** Getting Around's details, loaded through ensure('airport' | 'traffic'). */
 	airport: Readable<AirportStatusData | null>;
 	traffic: Readable<TrafficCorridorsData | null>;
+	/** The map's gas, EV and coffee, committed by the essentials (MAPX2b). */
+	places: {
+		[K in keyof PlaceStores]: Readable<PlaceStores[K] extends Writable<infer T> ? T : never>;
+	};
 	/** Outdoors' details, loaded through ensure(OUTDOORS_DATASETS.*.id). */
 	marine: Readable<MarineForecastRead | null>;
 	fires: Readable<FireRead | null>;
@@ -441,6 +466,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 	const healthReport = writable<HealthReportJson | null>(null);
 	const airport = writable<AirportStatusData | null>(null);
 	const traffic = writable<TrafficCorridorsData | null>(null);
+	const places: PlaceStores = { gas: writable(null), ev: writable(null), coffee: writable(null) };
 	const transit = writable<TransitState>({ reads: null, error: null });
 	const outdoors: OutdoorsStores = {
 		marine: writable(null),
@@ -459,7 +485,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 	const civic = writable<CivicReads>({ police: null, nps: null, activity: null });
 	// /api/health feeds the header indicator only; it never re-dates a dataset (Codex r1 #3).
 	const defs = deps.datasets ?? [
-		...ESSENTIAL_DATASETS,
+		...essentialDatasets(places),
 		dataset({
 			id: 'health',
 			name: 'Source health',
@@ -608,6 +634,11 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		transit: { subscribe: transit.subscribe },
 		airport: { subscribe: airport.subscribe },
 		traffic: { subscribe: traffic.subscribe },
+		places: {
+			gas: { subscribe: places.gas.subscribe },
+			ev: { subscribe: places.ev.subscribe },
+			coffee: { subscribe: places.coffee.subscribe }
+		},
 		marine: { subscribe: outdoors.marine.subscribe },
 		fires: { subscribe: outdoors.fires.subscribe },
 		quakesWeek: { subscribe: outdoors.quakesWeek.subscribe },

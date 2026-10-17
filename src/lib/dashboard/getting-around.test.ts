@@ -692,6 +692,7 @@ describe('gettingAroundView', () => {
 			where: 'Westbound east of Central Ave',
 			severity: 'Moderate' as 'Major' | 'Moderate' | 'Minor' | null,
 			reportedAt: new Date(NOW - 25 * MIN).toISOString(),
+			at: null as [number, number] | null,
 			...over
 		});
 		const view = (events: TrafficCorridorsData['events']) =>
@@ -945,7 +946,8 @@ describe("gettingAroundCard (MAPX1: the brief's status card)", () => {
 		road: 'US-101',
 		where: 'Southbound',
 		severity: 'Minor',
-		reportedAt: new Date(NOW - 5 * MIN).toISOString()
+		reportedAt: new Date(NOW - 5 * MIN).toISOString(),
+		at: null
 	});
 
 	it('a fresh ok read with nothing listed: each all-clear, named for its source', () => {
@@ -1042,7 +1044,8 @@ describe('gettingAroundCard road wording (MAPX1 live look)', () => {
 			road: 'I-280',
 			where: 'Northbound',
 			severity: 'Minor' as const,
-			reportedAt: new Date(NOW - 5 * MIN).toISOString()
+			reportedAt: new Date(NOW - 5 * MIN).toISOString(),
+			at: null
 		});
 		const i = input({ traffic: { ...TRAFFIC, events: [ev('a'), ev('b')] } });
 		expect(gettingAroundCard(gettingAroundView(i), i)[2]).toEqual({

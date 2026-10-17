@@ -58,8 +58,9 @@ test.describe('tablet 900×900', () => {
 		expect(
 			JSON.parse((await page.evaluate(() => localStorage.getItem('mm_sections_v2'))) ?? '{}')
 		).toEqual({
-			version: 2,
-			open: { news: false }
+			version: 3,
+			open: { news: false },
+			layers: {}
 		});
 	});
 

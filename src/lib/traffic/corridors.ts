@@ -37,6 +37,8 @@ export interface CorridorEvent {
 	severity: 'Major' | 'Moderate' | 'Minor' | null;
 	/** When 511 created the event (ISO); null when unreadable. */
 	reportedAt: string | null;
+	/** 511's own point, validated [lon, lat] (the v2 map, MAPX2); null when 511 gives none. */
+	at: [number, number] | null;
 }
 
 export interface CorridorRead {
@@ -197,7 +199,8 @@ export function corridorEvents(events: readonly unknown[], now: number): Corrido
 			(Array.isArray(e.roads) ? e.roads.length : 0) !== roads.length ||
 			(Array.isArray(e.areas) ? e.areas.length : 0) !== areas.length;
 		const marin = areas.includes(MARIN_AREA);
-		const placed = corridorOf(roads, pointOf(e.geography));
+		const at = pointOf(e.geography);
+		const placed = corridorOf(roads, at);
 		if (!marin && placed === null) {
 			// Without a county we can't say it is outside Marin; without a road, that it is off the routes.
 			if (areas.length === 0 || roads.length === 0 || malformed) unreadable += 1;
@@ -230,7 +233,8 @@ export function corridorEvents(events: readonly unknown[], now: number): Corrido
 				road,
 				where: whereOf(shown),
 				severity,
-				reportedAt: Number.isFinite(created) ? new Date(created).toISOString() : null
+				reportedAt: Number.isFinite(created) ? new Date(created).toISOString() : null,
+				at
 			},
 			rank: closed ? RANK.closed : RANK[severity ?? 'unknown'],
 			created: Number.isFinite(created) ? created : 0

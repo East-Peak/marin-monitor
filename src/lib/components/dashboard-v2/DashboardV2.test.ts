@@ -123,6 +123,12 @@ vi.mock('$lib/dashboard/v2-controller', async () => ({
 			},
 			airport: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
 			traffic: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
+			places: Object.fromEntries(
+				['gas', 'ev', 'coffee'].map((id) => [
+					id,
+					{ subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) }
+				])
+			),
 			brief: { subscribe: (fn: (v: unknown) => void) => (fn(controller.EMPTY_BRIEF), () => {}) },
 			advisories: {
 				subscribe: (fn: (v: unknown) => void) => (

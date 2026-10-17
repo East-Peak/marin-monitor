@@ -33,6 +33,21 @@ const work = (intervals: unknown, over: Record<string, unknown> = {}) =>
 		...over
 	});
 
+describe('corridorEvents: the map point (MAPX2)', () => {
+	it("keeps 511's validated [lon, lat]; null when 511 gives no usable point", () => {
+		const marin = { areas: [{ name: 'Marin' }] };
+		const { events } = corridorEvents(
+			[
+				ev('US-101 N', [-122.52, 37.9], marin),
+				ev('US-101 N', [0, 0], { ...marin, geography: null }),
+				ev('US-101 N', [0, 0], { ...marin, geography: { type: 'Point', coordinates: [400, 1] } })
+			],
+			NOW
+		);
+		expect(events.map((e) => e.at)).toEqual([[-122.52, 37.9], null, null]);
+	});
+});
+
 describe('corridorEvents (Getting Around roads)', () => {
 	it('keeps the live airport-route incidents of 2026-10-14 (I-580 at Central Ave; 101 at Cesar Chavez)', () => {
 		const { events, unreadable } = corridorEvents(
@@ -56,7 +71,8 @@ describe('corridorEvents (Getting Around roads)', () => {
 			road: 'I-580',
 			where: 'Westbound east of Central Ave',
 			severity: 'Moderate',
-			reportedAt: '2026-10-14T22:20:00.000Z'
+			reportedAt: '2026-10-14T22:20:00.000Z',
+			at: [-122.311741, 37.89741]
 		});
 	});
 

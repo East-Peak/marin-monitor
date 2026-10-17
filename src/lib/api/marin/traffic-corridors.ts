@@ -60,6 +60,18 @@ function fromGroup(e: Record<string, unknown>): Record<string, unknown> | null {
 	return { ...rest, marin: group === 'marin', corridor, trip, closed: false, lanes: null };
 }
 
+/** A point we can't read is "no location" (counted by the map), never a guess. */
+function pointOf(v: unknown): [number, number] | null {
+	if (!Array.isArray(v) || v.length !== 2) return null;
+	const [lon, lat] = v as unknown[];
+	return typeof lon === 'number' &&
+		typeof lat === 'number' &&
+		Math.abs(lon) <= 180 &&
+		Math.abs(lat) <= 90
+		? [lon, lat]
+		: null;
+}
+
 function readEvent(e: unknown): CorridorEvent | null {
 	if (
 		!isRecord(e) ||
@@ -76,7 +88,9 @@ function readEvent(e: unknown): CorridorEvent | null {
 	)
 		return null;
 	const tagged = 'group' in e && !('marin' in e) ? fromGroup(e) : e;
-	return tagged && isTagged(tagged) ? (tagged as unknown as CorridorEvent) : null;
+	return tagged && isTagged(tagged)
+		? ({ ...tagged, at: pointOf(tagged.at) } as unknown as CorridorEvent)
+		: null;
 }
 
 export async function fetchTrafficCorridorsOrThrow({

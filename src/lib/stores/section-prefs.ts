@@ -9,14 +9,16 @@ import {
 	emptySectionPrefs,
 	parseSectionPrefs,
 	serializeSectionPrefs,
+	withLayerOn,
 	withSectionOpen,
+	type LayerPrefId,
 	type SectionId,
 	type SectionPrefs
 } from '$lib/dashboard/section-prefs';
 import { safeGetItem, safeRemoveItem, safeSetItem } from '$lib/utils/safe-storage';
 
 function createSectionPrefsStore() {
-	const { subscribe, set, update } = writable<SectionPrefs>(
+	const { subscribe, update } = writable<SectionPrefs>(
 		parseSectionPrefs(safeGetItem(SECTION_PREFS_KEY))
 	);
 
@@ -32,10 +34,23 @@ function createSectionPrefsStore() {
 			});
 		},
 
-		/** "Reset sections": forget section choices only (spec §13.5). */
+		/** An explicit map layer switch (MAPX2b). */
+		setLayer(id: LayerPrefId, on: boolean) {
+			update((prefs) => {
+				const next = withLayerOn(prefs, id, on);
+				safeSetItem(SECTION_PREFS_KEY, serializeSectionPrefs(next));
+				return next;
+			});
+		},
+
+		/** "Reset sections": forget section choices only (spec §13.5); layer choices stay. */
 		reset() {
-			safeRemoveItem(SECTION_PREFS_KEY);
-			set(emptySectionPrefs());
+			update((prefs) => {
+				const next = { ...emptySectionPrefs(), layers: prefs.layers };
+				if (Object.keys(next.layers).length === 0) safeRemoveItem(SECTION_PREFS_KEY);
+				else safeSetItem(SECTION_PREFS_KEY, serializeSectionPrefs(next));
+				return next;
+			});
 		}
 	};
 }

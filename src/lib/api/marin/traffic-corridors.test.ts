@@ -18,12 +18,21 @@ const GOOD = {
 			road: 'I-580',
 			where: 'Westbound east of Central Ave',
 			severity: 'Moderate',
-			reportedAt: '2026-10-14T22:20:00.000Z'
+			reportedAt: '2026-10-14T22:20:00.000Z',
+			at: [-122.311741, 37.89741] as [number, number] | null
 		}
 	]
 };
 /** The pre-v2 shape, still in a CDN copy for a few minutes after a deploy (and in the unedited height spec). */
-const { marin: _m, corridor: _c, trip: _t, closed: _x, lanes: _l, ...BASE } = GOOD.events[0];
+const {
+	marin: _m,
+	corridor: _c,
+	trip: _t,
+	closed: _x,
+	lanes: _l,
+	at: _a,
+	...BASE
+} = GOOD.events[0];
 const LEGACY = { ...BASE, group: 'to-oak' };
 const respond = (body: unknown, status = 200) =>
 	vi
@@ -33,6 +42,23 @@ const respond = (body: unknown, status = 200) =>
 		);
 
 afterEach(() => vi.restoreAllMocks());
+
+describe('fetchTrafficCorridorsOrThrow: the map point (MAPX2)', () => {
+	it('a response from before the point existed reads as "no location", never a guess', async () => {
+		const { at: _gone, ...old } = GOOD.events[0];
+		respond({ ...GOOD, events: [old] });
+		expect((await fetchTrafficCorridorsOrThrow()).events[0].at).toBeNull();
+	});
+	it.each([
+		['a string', 'here'],
+		['one number', [-122.5]],
+		['a non-finite number', [-122.5, null]],
+		['out of range', [-222.5, 37.9]]
+	])('a malformed point (%s) reads as "no location"', async (_name, at) => {
+		respond({ ...GOOD, events: [{ ...GOOD.events[0], at }] });
+		expect((await fetchTrafficCorridorsOrThrow()).events[0].at).toBeNull();
+	});
+});
 
 describe('fetchTrafficCorridorsOrThrow', () => {
 	it('returns a valid body and passes an owner-linked signal', async () => {
