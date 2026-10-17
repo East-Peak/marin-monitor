@@ -71,6 +71,8 @@ export function createBriefStore(
 	load(preset: LocationPreset): Promise<void>;
 	/** The desktop brief's trace and tide curve: loaded now (once a town is set) and on every load. */
 	enableDetail(): Promise<void>;
+	/** Below desktop again: later loads skip the detail (values are kept). */
+	disableDetail(): void;
 } {
 	const deadlineMs = options.deadlineMs ?? DEFAULT_OP_DEADLINE_MS;
 	/** Every brief request: owner-linked, bounded end to end (Task 6's rule). */
@@ -216,6 +218,9 @@ export function createBriefStore(
 
 	return {
 		subscribe: state.subscribe,
+		disableDetail() {
+			detail = false;
+		},
 		async enableDetail() {
 			if (detail || signal.aborted) return;
 			detail = true;

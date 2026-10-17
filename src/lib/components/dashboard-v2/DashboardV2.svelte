@@ -30,7 +30,11 @@
 	import { v2MapData } from '$lib/dashboard/v2-map-data';
 	import { briefPending } from '$lib/dashboard/v2-probe';
 	import type { BriefState } from '$lib/dashboard/brief-store';
-	import { gettingAroundView, type TransitState } from '$lib/dashboard/getting-around';
+	import {
+		gettingAroundCard,
+		gettingAroundView,
+		type TransitState
+	} from '$lib/dashboard/getting-around';
 	import { OUTDOORS_DATASETS, outdoorsView } from '$lib/dashboard/outdoors';
 	import { COST_DATASETS, costView } from '$lib/dashboard/cost';
 	import type { CivicReads, CostReads } from '$lib/dashboard/v2-controller';
@@ -122,6 +126,10 @@
 			now: $clock
 		})
 	);
+	/** The desktop brief's status card: the same view, one line per part (MAPX1). */
+	const aroundCard = $derived(
+		gettingAroundCard(around, { transit: $transitState, traffic: $traffic, now: $clock })
+	);
 	/** The section's body mounts on open: its details load then (§13.7). */
 	function openAround() {
 		void controller?.ensure('airport');
@@ -145,6 +153,8 @@
 		if (!desktop || !controller) return;
 		void controller.enableBriefDetail();
 		void controller.ensure(OUTDOORS_DATASETS.marine.id);
+		// Resized to below desktop: the detail stops with it (Codex #4).
+		return () => controller.disableBriefDetail();
 	});
 	function openOutdoors() {
 		for (const d of Object.values(OUTDOORS_DATASETS)) void controller?.ensure(d.id);
@@ -311,11 +321,21 @@
 		<a class="v2-old" href="/?layout=legacy" data-text-role="label">Old dashboard</a>
 	</header>
 
+	{#if desktop}
+		<div class="v2-jump-row"><JumpNav desktop onjump={navJump} /></div>
+	{/if}
+
 	<main class="v2-main">
 		{#if controller && hydrated}
-			<AdvisoryRow feed={controller.advisories} now={clock} />
+			<AdvisoryRow feed={controller.advisories} now={clock} {desktop} />
 			{#if desktop && $briefState}
-				<BriefDesktop brief={$briefState} now={$clock} ocean={outdoors.surf} onjump={navJump} />
+				<BriefDesktop
+					brief={$briefState}
+					now={$clock}
+					ocean={outdoors.surf}
+					around={aroundCard}
+					onjump={navJump}
+				/>
 			{:else}
 				<BriefRow brief={controller.brief} now={clock} onjump={navJump} />
 			{/if}
@@ -466,6 +486,10 @@
 		align-items: center;
 		gap: 0.75rem 1rem;
 		padding: 0.75rem 1rem;
+		border-bottom: 1px solid var(--border-light);
+	}
+	.v2-jump-row {
+		padding: 0.25rem var(--v2-gutter);
 		border-bottom: 1px solid var(--border-light);
 	}
 	.v2-logo {

@@ -418,6 +418,11 @@ export function transitRows(agencyName: string, alerts: TransitAlertRow[], now: 
 	return summaries(agencyName, alerts, now).map((s) => s.row);
 }
 
+/** The alerts the section shows for one agency: in effect now, promotions dropped. */
+function shownAlerts(agencyName: string, alerts: TransitAlertRow[], now: number): number {
+	return summaries(agencyName, alerts, now).reduce((n, s) => n + s.alerts, 0);
+}
+
 function agencyText(state: SourceEntryState, count: number | null): string {
 	switch (state) {
 		case 'loading':
@@ -540,4 +545,67 @@ export function gettingAroundView(input: GettingAroundInput): GettingAroundView 
 			input.now
 		)
 	};
+}
+
+// ── The brief's status card (MAPX1) ──────────────────────────────────────
+
+export interface CardItem {
+	text: string;
+	state: SourceEntryState;
+}
+
+const MARIN_TRANSIT = 'Marin Transit';
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+/**
+ * One line per part for the brief's card, from the section's own view. An all-clear is said
+ * only where the part says it from a fresh ok read; anything else keeps the part's own words.
+ */
+export function gettingAroundCard(
+	view: GettingAroundView,
+	input: Pick<GettingAroundInput, 'transit' | 'traffic' | 'now'>
+): CardItem[] {
+	const { airports: a, roads: r, transit: t } = view;
+	const airports: CardItem[] =
+		a.state === 'ok' && a.note
+			? SUMMARY_AIRPORTS.map((code) => ({ text: `${code} no delays`, state: 'ok' }))
+			: a.state === 'ok' || (a.lines.length && a.state !== 'stale')
+				? a.lines.map((l) => ({ text: `${l.label} ${l.text.toLowerCase()}`, state: l.state }))
+				: [
+						{
+							text:
+								a.state === 'stale'
+									? 'Airport status out of date'
+									: (a.note ?? 'Airport status unavailable'),
+							state: a.state ?? 'loading'
+						}
+					];
+
+	const events = input.traffic?.events ?? [];
+	const marin = events.filter((e) => e.marin).length;
+	const routes = events.length - marin;
+	const road: CardItem =
+		r.state === 'ok'
+			? {
+					text: events.length
+						? `${plural(marin, 'incident')} on Marin roads${routes ? ` · ${routes} on airport routes` : ''}`
+						: '511 lists no incidents on Marin roads',
+					state: 'ok'
+				}
+			: {
+					text: r.state === 'stale' ? 'Traffic out of date' : (r.note ?? 'Traffic not verified'),
+					state: r.state ?? 'loading'
+				};
+
+	const own = t.lines.find((l) => l.label === MARIN_TRANSIT);
+	const quiet = t.lines.find((l) => l.id === 'no-511' && l.label.includes(MARIN_TRANSIT));
+	const alerts = input.transit.reads?.find((x) => x.name === MARIN_TRANSIT)?.alerts ?? [];
+	const count = shownAlerts(MARIN_TRANSIT, alerts, input.now);
+	const transit: CardItem = quiet
+		? { text: `${MARIN_TRANSIT}: 511 lists no alerts`, state: quiet.state }
+		: own
+			? { text: `${MARIN_TRANSIT}: ${own.text.toLowerCase()}`, state: own.state }
+			: { text: `${MARIN_TRANSIT}: ${plural(count, 'alert')} on 511`, state: 'ok' };
+
+	return [...airports, road, transit];
 }

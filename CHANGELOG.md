@@ -6,6 +6,13 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-17
 
+### Changed — Advisories, Getting Around and jump links at the top of the desktop page
+
+- **Advisories are chips**: "⚠ Beach Hazards Statement · North Bay coast · until Oct 18, 5:04 PM", one per advisory, wrapping as needed, instead of a full-width box. Clicking one opens the National Weather Service's own text (what, where, what to do) in a panel on the right; Esc or Close puts you back on the chip. "Advisories unavailable" is one muted line.
+- **Getting Around is a status card** in the brief's third slot instead of a link: "SFO no delays · OAK no delays · 511 lists no incidents on Marin roads · Marin Transit: 511 lists no alerts". An all-clear appears only from a fresh read; otherwise the card says "out of date", "not verified" or "unavailable". The whole card jumps to the section.
+- **Jump links** under the header: Map · Getting around · Outdoors · News · Cost · Events.
+- Desktop only (1,024 px and wider). The phone is unchanged.
+
 ### Changed — The top of the desktop dashboard answers more at a glance
 
 - **Weather** shows the temperature large, with the last 12 hours at Gnoss Field (Novato) drawn beside it and the next 8 hours' temperature and rain chance underneath. The 12-hour line comes from the station's own reports; a stretch with no report stays a gap.

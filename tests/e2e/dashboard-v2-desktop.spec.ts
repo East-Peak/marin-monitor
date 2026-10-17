@@ -499,6 +499,32 @@ async function stubBrief(page: Page) {
 				}));
 		return r.fulfill(json({ predictions }));
 	});
+	await page.route(/api\.weather\.gov\/alerts\/active/, (r) =>
+		r.fulfill(
+			json({
+				features: [
+					{
+						properties: {
+							id: 'urn:oid:mapx1-beach',
+							event: 'Beach Hazards Statement',
+							headline: 'Beach Hazards Statement',
+							description: '* WHAT...Sneaker waves.',
+							instruction: 'Never turn your back on the ocean.',
+							severity: 'Moderate',
+							status: 'Actual',
+							messageType: 'Alert',
+							sent: new Date(now - H).toISOString(),
+							effective: new Date(now - H).toISOString(),
+							expires: new Date(now + 6 * H).toISOString(),
+							ends: new Date(now + 30 * H).toISOString(),
+							references: [],
+							geocode: { UGC: ['CAZ505'] }
+						}
+					}
+				]
+			})
+		)
+	);
 	await stubOutdoors(page);
 }
 
@@ -535,8 +561,40 @@ for (const width of [1440, 2000]) {
 			);
 			expect(Math.max(...tops) - Math.min(...tops)).toBeLessThanOrEqual(2);
 
+			await expect(brief.locator('a[data-card="getting-around"]')).toBeVisible();
+			const jump = page.locator('nav.v2-jump-desk');
+			await expect(jump.locator('a')).toHaveCount(6);
+			expect((await jump.boundingBox())!.height).toBeLessThanOrEqual(40);
+			// The advisory is a chip sized to its text, never a full-width box.
+			const chip = page.locator('[data-slot="advisories"] button[data-advisory]');
+			await expect(chip).toContainText('Beach Hazards Statement · North Bay coast · until');
+			expect((await chip.boundingBox())!.width).toBeLessThan(width / 2);
+
 			expect((await brief.boundingBox())!.height).toBeLessThanOrEqual(260);
 			if (width === 1440) expect((await box(page, '#v2-map-title')).y).toBeLessThanOrEqual(520);
 		});
 	});
 }
+
+test.describe('desktop 1440: the advisory reader (MAPX1)', () => {
+	test.use({ viewport: { width: 1440, height: 1000 } });
+
+	test('a chip opens the NWS text; Esc closes it and focus returns to the chip', async ({
+		page
+	}) => {
+		await stubRest(page);
+		await stubBrief(page);
+		await stubCams(page);
+		await page.goto('/?layout=v2');
+		const chip = page.locator('[data-slot="advisories"] button[data-advisory]');
+		await chip.click();
+		const dialog = page.getByRole('dialog', { name: 'Beach Hazards Statement' });
+		await expect(dialog).toContainText('Never turn your back on the ocean.');
+		await expect(dialog.getByRole('button', { name: 'Close' })).toBeFocused();
+		await page.keyboard.press('Escape');
+		await expect(dialog).toHaveCount(0);
+		await expect(chip).toBeFocused();
+		const dir = process.env.SHOTS_DIR;
+		if (dir) await page.screenshot({ path: `${dir}/mapx1-top-1440.png` });
+	});
+});

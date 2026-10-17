@@ -415,6 +415,7 @@ export interface DashboardV2Controller {
 	brief: Readable<BriefState>;
 	/** The desktop brief's trace and tide curve (MAPX1); the phone never asks. */
 	enableBriefDetail(): Promise<void>;
+	disableBriefDetail(): void;
 	advisories: Readable<AdvisoryFeedState>;
 	setLocation(preset: LocationPreset): void;
 	healthReport: Readable<HealthReportJson | null>;
@@ -616,6 +617,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		datasetOutcomes: registry.outcomes,
 		brief: { subscribe: brief.subscribe },
 		enableBriefDetail: () => brief.enableDetail(),
+		disableBriefDetail: () => brief.disableDetail(),
 		advisories: { subscribe: advisories.subscribe },
 		setLocation(preset) {
 			if (location?.id === preset.id) return;

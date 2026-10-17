@@ -6,6 +6,7 @@ import type { DatasetFetch } from './source-adapters';
 import { describePresentation } from './source-status';
 import {
 	faaText,
+	gettingAroundCard,
 	gettingAroundView,
 	PROMO_HEADLINES,
 	transitRows,
@@ -926,5 +927,103 @@ describe('Getting Around v2: transit summaries', () => {
 		];
 		for (const f of fixtures)
 			expect(everything(f)).not.toMatch(/tonight|on time|vs usual|don't publish|all clear/i);
+	});
+});
+
+describe("gettingAroundCard (MAPX1: the brief's status card)", () => {
+	const card = (i: GettingAroundInput) =>
+		gettingAroundCard(gettingAroundView(i), i).map((x) => `${x.state}: ${x.text}`);
+	const event = (id: string, marin = true): TrafficCorridorsData['events'][number] => ({
+		id,
+		marin,
+		corridor: marin ? null : 'to-sfo',
+		trip: marin ? null : 'to-sfo',
+		closed: false,
+		lanes: null,
+		certain: true,
+		kind: 'Roadwork',
+		road: 'US-101',
+		where: 'Southbound',
+		severity: 'Minor',
+		reportedAt: new Date(NOW - 5 * MIN).toISOString()
+	});
+
+	it('a fresh ok read with nothing listed: each all-clear, named for its source', () => {
+		expect(card(input())).toEqual([
+			'ok: SFO no delays',
+			'ok: OAK no delays',
+			'ok: 511 lists no incidents on Marin roads',
+			'reference: Marin Transit: 511 lists no alerts'
+		]);
+	});
+	it('incidents and alerts are counted, not previewed', () => {
+		const i = input({
+			traffic: {
+				...TRAFFIC,
+				events: [event('a'), event('b'), event('c'), event('d'), event('e', false)]
+			},
+			transit: { reads: reads({ MA: { alerts: alerts(2) } }), error: null }
+		});
+		expect(card(i)).toEqual([
+			'ok: SFO no delays',
+			'ok: OAK no delays',
+			'ok: 4 incidents on Marin roads · 1 on airport routes',
+			'ok: Marin Transit: 2 alerts on 511'
+		]);
+	});
+	it('no all-clear from anything but a fresh ok read: stale, unverified and failed reads say so', () => {
+		const stale = input({
+			now: NOW + 45 * MIN,
+			transit: { reads: reads({}, NOW + 44 * MIN), error: null }
+		});
+		const out = card(stale);
+		expect(out.slice(0, 2)).toEqual([
+			'stale: Airport status out of date',
+			'stale: Traffic out of date'
+		]);
+		const unverified = card(input({ traffic: { ...TRAFFIC, unreadable: 2 } }));
+		expect(unverified[2]).toBe('unknown: Traffic not verified');
+		const failedReads = card(
+			input({
+				outcomes: { airport: failed(false), traffic: failed(false) },
+				airport: null,
+				traffic: null,
+				transit: { reads: null, error: 'HTTP 503' }
+			})
+		);
+		expect(failedReads).toEqual([
+			'unavailable: Airport status unavailable',
+			'unavailable: Traffic incidents unavailable',
+			'unavailable: Marin Transit: alerts unavailable'
+		]);
+		// Transit's read in `stale` is fresh, so only the stale parts are held to this.
+		for (const line of [...out.slice(0, 2), ...unverified.slice(2, 3), ...failedReads])
+			expect(line).not.toMatch(/no delays|no incidents|no alerts/i);
+	});
+	it('loading reads as loading', () => {
+		expect(
+			card(
+				input({ outcomes: {}, airport: null, traffic: null, transit: { reads: null, error: null } })
+			)
+		).toEqual([
+			'loading: Loading airport status…',
+			'loading: Loading traffic…',
+			'loading: Marin Transit: loading…'
+		]);
+	});
+});
+
+describe('gettingAroundCard transit count (MAPX1, Codex #6)', () => {
+	it('counts what the section shows: a promotion is not an alert', () => {
+		const i = input({
+			transit: {
+				reads: reads({
+					MA: { alerts: [alert('1', 'Detour on 4th St'), alert('2', 'Save Money with Clipper!')] }
+				}),
+				error: null
+			}
+		});
+		const items = gettingAroundCard(gettingAroundView(i), i);
+		expect(items.at(-1)).toEqual({ text: 'Marin Transit: 1 alert on 511', state: 'ok' });
 	});
 });

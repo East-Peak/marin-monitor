@@ -13,6 +13,16 @@ export const JUMP_TARGETS = [
 	{ hash: '#sections', label: 'Sections' }
 ] as const;
 
+/** Desktop (MAPX1): a slim row under the header, one link per region of the page. */
+export const DESKTOP_JUMP_TARGETS = [
+	{ hash: '#map', label: 'Map' },
+	{ hash: '#getting-around', label: 'Getting around' },
+	{ hash: '#outdoors', label: 'Outdoors' },
+	{ hash: '#news', label: 'News' },
+	{ hash: '#cost', label: 'Cost' },
+	{ hash: '#events', label: 'Events' }
+] as const;
+
 export async function openAndFocus(
 	hash: string,
 	openSection: (id: SectionId) => void,

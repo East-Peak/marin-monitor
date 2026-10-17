@@ -11,6 +11,8 @@ import { pacificDate, pacificMidnightAfter, parsePacificWallTime } from './pacif
 const H = 3_600_000;
 export const HOURLY_STRIP_HOURS = 8;
 const TRACE_MS = 12 * H;
+/** NOAA's hourly series: anything wider than an hour (plus slack) is a missing hour. */
+const TIDE_GAP_MS = 90 * 60_000;
 /** KDVO reports every 20 minutes; a silence longer than this is shown as a break. */
 const TRACE_GAP_MS = H;
 
@@ -62,7 +64,7 @@ export function tempTrace(reports: readonly TempReport[], now: number): TempTrac
 
 export interface TideDay {
 	domain: [number, number];
-	/** NOAA's hourly heights and today's hi/lo predictions, in time order. */
+	/** NOAA's hourly heights and today's hi/lo predictions, in time order; ft NaN is a break. */
 	points: { atMs: number; ft: number }[];
 	events: TideEvent[];
 }
@@ -82,9 +84,17 @@ export function tideDay(
 	if (hourly.length < 2) return null;
 	const todays = events.filter((e) => inDay(e.atMs)).sort((a, b) => a.atMs - b.atMs);
 	const eventTimes = new Set(todays.map((e) => e.atMs));
-	const points = [
+	const merged = [
 		...hourly.filter((p) => !eventTimes.has(p.atMs)),
 		...todays.map((e) => ({ atMs: e.atMs, ft: e.heightFt }))
 	].sort((a, b) => a.atMs - b.atMs);
+	// An hour NOAA didn't give is a break (ft NaN), never a bridge across it.
+	const points: TideDay['points'] = [];
+	merged.forEach((p, i) => {
+		const prev = merged[i - 1];
+		if (prev && p.atMs - prev.atMs > TIDE_GAP_MS)
+			points.push({ atMs: (p.atMs + prev.atMs) / 2, ft: Number.NaN });
+		points.push(p);
+	});
 	return { domain: [start, end], points, events: todays };
 }

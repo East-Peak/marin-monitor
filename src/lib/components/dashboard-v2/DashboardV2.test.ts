@@ -48,6 +48,7 @@ const controller = vi.hoisted(() => ({
 	refresh: vi.fn(async () => {}),
 	ensure: vi.fn(async () => {}),
 	enableBriefDetail: vi.fn(async () => {}),
+	disableBriefDetail: vi.fn(),
 	setLocation: vi.fn(),
 	created: [] as AbortSignal[],
 	EMPTY_BRIEF: Object.fromEntries(
@@ -76,6 +77,7 @@ beforeEach(() => {
 	controller.refresh.mockClear();
 	controller.ensure.mockClear();
 	controller.enableBriefDetail.mockClear();
+	controller.disableBriefDetail.mockClear();
 	controller.created.length = 0;
 });
 vi.mock('$lib/dashboard/v2-controller', async () => ({
@@ -136,6 +138,7 @@ vi.mock('$lib/dashboard/v2-controller', async () => ({
 			},
 			setLocation: controller.setLocation,
 			enableBriefDetail: controller.enableBriefDetail,
+			disableBriefDetail: controller.disableBriefDetail,
 			healthReport: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
 			datasetOutcomes: { subscribe: (fn: (v: unknown) => void) => (fn({}), () => {}) }
 		};
@@ -322,6 +325,15 @@ describe('DashboardV2 preview shell', () => {
 		const { container } = render(DashboardV2);
 		await tick();
 		expect(container.querySelector('[data-slot="brief"] [data-card="ocean"]')).not.toBeNull();
+		expect(
+			container.querySelector('[data-slot="brief"] a[data-card="getting-around"]')
+		).not.toBeNull();
+		expect(container.querySelector('[data-brief-link]')).toBeNull();
+		// The slim jump row sits under the header, before the brief.
+		const nav = container.querySelector('nav.v2-jump-desk')!;
+		expect(nav.compareDocumentPosition(container.querySelector('[data-slot="brief"]')!)).toBe(
+			Node.DOCUMENT_POSITION_FOLLOWING
+		);
 		expect(controller.enableBriefDetail).toHaveBeenCalled();
 		expect(controller.ensure).toHaveBeenCalledWith('marine');
 	});
@@ -332,8 +344,20 @@ describe('DashboardV2 preview shell', () => {
 		await tick();
 		expect(container.querySelector('[data-card="ocean"]')).toBeNull();
 		expect(container.querySelector('[data-brief-link="getting-around"]')).not.toBeNull();
+		expect(container.querySelector('nav.v2-jump-desk')).toBeNull();
 		expect(controller.enableBriefDetail).not.toHaveBeenCalled();
 		expect(controller.ensure).not.toHaveBeenCalledWith('marine');
+	});
+
+	it('resized from desktop to phone, the page stops asking for the desktop detail (Codex #4)', async () => {
+		atWidth(1440);
+		render(DashboardV2);
+		await tick();
+		expect(controller.disableBriefDetail).not.toHaveBeenCalled();
+		atWidth(390);
+		window.dispatchEvent(new Event('resize'));
+		await tick();
+		expect(controller.disableBriefDetail).toHaveBeenCalled();
 	});
 
 	it('desktop (1440): no strip; the cam wall sits right after the map', async () => {

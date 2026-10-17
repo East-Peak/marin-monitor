@@ -90,3 +90,18 @@ describe('tideDay', () => {
 		expect(tideDay([], events, NOW)).toBeNull();
 	});
 });
+
+describe('tideDay gaps (MAPX1, Codex #2)', () => {
+	it('an hour NOAA omitted breaks the curve rather than bridging it', () => {
+		const midnight = Date.parse('2026-10-17T07:00:00Z');
+		const heights = Array.from({ length: 25 }, (_, i) => ({
+			atMs: midnight + i * H,
+			heightFt: 3
+		})).filter((_, i) => i < 5 || i > 8);
+		const d = tideDay(heights, [], NOW)!;
+		const breaks = d.points.filter((p) => Number.isNaN(p.ft));
+		expect(breaks).toHaveLength(1);
+		expect(breaks[0].atMs).toBeGreaterThan(midnight + 4 * H);
+		expect(breaks[0].atMs).toBeLessThan(midnight + 9 * H);
+	});
+});

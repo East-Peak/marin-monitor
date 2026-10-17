@@ -296,3 +296,19 @@ describe('createBriefStore — desktop detail (MAPX1)', () => {
 		expect(get(s).history).toMatchObject({ value: HISTORY, state: 'stale' });
 	});
 });
+
+describe('createBriefStore — disableDetail (MAPX1, Codex #4)', () => {
+	it('a page resized to phone stops asking for the desktop detail', async () => {
+		const history = vi.fn(async () => []);
+		const tideHourly = vi.fn(async () => []);
+		const s = createBriefStore(fetchers({ history, tideHourly }), new AbortController().signal);
+		await s.load(CENTRAL);
+		await s.enableDetail();
+		s.disableDetail();
+		await s.load(MILL_VALLEY);
+		expect(history).toHaveBeenCalledTimes(1);
+		expect(tideHourly).toHaveBeenCalledTimes(1);
+		await s.enableDetail();
+		expect(history).toHaveBeenCalledTimes(2);
+	});
+});

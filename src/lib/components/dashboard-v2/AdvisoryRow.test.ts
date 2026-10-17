@@ -1,4 +1,4 @@
-import { render } from '@testing-library/svelte';
+import { fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { writable } from 'svelte/store';
 import { describe, expect, it } from 'vitest';
@@ -75,5 +75,103 @@ describe('AdvisoryRow', () => {
 		).row()!.textContent!;
 		expect(text).toContain('Coastal Flood Advisory');
 		expect(text).toContain('Advisories not updated since 7:40 AM');
+	});
+});
+
+describe('AdvisoryRow on desktop (MAPX1): chips and the advisory reader', () => {
+	const BEACH: Advisory = {
+		...ADVISORY,
+		id: 'a2',
+		event: 'Beach Hazards Statement',
+		severity: 'Moderate',
+		zones: ['CAZ505'],
+		description: '* WHAT...Sneaker waves.\n\n* WHERE...North Bay coast.',
+		instruction: 'Never turn your back on the ocean.'
+	};
+	function renderDesktop(state: AdvisoryFeedState) {
+		const { container } = render(AdvisoryRow, {
+			props: { feed: writable(state), now: writable(NOW), desktop: true }
+		});
+		return container;
+	}
+
+	it('each active advisory is a compact chip with its scope and end, in one wrapping row', () => {
+		const c = renderDesktop(feedState({ advisories: [ADVISORY, BEACH] }));
+		const chips = [...c.querySelectorAll('[data-slot="advisories"] button[data-advisory]')];
+		expect(chips.map((b) => b.textContent!.replace(/\s+/g, ' ').trim())).toEqual([
+			'⚠ Beach Hazards Statement · North Bay coast · until Oct 1, 5:00 PM',
+			'⚠ Coastal Flood Advisory · North Bay interior valleys · until Oct 1, 5:00 PM'
+		]);
+		expect(c.querySelector('[data-slot="advisories"]')!.classList).toContain('v2-adv-chips');
+	});
+
+	it('a chip opens the NWS text in a dialog; Esc closes it and focus returns to the chip', async () => {
+		renderDesktop(feedState({ advisories: [BEACH] }));
+		const chip = screen.getByRole('button', { name: /Beach Hazards Statement/ });
+		chip.focus();
+		await fireEvent.click(chip);
+		const dialog = screen.getByRole('dialog', { name: 'Beach Hazards Statement' });
+		expect(dialog.getAttribute('aria-modal')).toBe('true');
+		expect(dialog.textContent).toContain('* WHAT...Sneaker waves.');
+		expect(dialog.textContent).toContain('Never turn your back on the ocean.');
+		expect(dialog.querySelector('a[href^="https://www.weather.gov/"]')).not.toBeNull();
+		expect(dialog.contains(document.activeElement)).toBe(true);
+		await fireEvent.keyDown(dialog, { key: 'Escape' });
+		expect(screen.queryByRole('dialog')).toBeNull();
+		expect(document.activeElement).toBe(chip);
+	});
+
+	it('Tab stays inside the open dialog (focus trap); the close button closes it', async () => {
+		renderDesktop(feedState({ advisories: [BEACH] }));
+		await fireEvent.click(screen.getByRole('button', { name: /Beach Hazards Statement/ }));
+		const dialog = screen.getByRole('dialog');
+		const focusable = [...dialog.querySelectorAll<HTMLElement>('a[href], button')];
+		focusable.at(-1)!.focus();
+		await fireEvent.keyDown(dialog, { key: 'Tab' });
+		expect(document.activeElement).toBe(focusable[0]);
+		focusable[0].focus();
+		await fireEvent.keyDown(dialog, { key: 'Tab', shiftKey: true });
+		expect(document.activeElement).toBe(focusable.at(-1));
+		await fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+		expect(screen.queryByRole('dialog')).toBeNull();
+	});
+
+	it('an advisory without NWS text says so rather than showing an empty reader', async () => {
+		renderDesktop(feedState());
+		await fireEvent.click(screen.getByRole('button', { name: /Coastal Flood Advisory/ }));
+		expect(screen.getByRole('dialog').textContent).toContain('NWS gave no text for this advisory');
+	});
+
+	it('unavailable stays one muted line on desktop', () => {
+		const c = renderDesktop(
+			feedState({ advisories: [], lastError: 'HTTP 503', lastSuccessAt: null })
+		);
+		expect(c.querySelector('[data-slot="advisories"]')!.textContent).toContain(
+			'Advisories unavailable'
+		);
+		expect(c.querySelector('button[data-advisory]')).toBeNull();
+		// A line, not a full-width box.
+		expect(c.querySelector('[data-slot="advisories"]')!.classList).toContain('v2-adv-line');
+	});
+});
+
+describe('AdvisoryRow reader focus fallback (MAPX1, Codex #5)', () => {
+	it('when the advisory expires under an open reader, focus lands on the page, not nowhere', async () => {
+		const top = document.createElement('div');
+		top.id = 'top';
+		top.tabIndex = -1;
+		document.body.append(top);
+		const clock = writable(NOW);
+		render(AdvisoryRow, { props: { feed: writable(feedState()), now: clock, desktop: true } });
+		const chip = screen.getByRole('button', { name: /Coastal Flood Advisory/ });
+		chip.focus(); // a real click focuses the button; jsdom's doesn't
+		await fireEvent.click(chip);
+		expect(screen.getByRole('dialog')).toBeTruthy();
+		clock.set(NOW + 3 * MIN);
+		await tick();
+		await Promise.resolve();
+		expect(screen.queryByRole('dialog')).toBeNull();
+		expect(document.activeElement).toBe(top);
+		top.remove();
 	});
 });

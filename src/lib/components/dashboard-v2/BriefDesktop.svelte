@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { BriefCard, BriefState } from '$lib/dashboard/brief-store';
 	import { hourlyStrip, tempTrace, tideDay } from '$lib/dashboard/brief-desktop';
+	import type { CardItem } from '$lib/dashboard/getting-around';
 	import type { OutdoorsView } from '$lib/dashboard/outdoors';
 	import { formatAsOf } from '$lib/dashboard/pacific-time';
 	import { effectiveState, type SourceEntryState } from '$lib/dashboard/source-status';
@@ -17,11 +18,14 @@
 		brief,
 		now,
 		ocean,
+		around,
 		onjump
 	}: {
 		brief: BriefState;
 		now: number;
 		ocean: OutdoorsView['surf'];
+		/** Getting Around's one line per part (gettingAroundCard). */
+		around: CardItem[];
 		onjump?: (hash: string) => void;
 	} = $props();
 
@@ -63,8 +67,12 @@
 		brief.tides.value !== null && tide === null ? 'unavailable' : stateOf(brief.tides)
 	);
 	let tideW = $state(0);
+	/** One station only: right after a town switch the two reads can name different ones (Codex #1). */
+	const sameStation = $derived(brief.tideHourly.scope === brief.tides.scope);
 	const day = $derived(
-		brief.tideHourly.value ? tideDay(brief.tideHourly.value, brief.tides.value ?? [], now) : null
+		brief.tideHourly.value && sameStation
+			? tideDay(brief.tideHourly.value, brief.tides.value ?? [], now)
+			: null
 	);
 	const tideChart = $derived(
 		day &&
@@ -150,7 +158,11 @@
 							{/each}
 						</g>
 					</svg>
-					<p class="muted" data-text-role="meta">Last 12 h at {brief.history.scope}</p>
+					<p class="muted" data-text-role="meta">
+						Last 12 h at {brief.history.scope}{stateOf(brief.history) === 'stale'
+							? ' · out of date'
+							: ''}
+					</p>
 				{:else if brief.history.state === 'loading'}
 					<p class="muted" data-text-role="meta">Loading the last 12 hours…</p>
 				{:else}
@@ -256,7 +268,10 @@
 			{/if}
 		</div>
 		<p class="muted" data-text-role="meta">
-			{brief.tides.scope ? `${brief.tides.scope} · ` : ''}NOAA prediction
+			{brief.tides.scope ? `${brief.tides.scope} · ` : ''}NOAA prediction{day &&
+			stateOf(brief.tideHourly) === 'stale'
+				? ' · curve out of date'
+				: ''}
 		</p>
 		{#if brief.tides.updatingFor}
 			<p class="muted" data-text-role="meta">Updating for {brief.tides.updatingFor}…</p>
@@ -297,12 +312,18 @@
 			<CardSource lines={[{ measured: ocean.measured, verb: 'checked' }]} {now} />
 		</article>
 		<a
-			class="link"
-			data-brief-link="getting-around"
-			data-text-role="label"
+			class="card ga"
+			data-card="getting-around"
 			href="#getting-around"
-			onclick={() => onjump?.('#getting-around')}>Getting around: airports, roads &amp; transit →</a
+			onclick={() => onjump?.('#getting-around')}
 		>
+			<span class="title" data-text-role="label">Getting around →</span>
+			<ul>
+				{#each around as item, i (i)}
+					<li data-state={item.state} data-text-role="meta">{item.text}</li>
+				{/each}
+			</ul>
+		</a>
 	</div>
 </section>
 
@@ -400,12 +421,32 @@
 	.warn {
 		color: var(--warning, var(--text-primary));
 	}
-	.link {
-		color: var(--accent);
+	.ga {
+		color: var(--text-primary);
 		text-decoration: none;
 	}
-	.link:focus-visible {
+	.ga:hover {
+		border-color: var(--accent);
+	}
+	.ga:focus-visible {
 		outline: 2px solid var(--accent);
 		outline-offset: 2px;
+	}
+	.ga ul {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0 0.5rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.ga li:not(:last-child)::after {
+		content: ' ·';
+		color: var(--text-muted);
+	}
+	.ga li[data-state='unavailable'],
+	.ga li[data-state='stale'],
+	.ga li[data-state='unknown'] {
+		color: var(--warning, var(--text-primary));
 	}
 </style>

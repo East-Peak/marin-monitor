@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { JUMP_TARGETS } from '$lib/dashboard/fragment-nav';
+	import { DESKTOP_JUMP_TARGETS, JUMP_TARGETS } from '$lib/dashboard/fragment-nav';
 
-	let { onjump }: { onjump: (hash: string) => void } = $props();
+	let { onjump, desktop = false }: { onjump: (hash: string) => void; desktop?: boolean } = $props();
+	const targets = $derived(desktop ? DESKTOP_JUMP_TARGETS : JUMP_TARGETS);
 </script>
 
-<nav class="v2-jump-nav" aria-label="Jump to">
+<nav class={desktop ? 'v2-jump-desk' : 'v2-jump-nav'} aria-label="Jump to">
 	<ul>
-		{#each JUMP_TARGETS as target (target.hash)}
+		{#each targets as target (target.hash)}
 			<li>
 				<!-- A real anchor: the hash changes and history works; onjump opens a collapsed target
 				     (also when the same item is tapped twice, which fires no hashchange). -->
@@ -21,6 +22,31 @@
 <style>
 	.v2-jump-nav {
 		display: none;
+	}
+	.v2-jump-desk ul {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0 1.25rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.v2-jump-desk a {
+		display: inline-flex;
+		align-items: center;
+		min-height: 2rem;
+		color: var(--text-muted);
+		text-decoration: none;
+	}
+	.v2-jump-desk a:hover,
+	.v2-jump-desk a:focus-visible {
+		color: var(--text-primary);
+	}
+	@media (max-width: 1023px) {
+		/* The render boundary's CSS half: desktop only. */
+		.v2-jump-desk {
+			display: none;
+		}
 	}
 	@media (max-width: 767px) {
 		.v2-jump-nav {

@@ -18,3 +18,23 @@ describe('JumpNav', () => {
 		expect(onjump).toHaveBeenCalledWith('#news');
 	});
 });
+
+describe('JumpNav on desktop (MAPX1)', () => {
+	it('is a slim row of the page’s regions, real anchors that report the jump', async () => {
+		const onjump = vi.fn();
+		render(JumpNav, { props: { onjump, desktop: true } });
+		const nav = screen.getByRole('navigation', { name: 'Jump to' });
+		expect(nav.classList).toContain('v2-jump-desk');
+		const links = [...nav.querySelectorAll('a')];
+		expect(links.map((a) => [a.textContent?.trim(), a.getAttribute('href')])).toEqual([
+			['Map', '#map'],
+			['Getting around', '#getting-around'],
+			['Outdoors', '#outdoors'],
+			['News', '#news'],
+			['Cost', '#cost'],
+			['Events', '#events']
+		]);
+		await fireEvent.click(screen.getByRole('link', { name: 'Outdoors' }));
+		expect(onjump).toHaveBeenCalledWith('#outdoors');
+	});
+});
