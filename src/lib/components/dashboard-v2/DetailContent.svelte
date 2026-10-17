@@ -18,7 +18,7 @@
 </script>
 
 <article class="detail" data-detail>
-	<h2 id={titleId} class="title" data-text-role="section-title">{detail.title}</h2>
+	<h2 id={titleId} class="title" tabindex="-1" data-text-role="section-title">{detail.title}</h2>
 	{#if detail.meta.length}
 		<p class="muted" data-text-role="meta">{detail.meta.join(' · ')}</p>
 	{/if}

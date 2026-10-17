@@ -17,8 +17,9 @@ const FIX_IT = {
 			status: 'Open',
 			summary: 'Pothole / Bache',
 			description: 'Deep pothole by the crosswalk',
-			lat: 37.9735,
-			lng: -122.5311,
+			// East of San Rafael's town circle, so the rebalance check samples each on its own.
+			lat: 37.955,
+			lng: -122.49,
 			address: '1400 Fifth Ave, San Rafael, CA',
 			created_at: new Date(T0 - 3_600_000).toISOString(),
 			updated_at: new Date(T0 - 3_600_000).toISOString(),
@@ -64,13 +65,15 @@ const STORIES = [
 	{ slug: 'g', title: 'Library hours extend', source: SOURCES.ij, hoursAgo: 7 }
 ];
 
-async function open(page: Page) {
+/** `extra` routes are added after the broad fail-fast stub, so they win. */
+async function open(page: Page, extra: (page: Page) => Promise<unknown> = async () => {}) {
 	await page.route(
 		/\/api\/(data|nps|transit|health|feeds|article|geocode|calfire|traffic)\b|earthquake\.usgs\.gov|api\.weather\.gov|tidesandcurrents/,
 		(r) => r.fulfill({ status: 503, body: 'stubbed' })
 	);
 	await page.route('**/api/data/311', (r) => json(r, FIX_IT));
 	await page.route(/earthquake\.usgs\.gov/, (r) => json(r, QUAKES));
+	await extra(page);
 	await page.route('**/api/news/snapshot', (r) =>
 		r.fulfill({
 			status: 200,
@@ -184,5 +187,151 @@ test.describe('desktop 1440×900', () => {
 		await expect(listed(page)).toHaveCount(0);
 		await panel(page).getByRole('button', { name: 'Show in view' }).click();
 		await expect(listed(page).first()).toBeVisible();
+	});
+});
+
+/** /api/traffic/corridors with 511 points (MAPX2b): two located Marin events, one without a point. */
+const CORRIDORS = {
+	checkedAt: new Date(T0 - 60_000).toISOString(),
+	upstreamCount: 3,
+	unreadable: 0,
+	events: [
+		['t1', 'Minor', [-122.515, 37.93]],
+		['t2', null, [-122.53, 38.0]],
+		['t3', 'Major', null]
+	].map(([id, severity, at]) => ({
+		id,
+		marin: true,
+		corridor: null,
+		trip: null,
+		closed: false,
+		lanes: null,
+		certain: true,
+		kind: 'Traffic Collision',
+		road: 'US-101',
+		where: 'Northbound at Lucky Dr',
+		severity,
+		reportedAt: new Date(T0 - 1_800_000).toISOString(),
+		at
+	}))
+};
+const layerRow = (page: Page, id: string) => page.locator(`[data-layer-row="${id}"]`);
+
+test.describe('desktop 1440×900: layers (MAPX2b)', () => {
+	test.use({ viewport: { width: 1440, height: 900 } });
+
+	test('an ok traffic read is drawn, counted in view, and names what it could not place', async ({
+		page
+	}) => {
+		await open(page, (p) => p.route('**/api/traffic/corridors', (r) => json(r, CORRIDORS)));
+		await expect.poll(async () => (await settled(page)).synced?.counts['traffic-events']).toBe(2);
+		await page.getByRole('button', { name: 'Layers' }).click();
+		await expect(layerRow(page, 'traffic').locator('[data-layer-status]')).toHaveText(
+			/^511 · as of \d{1,2}:\d{2} [AP]M$/
+		);
+		await expect(layerRow(page, 'traffic').locator('[data-layer-note]')).toHaveText(
+			'1 event without a location'
+		);
+		await expect(layerRow(page, 'traffic').locator('[data-layer-count]')).toHaveText(/^[12]$/);
+		const at = (await pinAt(page, 'traffic-events-layer'))!;
+		await page.mouse.click(at.x, at.y);
+		await expect(panel(page).locator('[data-detail]')).toContainText('Traffic Collision · US-101');
+	});
+
+	test('failed reads say "unavailable", draw nothing and claim no count', async ({ page }) => {
+		// open() fails /api/traffic, /api/calfire and /api/data (gas, EV, coffee).
+		await open(page);
+		const p = await settled(page);
+		for (const source of ['traffic-events', 'fire-incidents', 'gas-stations'])
+			expect(p.synced!.counts[source], source).toBe(0);
+		await page.getByRole('button', { name: 'Layers' }).click();
+		for (const [id, source] of [
+			['traffic', '511'],
+			['fire', 'CAL FIRE + NIFC'],
+			['gas', 'Google Places']
+		]) {
+			await expect(layerRow(page, id).locator('[data-layer-status]')).toHaveText(
+				`${source} unavailable`
+			);
+			await expect(layerRow(page, id).locator('[data-layer-count]')).toHaveCount(0);
+		}
+	});
+
+	test('a layer choice persists with the section prefs (version 3)', async ({ page }) => {
+		await open(page);
+		await page.getByRole('button', { name: 'Layers' }).click();
+		const ev = layerRow(page, 'ev').getByRole('checkbox');
+		await expect(ev).not.toBeChecked();
+		await ev.check();
+		expect(
+			JSON.parse((await page.evaluate(() => localStorage.getItem('mm_sections_v2'))) ?? '{}')
+		).toMatchObject({ version: 3, layers: { ev: true } });
+		await page.reload();
+		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+		await page.getByRole('button', { name: 'Layers' }).click();
+		await expect(layerRow(page, 'ev').getByRole('checkbox')).toBeChecked();
+	});
+});
+
+test.describe('desktop 1440×900: rebalance (MAPX2b)', () => {
+	test.use({ viewport: { width: 1440, height: 900 } });
+
+	test('a town circle with stories reads bright, and distinct from a 311 dot', async ({ page }) => {
+		await open(page);
+		await page.waitForTimeout(800); // the map's last paint after the synced revision
+		const at = (lon: number, lat: number) =>
+			page.evaluate(
+				([x, y]) => {
+					const m = (
+						window as unknown as {
+							__v2ProbeMap: {
+								project(c: number[]): { x: number; y: number };
+								getCanvas(): HTMLCanvasElement;
+							};
+						}
+					).__v2ProbeMap;
+					const p = m.project([x, y]);
+					const r = m.getCanvas().getBoundingClientRect();
+					return { x: Math.round(r.left + p.x), y: Math.round(r.top + p.y) };
+				},
+				[lon, lat]
+			);
+		await page.screenshot({ path: '/tmp/claude-501/mapx2-rebalance-1440-labels.png' });
+		// Sample the fill, not the count label at the circle's centre.
+		await page.evaluate(() =>
+			(
+				window as unknown as {
+					__v2ProbeMap: { setLayoutProperty(id: string, p: string, v: string): void };
+				}
+			).__v2ProbeMap.setLayoutProperty('v2-towns-count', 'visibility', 'none')
+		);
+		await page.waitForTimeout(300);
+		const town = await at(-122.5311, 37.9735); // San Rafael: one civic story
+		const dot = await at(-122.49, 37.955);
+		const shot = await page.screenshot({ path: '/tmp/claude-501/mapx2-rebalance-1440.png' });
+		const rgb = (x: number, y: number) =>
+			page.evaluate(
+				async ([b64, px, py]) => {
+					const img = new Image();
+					img.src = `data:image/png;base64,${b64}`;
+					await img.decode();
+					const c = document.createElement('canvas');
+					c.width = img.width;
+					c.height = img.height;
+					const g = c.getContext('2d')!;
+					g.drawImage(img, 0, 0);
+					return [...g.getImageData(px as number, py as number, 1, 1).data.slice(0, 3)];
+				},
+				[shot.toString('base64'), x, y] as const
+			);
+		const [tr, tg, tb] = await rgb(town.x, town.y);
+		const [dr, dg, db] = await rgb(dot.x, dot.y);
+		console.log(`town ${[tr, tg, tb]} · 311 ${[dr, dg, db]}`);
+		// The civic fill (#93c5fd) over the dark basemap: light and blue, not the old dark #3b82f6.
+		expect(tb).toBeGreaterThan(200);
+		expect((tr + tg + tb) / 3).toBeGreaterThan(150);
+		// The 311 dot stays orange, and the two never read as the same mark.
+		expect(dr).toBeGreaterThan(db + 60);
+		expect(Math.hypot(tr - dr, tg - dg, tb - db)).toBeGreaterThan(120);
 	});
 });

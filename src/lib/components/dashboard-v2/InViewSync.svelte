@@ -1,7 +1,9 @@
 <!-- The map side of the in-view list (MAPX2): reports the visible bounds on a debounced moveend,
      keeps the docked panel as camera padding (so fits and flights never land under it), flies
      to a selection, draws a highlight ring for the hovered or selected item, and names the
-     owned pin under the pointer. Renders nothing. -->
+     owned pin under the pointer. The map stays north-up and flat while it runs (v2 has no
+     compass to undo a turn, and the bounds trim assumes it). Leaving desktop undoes all of
+     it. Renders nothing. -->
 <script lang="ts">
 	import { getContext, onMount } from 'svelte';
 	import type { Writable } from 'svelte/store';
@@ -44,9 +46,16 @@
 			m.getCanvas().clientWidth
 		);
 	}
+	const ring = (at: [number, number] | null): GeoJSON.FeatureCollection => ({
+		type: 'FeatureCollection',
+		features: at
+			? [{ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: at } }]
+			: []
+	});
 	function ensureHighlight(m: MapLibreMap) {
 		if (m.getSource(SOURCE)) return;
-		m.addSource(SOURCE, { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+		// Recreated after a style swap with the current ring, not an empty one.
+		m.addSource(SOURCE, { type: 'geojson', data: ring(highlight) });
 		m.addLayer({
 			id: `${SOURCE}-ring`,
 			type: 'circle',
@@ -83,6 +92,11 @@
 			if (!ready || !m || bound === m) return;
 			bound = m;
 			map = m;
+			m.dragRotate.disable();
+			m.touchZoomRotate.disableRotation();
+			m.keyboard.disableRotation();
+			m.setBearing(0);
+			m.setPitch(0);
 			ensureHighlight(m);
 			m.on('moveend', onMove);
 			m.on('resize', onMove);
@@ -93,10 +107,18 @@
 		return () => {
 			stop();
 			if (timer) clearTimeout(timer);
-			bound?.off('moveend', onMove);
-			bound?.off('resize', onMove);
-			bound?.off('mousemove', onPointer);
-			bound?.off('styledata', onStyle);
+			if (!bound) return;
+			bound.off('moveend', onMove);
+			bound.off('resize', onMove);
+			bound.off('mousemove', onPointer);
+			bound.off('styledata', onStyle);
+			// Below desktop the map is the phone/tablet map again: no padding, ring or lock.
+			bound.setPadding({ top: 0, bottom: 0, left: 0, right: 0 });
+			if (bound.getLayer(`${SOURCE}-ring`)) bound.removeLayer(`${SOURCE}-ring`);
+			if (bound.getSource(SOURCE)) bound.removeSource(SOURCE);
+			bound.dragRotate.enable();
+			bound.touchZoomRotate.enableRotation();
+			bound.keyboard.enableRotation();
 		};
 	});
 
@@ -114,12 +136,7 @@
 	});
 	$effect(() => {
 		const source = map?.getSource(SOURCE) as GeoJSONSource | undefined;
-		source?.setData({
-			type: 'FeatureCollection',
-			features: highlight
-				? [{ type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: highlight } }]
-				: []
-		});
+		source?.setData(ring(highlight));
 	});
 	$effect(() => {
 		if (map && flyTo)

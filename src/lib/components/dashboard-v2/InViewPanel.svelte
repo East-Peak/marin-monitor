@@ -4,6 +4,7 @@
 	import type { InViewItem, InViewLayer } from '$lib/dashboard/map-in-view';
 	import DetailPanel from './DetailPanel.svelte';
 	import DetailContent from './DetailContent.svelte';
+	import { tick } from 'svelte';
 
 	let {
 		items,
@@ -11,6 +12,7 @@
 		hovered,
 		collapsed,
 		emptyText,
+		gaps = [],
 		ontoggle,
 		onselect,
 		onhover,
@@ -22,6 +24,8 @@
 		collapsed: boolean;
 		/** What an empty view means; null while coverage can't vouch for "nothing here". */
 		emptyText: string | null;
+		/** Enabled layers this list can't vouch for (unavailable, loading or kept). */
+		gaps?: readonly string[];
 		ontoggle: () => void;
 		onselect: (id: string) => void;
 		onhover: (id: string | null) => void;
@@ -38,6 +42,38 @@
 		ev: 'EV chargers',
 		coffee: 'Coffee'
 	};
+	// Keyboard users keep their place (Codex MAPX2 #6): a selection takes focus to its detail's
+	// heading; Back returns it to the row it came from, else to the panel's list heading.
+	let root = $state<HTMLElement | null>(null);
+	let cameFrom: string | null = null;
+	/** Set by a change made from the panel itself; a pin click never moves focus. */
+	let pending: 'detail' | 'list' | null = null;
+	$effect(() => {
+		void selected;
+		const to = pending;
+		pending = null;
+		if (!to || !root) return;
+		void tick().then(() => {
+			if (to === 'detail') root?.querySelector<HTMLElement>('#v2-in-view-detail-title')?.focus();
+			else
+				(
+					[...(root?.querySelectorAll<HTMLElement>('[data-in-view-row]') ?? [])].find(
+						(el) => el.dataset.inViewRow === cameFrom
+					) ?? root?.querySelector<HTMLElement>('[data-in-view-count]')
+				)?.focus();
+		});
+	});
+	function choose(id: string) {
+		cameFrom = id;
+		pending = 'detail';
+		onselect(id);
+	}
+	function back() {
+		// Back's button or an Esc pressed while in the panel: focus goes back to the list.
+		pending = root?.closest('aside')?.contains(document.activeElement) ? 'list' : null;
+		onback();
+	}
+
 	const groups = $derived(
 		[...new Set(items.map((i) => i.layer))].map((layer) => ({
 			layer,
@@ -46,45 +82,52 @@
 	);
 </script>
 
-<DetailPanel label="In view" {collapsed} {ontoggle} onback={selected ? onback : undefined}>
-	{#if selected}
-		<DetailContent detail={selected.detail} titleId="v2-in-view-detail-title" />
-		{#if selected.note}
-			<p class="note" data-inspector-note data-text-role="meta">{selected.note}</p>
+<DetailPanel label="In view" {collapsed} {ontoggle} onback={selected ? back : undefined}>
+	<div bind:this={root} class="root">
+		{#if selected}
+			<DetailContent detail={selected.detail} titleId="v2-in-view-detail-title" />
+			{#if selected.note}
+				<p class="note" data-inspector-note data-text-role="meta">{selected.note}</p>
+			{/if}
+		{:else}
+			<h3 class="head" tabindex="-1" data-text-role="label" data-in-view-count={items.length}>
+				In view · {items.length}
+			</h3>
+			{#if gaps.length}
+				<p class="muted" data-in-view-gaps data-text-role="meta">
+					Not shown, or not current: {gaps.join(', ')}
+				</p>
+			{/if}
+			{#if items.length === 0}
+				<p class="muted" data-text-role="body">{emptyText ?? 'Nothing listed in this view.'}</p>
+			{/if}
+			{#each groups as group (group.layer)}
+				<h4 class="group" data-text-role="meta">{LAYER_NAME[group.layer]}</h4>
+				<ul>
+					{#each group.rows as row (row.id)}
+						<li>
+							<button
+								type="button"
+								class="row"
+								data-in-view-row={row.id}
+								data-hovered={hovered === row.id ? 'true' : undefined}
+								onclick={() => choose(row.id)}
+								onmouseenter={() => onhover(row.id)}
+								onmouseleave={() => onhover(null)}
+								onfocus={() => onhover(row.id)}
+								onblur={() => onhover(null)}
+							>
+								<span data-text-role="body">{row.title}</span>
+								{#if row.detail.meta.length}
+									<span class="muted" data-text-role="meta">{row.detail.meta.join(' · ')}</span>
+								{/if}
+							</button>
+						</li>
+					{/each}
+				</ul>
+			{/each}
 		{/if}
-	{:else}
-		<h3 class="head" data-text-role="label" data-in-view-count={items.length}>
-			In view · {items.length}
-		</h3>
-		{#if items.length === 0}
-			<p class="muted" data-text-role="body">{emptyText ?? 'Nothing listed in this view.'}</p>
-		{/if}
-		{#each groups as group (group.layer)}
-			<h4 class="group" data-text-role="meta">{LAYER_NAME[group.layer]}</h4>
-			<ul>
-				{#each group.rows as row (row.id)}
-					<li>
-						<button
-							type="button"
-							class="row"
-							data-in-view-row={row.id}
-							data-hovered={hovered === row.id ? 'true' : undefined}
-							onclick={() => onselect(row.id)}
-							onmouseenter={() => onhover(row.id)}
-							onmouseleave={() => onhover(null)}
-							onfocus={() => onhover(row.id)}
-							onblur={() => onhover(null)}
-						>
-							<span data-text-role="body">{row.title}</span>
-							{#if row.detail.meta.length}
-								<span class="muted" data-text-role="meta">{row.detail.meta.join(' · ')}</span>
-							{/if}
-						</button>
-					</li>
-				{/each}
-			</ul>
-		{/each}
-	{/if}
+	</div>
 </DetailPanel>
 
 <style>

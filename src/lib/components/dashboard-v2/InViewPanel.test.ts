@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { describe, expect, it, vi } from 'vitest';
 import type { InViewItem } from '$lib/dashboard/map-in-view';
 import InViewPanel from './InViewPanel.svelte';
@@ -49,6 +50,30 @@ describe('InViewPanel', () => {
 		e.preventDefault();
 		document.body.dispatchEvent(e);
 		expect(p.onback).not.toHaveBeenCalled();
+	});
+
+	it('keyboard: a row click moves focus to the detail heading; Back returns it to that row', async () => {
+		const p = props();
+		const { rerender } = render(InViewPanel, p);
+		const row = screen.getByText('Title 311:b').closest('button')!;
+		row.focus();
+		await fireEvent.click(row);
+		await rerender({ ...p, selected: item('311:b', '311') });
+		await tick();
+		await tick();
+		expect(document.activeElement?.id).toBe('v2-in-view-detail-title');
+		const backButton = screen.getByRole('button', { name: '← Back to list' });
+		backButton.focus(); // a keyboard press on Back, as Enter would leave it
+		await fireEvent.click(backButton);
+		await rerender({ ...p, selected: null });
+		await tick();
+		await tick();
+		expect((document.activeElement as HTMLElement)?.dataset.inViewRow).toBe('311:b');
+	});
+
+	it('names the enabled layers it cannot vouch for beside the list (Codex MAPX2 #5)', () => {
+		render(InViewPanel, props({ gaps: ['Traffic', 'Fire'] }));
+		expect(screen.getByText('Not shown, or not current: Traffic, Fire')).toBeTruthy();
 	});
 
 	it('with nothing in view and no coverage to vouch, it never claims "nothing here"', () => {

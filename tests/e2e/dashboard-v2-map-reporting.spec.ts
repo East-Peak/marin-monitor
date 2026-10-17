@@ -323,7 +323,17 @@ test.describe('desktop 1440×900', () => {
 				{ timeout: 30_000 }
 			)
 			.toBe(true);
+		type Cam = { getCenter(): unknown; getZoom(): number; jumpTo(o: object): void };
+		const view = await page.evaluate(() => {
+			const m = (window as unknown as { __v2ProbeMap: Cam }).__v2ProbeMap;
+			return { center: m.getCenter(), zoom: m.getZoom() };
+		});
 		for (const layer of ['311-reports-layer', 'earthquakes-layer']) {
+			// A selection flies to its item (MAPX2): start each layer from the county view.
+			await page.evaluate(
+				(v) => (window as unknown as { __v2ProbeMap: Cam }).__v2ProbeMap.jumpTo(v),
+				view
+			);
 			await expect.poll(() => pinAt(page, layer), { timeout: 20_000 }).not.toBeNull();
 			const at = (await pinAt(page, layer))!;
 			await page.mouse.click(at.x, at.y);

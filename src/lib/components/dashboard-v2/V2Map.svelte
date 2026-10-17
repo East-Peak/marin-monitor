@@ -23,7 +23,7 @@
 	import { TOWN_BY_SLUG } from '$lib/config';
 	import { mapStore, selectedTown } from '$lib/stores/map';
 	import { townFilter } from '$lib/stores/town-filter';
-	import type { MapFeatureInspectorData } from '$lib/types';
+	import type { MapFeatureInspectorData, MapLayer } from '$lib/types';
 	import { v2FeatureView, v2Inspector, type V2MapData } from '$lib/dashboard/v2-map-data';
 	import { createV2Probe } from '$lib/dashboard/v2-probe';
 	import SectionStatus from './SectionStatus.svelte';
@@ -39,10 +39,29 @@
 		visibleBounds,
 		type Bounds
 	} from '$lib/dashboard/map-in-view';
-	import { flyTarget, resolveSelection } from '$lib/dashboard/map-selection';
+	import { clickSelection, flyTarget, resolveSelection } from '$lib/dashboard/map-selection';
+	import {
+		DATA_LAYERS,
+		layerFeatures,
+		type DataLayerId,
+		type DataLayerView
+	} from '$lib/dashboard/v2-map-layers';
+	import { LAYER_COLORS } from '$lib/config/map';
+	import { sectionPrefs } from '$lib/stores/section-prefs';
+	import type { LayerPrefId } from '$lib/dashboard/section-prefs';
+	import LayerPanel, { type LayerRow } from './LayerPanel.svelte';
 	import { formatAsOf } from '$lib/dashboard/pacific-time';
 
-	let { data, now }: { data: V2MapData; now: number } = $props();
+	let {
+		data,
+		dataLayers,
+		now
+	}: {
+		data: V2MapData;
+		/** Desktop's data layers (MAPX2b); absent, the map draws only news, 311 and quakes. */
+		dataLayers?: Record<DataLayerId, DataLayerView>;
+		now: number;
+	} = $props();
 
 	let expanded = $state(false);
 	let phone = $state(false);
@@ -71,9 +90,22 @@
 	let revision = $state(0);
 	$effect(() => {
 		void data;
+		void dataLayers;
 		revision = untrack(() => revision) + 1;
 	});
-	const layerData = $derived({ ...data.layerData, revision });
+	const drawn = $derived(desktop && dataLayers ? DATA_LAYERS.map((l) => dataLayers[l.id]) : []);
+	const layerData = $derived({
+		...data.layerData,
+		revision,
+		...(drawn.length
+			? {
+					places: Object.fromEntries(drawn.map((v) => [v.id, layerFeatures(v)])) as Record<
+						DataLayerId,
+						GeoJSON.Feature[]
+					>
+				}
+			: {})
+	});
 	$effect(() =>
 		probe.set({
 			loading: data.loading,
@@ -102,7 +134,8 @@
 			town: $townFilter,
 			towns: TOWN_BY_SLUG,
 			notes: data.notes,
-			formatTime: (ms) => formatAsOf(ms, now)
+			formatTime: (ms) => formatAsOf(ms, now),
+			layers: drawn
 		})
 	);
 	let view = $state<{ bounds: Bounds; width: number } | null>(null);
@@ -132,6 +165,101 @@
 		collapsed = false;
 		flight = flyTarget(allItems, id);
 	}
+
+	// The layer panel (MAPX2b): every row says its source and time, or why it has none.
+	const inViewCount = (layer: string) => listed.filter((i) => i.layer === layer).length;
+	const statusOf = (
+		source: string,
+		kind: 'loading' | 'value' | 'unknown' | 'unavailable',
+		asOf: number | null
+	) =>
+		kind === 'value'
+			? `${source} · ${asOf === null ? 'time not reported' : `as of ${formatAsOf(asOf, now)}`}`
+			: kind === 'loading'
+				? `${source} · loading…`
+				: `${source} unavailable`;
+	const STORY_LAYERS = [
+		['news', 'News'],
+		['safety', 'Safety'],
+		['civic', 'Civic'],
+		['activity', 'Activity'],
+		['housing', 'Housing'],
+		['satire', 'Satire (Marin Lately)']
+	] as const;
+	const stories = $derived({
+		count: data.layers.news === 'value' ? inViewCount('news') : null,
+		status: statusOf('News snapshot', data.layers.news, data.asOf.news),
+		rows: STORY_LAYERS.map(
+			([id, name]): LayerRow => ({
+				id,
+				name,
+				swatch: LAYER_COLORS[id],
+				on: $mapStore.activeLayers[id],
+				count: null,
+				status: ''
+			})
+		)
+	});
+	const layerRows = $derived<LayerRow[]>([
+		{
+			id: '311',
+			name: 'Fix It Marin (311)',
+			swatch: LAYER_COLORS['311'],
+			on: $mapStore.activeLayers['311'],
+			count:
+				data.layers['311'] === 'value' && $mapStore.activeLayers['311'] ? inViewCount('311') : null,
+			status: statusOf('Fix It Marin', data.layers['311'], data.asOf['311'])
+		},
+		{
+			id: 'earthquakes',
+			name: 'Earthquakes',
+			swatch: '#facc15',
+			on: null,
+			count: data.layers.earthquakes === 'value' ? inViewCount('quake') : null,
+			status: statusOf('USGS', data.layers.earthquakes, data.asOf.earthquakes)
+		},
+		...(dataLayers
+			? DATA_LAYERS.map((l): LayerRow => {
+					const v = dataLayers[l.id];
+					return {
+						id: l.id,
+						name: l.name,
+						swatch: l.swatch,
+						on: v.on,
+						count: v.count === null ? null : inViewCount(l.id),
+						status: statusOf(v.source, v.state, v.asOf),
+						note: [v.kept, v.note].filter(Boolean).join(' · ') || null
+					};
+				})
+			: [])
+	]);
+	// "Nothing here" needs every enabled layer read fresh, with a count it can vouch for (Codex
+	// MAPX2 #5); a layer that can't is named beside the list.
+	const enabledData = $derived(drawn.filter((v) => v.on));
+	const gaps = $derived(
+		enabledData.filter((v) => v.state !== 'value' || v.kept !== null).map((v) => v.name)
+	);
+	const vouched = $derived(
+		data.established && enabledData.every((v) => v.state === 'value' && !v.kept && v.count !== null)
+	);
+	function toggleLayer(id: string, on: boolean) {
+		const story = id === '311' || STORY_LAYERS.some(([s]) => s === id);
+		if (story && $mapStore.activeLayers[id as MapLayer] !== on)
+			mapStore.toggleLayer(id as MapLayer);
+		sectionPrefs.setLayer(id as LayerPrefId, on);
+	}
+	// Saved story choices apply once on desktop (the data layers read the prefs directly).
+	let storiesRestored = false;
+	$effect(() => {
+		if (!desktop || storiesRestored) return;
+		storiesRestored = true;
+		const saved = untrack(() => $sectionPrefs.layers);
+		for (const [id] of [...STORY_LAYERS, ['311']] as const) {
+			const want = saved[id];
+			if (want !== undefined && untrack(() => $mapStore.activeLayers[id]) !== want)
+				mapStore.toggleLayer(id);
+		}
+	});
 
 	function apply(outcome: MapClickOutcome) {
 		if (outcome.selectTown !== undefined) {
@@ -181,15 +309,15 @@
 				airports={false}
 				trafficEvents={false}
 				{layerData}
+				v2Paint={desktop}
 				onSynced={(s) => probe.set({ synced: s })}
 				onTownClick={(slug) => apply(townClickOutcome($selectedTown, slug))}
 				onTownHover={(slug) => mapStore.hoverTown(slug)}
 				{onPinClick}
 				onFeatureClick={(f) => {
 					if (desktop) {
-						const layer =
-							f.kind === '311-report' ? '311' : f.kind === 'earthquake' ? 'quake' : null;
-						if (layer && f.itemId) select(selectionId(layer, f.itemId));
+						const id = clickSelection(f);
+						if (id) select(id);
 						return;
 					}
 					// Kept 311/quake features say from when, like news pins (Codex r4 #2; shownFeature).
@@ -197,7 +325,11 @@
 					inspector = null;
 				}}
 			/>
-			<MapControls traffic={false} layers={OWNED_MAP_LAYERS} />
+			{#if desktop}
+				<LayerPanel {stories} layers={layerRows} ontoggle={toggleLayer} />
+			{:else}
+				<MapControls traffic={false} layers={OWNED_MAP_LAYERS} />
+			{/if}
 			<MapTooltip
 				items={data.inspectable}
 				emptyText={data.established ? 'No active stories for this town.' : null}
@@ -244,7 +376,8 @@
 				{selected}
 				hovered={hoveredId}
 				{collapsed}
-				emptyText={data.established ? 'Nothing on the map in this view.' : null}
+				emptyText={vouched ? 'Nothing on the map in this view.' : null}
+				{gaps}
 				ontoggle={() => (collapsed = !collapsed)}
 				onselect={select}
 				onhover={(id) => (hoveredId = id)}

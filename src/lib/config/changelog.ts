@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-17',
+		title: 'A bigger map with an “In view” list and more layers',
+		description:
+			'On a computer, the map now runs the full width of the page, with the latest five headlines in a row underneath. A list inside the map shows what is in view, newest first; click a row or a pin to fly there and read it in the list, photo and source link included. A Layers button turns on traffic, fire, gas prices, EV chargers and coffee, and says where each comes from and when it was read, or that it is unavailable. Town circles are brighter and Fix It Marin dots smaller, so the news stands out. The phone is unchanged.'
+	},
+	{
+		date: '2026-10-17',
 		title: 'Advisory chips, a Getting Around card and jump links',
 		description:
 			'On a computer, weather advisories are now small chips under the header; click one to read the National Weather Service’s own text. Getting Around is a card beside the ocean that says at a glance whether the airports, Marin roads and Marin Transit are clear, and only says so from a fresh read. A row of links under the header jumps to the map, Getting Around, Outdoors, News, Cost and Events. The phone is unchanged.'

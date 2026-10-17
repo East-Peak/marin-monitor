@@ -6,6 +6,20 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-17
 
+### Changed — A full-width desktop map with an "In view" list and more layers
+
+- **The map spans the page** on desktop, 62% of the window's height (520–820 px). Latest reporting sits under it as one row of five headlines. That row is still the content the page arrives with, and what the phone shows.
+- **An "In view" list** docks inside the map's right edge, 360 px wide and collapsible. It lists what the visible map shows, newest first in each layer: stories (a story placed only by town is listed at its town circle), Fix It Marin reports, earthquakes and every layer that's on. Hovering a row rings its pin, and hovering a pin marks its row. Clicking either flies there and opens the item in the list: the report's photo and text, a link to the source and the time. "Back to list" or Esc returns. On desktop the map's pop-up is gone.
+- **A Layers button** opens a checklist. Each layer shows its colour, how many are in view, its source and when it was read, or "unavailable" (with no count).
+  - **Traffic** (511, Marin events, every severity; an event without a location is counted, not dropped), **Fire** (CAL FIRE + NIFC) and **Gas prices** are on by default.
+  - **EV chargers** and **Coffee** are off by default.
+  - The story categories are its "Stories" group.
+  - Choices are remembered.
+  - Airports, fitness studios and landmarks stay off. They have no honest status, or add nothing here.
+- **Easier to read:** town circles use a brighter fill with a light outline and a count. Fix It Marin dots are smaller and lighter at county zoom, and grow as you zoom in.
+- **Behind it:** `/api/traffic/corridors` now carries each event's 511 location.
+- Desktop only (1,024 px and wider). The phone, `?layout=legacy` and `/tv` are unchanged.
+
 ### Changed — Advisories, Getting Around and jump links at the top of the desktop page
 
 - **Advisories are chips**: "⚠ Beach Hazards Statement · North Bay coast · until Oct 18, 5:04 PM", one per advisory, wrapping as needed, instead of a full-width box. Clicking one opens the National Weather Service's own text (what, where, what to do) in a panel on the right; Esc or Close puts you back on the chip. "Advisories unavailable" is one muted line.

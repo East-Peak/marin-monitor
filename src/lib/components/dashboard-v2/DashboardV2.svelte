@@ -55,6 +55,10 @@
 	import { createClock } from '$lib/dashboard/clock';
 	import './v2-tokens.css';
 	import { sectionPrefs } from '$lib/stores/section-prefs';
+	import { DATA_LAYERS, v2DataLayers, type DataLayerId } from '$lib/dashboard/v2-map-layers';
+	import type { GasPriceData } from '$lib/types/gas';
+	import type { EvChargingData } from '$lib/types/ev-charging';
+	import type { CoffeeIndexData } from '$lib/types/coffee';
 	import { createSectionOpenState } from '$lib/dashboard/section-open';
 	import { openAndFocus } from '$lib/dashboard/fragment-nav';
 	import { createDashboardV2Controller, V2_REFRESH_MS } from '$lib/dashboard/v2-controller';
@@ -115,6 +119,9 @@
 	const airQuality = controller?.airQuality ?? readable<AirQualityRead | null>(null);
 	const outcomes =
 		controller?.datasetOutcomes ?? readable<Readonly<Record<string, DatasetFetch>>>({});
+	const gasPlaces = controller?.places.gas ?? readable<GasPriceData | null>(null);
+	const evPlaces = controller?.places.ev ?? readable<EvChargingData | null>(null);
+	const coffeePlaces = controller?.places.coffee ?? readable<CoffeeIndexData | null>(null);
 	/** Getting Around's one view per tick; closed, its header still reads transit (Decision 9). */
 	const around = $derived(
 		gettingAroundView({
@@ -247,6 +254,36 @@
 			now: $clock
 		})
 	);
+	/**
+	 * The map's data layers (MAPX2b), desktop only (phone keeps its map until MAPX3). A layer's
+	 * dataset activates when the layer is on, whatever sections are open; an open section and
+	 * an enabled layer share one fetch (the registry's ensure).
+	 */
+	const layerOn = $derived(
+		Object.fromEntries(
+			DATA_LAYERS.map((l) => [l.id, desktop && ($sectionPrefs.layers[l.id] ?? l.defaultOn)])
+		) as Record<DataLayerId, boolean>
+	);
+	$effect(() => {
+		for (const l of DATA_LAYERS)
+			if (layerOn[l.id] && (l.dataset === 'traffic' || l.dataset === 'fires'))
+				void controller?.ensure(l.dataset);
+	});
+	const dataLayers = $derived(
+		v2DataLayers({
+			on: layerOn,
+			outcomes: $outcomes,
+			values: {
+				traffic: $traffic,
+				fire: $fires,
+				gas: $gasPlaces,
+				ev: $evPlaces,
+				coffee: $coffeePlaces
+			},
+			town: scopeTown,
+			now: $clock
+		})
+	);
 	/** The probe's settlement list also waits for the brief cards above the map (Codex r4 #3). */
 	const settledData = $derived({
 		...mapData,
@@ -352,7 +389,7 @@
 				<!-- With the server's snapshot, Latest reporting is in the HTML; the map is client-only. -->
 				<div class="v2-map-row">
 					{#if ready}
-						<V2Map data={settledData} now={$clock} />
+						<V2Map data={settledData} {dataLayers} now={$clock} />
 					{/if}
 					<LatestReporting view={latest} now={$clock} />
 				</div>
