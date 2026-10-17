@@ -122,6 +122,9 @@ test.describe('dashboard layout flag', () => {
 		for (const path of ['/', '/?layout=v2', '/?layout=legacy']) {
 			const h = await head(path);
 			expect(h, path).toContain('<title>Marin Monitor</title>');
+			// One owner (DashboardHead): app.html carries no title or description of its own.
+			expect(h.match(/<title>/g), `${path} titles`).toHaveLength(1);
+			expect(h.match(/name="description"/g), `${path} descriptions`).toHaveLength(1);
 			expect(h, path).toContain('property="og:title" content="Marin Monitor"');
 			expect(h, path).toContain('name="twitter:card" content="summary"');
 			expect(h, path).toMatch(/name="description" content="Everything happening in Marin County/);

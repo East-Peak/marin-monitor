@@ -142,60 +142,72 @@ test.describe('shared news pipeline — built app', () => {
 	}) => {
 		const TV_ONLY = 'Point Reyes TV-only late story';
 		await setup(page);
-		// Deterministic navigation (Codex r3 #2): the dashboard's server load awaits NWS and USGS
+		// Deterministic navigation (Codex r3 #2): the dashboard's server load reads the snapshot
 		// server-side, which page.route cannot stub. Answer its client-side data request with the
-		// valid SvelteKit payload for { bootstrap: null } (what +page.server.ts returns on failure;
-		// shape checked against prod /__data.json: node 0 = +layout.ts skip, node 1 = the page).
+		// valid SvelteKit payload for the default v2 page with no server snapshot (DASH-FLIP2;
+		// node 0 = +layout.ts skip, node 1 = the page, devalue-indexed).
 		await page.route('**/__data.json*', (route) =>
 			route.fulfill({
 				status: 200,
 				contentType: 'application/json',
 				body: JSON.stringify({
 					type: 'data',
-					nodes: [{ type: 'skip' }, { type: 'data', data: [{ bootstrap: 1 }, null], uses: {} }]
+					nodes: [
+						{ type: 'skip' },
+						{
+							type: 'data',
+							data: [
+								{ layout: 1, explicit: 2, bootstrap: 3, snapshot: 3, renderedAt: 4 },
+								'v2',
+								false,
+								null,
+								Date.now()
+							],
+							uses: {}
+						}
+					]
 				})
 			})
 		);
-		// Hold the dashboard's feeds so nothing it loads can overwrite (and hide) a late TV write.
-		let releaseFeeds!: () => void;
-		const feedsHeld = new Promise<void>((r) => (releaseFeeds = r));
-		await page.route('**/api/feeds?*', async (route) => {
-			await feedsHeld;
-			await route.fallback().catch(() => {});
-		});
-		// Hold the TV's snapshot; release it after navigation, well inside the reader's 10 s deadline.
+		// Hold the TV's snapshot (the first request); release it after navigation, well inside the
+		// reader's 10 s deadline. v2's own reads fall through to setup's two Point Reyes stories.
 		let releaseSnapshot!: () => void;
 		const snapshotHeld = new Promise<void>((r) => (releaseSnapshot = r));
 		let requestedAt = 0;
 		await page.route('**/api/news/snapshot', async (route) => {
+			if (requestedAt) return route.fallback();
 			requestedAt = Date.now();
 			await snapshotHeld;
 			await route
 				.fulfill({
 					status: 200,
 					contentType: 'application/json',
+					// Newer than v2's read, so a leaked write would win the loader's ordering.
 					body: snapshotEnvelope([{ title: TV_ONLY, hoursAgo: 0.5, slug: 'tv-only' }], 9)
 				})
 				.catch(() => {});
 		});
 		await page.goto('/tv');
 		await expect.poll(() => requestedAt, { timeout: 10_000 }).toBeGreaterThan(0);
-		await page.keyboard.press('Escape'); // TvWallboard: goto('/')
+		await page.keyboard.press('Escape'); // TvWallboard: goto('/'), the v2 default since DASH-FLIP2
 		await page.waitForURL((url) => url.pathname === '/', { timeout: 5_000 });
-		await expect(page.locator('[data-panel-id="local-wire"]')).toBeVisible({ timeout: 5_000 });
+		const reporting = page.locator('[data-slot="latest-reporting"]');
+		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible({
+			timeout: 5_000
+		});
+		await expect(reporting).toContainText(DATED, { timeout: 10_000 });
 		// The deadline check comes BEFORE the observation window, so a slow run fails
 		// here and can never be mistaken for the disposal proof below.
 		expect(Date.now() - requestedAt).toBeLessThan(8_000);
 		releaseSnapshot();
-		// A destroyed TV must not write: the wire never shows its story.
+		// A destroyed TV must not write: the dashboard never shows its story.
 		for (let i = 0; i < 15; i++) {
 			expect(await page.locator('body').innerText(), 'late TV write: TV_ONLY').not.toContain(
 				TV_ONLY
 			);
 			await page.waitForTimeout(200);
 		}
-		releaseFeeds();
-		await expectDashboardWire(page);
+		await expect(reporting).toContainText(DATED);
 		await expect(page.locator('body')).not.toContainText(TV_ONLY);
 	});
 });
