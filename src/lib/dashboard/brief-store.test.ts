@@ -236,3 +236,63 @@ describe('createBriefStore', () => {
 		expect(get(s).forecast.value).toBeNull();
 	});
 });
+
+describe('createBriefStore — desktop detail (MAPX1)', () => {
+	const HISTORY = [
+		{ atMs: 10, tempF: 50 },
+		{ atMs: 20, tempF: 52 }
+	];
+	const HEIGHTS = [{ atMs: 1, heightFt: 3.1 }];
+	const withDetail = (over: Partial<BriefFetchers> = {}) =>
+		fetchers({
+			history: vi.fn(async () => HISTORY),
+			tideHourly: vi.fn(async () => HEIGHTS),
+			...over
+		});
+
+	it('loads nothing extra until the desktop asks: the phone issues no new requests', async () => {
+		const f = withDetail();
+		const s = createBriefStore(f, new AbortController().signal);
+		await s.load(CENTRAL);
+		expect(f.history).not.toHaveBeenCalled();
+		expect(f.tideHourly).not.toHaveBeenCalled();
+		expect(get(s).history.state).toBe('loading');
+	});
+	it('enableDetail loads the 12-hour trace and the hourly tide now, then on every load', async () => {
+		const f = withDetail();
+		const s = createBriefStore(f, new AbortController().signal);
+		await s.load(CENTRAL);
+		await s.enableDetail();
+		expect(get(s).history).toMatchObject({
+			value: HISTORY,
+			scope: 'Gnoss Field (Novato)',
+			observedAt: 20,
+			state: 'ok'
+		});
+		expect(get(s).tideHourly).toMatchObject({ value: HEIGHTS, scope: 'Point Reyes', state: 'ok' });
+		expect(f.tideHourly).toHaveBeenCalledWith(CENTRAL.tideStation, expect.any(AbortSignal));
+		await s.load(MILL_VALLEY);
+		expect(f.history).toHaveBeenCalledTimes(2);
+		expect(f.tideHourly).toHaveBeenCalledTimes(2);
+	});
+	it('enabled before the first load, it waits for a location and then loads with it', async () => {
+		const f = withDetail();
+		const s = createBriefStore(f, new AbortController().signal);
+		await s.enableDetail();
+		expect(f.tideHourly).not.toHaveBeenCalled();
+		await s.load(CENTRAL);
+		expect(f.tideHourly).toHaveBeenCalledTimes(1);
+	});
+	it('a failed trace is unavailable, never an empty trace; a later failure keeps the old one as stale', async () => {
+		const history = vi.fn().mockRejectedValueOnce(new Error('503'));
+		const s = createBriefStore(withDetail({ history }), new AbortController().signal);
+		await s.load(CENTRAL);
+		await s.enableDetail();
+		expect(get(s).history).toMatchObject({ value: null, state: 'unavailable' });
+		history.mockResolvedValueOnce(HISTORY).mockRejectedValueOnce(new Error('503'));
+		await s.load(CENTRAL);
+		expect(get(s).history.state).toBe('ok');
+		await s.load(CENTRAL);
+		expect(get(s).history).toMatchObject({ value: HISTORY, state: 'stale' });
+	});
+});

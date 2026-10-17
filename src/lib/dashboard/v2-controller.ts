@@ -36,8 +36,11 @@ import { readEarthquakesWeekOrThrow, type EarthquakeRead } from '$lib/api/marin/
 import { fetchHealthReport, type HealthReportJson } from '$lib/api/marin/health-report';
 import { fetchMarinAdvisories } from '$lib/api/marin/nws-advisories';
 import { fetchHourlyPopOrThrow } from '$lib/api/marin/nws-hourly';
-import { fetchLatestObservation } from '$lib/api/marin/nws-observation';
-import { fetchTideEventsOrThrow } from '$lib/api/marin/tides';
+import {
+	fetchLatestObservation,
+	fetchObservationHistoryOrThrow
+} from '$lib/api/marin/nws-observation';
+import { fetchTideEventsOrThrow, fetchTideHourlyOrThrow } from '$lib/api/marin/tides';
 import {
 	fetchTrafficCorridorsOrThrow,
 	type TrafficCorridorsData
@@ -329,7 +332,9 @@ interface OutdoorsStores {
 export const BRIEF_FETCHERS: BriefFetchers = {
 	hourly: (lat, lon, signal) => fetchHourlyPopOrThrow(lat, lon, { signal }),
 	observation: (station, signal) => fetchLatestObservation(station, { signal }),
-	tides: (stationId, signal) => fetchTideEventsOrThrow(stationId, { signal })
+	tides: (stationId, signal) => fetchTideEventsOrThrow(stationId, { signal }),
+	history: (station, signal) => fetchObservationHistoryOrThrow(station, { signal }),
+	tideHourly: (stationId, signal) => fetchTideHourlyOrThrow(stationId, { signal })
 };
 
 /**
@@ -408,6 +413,8 @@ export interface DashboardV2Controller {
 	/** This controller's own Fix It (311) items; null until its first successful commit. */
 	fixIt: Readable<NewsItem[] | null>;
 	brief: Readable<BriefState>;
+	/** The desktop brief's trace and tide curve (MAPX1); the phone never asks. */
+	enableBriefDetail(): Promise<void>;
 	advisories: Readable<AdvisoryFeedState>;
 	setLocation(preset: LocationPreset): void;
 	healthReport: Readable<HealthReportJson | null>;
@@ -608,6 +615,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		civic: { subscribe: civic.subscribe },
 		datasetOutcomes: registry.outcomes,
 		brief: { subscribe: brief.subscribe },
+		enableBriefDetail: () => brief.enableDetail(),
 		advisories: { subscribe: advisories.subscribe },
 		setLocation(preset) {
 			if (location?.id === preset.id) return;

@@ -10,8 +10,11 @@ import { scaleLinear } from 'd3-scale';
 import { area, curveMonotoneX, line } from 'd3-shape';
 
 interface ChartDataPoint {
+	/** A non-finite value is a gap: the line and area break there. */
 	value: number;
 	label?: string;
+	/** The point's position on `xDomain` (e.g. a time); without `xDomain`, its index is. */
+	x?: number;
 }
 
 interface ChartMargins {
@@ -29,6 +32,8 @@ export interface ChartConfig {
 	data: ChartDataPoint[];
 	/** Values the y domain must cover without being plotted (a low–high band, a baseline). */
 	include?: readonly number[];
+	/** Plot each point at its own `x` over this domain instead of by index. */
+	xDomain?: readonly [number, number];
 }
 
 interface ChartDot {
@@ -69,7 +74,8 @@ const DEFAULT_MARGINS: ChartMargins = { top: 12, right: 10, bottom: 24, left: 44
  */
 export function buildChart(config: ChartConfig): ChartPaths | null {
 	const { width, height, data } = config;
-	if (data.length < 2) return null;
+	const defined = (d: ChartDataPoint) => Number.isFinite(d.value);
+	if (data.filter(defined).length < 2) return null;
 
 	const margins = config.margins ?? DEFAULT_MARGINS;
 	const innerW = width - margins.left - margins.right;
@@ -77,7 +83,7 @@ export function buildChart(config: ChartConfig): ChartPaths | null {
 
 	// --- Scales -----------------------------------------------------------
 
-	const values = [...data.map((d) => d.value), ...(config.include ?? [])];
+	const values = [...data.filter(defined).map((d) => d.value), ...(config.include ?? [])];
 	const rawMin = Math.min(...values);
 	const rawMax = Math.max(...values);
 
@@ -99,20 +105,23 @@ export function buildChart(config: ChartConfig): ChartPaths | null {
 	}
 
 	const xScale = scaleLinear()
-		.domain([0, data.length - 1])
+		.domain(config.xDomain ? [...config.xDomain] : [0, data.length - 1])
 		.range([0, innerW]);
+	const xOf = (d: ChartDataPoint, i: number) => xScale(config.xDomain ? (d.x ?? i) : i);
 
 	const yScale = scaleLinear().domain([yMin, yMax]).range([innerH, 0]);
 
 	// --- SVG paths --------------------------------------------------------
 
 	const lineGen = line<ChartDataPoint>()
-		.x((_d, i) => xScale(i))
+		.defined(defined)
+		.x(xOf)
 		.y((d) => yScale(d.value))
 		.curve(curveMonotoneX);
 
 	const areaGen = area<ChartDataPoint>()
-		.x((_d, i) => xScale(i))
+		.defined(defined)
+		.x(xOf)
 		.y0(innerH)
 		.y1((d) => yScale(d.value))
 		.curve(curveMonotoneX);
@@ -124,11 +133,9 @@ export function buildChart(config: ChartConfig): ChartPaths | null {
 
 	// --- Dots -------------------------------------------------------------
 
-	const dots: ChartDot[] = data.map((d, i) => ({
-		x: xScale(i),
-		y: yScale(d.value),
-		value: d.value
-	}));
+	const dots: ChartDot[] = data.flatMap((d, i) =>
+		defined(d) ? [{ x: xOf(d, i), y: yScale(d.value), value: d.value }] : []
+	);
 
 	// --- Axis labels ------------------------------------------------------
 

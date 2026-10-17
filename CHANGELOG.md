@@ -6,6 +6,13 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-17
 
+### Changed — The top of the desktop dashboard answers more at a glance
+
+- **Weather** shows the temperature large, with the last 12 hours at Gnoss Field (Novato) drawn beside it and the next 8 hours' temperature and rain chance underneath. The 12-hour line comes from the station's own reports; a stretch with no report stays a gap.
+- **Tides** draws today's curve from NOAA's own hourly predictions, with each high and low marked on it. If NOAA's hourly heights can't be read, the card says "Tide curve unavailable" rather than drawing one of its own.
+- **Ocean · Point Reyes** fills the third slot: wave height and period now, and the next 24 hours, from the Open-Meteo marine forecast (a model, labelled as one). It loads straight away on desktop, and a failed read says "Ocean forecast unavailable".
+- Desktop only (1,024 px and wider). The phone's brief is unchanged and requests nothing new.
+
 ### Changed — The redesigned dashboard is now the default
 
 - **The redesigned dashboard is now the default.** The old one stays at marinmonitor.com/?layout=legacy for now; the header's "Old dashboard" link goes there. `/tv` is unchanged.

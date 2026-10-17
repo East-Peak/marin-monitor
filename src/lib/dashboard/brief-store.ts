@@ -16,12 +16,17 @@ import {
 	type ObservedNow,
 	type TideEvent
 } from '$lib/weather/brief';
+import type { TempReport } from '$lib/api/marin/nws-observation';
+import type { TideHeight } from '$lib/api/marin/tides';
 import type { SourceEntryState } from './source-status';
 
 export interface BriefFetchers {
 	hourly(lat: number, lon: number, signal: AbortSignal): Promise<HourlyForecast>;
 	observation(station: { id: string; name: string }, signal: AbortSignal): Promise<ObservedNow>;
 	tides(stationId: string, signal: AbortSignal): Promise<TideEvent[]>;
+	/** Desktop detail (MAPX1): read only after enableDetail(). */
+	history?(station: { id: string; name: string }, signal: AbortSignal): Promise<TempReport[]>;
+	tideHourly?(stationId: string, signal: AbortSignal): Promise<TideHeight[]>;
 }
 
 export interface BriefCard<T> {
@@ -40,6 +45,10 @@ export interface BriefState {
 	forecast: BriefCard<HourlyForecast>;
 	observed: BriefCard<ObservedNow>;
 	tides: BriefCard<TideEvent[]>;
+	/** The station's last 12 hours (desktop only; loading until enabled). */
+	history: BriefCard<TempReport[]>;
+	/** NOAA's hourly heights for the tide curve (desktop only; loading until enabled). */
+	tideHourly: BriefCard<TideHeight[]>;
 }
 
 function emptyCard<T>(maxAgeMs: number | null): BriefCard<T> {
@@ -58,7 +67,11 @@ export function createBriefStore(
 	fetchers: BriefFetchers,
 	signal: AbortSignal,
 	options: { deadlineMs?: number } = {}
-): Readable<BriefState> & { load(preset: LocationPreset): Promise<void> } {
+): Readable<BriefState> & {
+	load(preset: LocationPreset): Promise<void>;
+	/** The desktop brief's trace and tide curve: loaded now (once a town is set) and on every load. */
+	enableDetail(): Promise<void>;
+} {
 	const deadlineMs = options.deadlineMs ?? DEFAULT_OP_DEADLINE_MS;
 	/** Every brief request: owner-linked, bounded end to end (Task 6's rule). */
 	const bounded = <T>(label: string, run: (s: AbortSignal) => Promise<T>) =>
@@ -66,9 +79,13 @@ export function createBriefStore(
 	const state = writable<BriefState>({
 		forecast: emptyCard(FORECAST_MAX_AGE_MS),
 		observed: emptyCard(OBSERVATION_MAX_AGE_MS),
-		tides: emptyCard(null)
+		tides: emptyCard(null),
+		history: emptyCard(OBSERVATION_MAX_AGE_MS),
+		tideHourly: emptyCard(null)
 	});
 	let latest = 0;
+	let detail = false;
+	let current: LocationPreset | null = null;
 
 	function patch<T>(key: keyof BriefState, next: (card: BriefCard<T>) => BriefCard<T>) {
 		if (signal.aborted) return;
@@ -77,7 +94,7 @@ export function createBriefStore(
 
 	/** One location-scoped card: latest request wins; failure keeps value and label. */
 	async function loadScoped<T>(
-		key: 'forecast' | 'tides',
+		key: 'forecast' | 'tides' | 'tideHourly',
 		requestId: number,
 		place: string,
 		scope: string,
@@ -149,11 +166,65 @@ export function createBriefStore(
 		}
 	}
 
+	let historyRun: Promise<void> | null = null;
+	/** The trace's one fixed station: overlapping loads share one request, as the observation does. */
+	function loadHistory(): Promise<void> {
+		const read = fetchers.history;
+		if (!read) return Promise.resolve();
+		historyRun ??= (async () => {
+			try {
+				const value = await bounded('brief history', (s) => read(OBSERVATION_STATION, s));
+				patch<TempReport[]>('history', (c) => ({
+					...c,
+					value,
+					scope: OBSERVATION_STATION.name,
+					observedAt: value.length ? value[value.length - 1].atMs : null,
+					state: 'ok',
+					detail: null
+				}));
+			} catch {
+				patch<TempReport[]>('history', (c) => ({
+					...c,
+					state: c.value === null ? 'unavailable' : 'stale',
+					detail: 'Temperature history unavailable'
+				}));
+			}
+		})().finally(() => {
+			historyRun = null;
+		});
+		return historyRun;
+	}
+
+	/** The detail cards for one location, under the same latest-request-wins rule. */
+	function loadDetail(preset: LocationPreset, requestId: number): Promise<unknown> {
+		const read = fetchers.tideHourly;
+		return Promise.all([
+			loadHistory(),
+			read
+				? loadScoped(
+						'tideHourly',
+						requestId,
+						preset.name,
+						preset.tideStationName,
+						`Couldn't load ${preset.tideStationName} hourly tides`,
+						() => bounded('brief tide curve', (s) => read(preset.tideStation, s)),
+						() => null
+					)
+				: undefined
+		]);
+	}
+
 	return {
 		subscribe: state.subscribe,
+		async enableDetail() {
+			if (detail || signal.aborted) return;
+			detail = true;
+			if (current) await loadDetail(current, latest);
+		},
 		async load(preset) {
 			if (signal.aborted) return;
 			const requestId = ++latest;
+			current = preset;
 			const forecastLabel = forecastScope(preset);
 			await Promise.all([
 				loadScoped(
@@ -174,7 +245,8 @@ export function createBriefStore(
 					() => bounded('brief tides', (s) => fetchers.tides(preset.tideStation, s)),
 					() => null
 				),
-				loadObserved()
+				loadObserved(),
+				detail ? loadDetail(preset, requestId) : undefined
 			]);
 		}
 	};

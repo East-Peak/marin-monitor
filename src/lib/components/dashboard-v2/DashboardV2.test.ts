@@ -47,10 +47,11 @@ const controller = vi.hoisted(() => ({
 	start: vi.fn(async () => {}),
 	refresh: vi.fn(async () => {}),
 	ensure: vi.fn(async () => {}),
+	enableBriefDetail: vi.fn(async () => {}),
 	setLocation: vi.fn(),
 	created: [] as AbortSignal[],
 	EMPTY_BRIEF: Object.fromEntries(
-		['forecast', 'observed', 'tides'].map((k) => [
+		['forecast', 'observed', 'tides', 'history', 'tideHourly'].map((k) => [
 			k,
 			{
 				value: null,
@@ -74,6 +75,7 @@ beforeEach(() => {
 	controller.setLocation.mockClear();
 	controller.refresh.mockClear();
 	controller.ensure.mockClear();
+	controller.enableBriefDetail.mockClear();
 	controller.created.length = 0;
 });
 vi.mock('$lib/dashboard/v2-controller', async () => ({
@@ -133,6 +135,7 @@ vi.mock('$lib/dashboard/v2-controller', async () => ({
 				)
 			},
 			setLocation: controller.setLocation,
+			enableBriefDetail: controller.enableBriefDetail,
 			healthReport: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
 			datasetOutcomes: { subscribe: (fn: (v: unknown) => void) => (fn({}), () => {}) }
 		};
@@ -312,6 +315,25 @@ describe('DashboardV2 preview shell', () => {
 		expect(order[cams - 1]).toBe('brief');
 		expect(order[cams + 1]).toBe('map');
 		expect(container.querySelector('[data-card="getting-around"]')).toBeNull();
+	});
+
+	it('desktop (1440) mounts the desktop brief and asks for its trace, tide curve and ocean (MAPX1)', async () => {
+		atWidth(1440);
+		const { container } = render(DashboardV2);
+		await tick();
+		expect(container.querySelector('[data-slot="brief"] [data-card="ocean"]')).not.toBeNull();
+		expect(controller.enableBriefDetail).toHaveBeenCalled();
+		expect(controller.ensure).toHaveBeenCalledWith('marine');
+	});
+
+	it('phone (390) keeps the phone brief and never asks for the desktop detail (MAPX1)', async () => {
+		atWidth(390);
+		const { container } = render(DashboardV2);
+		await tick();
+		expect(container.querySelector('[data-card="ocean"]')).toBeNull();
+		expect(container.querySelector('[data-brief-link="getting-around"]')).not.toBeNull();
+		expect(controller.enableBriefDetail).not.toHaveBeenCalled();
+		expect(controller.ensure).not.toHaveBeenCalledWith('marine');
 	});
 
 	it('desktop (1440): no strip; the cam wall sits right after the map', async () => {

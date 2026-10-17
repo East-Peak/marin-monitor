@@ -18,7 +18,9 @@ const ADVISORY: Advisory = {
 	expiresAt: NOW + 2 * MIN,
 	endsAt: Date.parse('2026-10-02T00:00:00Z'),
 	references: [],
-	zones: ['CAZ506']
+	zones: ['CAZ506'],
+	description: null,
+	instruction: null
 };
 const feedState = (over: Partial<AdvisoryFeedState> = {}): AdvisoryFeedState => ({
 	advisories: [ADVISORY],

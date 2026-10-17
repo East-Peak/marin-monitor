@@ -50,6 +50,9 @@ export interface Advisory {
 	references: string[];
 	/** The Marin zones this alert names. */
 	zones: string[];
+	/** NWS's own text, shown in the advisory reader (MAPX1); null when absent or blank. */
+	description: string | null;
+	instruction: string | null;
 }
 
 export interface ParsedAlerts {
@@ -60,6 +63,7 @@ export interface ParsedAlerts {
 
 type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
+const text = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v : null);
 const instant = (v: unknown): number | null => (typeof v === 'string' ? parseFeedDate(v) : null);
 /** NWS UGC code: state, C (county) or Z (zone), three digits, e.g. CAZ506, CAC041. */
 const UGC_CODE = /^[A-Z]{2}[CZ]\d{3}$/;
@@ -114,7 +118,9 @@ function classify(feature: unknown): Advisory | typeof EXCLUDED | typeof UNREADA
 		expiresAt,
 		endsAt,
 		references,
-		zones
+		zones,
+		description: text(p.description),
+		instruction: text(p.instruction)
 	};
 }
 

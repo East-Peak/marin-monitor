@@ -71,3 +71,39 @@ export async function fetchLatestObservation(
 	if (!picked) throw new Error('NWS observations missing a timestamp');
 	return { stationName: station.name, ...picked.reading, listNewestAt: picked.listNewestAt };
 }
+
+/** One usable temperature report in the 12-hour trace. */
+export interface TempReport {
+	atMs: number;
+	tempF: number;
+}
+
+/** The brief's trace window (MAPX1). KDVO's list for 12 h is ~35 reports (measured 2026-10-17). */
+export const OBSERVATION_HISTORY_MS = 12 * 3_600_000;
+
+/**
+ * The station's last 12 hours, usable temperatures only, oldest first. A report
+ * without one is left out, never filled: the trace shows its gap. Throws on failure.
+ */
+export async function fetchObservationHistoryOrThrow(
+	station: { id: string; name: string },
+	{ signal, now }: OwnerOptions & { now?: number } = {}
+): Promise<TempReport[]> {
+	const startMs = Math.floor(((now ?? Date.now()) - OBSERVATION_HISTORY_MS) / 60_000) * 60_000;
+	const result = await serviceClient.request<NwsObservationList>(
+		'NWS',
+		`/stations/${station.id}/observations`,
+		{
+			accept: 'application/geo+json',
+			params: { start: new Date(startMs).toISOString().replace('.000Z', 'Z') },
+			signal,
+			revalidateInBackground: false
+		}
+	);
+	const features = liveData(result)?.features;
+	if (!Array.isArray(features)) throw new Error('NWS observations missing a feature list');
+	return features
+		.map(toReading)
+		.flatMap((r) => (r && r.tempF !== null ? [{ atMs: r.observedAt, tempF: r.tempF }] : []))
+		.sort((a, b) => a.atMs - b.atMs);
+}

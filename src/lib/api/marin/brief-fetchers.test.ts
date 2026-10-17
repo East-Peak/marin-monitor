@@ -9,8 +9,8 @@ const { getGridPoint } = vi.hoisted(() => ({ getGridPoint: vi.fn() }));
 vi.mock('./nws-common', () => ({ getGridPoint }));
 
 import { fetchHourlyForecast, fetchHourlyPopOrThrow } from './nws-hourly';
-import { fetchLatestObservation } from './nws-observation';
-import { fetchTideEventsOrThrow } from './tides';
+import { fetchLatestObservation, fetchObservationHistoryOrThrow } from './nws-observation';
+import { fetchTideEventsOrThrow, fetchTideHourlyOrThrow } from './tides';
 
 const ok = (data: unknown) => ({ data, fromCache: false });
 const period = (startTime: string, endTime: string, value: number | null) => ({
@@ -289,5 +289,80 @@ describe('tide times are requested in GMT, so the repeated fall-back hour is una
 			{ atMs: Date.parse('2026-11-01T09:30:00Z'), heightFt: 5.1, type: 'H' }
 		]);
 		expect(request.mock.calls[0][2].params).toMatchObject({ time_zone: 'gmt' });
+	});
+});
+
+describe('fetchObservationHistoryOrThrow (MAPX1: the 12-hour trace)', () => {
+	const station = { id: 'KDVO', name: 'Gnoss Field (Novato)' };
+	const NOW = Date.parse('2026-10-17T15:02:30Z');
+	const feature = (timestamp: unknown, temperature: unknown) => ({
+		properties: { timestamp, temperature }
+	});
+
+	it('asks for 12 hours by start time and keeps only usable temperatures, oldest first', async () => {
+		request.mockResolvedValue(
+			ok({
+				features: [
+					feature('2026-10-17T14:55:00+00:00', { value: 15.5, qualityControl: 'V' }),
+					feature('2026-10-17T14:35:00+00:00', { value: null, qualityControl: 'Z' }),
+					feature('2026-10-17T14:15:00+00:00', { value: 14, qualityControl: 'X' }),
+					feature('bad', { value: 14, qualityControl: 'V' }),
+					feature('2026-10-17T03:15:00+00:00', { value: 10, qualityControl: 'C' })
+				]
+			})
+		);
+		expect(await fetchObservationHistoryOrThrow(station, { now: NOW })).toEqual([
+			{ atMs: Date.parse('2026-10-17T03:15:00Z'), tempF: 50 },
+			{ atMs: Date.parse('2026-10-17T14:55:00Z'), tempF: 60 }
+		]);
+		expect(request.mock.calls[0][1]).toBe('/stations/KDVO/observations');
+		// Start rounded down to the minute, so overlapping calls share one request.
+		expect(request.mock.calls[0][2]).toMatchObject({
+			params: { start: '2026-10-17T03:02:00Z' },
+			accept: 'application/geo+json',
+			revalidateInBackground: false
+		});
+	});
+	it('throws on a failure or a body without a feature list; an empty list is an empty trace', async () => {
+		request.mockRejectedValueOnce(new Error('HTTP 503'));
+		await expect(fetchObservationHistoryOrThrow(station, { now: NOW })).rejects.toThrow('HTTP 503');
+		request.mockResolvedValueOnce(ok({}));
+		await expect(fetchObservationHistoryOrThrow(station, { now: NOW })).rejects.toThrow();
+		request.mockResolvedValueOnce(ok({ features: [] }));
+		expect(await fetchObservationHistoryOrThrow(station, { now: NOW })).toEqual([]);
+	});
+});
+
+describe('fetchTideHourlyOrThrow (MAPX1: NOAA hourly predictions, never our own curve)', () => {
+	it('requests hourly predictions in GMT by range (no end_date) and parses them', async () => {
+		request.mockResolvedValue(
+			ok({
+				predictions: [
+					{ t: '2026-10-17 07:00', v: '3.105' },
+					{ t: '2026-10-17 08:00', v: 'x' },
+					{ t: '2026-10-17 9:00', v: '1.0' },
+					{ t: '2026-10-17 09:00', v: '2.5' }
+				]
+			})
+		);
+		expect(await fetchTideHourlyOrThrow('9415020')).toEqual([
+			{ atMs: Date.parse('2026-10-17T07:00:00Z'), heightFt: 3.105 },
+			{ atMs: Date.parse('2026-10-17T09:00:00Z'), heightFt: 2.5 }
+		]);
+		const params = request.mock.calls[0][2].params;
+		expect(params).toMatchObject({
+			station: '9415020',
+			product: 'predictions',
+			interval: 'h',
+			time_zone: 'gmt',
+			datum: 'MLLW',
+			range: 48
+		});
+		expect(params).not.toHaveProperty('end_date');
+		expect(params.begin_date).toMatch(/^\d{8}$/);
+	});
+	it('throws when NOAA returns no predictions', async () => {
+		request.mockResolvedValueOnce(ok({ error: { message: 'No data' } }));
+		await expect(fetchTideHourlyOrThrow('9415020')).rejects.toThrow('no predictions');
 	});
 });

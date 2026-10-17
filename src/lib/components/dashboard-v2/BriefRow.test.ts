@@ -28,6 +28,8 @@ function periods(pops: (number | null)[]) {
 }
 function state(over: Partial<BriefState> = {}): BriefState {
 	return {
+		history: card({}),
+		tideHourly: card({}),
 		observed: card({
 			value: {
 				stationName: 'Gnoss Field (Novato)',
@@ -139,7 +141,13 @@ describe('BriefRow', () => {
 		);
 	});
 	it('loading reads as loading, never as a value or "unavailable"', () => {
-		renderRow({ observed: card({}), forecast: card({}), tides: card({}) });
+		renderRow({
+			observed: card({}),
+			forecast: card({}),
+			tides: card({}),
+			history: card({}),
+			tideHourly: card({})
+		});
 		expect(document.querySelector('[data-card="weather"]')!.getAttribute('data-state')).toBe(
 			'loading'
 		);

@@ -15,3 +15,10 @@ process.emitWarning = ((warning: string | Error, ...args: unknown[]) => {
 			: never)
 	);
 }) as typeof process.emitWarning;
+
+// bind:clientWidth needs a ResizeObserver; jsdom has none (every supported browser does).
+globalThis.ResizeObserver ??= class {
+	observe() {}
+	unobserve() {}
+	disconnect() {}
+} as unknown as typeof ResizeObserver;

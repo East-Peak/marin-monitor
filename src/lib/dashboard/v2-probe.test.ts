@@ -47,14 +47,19 @@ describe('the v2 test hook (Codex r3 #5)', () => {
 			briefPending({
 				forecast: card('loading'),
 				observed: card('ok'),
-				tides: card('stale', 'Mill Valley')
+				tides: card('stale', 'Mill Valley'),
+				// Desktop-only detail stays loading on the phone: never pending (MAPX1).
+				history: card('loading'),
+				tideHourly: card('loading')
 			})
 		).toEqual(['brief:forecast', 'brief:tides']);
 		expect(
 			briefPending({
 				forecast: card('unavailable'),
 				observed: card('ok'),
-				tides: card('ok')
+				tides: card('ok'),
+				history: card('loading'),
+				tideHourly: card('loading')
 			})
 		).toEqual([]);
 	});

@@ -133,15 +133,12 @@ function parseGmtMinute(value: string): number | null {
 	return Number.isFinite(ms) && new Date(ms).toISOString() === iso ? ms : null;
 }
 
-/**
- * v2 brief: hi/lo predictions for 48 h from the station's local midnight,
- * requested in GMT so every time is unambiguous. Throws on failure.
- * (The legacy functions above build begin_date from the browser's zone.)
- */
-export async function fetchTideEventsOrThrow(
+/** The v2 brief's request: 48 h from the station's local midnight, in GMT (no end_date). */
+async function requestPredictionsOrThrow(
 	station: string,
-	{ signal }: OwnerOptions = {}
-): Promise<TideEvent[]> {
+	interval: 'hilo' | 'h',
+	signal: AbortSignal | undefined
+): Promise<NoaaTidePrediction[]> {
 	const result = await serviceClient.request<{ predictions?: NoaaTidePrediction[] }>(
 		'NOAA_TIDES',
 		'',
@@ -157,7 +154,7 @@ export async function fetchTideEventsOrThrow(
 				units: 'english',
 				// GMT, not local: the repeated fall-back hour is ambiguous in lst_ldt (Codex PR 8 #3).
 				time_zone: 'gmt',
-				interval: 'hilo',
+				interval,
 				format: 'json',
 				application: 'MarinMonitor'
 			}
@@ -165,11 +162,46 @@ export async function fetchTideEventsOrThrow(
 	);
 	const predictions = liveData(result)?.predictions;
 	if (!Array.isArray(predictions)) throw new Error('NOAA returned no predictions');
+	return predictions;
+}
+
+/**
+ * v2 brief: hi/lo predictions for 48 h from the station's local midnight,
+ * requested in GMT so every time is unambiguous. Throws on failure.
+ * (The legacy functions above build begin_date from the browser's zone.)
+ */
+export async function fetchTideEventsOrThrow(
+	station: string,
+	{ signal }: OwnerOptions = {}
+): Promise<TideEvent[]> {
+	const predictions = await requestPredictionsOrThrow(station, 'hilo', signal);
 	return predictions.flatMap((p) => {
 		const atMs = parseGmtMinute(p.t);
 		const heightFt = Number.parseFloat(p.v);
 		if (atMs === null || !Number.isFinite(heightFt) || (p.type !== 'H' && p.type !== 'L'))
 			return [];
 		return [{ atMs, heightFt, type: p.type }];
+	});
+}
+
+/** One NOAA hourly height prediction. */
+export interface TideHeight {
+	atMs: number;
+	heightFt: number;
+}
+
+/**
+ * v2 brief (MAPX1): NOAA's own hourly height predictions for the same 48 h, so the
+ * card's curve is NOAA's, never one we interpolate. Throws on failure.
+ */
+export async function fetchTideHourlyOrThrow(
+	station: string,
+	{ signal }: OwnerOptions = {}
+): Promise<TideHeight[]> {
+	const predictions = await requestPredictionsOrThrow(station, 'h', signal);
+	return predictions.flatMap((p) => {
+		const atMs = parseGmtMinute(p.t);
+		const heightFt = Number.parseFloat(p.v);
+		return atMs === null || !Number.isFinite(heightFt) ? [] : [{ atMs, heightFt }];
 	});
 }

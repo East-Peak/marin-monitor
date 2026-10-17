@@ -459,3 +459,84 @@ test.describe('phone 390', () => {
 		);
 	});
 });
+
+/** The brief's own reads with real shapes (MAPX1): 12 h of KDVO, NOAA hi/lo + hourly, marine. */
+async function stubBrief(page: Page) {
+	const H = 3_600_000;
+	const now = Date.now();
+	const json = (body: unknown) => ({
+		status: 200,
+		contentType: 'application/json',
+		body: JSON.stringify(body)
+	});
+	const gmt = (ms: number) => new Date(ms).toISOString().slice(0, 16).replace('T', ' ');
+	await page.route(/stations\/KDVO\/observations/, (r) =>
+		r.fulfill(
+			json({
+				features: Array.from({ length: 36 }, (_, i) => ({
+					properties: {
+						timestamp: new Date(now - i * 20 * 60_000).toISOString(),
+						textDescription: 'Clear',
+						temperature: { value: 12 + Math.sin(i / 6) * 4, qualityControl: 'V' }
+					}
+				}))
+			})
+		)
+	);
+	await page.route(/tidesandcurrents\.noaa\.gov/, (r) => {
+		const day0 = Math.floor(now / (24 * H)) * 24 * H - 24 * H;
+		const hourly =
+			r.request().url().includes('interval=h&') || /interval=h$/.test(r.request().url());
+		const predictions = hourly
+			? Array.from({ length: 96 }, (_, i) => ({
+					t: gmt(day0 + i * H),
+					v: (3 + 2.5 * Math.cos((i * 2 * Math.PI) / 12.4)).toFixed(3)
+				}))
+			: Array.from({ length: 16 }, (_, i) => ({
+					t: gmt(day0 + i * 6.2 * H),
+					v: i % 2 ? '0.500' : '5.500',
+					type: i % 2 ? 'L' : 'H'
+				}));
+		return r.fulfill(json({ predictions }));
+	});
+	await stubOutdoors(page);
+}
+
+for (const width of [1440, 2000]) {
+	test.describe(`desktop ${width}: the top of the page (MAPX1)`, () => {
+		test.use({ viewport: { width, height: 1000 } });
+
+		test('the brief is compact, its three slots all answer, and the map starts high', async ({
+			page
+		}) => {
+			await stubRest(page);
+			await stubBrief(page);
+			await stubCams(page);
+			await page.goto('/?layout=v2');
+			await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+			const brief = page.locator('[data-slot="brief"]');
+			await expect(brief.locator('[data-chart="trace"] path[data-line]')).toHaveAttribute(
+				'd',
+				/^M/
+			);
+			await expect(brief.locator('[data-chart="tide"] circle[data-event]').first()).toBeVisible();
+			await expect(brief.locator('[data-card="ocean"]')).toHaveAttribute('data-state', 'ok');
+
+			// Three grid slots, each holding an answer: no empty third slot.
+			const slots = brief.locator(':scope > *');
+			await expect(slots).toHaveCount(3);
+			for (const slot of await slots.all()) {
+				const b = (await slot.boundingBox())!;
+				expect(b.height).toBeGreaterThan(60);
+				expect((await slot.innerText()).trim().length).toBeGreaterThan(10);
+			}
+			const tops = await Promise.all(
+				(await slots.all()).map(async (s) => (await s.boundingBox())!.y)
+			);
+			expect(Math.max(...tops) - Math.min(...tops)).toBeLessThanOrEqual(2);
+
+			expect((await brief.boundingBox())!.height).toBeLessThanOrEqual(260);
+			if (width === 1440) expect((await box(page, '#v2-map-title')).y).toBeLessThanOrEqual(520);
+		});
+	});
+}

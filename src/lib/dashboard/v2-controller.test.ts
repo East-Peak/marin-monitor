@@ -489,6 +489,21 @@ describe('createDashboardV2Controller', () => {
 		expect(get(c.brief).forecast.scope).toBe('Central Marin forecast');
 	});
 
+	it('enableBriefDetail (desktop) adds the 12-hour trace and the hourly tide to the brief (MAPX1)', async () => {
+		const briefFetchers = {
+			...fakeBrief(),
+			history: vi.fn(async () => [{ atMs: NOW, tempF: 61 }]),
+			tideHourly: vi.fn(async () => [{ atMs: NOW, heightFt: 2 }])
+		};
+		const c = controller({ briefFetchers });
+		c.setLocation(getLocationById('central-marin'));
+		await c.start();
+		expect(briefFetchers.history).not.toHaveBeenCalled();
+		await c.enableBriefDetail();
+		expect(get(c.brief).history.value).toEqual([{ atMs: NOW, tempF: 61 }]);
+		expect(get(c.brief).tideHourly.state).toBe('ok');
+	});
+
 	it('a town change reloads only the brief, at once; the same town again does nothing', async () => {
 		const briefFetchers = fakeBrief();
 		const fetchAdvisories = vi.fn(async () => ({ advisories: [], unreadable: 0 }));

@@ -56,10 +56,23 @@ describe('parseNwsAlerts (identity, lifecycle, applicability)', () => {
 					expiresAt: Date.parse('2026-09-29T22:00:00Z'),
 					endsAt: Date.parse('2026-10-02T00:00:00Z'),
 					references: [],
-					zones: ['CAZ506']
+					zones: ['CAZ506'],
+					description: null,
+					instruction: null
 				}
 			]
 		});
+	});
+	it('keeps the NWS description and instruction for the advisory reader (MAPX1); a blank one is null', () => {
+		const [a] = parse({
+			description: '* WHAT...Minor coastal flooding.\n\n* WHERE...North Bay coast.',
+			instruction: '  '
+		}).advisories;
+		expect(a.description).toBe('* WHAT...Minor coastal flooding.\n\n* WHERE...North Bay coast.');
+		expect(a.instruction).toBeNull();
+		const [b] = parse({ description: 42, instruction: 'Avoid low-lying roads.' }).advisories;
+		expect(b.description).toBeNull();
+		expect(b.instruction).toBe('Avoid low-lying roads.');
 	});
 	it.each([
 		['a San Francisco-only alert', { geocode: { UGC: ['CAZ006'] } }],

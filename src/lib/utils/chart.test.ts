@@ -289,3 +289,38 @@ describe('buildChart — include', () => {
 		expect(plain.yMin).toBeGreaterThan(5.5);
 	});
 });
+
+describe('buildChart — time axis and gaps (MAPX1)', () => {
+	const NO_MARGIN = { top: 0, right: 0, bottom: 0, left: 0 };
+	it('places points by their own x within xDomain, not by index', () => {
+		const data = [
+			{ value: 1, x: 0 },
+			{ value: 2, x: 75 },
+			{ value: 3, x: 100 }
+		];
+		const r = buildChart(makeConfig({ data, xDomain: [0, 100], width: 200, margins: NO_MARGIN }))!;
+		expect(r.dots.map((d) => d.x)).toEqual([0, 150, 200]);
+		expect(r.xScale(50)).toBe(100);
+	});
+	it('a non-finite value breaks the line (a gap stays a gap) and is neither a dot nor in the domain', () => {
+		const data = [
+			{ value: 1, x: 0 },
+			{ value: 2, x: 10 },
+			{ value: Number.NaN, x: 15 },
+			{ value: 50, x: 20 },
+			{ value: 60, x: 30 }
+		];
+		const r = buildChart(makeConfig({ data, xDomain: [0, 30], margins: NO_MARGIN }))!;
+		expect(r.linePath.match(/M/g)).toHaveLength(2);
+		expect(r.dots).toHaveLength(4);
+		expect(r.yMax).toBeLessThan(62);
+		expect(Number.isFinite(r.yMin)).toBe(true);
+	});
+	it('fewer than two plottable points is still null', () => {
+		const data = [
+			{ value: 1, x: 0 },
+			{ value: Number.NaN, x: 5 }
+		];
+		expect(buildChart(makeConfig({ data, xDomain: [0, 5] }))).toBeNull();
+	});
+});

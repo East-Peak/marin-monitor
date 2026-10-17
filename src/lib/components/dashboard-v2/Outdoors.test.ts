@@ -1,3 +1,5 @@
+import type { TempReport } from '$lib/api/marin/nws-observation';
+import type { TideHeight } from '$lib/api/marin/tides';
 import { render } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import type { BriefCard, BriefState } from '$lib/dashboard/brief-store';
@@ -43,7 +45,9 @@ const brief: BriefState = {
 		maxAgeMs: 6 * H
 	}),
 	observed: card<ObservedNow>(null),
-	tides: card(tides, { scope: 'Point Reyes' })
+	tides: card(tides, { scope: 'Point Reyes' }),
+	history: card<TempReport[]>(null),
+	tideHourly: card<TideHeight[]>(null)
 };
 
 function input(over: Partial<OutdoorsInput> = {}): OutdoorsInput {

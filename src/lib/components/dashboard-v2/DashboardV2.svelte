@@ -6,6 +6,7 @@
 	import Section from './Section.svelte';
 	import JumpNav from './JumpNav.svelte';
 	import BriefRow from './BriefRow.svelte';
+	import BriefDesktop from './BriefDesktop.svelte';
 	import CamStrip from './CamStrip.svelte';
 	import CamWall from './CamWall.svelte';
 	import AdvisoryRow from './AdvisoryRow.svelte';
@@ -138,6 +139,13 @@
 			now: $clock
 		})
 	);
+	// The desktop brief (MAPX1): its trace, tide curve and ocean load as soon as the page is
+	// desktop, never waiting on the Outdoors section. The phone never asks for them.
+	$effect(() => {
+		if (!desktop || !controller) return;
+		void controller.enableBriefDetail();
+		void controller.ensure(OUTDOORS_DATASETS.marine.id);
+	});
 	function openOutdoors() {
 		for (const d of Object.values(OUTDOORS_DATASETS)) void controller?.ensure(d.id);
 	}
@@ -306,7 +314,11 @@
 	<main class="v2-main">
 		{#if controller && hydrated}
 			<AdvisoryRow feed={controller.advisories} now={clock} />
-			<BriefRow brief={controller.brief} now={clock} onjump={navJump} />
+			{#if desktop && $briefState}
+				<BriefDesktop brief={$briefState} now={$clock} ocean={outdoors.surf} onjump={navJump} />
+			{:else}
+				<BriefRow brief={controller.brief} now={clock} onjump={navJump} />
+			{/if}
 			{#if !desktop}
 				<CamStrip now={$clock} />
 			{/if}

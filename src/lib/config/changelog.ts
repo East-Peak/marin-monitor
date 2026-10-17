@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-17',
+		title: 'Weather, tides and the ocean at the top of the desktop page',
+		description:
+			'On a computer, the top of the dashboard now shows the temperature with its last 12 hours and the next 8 hours’ temperature and rain chance, today’s tide curve from NOAA’s own hourly predictions with each high and low marked, and the ocean at Point Reyes: wave height and period now and for the next day. Anything that can’t be read says so. The phone is unchanged.'
+	},
+	{
+		date: '2026-10-17',
 		title: 'The redesigned dashboard is now the default',
 		description:
 			'The redesigned dashboard is now the default. The old one stays at marinmonitor.com/?layout=legacy for now, and an “Old dashboard” link in the header takes you there. The TV is unchanged.'
