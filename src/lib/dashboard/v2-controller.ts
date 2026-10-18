@@ -438,6 +438,8 @@ export interface DashboardV2Controller {
 	ensure(id: string): Promise<void>;
 	earthquakes: Readable<NewsItem[]>;
 	sources: Readable<SourceStatusEntry[]>;
+	/** A refresh cycle is in flight; a refresh asked for meanwhile joins it rather than starting one. */
+	cycling: Readable<boolean>;
 	/** The applied news snapshot view (Latest reporting and the map read it; D1 PR 9). */
 	snapshot: Readable<NewsSnapshotView | null>;
 	/** This controller's own Fix It (311) items; null until its first successful commit. */
@@ -613,10 +615,12 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 	let started = false;
 	let lastCycleAt = -Infinity;
 	let running: Promise<void> | null = null;
+	const cycling = writable(false);
 
 	function cycle(): Promise<void> {
 		if (running) return running;
 		lastCycleAt = now();
+		cycling.set(true);
 		running = Promise.all([
 			registry.refresh('essential'),
 			registry.refresh('detail'),
@@ -627,6 +631,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 			.then(() => undefined)
 			.finally(() => {
 				running = null;
+				cycling.set(false);
 			});
 		return running;
 	}
@@ -644,6 +649,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 			return cycle();
 		},
 		ensure: (id) => registry.ensure(id),
+		cycling: { subscribe: cycling.subscribe },
 		snapshot: { subscribe: snapshot.subscribe },
 		fixIt: { subscribe: fixIt.subscribe },
 		healthReport: { subscribe: healthReport.subscribe },

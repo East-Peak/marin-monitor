@@ -50,6 +50,14 @@ const controller = vi.hoisted(() => ({
 	enableBriefDetail: vi.fn(async () => {}),
 	disableBriefDetail: vi.fn(),
 	setLocation: vi.fn(),
+	cycling: (() => {
+		let value = false;
+		const subs = new Set<(v: boolean) => void>();
+		return {
+			subscribe: (fn: (v: boolean) => void) => (subs.add(fn), fn(value), () => subs.delete(fn)),
+			set: (v: boolean) => ((value = v), subs.forEach((fn) => fn(v)))
+		};
+	})(),
 	created: [] as AbortSignal[],
 	EMPTY_BRIEF: Object.fromEntries(
 		['forecast', 'observed', 'tides', 'history', 'tideHourly'].map((k) => [
@@ -78,6 +86,7 @@ beforeEach(() => {
 	controller.ensure.mockClear();
 	controller.enableBriefDetail.mockClear();
 	controller.disableBriefDetail.mockClear();
+	controller.cycling.set(false);
 	controller.created.length = 0;
 });
 vi.mock('$lib/dashboard/v2-controller', async () => ({
@@ -96,6 +105,7 @@ vi.mock('$lib/dashboard/v2-controller', async () => ({
 			start: controller.start,
 			refresh: controller.refresh,
 			ensure: controller.ensure,
+			cycling: { subscribe: controller.cycling.subscribe },
 			earthquakes: { subscribe: (fn: (v: unknown[]) => void) => (fn([]), () => {}) },
 			sources: {
 				subscribe: (fn: (v: unknown[]) => void) => (
@@ -194,6 +204,19 @@ describe('DashboardV2 preview shell', () => {
 		expect(root?.textContent).not.toMatch(/preview/i);
 		expect(screen.getByText('Showing:')).toBeTruthy();
 		expect(screen.getByRole('button', { name: /All of Marin/ })).toBeTruthy();
+	});
+
+	it('the root says while a refresh cycle is in flight, for e2e to wait on (data-cycling; E2E-TIDY2)', async () => {
+		const { container } = render(DashboardV2);
+		await tick();
+		const root = container.querySelector('[data-layout="v2"]')!;
+		expect(root.getAttribute('data-cycling')).toBe('false');
+		controller.cycling.set(true);
+		await tick();
+		expect(root.getAttribute('data-cycling')).toBe('true');
+		controller.cycling.set(false);
+		await tick();
+		expect(root.getAttribute('data-cycling')).toBe('false');
 	});
 
 	it('the logo goes home and the old dashboard stays one link away', () => {

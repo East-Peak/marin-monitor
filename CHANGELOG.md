@@ -6,6 +6,11 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-18
 
+### Changed — The test suite passes at full speed
+
+- **The page says when it is refreshing.** The v2 dashboard's root carries `data-cycling="true"` while a data refresh is in flight, so tests can wait for one to finish instead of guessing how long it takes. Nothing visible changes.
+- **The end-to-end suite passes with every worker running.** Tests that waited a fixed time, or let the test clock run minute by minute, now wait for what they check: the page settling, a response arriving, a TV screen becoming current. The TV tests pause the carousel and go to each screen by its dot, and Fix It's photo wall is tested both with and without a photo.
+
 ### Fixed — Camera pictures show whole, with nothing on them
 
 - **Labels moved off the picture.** On the camera strip, the camera wall, and `/tv`, the camera's name, credit, heading and "updated" time now sit under the picture instead of on it. ALERTCalifornia asks that their frames not be cropped and that the info bar along the bottom not be covered. Pictures now show whole, never trimmed to fit the tile. On a phone the caption is one line (name and credit) to keep the strip the same height, so tiles are slightly narrower.

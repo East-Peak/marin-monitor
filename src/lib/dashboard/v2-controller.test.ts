@@ -346,6 +346,21 @@ describe('createDashboardV2Controller', () => {
 		expect(fetchers.gas).toHaveBeenCalledTimes(2);
 	});
 
+	it('cycling reads true from a cycle’s start until it settles, a joined refresh included (E2E-TIDY2)', async () => {
+		const c = controller();
+		expect(get(c.cycling)).toBe(false);
+		const first = c.start();
+		expect(get(c.cycling)).toBe(true);
+		const joined = c.refresh({ force: true });
+		await Promise.all([first, joined]);
+		expect(get(c.cycling)).toBe(false);
+		clock += 61_000;
+		const next = c.refresh();
+		expect(get(c.cycling)).toBe(true);
+		await next;
+		expect(get(c.cycling)).toBe(false);
+	});
+
 	it('a body that never arrives does not wedge later cycles (Codex r1 #4)', async () => {
 		vi.useFakeTimers();
 		fetchers.gas.mockReturnValueOnce(new Promise(() => {}));

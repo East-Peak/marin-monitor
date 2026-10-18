@@ -107,6 +107,8 @@
 	);
 	// SSR has no controller: the server's snapshot (or nothing) keeps the markup stable until hydration.
 	const snapshot = controller?.snapshot ?? readable<NewsSnapshotView | null>(seed);
+	/** A refresh cycle in flight, as data-cycling: e2e waits for the first to settle (E2E-TIDY2). */
+	const cycling = controller?.cycling ?? readable(false);
 	const sources =
 		controller?.sources ?? readable<SourceStatusEntry[]>(seed ? seededSnapshotEntries(seed) : []);
 	const fixIt = controller?.fixIt ?? readable<NewsItem[] | null>(null);
@@ -312,6 +314,7 @@
 	tabindex="-1"
 	data-layout="v2"
 	data-hydrated={hydrated ? 'true' : 'false'}
+	data-cycling={$cycling ? 'true' : 'false'}
 >
 	<header class="v2-header">
 		<a class="v2-logo" href="/" data-text-role="brand">Marin Monitor</a>
