@@ -4,6 +4,12 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-10-18
+
+### Fixed — Camera pictures show whole, with nothing on them
+
+- **Labels moved off the picture.** On the camera strip, the camera wall, and `/tv`, the camera's name, credit, heading and "updated" time now sit under the picture instead of on it. ALERTCalifornia asks that their frames not be cropped and that the info bar along the bottom not be covered. Pictures now show whole, never trimmed to fit the tile. On a phone the caption is one line (name and credit) to keep the strip the same height, so tiles are slightly narrower.
+
 ## 2026-10-17
 
 ### Added — Traffic cameras on the map; a down camera says so

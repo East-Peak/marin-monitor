@@ -1,6 +1,7 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
 import { reportingSnapshot } from './fixtures/v2-reporting';
 import { settled, sourceCount } from './fixtures/v2-probe';
+import { frameProblems } from './fixtures/frame-whole';
 
 /** MAPX4: the fire cameras on the map, a wedge per last reported heading, the frame on click. */
 test.skip(({ baseURL }) => baseURL?.startsWith('https://') ?? false, 'stubbed');
@@ -97,6 +98,8 @@ test.describe('desktop 1440×900', () => {
 			'src',
 			/Axis-MuirBeach\/latest-frame\.jpg\?t=\d+/
 		);
+		// CAMBAR1: the panel shows the frame whole, nothing over its info bar.
+		expect(await frameProblems(detail.locator('img'))).toEqual([]);
 		await page.screenshot({ path: '/tmp/claude-501/mapx4/wedge-click-1440.png' });
 	});
 

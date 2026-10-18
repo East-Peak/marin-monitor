@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-10-18',
+		title: 'Camera pictures show whole, with nothing on them',
+		description:
+			'Each camera’s name, credit and heading now sit under its picture, not on it, and pictures are never trimmed to fit their tile. ALERTCalifornia asks that their frames stay whole and their info bar along the bottom stay uncovered.'
+	},
+	{
 		date: '2026-10-17',
 		title: 'Traffic cameras on the map; a down camera says so',
 		description:

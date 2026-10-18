@@ -64,7 +64,7 @@
 	const showFrame: Action<HTMLElement, HTMLImageElement> = (host, img) => {
 		const mount = (frame: HTMLImageElement) => {
 			frame.alt = cam.name;
-			frame.className = 'block h-full w-full object-cover';
+			frame.className = 'block h-full w-full object-contain';
 			host.replaceChildren(frame);
 		};
 		mount(img);
@@ -83,36 +83,33 @@
 	});
 </script>
 
+<!-- CAMBAR1: the frame shows whole (contain, square corners) and our labels sit under it, never
+     on it: ALERTCalifornia asks that their frame and its bottom info bar not be cropped or covered. -->
 <div
-	class="relative h-full w-full min-h-0 min-w-0 overflow-hidden rounded bg-gray-800"
+	class="flex h-full w-full min-h-0 min-w-0 flex-col gap-0.5"
 	data-camera-id={cam.id}
 	data-status={status}
 >
-	{#if shownImg}
-		<div class="h-full w-full" use:showFrame={shownImg}></div>
-	{/if}
-	{#if status === 'connecting'}
-		<div class="absolute inset-0 flex items-center justify-center">
-			<span class="text-sm text-gray-400">Connecting…</span>
-		</div>
-	{:else if status === 'offline'}
-		<div class="absolute inset-0 flex items-center justify-center">
-			<span class="text-sm text-gray-400">Camera offline</span>
-		</div>
-	{:else if status === 'stale'}
-		<div class="absolute bottom-0 left-0 p-1.5 pointer-events-none">
-			<span class="text-xs text-amber-300 bg-black/70 px-1.5 py-0.5 rounded"
-				>Last frame {ageMin} min ago</span
-			>
-		</div>
-	{/if}
-	<div
-		class="absolute top-0 left-0 right-0 flex justify-between items-start p-1.5 pointer-events-none"
-	>
-		<span class="text-xs font-medium text-white bg-black/60 px-1.5 py-0.5 rounded">{cam.name}</span>
-		<span class="text-xs text-gray-300 bg-black/60 px-1.5 py-0.5 rounded">{cam.location}</span>
+	<div class="relative min-h-0 flex-1 bg-gray-800">
+		{#if shownImg}
+			<div class="h-full w-full" use:showFrame={shownImg}></div>
+		{/if}
+		{#if status === 'connecting'}
+			<div class="absolute inset-0 flex items-center justify-center">
+				<span class="text-sm text-gray-400">Connecting…</span>
+			</div>
+		{:else if status === 'offline'}
+			<div class="absolute inset-0 flex items-center justify-center">
+				<span class="text-sm text-gray-400">Camera offline</span>
+			</div>
+		{/if}
 	</div>
-	<div class="absolute bottom-0 right-0 p-1.5 pointer-events-none">
-		<span class="text-[10px] text-gray-400 bg-black/60 px-1 py-0.5 rounded">{cam.source}</span>
+	<div class="flex shrink-0 items-baseline gap-1.5 px-0.5 text-xs leading-tight whitespace-nowrap">
+		<span class="min-w-0 truncate font-medium text-white">{cam.name}</span>
+		<span class="min-w-0 truncate text-gray-400">{cam.location}</span>
+		{#if status === 'stale'}
+			<span class="min-w-0 truncate text-amber-300">Last frame {ageMin} min ago</span>
+		{/if}
+		<span class="ml-auto shrink-0 text-[10px] text-gray-400">{cam.source}</span>
 	</div>
 </div>

@@ -170,18 +170,10 @@
 	.grp[data-span='4'] .tiles {
 		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
-	/* South Marin's lead camera fills a 2×2 block. */
-	/* South Marin's lead camera fills a 2×2 block; out of flow, so the 16:9 tiles beside it
-	   set the two rows' heights. */
+	/* South Marin's lead camera spans a 2×2 block at its own 16:9 (CAMBAR1: never cropped). */
 	.grp[data-span='4'] li:first-child {
-		position: relative;
 		grid-column: span 2;
 		grid-row: span 2;
-	}
-	.grp[data-span='4'] li:first-child :global(.cam-tile) {
-		position: absolute;
-		inset: 0;
-		aspect-ratio: auto;
 	}
 	li {
 		min-width: 0;

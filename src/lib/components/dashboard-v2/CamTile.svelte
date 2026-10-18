@@ -162,50 +162,63 @@
 	data-camera-id={cam.id}
 	data-status={attempted ? status : active ? 'connecting' : 'idle'}
 >
-	{#if shownImg}
-		<div class="cam-frame" use:showFrame={shownImg}></div>
-	{/if}
-	{#if attempted && status === 'offline'}
-		<span class="cam-state" data-text-role="meta"
-			>{unavailable ? 'Camera temporarily unavailable' : 'Camera offline'}</span
-		>
-	{:else if active && !shownImg}
-		<span class="cam-state" data-text-role="meta">Connecting…</span>
-	{/if}
-	<span class="cam-chip cam-name" data-text-role="label">{cam.name}</span>
-	<span class="cam-chip cam-meta" data-text-role="meta" data-cam-meta>
-		<!-- The source's own age wins, even while our refresh is failing (Codex r2 #7). Without
-		     one, a failing refresh says when *we* last received a picture, never "updated". -->
-		<!-- Explicit separators: Svelte trims the whitespace before a block's text (Codex r5 #1). -->
-		{cam.source}{#if age}{' · '}<span class:cam-old={age.old || status === 'stale'}
-				>updated {age.text}</span
-			>{:else if status === 'stale'}{' · '}<span class="cam-old"
-				>last received {lastFrameMin} min ago</span
-			>{/if}
+	<!-- CAMBAR1: the frame shows whole and nothing of ours sits on it. ALERTCalifornia asks that
+	     their frame (its info bar along the bottom) not be cropped or covered. -->
+	<div class="cam-frame">
+		{#if shownImg}
+			<div class="cam-pic" use:showFrame={shownImg}></div>
+		{:else if attempted && status === 'offline'}
+			<span class="cam-state" data-text-role="meta"
+				>{unavailable ? 'Camera temporarily unavailable' : 'Camera offline'}</span
+			>
+		{:else if active}
+			<span class="cam-state" data-text-role="meta">Connecting…</span>
+		{/if}
+	</div>
+	<span class="cam-cap">
+		<span class="cam-name" data-text-role="label">{cam.name}</span>
+		{#if heading}
+			<span class="cam-heading" data-text-role="meta" data-cam-heading>{heading}</span>
+		{/if}
+		<span class="cam-meta" data-text-role="meta" data-cam-meta>
+			<!-- The source's own age wins, even while our refresh is failing (Codex r2 #7). Without
+			     one, a failing refresh says when *we* last received a picture, never "updated". -->
+			<!-- Explicit separators: Svelte trims the whitespace before a block's text (Codex r5 #1). -->
+			{cam.source}{#if age}{' · '}<span class:cam-old={age.old || status === 'stale'}
+					>updated {age.text}</span
+				>{:else if status === 'stale'}{' · '}<span class="cam-old"
+					>last received {lastFrameMin} min ago</span
+				>{/if}
+		</span>
 	</span>
-	{#if heading}
-		<span class="cam-chip cam-heading" data-text-role="meta" data-cam-heading>{heading}</span>
-	{/if}
 </a>
 
 <style>
 	.cam-tile {
-		position: relative;
-		display: block;
-		aspect-ratio: 16 / 9;
-		overflow: hidden;
-		border-radius: 6px;
-		border: 1px solid var(--border-light);
-		background: #0b1220;
-		color: #fff;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		color: var(--text-primary);
 		text-decoration: none;
 	}
-	.cam-frame,
-	.cam-frame :global(.cam-img) {
+	/* Sized to the frame's own shape (16:9) and `contain`: never cropped, whatever the box.
+	   Square corners: a rounded clip would trim the frame's corners, the info bar's among them. */
+	.cam-frame {
+		position: relative;
+		aspect-ratio: 16 / 9;
+		border: 1px solid var(--border-light);
+		background: #0b1220;
+	}
+	/* Out of flow, so the picture's own size never stretches the 16:9 box. */
+	.cam-pic {
+		position: absolute;
+		inset: 0;
+	}
+	.cam-pic :global(.cam-img) {
 		display: block;
 		width: 100%;
 		height: 100%;
-		object-fit: cover;
+		object-fit: contain;
 	}
 	.cam-state {
 		position: absolute;
@@ -214,31 +227,44 @@
 		place-items: center;
 		color: #cbd5e1;
 	}
-	/* Photos are dark or bright whatever the theme: fixed dark chips keep text legible. */
-	.cam-chip {
-		position: absolute;
-		left: 0.375rem;
-		max-width: calc(100% - 0.75rem);
-		padding: 0 0.375rem;
-		border-radius: 4px;
-		background: rgba(0, 0, 0, 0.62);
+	/* Below the frame: name and heading on one line, the credit under them. */
+	.cam-cap {
+		display: flex;
+		flex-wrap: wrap;
+		column-gap: 0.5rem;
+		min-width: 0;
+		line-height: 1.4;
+	}
+	.cam-cap > span {
+		min-width: 0;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
-		pointer-events: none;
 	}
 	.cam-name {
-		top: 0.375rem;
+		flex: 0 1 auto;
 		font-weight: 600;
 	}
-	.cam-meta {
-		bottom: 0.375rem;
-		color: #e2e8f0;
-	}
-	/* Its own row above the credit, so the required attribution is never covered (Codex MAPX4 #8). */
 	.cam-heading {
-		bottom: calc(0.375rem + 1.6em);
-		color: #e2e8f0;
+		flex: 1 1 0;
+		text-align: right;
+		color: var(--text-muted);
+	}
+	.cam-meta {
+		flex: 0 0 100%;
+		color: var(--text-muted);
+	}
+	/* Phone (the strip's height cap, Decision 6): one line, name then credit; no heading. */
+	@media (max-width: 767px) {
+		.cam-cap {
+			flex-wrap: nowrap;
+		}
+		.cam-heading {
+			display: none;
+		}
+		.cam-meta {
+			flex: 0 0 auto;
+		}
 	}
 	.cam-old {
 		color: var(--warning, #f59e0b);

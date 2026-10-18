@@ -77,9 +77,9 @@
 	.para {
 		white-space: pre-line;
 	}
+	/* Square corners: a rounded clip trims a camera frame's corners (CAMBAR1). */
 	img {
 		max-width: 100%;
-		border-radius: 6px;
 	}
 	a {
 		color: var(--accent);

@@ -190,9 +190,10 @@
 		scroll-snap-align: start;
 	}
 	@media (max-width: 767px) {
-		/* Phone: one tile and a peek of the next (Decision 6). */
+		/* Phone: one tile and a peek of the next (Decision 6). 72%, not 78%: the caption moved
+		   under the frame (CAMBAR1) and the strip keeps its 220 px cap. */
 		.cams-row > li {
-			flex-basis: 78%;
+			flex-basis: 72%;
 		}
 	}
 	@media (max-width: 767px), (hover: none) {
