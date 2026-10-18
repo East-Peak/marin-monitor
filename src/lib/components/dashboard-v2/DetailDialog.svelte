@@ -9,8 +9,15 @@
 	let {
 		labelledby,
 		onclose,
+		variant = 'side',
 		children
-	}: { labelledby: string; onclose: () => void; children: Snippet } = $props();
+	}: {
+		labelledby: string;
+		onclose: () => void;
+		/** 'sheet': /map's phone sheet at full height (MAPX3), rising from the bottom. */
+		variant?: 'side' | 'sheet';
+		children: Snippet;
+	} = $props();
 
 	let panel: HTMLElement;
 	const FOCUSABLE = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -54,6 +61,7 @@
 	role="dialog"
 	aria-modal="true"
 	aria-labelledby={labelledby}
+	data-variant={variant}
 	tabindex="-1"
 	{onkeydown}
 >
@@ -78,6 +86,15 @@
 		border-left: 1px solid var(--border-light);
 		background: var(--bg);
 		color: var(--text-primary);
+	}
+	.panel[data-variant='sheet'] {
+		/* Its content's height, from the bottom: the map and the ringed pin stay in sight. */
+		inset: auto 0 0 0;
+		width: auto;
+		max-height: 88vh;
+		border-top: 1px solid var(--border-light);
+		border-left: 0;
+		border-radius: 12px 12px 0 0;
 	}
 	.panel:focus {
 		outline: none;

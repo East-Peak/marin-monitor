@@ -3,7 +3,9 @@
 <script lang="ts">
 	import type { InViewItem, InViewLayer } from '$lib/dashboard/map-in-view';
 	import DetailPanel from './DetailPanel.svelte';
+	import DetailDialog from './DetailDialog.svelte';
 	import DetailContent from './DetailContent.svelte';
+	import BottomSheet from './BottomSheet.svelte';
 	import { tick } from 'svelte';
 
 	let {
@@ -14,6 +16,8 @@
 		emptyText,
 		gaps = [],
 		notice = null,
+		sheet = null,
+		onsheet,
 		ontoggle,
 		onselect,
 		onhover,
@@ -29,6 +33,9 @@
 		gaps?: readonly string[];
 		/** Why a linked selection can't be shown (/map's `sel`, MAPX3). */
 		notice?: string | null;
+		/** /map below desktop (MAPX3): a bottom sheet, its detail a modal dialog over it. */
+		sheet?: 'peek' | 'half' | null;
+		onsheet?: (next: 'peek' | 'half') => void;
 		ontoggle: () => void;
 		onselect: (id: string) => void;
 		onhover: (id: string | null) => void;
@@ -87,61 +94,86 @@
 	);
 </script>
 
-<DetailPanel label="In view" {collapsed} {ontoggle} onback={selected ? back : undefined}>
-	<div bind:this={root} class="root">
-		{#if selected}
-			<DetailContent detail={selected.detail} titleId="v2-in-view-detail-title" />
-			{#if selected.note}
-				<p class="note" data-inspector-note data-text-role="meta">{selected.note}</p>
-			{/if}
-		{:else}
-			{#if notice}
-				<p class="notice" role="status" data-in-view-notice data-text-role="body">{notice}</p>
-			{/if}
-			<h3 class="head" tabindex="-1" data-text-role="label" data-in-view-count={items.length}>
-				In view · {items.length}
-			</h3>
-			{#if gaps.length}
-				<p class="muted" data-in-view-gaps data-text-role="meta">
-					Not shown, or not current: {gaps.join(', ')}
-				</p>
-			{/if}
-			{#if items.length === 0}
-				<p class="muted" data-text-role="body">{emptyText ?? 'Nothing listed in this view.'}</p>
-			{/if}
-			{#each groups as group (group.layer)}
-				<h4 class="group" data-text-role="meta">{LAYER_NAME[group.layer]}</h4>
-				<ul>
-					{#each group.rows as row (row.id)}
-						<li>
-							<button
-								type="button"
-								class="row"
-								data-in-view-row={row.id}
-								data-hovered={hovered === row.id ? 'true' : undefined}
-								onclick={() => choose(row.id)}
-								onmouseenter={() => onhover(row.id)}
-								onmouseleave={() => onhover(null)}
-								onfocus={() => onhover(row.id)}
-								onblur={() => onhover(null)}
-							>
-								<span data-text-role="body">{row.title}</span>
-								{#if row.detail.meta.length}
-									<span class="muted" data-text-role="meta">{row.detail.meta.join(' · ')}</span>
-								{/if}
-							</button>
-						</li>
-					{/each}
-				</ul>
+{#snippet listing()}
+	{#if notice}
+		<p class="notice" role="status" data-in-view-notice data-text-role="body">{notice}</p>
+	{/if}
+	<h3 class="head" tabindex="-1" data-text-role="label" data-in-view-count={items.length}>
+		In view · {items.length}
+	</h3>
+	{#if gaps.length}
+		<p class="muted" data-in-view-gaps data-text-role="meta">
+			Not shown, or not current: {gaps.join(', ')}
+		</p>
+	{/if}
+	{#if items.length === 0}
+		<p class="muted" data-text-role="body">{emptyText ?? 'Nothing listed in this view.'}</p>
+	{/if}
+	{#each groups as group (group.layer)}
+		<h4 class="group" data-text-role="meta">{LAYER_NAME[group.layer]}</h4>
+		<ul>
+			{#each group.rows as row (row.id)}
+				<li>
+					<button
+						type="button"
+						class="row"
+						data-in-view-row={row.id}
+						data-hovered={hovered === row.id ? 'true' : undefined}
+						onclick={() => choose(row.id)}
+						onmouseenter={() => onhover(row.id)}
+						onmouseleave={() => onhover(null)}
+						onfocus={() => onhover(row.id)}
+						onblur={() => onhover(null)}
+					>
+						<span data-text-role="body">{row.title}</span>
+						{#if row.detail.meta.length}
+							<span class="muted" data-text-role="meta">{row.detail.meta.join(' · ')}</span>
+						{/if}
+					</button>
+				</li>
 			{/each}
+		</ul>
+	{/each}
+{/snippet}
+
+{#snippet detail(item: InViewItem)}
+	<DetailContent detail={item.detail} titleId="v2-in-view-detail-title" />
+	{#if item.note}
+		<p class="note" data-inspector-note data-text-role="meta">{item.note}</p>
+	{/if}
+{/snippet}
+
+{#if sheet && onsheet}
+	<div bind:this={root} class="root in-sheet">
+		<BottomSheet label="In view" summary={`In view · ${items.length}`} {sheet} {onsheet}>
+			{@render listing()}
+		</BottomSheet>
+		{#if selected}
+			<DetailDialog labelledby="v2-in-view-detail-title" onclose={back} variant="sheet">
+				{@render detail(selected)}
+			</DetailDialog>
 		{/if}
 	</div>
-</DetailPanel>
+{:else}
+	<DetailPanel label="In view" {collapsed} {ontoggle} onback={selected ? back : undefined}>
+		<div bind:this={root} class="root">
+			{#if selected}
+				{@render detail(selected)}
+			{:else}
+				{@render listing()}
+			{/if}
+		</div>
+	</DetailPanel>
+{/if}
 
 <style>
 	.head,
 	.group {
 		margin: 0;
+	}
+	/* The sheet's handle already says "In view · N". */
+	.in-sheet .head {
+		display: none;
 	}
 	.group {
 		margin-top: 0.75rem;

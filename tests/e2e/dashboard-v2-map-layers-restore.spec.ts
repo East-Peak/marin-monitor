@@ -251,7 +251,7 @@ test.describe('desktop 1440×900 (MAPX2c)', () => {
 test.describe('phone 390×844 (MAPX2c)', () => {
 	test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 
-	test('the preview loads no data layer; expanded, the same Layers panel, and a choice persists', async ({
+	test('the preview loads no data layer; /map has the same Layers panel, and a choice persists (MAPX3)', async ({
 		page
 	}) => {
 		const airportReads: string[] = [];
@@ -266,7 +266,8 @@ test.describe('phone 390×844 (MAPX2c)', () => {
 		await expect(page.getByRole('button', { name: 'Layers' })).toBeHidden();
 		expect(airportReads).toEqual([]);
 
-		await page.getByRole('button', { name: 'Expand map' }).click();
+		await page.getByRole('link', { name: 'Expand map' }).click();
+		await expect(page.locator('[data-layout="explore"][data-hydrated="true"]')).toBeVisible();
 		await page.getByRole('button', { name: 'Layers' }).click();
 		for (const id of ['traffic', 'fire', 'gas', 'ev', 'coffee', 'fitness', 'airport'])
 			await expect(layerRow(page, id)).toBeVisible();

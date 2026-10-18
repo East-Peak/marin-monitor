@@ -180,3 +180,92 @@ test.describe('desktop 1440×900', () => {
 		await expect(page.locator('[data-layout="v2"]')).toBeVisible();
 	});
 });
+
+test.describe('phone 390×844', () => {
+	test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+	const sheet = (page: Page) => page.getByRole('region', { name: 'In view' });
+	const handle = (page: Page) => sheet(page).locator('[data-sheet-handle]');
+
+	test('the sheet: peek shows the count, the keyboard raises and lowers it, a pick opens a modal detail', async ({
+		page
+	}) => {
+		await stub(page);
+		await explore(page, '/map?layers=311#11/37.95/-122.49');
+		await expect(handle(page)).toHaveText(/In view · \d+/);
+		await expect(handle(page)).toHaveAttribute('aria-expanded', 'false');
+		await expect(sheet(page).locator('[data-in-view-row]')).toHaveCount(0);
+		await handle(page).focus();
+		await page.keyboard.press('ArrowUp');
+		await expect(handle(page)).toHaveAttribute('aria-expanded', 'true');
+		const dir = process.env.SHOTS_DIR;
+		if (dir) await page.screenshot({ path: `${dir}/map-explore-390-half.png` });
+		await sheet(page).locator(`[data-in-view-row="${SEL}"]`).click();
+		const dialog = page.getByRole('dialog');
+		await expect(dialog).toHaveAttribute('aria-modal', 'true');
+		await expect(dialog).toContainText('Deep pothole by the crosswalk');
+		expect(search(page).get('sel')).toBe(SEL);
+		await page.keyboard.press('Escape');
+		await expect(dialog).toHaveCount(0);
+		expect(search(page).get('sel')).toBeNull();
+		await handle(page).focus();
+		await page.keyboard.press('ArrowDown');
+		await expect(handle(page)).toHaveAttribute('aria-expanded', 'false');
+		await page.keyboard.press('Escape');
+		await expect(page.locator('[data-layout="v2"]')).toBeVisible();
+	});
+
+	test('a touch swipe on the handle raises the sheet, and another lowers it', async ({ page }) => {
+		await stub(page);
+		await explore(page, '/map?layers=311');
+		const cdp = await page.context().newCDPSession(page);
+		const swipe = async (yDistance: number) => {
+			const b = (await handle(page).boundingBox())!;
+			await cdp.send('Input.synthesizeScrollGesture', {
+				x: Math.round(b.x + b.width / 2),
+				y: Math.round(b.y + b.height / 2),
+				yDistance,
+				gestureSourceType: 'touch',
+				speed: 800
+			});
+		};
+		// A negative yDistance moves the finger up the screen (as in the preview gesture test).
+		await swipe(-120);
+		await expect(handle(page)).toHaveAttribute('aria-expanded', 'true');
+		await swipe(120);
+		await expect(handle(page)).toHaveAttribute('aria-expanded', 'false');
+	});
+
+	test('layers sit behind a button; a choice with no URL layers is saved', async ({ page }) => {
+		await stub(page);
+		await explore(page, '/map');
+		await expect(page.locator('[data-layer-panel][data-rail]')).toHaveCount(0);
+		await page.getByRole('button', { name: 'Layers' }).click();
+		await layer(page, 'ev').check();
+		expect(search(page).get('layers')?.split(',')).toContain('ev');
+		expect(
+			JSON.parse((await page.evaluate(() => localStorage.getItem('mm_sections_v2')))!)
+		).toMatchObject({ layers: { ev: true } });
+	});
+});
+
+test.describe('screenshots', () => {
+	for (const [width, height] of [
+		[1440, 900],
+		[2000, 1100],
+		[390, 844]
+	] as const)
+		test(`/map at ${width}`, async ({ browser }) => {
+			const context = await browser.newContext({
+				viewport: { width, height },
+				...(width < 768 ? { hasTouch: true, isMobile: true } : {})
+			});
+			const page = await context.newPage();
+			await page.clock.install({ time: T0 });
+			await stub(page);
+			await explore(page, `/map?layers=311,news,traffic,fire&sel=${SEL}`);
+			await expect(page.locator('[data-detail]').first()).toBeVisible();
+			const dir = process.env.SHOTS_DIR;
+			if (dir) await page.screenshot({ path: `${dir}/map-explore-${width}.png` });
+			await context.close();
+		});
+});

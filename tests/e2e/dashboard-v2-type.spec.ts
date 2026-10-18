@@ -128,18 +128,6 @@ const DISCLOSURES: {
 			await expect(page.locator('[data-health-list]')).toBeVisible();
 		},
 		close: (page) => page.locator('.v2-health-button').click()
-	},
-	{
-		// Phone only: the preview hides the map controls until expanded (desktop has no button).
-		name: 'expanded map',
-		open: async (page) => {
-			const button = page.getByRole('button', { name: 'Expand map' });
-			if (await button.isVisible()) await button.click();
-		},
-		close: async (page) => {
-			const button = page.getByRole('button', { name: 'Collapse map' });
-			if (await button.isVisible()) await button.click();
-		}
 	}
 ];
 

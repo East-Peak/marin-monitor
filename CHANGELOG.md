@@ -8,6 +8,8 @@ All notable changes to Marin Monitor are documented here.
 
 ### Added — Explore mode: the map on the whole screen (/map)
 
+- **Phone:** "Expand map" now opens `/map` instead of growing the map in place. There, a sheet at the bottom shows how many things are in view; tap it, press ↑ or swipe it up for the list, and pick one to read its detail over the map. Layers sit behind the map's Layers button. The dashboard's small preview is unchanged.
+- Coming from the dashboard, a layer you switch on `/map` is saved as usual. A link someone else sent you with different layers applies only to that visit.
 - **"Explore ↗"** on the desktop map opens `/map`: the map fills the screen, the Layers list is a column on the left that is always open, and the "In view" list and each item's detail sit on the right.
 - **The link is the view.** The address keeps the camera (`#zoom/lat/lng`), the layers that are on and the open item (`?layers=…&sel=…`). Toggling a layer, opening an item or going back updates it at once, so a copied link reopens exactly what you see.
 - A link's layers apply for that visit and never change your saved choices. A linked item turns its own layer on. If its source can't be read, the list says so ("Fix It Marin is unavailable right now"); if it has left the feed, it says that instead.

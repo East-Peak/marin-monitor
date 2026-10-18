@@ -59,7 +59,7 @@
 	let layers = $state<Partial<Record<LayerPrefId, boolean>>>({});
 	let sel = $state<string | null>(null);
 	let view = $state<ExploreView | null>(null);
-	/** The URL chose the layers: they hold for this visit and never overwrite the saved choices. */
+	/** The URL chose other layers: they hold for this visit and never overwrite the saved choices. */
 	let urlLayers = false;
 
 	let mapFull = $state(false);
@@ -87,10 +87,13 @@
 
 	onMount(() => {
 		const read = parseExplore(new URL(window.location.href));
-		urlLayers = read.layers !== null;
-		const on = new Set(
-			read.layers ?? layersOn(get(sectionPrefs).layers, get(mapStore).activeLayers)
-		);
+		const saved = layersOn(get(sectionPrefs).layers, get(mapStore).activeLayers);
+		// The dashboard's own links carry exactly the saved choices; only a link that differs
+		// (someone else's view) holds its layers for the visit alone.
+		urlLayers =
+			read.layers !== null &&
+			(read.layers.length !== saved.length || read.layers.some((id) => !saved.includes(id)));
+		const on = new Set(read.layers ?? saved);
 		// A selection's own layer comes on for the visit: it is in the URL, so it was asked for.
 		const needed = read.sel ? selLayer(read.sel) : null;
 		if (needed) on.add(needed);

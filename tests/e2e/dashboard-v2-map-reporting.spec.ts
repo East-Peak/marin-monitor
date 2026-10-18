@@ -415,7 +415,7 @@ test.describe('desktop 1440×900', () => {
 test.describe('phone 390×844', () => {
 	test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
 
-	test('with every section closed the map preview has its pins drawn (§13.7), and Expand map grows it', async ({
+	test('with every section closed the map preview has its pins drawn (§13.7); Expand map opens /map (MAPX3)', async ({
 		page
 	}) => {
 		await stub(page, ALL_OF_MARIN);
@@ -423,40 +423,24 @@ test.describe('phone 390×844', () => {
 		for (const t of await page.locator('[data-section-toggle]').all())
 			await expect(t).toHaveAttribute('aria-expanded', 'false');
 		expect((await settled(page)).synced!.counts['news-pins']).toBeGreaterThan(0);
-		const canvas = page.locator('#v2-map-canvas');
-		const button = page.getByRole('button', { name: 'Expand map' });
-		await expect(button).toHaveAttribute('aria-expanded', 'false');
-		expect((await canvas.boundingBox())!.height).toBeLessThan(260);
-		await button.click();
-		const collapse = page.getByRole('button', { name: 'Collapse map' });
-		await expect(collapse).toHaveAttribute('aria-expanded', 'true');
-		await expect.poll(async () => (await canvas.boundingBox())!.height).toBeGreaterThan(500);
-		// The button has a corner of its own: it never covers the attribution, and an open
-		// inspector never hides it (Codex 9c #2).
-		const overlaps = (
-			a: { x: number; y: number; width: number; height: number },
-			b: { x: number; y: number; width: number; height: number }
-		) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
-		const attribution = (await page.locator('.v2-map .maplibregl-ctrl-attrib').boundingBox())!;
-		expect(overlaps((await collapse.boundingBox())!, attribution)).toBe(false);
-		await page.evaluate(() =>
-			document.getElementById('v2-map-canvas')!.scrollIntoView({ block: 'start' })
-		);
-		await expect.poll(() => pinAt(page), { timeout: 20_000 }).not.toBeNull();
-		const at = (await pinAt(page))!;
-		await page.mouse.click(at.x, at.y);
-		// Whichever inspector the tap opens (story or feature, by click priority) stays clear of it.
-		const inspector = page.locator('.v2-map aside.inspector, .v2-map aside.feature-inspector');
-		await expect(inspector).toBeVisible();
-		expect(overlaps((await collapse.boundingBox())!, (await inspector.boundingBox())!)).toBe(false);
-		await expect(collapse).toBeVisible();
-		await collapse.click();
-		await expect.poll(async () => (await canvas.boundingBox())!.height).toBeLessThan(260);
-		// Collapsing closes the inspector: nothing in the preview can scroll (Codex 9c r2 #1).
-		await expect(inspector).toHaveCount(0);
+		expect((await page.locator('#v2-map-canvas').boundingBox())!.height).toBeLessThan(260);
+		// The link has a corner of its own: it never covers the attribution (Codex 9c #2).
+		const expand = page.getByRole('link', { name: 'Expand map' });
+		const a = (await expand.boundingBox())!;
+		const b = (await page.locator('.v2-map .maplibregl-ctrl-attrib').boundingBox())!;
+		expect(
+			a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
+		).toBe(false);
+		await expand.click();
+		await expect(page).toHaveURL(/\/map\?/);
+		await expect(page.locator('[data-layout="explore"][data-hydrated="true"]')).toBeVisible();
+		await expect(page.getByRole('region', { name: 'In view' })).toBeVisible();
+		await expect(
+			page.locator('.v2-map aside.inspector, .v2-map aside.feature-inspector')
+		).toHaveCount(0);
 	});
 
-	test('a vertical drag on the collapsed preview scrolls the page and does not pan the map; expanded, the map pans (Codex r1 #13)', async ({
+	test('a vertical drag on the preview scrolls the page and does not pan the map; on /map, the map pans (Codex r1 #13)', async ({
 		page
 	}) => {
 		await stub(page, ALL_OF_MARIN);
@@ -477,15 +461,13 @@ test.describe('phone 390×844', () => {
 		await swipe(box);
 		await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
 		expect(await mapCenter(page)).toEqual(before);
-		await page.evaluate(() => window.scrollTo(0, 0));
-		await page.getByRole('button', { name: 'Expand map' }).click();
-		// The expanded map runs below the fixed phone jump-nav: bring it to the top and swipe in its
-		// upper part, so the touch lands on the map rather than on the nav.
-		await page.evaluate(() =>
-			document.getElementById('v2-map-canvas')!.scrollIntoView({ block: 'start' })
-		);
+		await page.getByRole('link', { name: 'Expand map' }).click();
+		await expect(page.locator('[data-layout="explore"][data-hydrated="true"]')).toBeVisible();
+		await settled(page);
+		const atMap = await mapCenter(page);
+		// The upper part of the map: clear of the sheet at the bottom.
 		const open = (await page.locator('#v2-map-canvas').boundingBox())!;
-		await swipe({ ...open, height: Math.min(open.height, 400) });
-		await expect.poll(() => mapCenter(page)).not.toEqual(before);
+		await swipe({ ...open, height: Math.min(open.height, 300) });
+		await expect.poll(() => mapCenter(page)).not.toEqual(atMap);
 	});
 });

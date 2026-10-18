@@ -88,4 +88,25 @@ describe('InViewPanel', () => {
 		);
 		expect(screen.getByText('Title news:a')).toBeTruthy();
 	});
+
+	describe("as /map's phone sheet (MAPX3)", () => {
+		it('peek shows the count on its handle and no rows; half lists them', async () => {
+			const onsheet = vi.fn();
+			const { rerender } = render(InViewPanel, props({ sheet: 'peek', onsheet }));
+			expect(screen.getByRole('button', { name: /In view · 2/ })).toBeTruthy();
+			expect(screen.queryByText('Title news:a')).toBeNull();
+			await rerender(props({ sheet: 'half', onsheet }));
+			expect(screen.getByText('Title news:a')).toBeTruthy();
+		});
+
+		it('a selection opens a modal dialog with its detail; Close goes back to the list', async () => {
+			const p = props({ sheet: 'half', onsheet: vi.fn(), selected: item('311:b', '311') });
+			render(InViewPanel, p);
+			const dialog = screen.getByRole('dialog');
+			expect(dialog.getAttribute('aria-modal')).toBe('true');
+			expect(dialog.textContent).toContain('Title 311:b');
+			await fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+			expect(p.onback).toHaveBeenCalled();
+		});
+	});
 });
