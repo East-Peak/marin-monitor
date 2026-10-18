@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CONGESTION_LINE_OPACITY } from './map-layers';
-import { applyRoadSpeeds, watchRoadSpeeds, type RoadSpeeds } from './road-speeds';
+import { applyRoadSpeeds, roadSpeedsNote, watchRoadSpeeds, type RoadSpeeds } from './road-speeds';
 
 /** A MapLibre-shaped event source: just the events, the source check and the paint calls. */
 function fakeMap() {
@@ -9,9 +9,15 @@ function fakeMap() {
 	const paint: Record<string, unknown> = {};
 	let loaded = false;
 	let ids: string[] = [];
+	let rendered: { properties: Record<string, unknown> }[] = [];
 	return {
 		layout,
 		paint,
+		setRendered: (congestion: (string | { closed: unknown })[]) =>
+			(rendered = congestion.map((c) => ({
+				properties: typeof c === 'string' ? { congestion: c } : { congestion: 'unknown', ...c }
+			}))),
+		renderedRoads: () => rendered,
 		setLoaded: (v: boolean) => (loaded = v),
 		setView: (keys: string[]) => (ids = keys),
 		tileIds: () => ids,
@@ -67,13 +73,13 @@ function watched(start = 1_000) {
 describe('watchRoadSpeeds (MAPX2c): a status from the tiles in view', () => {
 	it('starts loading, with nothing drawn and no time', () => {
 		const { last } = watched();
-		expect(last()).toEqual({ state: 'loading', asOf: null, drawn: false });
+		expect(last()).toEqual({ state: 'loading', asOf: null, drawn: false, slow: null });
 	});
 
 	it("the view's tiles all loaded: ok, as of the last tile load, and drawn", () => {
 		const { last, show } = watched(5_000);
 		show({ a: 'ok', b: 'ok' });
-		expect(last()).toEqual({ state: 'value', asOf: 5_000, drawn: true });
+		expect(last()).toEqual({ state: 'value', asOf: 5_000, drawn: true, slow: 0 });
 	});
 
 	it('idle before any tile has loaded is not ok', () => {
@@ -88,7 +94,7 @@ describe('watchRoadSpeeds (MAPX2c): a status from the tiles in view', () => {
 		show({ a: 'ok' });
 		tick(60_000);
 		show({ a: 'cached', b: 'error' });
-		expect(last()).toEqual({ state: 'unavailable', asOf: 5_000, drawn: false });
+		expect(last()).toEqual({ state: 'unavailable', asOf: 5_000, drawn: false, slow: null });
 	});
 
 	it('a pan that keeps a failed tile in view stays unavailable, whatever new tiles load (Codex MAPX2c #2)', () => {
@@ -114,7 +120,7 @@ describe('watchRoadSpeeds (MAPX2c): a status from the tiles in view', () => {
 		show({ a: 'error' });
 		tick(1_000);
 		show({ b: 'ok' });
-		expect(last()).toEqual({ state: 'value', asOf: 6_000, drawn: true });
+		expect(last()).toEqual({ state: 'value', asOf: 6_000, drawn: true, slow: 0 });
 	});
 
 	it('tiles back from the cache (no events: MapLibre caches only tiles that loaded) count as loaded', () => {
@@ -164,6 +170,54 @@ describe('watchRoadSpeeds (MAPX2c): a status from the tiles in view', () => {
 		map.fire('idle');
 		map.fire('idle');
 		expect(seen.map((s) => s.state)).toEqual(['loading', 'value']);
+	});
+});
+
+describe('slowdowns in view (TRAFFIC1): counted from the drawn segments, not the tiles', () => {
+	it('free flow is not a slowdown; moderate, heavy, severe and closed are', () => {
+		const { map, last, show } = watched();
+		map.setRendered(['low', 'low', 'moderate', 'heavy', 'severe', { closed: 'yes' }]);
+		show({ a: 'ok' });
+		expect(last().slow).toBe(4);
+	});
+
+	it('a pan recounts when the map idles', () => {
+		const { map, last, show } = watched();
+		map.setRendered(['heavy']);
+		show({ a: 'ok' });
+		map.setRendered(['low']);
+		show({ b: 'ok' });
+		expect(last().slow).toBe(0);
+	});
+
+	it('no count while the tiles cannot vouch', () => {
+		const { map, last, show } = watched();
+		map.setRendered(['heavy']);
+		show({ a: 'error' });
+		expect(last().slow).toBeNull();
+	});
+});
+
+describe('roadSpeedsNote: the Layers row says what the lines show', () => {
+	const at = (s: Partial<RoadSpeeds>): RoadSpeeds => ({
+		state: 'value',
+		asOf: 1,
+		drawn: true,
+		slow: 0,
+		...s
+	});
+	it('none slow: "No slowdowns in view"', () => {
+		expect(roadSpeedsNote(at({ slow: 0 }))).toBe('No slowdowns in view');
+	});
+	it('N slow: "N slow segments in view", singular for one', () => {
+		expect(roadSpeedsNote(at({ slow: 1 }))).toBe('1 slow segment in view');
+		expect(roadSpeedsNote(at({ slow: 7 }))).toBe('7 slow segments in view');
+	});
+	it('failed tiles say the lines are hidden; loading or uncounted says nothing', () => {
+		expect(roadSpeedsNote(at({ state: 'unavailable', drawn: false, slow: null }))).toBe(
+			'Lines hidden: Mapbox tiles failed to load'
+		);
+		expect(roadSpeedsNote(at({ state: 'loading', slow: null }))).toBeNull();
 	});
 });
 

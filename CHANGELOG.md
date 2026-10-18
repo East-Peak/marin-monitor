@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-18
 
+### Changed — Road speeds show free-flowing roads; 511 reads stay inside their allowance
+
+- **Free-flowing roads are drawn**, as a faint grey-green line under the slowdown colours, so a quiet Sunday map shows the roads are covered rather than looking empty. Slow spots stand out against it.
+- **The Layers row says what the lines show**: "No slowdowns in view", or "N slow segments in view", counted from the segments drawn on screen, with a colour key (free flow, moderate, heavy, severe, closed).
+- **511 reads are budgeted under our key's 60-an-hour limit.** Road events are read at most every 5 minutes, transit alerts every 15 minutes per agency, and concurrent requests share one read. A road read that hits a 511 server error tries once more; a "too many requests" answer is never retried, and every route waits out 511's Retry-After. A failed read still says it failed.
+
 ### Changed — 511 reads say why they fail
 
 - **Every read from 511 (road events, transit alerts) now logs one line** with 511's answer, its `Retry-After` and the requests left on our hourly allowance, so an intermittent "Traffic events unavailable" can be traced to a cause. A failed road read also says 511's status in its reply.

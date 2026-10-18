@@ -1,13 +1,11 @@
 import { json } from '@sveltejs/kit';
-import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import { get511ApiKey } from '$lib/server/api-keys';
-import { log511Read, read511Of } from '$lib/server/upstream-511';
+import { get511, memo511 } from '$lib/server/upstream-511';
 
-const API_BASE = 'https://api.511.org/traffic/events';
-
-function normalizeEvents(payload: unknown): Record<string, unknown>[] {
+/** The event list wherever 511 put it; null when there is none (not an empty list). */
+function normalizeEvents(payload: unknown): Record<string, unknown>[] | null {
 	if (Array.isArray(payload)) return payload as Record<string, unknown>[];
-	if (!payload || typeof payload !== 'object') return [];
+	if (!payload || typeof payload !== 'object') return null;
 
 	const root = payload as Record<string, unknown>;
 	const candidateKeys = ['events', 'Events', 'event', 'Event', 'results', 'Results', 'data'];
@@ -17,59 +15,45 @@ function normalizeEvents(payload: unknown): Record<string, unknown>[] {
 		}
 	}
 
-	return [];
+	return null;
 }
+
+type Outcome = { status: number; body: unknown };
+const NO_STORE = { 'cache-control': 'no-store' };
+const UPSTREAM_ERROR = { events: [], error: 'Upstream traffic API error' };
+/** The whole read, body included. */
+const DEADLINE_MS = 10_000;
+/** One 511 read per 10 minutes, success or failure. Budget: $lib/server/upstream-511. */
+const memo = memo511<Outcome>(10 * 60_000);
 
 export async function GET() {
 	const apiKey = get511ApiKey();
 	if (!apiKey) {
 		return json({ error: 'Service unavailable' }, { status: 503 });
 	}
+	const { status, body } = await memo('traffic/events', () => readEvents(apiKey));
+	return json(body, {
+		status,
+		headers: status === 200 ? { 'cache-control': 'public, max-age=60, s-maxage=600' } : NO_STORE
+	});
+}
 
-	const url = `${API_BASE}?api_key=${encodeURIComponent(apiKey)}&format=json`;
-	const started = Date.now();
-	let response: Response;
+async function readEvents(apiKey: string): Promise<Outcome> {
+	const deadline = new AbortController();
+	const timer = setTimeout(() => deadline.abort(), DEADLINE_MS);
 	try {
-		response = await fetchWithTimeout(url, { headers: { Accept: 'application/json' } });
-	} catch {
-		log511Read(
-			'traffic/events',
-			{ status: null, retryAfter: null, remaining: null },
-			Date.now() - started
+		const { status, body } = await get511(
+			'/traffic/events?format=json',
+			apiKey,
+			deadline.signal,
+			'traffic/events'
 		);
-		return json(
-			{ events: [], error: 'Upstream traffic API error' },
-			{ status: 502, headers: { 'cache-control': 'no-store' } }
-		);
+		if (status !== null && status >= 400) return { status, body: UPSTREAM_ERROR };
+		const events = body === null ? null : normalizeEvents(body);
+		if (events === null)
+			return { status: 502, body: { events: [], error: 'Invalid upstream response' } };
+		return { status: 200, body: { events, count: events.length } };
+	} finally {
+		clearTimeout(timer);
 	}
-	log511Read('traffic/events', read511Of(response), Date.now() - started);
-
-	if (!response.ok) {
-		return json(
-			{ events: [], error: 'Upstream traffic API error' },
-			{
-				status: response.status,
-				headers: { 'cache-control': 'no-store' }
-			}
-		);
-	}
-
-	const text = await response.text();
-	const clean = text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
-
-	let payload: unknown = {};
-	try {
-		payload = JSON.parse(clean);
-	} catch {
-		return json(
-			{ events: [], error: 'Invalid upstream response' },
-			{ status: 502, headers: { 'cache-control': 'no-store' } }
-		);
-	}
-
-	const events = normalizeEvents(payload);
-	return json(
-		{ events, count: events.length },
-		{ headers: { 'cache-control': 'public, max-age=60' } }
-	);
 }

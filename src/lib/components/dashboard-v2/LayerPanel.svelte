@@ -14,6 +14,8 @@
 		status: string;
 		/** e.g. "2 events without a location", or a kept note. */
 		note?: string | null;
+		/** A colour key for a layer drawn in several colours (Road speeds). */
+		key?: readonly { color: string; label: string }[];
 	}
 </script>
 
@@ -58,6 +60,15 @@
 		</label>
 		{#if r.status}<p class="meta" data-layer-status data-text-role="meta">{r.status}</p>{/if}
 		{#if r.note}<p class="meta" data-layer-note data-text-role="meta">{r.note}</p>{/if}
+		{#if r.on && r.key}
+			<ul class="key" data-layer-key aria-label="{r.name} key">
+				{#each r.key as k (k.label)}
+					<li data-text-role="meta">
+						<span class="chip" style:background={k.color} aria-hidden="true"></span>{k.label}
+					</li>
+				{/each}
+			</ul>
+		{/if}
 	</li>
 {/snippet}
 
@@ -191,6 +202,24 @@
 	.meta {
 		margin: 0.1rem 0 0 1.95rem;
 		color: var(--text-muted);
+	}
+	.key {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.15rem 0.6rem;
+		margin: 0.2rem 0 0 1.95rem;
+		color: var(--text-muted);
+	}
+	.key li {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0;
+	}
+	.chip {
+		width: 0.9rem;
+		height: 0.2rem;
+		border-radius: 1px;
 	}
 	@media (max-width: 767px) {
 		/* The expanded phone map (70vh): the list ends above the Collapse button (MAPX2c). */

@@ -14,7 +14,11 @@
 		MapInspector,
 		MapFeatureInspector
 	} from '$lib/components/map';
-	import type { RoadSpeeds } from '$lib/components/map/road-speeds';
+	import {
+		ROAD_SPEEDS_KEY,
+		roadSpeedsNote,
+		type RoadSpeeds
+	} from '$lib/components/map/road-speeds';
 	import { MAPBOX_TOKEN } from '$lib/config/api';
 	import {
 		pinClickOutcome,
@@ -330,7 +334,7 @@
 	// Road speeds (MAPX2c): Mapbox's congestion lines, with their tiles' own status. Lines, not
 	// places: no count and no in-view rows. Without a token there is no layer and no row.
 	const roadsOn = $derived(Boolean(MAPBOX_TOKEN) && (layerPrefs.roads ?? true));
-	let roadSpeeds = $state<RoadSpeeds>({ state: 'loading', asOf: null, drawn: false });
+	let roadSpeeds = $state<RoadSpeeds>({ state: 'loading', asOf: null, drawn: false, slow: null });
 	const roadsRow = $derived<LayerRow[]>(
 		MAPBOX_TOKEN
 			? [
@@ -341,10 +345,8 @@
 						on: roadsOn,
 						count: null,
 						status: roadsOn ? statusOf('Mapbox', roadSpeeds.state, roadSpeeds.asOf) : 'Mapbox',
-						note:
-							roadsOn && roadSpeeds.state === 'unavailable'
-								? 'Lines hidden: Mapbox tiles failed to load'
-								: null
+						note: roadsOn ? roadSpeedsNote(roadSpeeds) : null,
+						key: ROAD_SPEEDS_KEY
 					}
 				]
 			: []

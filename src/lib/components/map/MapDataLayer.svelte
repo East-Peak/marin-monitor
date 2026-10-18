@@ -192,7 +192,7 @@
 	}
 
 	// v2's road speeds: drawn only while their tiles vouch for them (MAPX2c).
-	let roadStatus: RoadSpeeds = { state: 'loading', asOf: null, drawn: false };
+	let roadStatus: RoadSpeeds = { state: 'loading', asOf: null, drawn: false, slow: null };
 	let roadWatch: ReturnType<typeof watchRoadSpeeds> | null = null;
 	$effect(() => {
 		if (!roadSpeeds) return;
@@ -214,7 +214,11 @@
 		off: (type, fn) => map.off(type as 'idle', fn),
 		getSource: (id) => map.getSource(id),
 		isSourceLoaded: (id) => map.isSourceLoaded(id),
-		tileIds: () => map.style?.sourceCaches?.['traffic-congestion']?.getIds() ?? []
+		tileIds: () => map.style?.sourceCaches?.['traffic-congestion']?.getIds() ?? [],
+		renderedRoads: () =>
+			map.getLayer('traffic-congestion-layer')
+				? map.queryRenderedFeatures({ layers: ['traffic-congestion-layer'] })
+				: []
 	});
 
 	function applyTrafficVisibility(map: MapLibreMap) {

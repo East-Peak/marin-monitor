@@ -3,7 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const key = vi.hoisted(() => ({ value: 'test-key' }));
 vi.mock('$lib/server/api-keys', () => ({ get511ApiKey: () => key.value }));
-const { GET } = await import('./+server');
+/** Fresh per test: the route's memo is module state. */
+let GET: () => Promise<Response>;
 
 const fetchMock = vi.fn<typeof fetch>();
 const incident = {
@@ -38,7 +39,11 @@ const call = async () => {
 const ids = (j: { events: { id: string }[] }) => j.events.map((e) => e.id);
 const urlOf = (i: number) => new URL(String(fetchMock.mock.calls[i][0]));
 
-beforeEach(() => {
+beforeEach(async () => {
+	vi.resetModules();
+	({ GET } = await import('./+server'));
+	vi.spyOn(console, 'info').mockImplementation(() => {});
+	vi.spyOn(console, 'warn').mockImplementation(() => {});
 	fetchMock.mockReset();
 	vi.stubGlobal('fetch', fetchMock);
 	key.value = 'test-key';
@@ -62,7 +67,7 @@ describe('GET /api/traffic/corridors', () => {
 		const { res, json } = await call();
 		expect(res.status).toBe(200);
 		expect(res.headers.get('cache-control')).toBe(
-			'public, max-age=60, s-maxage=120, stale-while-revalidate=60'
+			'public, max-age=60, s-maxage=300, stale-while-revalidate=60'
 		);
 		expect(urlOf(0).origin + urlOf(0).pathname).toBe('https://api.511.org/traffic/events');
 		expect(urlOf(0).searchParams.get('limit')).toBe('500');
@@ -118,7 +123,7 @@ describe('GET /api/traffic/corridors', () => {
 	});
 
 	it('a 429 says so: the 502 carries the upstream status, and the read is logged without the key', async () => {
-		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		const warn = vi.mocked(console.warn);
 		fetchMock.mockResolvedValueOnce(
 			new Response('Too Many Requests', { status: 429, headers: { 'Retry-After': '1800' } })
 		);
@@ -137,6 +142,39 @@ describe('GET /api/traffic/corridors', () => {
 			})
 		]);
 		expect(JSON.stringify(warn.mock.calls)).not.toContain('test-key');
+	});
+
+	it('concurrent cold requests make one 511 read; a request inside 60 s makes none (TRAFFIC1)', async () => {
+		fetchMock.mockImplementation(async () => page([incident]));
+		const [a, b] = await Promise.all([GET(), GET()]);
+		expect([a.status, b.status]).toEqual([200, 200]);
+		const again = await call();
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+		expect(again.json.checkedAt).toBe((await a.json()).checkedAt); // the read's own time
+	});
+
+	it('a failure is held too, and still says failed: no-store, never a cached success', async () => {
+		fetchMock.mockResolvedValue(new Response('', { status: 429 }));
+		await call();
+		const { res, json } = await call();
+		expect([res.status, res.headers.get('cache-control'), json.upstreamStatus]).toEqual([
+			502,
+			'no-store',
+			429
+		]);
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+	});
+
+	it('a failure is held for the CDN window (5 min), so an outage costs no more than a good day', async () => {
+		vi.useFakeTimers();
+		fetchMock.mockResolvedValue(new Response('', { status: 503 }));
+		await call(); // two attempts: the read and its retry
+		await vi.advanceTimersByTimeAsync(299_000);
+		await call();
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+		await vi.advanceTimersByTimeAsync(1_000);
+		await call();
+		expect(fetchMock).toHaveBeenCalledTimes(4);
 	});
 
 	it('records it cannot read are reported, so no client reads them as "nothing listed" (Codex r1 #3)', async () => {
@@ -200,6 +238,8 @@ describe('GET /api/traffic/corridors', () => {
 	it('never echoes the key: not after following a key-bearing next_url, not when 511 fails with the URL (Codex A1 #1)', async () => {
 		fetchMock.mockResolvedValueOnce(page([sonoma], NEXT)).mockResolvedValueOnce(page([incident]));
 		const served = JSON.stringify((await call()).json);
+		vi.resetModules(); // past the memo: a fresh instance
+		({ GET } = await import('./+server'));
 		fetchMock.mockImplementation(async (url) => {
 			throw new Error(`request failed: ${String(url)}`);
 		});

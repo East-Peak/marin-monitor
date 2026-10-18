@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { expect, test, type Page, type Route } from '@playwright/test';
 import { camsOff, pinAt, probe, settled } from './fixtures/v2-probe';
+import { FREE_FLOW_TILE } from './fixtures/traffic-tile';
 
 /**
  * MAPX2c: the old map's remaining layers, each owned and with a status: fitness studios,
@@ -191,6 +192,45 @@ test.describe('desktop 1440×900 (MAPX2c)', () => {
 			await expect(layerRow(page, 'roads').locator('[data-layer-count]')).toHaveCount(0);
 			await expect.poll(() => roadOpacity(page)).toMatchObject({ visibility: 'visible' });
 			expect((await roadOpacity(page))!.opacity).not.toBe(0);
+		});
+
+		test('free flow is drawn, and the row says "No slowdowns in view" (TRAFFIC1)', async ({
+			page
+		}) => {
+			await open(page, (p) =>
+				p.route(TRAFFIC_TILES, (r) =>
+					r.fulfill({ status: 200, contentType: 'application/x-protobuf', body: FREE_FLOW_TILE })
+				)
+			);
+			await settled(page);
+			await page.getByRole('button', { name: 'Layers' }).click();
+			await expect(layerRow(page, 'roads').locator('[data-layer-note]')).toHaveText(
+				'No slowdowns in view'
+			);
+			const drawn = await page.evaluate(() => {
+				const m = (
+					window as unknown as {
+						__v2ProbeMap: {
+							queryRenderedFeatures(o: {
+								layers: string[];
+							}): { properties: { congestion?: string } }[];
+						};
+					}
+				).__v2ProbeMap;
+				return m
+					.queryRenderedFeatures({ layers: ['traffic-congestion-layer'] })
+					.map((f) => f.properties.congestion);
+			});
+			expect(drawn.length).toBeGreaterThan(0);
+			expect(new Set(drawn)).toEqual(new Set(['low']));
+			expect((await roadOpacity(page))!.opacity).not.toBe(0);
+			await expect(layerRow(page, 'roads').locator('[data-layer-key] li')).toHaveText([
+				'Free flow',
+				'Moderate',
+				'Heavy',
+				'Severe',
+				'Closed'
+			]);
 		});
 
 		test('tiles that fail: "Mapbox unavailable", and no colour left on the roads', async ({

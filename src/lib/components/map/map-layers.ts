@@ -17,9 +17,34 @@ import { hoverCase, hoverAdd, hoveredFeatureIds } from './map-interactions';
 
 const mapboxToken = MAPBOX_TOKEN.trim();
 
-/** The congestion lines' opacity; v2 swaps it for 0 while the tiles can't vouch (road-speeds). */
+/** Road speeds' colours, free flow to closed: the lines and the Layers key share them (TRAFFIC1). */
+export const ROAD_SPEED_COLORS = {
+	low: '#9fbfa5',
+	moderate: '#f59e0b',
+	heavy: '#f97316',
+	severe: '#dc2626',
+	closed: '#7f1d1d'
+} as const;
+
+const CLOSED: ExpressionSpecification = [
+	'any',
+	['==', ['get', 'closed'], true],
+	['==', ['get', 'closed'], 'yes']
+];
+const FREE_FLOW: ExpressionSpecification = ['==', ['get', 'congestion'], 'low'];
+/** Free flow on an open road: a closure keeps its full width whatever its congestion says. */
+const FREE_FLOW_OPEN: ExpressionSpecification = ['all', FREE_FLOW, ['!', CLOSED]];
+
+/**
+ * The congestion lines' opacity; v2 swaps it for 0 while the tiles can't vouch (road-speeds).
+ * Free flow is a whisper, fainter than a camera wedge at rest (0.25), so slow spots stand out.
+ */
 export const CONGESTION_LINE_OPACITY: ExpressionSpecification = [
 	'case',
+	CLOSED,
+	0.78,
+	FREE_FLOW,
+	0.24,
 	['==', ['get', 'congestion'], 'moderate'],
 	0.46,
 	0.78
@@ -369,25 +394,48 @@ function addLayers(map: MapLibreMap): void {
 			'source-layer': 'traffic',
 			filter: [
 				'any',
-				['==', ['get', 'congestion'], 'moderate'],
-				['==', ['get', 'congestion'], 'heavy'],
-				['==', ['get', 'congestion'], 'severe'],
-				['==', ['get', 'closed'], true],
-				['==', ['get', 'closed'], 'yes']
+				['match', ['get', 'congestion'], ['low', 'moderate', 'heavy', 'severe'], true, false],
+				CLOSED
 			],
+			// Slower draws on top: free flow under the colours, closures over everything.
+			layout: {
+				'line-sort-key': [
+					'case',
+					CLOSED,
+					4,
+					['match', ['get', 'congestion'], 'moderate', 1, 'heavy', 2, 'severe', 3, 0]
+				]
+			},
 			paint: {
 				'line-color': [
 					'case',
-					['any', ['==', ['get', 'closed'], true], ['==', ['get', 'closed'], 'yes']],
-					'#7f1d1d',
-					['==', ['get', 'congestion'], 'severe'],
-					'#dc2626',
-					['==', ['get', 'congestion'], 'heavy'],
-					'#f97316',
-					'#f59e0b'
+					CLOSED,
+					ROAD_SPEED_COLORS.closed,
+					[
+						'match',
+						['get', 'congestion'],
+						'low',
+						ROAD_SPEED_COLORS.low,
+						'severe',
+						ROAD_SPEED_COLORS.severe,
+						'heavy',
+						ROAD_SPEED_COLORS.heavy,
+						ROAD_SPEED_COLORS.moderate
+					]
 				],
 				'line-opacity': CONGESTION_LINE_OPACITY,
-				'line-width': ['interpolate', ['linear'], ['zoom'], 8, 1.6, 11, 2.9, 14, 5.2]
+				// Free flow stays under a resting camera wedge's 0.75 px at every zoom.
+				'line-width': [
+					'interpolate',
+					['linear'],
+					['zoom'],
+					8,
+					['case', FREE_FLOW_OPEN, 0.6, 1.6],
+					11,
+					['case', FREE_FLOW_OPEN, 0.7, 2.9],
+					14,
+					['case', FREE_FLOW_OPEN, 0.72, 5.2]
+				]
 			}
 		});
 	}
