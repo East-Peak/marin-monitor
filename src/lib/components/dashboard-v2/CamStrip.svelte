@@ -5,13 +5,22 @@
 	import { stripCameras, stripNotice } from '$lib/dashboard/cam-strip';
 	import { loadFrame } from '$lib/dashboard/cam-frame-loader';
 	import CamTile from './CamTile.svelte';
+	import type { CamHeadings, HeadingsState } from '$lib/dashboard/cam-headings-store';
+	import { headingFooter } from '$lib/dashboard/cam-heading';
 
 	interface Props {
 		now: number;
 		cams?: CameraConfig[];
 		load?: typeof loadFrame;
+		/** The cameras' last reported headings (MAPX4), held while the tiles load. */
+		headings?: CamHeadings;
 	}
-	let { now, cams = stripCameras(), load = loadFrame }: Props = $props();
+	let { now, cams = stripCameras(), load = loadFrame, headings }: Props = $props();
+
+	let headingState = $state<HeadingsState | null>(null);
+	$effect(() => headings?.subscribe((s) => (headingState = s)));
+	$effect(() => (headings && pageVisible && stripNear ? headings.hold() : undefined));
+	const footer = (id: string) => headingFooter(headingState?.read?.cams.find((c) => c.id === id));
 
 	let row = $state<HTMLElement | null>(null);
 	let stripNear = $state(false);
@@ -114,6 +123,7 @@
 						active={isActive(cam.id)}
 						{now}
 						{load}
+						heading={footer(cam.id)}
 						onstatus={(id, s) => (attempted[id] = s)}
 					/>
 				</li>

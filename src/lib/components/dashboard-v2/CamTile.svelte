@@ -29,8 +29,18 @@
 		load?: typeof loadFrame;
 		onstatus?: (id: string, status: TileStatus) => void;
 		clock?: () => number;
+		/** "Looking SSE · 163°" or "Sweeping" (MAPX4); absent without a reported heading. */
+		heading?: string | null;
 	}
-	let { cam, active, now, load = loadFrame, onstatus, clock = Date.now }: Props = $props();
+	let {
+		cam,
+		active,
+		now,
+		load = loadFrame,
+		onstatus,
+		clock = Date.now,
+		heading = null
+	}: Props = $props();
 
 	// TV's decode gate (camera-frame.ts): a frame is shown only after it decoded.
 	let tile = $state<TileState>(initialTileState());
@@ -154,6 +164,9 @@
 				>last received {lastFrameMin} min ago</span
 			>{/if}
 	</span>
+	{#if heading}
+		<span class="cam-chip cam-heading" data-text-role="meta" data-cam-heading>{heading}</span>
+	{/if}
 </a>
 
 <style>
@@ -201,6 +214,13 @@
 	}
 	.cam-meta {
 		bottom: 0.375rem;
+		color: #e2e8f0;
+	}
+	.cam-heading {
+		left: auto;
+		right: 0.375rem;
+		bottom: 0.375rem;
+		max-width: 45%;
 		color: #e2e8f0;
 	}
 	.cam-old {

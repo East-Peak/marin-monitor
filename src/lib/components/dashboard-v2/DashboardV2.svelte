@@ -352,7 +352,7 @@
 				<BriefRow brief={controller.brief} now={clock} around={aroundCard} onjump={navJump} />
 			{/if}
 			{#if !desktop}
-				<CamStrip now={$clock} />
+				<CamStrip now={$clock} headings={controller.camHeadings} />
 			{/if}
 		{/if}
 
@@ -379,7 +379,7 @@
 		</section>
 
 		{#if desktop}
-			<CamWall now={$clock} />
+			<CamWall now={$clock} headings={controller?.camHeadings} />
 		{/if}
 
 		{#snippet gettingAroundSection(cls: string)}

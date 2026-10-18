@@ -6,13 +6,22 @@
 	import { camWallGroups } from '$lib/dashboard/cam-wall';
 	import { loadFrame } from '$lib/dashboard/cam-frame-loader';
 	import CamTile from './CamTile.svelte';
+	import type { CamHeadings, HeadingsState } from '$lib/dashboard/cam-headings-store';
+	import { headingFooter } from '$lib/dashboard/cam-heading';
 
 	interface Props {
 		now: number;
 		cams?: CameraConfig[];
 		load?: typeof loadFrame;
+		/** The cameras' last reported headings (MAPX4), held while the tiles load. */
+		headings?: CamHeadings;
 	}
-	let { now, cams = stripCameras(), load = loadFrame }: Props = $props();
+	let { now, cams = stripCameras(), load = loadFrame, headings }: Props = $props();
+
+	let headingState = $state<HeadingsState | null>(null);
+	$effect(() => headings?.subscribe((s) => (headingState = s)));
+	$effect(() => (headings && active ? headings.hold() : undefined));
+	const footer = (id: string) => headingFooter(headingState?.read?.cams.find((c) => c.id === id));
 
 	const groups = $derived(camWallGroups(cams));
 	let wall = $state<HTMLElement | null>(null);
@@ -82,7 +91,14 @@
 					<ul class="tiles" aria-label="{g.label} cameras">
 						{#each g.cams as cam (cam.id)}
 							<li data-cam-slot={cam.id}>
-								<CamTile {cam} {active} {now} {load} onstatus={(id, s) => (attempted[id] = s)} />
+								<CamTile
+									{cam}
+									{active}
+									{now}
+									{load}
+									heading={footer(cam.id)}
+									onstatus={(id, s) => (attempted[id] = s)}
+								/>
 							</li>
 						{/each}
 					</ul>

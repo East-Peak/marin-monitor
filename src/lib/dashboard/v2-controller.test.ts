@@ -833,3 +833,16 @@ describe('createDashboardV2Controller', () => {
 		});
 	});
 });
+
+describe('camera headings (MAPX4)', () => {
+	it('one shared store, read through deps, nothing until a holder asks', async () => {
+		const loadCamHeadings = vi.fn().mockResolvedValue({ headingAt: 1, cams: [] });
+		const c = controller({ loadCamHeadings });
+		await c.start();
+		expect(loadCamHeadings).not.toHaveBeenCalled();
+		const release = c.camHeadings.hold();
+		await vi.waitFor(() => expect(get(c.camHeadings).state).toBe('ok'));
+		expect(loadCamHeadings).toHaveBeenCalledTimes(1);
+		release();
+	});
+});

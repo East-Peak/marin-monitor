@@ -8,6 +8,8 @@
 import { derived, writable, type Readable, type Writable } from 'svelte/store';
 import { news } from '$lib/stores/news';
 import type { StoreClaim } from '$lib/stores/ownership';
+import type { HeadingRead } from './cam-heading';
+import { createCamHeadings, fetchCamHeadings, type CamHeadings } from './cam-headings-store';
 import { gasPriceStore } from '$lib/stores/gas-prices';
 import { evChargingStore } from '$lib/stores/ev-charging';
 import { coffeeIndexStore } from '$lib/stores/coffee';
@@ -426,6 +428,8 @@ export interface ControllerDeps {
 	fetchAdvisories?: (signal: AbortSignal) => Promise<ParsedAlerts>;
 	/** The server-rendered snapshot (DASH-FLIP1): the starting view, held to the loader's order. */
 	initialSnapshot?: NewsSnapshotView | null;
+	/** The cameras' heading read (MAPX4; default `/api/cams/heading`). */
+	loadCamHeadings?: (signal: AbortSignal) => Promise<HeadingRead>;
 }
 
 export interface DashboardV2Controller {
@@ -464,6 +468,8 @@ export interface DashboardV2Controller {
 	cost: Readable<CostReads>;
 	/** News & Civic's and Events' own reads, loaded through ensure(CIVIC_DATASETS / EVENTS_DATASETS). */
 	civic: Readable<CivicReads>;
+	/** The cameras' last reported headings, read only while held (MAPX4). */
+	camHeadings: CamHeadings;
 }
 
 export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Controller {
@@ -668,6 +674,10 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 			if (started && !deps.signal.aborted) void brief.load(preset);
 		},
 		earthquakes: { subscribe: earthquakes.subscribe },
-		sources
+		sources,
+		camHeadings: createCamHeadings({
+			load: deps.loadCamHeadings ?? ((signal) => fetchCamHeadings(signal)),
+			signal: deps.signal
+		})
 	};
 }

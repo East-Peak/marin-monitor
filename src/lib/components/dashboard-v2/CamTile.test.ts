@@ -40,6 +40,25 @@ afterEach(() => {
 });
 
 describe('CamTile', () => {
+	it('a heading footer says which way the camera looks (MAPX4)', async () => {
+		const load = vi.fn<Load>(async () => frame());
+		const { container } = render(CamTile, {
+			cam: fire,
+			active: false,
+			now: T0,
+			load,
+			heading: 'Looking SSE · 163°'
+		});
+		await flush();
+		expect(container.querySelector('[data-cam-heading]')?.textContent).toBe('Looking SSE · 163°');
+	});
+
+	it('no heading (unread, failed or unreported): no footer at all, never a guess', async () => {
+		const load = vi.fn<Load>(async () => frame());
+		const { container } = render(CamTile, { cam: fire, active: false, now: T0, load });
+		await flush();
+		expect(container.querySelector('[data-cam-heading]')).toBeNull();
+	});
 	it('inactive: requests nothing and claims nothing', async () => {
 		const load = vi.fn<Load>(async () => frame());
 		const { container } = render(CamTile, { cam: fire, active: false, now: T0, load });
