@@ -10,9 +10,11 @@
 
 	interface Props {
 		children?: Snippet;
+		/** Open on this camera instead of the county fit (/map's URL view, MAPX3). Read once. */
+		initialView?: { zoom: number; lat: number; lng: number } | null;
 	}
 
-	let { children }: Props = $props();
+	let { children, initialView = null }: Props = $props();
 
 	let container: HTMLDivElement;
 	let map: MapLibreMap | null = $state(null);
@@ -38,11 +40,12 @@
 		const initialTheme = get(settings).theme;
 		currentMapStyle = getMapStyleUrl(initialTheme);
 
+		const view = initialView;
 		map = new maplibregl.Map({
 			container,
 			style: currentMapStyle,
-			center: [MAP_DEFAULT.center.lon, MAP_DEFAULT.center.lat],
-			zoom: MAP_DEFAULT.zoom,
+			center: view ? [view.lng, view.lat] : [MAP_DEFAULT.center.lon, MAP_DEFAULT.center.lat],
+			zoom: view?.zoom ?? MAP_DEFAULT.zoom,
 			minZoom: MAP_DEFAULT.minZoom,
 			maxZoom: MAP_DEFAULT.maxZoom,
 			attributionControl: false
@@ -53,7 +56,7 @@
 		map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
 
 		map.on('load', () => {
-			if (map) fitMarinOverview(map, 0);
+			if (map && !view) fitMarinOverview(map, 0);
 			mapReady.set(true);
 		});
 

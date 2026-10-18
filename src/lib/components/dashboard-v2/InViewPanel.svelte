@@ -13,6 +13,7 @@
 		collapsed,
 		emptyText,
 		gaps = [],
+		notice = null,
 		ontoggle,
 		onselect,
 		onhover,
@@ -26,6 +27,8 @@
 		emptyText: string | null;
 		/** Enabled layers this list can't vouch for (unavailable, loading or kept). */
 		gaps?: readonly string[];
+		/** Why a linked selection can't be shown (/map's `sel`, MAPX3). */
+		notice?: string | null;
 		ontoggle: () => void;
 		onselect: (id: string) => void;
 		onhover: (id: string | null) => void;
@@ -92,6 +95,9 @@
 				<p class="note" data-inspector-note data-text-role="meta">{selected.note}</p>
 			{/if}
 		{:else}
+			{#if notice}
+				<p class="notice" role="status" data-in-view-notice data-text-role="body">{notice}</p>
+			{/if}
 			<h3 class="head" tabindex="-1" data-text-role="label" data-in-view-count={items.length}>
 				In view · {items.length}
 			</h3>
@@ -168,6 +174,12 @@
 	.row:focus-visible {
 		outline: 2px solid var(--accent);
 		outline-offset: -2px;
+	}
+	.notice {
+		margin: 0 0 0.75rem;
+		padding: 0.5rem;
+		border-left: 3px solid var(--accent);
+		background: var(--bg-hover, rgb(127 127 127 / 0.15));
 	}
 	.muted,
 	.note {

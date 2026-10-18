@@ -80,4 +80,12 @@ describe('InViewPanel', () => {
 		render(InViewPanel, props({ items: [] }));
 		expect(screen.getByText('Nothing listed in this view.')).toBeTruthy();
 	});
+
+	it("says why a linked item can't be shown, above the list (MAPX3)", () => {
+		render(InViewPanel, props({ notice: 'Fix It Marin is unavailable right now' }));
+		expect(screen.getByRole('status').textContent).toContain(
+			'Fix It Marin is unavailable right now'
+		);
+		expect(screen.getByText('Title news:a')).toBeTruthy();
+	});
 });

@@ -123,8 +123,9 @@ vi.mock('$lib/dashboard/v2-controller', async () => ({
 			},
 			airport: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
 			traffic: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
+			fires: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
 			places: Object.fromEntries(
-				['gas', 'ev', 'coffee'].map((id) => [
+				['gas', 'ev', 'coffee', 'fitness'].map((id) => [
 					id,
 					{ subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) }
 				])

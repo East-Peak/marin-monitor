@@ -5,7 +5,7 @@
      compass to undo a turn, and the bounds trim assumes it). Leaving desktop undoes all of
      it. Renders nothing. -->
 <script lang="ts">
-	import { getContext, onMount } from 'svelte';
+	import { getContext, onMount, untrack } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import type { GeoJSONSource, Map as MapLibreMap, MapMouseEvent } from 'maplibre-gl';
 	import type { Bounds } from '$lib/dashboard/map-in-view';
@@ -18,6 +18,7 @@
 		panelPx,
 		highlight,
 		flyTo,
+		refit = true,
 		onbounds,
 		onhover
 	}: {
@@ -27,7 +28,14 @@
 		highlight: [number, number] | null;
 		/** A new array instance per request: each one flies. */
 		flyTo: [number, number] | null;
-		onbounds: (bounds: Bounds, widthPx: number) => void;
+		/** Refit the county under the panel once it docks; off when the URL chose the view. */
+		refit?: boolean;
+		/** The settled bounds and camera (debounced), for the list and /map's URL. */
+		onbounds: (
+			bounds: Bounds,
+			widthPx: number,
+			camera: { zoom: number; lat: number; lng: number }
+		) => void;
 		onhover: (id: string | null) => void;
 	} = $props();
 
@@ -41,9 +49,14 @@
 
 	function report(m: MapLibreMap) {
 		const b = m.getBounds();
-		onbounds(
-			{ west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() },
-			m.getCanvas().clientWidth
+		const { lng, lat } = m.getCenter();
+		// Untracked: report runs inside the padding effect, and the owner's handler reads state.
+		untrack(() =>
+			onbounds(
+				{ west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() },
+				m.getCanvas().clientWidth,
+				{ zoom: m.getZoom(), lat, lng }
+			)
 		);
 	}
 	const ring = (at: [number, number] | null): GeoJSON.FeatureCollection => ({
@@ -128,7 +141,7 @@
 	$effect(() => {
 		if (!map) return;
 		map.setPadding({ top: 0, bottom: 0, left: 0, right: panelPx });
-		if (!refitted && panelPx > 0) {
+		if (refit && !refitted && panelPx > 0) {
 			refitted = true;
 			if (get(townFilter) === null) fitMarinOverview(map, 0);
 		}

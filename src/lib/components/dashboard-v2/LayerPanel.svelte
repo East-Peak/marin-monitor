@@ -18,15 +18,23 @@
 </script>
 
 <script lang="ts">
+	import type { Snippet } from 'svelte';
+
 	let {
 		stories,
 		layers,
-		ontoggle
+		ontoggle,
+		rail = false,
+		extra
 	}: {
 		/** The Stories group: its rows, under one status line. */
 		stories: { rows: LayerRow[]; count: number | null; status: string };
 		layers: LayerRow[];
 		ontoggle: (id: string, on: boolean) => void;
+		/** /map on desktop (MAPX3): a column beside the map, always open, with no trigger. */
+		rail?: boolean;
+		/** Beside the trigger, e.g. the dashboard map's "Explore ↗" link. */
+		extra?: Snippet;
 	} = $props();
 
 	let open = $state(false);
@@ -53,16 +61,21 @@
 	</li>
 {/snippet}
 
-<div class="layers" data-layer-panel>
-	<button
-		type="button"
-		class="trigger"
-		aria-expanded={open}
-		aria-controls="v2-layer-list"
-		data-text-role="label"
-		onclick={() => (open = !open)}>Layers</button
-	>
-	{#if open}
+<div class="layers" data-layer-panel data-rail={rail ? 'true' : undefined}>
+	{#if !rail}
+		<div class="bar">
+			<button
+				type="button"
+				class="trigger"
+				aria-expanded={open}
+				aria-controls="v2-layer-list"
+				data-text-role="label"
+				onclick={() => (open = !open)}>Layers</button
+			>
+			{@render extra?.()}
+		</div>
+	{/if}
+	{#if open || rail}
 		<div class="list" id="v2-layer-list" role="group" aria-label="Map layers">
 			<h3 data-text-role="label">
 				Stories{#if stories.count !== null}<span class="count" data-text-role="meta"
@@ -88,6 +101,24 @@
 		left: 0.5rem;
 		z-index: 21;
 		max-width: 18rem;
+	}
+	.bar {
+		display: flex;
+		gap: 0.4rem;
+	}
+	.layers[data-rail] {
+		position: static;
+		max-width: none;
+		height: 100%;
+	}
+	.layers[data-rail] .list {
+		height: 100%;
+		max-height: none;
+		margin: 0;
+		box-sizing: border-box;
+		border-radius: 0;
+		border-width: 0 1px 0 0;
+		box-shadow: none;
 	}
 	.trigger {
 		min-height: 2.25rem;

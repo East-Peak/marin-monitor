@@ -23,11 +23,11 @@
 	import type { HealthReportJson } from '$lib/api/marin/health-report';
 	import HealthIndicator from './HealthIndicator.svelte';
 	import { townFilter, townLocation } from '$lib/stores/town-filter';
-	import { readable } from 'svelte/store';
+	import { derived, readable, toStore } from 'svelte/store';
 	import V2Map from './V2Map.svelte';
 	import LatestReporting from './LatestReporting.svelte';
 	import { latestReportingView } from '$lib/dashboard/latest-reporting';
-	import { v2MapData } from '$lib/dashboard/v2-map-data';
+	import { createMapFeed, type MapFeed } from '$lib/dashboard/map-feed';
 	import { briefPending } from '$lib/dashboard/v2-probe';
 	import type { BriefState } from '$lib/dashboard/brief-store';
 	import {
@@ -55,11 +55,6 @@
 	import { createClock } from '$lib/dashboard/clock';
 	import './v2-tokens.css';
 	import { sectionPrefs } from '$lib/stores/section-prefs';
-	import { DATA_LAYERS, v2DataLayers, type DataLayerId } from '$lib/dashboard/v2-map-layers';
-	import type { GasPriceData } from '$lib/types/gas';
-	import type { EvChargingData } from '$lib/types/ev-charging';
-	import type { CoffeeIndexData } from '$lib/types/coffee';
-	import type { FitnessData } from '$lib/types/fitness';
 	import { createSectionOpenState } from '$lib/dashboard/section-open';
 	import { openAndFocus } from '$lib/dashboard/fragment-nav';
 	import { createDashboardV2Controller, V2_REFRESH_MS } from '$lib/dashboard/v2-controller';
@@ -115,7 +110,6 @@
 	const sources =
 		controller?.sources ?? readable<SourceStatusEntry[]>(seed ? seededSnapshotEntries(seed) : []);
 	const fixIt = controller?.fixIt ?? readable<NewsItem[] | null>(null);
-	const quakes = controller?.earthquakes ?? readable<NewsItem[]>([]);
 	const briefState = controller?.brief ?? readable<BriefState | null>(null);
 	const transitState = controller?.transit ?? readable<TransitState>({ reads: null, error: null });
 	const airport = controller?.airport ?? readable<AirportStatusData | null>(null);
@@ -126,10 +120,6 @@
 	const airQuality = controller?.airQuality ?? readable<AirQualityRead | null>(null);
 	const outcomes =
 		controller?.datasetOutcomes ?? readable<Readonly<Record<string, DatasetFetch>>>({});
-	const gasPlaces = controller?.places.gas ?? readable<GasPriceData | null>(null);
-	const evPlaces = controller?.places.ev ?? readable<EvChargingData | null>(null);
-	const coffeePlaces = controller?.places.coffee ?? readable<CoffeeIndexData | null>(null);
-	const fitnessPlaces = controller?.places.fitness ?? readable<FitnessData | null>(null);
 	/** Getting Around's one view per tick; closed, its header still reads transit (Decision 9). */
 	const around = $derived(
 		gettingAroundView({
@@ -250,57 +240,29 @@
 		if (id === 'events' && events.upcoming !== null) return `${events.upcoming} upcoming`;
 		return null;
 	}
-	/** The map's own data: only what this controller established (Codex r3 #1). */
-	const mapData = $derived(
-		v2MapData({
-			view: $snapshot,
-			fixIt: $fixIt,
-			earthquakes: $quakes,
-			sources: $sources,
-			activeLayers: $activeLayers,
-			town: scopeTown,
-			now: $clock
-		})
-	);
 	/**
-	 * The map's data layers (MAPX2b, MAPX2c): wherever the whole map shows, which on the phone
-	 * is once it is expanded (the preview adds no requests). A layer's dataset activates when the layer is on,
-	 * whatever sections are open; an open section and an enabled layer share one fetch (the
-	 * registry's ensure).
+	 * The map's data and layers (MAPX2b, MAPX2c): only what this controller established (Codex
+	 * r3 #1). The layers load wherever the whole map shows, which on the phone is never: its
+	 * preview adds no requests, and its full map is /map (MAPX3).
 	 */
 	let mapFull = $state(false);
-	const layerOn = $derived(
-		Object.fromEntries(
-			DATA_LAYERS.map((l) => [l.id, mapFull && ($sectionPrefs.layers[l.id] ?? l.defaultOn)])
-		) as Record<DataLayerId, boolean>
-	);
-	const DETAIL_LAYER_DATASETS: ReadonlySet<string> = new Set(['traffic', 'fires', 'airport']);
-	$effect(() => {
-		for (const l of DATA_LAYERS)
-			if (layerOn[l.id] && DETAIL_LAYER_DATASETS.has(l.dataset)) void controller?.ensure(l.dataset);
-	});
-	const dataLayers = $derived(
-		v2DataLayers({
-			on: layerOn,
-			outcomes: $outcomes,
-			values: {
-				traffic: $traffic,
-				fire: $fires,
-				gas: $gasPlaces,
-				ev: $evPlaces,
-				coffee: $coffeePlaces,
-				fitness: $fitnessPlaces,
-				airport: $airport
-			},
-			town: scopeTown,
-			now: $clock
-		})
-	);
+	const mapSource = controller
+		? createMapFeed(controller, {
+				full: toStore(() => mapFull),
+				layers: derived(sectionPrefs, (p) => p.layers),
+				town: toStore(() => scopeTown),
+				clock,
+				activeLayers
+			})
+		: null;
+	const mapFeed = mapSource?.feed ?? readable<MapFeed | null>(null);
 	/** The probe's settlement list also waits for the brief cards above the map (Codex r4 #3). */
-	const settledData = $derived({
-		...mapData,
-		loading: [...mapData.loading, ...($briefState ? briefPending($briefState) : [])]
-	});
+	const settledData = $derived(
+		$mapFeed && {
+			...$mapFeed.data,
+			loading: [...$mapFeed.data.loading, ...($briefState ? briefPending($briefState) : [])]
+		}
+	);
 
 	/** Jump-nav, fragment links and back/forward: open a collapsed target, then focus it (§8). */
 	function jump(hash: string) {
@@ -333,6 +295,7 @@
 		const timer = setInterval(() => void controller?.refresh(), V2_REFRESH_MS);
 		return () => {
 			stopTown();
+			mapSource?.stop();
 			lifetime.abort();
 			clearInterval(timer);
 			document.removeEventListener('visibilitychange', onVisible);
@@ -401,7 +364,14 @@
 				<!-- With the server's snapshot, Latest reporting is in the HTML; the map is client-only. -->
 				<div class="v2-map-row">
 					{#if ready}
-						<V2Map data={settledData} {dataLayers} now={$clock} bind:full={mapFull} />
+						{#if settledData && $mapFeed}
+							<V2Map
+								data={settledData}
+								dataLayers={$mapFeed.dataLayers}
+								now={$clock}
+								bind:full={mapFull}
+							/>
+						{/if}
 					{/if}
 					<LatestReporting view={latest} now={$clock} />
 				</div>

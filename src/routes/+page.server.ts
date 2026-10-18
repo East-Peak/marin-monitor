@@ -1,32 +1,7 @@
 import type { ServerLoadEvent } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
 import { loadLegacyBootstrap } from '$lib/dashboard/bootstrap';
 import { dashboardCacheControl, resolveDashboardLayout } from '$lib/dashboard/layout-flag';
-import type { NewsSnapshotView } from '$lib/news/snapshot';
-import { snapshotBlobApi } from '$lib/server/news/fixture-blob-api';
-import { readNewsSnapshot } from '$lib/server/news/read-snapshot';
-
-/** The first paint never waits longer than this for news (DASH-FLIP1). */
-const SNAPSHOT_DEADLINE_MS = 1_200;
-
-/** The reader's validated view, or null for a timeout, unavailable, unknown or a throw. */
-async function readSnapshotForFirstPaint(): Promise<NewsSnapshotView | null> {
-	let timer: ReturnType<typeof setTimeout> | undefined;
-	const deadline = new Promise<null>((resolve) => {
-		timer = setTimeout(() => resolve(null), SNAPSHOT_DEADLINE_MS);
-	});
-	try {
-		const body = await Promise.race([
-			readNewsSnapshot(snapshotBlobApi(env), SNAPSHOT_DEADLINE_MS),
-			deadline
-		]);
-		return body?.status === 'ok' ? body.snapshot : null;
-	} catch {
-		return null;
-	} finally {
-		clearTimeout(timer);
-	}
-}
+import { readSnapshotForFirstPaint } from '$lib/server/news/first-paint';
 
 export async function load({ url, setHeaders }: ServerLoadEvent) {
 	// Reading url.searchParams makes SvelteKit re-run this load when ?layout changes
