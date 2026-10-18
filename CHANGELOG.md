@@ -6,6 +6,11 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-18
 
+### Fixed — A selected camera lets go
+
+- **Back to list, Esc, or a click on empty map now unselects** a camera or any other selected item. Its wedge goes quiet, the white ring goes away and the list comes back, on the dashboard map and on /map (where the link's `sel` is cleared too). A drag still keeps the selection. On a tablet the same three close the inspector; on a phone, the detail's Close does it.
+- **Back no longer relights the camera.** Focus going back to the list's row lit its camera again; now only a pointer or the keyboard (Tab) lights a row's camera.
+
 ### Changed — Road speeds show free-flowing roads; 511 reads stay inside their allowance
 
 - **Free-flowing roads are drawn**, as a faint grey-green line under the slowdown colours, so a quiet Sunday map shows the roads are covered rather than looking empty. Slow spots stand out against it.

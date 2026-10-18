@@ -6,7 +6,7 @@
  * and set cursor styles) but contain no rendering logic.
  */
 
-import type { Map as MapLibreMap, MapLayerMouseEvent } from 'maplibre-gl';
+import type { Map as MapLibreMap, MapLayerMouseEvent, MapMouseEvent } from 'maplibre-gl';
 
 // ---------------------------------------------------------------------------
 // Hover expression helpers  (used by layer paint definitions)
@@ -274,5 +274,18 @@ export function bindTownSelectionClick(map: MapLibreMap, onTownClick: (townSlug:
 			return;
 		const slug = e.features?.[0]?.properties?.slug;
 		if (slug) onTownClick(String(slug));
+	});
+}
+
+/**
+ * A click on nothing of ours (CAMDESEL1): no inspection target, town or Strava feature under
+ * it. The basemap's land and water don't count. MapLibre fires no click after a drag.
+ */
+export function bindEmptyClick(map: MapLibreMap, onEmpty: () => void) {
+	map.on('click', (e: MapMouseEvent) => {
+		const at = e as MapLayerMouseEvent;
+		if (clickHitsVisibleStravaFeature(map, at)) return;
+		if (hitsVisible(map, at, [...INSPECTION_CLICK_LAYERS, ...TOWN_CLICK_LAYERS])) return;
+		onEmpty();
 	});
 }

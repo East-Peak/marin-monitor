@@ -1,6 +1,10 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
 import { MILL_VALLEY, SOURCES, reportingSnapshot } from './fixtures/v2-reporting';
 import { mapCenter, settled } from './fixtures/v2-probe';
+import {
+	INSPECTION_CLICK_LAYERS,
+	TOWN_CLICK_LAYERS
+} from '../../src/lib/components/map/map-interactions';
 
 /** MAPX3: Explore mode at /map — the URL holds view, layers and selection; Esc goes home. */
 test.skip(({ baseURL }) => baseURL?.startsWith('https://') ?? false, 'stubbed');
@@ -210,6 +214,67 @@ test.describe('desktop 1440×900', () => {
 		await expect(page.getByRole('listbox', { name: 'Marin towns' })).toHaveCount(0);
 		await expect(page).toHaveURL(/\/map/);
 		await expect(page.locator('[data-layout="explore"]')).toBeVisible();
+	});
+
+	test('a click on empty map before a linked item loads cancels it (Codex CAMDESEL1 #2)', async ({
+		page
+	}) => {
+		let release!: () => void;
+		const held = new Promise<void>((r) => (release = r));
+		await stub(page, async (r) => {
+			await held;
+			await json(r, FIX_IT);
+		});
+		// Open ocean west of the Golden Gate: nothing of ours under the map's centre.
+		await page.goto(`/map?probe&sel=${SEL}#11/37.78/-122.75`);
+		await expect(page.locator('[data-layout="explore"][data-hydrated="true"]')).toBeVisible();
+		// The style and our layers, at rest; basemap tiles needn't finish for an empty click.
+		await expect
+			.poll(
+				() =>
+					page.evaluate(() => {
+						const m = (
+							window as unknown as {
+								__v2ProbeMap?: { isStyleLoaded(): boolean; isMoving(): boolean };
+							}
+						).__v2ProbeMap;
+						return !!m && m.isStyleLoaded() !== false && !m.isMoving();
+					}),
+				{ timeout: 20_000 }
+			)
+			.toBe(true);
+		const box = (await page.locator('.v2-map-canvas canvas').boundingBox())!;
+		const at = { x: box.x + box.width * 0.3, y: box.y + box.height / 2 };
+		expect(
+			await page.evaluate(
+				({ x, y, layers }) => {
+					const m = (
+						window as unknown as {
+							__v2ProbeMap: {
+								getLayer(id: string): unknown;
+								queryRenderedFeatures(p: [number, number], o: { layers: string[] }): unknown[];
+								getCanvas(): HTMLCanvasElement;
+							};
+						}
+					).__v2ProbeMap;
+					const r = m.getCanvas().getBoundingClientRect();
+					const hits = m.queryRenderedFeatures([x - r.left, y - r.top], {
+						layers: layers.filter((l) => m.getLayer(l))
+					});
+					return hits.length === 0 && document.elementFromPoint(x, y) === m.getCanvas();
+				},
+				{ ...at, layers: [...INSPECTION_CLICK_LAYERS, ...TOWN_CLICK_LAYERS] }
+			)
+		).toBe(true);
+		// Still waiting on Fix It Marin: the link is pending, not shown.
+		await expect(drawer(page).locator('[data-detail]')).toHaveCount(0);
+		await page.mouse.click(at.x, at.y);
+		await expect.poll(() => search(page).get('sel')).toBeNull();
+		release();
+		await settled(page);
+		await expect(drawer(page).locator('[data-in-view-count]')).toBeVisible();
+		await expect(drawer(page).locator('[data-detail]')).toHaveCount(0);
+		expect(search(page).get('sel')).toBeNull();
 	});
 
 	test('Esc goes back from a detail to the list, then back to the dashboard', async ({ page }) => {

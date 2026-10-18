@@ -59,6 +59,10 @@
 	// heading; Back returns it to the row it came from, else to the panel's list heading.
 	let root = $state<HTMLElement | null>(null);
 	let cameFrom: string | null = null;
+	/** The selection was made by keyboard (Enter or Space on its row), not a pointer. */
+	let keyed = false;
+	/** Focus being put back by Back: it lights the row's camera only for a keyed selection. */
+	let restoring = false;
 	/** Set by a change made from the panel itself; a pin click never moves focus. */
 	let pending: 'detail' | 'list' | null = null;
 	$effect(() => {
@@ -68,19 +72,24 @@
 		if (!to || !root) return;
 		void tick().then(() => {
 			if (to === 'detail') root?.querySelector<HTMLElement>('#v2-in-view-detail-title')?.focus();
-			else
+			else {
+				// An Esc makes this focus :focus-visible even after a mouse selection (CAMDESEL1).
+				restoring = !keyed;
 				(
 					[...(root?.querySelectorAll<HTMLElement>('[data-in-view-row]') ?? [])].find(
 						(el) => el.dataset.inViewRow === cameFrom
 					) ?? root?.querySelector<HTMLElement>('[data-in-view-count]')
 				)?.focus();
+				restoring = false;
+			}
 		});
 	});
-	function choose(id: string) {
+	function choose(id: string, byKey: boolean) {
 		// The row leaves with the list, without its mouseleave: its hover ends here (Codex
 		// CAMQUIET1 #1), or its camera would stay emphasised after the selection.
 		onhover(null);
 		cameFrom = id;
+		keyed = byKey;
 		pending = 'detail';
 		onselect(id);
 	}
@@ -123,10 +132,14 @@
 						class="row"
 						data-in-view-row={row.id}
 						data-hovered={hovered === row.id ? 'true' : undefined}
-						onclick={() => choose(row.id)}
+						onclick={(e) => choose(row.id, e.detail === 0)}
 						onmouseenter={() => onhover(row.id)}
 						onmouseleave={() => onhover(null)}
-						onfocus={() => onhover(row.id)}
+						onfocus={(e) => {
+							// Only a keyboard's focus lights the row's camera; focus put back by Back
+							// after a pointer's selection does not (CAMDESEL1).
+							if (!restoring && e.currentTarget.matches(':focus-visible')) onhover(row.id);
+						}}
 						onblur={() => onhover(null)}
 					>
 						<span data-text-role="body">{row.title}</span>

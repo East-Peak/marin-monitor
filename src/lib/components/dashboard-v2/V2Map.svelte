@@ -39,7 +39,6 @@
 	import InViewPanel from './InViewPanel.svelte';
 	import InViewSync from './InViewSync.svelte';
 	import CamEmphasis from './CamEmphasis.svelte';
-	import { emphasisedCams } from '$lib/dashboard/cam-emphasis';
 	import {
 		inView,
 		inViewItems,
@@ -47,7 +46,13 @@
 		visibleBounds,
 		type Bounds
 	} from '$lib/dashboard/map-in-view';
-	import { clickSelection, flyTarget, resolveSelection } from '$lib/dashboard/map-selection';
+	import {
+		clickSelection,
+		deselection,
+		flyTarget,
+		mapEmphasis,
+		resolveSelection
+	} from '$lib/dashboard/map-selection';
 	import {
 		DATA_LAYERS,
 		camWedgeFeatures,
@@ -214,18 +219,33 @@
 		view ? inView(allItems, visibleBounds(view.bounds, view.width, panelPx)) : []
 	);
 	const selected = $derived(resolveSelection(allItems, selectedId));
-	const ring = $derived(flyTarget(allItems, hoveredId ?? selectedId ?? ''));
+	const lit = $derived(
+		mapEmphasis(allItems, { hovered: hoveredId, selected: selectedId, feature })
+	);
 	function select(id: string, fly = true) {
 		if (!resolveSelection(allItems, id)) return;
 		selectedId = id;
+		// The selection takes over from the hover (CAMDESEL1); the next pointer move restores it.
+		hoveredId = null;
 		collapsed = false;
 		notice = null;
 		if (fly) flight = flyTarget(allItems, id);
 		onselect?.(id);
 	}
-	function back() {
-		selectedId = null;
-		onselect?.(null);
+	/** Back, Esc, a click on empty map (CAMDESEL1). A link still loading is cancelled too. */
+	function deselect() {
+		const next = deselection({
+			selected: selectedId,
+			pending: pendingSel,
+			hovered: hoveredId,
+			feature
+		});
+		selectedId = next.selected;
+		pendingSel = next.pending;
+		hoveredId = next.hovered;
+		feature = next.feature;
+		inspector = null;
+		if (next.clearUrl) onselect?.(null);
 	}
 	// A linked selection opens once its own layer's read settles; it never errors. A URL view
 	// beats the selection's flight (the link was copied where the reader left the camera).
@@ -277,7 +297,7 @@
 	// A selection whose item leaves the list (its layer switched off, a new town, the feed moved
 	// on) is cleared with its URL, so nothing invisible blocks Esc or rides on a copied link.
 	$effect(() => {
-		if (selectedId && !pendingSel && !resolveSelection(allItems, selectedId)) untrack(back);
+		if (selectedId && !pendingSel && !resolveSelection(allItems, selectedId)) untrack(deselect);
 	});
 	/** The page's own query (`?probe`, `utm_*`), carried into /map. */
 	const carried = new URLSearchParams(typeof location === 'undefined' ? '' : location.search);
@@ -288,11 +308,27 @@
 			carried
 		)
 	);
+	/** Whether a key's target is inside an open popup: its trigger or the list it controls. */
+	function owns(control: HTMLElement | null, target: EventTarget | null): boolean {
+		if (!control || !(target instanceof Node)) return false;
+		const list = document.getElementById(control.getAttribute('aria-controls') ?? '');
+		return control.contains(target) || (list?.contains(target) ?? false);
+	}
 	function onkeydown(e: KeyboardEvent) {
 		// The panel's Back takes Esc first while a detail shows (it marks the key handled); an
-		// open popup (the town picker, the Layers list) closes itself on the same key.
-		const openControl = document.querySelector('[aria-expanded="true"][aria-controls]');
-		if (e.key !== 'Escape' || e.defaultPrevented || selectedId || openControl || !onexit) return;
+		// open popup (the town picker, the Layers list) closes itself on the same key. An open
+		// dashboard section is a disclosure, not a popup: it never takes Esc (CAMDESEL1).
+		if (e.key !== 'Escape' || e.defaultPrevented) return;
+		const openControl = document.querySelector<HTMLElement>(
+			'[aria-expanded="true"][aria-controls]:not([data-section-toggle])'
+		);
+		// Below desktop, Esc closes the inspector (CAMDESEL1) unless the key was pressed inside
+		// an open popup, which closes itself (Codex CAMDESEL1 #1).
+		if ((feature || inspector) && !owns(openControl, e.target)) {
+			e.preventDefault();
+			return deselect();
+		}
+		if (openControl || selectedId || !onexit) return;
 		e.preventDefault();
 		onexit();
 	}
@@ -477,6 +513,8 @@
 				onTownHover={(slug) => mapStore.hoverTown(slug)}
 				{onPinClick}
 				onFeatureClick={(f) => {
+					// A pin or wedge clicked: the selection takes over from the hover (CAMDESEL1).
+					hoveredId = null;
 					if (desktop || explore) {
 						const id = clickSelection(f);
 						if (id) select(id);
@@ -486,6 +524,7 @@
 					feature = f;
 					inspector = null;
 				}}
+				onEmptyClick={deselect}
 			/>
 			{#if !(explore && desktop)}
 				{@render layerPanel(false)}
@@ -498,7 +537,7 @@
 				<!-- Every full map tracks its bounds, so the Layers counts are in-view counts. -->
 				<InViewSync
 					{panelPx}
-					highlight={ring}
+					highlight={lit.ring}
 					flyTo={flight}
 					refit={!initialView}
 					onbounds={(bounds, width, cam) => {
@@ -511,7 +550,7 @@
 				<!-- A camera's wedge is quiet until its pin, wedge or row is hovered, or it is
 				     selected (CAMQUIET1); a phone's tap selects, as does a tablet dashboard's
 				     inspected camera. -->
-				<CamEmphasis ids={emphasisedCams(hoveredId, selectedId ?? clickSelection(feature))} />
+				<CamEmphasis ids={lit.cams} />
 			{/if}
 			{#if desktop || explore}
 				<!-- The docked list (or /map's sheet) shows detail. -->
@@ -557,7 +596,7 @@
 				ontoggle={() => (collapsed = !collapsed)}
 				onselect={select}
 				onhover={(id) => (hoveredId = id)}
-				onback={back}
+				onback={deselect}
 			/>
 		{/if}
 		<!-- Phone: over the preview's corner, so it costs no row of its own (§13.3 height). The

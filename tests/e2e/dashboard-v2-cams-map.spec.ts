@@ -1,8 +1,12 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
 import { reportingSnapshot } from './fixtures/v2-reporting';
-import { settled, sourceCount } from './fixtures/v2-probe';
+import { mapCenter, rendered, settled, sourceCount } from './fixtures/v2-probe';
 import { frameProblems } from './fixtures/frame-whole';
 import { png } from './fixtures/cams';
+import {
+	INSPECTION_CLICK_LAYERS,
+	TOWN_CLICK_LAYERS
+} from '../../src/lib/components/map/map-interactions';
 
 /** MAPX4: the fire cameras on the map, a wedge per last reported heading, the frame on click. */
 test.skip(({ baseURL }) => baseURL?.startsWith('https://') ?? false, 'stubbed');
@@ -26,7 +30,7 @@ const HEADINGS = {
 const json = (route: Route, body: unknown, status = 200) =>
 	route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
 
-async function open(page: Page, heading: (r: Route) => Promise<void>) {
+async function open(page: Page, heading: (r: Route) => Promise<void>, path = '/?probe') {
 	await page.route(
 		/\/api\/(data|nps|transit|health|feeds|article|geocode|calfire|traffic)\b|earthquake\.usgs\.gov|api\.weather\.gov|tidesandcurrents/,
 		(r) => r.fulfill({ status: 503, body: 'stubbed' })
@@ -42,8 +46,9 @@ async function open(page: Page, heading: (r: Route) => Promise<void>) {
 			body: reportingSnapshot(T0, [])
 		})
 	);
-	await page.goto('/?probe');
-	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+	await page.goto(path);
+	const layout = path.startsWith('/map') ? 'explore' : 'v2';
+	await expect(page.locator(`[data-layout="${layout}"][data-hydrated="true"]`)).toBeVisible();
 	await settled(page);
 }
 
@@ -228,5 +233,308 @@ test.describe('desktop 1440×900', () => {
 		await page.getByRole('button', { name: 'Layers' }).click();
 		await expect(layerRow(page, 'cams')).toContainText('unavailable');
 		await expect(layerRow(page, 'cams')).toContainText('ALERTCalifornia directions unavailable');
+	});
+});
+
+/** CAMDESEL1: a selected camera lets go — Back, a click on empty map, Esc — and stays let go. */
+const QUIET = { rendered: false, wedge: false, pin: false };
+const LOUD = { rendered: true, wedge: true, pin: true };
+const ringCount = (page: Page) => sourceCount(page, 'v2-in-view-highlight');
+const sel = (page: Page) => new URL(page.url()).searchParams.get('sel');
+/** Whether any of our interactive layers (pins, wedges, data layers, towns) is under a point. */
+const hitsAt = (page: Page, at: { x: number; y: number }) =>
+	page.evaluate(
+		({ x, y, layers }) => {
+			const m = (
+				window as unknown as {
+					__v2ProbeMap: {
+						getLayer(id: string): unknown;
+						queryRenderedFeatures(p: [number, number], o: { layers: string[] }): unknown[];
+						getCanvas(): HTMLCanvasElement;
+					};
+				}
+			).__v2ProbeMap;
+			const r = m.getCanvas().getBoundingClientRect();
+			return m.queryRenderedFeatures([x - r.left, y - r.top], {
+				layers: layers.filter((l) => m.getLayer(l))
+			}).length;
+		},
+		{ ...at, layers: [...INSPECTION_CLICK_LAYERS, ...TOWN_CLICK_LAYERS] }
+	);
+/** The map at rest, Muir Beach's pin drawn where it projects: coordinates are now safe to use
+ *  (Codex CAMDESEL1 #4). */
+const mapStill = (page: Page) =>
+	expect
+		.poll(() =>
+			page.evaluate(([lon, lat]) => {
+				const m = (
+					window as unknown as {
+						__v2ProbeMap?: {
+							isMoving(): boolean;
+							getLayer(id: string): unknown;
+							project(c: number[]): { x: number; y: number };
+							queryRenderedFeatures(
+								p: [number, number],
+								o: { layers: string[] }
+							): { properties: Record<string, unknown> }[];
+						};
+					}
+				).__v2ProbeMap;
+				if (!m || m.isMoving()) return false;
+				const p = m.project([lon, lat]);
+				const layers = ['cameras-layer', 'cameras-hit-layer'].filter((l) => m.getLayer(l));
+				return m
+					.queryRenderedFeatures([p.x, p.y], { layers })
+					.some((f) => f.properties.itemId === 'alert-muir-beach');
+			}, MUIR)
+		)
+		.toBe(true);
+/** Muir Beach selected by its pin, the way a reader does it: hover, click, the flight lands. */
+async function selectMuir(page: Page) {
+	await page.locator('#v2-map-canvas').evaluate((el) => el.scrollIntoView({ block: 'end' }));
+	await mapStill(page);
+	const pin = await along(page, MUIR, 0, 0);
+	await page.mouse.move(pin.x, pin.y, { steps: 4 });
+	await expect.poll(() => wedgeLit(page, 'alert-muir-beach')).toEqual(LOUD);
+	await page.mouse.click(pin.x, pin.y);
+	await expect(panel(page).getByRole('heading', { name: 'Muir Beach' })).toBeVisible();
+	// The selection flies to the camera; positions are read after it lands.
+	await expect
+		.poll(async () => {
+			const c = await mapCenter(page);
+			return c ? Math.hypot(c.lng - MUIR[0], c.lat - MUIR[1]) : Infinity;
+		})
+		.toBeLessThan(0.002);
+	await mapStill(page);
+}
+/** Into the panel, as the pointer goes to reach Back. */
+async function intoPanel(page: Page) {
+	const box = (await panel(page).boundingBox())!;
+	await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 8 });
+}
+async function letGo(page: Page) {
+	await expect(panel(page).locator('[data-in-view-count]')).toBeVisible();
+	await expect.poll(() => wedgeLit(page, 'alert-muir-beach')).toEqual(QUIET);
+	expect(await ringCount(page)).toBe(0);
+}
+/** A point on the map clear of Muir Beach's wedge (169°–231°), with none of our features under
+ *  it and the map's own canvas on top (no panel, inspector or control). */
+async function emptyPoint(page: Page) {
+	for (const [az, km] of [
+		[320, 1.2],
+		[280, 2],
+		[260, 4],
+		[300, 3],
+		[250, 7],
+		[140, 3]
+	]) {
+		const at = await along(page, MUIR, az, km);
+		const onCanvas = await page.evaluate(
+			({ x, y }) => document.elementFromPoint(x, y)?.classList.contains('maplibregl-canvas'),
+			at
+		);
+		if (onCanvas && (await hitsAt(page, at)) === 0) return at;
+	}
+	throw new Error('no empty point near Muir Beach');
+}
+
+for (const path of ['/?probe', '/map?probe']) {
+	test.describe(`deselect at 1440×900 on ${path} (CAMDESEL1)`, () => {
+		test.use({ viewport: { width: 1440, height: 900 } });
+		const explore = path.startsWith('/map');
+
+		test('Back to list lets the camera go, though the pointer passed into the panel', async ({
+			page
+		}) => {
+			await open(page, (r) => json(r, HEADINGS), path);
+			await selectMuir(page);
+			if (explore) expect(sel(page)).toBe('cams:alert-muir-beach');
+			await intoPanel(page);
+			await panel(page).getByRole('button', { name: '← Back to list' }).click();
+			await letGo(page);
+			if (explore) expect(sel(page)).toBeNull();
+		});
+
+		test('Back after choosing the row lets go too: focus back on the row lights nothing', async ({
+			page
+		}) => {
+			await open(page, (r) => json(r, HEADINGS), path);
+			await page.locator('#v2-map-canvas').evaluate((el) => el.scrollIntoView({ block: 'end' }));
+			await panel(page).locator('[data-in-view-row="cams:alert-muir-beach"]').click();
+			await expect(panel(page).getByRole('heading', { name: 'Muir Beach' })).toBeVisible();
+			await panel(page).getByRole('button', { name: '← Back to list' }).click();
+			await expect(panel(page).locator('[data-in-view-row="cams:alert-muir-beach"]')).toBeFocused();
+			await page.mouse.move(5, 5);
+			await letGo(page);
+		});
+
+		test('Esc after choosing the row by mouse lets go: the key restores focus, not the light', async ({
+			page
+		}) => {
+			await open(page, (r) => json(r, HEADINGS), path);
+			await page.locator('#v2-map-canvas').evaluate((el) => el.scrollIntoView({ block: 'end' }));
+			const row = panel(page).locator('[data-in-view-row="cams:alert-muir-beach"]');
+			await row.click();
+			await expect(panel(page).getByRole('heading', { name: 'Muir Beach' })).toBeVisible();
+			await page.keyboard.press('Escape');
+			await expect(row).toBeFocused();
+			await page.mouse.move(5, 5);
+			await letGo(page);
+			if (explore) expect(sel(page)).toBeNull();
+		});
+
+		test('a click on empty map lets go; a drag does not', async ({ page }) => {
+			await open(page, (r) => json(r, HEADINGS), path);
+			await selectMuir(page);
+			// A drag pans the map and keeps the selection.
+			const from = await emptyPoint(page);
+			await page.mouse.move(from.x, from.y);
+			await page.mouse.down();
+			await page.mouse.move(from.x - 60, from.y + 40, { steps: 8 });
+			await page.mouse.up();
+			await mapStill(page);
+			await expect(panel(page).getByRole('heading', { name: 'Muir Beach' })).toBeVisible();
+			expect(await wedgeLit(page, 'alert-muir-beach')).toEqual(LOUD);
+			// A click on nothing of ours (land or water) is a click away.
+			const at = await emptyPoint(page);
+			await page.mouse.click(at.x, at.y);
+			await letGo(page);
+			if (explore) expect(sel(page)).toBeNull();
+		});
+
+		test('Esc lets go, with the pointer resting on the panel', async ({ page }) => {
+			await open(page, (r) => json(r, HEADINGS), path);
+			await selectMuir(page);
+			await intoPanel(page);
+			await page.keyboard.press('Escape');
+			await letGo(page);
+			if (explore) {
+				expect(sel(page)).toBeNull();
+				await expect(page).toHaveURL(/\/map/);
+			}
+		});
+	});
+}
+
+test.describe('deselect by keyboard at 1440×900 (CAMDESEL1)', () => {
+	test.use({ viewport: { width: 1440, height: 900 } });
+
+	test("Tab lights a row's camera, Enter selects, Esc returns to the row still lit; a mouse Back leaves it unlit", async ({
+		page
+	}) => {
+		await open(page, (r) => json(r, HEADINGS));
+		await page.locator('#v2-map-canvas').evaluate((el) => el.scrollIntoView({ block: 'end' }));
+		const row = panel(page).locator('[data-in-view-row="cams:alert-muir-beach"]');
+		await panel(page).locator('[data-in-view-count]').focus();
+		for (let i = 0; i < 60 && !(await row.evaluate((el) => el === document.activeElement)); i++)
+			await page.keyboard.press('Tab');
+		await expect(row).toBeFocused();
+		await expect.poll(() => wedgeLit(page, 'alert-muir-beach')).toEqual(LOUD);
+		await page.keyboard.press('Enter');
+		await expect(panel(page).getByRole('heading', { name: 'Muir Beach' })).toBeVisible();
+		await page.keyboard.press('Escape');
+		await expect(row).toBeFocused();
+		// Keyboard focus on the row: its camera lit, as intended.
+		await expect.poll(() => wedgeLit(page, 'alert-muir-beach')).toEqual(LOUD);
+		await page.keyboard.press('Enter');
+		await expect(panel(page).getByRole('heading', { name: 'Muir Beach' })).toBeVisible();
+		await panel(page).getByRole('button', { name: '← Back to list' }).click();
+		await expect(row).toBeFocused();
+		await page.mouse.move(5, 5);
+		await letGo(page);
+	});
+});
+
+test.describe('deselect at tablet 900×1000 (CAMDESEL1)', () => {
+	test.use({ viewport: { width: 900, height: 1000 } });
+	const inspector = (page: Page) =>
+		page.getByRole('complementary', { name: 'Map feature inspector' });
+
+	async function inspectMuir(page: Page) {
+		await open(page, (r) => json(r, HEADINGS));
+		await page.locator('#v2-map-canvas').evaluate((el) => el.scrollIntoView({ block: 'end' }));
+		await mapStill(page);
+		const pin = await along(page, MUIR, 0, 0);
+		await page.mouse.move(pin.x, pin.y, { steps: 4 });
+		await page.mouse.click(pin.x, pin.y);
+		await expect(inspector(page)).toContainText('Muir Beach');
+		await intoInspector(page);
+		await expect.poll(() => wedgeLit(page, 'alert-muir-beach')).toEqual(LOUD);
+	}
+	async function intoInspector(page: Page) {
+		const box = (await inspector(page).boundingBox())!;
+		await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 8 });
+	}
+	async function closed(page: Page) {
+		await expect(inspector(page)).toHaveCount(0);
+		await page.mouse.move(5, 5);
+		await expect.poll(() => wedgeLit(page, 'alert-muir-beach')).toEqual(QUIET);
+	}
+
+	test("the inspector's Close lets the camera go", async ({ page }) => {
+		await inspectMuir(page);
+		await inspector(page).getByRole('button', { name: 'Close inspector' }).click();
+		await closed(page);
+	});
+
+	test('a click on empty map closes the inspector and lets the camera go', async ({ page }) => {
+		await inspectMuir(page);
+		const at = await emptyPoint(page);
+		await page.mouse.click(at.x, at.y);
+		await closed(page);
+	});
+
+	test('Esc closes the inspector though the Layers list is open (Codex CAMDESEL1 #1)', async ({
+		page
+	}) => {
+		await inspectMuir(page);
+		await page.getByRole('button', { name: 'Layers' }).click();
+		await expect(page.getByRole('button', { name: 'Layers' })).toHaveAttribute(
+			'aria-expanded',
+			'true'
+		);
+		await inspector(page).getByRole('button', { name: 'Close inspector' }).focus();
+		await page.keyboard.press('Escape');
+		await closed(page);
+	});
+
+	test('Esc closes the inspector and lets the camera go', async ({ page }) => {
+		await inspectMuir(page);
+		await page.keyboard.press('Escape');
+		await closed(page);
+	});
+});
+
+test.describe('deselect on the phone 390×844 (CAMDESEL1)', () => {
+	test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+	test("/map: the detail's Close lets the camera go and clears its URL", async ({ page }) => {
+		await open(page, (r) => json(r, HEADINGS), '/map?probe');
+		await mapStill(page);
+		const pin = await along(page, MUIR, 0, 0);
+		await page.touchscreen.tap(pin.x, pin.y);
+		const dialog = page.getByRole('dialog');
+		await expect(dialog.getByRole('heading', { name: 'Muir Beach' })).toBeVisible();
+		expect(sel(page)).toBe('cams:alert-muir-beach');
+		await expect.poll(() => wedgeLit(page, 'alert-muir-beach')).toEqual(LOUD);
+		await dialog.getByRole('button', { name: 'Close' }).click();
+		await expect(dialog).toHaveCount(0);
+		expect(sel(page)).toBeNull();
+		await expect.poll(() => wedgeLit(page, 'alert-muir-beach')).toEqual(QUIET);
+		expect(await ringCount(page)).toBe(0);
+	});
+
+	test('the dashboard preview: no camera is drawn, and a tap lights or opens nothing', async ({
+		page
+	}) => {
+		await open(page, (r) => json(r, HEADINGS));
+		await page.locator('#v2-map-canvas').evaluate((el) => el.scrollIntoView({ block: 'center' }));
+		// The preview draws no data layer (MAPX3): there is no camera to select.
+		expect(await rendered(page, ['cameras-layer', 'camera-wedges-fill'])).toBe(0);
+		const pin = await along(page, MUIR, 0, 0);
+		await page.touchscreen.tap(pin.x, pin.y);
+		await page.waitForTimeout(300); // a tap that lit or opened anything would show by now
+		await expect(page.locator('.feature-inspector:visible')).toHaveCount(0);
+		expect(await wedgeLit(page, 'alert-muir-beach')).toMatchObject({ wedge: false, pin: false });
 	});
 });

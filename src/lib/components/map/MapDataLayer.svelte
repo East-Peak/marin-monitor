@@ -64,6 +64,7 @@
 		hoveredFeatureIds,
 		bindInteractiveHover,
 		bindCameraClick,
+		bindEmptyClick,
 		bindLayerGroupClick,
 		bindTownSelectionClick,
 		clickHitsVisibleStravaFeature
@@ -89,6 +90,8 @@
 		onTownHover?: (townSlug: string | null) => void;
 		onPinClick?: (itemId: string) => void;
 		onFeatureClick?: (feature: MapFeatureInspectorData) => void;
+		/** A click with none of our features under it: the v2 map's click-away (CAMDESEL1). */
+		onEmptyClick?: () => void;
 		/** Optional layers (legacy defaults on; the v2 preview passes false for each). */
 		alertPulses?: boolean;
 		airports?: boolean;
@@ -118,7 +121,8 @@
 		onTownClick,
 		onTownHover,
 		onPinClick,
-		onFeatureClick
+		onFeatureClick,
+		onEmptyClick
 	}: Props = $props();
 
 	// Fixed for the component's life: the v2 map is mounted with its switches and never flips them.
@@ -280,6 +284,7 @@
 		// --- Click handlers ---
 
 		if (onTownClick) bindTownSelectionClick(map, onTownClick);
+		bindEmptyClick(map, () => onEmptyClick?.());
 
 		bindLayerGroupClick(map, newsTriggerLayers, (e: MapLayerMouseEvent) => {
 			if (clickHitsVisibleStravaFeature(map, e)) return;

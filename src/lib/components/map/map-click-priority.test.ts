@@ -113,3 +113,37 @@ describe('camera wedges are the lowest click priority (MAPX4)', () => {
 		expect(calls).toEqual(['cam:alert-tam-west']);
 	});
 });
+
+describe('a click on empty map (CAMDESEL1)', () => {
+	async function wireEmpty(hits: Hits) {
+		const { bindEmptyClick } = await import('./map-interactions');
+		const map = await delegatingMap(hits);
+		const calls: string[] = [];
+		bindEmptyClick(map, () => calls.push('empty'));
+		return { map, calls };
+	}
+
+	it('a click on the basemap alone (land, water) is empty', async () => {
+		const { map, calls } = await wireEmpty({ water: [{ properties: {} }] });
+		map.click();
+		expect(calls).toEqual(['empty']);
+	});
+	it.each([
+		['a camera pin', 'cameras-layer'],
+		['a wedge', 'camera-wedges-fill'],
+		['a data layer', 'gas-stations-layer'],
+		['a news pin', 'news-pins-layer'],
+		['a town dot', 'towns-layer'],
+		['a Strava segment', 'strava-pins']
+	])('%s under the click is not empty', async (_name, layer) => {
+		const { map, calls } = await wireEmpty({ [layer]: [{ properties: { itemId: 'x' } }] });
+		map.click();
+		expect(calls).toEqual([]);
+	});
+	it('a hidden layer under the click does not count', async () => {
+		const { map, calls } = await wireEmpty({ 'gas-stations-layer': [{ properties: {} }] });
+		(map as unknown as { getLayoutProperty: () => string }).getLayoutProperty = () => 'none';
+		map.click();
+		expect(calls).toEqual(['empty']);
+	});
+});

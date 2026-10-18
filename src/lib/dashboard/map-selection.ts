@@ -3,6 +3,7 @@
  * both sides. A pin's id comes from its own source's properties; a row's fly target is its
  * item's point. The selection lasts while the item is still in the data, in view or not.
  */
+import { emphasisedCams } from './cam-emphasis';
 import { selectionId, type InViewItem, type InViewLayer } from './map-in-view';
 
 /** Owned map sources and the property holding each feature's raw id. */
@@ -66,4 +67,36 @@ export function resolveSelection(
 export function flyTarget(items: readonly InViewItem[], id: string): [number, number] | null {
 	const hit = resolveSelection(items, id);
 	return hit ? [hit.lon, hit.lat] : null;
+}
+
+/** What the map has picked: the pointer's item, the selection, a tablet's inspected feature. */
+export interface MapPick {
+	hovered: string | null;
+	selected: string | null;
+	feature: { kind: string; itemId?: string } | null;
+}
+
+/** What a pick lights: the hovered item's ring, else the selection's; the emphasised cameras. */
+export function mapEmphasis(
+	items: readonly InViewItem[],
+	{ hovered, selected, feature }: MapPick
+): { ring: [number, number] | null; cams: string[] } {
+	return {
+		ring: flyTarget(items, hovered ?? selected ?? ''),
+		cams: emphasisedCams(hovered, selected ?? clickSelection(feature))
+	};
+}
+
+/**
+ * A deselect (CAMDESEL1): Back, Esc, a click on empty map. Nothing selected, pending, hovered
+ * or inspected; the URL's `sel` is cleared only when there was one to clear.
+ */
+export function deselection(was: MapPick & { pending: string | null }) {
+	return {
+		selected: null,
+		pending: null,
+		hovered: null,
+		feature: null,
+		clearUrl: was.selected !== null || was.pending !== null
+	} as const;
 }
