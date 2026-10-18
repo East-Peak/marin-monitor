@@ -185,14 +185,17 @@ function addSources(map: MapLibreMap): void {
 		data: { type: 'FeatureCollection', features: [] }
 	});
 
-	// v2's fire cameras and their view wedges (MAPX4); empty unless an owner draws them.
+	// v2's fire cameras and their view wedges (MAPX4); empty unless an owner draws them. Both
+	// keyed by the camera id, so one feature state lights a camera's pin and wedge (CAMQUIET1).
 	map.addSource('cameras', {
 		type: 'geojson',
-		data: { type: 'FeatureCollection', features: [] }
+		data: { type: 'FeatureCollection', features: [] },
+		promoteId: 'itemId'
 	});
 	map.addSource('camera-wedges', {
 		type: 'geojson',
-		data: { type: 'FeatureCollection', features: [] }
+		data: { type: 'FeatureCollection', features: [] },
+		promoteId: 'itemId'
 	});
 
 	// 311 reports source (SeeClickFix / Fix It Marin)
@@ -208,6 +211,23 @@ function addSources(map: MapLibreMap): void {
 
 /** The fire cameras' pins and wedges (the Layers row's swatch, `CAM_SWATCH`). */
 const CAMERA_COLOR = '#38bdf8';
+
+/** `loud` while the feature's camera is emphasised (`cam-emphasis.ts`), `rest` otherwise. */
+const emphasisCase = (
+	loud: number,
+	rest: number | ExpressionSpecification
+): ExpressionSpecification => [
+	'case',
+	['boolean', ['feature-state', 'emphasis'], false],
+	loud,
+	rest
+];
+
+/** A wedge's outline, whatever its dashes: a faint hairline at rest (CAMQUIET1). */
+const CAMERA_WEDGE_LINE = {
+	'line-width': emphasisCase(1.5, 0.75),
+	'line-opacity': emphasisCase(0.9, 0.25)
+};
 
 function addLayers(map: MapLibreMap): void {
 	// --- Shared paint expressions ---
@@ -291,6 +311,40 @@ function addLayers(map: MapLibreMap): void {
 			'line-width': 1.5,
 			'line-dasharray': [4, 3]
 		}
+	});
+
+	// --- Fire camera wedges (MAPX4): a wedge per last reported heading, dashed while sweeping.
+	// Quiet at rest, under every layer's dots; full strength while emphasised (CAMQUIET1). ---
+	map.addLayer({
+		id: 'camera-wedges-fill',
+		type: 'fill',
+		source: 'camera-wedges',
+		paint: {
+			'fill-color': CAMERA_COLOR,
+			'fill-opacity': emphasisCase(0.3, ['case', ['==', ['get', 'style'], 'solid'], 0.05, 0.03])
+		}
+	});
+	const wedgeLine = { 'line-color': CAMERA_COLOR, ...CAMERA_WEDGE_LINE };
+	map.addLayer({
+		id: 'camera-wedges-line',
+		type: 'line',
+		source: 'camera-wedges',
+		filter: ['==', ['get', 'style'], 'solid'],
+		paint: wedgeLine
+	});
+	map.addLayer({
+		id: 'camera-wedges-sweeping',
+		type: 'line',
+		source: 'camera-wedges',
+		filter: ['==', ['get', 'style'], 'sweeping'],
+		paint: { ...wedgeLine, 'line-dasharray': [2, 2] }
+	});
+	map.addLayer({
+		id: 'camera-wedges-approximate',
+		type: 'line',
+		source: 'camera-wedges',
+		filter: ['==', ['get', 'style'], 'approximate'],
+		paint: { ...wedgeLine, 'line-dasharray': [0.5, 1.5] }
 	});
 
 	// --- Fire zones ---
@@ -688,47 +742,7 @@ function addLayers(map: MapLibreMap): void {
 		}
 	});
 
-	// --- Fire cameras (MAPX4): a wedge per last reported heading, dashed while sweeping ---
-	map.addLayer({
-		id: 'camera-wedges-fill',
-		type: 'fill',
-		source: 'camera-wedges',
-		paint: {
-			'fill-color': CAMERA_COLOR,
-			'fill-opacity': hoverCase(0.32, ['case', ['==', ['get', 'style'], 'solid'], 0.18, 0.08])
-		}
-	});
-	map.addLayer({
-		id: 'camera-wedges-line',
-		type: 'line',
-		source: 'camera-wedges',
-		filter: ['==', ['get', 'style'], 'solid'],
-		paint: { 'line-color': CAMERA_COLOR, 'line-width': 1.25, 'line-opacity': 0.8 }
-	});
-	map.addLayer({
-		id: 'camera-wedges-sweeping',
-		type: 'line',
-		source: 'camera-wedges',
-		filter: ['==', ['get', 'style'], 'sweeping'],
-		paint: {
-			'line-color': CAMERA_COLOR,
-			'line-width': 1.25,
-			'line-opacity': 0.8,
-			'line-dasharray': [2, 2]
-		}
-	});
-	map.addLayer({
-		id: 'camera-wedges-approximate',
-		type: 'line',
-		source: 'camera-wedges',
-		filter: ['==', ['get', 'style'], 'approximate'],
-		paint: {
-			'line-color': CAMERA_COLOR,
-			'line-width': 1,
-			'line-opacity': 0.7,
-			'line-dasharray': [0.5, 1.5]
-		}
-	});
+	// --- Fire cameras (MAPX4): their pins; the wedges sit under every layer's dots ---
 	map.addLayer({
 		id: 'cameras-layer',
 		type: 'circle',

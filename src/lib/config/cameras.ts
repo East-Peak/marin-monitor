@@ -161,8 +161,8 @@ export const CAMERAS: CameraConfig[] = [
 		refreshInterval: 10,
 		source: 'ALERTCalifornia | UC San Diego',
 		order: 1,
-		lat: 37.9235,
-		lon: -122.5816,
+		lat: 37.92724,
+		lon: -122.58854,
 		tvCluster: 'tam-coast'
 	},
 	{
@@ -176,8 +176,8 @@ export const CAMERAS: CameraConfig[] = [
 		refreshInterval: 10,
 		source: 'ALERTCalifornia | UC San Diego',
 		order: 2,
-		lat: 37.9235,
-		lon: -122.5816,
+		lat: 37.92724,
+		lon: -122.58854,
 		tvCluster: 'tam-coast'
 	},
 	{
@@ -191,8 +191,8 @@ export const CAMERAS: CameraConfig[] = [
 		refreshInterval: 10,
 		source: 'ALERTCalifornia | UC San Diego',
 		order: 3,
-		lat: 37.8592,
-		lon: -122.5784,
+		lat: 37.86281,
+		lon: -122.58572,
 		tvCluster: 'tam-coast'
 	},
 	{
@@ -206,8 +206,8 @@ export const CAMERAS: CameraConfig[] = [
 		refreshInterval: 10,
 		source: 'ALERTCalifornia | UC San Diego',
 		order: 4,
-		lat: 37.8529,
-		lon: -122.5103,
+		lat: 37.851,
+		lon: -122.499,
 		tvCluster: 'tam-coast'
 	},
 	{
@@ -221,8 +221,8 @@ export const CAMERAS: CameraConfig[] = [
 		refreshInterval: 10,
 		source: 'ALERTCalifornia | UC San Diego',
 		order: 5,
-		lat: 37.9093,
-		lon: -122.6869,
+		lat: 37.94465,
+		lon: -122.70639,
 		tvCluster: 'tam-coast'
 	},
 
@@ -238,8 +238,8 @@ export const CAMERAS: CameraConfig[] = [
 		refreshInterval: 10,
 		source: 'ALERTCalifornia | UC San Diego',
 		order: 6,
-		lat: 37.9962,
-		lon: -122.5343,
+		lat: 37.99305,
+		lon: -122.50107,
 		tvCluster: 'central-highway'
 	},
 	{
@@ -253,8 +253,8 @@ export const CAMERAS: CameraConfig[] = [
 		refreshInterval: 10,
 		source: 'ALERTCalifornia | UC San Diego',
 		order: 7,
-		lat: 37.9735,
-		lon: -122.5311,
+		lat: 37.98536,
+		lon: -122.53368,
 		tvCluster: 'central-highway'
 	},
 	{
@@ -268,8 +268,8 @@ export const CAMERAS: CameraConfig[] = [
 		refreshInterval: 10,
 		source: 'ALERTCalifornia | UC San Diego',
 		order: 8,
-		lat: 38.0303,
-		lon: -122.5944,
+		lat: 38.05919,
+		lon: -122.60429,
 		tvCluster: 'central-highway'
 	},
 	{
@@ -283,8 +283,8 @@ export const CAMERAS: CameraConfig[] = [
 		refreshInterval: 10,
 		source: 'ALERTCalifornia | UC San Diego',
 		order: 9,
-		lat: 38.0303,
-		lon: -122.5944,
+		lat: 38.05919,
+		lon: -122.60429,
 		tvCluster: 'central-highway'
 	},
 
@@ -300,8 +300,8 @@ export const CAMERAS: CameraConfig[] = [
 		refreshInterval: 10,
 		source: 'ALERTCalifornia | UC San Diego',
 		order: 10,
-		lat: 38.0256,
-		lon: -122.7218,
+		lat: 38.02682,
+		lon: -122.71618,
 		tvCluster: 'west-north'
 	},
 	{
@@ -315,8 +315,8 @@ export const CAMERAS: CameraConfig[] = [
 		refreshInterval: 10,
 		source: 'ALERTCalifornia | UC San Diego',
 		order: 11,
-		lat: 38.0256,
-		lon: -122.7218,
+		lat: 38.02682,
+		lon: -122.71618,
 		tvCluster: 'west-north'
 	},
 	{
@@ -330,8 +330,8 @@ export const CAMERAS: CameraConfig[] = [
 		refreshInterval: 10,
 		source: 'ALERTCalifornia | UC San Diego',
 		order: 12,
-		lat: 38.0706,
-		lon: -122.7896,
+		lat: 38.08061,
+		lon: -122.76539,
 		tvCluster: 'west-north'
 	},
 	{
@@ -345,8 +345,8 @@ export const CAMERAS: CameraConfig[] = [
 		refreshInterval: 10,
 		source: 'ALERTCalifornia | UC San Diego',
 		order: 13,
-		lat: 38.0976,
-		lon: -122.8479,
+		lat: 38.07965,
+		lon: -122.8686,
 		tvCluster: 'west-north'
 	},
 
@@ -362,8 +362,8 @@ export const CAMERAS: CameraConfig[] = [
 		refreshInterval: 10,
 		source: 'ALERTCalifornia | UC San Diego',
 		order: 14,
-		lat: 38.1479,
-		lon: -122.5618,
+		lat: 38.14635,
+		lon: -122.59171,
 		tvCluster: 'west-north'
 	},
 	{
@@ -377,8 +377,8 @@ export const CAMERAS: CameraConfig[] = [
 		refreshInterval: 10,
 		source: 'ALERTCalifornia | UC San Diego',
 		order: 15,
-		lat: 38.1479,
-		lon: -122.5618,
+		lat: 38.14635,
+		lon: -122.59171,
 		tvCluster: 'west-north'
 	},
 	{
@@ -392,14 +392,14 @@ export const CAMERAS: CameraConfig[] = [
 		refreshInterval: 10,
 		source: 'ALERTCalifornia | UC San Diego',
 		order: 16,
-		lat: 38.1479,
-		lon: -122.5618,
+		lat: 38.14635,
+		lon: -122.59171,
 		tvCluster: 'west-north'
 	},
 	{
 		id: 'alert-league-221',
 		name: 'League 221',
-		location: 'Novato',
+		location: 'Hicks Valley',
 		category: 'fire',
 		subRegion: 'north',
 		type: 'image',
@@ -407,8 +407,8 @@ export const CAMERAS: CameraConfig[] = [
 		refreshInterval: 10,
 		source: 'ALERTCalifornia | UC San Diego',
 		order: 17,
-		lat: 38.1195,
-		lon: -122.5965,
+		lat: 38.179,
+		lon: -122.766,
 		tvCluster: 'west-north'
 	}
 ];

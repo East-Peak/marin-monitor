@@ -14,8 +14,11 @@
 	}: {
 		labelledby: string;
 		onclose: () => void;
-		/** 'sheet': /map's phone sheet at full height (MAPX3), rising from the bottom. */
-		variant?: 'side' | 'sheet';
+		/**
+		 * 'sheet': /map's phone sheet at full height (MAPX3), rising from the bottom. 'frame': a
+		 * camera's frame enlarged, centred; a full-screen sheet on the phone (CAMQUIET1).
+		 */
+		variant?: 'side' | 'sheet' | 'frame';
 		children: Snippet;
 	} = $props();
 
@@ -34,6 +37,8 @@
 	});
 
 	function onkeydown(e: KeyboardEvent) {
+		// A dialog opened from inside this one (an enlarged frame) took the key first.
+		if (e.defaultPrevented) return;
 		if (e.key === 'Escape') {
 			e.preventDefault();
 			onclose();
@@ -95,6 +100,23 @@
 		border-top: 1px solid var(--border-light);
 		border-left: 0;
 		border-radius: 12px 12px 0 0;
+	}
+	.panel[data-variant='frame'] {
+		inset: 50% auto auto 50%;
+		transform: translate(-50%, -50%);
+		width: min(calc(90vw + 2.5rem), 100vw - 1rem);
+		max-height: 100vh;
+		border: 1px solid var(--border-light);
+		border-radius: 8px;
+	}
+	@media (max-width: 767px) {
+		.panel[data-variant='frame'] {
+			inset: 0;
+			transform: none;
+			width: auto;
+			border: 0;
+			border-radius: 0;
+		}
 	}
 	.panel:focus {
 		outline: none;

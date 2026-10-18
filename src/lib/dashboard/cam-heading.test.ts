@@ -6,6 +6,7 @@ import {
 	compass16,
 	headingFooter,
 	headingLine,
+	noWedgeLine,
 	parseHeadingFeed,
 	sector,
 	wedgeState,
@@ -168,6 +169,28 @@ describe('wedgeState', () => {
 		expect(wedgeState(cam({ frameAt: null }), now)).toBeNull();
 		expect(wedgeState(cam({ frameAt: now, az: null }), now)).toBeNull();
 		expect(wedgeState(cam({ frameAt: now, fov: null }), now)).toBeNull();
+	});
+});
+
+describe('noWedgeLine (CAMQUIET1)', () => {
+	const now = 10_000_000;
+	it('nothing to say while a wedge is drawn', () => {
+		expect(noWedgeLine(cam({ frameAt: now - 60_000 }), now)).toBeNull();
+		expect(noWedgeLine(cam({ frameAt: now, patrolling: true }), now)).toBeNull();
+	});
+	it("a stale frame: says how old, in minutes (Vision's 11)", () => {
+		expect(noWedgeLine(cam({ frameAt: now - 11 * 60_000 }), now)).toBe(
+			'No direction drawn: last frame 11 min ago'
+		);
+	});
+	it('no read, no heading or no frame time: heading unavailable', () => {
+		expect(noWedgeLine(undefined, now)).toBe('No direction drawn: heading unavailable');
+		expect(noWedgeLine(cam({ frameAt: now, az: null }), now)).toBe(
+			'No direction drawn: heading unavailable'
+		);
+		expect(noWedgeLine(cam({ frameAt: null }), now)).toBe(
+			'No direction drawn: heading unavailable'
+		);
 	});
 });
 

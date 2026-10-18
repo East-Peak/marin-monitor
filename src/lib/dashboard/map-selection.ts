@@ -36,7 +36,8 @@ const KINDS: Readonly<Record<string, InViewLayer>> = {
 };
 
 /** A feature click's selection: its own id, namespaced by its kind (null when it names none). */
-export function clickSelection(f: { kind: string; itemId?: string }): string | null {
+export function clickSelection(f: { kind: string; itemId?: string } | null): string | null {
+	if (!f) return null;
 	const layer = KINDS[f.kind];
 	return layer && f.itemId ? selectionId(layer, f.itemId) : null;
 }

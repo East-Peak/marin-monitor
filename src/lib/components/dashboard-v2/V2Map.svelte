@@ -34,6 +34,8 @@
 	import V2MapNav from './V2MapNav.svelte';
 	import InViewPanel from './InViewPanel.svelte';
 	import InViewSync from './InViewSync.svelte';
+	import CamEmphasis from './CamEmphasis.svelte';
+	import { emphasisedCams } from '$lib/dashboard/cam-emphasis';
 	import {
 		inView,
 		inViewItems,
@@ -504,6 +506,10 @@
 					}}
 					onhover={(id) => (hoveredId = id)}
 				/>
+				<!-- A camera's wedge is quiet until its pin, wedge or row is hovered, or it is
+				     selected (CAMQUIET1); a phone's tap selects, as does a tablet dashboard's
+				     inspected camera. -->
+				<CamEmphasis ids={emphasisedCams(hoveredId, selectedId ?? clickSelection(feature))} />
 			{/if}
 			{#if desktop || explore}
 				<!-- The docked list (or /map's sheet) shows detail. -->

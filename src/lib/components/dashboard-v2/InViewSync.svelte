@@ -98,6 +98,8 @@
 			const hit = bound.queryRenderedFeatures(e.point, { layers: owned(bound) })[0];
 			onhover(hit ? featureSelection({ source: hit.source, properties: hit.properties }) : null);
 		};
+		// Off the map, nothing on it is hovered (CAMQUIET1: a camera's wedge goes quiet again).
+		const onLeave = () => onhover(null);
 		// A style swap (theme) drops our source; put it back.
 		const onStyle = () => bound && ensureHighlight(bound);
 		const stop = mapReady.subscribe((ready) => {
@@ -114,6 +116,7 @@
 			m.on('moveend', onMove);
 			m.on('resize', onMove);
 			m.on('mousemove', onPointer);
+			m.on('mouseout', onLeave);
 			m.on('styledata', onStyle);
 			report(m);
 		});
@@ -124,6 +127,7 @@
 			bound.off('moveend', onMove);
 			bound.off('resize', onMove);
 			bound.off('mousemove', onPointer);
+			bound.off('mouseout', onLeave);
 			bound.off('styledata', onStyle);
 			// Below desktop the map is the phone/tablet map again: no padding, ring or lock.
 			bound.setPadding({ top: 0, bottom: 0, left: 0, right: 0 });

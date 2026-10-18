@@ -419,7 +419,7 @@ describe('cams layer (MAPX4)', () => {
 		expect(v.asOf).toBe(NOW - 20_000);
 		expect(v.points.filter((p) => p.id.startsWith('alert-'))).toHaveLength(17);
 		const tam = v.points.find((p) => p.id === 'alert-tam-east')!;
-		expect([tam.lon, tam.lat]).toEqual([-122.5816, 37.9235]);
+		expect([tam.lon, tam.lat]).toEqual([-122.58854, 37.92724]);
 		expect(v.count).toBe(21);
 	});
 
@@ -480,6 +480,22 @@ describe('cams layer (MAPX4)', () => {
 			['alert-tam-west', 'sweeping']
 		]);
 		expect(wedges[0].geometry.type).toBe('Polygon');
+	});
+
+	it("a stale frame: no wedge, and the camera's detail says why (CAMQUIET1)", () => {
+		const v = run(
+			okRead(heading('alert-tam-east'), heading('alert-vision', { frameAt: NOW - 11 * 60_000 }))
+		);
+		const ids = camWedgeFeatures(v, NOW).map((w) => w.properties?.itemId);
+		expect(ids).toContain('alert-tam-east');
+		expect(ids).not.toContain('alert-vision');
+		const vision = v.points.find((p) => p.id === 'alert-vision')!;
+		expect(vision.detail.status).toBe('No direction drawn: last frame 11 min ago');
+		expect(v.points.find((p) => p.id === 'alert-tam-east')!.detail.status).toBeUndefined();
+		// Heard nothing from the feed about it: unavailable, said the same way.
+		expect(v.points.find((p) => p.id === 'alert-bolinas')!.detail.status).toBe(
+			'No direction drawn: heading unavailable'
+		);
 	});
 
 	it('the legend says the wedge is direction, not reach', () => {

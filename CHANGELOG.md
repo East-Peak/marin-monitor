@@ -6,6 +6,13 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-18
 
+### Changed — Quieter camera wedges, a bigger picture, cameras where they are
+
+- **Camera wedges are quiet until you ask.** At rest each wedge is a faint tint with a hairline outline, drawn under every dot on the map. Hovering a wedge, its camera's pin or its row in the list, or opening the camera, shows its wedge at full strength. A tap does the same on a phone.
+- **The picture enlarges.** In the camera's panel, click or tap the picture (or "Enlarge") to see the whole frame as large as the screen allows, credited below it. Esc or Close goes back to the panel. On a phone it fills the screen.
+- **Cameras sit at their sites.** Eleven ALERTCalifornia pins were 1 to 17 km off; each is now on its named peak or ridge, within 1 km of ALERTCalifornia's own point. League 221 is west of Hicks Valley, not in Novato. Mt. Vision is on Inverness Ridge, not in Tomales Bay.
+- **A camera without a wedge says why**, e.g. "No direction drawn: last frame 11 min ago".
+
 ### Changed — The test suite passes at full speed
 
 - **The page says when it is refreshing.** The v2 dashboard's root carries `data-cycling="true"` while a data refresh is in flight, so tests can wait for one to finish instead of guessing how long it takes. Nothing visible changes.

@@ -36,6 +36,17 @@ describe('InViewPanel', () => {
 		expect(p.onselect).toHaveBeenCalledWith('311:b');
 	});
 
+	it("a row click ends the row's hover: the row leaves without a mouseleave (Codex CAMQUIET1 #1)", async () => {
+		const p = props({ items: [item('cams:alert-vision', 'cams')] });
+		render(InViewPanel, p);
+		const row = screen.getByText('Title cams:alert-vision');
+		await fireEvent.mouseEnter(row.closest('button')!);
+		expect(p.onhover).toHaveBeenLastCalledWith('cams:alert-vision');
+		await fireEvent.click(row);
+		expect(p.onhover).toHaveBeenLastCalledWith(null);
+		expect(p.onselect).toHaveBeenCalledWith('cams:alert-vision');
+	});
+
 	it('Esc goes back from a detail to the list, wherever focus is', async () => {
 		const p = props({ selected: item('news:a') });
 		render(InViewPanel, p);

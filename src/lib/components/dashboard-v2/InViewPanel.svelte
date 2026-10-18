@@ -77,6 +77,9 @@
 		});
 	});
 	function choose(id: string) {
+		// The row leaves with the list, without its mouseleave: its hover ends here (Codex
+		// CAMQUIET1 #1), or its camera would stay emphasised after the selection.
+		onhover(null);
 		cameFrom = id;
 		pending = 'detail';
 		onselect(id);

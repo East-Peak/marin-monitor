@@ -41,7 +41,14 @@ import {
 import { OUTDOORS_MAX_AGE_MS } from './outdoors';
 import { CAMERAS } from '$lib/config/cameras';
 import { CALTRANS_CAMS, CALTRANS_WEDGE_FOV, directionAz } from '$lib/config/caltrans-cams';
-import { ALERT_AXIS_IDS, headingLine, sector, wedgeState, type CamHeading } from './cam-heading';
+import {
+	ALERT_AXIS_IDS,
+	headingLine,
+	noWedgeLine,
+	sector,
+	wedgeState,
+	type CamHeading
+} from './cam-heading';
 import type { HeadingsState } from './cam-headings-store';
 
 const DAY_MS = 86_400_000;
@@ -488,6 +495,7 @@ function camLayer(
 			detail: {
 				title: c.name,
 				meta: [c.source, headingLine(byId.get(c.id), read?.headingAt ?? null, now)],
+				status: noWedgeLine(byId.get(c.id), now) ?? undefined,
 				image: { src: c.url, alt: `Latest frame from ${c.name}`, refreshS: FRAME_REFRESH_S },
 				paragraphs: [],
 				empty: 'A live wildfire-detection camera. The wedge on the map is its direction of view.',

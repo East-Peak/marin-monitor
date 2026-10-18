@@ -2,13 +2,14 @@ import { expect, test, type Page, type Route } from '@playwright/test';
 import { reportingSnapshot } from './fixtures/v2-reporting';
 import { settled, sourceCount } from './fixtures/v2-probe';
 import { frameProblems } from './fixtures/frame-whole';
+import { png } from './fixtures/cams';
 
 /** MAPX4: the fire cameras on the map, a wedge per last reported heading, the frame on click. */
 test.skip(({ baseURL }) => baseURL?.startsWith('https://') ?? false, 'stubbed');
 
 const T0 = Math.floor(Date.now() / 1000) * 1000;
 // Muir Beach looks out over the ocean: nothing else under its wedge to take the click.
-const MUIR: [number, number] = [-122.5784, 37.8592];
+const MUIR: [number, number] = [-122.58572, 37.86281];
 const PIXEL = Buffer.from(
 	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
 	'base64'
@@ -68,6 +69,29 @@ const along = (page: Page, [lon, lat]: [number, number], az: number, km: number)
 		]
 	);
 const panel = (page: Page) => page.getByRole('complementary', { name: 'In view' });
+/** A camera's emphasis on its wedge: the rendered feature's state and the source's own. */
+const wedgeLit = (page: Page, id: string) =>
+	page.evaluate((camId) => {
+		const m = (
+			window as unknown as {
+				__v2ProbeMap: {
+					queryRenderedFeatures(o: { layers: string[] }): {
+						id?: unknown;
+						state: Record<string, unknown>;
+					}[];
+					getFeatureState(f: { source: string; id: string }): Record<string, unknown>;
+				};
+			}
+		).__v2ProbeMap;
+		const drawn = m
+			.queryRenderedFeatures({ layers: ['camera-wedges-fill'] })
+			.find((f) => f.id === camId);
+		return {
+			rendered: drawn ? drawn.state.emphasis === true : null,
+			wedge: m.getFeatureState({ source: 'camera-wedges', id: camId }).emphasis === true,
+			pin: m.getFeatureState({ source: 'cameras', id: camId }).emphasis === true
+		};
+	}, id);
 const layerRow = (page: Page, id: string) => page.locator(`[data-layer-row="${id}"]`);
 
 test.beforeEach(async ({ page }) => {
@@ -101,6 +125,70 @@ test.describe('desktop 1440×900', () => {
 		// CAMBAR1: the panel shows the frame whole, nothing over its info bar.
 		expect(await frameProblems(detail.locator('img'))).toEqual([]);
 		await page.screenshot({ path: '/tmp/claude-501/mapx4/wedge-click-1440.png' });
+	});
+
+	test('hovering a pin lights its wedge; a selection keeps it lit until deselected (CAMQUIET1)', async ({
+		page
+	}) => {
+		await open(page, (r) => json(r, HEADINGS));
+		await expect.poll(() => sourceCount(page, 'camera-wedges')).toBe(6);
+		await page.locator('#v2-map-canvas').evaluate((el) => el.scrollIntoView({ block: 'end' }));
+		await page.waitForTimeout(500); // the map's paint after the synced revision
+		const quiet = { rendered: false, wedge: false, pin: false };
+		const loud = { rendered: true, wedge: true, pin: true };
+		expect(await wedgeLit(page, 'alert-muir-beach')).toEqual(quiet);
+		const pin = await along(page, MUIR, 0, 0);
+		await page.mouse.move(pin.x, pin.y);
+		await expect.poll(() => wedgeLit(page, 'alert-muir-beach')).toEqual(loud);
+		// Off the map: the hover ends.
+		await page.mouse.move(5, 5);
+		await expect.poll(() => wedgeLit(page, 'alert-muir-beach')).toEqual(quiet);
+		// Its in-view row lights it too (before a selection's flight reshapes the list).
+		await panel(page).locator('[data-in-view-row="cams:alert-muir-beach"]').hover();
+		await expect.poll(() => wedgeLit(page, 'alert-muir-beach')).toEqual(loud);
+		await page.mouse.move(5, 5);
+		await expect.poll(() => wedgeLit(page, 'alert-muir-beach')).toEqual(quiet);
+		// Selected: lit with the pointer elsewhere; Back clears it.
+		await page.mouse.click(pin.x, pin.y);
+		await expect(panel(page).getByRole('heading', { name: 'Muir Beach' })).toBeVisible();
+		await page.mouse.move(5, 5);
+		await expect.poll(() => wedgeLit(page, 'alert-muir-beach')).toEqual(loud);
+		await panel(page).getByRole('button', { name: '← Back to list' }).click();
+		await expect.poll(() => wedgeLit(page, 'alert-muir-beach')).toEqual(quiet);
+	});
+
+	test("the panel's frame enlarges: the whole frame in a dialog, credited; Esc returns to it (CAMQUIET1)", async ({
+		page
+	}) => {
+		await open(page, (r) => json(r, HEADINGS));
+		// A real frame's size (1920×1080); registered last, so it wins over the 1×1 stub.
+		await page.route(/cameras\.alertcalifornia\.org/, (r) =>
+			r.fulfill({ status: 200, contentType: 'image/png', body: png(1920, 1080) })
+		);
+		await page.locator('#v2-map-canvas').evaluate((el) => el.scrollIntoView({ block: 'end' }));
+		await page.waitForTimeout(500);
+		const pin = await along(page, MUIR, 0, 0);
+		await page.mouse.click(pin.x, pin.y);
+		const frame = panel(page).locator('[data-frame-enlarge]');
+		await expect(frame).toBeVisible();
+		await frame.click();
+		const dialog = page.getByRole('dialog', { name: 'Muir Beach' });
+		await expect(dialog).toBeVisible();
+		const img = dialog.locator('img');
+		expect(await frameProblems(img)).toEqual([]);
+		// Bigger than the panel's preview: up to 90vw × 80vh.
+		const box = (await img.boundingBox())!;
+		expect(box.height).toBeGreaterThan(900 * 0.6);
+		expect(box.height).toBeLessThanOrEqual(900 * 0.8 + 1);
+		expect(box.width).toBeLessThanOrEqual(1440 * 0.9 + 1);
+		await expect(dialog).toContainText('ALERTCalifornia | UC San Diego');
+		await expect(dialog).toContainText(/Last reported heading: SSW \(200°\) · \d+:\d\d [AP]M/);
+		await page.screenshot({ path: '/tmp/claude-501/camquiet1/e2e-enlarged-1440.png' });
+		await page.keyboard.press('Escape');
+		await expect(dialog).toBeHidden();
+		await expect(frame).toBeFocused();
+		// Esc closed the dialog only: the camera's detail is still open.
+		await expect(panel(page).getByRole('heading', { name: 'Muir Beach' })).toBeVisible();
 	});
 
 	test('a tile shows its heading on its own row: the full credit stays readable (Codex MAPX4 #8)', async ({

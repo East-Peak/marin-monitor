@@ -1,0 +1,75 @@
+{
+	"source": "https://cameras.alertcalifornia.org/public-camera-data/all_cameras-v3.json",
+	"readAt": "2026-10-18",
+	"note": "The feed's own coordinates, rounded by ALERTCalifornia to 0.01 degree: [lon, lat, elevation m].",
+	"cams": {
+		"Axis-TamEast": {
+			"name": "Mt. Tamalpais East",
+			"coordinates": [-122.58, 37.93, 741]
+		},
+		"Axis-TamWest": {
+			"name": "Mt. Tamalpais West",
+			"coordinates": [-122.58, 37.93, 741]
+		},
+		"Axis-MuirBeach": {
+			"name": "Muir Beach Overlook",
+			"coordinates": [-122.59, 37.86, 148]
+		},
+		"Axis-WolfbackRidge": {
+			"name": "Wolfback Ridge",
+			"coordinates": [-122.5, 37.85, 339]
+		},
+		"Axis-Bolinas": {
+			"name": "Bolinas",
+			"coordinates": [-122.71, 37.94, 103]
+		},
+		"Axis-SanPedro": {
+			"name": "San Pedro",
+			"coordinates": [-122.5, 37.99, 323]
+		},
+		"Axis-SanRafaelHill1": {
+			"name": "San Rafael Hill",
+			"coordinates": [-122.53, 37.98, 188]
+		},
+		"Axis-BigRock": {
+			"name": "Big Rock Ridge 1",
+			"coordinates": [-122.6, 38.06, 575]
+		},
+		"Axis-BigRock2": {
+			"name": "Big Rock Ridge 2",
+			"coordinates": [-122.6, 38.06, 573]
+		},
+		"Axis-BarnabeEast": {
+			"name": "Barnabe Peak East",
+			"coordinates": [-122.72, 38.03, 445]
+		},
+		"Axis-BarnabeWest": {
+			"name": "Barnabe Peak West",
+			"coordinates": [-122.72, 38.03, 445]
+		},
+		"Axis-BlackMtnMarin": {
+			"name": "Black Mtn. (Marin)",
+			"coordinates": [-122.77, 38.08, 381]
+		},
+		"Axis-Vision": {
+			"name": "Mt. Vision",
+			"coordinates": [-122.87, 38.08, 403]
+		},
+		"Axis-Burdell": {
+			"name": "Mt. Burdell 1",
+			"coordinates": [-122.59, 38.15, 477]
+		},
+		"Axis-Burdell2": {
+			"name": "Mt. Burdell 2",
+			"coordinates": [-122.59, 38.15, 477]
+		},
+		"Axis-MtBurdellSouth1": {
+			"name": "Mt. Burdell South",
+			"coordinates": [-122.59, 38.15, 453]
+		},
+		"Axis-League221": {
+			"name": "League 22",
+			"coordinates": [-122.77, 38.18, 416]
+		}
+	}
+}

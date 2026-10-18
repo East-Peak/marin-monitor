@@ -104,6 +104,14 @@ export function wedgeState(h: CamHeading, now: number): 'solid' | 'sweeping' | n
 	return h.patrolling ? 'sweeping' : 'solid';
 }
 
+/** Why a selected camera shows no wedge (CAMQUIET1); null while one is drawn. */
+export function noWedgeLine(h: CamHeading | undefined, now: number): string | null {
+	if (h && wedgeState(h, now)) return null;
+	if (h?.frameAt != null && now - h.frameAt > FRAME_FRESH_MS)
+		return `No direction drawn: last frame ${Math.round((now - h.frameAt) / 60_000)} min ago`;
+	return 'No direction drawn: heading unavailable';
+}
+
 const EARTH_KM = 6371;
 const rad = (d: number) => (d * Math.PI) / 180;
 const deg = (r: number) => (r * 180) / Math.PI;
