@@ -44,6 +44,7 @@
 	import { clickSelection, flyTarget, resolveSelection } from '$lib/dashboard/map-selection';
 	import {
 		DATA_LAYERS,
+		camWedgeFeatures,
 		layerFeatures,
 		type DataLayerId,
 		type DataLayerView
@@ -135,10 +136,13 @@
 		revision,
 		...(drawn.length
 			? {
-					places: Object.fromEntries(drawn.map((v) => [v.id, layerFeatures(v)])) as Record<
-						DataLayerId,
-						GeoJSON.Feature[]
-					>
+					places: {
+						...(Object.fromEntries(drawn.map((v) => [v.id, layerFeatures(v)])) as Record<
+							DataLayerId,
+							GeoJSON.Feature[]
+						>),
+						camWedges: dataLayers ? camWedgeFeatures(dataLayers.cams, now) : []
+					}
 				}
 			: {})
 	});

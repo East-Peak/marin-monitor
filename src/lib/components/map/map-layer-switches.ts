@@ -32,7 +32,10 @@ export const OWNED_PLACE_SOURCES = {
 	ev: 'ev-charging-stations',
 	coffee: 'coffee-shops',
 	fitness: 'fitness-studios',
-	airport: 'airports'
+	airport: 'airports',
+	cams: 'cameras',
+	/** The cameras' view wedges (MAPX4), polygons on their own source. */
+	camWedges: 'camera-wedges'
 } as const;
 export type OwnedPlace = keyof typeof OWNED_PLACE_SOURCES;
 

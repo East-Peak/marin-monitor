@@ -16,7 +16,9 @@ const SOURCES: Readonly<Record<string, { layer: InViewLayer; key: string }>> = {
 	'ev-charging-stations': { layer: 'ev', key: 'itemId' },
 	'coffee-shops': { layer: 'coffee', key: 'itemId' },
 	'fitness-studios': { layer: 'fitness', key: 'itemId' },
-	airports: { layer: 'airport', key: 'itemId' }
+	airports: { layer: 'airport', key: 'itemId' },
+	cameras: { layer: 'cams', key: 'itemId' },
+	'camera-wedges': { layer: 'cams', key: 'itemId' }
 };
 
 /** The map's click payload kinds that name a listed item. */
@@ -29,7 +31,8 @@ const KINDS: Readonly<Record<string, InViewLayer>> = {
 	'ev-charging-station': 'ev',
 	'coffee-shop': 'coffee',
 	'fitness-studio': 'fitness',
-	airport: 'airport'
+	airport: 'airport',
+	camera: 'cams'
 };
 
 /** A feature click's selection: its own id, namespaced by its kind (null when it names none). */

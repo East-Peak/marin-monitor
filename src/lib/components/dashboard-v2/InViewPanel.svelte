@@ -52,7 +52,8 @@
 		ev: 'EV chargers',
 		coffee: 'Coffee',
 		fitness: 'Fitness studios',
-		airport: 'Airports'
+		airport: 'Airports',
+		cams: 'Fire cameras'
 	};
 	// Keyboard users keep their place (Codex MAPX2 #6): a selection takes focus to its detail's
 	// heading; Back returns it to the row it came from, else to the panel's list heading.

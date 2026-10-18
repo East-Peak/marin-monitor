@@ -39,8 +39,17 @@ import {
 	airportsPart
 } from './getting-around';
 import { OUTDOORS_MAX_AGE_MS } from './outdoors';
+import { CAMERAS } from '$lib/config/cameras';
+import { ALERT_AXIS_IDS, headingLine, sector, wedgeState, type CamHeading } from './cam-heading';
+import type { HeadingsState } from './cam-headings-store';
 
 const DAY_MS = 86_400_000;
+/** The cameras' pins and wedges. */
+export const CAM_SWATCH = '#38bdf8';
+/** A wedge's radius: a display convention, not how far a camera sees. */
+const WEDGE_KM = 6;
+/** An open camera's frame refreshes this often. */
+const FRAME_REFRESH_S = 15;
 /** Each layer's freshness rule: its section's for traffic and fire, G0a's for the places. */
 const MAX_AGE_MS: Record<DataLayerId, number> = {
 	traffic: TRAFFIC_MAX_AGE_MS,
@@ -49,10 +58,20 @@ const MAX_AGE_MS: Record<DataLayerId, number> = {
 	ev: DATASET_POLICY.ev.maxAgeDays * DAY_MS,
 	coffee: DATASET_POLICY.coffee.maxAgeDays * DAY_MS,
 	fitness: DATASET_POLICY.fitness.maxAgeDays * DAY_MS,
-	airport: AIRPORT_MAX_AGE_MS
+	airport: AIRPORT_MAX_AGE_MS,
+	// Unused: the cams layer is judged by its heading read (camLayer).
+	cams: 0
 };
 
-export type DataLayerId = 'traffic' | 'fire' | 'gas' | 'ev' | 'coffee' | 'fitness' | 'airport';
+export type DataLayerId =
+	| 'traffic'
+	| 'fire'
+	| 'gas'
+	| 'ev'
+	| 'coffee'
+	| 'fitness'
+	| 'airport'
+	| 'cams';
 
 export const DATA_LAYERS: readonly {
 	id: DataLayerId;
@@ -118,6 +137,14 @@ export const DATA_LAYERS: readonly {
 		source: 'FAA',
 		defaultOn: true,
 		swatch: AIRPORT_STATUS_COLORS['on-time']
+	},
+	{
+		id: 'cams',
+		name: 'Fire cameras',
+		dataset: 'cam-headings',
+		source: 'ALERTCalifornia | UC San Diego',
+		defaultOn: true,
+		swatch: CAM_SWATCH
 	}
 ];
 
@@ -156,6 +183,8 @@ export interface DataLayerView {
 	points: LayerPoint[];
 	/** Features drawn; null whenever the read can't vouch for a number. */
 	count: number | null;
+	/** The cams layer's last reported headings (MAPX4), for its wedges. */
+	headings?: readonly CamHeading[];
 }
 
 interface Values {
@@ -166,6 +195,8 @@ interface Values {
 	coffee: CoffeeIndexData | null;
 	fitness: FitnessData | null;
 	airport: AirportStatusData | null;
+	/** Null until something holds the headings. */
+	cams: HeadingsState | null;
 }
 
 const ms = (iso: string | null | undefined) => {
@@ -177,7 +208,7 @@ const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
 const SEVERITY = { Major: 'MAJOR', Moderate: 'MODERATE', Minor: 'MINOR' } as const;
 
 function pointsOf(
-	id: Exclude<DataLayerId, 'airport'>,
+	id: Exclude<DataLayerId, 'airport' | 'cams'>,
 	values: Values,
 	time: (t: number) => string
 ): { points: LayerPoint[]; note: string | null; complete?: boolean } {
@@ -424,6 +455,76 @@ function airportLayer(
 	};
 }
 
+const ALERT_CAMS = CAMERAS.filter(
+	(c) => [...ALERT_AXIS_IDS.values()].includes(c.id) && c.lat !== undefined && c.lon !== undefined
+);
+
+/**
+ * The fire cameras: our own pins, always (the frame opens whatever the heading read did), and
+ * the layer judged by its heading read, the only thing it adds. A failed read draws no wedge.
+ */
+function camLayer(
+	headings: HeadingsState | null,
+	now: number
+): LayerRead & { headings: CamHeading[] } {
+	const read = headings?.state === 'ok' ? headings.read : null;
+	const byId = new Map((read?.cams ?? []).map((h) => [h.id, h]));
+	const points = ALERT_CAMS.map(
+		(c): LayerPoint => ({
+			id: c.id,
+			lon: c.lon!,
+			lat: c.lat!,
+			title: c.name,
+			at: null,
+			props: { itemId: c.id, name: c.name },
+			detail: {
+				title: c.name,
+				meta: [c.source, headingLine(byId.get(c.id), read?.headingAt ?? null, now)],
+				image: { src: c.url, alt: `Latest frame from ${c.name}`, refreshS: FRAME_REFRESH_S },
+				paragraphs: [],
+				empty: 'A live wildfire-detection camera. The wedge on the map is its direction of view.',
+				source: { label: 'ALERTCalifornia', href: 'https://alertcalifornia.org/' }
+			}
+		})
+	);
+	const state = headings === null ? 'loading' : read ? 'value' : headings.state;
+	return {
+		state: state === 'ok' ? 'value' : state,
+		asOf: read?.headingAt ?? null,
+		kept: null,
+		note:
+			state === 'value'
+				? 'Wedge: direction of view, not how far it sees'
+				: state === 'unavailable'
+					? 'Directions unavailable; the cameras still open'
+					: null,
+		points,
+		complete: state === 'value',
+		headings: read?.cams ?? []
+	};
+}
+
+/** The drawn cameras' view wedges: solid, dashed while sweeping, none when stale. */
+export function camWedgeFeatures(
+	view: Pick<DataLayerView, 'points' | 'headings'>,
+	now: number
+): GeoJSON.Feature[] {
+	const byId = new Map((view.headings ?? []).map((h) => [h.id, h]));
+	return view.points.flatMap((p): GeoJSON.Feature[] => {
+		const h = byId.get(p.id);
+		const style = h ? wedgeState(h, now) : null;
+		if (!h || !style) return [];
+		return [
+			{
+				type: 'Feature',
+				id: p.id,
+				properties: { itemId: p.id, style },
+				geometry: sector([p.lon, p.lat], h.az!, h.fov!, WEDGE_KM)
+			}
+		];
+	});
+}
+
 export function v2DataLayers(input: {
 	on: Readonly<Record<DataLayerId, boolean>>;
 	/** The registry's dataset outcomes (traffic and fires have no entry in the shared list). */
@@ -436,6 +537,7 @@ export function v2DataLayers(input: {
 	const out = {} as Record<DataLayerId, DataLayerView>;
 	const read = (layer: (typeof DATA_LAYERS)[number]): LayerRead => {
 		if (layer.id === 'airport') return airportLayer(outcomes.airport, values.airport, now);
+		if (layer.id === 'cams') return camLayer(values.cams, now);
 		const entry = datasetEntry(
 			layer.dataset,
 			layer.source,
@@ -475,7 +577,8 @@ export function v2DataLayers(input: {
 			kept: r.kept,
 			note: r.note,
 			points: shown,
-			count: r.state === 'value' && r.complete && on[layer.id] ? shown.length : null
+			count: r.state === 'value' && r.complete && on[layer.id] ? shown.length : null,
+			...('headings' in r ? { headings: r.headings as CamHeading[] } : {})
 		};
 	}
 	return out;

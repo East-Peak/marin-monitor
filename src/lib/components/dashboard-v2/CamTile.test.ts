@@ -105,7 +105,9 @@ describe('CamTile', () => {
 		});
 		await flush();
 		expect(container.textContent).toContain('Mt. Tam East');
-		expect(container.querySelector('[data-cam-meta]')!.textContent!.trim()).toBe('ALERTCalifornia');
+		expect(container.querySelector('[data-cam-meta]')!.textContent!.trim()).toBe(
+			'ALERTCalifornia | UC San Diego'
+		);
 	});
 
 	it("a Caltrans cam reads the source's capture age, and asks for it", async () => {
@@ -188,7 +190,7 @@ describe('CamTile', () => {
 		expect(root(ct.container).dataset.status).toBe('stale');
 		expect(ct.container.querySelector('.cam-old')!.textContent).toBe('updated 7 min ago');
 		expect(rf.container.querySelector('[data-cam-meta]')!.textContent).toMatch(
-			/ALERTCalifornia · last received 3 min ago/
+			/ALERTCalifornia \| UC San Diego · last received 3 min ago/
 		);
 		expect(rf.container.textContent).not.toMatch(/updated/);
 	});

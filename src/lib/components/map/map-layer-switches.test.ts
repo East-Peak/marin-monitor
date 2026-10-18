@@ -181,7 +181,9 @@ describe('owned data layers (MAPX2b)', () => {
 			ev: [],
 			coffee: [],
 			fitness: [point('y')],
-			airport: [point('SFO'), point('OAK')]
+			airport: [point('SFO'), point('OAK')],
+			cams: [point('alert-tam-east')],
+			camWedges: [point('alert-tam-east')]
 		});
 		expect(counts).toEqual({
 			'traffic-events': 2,
@@ -190,7 +192,9 @@ describe('owned data layers (MAPX2b)', () => {
 			'ev-charging-stations': 0,
 			'coffee-shops': 0,
 			'fitness-studios': 1,
-			airports: 2
+			airports: 2,
+			cameras: 1,
+			'camera-wedges': 1
 		});
 		expect(map.vis['fitness-studios-label']).toBe('visible');
 		expect(map.vis['airports-hit-layer']).toBe('visible');

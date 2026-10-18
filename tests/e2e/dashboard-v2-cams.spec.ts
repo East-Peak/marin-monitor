@@ -271,7 +271,7 @@ test.describe('desktop 1440', () => {
 		await expect(tile.locator('[data-cam-meta]')).toContainText(/Caltrans · updated [45] min ago/);
 		expect(await decodedImages(tile)).toBe(1);
 		await expect(page.locator('[data-camera-id="alert-tam-east"] [data-cam-meta]')).toHaveText(
-			'ALERTCalifornia'
+			'ALERTCalifornia | UC San Diego'
 		);
 	});
 

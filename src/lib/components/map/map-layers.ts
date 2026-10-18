@@ -185,6 +185,16 @@ function addSources(map: MapLibreMap): void {
 		data: { type: 'FeatureCollection', features: [] }
 	});
 
+	// v2's fire cameras and their view wedges (MAPX4); empty unless an owner draws them.
+	map.addSource('cameras', {
+		type: 'geojson',
+		data: { type: 'FeatureCollection', features: [] }
+	});
+	map.addSource('camera-wedges', {
+		type: 'geojson',
+		data: { type: 'FeatureCollection', features: [] }
+	});
+
 	// 311 reports source (SeeClickFix / Fix It Marin)
 	map.addSource('311-reports', {
 		type: 'geojson',
@@ -195,6 +205,9 @@ function addSources(map: MapLibreMap): void {
 // ---------------------------------------------------------------------------
 // Layers — added in z-order (bottom to top)
 // ---------------------------------------------------------------------------
+
+/** The fire cameras' pins and wedges (the Layers row's swatch, `CAM_SWATCH`). */
+const CAMERA_COLOR = '#38bdf8';
 
 function addLayers(map: MapLibreMap): void {
 	// --- Shared paint expressions ---
@@ -673,6 +686,53 @@ function addLayers(map: MapLibreMap): void {
 			'text-halo-color': 'rgba(10, 10, 10, 0.9)',
 			'text-halo-width': 1.5
 		}
+	});
+
+	// --- Fire cameras (MAPX4): a wedge per last reported heading, dashed while sweeping ---
+	map.addLayer({
+		id: 'camera-wedges-fill',
+		type: 'fill',
+		source: 'camera-wedges',
+		paint: {
+			'fill-color': CAMERA_COLOR,
+			'fill-opacity': hoverCase(0.32, ['case', ['==', ['get', 'style'], 'solid'], 0.18, 0.08])
+		}
+	});
+	map.addLayer({
+		id: 'camera-wedges-line',
+		type: 'line',
+		source: 'camera-wedges',
+		filter: ['==', ['get', 'style'], 'solid'],
+		paint: { 'line-color': CAMERA_COLOR, 'line-width': 1.25, 'line-opacity': 0.8 }
+	});
+	map.addLayer({
+		id: 'camera-wedges-sweeping',
+		type: 'line',
+		source: 'camera-wedges',
+		filter: ['==', ['get', 'style'], 'sweeping'],
+		paint: {
+			'line-color': CAMERA_COLOR,
+			'line-width': 1.25,
+			'line-opacity': 0.8,
+			'line-dasharray': [2, 2]
+		}
+	});
+	map.addLayer({
+		id: 'cameras-layer',
+		type: 'circle',
+		source: 'cameras',
+		paint: {
+			'circle-radius': hoverCase(7.5, 4.5),
+			'circle-color': CAMERA_COLOR,
+			'circle-stroke-width': hoverCase(3, 1.5),
+			'circle-stroke-color': hoverCase('rgba(255, 247, 220, 0.98)', 'rgba(10, 10, 10, 0.85)')
+		}
+	});
+	map.addLayer({
+		id: 'cameras-hit-layer',
+		type: 'circle',
+		source: 'cameras',
+		paint: { 'circle-radius': 14, 'circle-color': 'rgba(0, 0, 0, 0)' }
 	});
 
 	// --- 311 reports ---

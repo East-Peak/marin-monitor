@@ -3,9 +3,17 @@ import { get, readable, writable } from 'svelte/store';
 import { createMapFeed, type MapFeedSource } from './map-feed';
 import type { LayerPrefId } from './section-prefs';
 
-function source(): MapFeedSource & { ensure: ReturnType<typeof vi.fn> } {
+function source(): MapFeedSource & {
+	ensure: ReturnType<typeof vi.fn>;
+	release: ReturnType<typeof vi.fn>;
+} {
 	const none = readable(null);
+	const release = vi.fn();
 	return {
+		release,
+		camHeadings: Object.assign(readable({ state: 'loading' as const, read: null }), {
+			hold: vi.fn(() => release)
+		}),
 		ensure: vi.fn(async () => {}),
 		snapshot: none,
 		fixIt: none,
@@ -67,5 +75,29 @@ describe('createMapFeed', () => {
 		f.stop();
 		full.set(true);
 		expect(src.ensure).not.toHaveBeenCalled();
+	});
+});
+
+describe('the cams layer holds the headings (MAPX4)', () => {
+	it('only while the whole map shows with the layer on: 30 s reads are its to own', () => {
+		const { src, full, layers, f } = feed();
+		expect(src.camHeadings.hold).not.toHaveBeenCalled();
+		full.set(true);
+		expect(src.camHeadings.hold).toHaveBeenCalledTimes(1);
+		layers.set({ cams: true, ev: false });
+		expect(src.camHeadings.hold).toHaveBeenCalledTimes(1);
+		layers.set({ cams: false });
+		expect(src.release).toHaveBeenCalledTimes(1);
+		layers.set({ cams: true });
+		expect(src.camHeadings.hold).toHaveBeenCalledTimes(2);
+		f.stop();
+		expect(src.release).toHaveBeenCalledTimes(2);
+	});
+
+	it('its read reaches the layer', () => {
+		const { full, f } = feed();
+		full.set(true);
+		expect(get(f.feed).dataLayers.cams.state).toBe('loading');
+		f.stop();
 	});
 });

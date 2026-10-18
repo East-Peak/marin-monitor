@@ -26,6 +26,7 @@ export const LAYER_PREF_IDS = [
 	'coffee',
 	'fitness',
 	'airport',
+	'cams',
 	'roads',
 	'news',
 	'safety',

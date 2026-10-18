@@ -18,7 +18,8 @@ export type InViewLayer =
 	| 'ev'
 	| 'coffee'
 	| 'fitness'
-	| 'airport';
+	| 'airport'
+	| 'cams';
 /** List order: one group per layer. */
 const LAYER_ORDER: readonly InViewLayer[] = [
 	'news',
@@ -30,7 +31,8 @@ const LAYER_ORDER: readonly InViewLayer[] = [
 	'ev',
 	'coffee',
 	'fitness',
-	'airport'
+	'airport',
+	'cams'
 ];
 
 export interface InViewItem {

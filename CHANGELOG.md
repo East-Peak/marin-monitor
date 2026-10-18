@@ -6,6 +6,15 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-17
 
+### Added — Fire cameras on the map, with the way each one looks
+
+- **A wedge per camera.** The 17 ALERTCalifornia ridge cameras are pins on the v2 map, each with a wedge pointing the way it last reported looking. The wedge is solid while the camera holds still, dashed while it sweeps on patrol, and gone when its last frame is more than 5 minutes old. Its length is a drawing convention, not how far the camera sees; the Layers list says so.
+- **Click a wedge or pin** to open the camera's latest frame in the side panel, refreshed every 15 s, with "Last reported heading: SSE (163°) · 7:52 AM". That is when we read the heading; the picture may have been taken at another moment, and the panel never claims they match.
+- **Camera tiles** now say "Looking SSE · 163°", or "Sweeping" while patrolling. With no heading, there is no footer: never a guess.
+- If ALERTCalifornia's camera list can't be read, the layer says "unavailable", draws no wedges, and the cameras still open.
+- ALERTCalifornia frames are now credited "ALERTCalifornia | UC San Diego", as they ask.
+- New: `GET /api/cams/heading` (30 s public cache; 503 with a reason when the feed can't be read).
+
 ### Changed — Every map layer starts on
 
 - EV chargers, coffee and fitness studios now start switched on, like everything else, on the dashboard map and on `/map`. Anything you've switched off stays off.

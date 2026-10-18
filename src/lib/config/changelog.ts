@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-17',
+		title: 'Fire cameras on the map, pointing the way they look',
+		description:
+			'The ridge cameras are now on the map, each with a wedge showing the direction it last reported looking: solid while it holds still, dashed while it sweeps, gone when its picture is old. Click one to see its latest picture, refreshed every 15 seconds, and its last reported heading. Camera tiles now say which way they look too (“Looking SSE · 163°”). The wedge shows direction, not how far a camera can see.'
+	},
+	{
+		date: '2026-10-17',
 		title: 'The rain chart no longer looks like 50% on a dry day',
 		description:
 			'A dry hour now draws nothing above a labelled 0% line, with 50% and 100% marked above it. When the whole next day is dry, the card says “No rain expected” in words instead of drawing bars. The tide chart now labels its high and low in feet, and the surf card gives the wave range.'

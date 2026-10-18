@@ -118,6 +118,10 @@ vi.mock('$lib/dashboard/v2-controller', async () => ({
 				subscribe: (fn: (v: unknown) => void) => (fn(initialSnapshot ?? null), () => {})
 			},
 			fixIt: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
+			camHeadings: {
+				subscribe: (fn: (v: unknown) => void) => (fn({ state: 'loading', read: null }), () => {}),
+				hold: () => () => {}
+			},
 			transit: {
 				subscribe: (fn: (v: unknown) => void) => (fn({ reads: null, error: null }), () => {})
 			},

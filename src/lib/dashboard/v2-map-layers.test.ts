@@ -7,6 +7,7 @@ import type { AirportStatus, AirportStatusData } from '$lib/types/airport';
 import {
 	DATA_LAYERS,
 	defaultDataLayers,
+	camWedgeFeatures,
 	layerFeatures,
 	v2DataLayers,
 	type DataLayerId
@@ -77,7 +78,8 @@ const base = {
 		ev: null,
 		coffee: null,
 		fitness: null,
-		airport: null
+		airport: null,
+		cams: null
 	}
 };
 const airport = (code: string, over: Partial<AirportStatus> = {}): AirportStatus => ({
@@ -127,7 +129,8 @@ describe('v2DataLayers', () => {
 		});
 	});
 
-	it.each(DATA_LAYERS.map((l) => l.id))(
+	// The cams layer is judged by its heading read, not a dataset outcome (its own tests below).
+	it.each(DATA_LAYERS.map((l) => l.id).filter((id) => id !== 'cams'))(
 		'%s: a failed read is "unavailable", draws nothing and claims no count',
 		(id) => {
 			const dataset = DATA_LAYERS.find((l) => l.id === id)!.dataset;
@@ -391,5 +394,89 @@ describe("airports (MAPX2c): Getting Around's reads, in its card's words", () =>
 describe('defaults (Stuart, 2026-10-17: "flooding the zone is kind of fun")', () => {
 	it('every data layer starts on; only a saved choice turns one off', () => {
 		expect(Object.values(defaultDataLayers()).every(Boolean)).toBe(true);
+	});
+});
+
+describe('cams layer (MAPX4)', () => {
+	const heading = (id: string, over: Record<string, unknown> = {}) => ({
+		id,
+		az: 162.64,
+		fov: 65.1,
+		patrolling: false,
+		frameAt: NOW - 60_000,
+		...over
+	});
+	const run = (cams: unknown) =>
+		v2DataLayers({ ...base, outcomes: {}, values: { ...base.values, cams } as never }).cams;
+	const okRead = (...list: ReturnType<typeof heading>[]) => ({
+		state: 'ok',
+		read: { headingAt: NOW - 20_000, cams: list }
+	});
+
+	it('pins every ALERTCalifornia camera at our own position, as of the heading read', () => {
+		const v = run(okRead(heading('alert-tam-east')));
+		expect(v.state).toBe('value');
+		expect(v.asOf).toBe(NOW - 20_000);
+		expect(v.points).toHaveLength(17);
+		const tam = v.points.find((p) => p.id === 'alert-tam-east')!;
+		expect([tam.lon, tam.lat]).toEqual([-122.5816, 37.9235]);
+		expect(v.count).toBe(17);
+	});
+
+	it("the detail is the latest frame, refreshed every 15 s, with the camera's own credit", () => {
+		const tam = run(okRead(heading('alert-tam-east'))).points.find(
+			(p) => p.id === 'alert-tam-east'
+		)!;
+		expect(tam.detail.image).toEqual({
+			src: 'https://cameras.alertcalifornia.org/public-camera-data/Axis-TamEast/latest-frame.jpg',
+			alt: 'Latest frame from Mt. Tam East',
+			refreshS: 15
+		});
+		expect(tam.detail.meta[0]).toBe('ALERTCalifornia | UC San Diego');
+		expect(tam.detail.meta).toContain('Last reported heading: SSE (163°) · 7:59 AM');
+	});
+
+	it('wedges: solid when fresh and still, dashed while sweeping, none when stale', () => {
+		const v = run(
+			okRead(
+				heading('alert-tam-east'),
+				heading('alert-tam-west', { patrolling: true }),
+				heading('alert-bolinas', { frameAt: NOW - 6 * 60_000 })
+			)
+		);
+		const wedges = camWedgeFeatures(v, NOW);
+		expect(wedges.map((w) => [w.properties?.itemId, w.properties?.style])).toEqual([
+			['alert-tam-east', 'solid'],
+			['alert-tam-west', 'sweeping']
+		]);
+		expect(wedges[0].geometry.type).toBe('Polygon');
+	});
+
+	it('the legend says the wedge is direction, not reach', () => {
+		expect(run(okRead(heading('alert-tam-east'))).note).toBe(
+			'Wedge: direction of view, not how far it sees'
+		);
+	});
+
+	it('a failed heading read: unavailable, no wedges, the cameras still open', () => {
+		const v = run({ state: 'unavailable', read: null });
+		expect(v.state).toBe('unavailable');
+		expect(v.points).toHaveLength(17);
+		expect(v.count).toBeNull();
+		expect(v.note).toBe('Directions unavailable; the cameras still open');
+		expect(camWedgeFeatures(v, NOW)).toEqual([]);
+		expect(v.points[0].detail.meta).toContain('Heading unavailable');
+	});
+
+	it('not read yet: loading; switched off: nothing drawn', () => {
+		expect(run(null).state).toBe('loading');
+		const off = v2DataLayers({
+			...base,
+			outcomes: {},
+			on: { ...allOn, cams: false },
+			values: { ...base.values, cams: okRead(heading('alert-tam-east')) } as never
+		}).cams;
+		expect(off.points).toEqual([]);
+		expect(camWedgeFeatures(off, NOW)).toEqual([]);
 	});
 });

@@ -71,3 +71,15 @@ describe('the data layers (MAPX2b)', () => {
 		expect(clickSelection({ kind: 'fire-incident' })).toBeNull();
 	});
 });
+
+describe('cameras (MAPX4)', () => {
+	it('a pin or a wedge click names the camera', () => {
+		expect(clickSelection({ kind: 'camera', itemId: 'alert-tam-east' })).toBe(
+			'cams:alert-tam-east'
+		);
+		for (const source of ['cameras', 'camera-wedges'])
+			expect(featureSelection({ source, properties: { itemId: 'alert-tam-east' } })).toBe(
+				'cams:alert-tam-east'
+			);
+	});
+});

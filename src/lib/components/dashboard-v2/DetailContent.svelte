@@ -4,7 +4,8 @@
 		title: string;
 		/** Short facts under the title, e.g. scope and end time. */
 		meta: string[];
-		image?: { src: string; alt: string } | null;
+		/** `refreshS`: a live frame, reloaded that often while shown (MAPX4's cameras). */
+		image?: { src: string; alt: string; refreshS?: number } | null;
 		/** The source's text as we hold it (an excerpt, or NWS's own text). */
 		paragraphs: string[];
 		/** What to say when the source gave no text. */
@@ -15,6 +16,18 @@
 
 <script lang="ts">
 	let { detail, titleId }: { detail: Detail; titleId: string } = $props();
+
+	let loadedAt = $state(Date.now());
+	$effect(() => {
+		const every = detail.image?.refreshS;
+		if (!every) return;
+		loadedAt = Date.now();
+		const timer = setInterval(() => (loadedAt = Date.now()), every * 1000);
+		return () => clearInterval(timer);
+	});
+	const imageSrc = $derived(
+		detail.image?.refreshS ? `${detail.image.src}?t=${loadedAt}` : detail.image?.src
+	);
 </script>
 
 <article class="detail" data-detail>
@@ -23,7 +36,7 @@
 		<p class="muted" data-text-role="meta">{detail.meta.join(' · ')}</p>
 	{/if}
 	{#if detail.image}
-		<img src={detail.image.src} alt={detail.image.alt} loading="lazy" />
+		<img src={imageSrc} alt={detail.image.alt} loading={detail.image.refreshS ? 'eager' : 'lazy'} />
 	{/if}
 	{#each detail.paragraphs as p, i (i)}
 		<p class="para" data-text-role="body">{p}</p>

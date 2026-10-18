@@ -23,6 +23,7 @@ export type MapFeedSource = Pick<
 	| 'fires'
 	| 'airport'
 	| 'places'
+	| 'camHeadings'
 >;
 
 export interface MapFeed {
@@ -52,10 +53,23 @@ export function createMapFeed(
 				DATA_LAYERS.map((l) => [l.id, $full && ($layers[l.id] ?? l.defaultOn)])
 			) as Record<DataLayerId, boolean>
 	);
-	const stop = layerOn.subscribe((on) => {
+	// The cams layer owns the 30 s heading reads while it shows (MAPX4); an open camera's
+	// detail is on this map, so it is held with it.
+	let releaseHeadings: (() => void) | null = null;
+	const unsubscribe = layerOn.subscribe((on) => {
 		for (const l of DATA_LAYERS)
 			if (on[l.id] && DETAIL_LAYER_DATASETS.has(l.dataset)) void src.ensure(l.dataset);
+		if (on.cams && !releaseHeadings) releaseHeadings = src.camHeadings.hold();
+		if (!on.cams && releaseHeadings) {
+			releaseHeadings();
+			releaseHeadings = null;
+		}
 	});
+	const stop = () => {
+		unsubscribe();
+		releaseHeadings?.();
+		releaseHeadings = null;
+	};
 	const data = derived(
 		[
 			src.snapshot,
@@ -77,16 +91,18 @@ export function createMapFeed(
 			src.places.ev,
 			src.places.coffee,
 			src.places.fitness,
-			src.airport
+			src.airport,
+			src.camHeadings
 		],
-		([traffic, fire, gas, ev, coffee, fitness, airport]) => ({
+		([traffic, fire, gas, ev, coffee, fitness, airport, cams]) => ({
 			traffic,
 			fire,
 			gas,
 			ev,
 			coffee,
 			fitness,
-			airport
+			airport,
+			cams
 		})
 	);
 	const dataLayers = derived(
