@@ -22,7 +22,6 @@ import { fetchFitnessDataWithStatus } from '$lib/api/marin/fitness';
 import {
 	earthquakesToNewsItems,
 	fetchNpsAlerts,
-	fetchSheriffCrimeBlotter,
 	fetchSupplementalActivityFeeds,
 	fetchSupplementalPoliceLogs,
 	fetchTransitAlerts,
@@ -59,6 +58,7 @@ import { COST_DATASETS, costMaxAgeMs } from './cost';
 import { CIVIC_DATASETS } from './news-civic';
 import { EVENTS_DATASETS } from './events';
 import { fetchActivityReadWithStatus, type ActivityRead } from '$lib/api/marin/activity';
+import { readSheriffBlotterOrThrow, type BlotterRead } from '$lib/api/marin/blotter';
 import { fetchPoliceLogsDataWithStatus } from '$lib/api/marin/police-logs';
 import { fetchNpsAlertsWithStatus, type NpsAlert } from '$lib/api/marin/nps';
 import { fetchCompositeDataWithStatus } from '$lib/api/marin/composite';
@@ -384,8 +384,17 @@ export function v2NewsSources(
 	signal: AbortSignal,
 	{
 		deadlineMs = DEFAULT_OP_DEADLINE_MS,
-		onTransit
-	}: { deadlineMs?: number; onTransit?: (reads: readonly TransitAgencyRead[]) => void } = {}
+		onTransit,
+		onBlotter,
+		now = Date.now
+	}: {
+		deadlineMs?: number;
+		/** The owner's clock: a read is timed by it. */
+		now?: () => number;
+		onTransit?: (reads: readonly TransitAgencyRead[]) => void;
+		/** The blotter's whole read (its hidden count and cap), published as transit's is. */
+		onBlotter?: (read: BlotterRead) => void;
+	} = {}
 ): TvNewsSources {
 	const owned =
 		<T>(part: string, run: (s: AbortSignal) => Promise<T>) =>
@@ -404,9 +413,11 @@ export function v2NewsSources(
 			if (!s.aborted) onTransit?.(read.agencies);
 			return read.items;
 		}),
-		'sheriff-blotter': owned('sheriff-blotter', (s) =>
-			fetchSheriffCrimeBlotter(undefined, undefined, { signal: s })
-		),
+		'sheriff-blotter': owned('sheriff-blotter', async (s) => {
+			const read = await readSheriffBlotterOrThrow({ signal: s, now });
+			if (!s.aborted) onBlotter?.(read);
+			return { items: read.reports, observedAt: read.observedAt };
+		}),
 		'police-logs': owned('police-logs', (s) => fetchSupplementalPoliceLogs({ signal: s })),
 		'supplemental-activity': owned('supplemental-activity', (s) =>
 			fetchSupplementalActivityFeeds({ signal: s })
@@ -454,6 +465,8 @@ export interface DashboardV2Controller {
 	snapshot: Readable<NewsSnapshotView | null>;
 	/** This controller's own Fix It (311) items; null until its first successful commit. */
 	fixIt: Readable<NewsItem[] | null>;
+	/** This controller's last successful blotter read (NEWSPIN1); a failure leaves it as it was. */
+	blotter: Readable<BlotterRead | null>;
 	brief: Readable<BriefState>;
 	/** The desktop brief's trace and tide curve (MAPX1); the phone never asks. */
 	enableBriefDetail(): Promise<void>;
@@ -534,6 +547,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 	const seed = deps.initialSnapshot ?? null;
 	const snapshot = writable<NewsSnapshotView | null>(seed);
 	const fixIt = writable<NewsItem[] | null>(null);
+	const blotter = writable<BlotterRead | null>(null);
 	// A seeded read is ok as of the snapshot's own generatedAt, never the request time.
 	const parts = writable<Partial<Record<TvNewsPart, PartRecord>>>(
 		seed
@@ -560,8 +574,12 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		sources:
 			deps.newsSources ??
 			v2NewsSources(deps.signal, {
+				now,
 				onTransit: (reads) => {
 					if (live()) transit.set({ reads, error: null });
+				},
+				onBlotter: (read) => {
+					if (live()) blotter.set(read);
 				}
 			}),
 		signal: deps.signal,
@@ -662,6 +680,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		cycling: { subscribe: cycling.subscribe },
 		snapshot: { subscribe: snapshot.subscribe },
 		fixIt: { subscribe: fixIt.subscribe },
+		blotter: { subscribe: blotter.subscribe },
 		healthReport: { subscribe: healthReport.subscribe },
 		transit: { subscribe: transit.subscribe },
 		airport: { subscribe: airport.subscribe },

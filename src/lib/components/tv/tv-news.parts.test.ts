@@ -29,7 +29,7 @@ function sources(over: Partial<Sources> = {}): Sources {
 		nps: empty,
 		earthquakes: untimed,
 		transit: empty,
-		'sheriff-blotter': empty,
+		'sheriff-blotter': untimed,
 		'police-logs': empty,
 		'supplemental-activity': empty,
 		seeclickfix: untimed,

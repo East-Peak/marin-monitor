@@ -26,7 +26,7 @@ vi.mock('$lib/api/marin/transit', async (orig) => ({
 }));
 vi.mock('$lib/api/marin/blotter', async (orig) => ({
 	...(await orig<object>()),
-	fetchSheriffCrimeBlotter: held('sheriff-blotter')
+	readSheriffBlotterOrThrow: held('sheriff-blotter')
 }));
 vi.mock('$lib/api/marin/police-logs', async (orig) => ({
 	...(await orig<object>()),

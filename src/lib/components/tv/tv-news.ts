@@ -71,8 +71,8 @@ export interface ObservedItems {
 	items: NewsItem[];
 	observedAt: number | null;
 }
-/** The parts whose payload reports its own time. */
-type ObservedPart = 'earthquakes' | 'seeclickfix';
+/** The parts whose payload reports its own time (the TV's blotter read reports none). */
+type ObservedPart = 'earthquakes' | 'seeclickfix' | 'sheriff-blotter';
 
 export type TvNewsSources = {
 	snapshot: (signal: AbortSignal) => Promise<NewsSnapshotResponse>;
@@ -87,7 +87,7 @@ export const TV_NEWS_SOURCES: TvNewsSources = {
 		return { items: earthquakesToNewsItems(quakes), observedAt };
 	},
 	transit: async () => (await fetchTransitAlerts()).items,
-	'sheriff-blotter': () => fetchSheriffCrimeBlotter(),
+	'sheriff-blotter': async () => ({ items: await fetchSheriffCrimeBlotter(), observedAt: null }),
 	'police-logs': () => fetchSupplementalPoliceLogs(),
 	'supplemental-activity': () => fetchSupplementalActivityFeeds(),
 	seeclickfix: () => readSeeClickFixIssues()

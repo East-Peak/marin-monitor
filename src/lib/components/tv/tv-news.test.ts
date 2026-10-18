@@ -109,7 +109,7 @@ const fakes = (): TvNewsSources => ({
 	nps: async () => [],
 	earthquakes: async () => observed([]),
 	transit: async () => [],
-	'sheriff-blotter': async () => [],
+	'sheriff-blotter': async () => observed([]),
 	'police-logs': async () => [],
 	'supplemental-activity': async () => [],
 	seeclickfix: async () => observed([])

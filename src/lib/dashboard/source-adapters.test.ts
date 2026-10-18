@@ -126,13 +126,7 @@ describe('fromLoaderPart (transport success is not freshness; Codex r1 #2)', () 
 		expect(fromLoaderPart('earthquakes', undefined, false).state).toBe('loading');
 	});
 	it('parts that swallow failures are unknown on success; a deadline failure still shows', () => {
-		for (const part of [
-			'nps',
-			'transit',
-			'sheriff-blotter',
-			'police-logs',
-			'supplemental-activity'
-		] as const) {
+		for (const part of ['nps', 'transit', 'police-logs', 'supplemental-activity'] as const) {
 			expect(fromLoaderPart(part, { ok: true, at: NOW, observedAt: null }, true)).toMatchObject({
 				state: 'unknown',
 				detail: 'failures not reported by this source'
@@ -141,6 +135,33 @@ describe('fromLoaderPart (transport success is not freshness; Codex r1 #2)', () 
 		expect(
 			fromLoaderPart('transit', { ok: false, error: 'timed out after 15000 ms', at: NOW }, false)
 				.state
+		).toBe('unavailable');
+	});
+});
+
+describe('the sheriff blotter is ok only on a live read (NEWSPIN1)', () => {
+	it('a live read is ok as of when it was made, judged by its own max age', () => {
+		expect(STATUS_AWARE_PARTS.has('sheriff-blotter')).toBe(true);
+		expect(
+			fromLoaderPart('sheriff-blotter', { ok: true, at: NOW, observedAt: NOW - 60_000 }, true)
+		).toEqual({
+			id: 'part:sheriff-blotter',
+			name: 'Sheriff blotter',
+			state: 'ok',
+			observedAt: NOW - 60_000,
+			maxAgeMs: PART_OBSERVATION_MAX_AGE_MS['sheriff-blotter'],
+			detail: null
+		});
+	});
+	it('a read with no time is unknown; a failure after a success is stale from the last good read', () => {
+		expect(
+			fromLoaderPart('sheriff-blotter', { ok: true, at: NOW, observedAt: null }, true).state
+		).toBe('unknown');
+		expect(
+			fromLoaderPart('sheriff-blotter', { ok: false, error: 'HTTP 500', at: NOW }, true, NOW - DAY)
+		).toMatchObject({ state: 'stale', observedAt: NOW - DAY, detail: 'HTTP 500' });
+		expect(
+			fromLoaderPart('sheriff-blotter', { ok: false, error: 'HTTP 500', at: NOW }, false).state
 		).toBe('unavailable');
 	});
 });
@@ -249,9 +270,9 @@ describe('G0a health JSON (for the health indicator)', () => {
 });
 
 describe('the parts that carry a payload time (map coverage label)', () => {
-	it('are exactly the status-aware adapter parts: earthquakes and seeclickfix', () => {
+	it('are exactly the status-aware adapter parts: earthquakes, seeclickfix, the blotter', () => {
 		expect(new Set([...STATUS_AWARE_PARTS].filter((p) => p !== 'snapshot'))).toEqual(
-			new Set(['earthquakes', 'seeclickfix'])
+			new Set(['earthquakes', 'seeclickfix', 'sheriff-blotter'])
 		);
 	});
 });

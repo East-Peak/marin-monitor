@@ -20,17 +20,22 @@ const NO_AGE = 'fetched; data age not reported';
  * How old a status-aware part's payload may be and still read ok. 311 is G0a's
  * own policy (SOURCE_INVENTORY: 1 day; the cron runs every 4 h). USGS: a healthy
  * page's `generated` is never more than ~11 min old (5-min refresh and client
- * TTL, 60 s CDN), so 30 min is 4–6 missed cycles.
+ * TTL, 60 s CDN), so 30 min is 4–6 missed cycles. The blotter is timed by its own
+ * live read (no cache), made every 5-min cycle: 30 min is 6 missed cycles.
  */
 export const PART_OBSERVATION_MAX_AGE_MS = {
 	earthquakes: 30 * 60_000,
-	seeclickfix: DAY_MS
-} as const satisfies Record<'earthquakes' | 'seeclickfix', number>;
+	seeclickfix: DAY_MS,
+	'sheriff-blotter': 30 * 60_000
+} as const satisfies Record<TimedPart, number>;
+type TimedPart = 'earthquakes' | 'seeclickfix' | 'sheriff-blotter';
+const isTimed = (part: TvNewsPart): part is TimedPart => part in PART_OBSERVATION_MAX_AGE_MS;
 
 export const STATUS_AWARE_PARTS: ReadonlySet<TvNewsPart> = new Set([
 	'snapshot',
 	'earthquakes',
-	'seeclickfix'
+	'seeclickfix',
+	'sheriff-blotter'
 ]);
 
 export const PART_NAMES: Record<TvNewsPart, string> = {
@@ -112,7 +117,7 @@ export function fromLoaderPart(
 	const base = { id: `part:${part}`, name: PART_NAMES[part], observedAt: null, maxAgeMs: null };
 	if (!outcome) return { ...base, state: 'loading', detail: null };
 	if (outcome.ok) {
-		if (outcome.observedAt !== null && (part === 'earthquakes' || part === 'seeclickfix')) {
+		if (outcome.observedAt !== null && isTimed(part)) {
 			const maxAgeMs = PART_OBSERVATION_MAX_AGE_MS[part];
 			return { ...base, state: 'ok', observedAt: outcome.observedAt, maxAgeMs, detail: null };
 		}

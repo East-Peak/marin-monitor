@@ -1,7 +1,8 @@
 import { detectTown } from '$lib/config';
 import { logger } from '$lib/config/api';
 import type { NewsItem } from '$lib/types';
-import { serviceClient } from '$lib/services/client';
+import { liveData, serviceClient } from '$lib/services/client';
+import { parsePacificWallTime, pacificWallTime } from '$lib/dashboard/pacific-time';
 import type { OwnerOptions } from './fetch-helpers';
 
 const SHERIFF_BLOTTER_PAGE =
@@ -205,4 +206,113 @@ export async function fetchSheriffCrimeBlotter(
 		logger.warn('BLOTTER', `Marin Sheriff blotter fetch failed: ${(error as Error).message}`);
 		return [];
 	}
+}
+
+// ── v2 (NEWSPIN1): a live, throwing read; town-level only; property and public-place reports ──
+
+/** The county's 30 latest rows: a capped read knows only those. */
+export const BLOTTER_LIMIT = 30;
+export const BLOTTER_HOURS = 36;
+const HOUR_MS = 3_600_000;
+
+/**
+ * The classes v2 shows at all: property and public-place reports. The county also lists
+ * reports about people at a home (child abuse, mental health, domestic violence, missing
+ * persons, bodies, restraining orders); those are counted, never shown.
+ */
+const SHOWN_CRIMES: ReadonlySet<string> = new Set([
+	'THEFT',
+	'SHOPLIFTNG',
+	'BURG AUTO',
+	'BURG COMM',
+	'BURG RES',
+	'VANDALISM',
+	'STOLEN PRP',
+	'TRESPASS'
+]);
+
+export function shownReport(record: Pick<SheriffCrimeRecord, 'crime'>): boolean {
+	return SHOWN_CRIMES.has((record.crime || '').trim().toUpperCase());
+}
+
+export interface BlotterRead {
+	/** Shown reports, newest first: town-level, the county's masked address as text, no point. */
+	reports: NewsItem[];
+	/** When each report not shown happened, so a window counts them too. */
+	hiddenAt: number[];
+	/** The read hit the row cap: it holds only the latest BLOTTER_LIMIT rows. */
+	capped: boolean;
+	/** When this live read was made. */
+	observedAt: number;
+}
+
+/** "5XX THE ALAMEDA" as "5XX The Alameda": the mask stays as the county wrote it. */
+function maskedAddress(raw: string | undefined): string | null {
+	const words = (raw || '').trim().split(/\s+/).filter(Boolean);
+	if (!words.length) return null;
+	return words
+		.map((w) => (/\d/.test(w) ? w.toUpperCase() : w.charAt(0) + w.slice(1).toLowerCase()))
+		.join(' ');
+}
+
+function toV2Report(record: SheriffCrimeRecord, at: number): NewsItem {
+	const town = normalizeTown(record);
+	const label = translateSheriffCrimeLabel(record);
+	const address = maskedAddress(record.incident_street_address);
+	return {
+		id: `blotter-${record.unique_id}`,
+		title: address ? `${label} · ${address}` : label,
+		link: SHERIFF_BLOTTER_PAGE,
+		pubDate: new Date(at).toISOString(),
+		timestamp: at,
+		description: formatDescription(record, town.name),
+		source: 'Marin Sheriff Blotter',
+		category: 'safety',
+		verification: 'official',
+		town: town.name,
+		townSlug: town.slug,
+		locationConfidence: 'town',
+		locationEvidence: address ?? town.name,
+		topics: ['crime', 'blotter']
+	};
+}
+
+/**
+ * v2's blotter read. Every read goes to the county (no cache hit stands in for one), a cached
+ * copy after a failure throws, and the county's floating times are read as Pacific wall time.
+ */
+export async function readSheriffBlotterOrThrow({
+	signal,
+	now = Date.now
+}: OwnerOptions & { now?: () => number } = {}): Promise<BlotterRead> {
+	const observedAt = now();
+	const since = Math.floor((observedAt - BLOTTER_HOURS * HOUR_MS) / HOUR_MS) * HOUR_MS;
+	const result = await serviceClient.request<SheriffCrimeRecord[]>(
+		'MARIN_OPENDATA',
+		'/ahxi-5nsc.json',
+		{
+			params: {
+				$select:
+					'unique_id,incident_date_time,crime,crime_class,incident_street_address,incident_city_town,incident_city_town_mapping,jurisdiction,latitude,longitude',
+				$where: `incident_date_time >= '${pacificWallTime(since)}'`,
+				$order: 'incident_date_time DESC',
+				$limit: BLOTTER_LIMIT
+			},
+			signal,
+			useCache: false,
+			revalidateInBackground: false
+		}
+	);
+	const rows = liveData(result);
+	const reports: NewsItem[] = [];
+	const hiddenAt: number[] = [];
+	for (const record of rows) {
+		if (!record.unique_id) continue;
+		const at = parsePacificWallTime((record.incident_date_time || '').slice(0, 16));
+		if (at === null) continue;
+		if (shownReport(record)) reports.push(toV2Report(record, at));
+		else hiddenAt.push(at);
+	}
+	reports.sort((a, b) => b.timestamp - a.timestamp);
+	return { reports, hiddenAt, capped: rows.length >= BLOTTER_LIMIT, observedAt };
 }

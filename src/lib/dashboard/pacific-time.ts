@@ -18,6 +18,16 @@ const TIME = new Intl.DateTimeFormat('en-US', {
 	hour: 'numeric',
 	minute: '2-digit'
 });
+const WALL = new Intl.DateTimeFormat('en-CA', {
+	timeZone: PACIFIC,
+	year: 'numeric',
+	month: '2-digit',
+	day: '2-digit',
+	hour: '2-digit',
+	minute: '2-digit',
+	second: '2-digit',
+	hourCycle: 'h23'
+});
 const DAY = new Intl.DateTimeFormat('en-US', { timeZone: PACIFIC, month: 'short', day: 'numeric' });
 
 /** ICU uses a narrow no-break space before AM/PM; the UI and tests use a plain space. */
@@ -31,6 +41,12 @@ export function pacificDate(ms: number): string {
 export function parsePacificWallTime(value: string): number | null {
 	if (!/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}$/.test(value)) return null;
 	return parseFeedDate(value.replace(' ', 'T'), PACIFIC);
+}
+
+/** An instant as Pacific wall time, `YYYY-MM-DDTHH:MM:SS` (a floating-time query bound). */
+export function pacificWallTime(ms: number): string {
+	const part = Object.fromEntries(WALL.formatToParts(ms).map((p) => [p.type, p.value]));
+	return `${part.year}-${part.month}-${part.day}T${part.hour}:${part.minute}:${part.second}`;
 }
 
 /** The calendar day after a `YYYY-MM-DD` date (date arithmetic only; no clock or zone). */

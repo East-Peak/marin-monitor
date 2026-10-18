@@ -4,6 +4,9 @@
  * address (the review table is in the NEWSPIN1 progress log). Multi-branch and page-based
  * sources (the county library, KWMR, the hub pages) are not venues: their coordinates say only
  * where the source is, never where an event happens.
+ *
+ * An event's own location words agree with its calendar's venue when they name the venue, an
+ * alias or its street address as a whole phrase; anything else names another place.
  */
 
 export interface Venue {
@@ -90,9 +93,44 @@ export const VENUES: readonly Venue[] = [
 	}
 ];
 
+export function venueById(id: string | undefined): Venue | undefined {
+	return id === undefined ? undefined : VENUES.find((v) => v.id === id);
+}
+
 /** A calendar's venue by its source name (the scrapers stamp `venueId` from this). */
 export function venueOfSource(source: string): Venue {
 	const venue = VENUES.find((v) => v.source === source);
 	if (!venue) throw new Error(`no reviewed venue for ${source}`);
 	return venue;
+}
+
+/** Street words as calendars spell them variously ("200 N. San Pedro Rd." = "200 North San Pedro Road"). */
+const STREET_WORDS: Record<string, string> = {
+	north: 'n',
+	south: 's',
+	east: 'e',
+	west: 'w',
+	street: 'st',
+	road: 'rd',
+	avenue: 'ave',
+	boulevard: 'blvd',
+	highway: 'hwy',
+	drive: 'dr',
+	lane: 'ln'
+};
+
+const words = (s: string) =>
+	` ${s
+		.toLowerCase()
+		.replace(/[’']/g, '')
+		.split(/[^a-z0-9&]+/)
+		.filter(Boolean)
+		.map((w) => STREET_WORDS[w] ?? w)
+		.join(' ')} `;
+
+/** True when the words name this venue, an alias or its street as a whole phrase. */
+export function namesVenue(venue: Venue, text: string): boolean {
+	const haystack = words(text);
+	const street = venue.address.split(',')[0];
+	return [venue.name, ...venue.aliases, street].some((phrase) => haystack.includes(words(phrase)));
 }
