@@ -1,6 +1,6 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
 import { MILL_VALLEY, SAN_RAFAEL, SOURCES, reportingSnapshot } from './fixtures/v2-reporting';
-import { camsOff, pinAt, settled } from './fixtures/v2-probe';
+import { camsOff, pinAt, probe, settled } from './fixtures/v2-probe';
 
 /** MAPX2: the full-width map, its docked in-view list, and detail in the panel (no popup). */
 test.skip(({ baseURL }) => baseURL?.startsWith('https://') ?? false, 'stubbed');
@@ -225,7 +225,9 @@ test.describe('desktop 1440×900: layers (MAPX2b)', () => {
 		page
 	}) => {
 		await open(page, (p) => p.route('**/api/traffic/corridors', (r) => json(r, CORRIDORS)));
-		await expect.poll(async () => (await settled(page)).synced?.counts['traffic-events']).toBe(2);
+		// Settle on its own budget, then poll the probe (as map-layers-restore's airports do).
+		await settled(page);
+		await expect.poll(async () => (await probe(page))?.synced?.counts['traffic-events']).toBe(2);
 		await page.getByRole('button', { name: 'Layers' }).click();
 		await expect(layerRow(page, 'traffic').locator('[data-layer-status]')).toHaveText(
 			/^511 · as of \d{1,2}:\d{2} [AP]M$/

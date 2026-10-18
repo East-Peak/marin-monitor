@@ -26,7 +26,12 @@ test('production brief: every card answers or says why not; nothing says LIVE or
 	await expect(page.getByRole('button', { name: SETTLED_HEALTH_LABEL })).toBeVisible({
 		timeout: 30_000
 	});
-	for (const card of await page.locator('[data-card]').all()) {
+	// The brief's cards carry a state; the Getting-around link and the sections' cards don't.
+	const cards = await page
+		.locator('[data-slot="brief"] [data-card]:not([data-card="getting-around"])')
+		.all();
+	expect(cards.length).toBeGreaterThan(0);
+	for (const card of cards) {
 		expect(await card.getAttribute('data-state')).toMatch(
 			/^(loading|ok|stale|unavailable|unknown)$/
 		);

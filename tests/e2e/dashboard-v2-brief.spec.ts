@@ -231,7 +231,8 @@ test('an advisory shows with its Marin scope and leaves at expiry with no refetc
 		'CAZ505',
 		'CAZ506'
 	]);
-	await page.clock.runFor(3 * 60_000);
+	// The clock tick fires once in the jump (runFor would step every frame of it, and overran).
+	await page.clock.fastForward(3 * 60_000);
 	await expect(row).toHaveCount(0);
 	expect(alertRequests).toHaveLength(1);
 });

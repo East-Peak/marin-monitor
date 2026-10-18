@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { expect, test, type Page, type Route } from '@playwright/test';
-import { camsOff, pinAt, settled } from './fixtures/v2-probe';
+import { camsOff, pinAt, probe, settled } from './fixtures/v2-probe';
 
 /**
  * MAPX2c: the old map's remaining layers, each owned and with a status: fitness studios,
@@ -142,7 +142,10 @@ test.describe('desktop 1440×900 (MAPX2c)', () => {
 		page
 	}) => {
 		await open(page, (p) => p.route('**/api/airport-status', (r) => json(r, AIRPORTS)));
-		await expect.poll(async () => (await settled(page)).synced?.counts.airports).toBe(2);
+		// Settle on its own budget first: wrapped in the poll's 5 s, a settle that takes ~5 s under
+		// load ran the poll out. Getting Around's read can land after, so poll the probe for it.
+		await settled(page);
+		await expect.poll(async () => (await probe(page))?.synced?.counts.airports).toBe(2);
 		await page.getByRole('button', { name: 'Layers' }).click();
 		await expect(layerRow(page, 'airport').getByRole('checkbox')).toBeChecked();
 		await expect(status(page, 'airport')).toHaveText(/^FAA · as of \d{1,2}:\d{2} [AP]M$/);

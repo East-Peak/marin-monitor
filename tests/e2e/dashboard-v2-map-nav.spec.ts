@@ -22,7 +22,8 @@ const zoom = (page: Page) =>
 	);
 /**
  * A town whose circle is the only thing under its point (311 pins and fire-context landmarks
- * win clicks over circles, and some sit on Fairfax), with its screen point. Fairfax first.
+ * win clicks over circles, and some sit on Fairfax), with its point on the map canvas (not the
+ * page: the page above the map can still shift before the click). Fairfax first.
  */
 const clickableTown = (page: Page) =>
 	page.evaluate((winners) => {
@@ -34,7 +35,6 @@ const clickableTown = (page: Page) =>
 		const towns = m
 			.queryRenderedFeatures({ layers: ['towns-layer'] })
 			.sort((a, b) => fairfaxFirst(a) - fairfaxFirst(b));
-		const r = m.getCanvas().getBoundingClientRect();
 		for (const t of towns) {
 			const p = m.project(t.geometry.coordinates);
 			const under = m
@@ -44,7 +44,7 @@ const clickableTown = (page: Page) =>
 				])
 				.map((f) => f.layer.id);
 			if (!under.some((id) => CLICK_WINNERS.test(id)))
-				return { slug: String(t.properties.slug), x: r.left + p.x, y: r.top + p.y };
+				return { slug: String(t.properties.slug), x: p.x, y: p.y };
 		}
 		return null;
 	}, '^(311|landmarks|news-pins|earthquakes|airports)');
@@ -71,7 +71,9 @@ test('a town click flies in; "All of Marin" brings back the county view and clea
 
 	const town = (await clickableTown(page))!;
 	console.log(`clicking ${town.slug}`);
-	await page.mouse.click(town.x, town.y);
+	await page
+		.locator('#v2-map-canvas canvas.maplibregl-canvas')
+		.click({ position: { x: town.x, y: town.y } });
 	await expect.poll(() => zoom(page), { timeout: 10_000 }).toBeGreaterThan(12.5);
 	await expect(page.locator('.v2-scope-label + *')).toContainText(townName(town.slug));
 	await expect(reset).toBeVisible();
@@ -99,8 +101,14 @@ test('the key names how each layer is placed, inside the map', async ({ page }) 
 		'Fix It Marin each report at its spot'
 	);
 	await expect(key.locator('[data-key="earthquakes"]')).toContainText('Earthquakes each epicenter');
-	// Inside the canvas, so it costs the page no height.
-	const canvas = (await page.locator('#v2-map-canvas').boundingBox())!;
-	const box = (await key.boundingBox())!;
-	expect(box.y + box.height).toBeLessThanOrEqual(canvas.y + canvas.height);
+	// Inside the canvas, so it costs the page no height. Both boxes come from one layout: read
+	// apart, a shift above the map between them made them disagree by up to ~90 px.
+	const { keyBottom, canvasBottom } = await page.evaluate(() => {
+		const canvas = document.querySelector('#v2-map-canvas')!.getBoundingClientRect();
+		const key = document
+			.querySelector('#v2-map-canvas [data-slot="map-key"]')!
+			.getBoundingClientRect();
+		return { keyBottom: key.bottom, canvasBottom: canvas.bottom };
+	});
+	expect(keyBottom).toBeLessThanOrEqual(canvasBottom);
 });

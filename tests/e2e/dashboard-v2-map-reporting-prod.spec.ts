@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { expectNoAlertAffordance } from './fixtures/alert-affordances';
+import { FRESHNESS_CLAIM, LIVE_BADGE } from './fixtures/freshness-claims';
 import { probe, rendered, settled } from './fixtures/v2-probe';
 
 /** Production invariants for PR 9 on real data. Readiness is the ?probe hook, never wording (Codex r3 #5). */
@@ -43,7 +44,8 @@ test('Latest reporting is bounded and labelled; the map draws owned features or 
 	}
 	for (const meta of metas) {
 		expect(meta).toMatch(/^.+ · (\d+ min ago|\d+ h ago|[A-Z][a-z]{2} \d{1,2}) · .+$/);
-		expect(meta).not.toMatch(/just now|\bLIVE\b/i);
+		expect(meta).not.toMatch(LIVE_BADGE);
+		expect(meta).not.toMatch(FRESHNESS_CLAIM);
 	}
 	await expectNoAlertAffordance(region);
 

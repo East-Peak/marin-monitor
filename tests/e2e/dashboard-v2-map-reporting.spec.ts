@@ -8,6 +8,7 @@ import {
 	type ReportingStory
 } from './fixtures/v2-reporting';
 import { expectNoAlertAffordance } from './fixtures/alert-affordances';
+import { FRESHNESS_CLAIM, LIVE_BADGE } from './fixtures/freshness-claims';
 import { camsOff, mapCenter, pinAt, probe, settled, sourceCount } from './fixtures/v2-probe';
 
 test.skip(
@@ -154,8 +155,10 @@ test.describe('desktop 1440×900', () => {
 		]);
 		for (const label of await page
 			.locator('section#map [data-text-role="meta"], section#map [data-section-status]')
-			.allInnerTexts())
-			expect(label).not.toMatch(/just now|\bLIVE\b/i);
+			.allInnerTexts()) {
+			expect(label).not.toMatch(LIVE_BADGE);
+			expect(label).not.toMatch(FRESHNESS_CLAIM);
+		}
 	});
 
 	test('Mill Valley: 3 town items + 2 county-wide; a newer unlocated item never pads', async ({
@@ -269,7 +272,9 @@ test.describe('desktop 1440×900', () => {
 		await openV2(page);
 		expect((await settled(page)).synced!.counts['news-pins:retained']).toBe(0);
 		up = false;
-		await page.clock.runFor(5 * 60_000 + 1_000); // V2_REFRESH_MS: the next cycle's snapshot read fails
+		// V2_REFRESH_MS: the next cycle's snapshot read fails. fastForward fires the refresh interval
+		// once; runFor would step every tick and map frame of five minutes, which overran under load.
+		await page.clock.fastForward(5 * 60_000 + 1_000);
 		await expect
 			.poll(
 				async () => {
@@ -300,10 +305,10 @@ test.describe('desktop 1440×900', () => {
 		const first = await settled(page);
 		expect(first.layers).toMatchObject({ '311': 'value', earthquakes: 'value' });
 		up = false;
-		// Two refresh cycles: the 5-min refresh lands a few ms inside the USGS cache TTL (5 min), so
-		// its quake read is a genuine fresh cache hit; the 10-min one goes to the network, where
-		// v2's live-only read fails and the last list is kept.
-		await page.clock.runFor(10 * 60_000 + 1_000);
+		// fastForward fires the refresh interval once, at the jump's end: past the USGS cache TTL
+		// (5 min), so the quake read goes to the network, where v2's live-only read fails and the
+		// last list is kept. (runFor stepped every tick and map frame of ten minutes; it overran.)
+		await page.clock.fastForward(10 * 60_000 + 1_000);
 		await expect
 			.poll(
 				async () => {

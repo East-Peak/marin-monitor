@@ -17,6 +17,9 @@ const item = (title: string, link: string, pubDate?: string) =>
 const DATED = 'Point Reyes oyster farm reopens';
 const UNDATED = 'Undated Point Reyes notice';
 
+/** Playwright's errors for a request whose document or test is already gone. */
+const DOCUMENT_GONE = /Test ended|has been disposed|has been closed/;
+
 /** Frozen feeds; `failParser` = how many times the parser chunk fetch fails (Infinity = always). */
 async function setup(page: Page, failParser = 0) {
 	const loads = { count: 0, parserFetches: 0 };
@@ -51,8 +54,17 @@ async function setup(page: Page, failParser = 0) {
 	await page.route(/\/api\/(article|geocode)/, (route) => route.fulfill({ status: 404, body: '' }));
 	let failuresLeft = failParser;
 	await page.route('**/_app/immutable/**/*.js', async (route) => {
-		const response = await route.fetch();
-		const body = await response.text();
+		// The reload under test (or the test's end) can drop a chunk mid-fetch, disposing its
+		// response: that document is gone, so there is nothing left to answer. Anything else throws.
+		const fetched = await route
+			.fetch()
+			.then(async (response) => ({ response, body: await response.text() }))
+			.catch((err: Error) => {
+				if (DOCUMENT_GONE.test(err.message)) return null;
+				throw err;
+			});
+		if (!fetched) return;
+		const { response, body } = fetched;
 		if (body.includes('onopentag')) loads.parserFetches += 1;
 		if (body.includes('onopentag') && failuresLeft > 0) {
 			failuresLeft -= 1;

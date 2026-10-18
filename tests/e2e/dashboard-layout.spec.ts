@@ -26,6 +26,20 @@ async function v2Hydrated(page: Page) {
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 }
 
+/**
+ * Follow v2's "Old dashboard" link. Legacy's server load fetches live NWS and USGS before the
+ * page can render, so wait for that data to arrive, then for legacy itself.
+ */
+async function openOldDashboard(page: Page) {
+	const data = page.waitForResponse((r) => {
+		const url = new URL(r.url());
+		return url.pathname === '/__data.json' && url.searchParams.get('layout') === 'legacy';
+	});
+	await page.getByRole('link', { name: 'Old dashboard' }).click();
+	await data;
+	await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
+}
+
 test.beforeEach(async ({ page }) => {
 	// Keep the legacy onboarding modal from covering the page.
 	await page.addInitScript(() => localStorage.setItem('mm_onboardingComplete', 'true'));
@@ -60,8 +74,7 @@ test.describe('dashboard layout flag', () => {
 		await expect(page.locator('[data-layout]')).toHaveCount(1);
 		await page.waitForTimeout(3_000);
 		expect(data.filter((u) => LEGACY_ONLY.test(u))).toEqual([]);
-		await page.getByRole('link', { name: 'Old dashboard' }).click();
-		await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
+		await openOldDashboard(page);
 		await expect(page).toHaveURL(/\?layout=legacy$/);
 	});
 
@@ -150,8 +163,7 @@ test.describe('dashboard layout flag', () => {
 
 		const legacyFeeds = recordRequests(page, FEED_REQUEST);
 		await expect(page.locator('link[rel="canonical"]')).toHaveCount(1);
-		await page.getByRole('link', { name: 'Old dashboard' }).click();
-		await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
+		await openOldDashboard(page);
 		await expect(page.locator('[data-layout]')).toHaveCount(1);
 		// v2's canonical must not linger on the legacy override; both overrides stay noindex.
 		await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);

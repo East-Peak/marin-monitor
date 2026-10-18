@@ -45,7 +45,14 @@ async function setup(
 				? route.fulfill({ status: 503, contentType: 'application/json', body: '{}' })
 				: route.fallback();
 		}
-		return url.hostname.endsWith('cartocdn.com') ? route.fallback() : route.abort();
+		if (!url.hostname.endsWith('cartocdn.com')) return route.abort();
+		// The basemap's street tiles are empty: the style only counts as loaded once its tiles
+		// have downloaded and decoded, and the 311 dots never draw before it. Live tiles from the
+		// CDN held that up past the polls below on a busy machine; the style, sprite and glyphs
+		// stay live.
+		return /\.(mvt|pbf)$/.test(url.pathname)
+			? route.fulfill({ status: 200, contentType: 'application/x-protobuf', body: Buffer.alloc(0) })
+			: route.fallback();
 	});
 	// The old chain is held open: anything still waiting on it would wait here.
 	await page.route(CHAIN, (route) => {
@@ -81,7 +88,7 @@ const degradedCount = (page: Page) =>
 
 type ProbeMap = {
 	getLayer(id: string): unknown;
-	loaded(): boolean;
+	isStyleLoaded(): boolean;
 	queryRenderedFeatures(options: { layers: string[] }): unknown[];
 };
 
@@ -92,7 +99,9 @@ const rendered311 = (page: Page) =>
 		const active = document
 			.querySelector('[data-screen-id][aria-current="true"]')
 			?.getAttribute('data-screen-id');
-		if (!m || !m.getLayer('tv-overlay-311-dots') || !m.loaded() || active !== 'map-county')
+		// The style, not loaded(): loaded() also waits out pending repaints, and under load it
+		// trailed pins already drawn (style and tiles loaded) by seconds, running the polls out.
+		if (!m || !m.isStyleLoaded() || !m.getLayer('tv-overlay-311-dots') || active !== 'map-county')
 			return null;
 		return m.queryRenderedFeatures({ layers: ['tv-overlay-311-dots'] }).length > 0
 			? performance.now()

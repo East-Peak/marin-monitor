@@ -1,4 +1,4 @@
-import { expect, test, type Route } from '@playwright/test';
+import { expect, test, type Page, type Route } from '@playwright/test';
 
 /**
  * Work only the legacy controller does. v2 legitimately requests /api/data/*,
@@ -7,6 +7,25 @@ import { expect, test, type Route } from '@playwright/test';
  */
 const LEGACY_WORK =
 	/\/api\/(feeds|article|geocode)\b|\/api\/data\/strava|api\.weather\.gov\/gridpoints\/[A-Z]{3}\/\d+,\d+\/forecast(?:$|\?)/;
+
+/**
+ * Client-side navigation from legacy to v2 (the router keeps the shared stores). It waits for the
+ * navigation's own data response, then for v2 to hydrate, not for a fixed budget covering both.
+ */
+async function clientNavigateToV2(page: Page) {
+	const data = page.waitForResponse((r) => {
+		const url = new URL(r.url());
+		return url.pathname === '/__data.json' && url.searchParams.get('layout') === 'v2';
+	});
+	await page.evaluate(() => {
+		const a = document.createElement('a');
+		a.href = '/?layout=v2';
+		document.querySelector('[data-layout="legacy"]')!.append(a);
+		a.click();
+	});
+	await data;
+	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+}
 
 test('a destroyed legacy controller starts no further work (debounce, timers, visibility, delayed responses)', async ({
 	page
@@ -47,13 +66,7 @@ test('a destroyed legacy controller starts no further work (debounce, timers, vi
 	await page.locator('.picker-trigger').click();
 	await page.getByRole('option', { name: 'Novato' }).click();
 	navigated = true;
-	await page.evaluate(() => {
-		const a = document.createElement('a');
-		a.href = '/?layout=v2';
-		document.querySelector('[data-layout="legacy"]')!.append(a);
-		a.click();
-	});
-	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+	await clientNavigateToV2(page);
 
 	// PF5: the refresh store persists lastRefresh on every endRefresh; snapshot it at teardown.
 	const readRefresh = () => page.evaluate(() => localStorage.getItem('refreshSettings'));
@@ -78,14 +91,16 @@ test('a destroyed legacy controller starts no further work (debounce, timers, vi
 		}
 	}
 	// Legacy's loop would request the next agency 500 ms after its held response arrives.
-	await page.clock.runFor(2_000);
+	// fastForward fires every timer due in the jump once, which is all a leak needs to show;
+	// runFor would also step v2's every tick and frame, which overran the test under load.
+	await page.clock.fastForward(2_000);
 	await page.waitForTimeout(500);
 	const transitContinuation = transitAfterNav.filter((u) => !/[?&]agency=GG\b/.test(u));
 
 	// Past the debounce and the 5-minute auto-refresh, then a tab-visible event.
-	await page.clock.runFor(6 * 60_000);
+	await page.clock.fastForward(6 * 60_000);
 	await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
-	await page.clock.runFor(1_000);
+	await page.clock.fastForward(1_000);
 	await page.waitForTimeout(1_500);
 
 	expect(transitContinuation).toEqual([]);
@@ -142,13 +157,7 @@ test('legacy panels start no request after teardown (NWS grid chains, tide retri
 		route.fulfill({ status: 503, body: 'test' })
 	);
 
-	await page.evaluate(() => {
-		const a = document.createElement('a');
-		a.href = '/?layout=v2';
-		document.querySelector('[data-layout="legacy"]')!.append(a);
-		a.click();
-	});
-	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+	await clientNavigateToV2(page);
 
 	const late: string[] = [];
 	page.on('request', (req) => {
@@ -168,7 +177,7 @@ test('legacy panels start no request after teardown (NWS grid chains, tide retri
 			await route.fulfill({ status: 503, body: 'unavailable' });
 		}
 	}
-	await page.clock.runFor(60_000);
+	await page.clock.fastForward(60_000); // each panel's retry or next hop fires once
 	await page.waitForTimeout(1_500);
 
 	expect(late).toEqual([]);

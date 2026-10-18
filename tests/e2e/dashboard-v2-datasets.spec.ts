@@ -42,7 +42,8 @@ test('v2 loads each essential exactly once, never the feed chain or Strava', asy
 test('a tab-visible event inside a minute does not refetch; the 5-minute refresh does, once', async ({
 	page
 }) => {
-	await page.clock.install();
+	const installedAt = Date.now();
+	await page.clock.install({ time: installedAt });
 	// The browser's own HTTP cache would add stale-while-revalidate background requests
 	// (/api/data/* sends s-maxage + stale-while-revalidate, no max-age) that the app never
 	// made; serve the essentials uncacheable so the count is the app's own requests.
@@ -61,10 +62,20 @@ test('a tab-visible event inside a minute does not refetch; the 5-minute refresh
 	await expect
 		.poll(() => ESSENTIAL.every((p) => count(seen, p) === 1), { timeout: 15_000 })
 		.toBe(true);
+	// A refresh asked for during a cycle joins it: let the first cycle settle before time moves.
+	await expect(page.locator('[data-layout="v2"]')).toHaveAttribute('data-cycling', 'false', {
+		timeout: 15_000
+	});
+	// The interval started after the clock was installed and before now.
+	const sinceInstall = await page.evaluate((t) => Date.now() - t, installedAt);
 	await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+	// fastForward fires a due timer once per jump (runFor stepped every frame, and overran under
+	// load), so pin the cadence from both sides: 5 s short of any five-minute mark first ...
+	await page.clock.fastForward(5 * 60_000 - sinceInstall - 5_000);
 	await page.waitForTimeout(1_000);
 	for (const path of ESSENTIAL) expect(count(seen, path), `${path} after focus`).toBe(1);
-	await page.clock.runFor(5 * 60_000 + 1_000);
+	// ... then 5 s past the interval's.
+	await page.clock.fastForward(sinceInstall + 10_000);
 	await expect
 		.poll(() => ESSENTIAL.every((p) => count(seen, p) === 2), { timeout: 15_000 })
 		.toBe(true);
