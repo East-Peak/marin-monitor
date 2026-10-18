@@ -356,17 +356,6 @@ for (const width of [1440, 2000]) {
 			await stubCams(page);
 			await page.goto('/?layout=v2');
 			await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
-			const news = await box(page, '#news');
-			const events = await box(page, '#events');
-			expect(Math.abs(news.y - events.y)).toBeLessThanOrEqual(4);
-			expect(news.x).toBeLessThan(events.x);
-			expect(news.width).toBeGreaterThan(events.width);
-			const grid = await box(page, '#sections');
-			const lately = await box(page, '[data-slot="lately"]');
-			expect(Math.abs(lately.width - grid.width)).toBeLessThanOrEqual(2);
-			// Between Cost and News, as in the mockup.
-			expect(lately.y).toBeGreaterThan((await box(page, '#cost')).y);
-			expect(lately.y + lately.height).toBeLessThanOrEqual(news.y);
 			await expect(page.getByText(/later release/)).toHaveCount(0);
 
 			await expect(page.locator('#news [data-section-meta]')).toHaveText(/^\d+ of \d+ feeds OK$/);
@@ -379,6 +368,29 @@ for (const width of [1440, 2000]) {
 			await expect(page.locator('[data-slot="lately"]')).not.toContainText('quiet');
 			await expect(page.locator('[data-slot="lately"]')).not.toContainText('Subscribers');
 			await expect(page.locator('[data-slot="sources-footer"]')).toBeVisible();
+
+			// The layout, once the sections have their content, read in one go: separate reads
+			// straddled the sections' loading reflows and disagreed by up to 17 px.
+			const { news, events, grid, lately, cost } = await page.evaluate(() => {
+				const rect = (sel: string) => {
+					const r = document.querySelector(sel)!.getBoundingClientRect();
+					return { x: r.x, y: r.y, width: r.width, height: r.height };
+				};
+				return {
+					news: rect('#news'),
+					events: rect('#events'),
+					grid: rect('#sections'),
+					lately: rect('[data-slot="lately"]'),
+					cost: rect('#cost')
+				};
+			});
+			expect(Math.abs(news.y - events.y)).toBeLessThanOrEqual(4);
+			expect(news.x).toBeLessThan(events.x);
+			expect(news.width).toBeGreaterThan(events.width);
+			expect(Math.abs(lately.width - grid.width)).toBeLessThanOrEqual(2);
+			// Between Cost and News, as in the mockup.
+			expect(lately.y).toBeGreaterThan(cost.y);
+			expect(lately.y + lately.height).toBeLessThanOrEqual(news.y);
 
 			const dir = process.env.SHOTS_DIR;
 			if (dir) {
