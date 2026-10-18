@@ -1,6 +1,6 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
 import { MILL_VALLEY, SAN_RAFAEL, SOURCES, reportingSnapshot } from './fixtures/v2-reporting';
-import { pinAt, settled } from './fixtures/v2-probe';
+import { camsOff, pinAt, settled } from './fixtures/v2-probe';
 
 /** MAPX2: the full-width map, its docked in-view list, and detail in the panel (no popup). */
 test.skip(({ baseURL }) => baseURL?.startsWith('https://') ?? false, 'stubbed');
@@ -67,6 +67,7 @@ const STORIES = [
 
 /** `extra` routes are added after the broad fail-fast stub, so they win. */
 async function open(page: Page, extra: (page: Page) => Promise<unknown> = async () => {}) {
+	await camsOff(page);
 	await page.route(
 		/\/api\/(data|nps|transit|health|feeds|article|geocode|calfire|traffic)\b|earthquake\.usgs\.gov|api\.weather\.gov|tidesandcurrents/,
 		(r) => r.fulfill({ status: 503, body: 'stubbed' })

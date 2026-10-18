@@ -6,7 +6,8 @@ import { settled, sourceCount } from './fixtures/v2-probe';
 test.skip(({ baseURL }) => baseURL?.startsWith('https://') ?? false, 'stubbed');
 
 const T0 = Math.floor(Date.now() / 1000) * 1000;
-const TAM: [number, number] = [-122.5816, 37.9235];
+// Muir Beach looks out over the ocean: nothing else under its wedge to take the click.
+const MUIR: [number, number] = [-122.5784, 37.8592];
 const PIXEL = Buffer.from(
 	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
 	'base64'
@@ -14,7 +15,7 @@ const PIXEL = Buffer.from(
 const HEADINGS = {
 	headingAt: T0 - 20_000,
 	cams: [
-		{ id: 'alert-tam-east', az: 162.64, fov: 65.1, patrolling: false, frameAt: T0 - 60_000 },
+		{ id: 'alert-muir-beach', az: 200.2, fov: 62.8, patrolling: false, frameAt: T0 - 60_000 },
 		{ id: 'alert-tam-west', az: 333.69, fov: 65.1, patrolling: true, frameAt: T0 - 60_000 },
 		// Its frame is 10 minutes old: no wedge.
 		{ id: 'alert-bolinas', az: 97.6, fov: 62.8, patrolling: false, frameAt: T0 - 600_000 }
@@ -44,7 +45,7 @@ async function open(page: Page, heading: (r: Route) => Promise<void>) {
 	await settled(page);
 }
 
-/** The screen point `km` from the camera along `az` (flat-earth: fine at 3 km). */
+/** The screen point `km` from the camera along `az` (flat-earth: fine at 5 km). */
 const along = (page: Page, [lon, lat]: [number, number], az: number, km: number) =>
 	page.evaluate(
 		([x, y]) => {
@@ -80,18 +81,20 @@ test.describe('desktop 1440×900', () => {
 	}) => {
 		await open(page, (r) => json(r, HEADINGS));
 		await expect.poll(() => sourceCount(page, 'cameras')).toBe(17);
-		// Tam East is still and fresh, Tam West sweeping; Bolinas' frame is stale.
+		// Muir Beach is still and fresh, Tam West sweeping; Bolinas' frame is stale.
 		await expect.poll(() => sourceCount(page, 'camera-wedges')).toBe(2);
+		// The whole map on screen: Muir Beach's wedge reaches the map's south edge.
+		await page.locator('#v2-map-canvas').evaluate((el) => el.scrollIntoView({ block: 'end' }));
 		await page.waitForTimeout(500); // the map's paint after the synced revision
-		const inWedge = await along(page, TAM, 162.64, 3);
+		const inWedge = await along(page, MUIR, 200.2, 5);
 		await page.mouse.click(inWedge.x, inWedge.y);
 		const detail = panel(page).locator('[data-detail]');
-		await expect(detail.getByRole('heading', { name: 'Mt. Tam East' })).toBeVisible();
+		await expect(detail.getByRole('heading', { name: 'Muir Beach' })).toBeVisible();
 		await expect(detail).toContainText('ALERTCalifornia | UC San Diego');
-		await expect(detail).toContainText(/Last reported heading: SSE \(163°\) · \d+:\d\d [AP]M/);
+		await expect(detail).toContainText(/Last reported heading: SSW \(200°\) · \d+:\d\d [AP]M/);
 		await expect(detail.locator('img')).toHaveAttribute(
 			'src',
-			/Axis-TamEast\/latest-frame\.jpg\?t=\d+/
+			/Axis-MuirBeach\/latest-frame\.jpg\?t=\d+/
 		);
 		await page.screenshot({ path: '/tmp/claude-501/mapx4/wedge-click-1440.png' });
 	});

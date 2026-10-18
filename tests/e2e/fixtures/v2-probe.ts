@@ -60,3 +60,16 @@ export const mapCenter = (page: Page) =>
 	page.evaluate(
 		() => (window as unknown as { __v2ProbeMap?: ProbeMap }).__v2ProbeMap?.getCenter() ?? null
 	);
+
+/**
+ * Saved prefs with the fire cameras off (MAPX4), for specs whose exact in-view lists and counts
+ * predate that layer; with it off, nothing reads ALERTCalifornia either. A saved choice wins.
+ */
+export const camsOff = (page: Page) =>
+	page.addInitScript(() => {
+		if (localStorage.getItem('mm_sections_v2') === null)
+			localStorage.setItem(
+				'mm_sections_v2',
+				JSON.stringify({ version: 3, open: {}, layers: { cams: false } })
+			);
+	});

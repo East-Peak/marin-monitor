@@ -8,7 +8,7 @@ import {
 	type ReportingStory
 } from './fixtures/v2-reporting';
 import { expectNoAlertAffordance } from './fixtures/alert-affordances';
-import { mapCenter, pinAt, probe, settled, sourceCount } from './fixtures/v2-probe';
+import { camsOff, mapCenter, pinAt, probe, settled, sourceCount } from './fixtures/v2-probe';
 
 test.skip(
 	({ baseURL }) => baseURL?.startsWith('https://') ?? false,
@@ -92,6 +92,7 @@ async function stub(
 	);
 }
 async function openV2(page: Page) {
+	await camsOff(page);
 	await page.goto('/?layout=v2&probe');
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 }

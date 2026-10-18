@@ -216,13 +216,48 @@ export const INSPECTION_CLICK_LAYERS = [
 	'airports-label'
 ] as const;
 
-/** True when the click point overlaps a visible inspection target. */
-export function clickHitsInspectionTarget(map: MapLibreMap, e: MapLayerMouseEvent): boolean {
-	const visible = INSPECTION_CLICK_LAYERS.filter(
+function hitsVisible(map: MapLibreMap, e: MapLayerMouseEvent, layers: readonly string[]): boolean {
+	const visible = layers.filter(
 		(layerId) => map.getLayer(layerId) && map.getLayoutProperty(layerId, 'visibility') !== 'none'
 	);
 	if (visible.length === 0) return false;
 	return map.queryRenderedFeatures(e.point, { layers: [...visible] }).length > 0;
+}
+
+/** True when the click point overlaps a visible inspection target (`except` aside). */
+export function clickHitsInspectionTarget(
+	map: MapLibreMap,
+	e: MapLayerMouseEvent,
+	except: readonly string[] = []
+): boolean {
+	return hitsVisible(
+		map,
+		e,
+		INSPECTION_CLICK_LAYERS.filter((id) => !except.includes(id))
+	);
+}
+
+const CAMERA_PIN_LAYERS = ['cameras-layer', 'cameras-hit-layer'];
+const CAMERA_WEDGE_LAYER = 'camera-wedges-fill';
+
+/**
+ * The fire cameras (MAPX4). A pin opens its camera. A wedge covers kilometres of map, so it is
+ * the lowest priority: a click on any other target or a town circle inside it is theirs.
+ */
+export function bindCameraClick(map: MapLibreMap, onCamera: (id: string, name: string) => void) {
+	const open = (e: MapLayerMouseEvent) => {
+		const props = e.features?.[0]?.properties;
+		if (props?.itemId) onCamera(String(props.itemId), String(props.name ?? 'Camera'));
+	};
+	bindLayerGroupClick(map, CAMERA_PIN_LAYERS, (e) => {
+		if (!clickHitsVisibleStravaFeature(map, e)) open(e);
+	});
+	map.on('click', CAMERA_WEDGE_LAYER, (e: MapLayerMouseEvent) => {
+		if (clickHitsVisibleStravaFeature(map, e)) return;
+		if (clickHitsInspectionTarget(map, e, [CAMERA_WEDGE_LAYER])) return;
+		if (hitsVisible(map, e, TOWN_CLICK_LAYERS)) return;
+		open(e);
+	});
 }
 
 /**
@@ -231,7 +266,12 @@ export function clickHitsInspectionTarget(map: MapLibreMap, e: MapLayerMouseEven
  */
 export function bindTownSelectionClick(map: MapLibreMap, onTownClick: (townSlug: string) => void) {
 	bindLayerGroupClick(map, [...TOWN_CLICK_LAYERS], (e: MapLayerMouseEvent) => {
-		if (clickHitsVisibleStravaFeature(map, e) || clickHitsInspectionTarget(map, e)) return;
+		// A wedge yields to towns (bindCameraClick), so it can't block one either.
+		if (
+			clickHitsVisibleStravaFeature(map, e) ||
+			clickHitsInspectionTarget(map, e, [CAMERA_WEDGE_LAYER])
+		)
+			return;
 		const slug = e.features?.[0]?.properties?.slug;
 		if (slug) onTownClick(String(slug));
 	});

@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { expect, test, type Page, type Route } from '@playwright/test';
-import { pinAt, settled } from './fixtures/v2-probe';
+import { camsOff, pinAt, settled } from './fixtures/v2-probe';
 
 /**
  * MAPX2c: the old map's remaining layers, each owned and with a status: fitness studios,
@@ -65,6 +65,7 @@ const hasMapboxToken =
 
 /** Fails what the page would otherwise fetch live; `extra` routes are added after, so they win. */
 async function open(page: Page, extra: (page: Page) => Promise<unknown> = async () => {}) {
+	await camsOff(page);
 	await page.route(
 		/\/api\/(data|nps|transit|health|feeds|article|geocode|calfire|traffic|airport-status|news)\b|earthquake\.usgs\.gov|api\.weather\.gov|tidesandcurrents/,
 		(r) => r.fulfill({ status: 503, body: 'stubbed' })

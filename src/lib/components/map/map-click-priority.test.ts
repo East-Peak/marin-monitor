@@ -70,3 +70,46 @@ describe('map click priority (real MapLibre delegation)', () => {
 		expect(calls).toEqual(['town:novato', 'pin:n1']); // the pin handler is MapLibre's; the town is no longer blocked
 	});
 });
+
+describe('camera wedges are the lowest click priority (MAPX4)', () => {
+	async function wireCams(hits: Hits) {
+		const { bindCameraClick, bindLayerGroupClick, bindTownSelectionClick } =
+			await import('./map-interactions');
+		const map = await delegatingMap(hits);
+		const calls: string[] = [];
+		bindTownSelectionClick(map, (slug) => calls.push(`town:${slug}`));
+		bindLayerGroupClick(map, ['gas-stations-layer'], (e) =>
+			calls.push(`gas:${e.features?.[0]?.properties?.id}`)
+		);
+		bindCameraClick(map, (id) => calls.push(`cam:${id}`));
+		return { map, calls };
+	}
+	const WEDGE = { 'camera-wedges-fill': [{ properties: { itemId: 'alert-tam-east' } }] };
+
+	it('a bare wedge opens its camera', async () => {
+		const { map, calls } = await wireCams(WEDGE);
+		map.click();
+		expect(calls).toEqual(['cam:alert-tam-east']);
+	});
+	it('a station under a wedge is the station, not the camera', async () => {
+		const { map, calls } = await wireCams({
+			...WEDGE,
+			'gas-stations-layer': [{ properties: { id: 'g1' } }]
+		});
+		map.click();
+		expect(calls).toEqual(['gas:g1']);
+	});
+	it('a town circle under a wedge still selects the town', async () => {
+		const { map, calls } = await wireCams({ ...WEDGE, ...TOWN });
+		map.click();
+		expect(calls).toEqual(['town:novato']);
+	});
+	it("a camera's own pin opens it, whatever wedge it sits in", async () => {
+		const { map, calls } = await wireCams({
+			...WEDGE,
+			'cameras-layer': [{ properties: { itemId: 'alert-tam-west' } }]
+		});
+		map.click();
+		expect(calls).toEqual(['cam:alert-tam-west']);
+	});
+});

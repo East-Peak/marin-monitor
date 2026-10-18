@@ -63,6 +63,7 @@
 	import {
 		hoveredFeatureIds,
 		bindInteractiveHover,
+		bindCameraClick,
 		bindLayerGroupClick,
 		bindTownSelectionClick,
 		clickHitsVisibleStravaFeature
@@ -442,18 +443,11 @@
 			});
 		});
 
-		// A pin or its wedge opens the camera (MAPX4); co-located cams part by their wedges.
-		bindLayerGroupClick(map, cameraTriggerLayers, (e: MapLayerMouseEvent) => {
-			const feature = e.features?.[0];
-			const itemId = feature?.properties?.itemId;
-			if (!itemId) return;
-			onFeatureClick?.({
-				kind: 'camera',
-				title: String(feature?.properties?.name ?? 'Camera'),
-				source: 'ALERTCalifornia | UC San Diego',
-				itemId: String(itemId)
-			});
-		});
+		// A pin or its wedge opens the camera (MAPX4); co-located cams part by their wedges, and a
+		// wedge yields to whatever else is under the click.
+		bindCameraClick(map, (itemId, title) =>
+			onFeatureClick?.({ kind: 'camera', title, source: 'ALERTCalifornia | UC San Diego', itemId })
+		);
 
 		bindLayerGroupClick(map, airportTriggerLayers, (e: MapLayerMouseEvent) => {
 			if (clickHitsVisibleStravaFeature(map, e)) return;
@@ -495,7 +489,7 @@
 			sourceId: 'fitness-studios'
 		});
 		bindInteractiveHover(map, {
-			triggerLayerIds: ['cameras-layer', 'cameras-hit-layer'],
+			triggerLayerIds: cameraTriggerLayers.filter((id) => id !== 'camera-wedges-fill'),
 			sourceId: 'cameras'
 		});
 		bindInteractiveHover(map, {
