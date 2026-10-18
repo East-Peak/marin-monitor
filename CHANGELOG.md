@@ -6,6 +6,14 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-17
 
+### Added — Explore mode: the map on the whole screen (/map)
+
+- **"Explore ↗"** on the desktop map opens `/map`: the map fills the screen, the Layers list is a column on the left that is always open, and the "In view" list and each item's detail sit on the right.
+- **The link is the view.** The address keeps the camera (`#zoom/lat/lng`), the layers that are on and the open item (`?layers=…&sel=…`). Toggling a layer, opening an item or going back updates it at once, so a copied link reopens exactly what you see.
+- A link's layers apply for that visit and never change your saved choices. A linked item turns its own layer on. If its source can't be read, the list says so ("Fix It Marin is unavailable right now"); if it has left the feed, it says that instead.
+- **Esc** goes back from an item to the list, then back to the dashboard. "← Dashboard" does the same.
+- The page arrives with the layer names and the latest headlines in its HTML, is cached like the dashboard and is not indexed.
+
 ### Added — Road speeds, airports and fitness studios on the v2 map
 
 - **Road speeds** (Mapbox congestion lines) are back, on by default, with their own status: "Mapbox · as of …" once the tiles in view have loaded, or "Mapbox unavailable" when one fails. A failure takes the colour off the roads instead of leaving stale lines.

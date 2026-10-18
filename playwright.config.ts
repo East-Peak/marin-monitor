@@ -5,7 +5,7 @@ import { defineConfig, devices } from '@playwright/test';
  * own port; every other spec's server has no seed, so their per-test browser fixtures apply.
  * It is a dev server so Svelte reports hydration mismatches.
  */
-const SSR_SPEC = /dashboard-v2-ssr\.spec\.ts/;
+const SSR_SPEC = /(dashboard-v2|map-explore)-ssr\.spec\.ts/;
 const SSR_PORT = 4174;
 
 export default defineConfig({

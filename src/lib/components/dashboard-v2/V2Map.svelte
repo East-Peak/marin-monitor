@@ -52,12 +52,21 @@
 	import type { LayerPrefId } from '$lib/dashboard/section-prefs';
 	import LayerPanel, { type LayerRow } from './LayerPanel.svelte';
 	import { formatAsOf } from '$lib/dashboard/pacific-time';
+	import { exploreHref, layersOn, selOutcome, type ExploreView } from '$lib/dashboard/explore-url';
 
 	let {
 		data,
 		dataLayers,
 		now,
-		full = $bindable(false)
+		full = $bindable(false),
+		mode = 'dashboard',
+		prefs,
+		onlayer = sectionPrefs.setLayer,
+		initialView = null,
+		initialSel = null,
+		onselect,
+		oncamera,
+		onexit
 	}: {
 		data: V2MapData;
 		/** The data layers (MAPX2b); absent, the map draws only news, 311 and quakes. */
@@ -65,14 +74,29 @@
 		now: number;
 		/** Out: the whole map is showing (not the phone's preview), so its layers may load. */
 		full?: boolean;
+		/** 'explore' is /map (MAPX3): the whole screen, the Layers rail on desktop, no preview. */
+		mode?: 'dashboard' | 'explore';
+		/** The layer choices in force; the saved prefs unless /map's URL chose them. */
+		prefs?: Partial<Record<LayerPrefId, boolean>>;
+		onlayer?: (id: LayerPrefId, on: boolean) => void;
+		/** /map's URL: the camera to open on and the item to open, each read once. */
+		initialView?: ExploreView | null;
+		initialSel?: string | null;
+		/** Every selection change, and every settled camera, for /map's URL. */
+		onselect?: (id: string | null) => void;
+		oncamera?: (view: ExploreView) => void;
+		/** Esc with no detail open (/map: back to the dashboard). */
+		onexit?: () => void;
 	} = $props();
+	const explore = untrack(() => mode === 'explore');
+	const layerPrefs = $derived(prefs ?? $sectionPrefs.layers);
 
 	let expanded = $state(false);
 	let phone = $state(false);
 	let desktop = $state(false);
 	let mounted = $state(false);
 	$effect(() => {
-		full = mounted && (!phone || expanded);
+		full = mounted && (explore || !phone || expanded);
 	});
 	const probe = createV2Probe(
 		typeof location === 'undefined' ? '' : location.search,
@@ -155,6 +179,10 @@
 	let collapsed = $state(false);
 	let canvasEl = $state<HTMLElement | null>(null);
 	let selectedId = $state<string | null>(null);
+	/** /map's linked selection, until its dataset settles (MAPX3). */
+	let pendingSel = $state<string | null>(untrack(() => initialSel));
+	let notice = $state<string | null>(null);
+	let camera = $state<ExploreView | null>(null);
 	let hoveredId = $state<string | null>(null);
 	let flight = $state<[number, number] | null>(null);
 	/** The panel's share of the map's right edge, measured, so nothing listed hides under it. */
@@ -172,11 +200,52 @@
 	);
 	const selected = $derived(resolveSelection(allItems, selectedId));
 	const ring = $derived(flyTarget(allItems, hoveredId ?? selectedId ?? ''));
-	function select(id: string) {
+	function select(id: string, fly = true) {
 		if (!resolveSelection(allItems, id)) return;
 		selectedId = id;
 		collapsed = false;
-		flight = flyTarget(allItems, id);
+		notice = null;
+		if (fly) flight = flyTarget(allItems, id);
+		onselect?.(id);
+	}
+	function back() {
+		selectedId = null;
+		onselect?.(null);
+	}
+	// A linked selection opens once its own layer's read settles; it never errors. A URL view
+	// beats the selection's flight (the link was copied where the reader left the camera).
+	const stateOf = (layer: string) =>
+		layer === 'news'
+			? data.layers.news
+			: layer === '311'
+				? data.layers['311']
+				: layer === 'quake'
+					? data.layers.earthquakes
+					: (dataLayers?.[layer as DataLayerId]?.state ?? 'unavailable');
+	$effect(() => {
+		const id = pendingSel;
+		if (!id) return;
+		const found = resolveSelection(allItems, id) !== null;
+		const outcome = selOutcome(id, { state: stateOf(id.slice(0, id.indexOf(':'))), found });
+		if (outcome.kind === 'pending') return;
+		pendingSel = null;
+		if (outcome.kind === 'found') return untrack(() => select(id, !initialView));
+		notice = outcome.text;
+		untrack(() => onselect?.(null));
+	});
+	/** The dashboard map's way into /map: the same camera, layers and selection. */
+	const exploreLink = $derived(
+		exploreHref({
+			view: camera,
+			layers: layersOn(layerPrefs, $mapStore.activeLayers),
+			sel: selectedId
+		})
+	);
+	function onkeydown(e: KeyboardEvent) {
+		// The panel's Back takes Esc first while a detail shows (it marks the key handled).
+		if (e.key !== 'Escape' || e.defaultPrevented || selectedId || !onexit) return;
+		e.preventDefault();
+		onexit();
 	}
 
 	// The layer panel (MAPX2b): every row says its source and time, or why it has none.
@@ -215,7 +284,7 @@
 	});
 	// Road speeds (MAPX2c): Mapbox's congestion lines, with their tiles' own status. Lines, not
 	// places: no count and no in-view rows. Without a token there is no layer and no row.
-	const roadsOn = $derived(Boolean(MAPBOX_TOKEN) && ($sectionPrefs.layers.roads ?? true));
+	const roadsOn = $derived(Boolean(MAPBOX_TOKEN) && (layerPrefs.roads ?? true));
 	let roadSpeeds = $state<RoadSpeeds>({ state: 'loading', asOf: null, drawn: false });
 	const roadsRow = $derived<LayerRow[]>(
 		MAPBOX_TOKEN
@@ -283,14 +352,14 @@
 		const story = id === '311' || STORY_LAYERS.some(([s]) => s === id);
 		if (story && $mapStore.activeLayers[id as MapLayer] !== on)
 			mapStore.toggleLayer(id as MapLayer);
-		sectionPrefs.setLayer(id as LayerPrefId, on);
+		onlayer(id as LayerPrefId, on);
 	}
 	// Saved story choices apply once (the data layers read the prefs directly).
 	let storiesRestored = false;
 	$effect(() => {
 		if (!mounted || storiesRestored) return;
 		storiesRestored = true;
-		const saved = untrack(() => $sectionPrefs.layers);
+		const saved = untrack(() => layerPrefs);
 		for (const [id] of [...STORY_LAYERS, ['311']] as const) {
 			const want = saved[id];
 			if (want !== undefined && untrack(() => $mapStore.activeLayers[id]) !== want)
@@ -337,9 +406,29 @@
 	}
 </script>
 
-<div class="v2-map" data-expanded={expanded ? 'true' : 'false'}>
+<svelte:window {onkeydown} />
+
+{#snippet layerPanel(rail: boolean)}
+	<LayerPanel {stories} layers={layerRows} ontoggle={toggleLayer} {rail}>
+		{#snippet extra()}
+			{#if desktop && !explore}
+				<a class="v2-map-explore" href={exploreLink} data-text-role="label">Explore ↗</a>
+			{/if}
+		{/snippet}
+	</LayerPanel>
+{/snippet}
+
+<div
+	class="v2-map"
+	data-mode={mode}
+	data-rail={explore && desktop ? 'true' : undefined}
+	data-expanded={expanded ? 'true' : 'false'}
+>
+	{#if explore && desktop}
+		<div class="v2-map-rail">{@render layerPanel(true)}</div>
+	{/if}
 	<div class="v2-map-canvas" id="v2-map-canvas" data-text-role="control" bind:this={canvasEl}>
-		<MapContainer>
+		<MapContainer {initialView}>
 			<MapDataLayer
 				earthquakes={data.earthquakes}
 				alertPulses={false}
@@ -364,7 +453,9 @@
 					inspector = null;
 				}}
 			/>
-			<LayerPanel {stories} layers={layerRows} ontoggle={toggleLayer} />
+			{#if !(explore && desktop)}
+				{@render layerPanel(false)}
+			{/if}
 			<MapTooltip
 				items={data.inspectable}
 				emptyText={data.established ? 'No active stories for this town.' : null}
@@ -375,7 +466,12 @@
 					{panelPx}
 					highlight={ring}
 					flyTo={flight}
-					onbounds={(bounds, width) => (view = { bounds, width })}
+					refit={!initialView}
+					onbounds={(bounds, width, cam) => {
+						view = { bounds, width };
+						camera = cam;
+						oncamera?.(cam);
+					}}
 					onhover={(id) => (hoveredId = id)}
 				/>
 			{/if}
@@ -407,7 +503,7 @@
 				onReset={resetToMarin}
 			/>
 			<MapProbe />
-			<MapGesturePolicy interactive={expanded || !phone} />
+			<MapGesturePolicy interactive={explore || expanded || !phone} />
 		</MapContainer>
 		{#if desktop}
 			<InViewPanel
@@ -417,21 +513,22 @@
 				{collapsed}
 				emptyText={vouched ? 'Nothing on the map in this view.' : null}
 				{gaps}
+				{notice}
 				ontoggle={() => (collapsed = !collapsed)}
 				onselect={select}
 				onhover={(id) => (hoveredId = id)}
-				onback={() => (selectedId = null)}
+				onback={back}
 			/>
 		{/if}
 		<!-- Phone: over the preview's corner, so it costs no row of its own (§13.3 height). -->
-		<button
-			type="button"
-			class="v2-map-expand"
-			aria-controls="v2-map-canvas"
-			aria-expanded={expanded}
-			data-text-role="label"
-			onclick={toggleExpanded}>{expanded ? 'Collapse map' : 'Expand map'}</button
-		>
+		{#if !explore}<button
+				type="button"
+				class="v2-map-expand"
+				aria-controls="v2-map-canvas"
+				aria-expanded={expanded}
+				data-text-role="label"
+				onclick={toggleExpanded}>{expanded ? 'Collapse map' : 'Expand map'}</button
+			>{/if}
 	</div>
 	<div class="v2-map-status" data-slot="map-status">
 		<SectionStatus status={data.coverage} {now} />
@@ -449,11 +546,48 @@
 	.v2-map-expand {
 		display: none;
 	}
+	.v2-map-explore {
+		display: inline-flex;
+		align-items: center;
+		min-height: 2.25rem;
+		padding: 0 0.75rem;
+		border: 1px solid var(--border-light);
+		border-radius: 6px;
+		background: var(--bg);
+		color: var(--text-primary);
+		text-decoration: none;
+	}
+	.v2-map-explore:focus-visible {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+	}
 	@media (min-width: 1024px) {
 		/* Full width (MAPX2): the map is the page's centre. */
 		.v2-map-canvas {
 			height: clamp(520px, 62vh, 820px);
 		}
+	}
+	/* /map (MAPX3): the map fills the screen under the bar; on desktop the rail sits beside it. */
+	.v2-map[data-mode='explore'] {
+		display: grid;
+		grid-template-rows: minmax(0, 1fr) auto;
+		height: 100%;
+	}
+	.v2-map[data-mode='explore'][data-rail] {
+		grid-template-columns: 300px minmax(0, 1fr);
+	}
+	.v2-map-rail {
+		grid-row: 1 / span 2;
+		min-height: 0;
+	}
+	.v2-map[data-mode='explore'] .v2-map-canvas {
+		height: auto;
+		min-height: 0;
+		border-width: 0;
+		border-radius: 0;
+	}
+	.v2-map[data-mode='explore'] .v2-map-status {
+		padding: 0 0.75rem;
 	}
 
 	@media (max-width: 767px) {
@@ -464,9 +598,13 @@
 		.v2-map[data-expanded='true'] .v2-map-canvas {
 			height: 70vh;
 		}
-		.v2-map[data-expanded='false'] .v2-map-canvas :global([data-layer-panel]),
-		.v2-map[data-expanded='false'] .v2-map-canvas :global(.inspector),
-		.v2-map[data-expanded='false'] .v2-map-canvas :global(.feature-inspector) {
+		.v2-map[data-mode='dashboard'][data-expanded='false']
+			.v2-map-canvas
+			:global([data-layer-panel]),
+		.v2-map[data-mode='dashboard'][data-expanded='false'] .v2-map-canvas :global(.inspector),
+		.v2-map[data-mode='dashboard'][data-expanded='false']
+			.v2-map-canvas
+			:global(.feature-inspector) {
 			display: none;
 		}
 		/* The compact attribution opens wide on load: keep it on the row above the button. */

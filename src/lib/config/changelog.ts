@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-17',
+		title: 'Explore mode: the map on the whole screen',
+		description:
+			'On a computer, “Explore ↗” on the map opens it full screen: layers down the left, what is in view and each item’s detail on the right. The address keeps where you are, which layers are on and what you opened, so you can copy it and send it. Esc steps back from an item to the list, then to the dashboard.'
+	},
+	{
+		date: '2026-10-17',
 		title: 'Road speeds, airports and fitness studios back on the map',
 		description:
 			'The map’s Layers list now has Road speeds (Mapbox’s congestion lines, on by default), Airports (SFO and OAK, on by default, in the same words as the Getting Around card) and Fitness studios (off by default). Each says where it comes from and when it was read. If the road-speed tiles fail to load, the lines come off the roads and the list says so, instead of leaving old colours behind. On the phone, the same Layers list is in the map’s corner once you expand it.'
