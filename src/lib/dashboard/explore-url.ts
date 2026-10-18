@@ -99,21 +99,38 @@ export type SelOutcome =
 	| { kind: 'found' }
 	| { kind: 'missing'; text: string };
 
-/** A URL selection resolves only once its dataset settles, and never errors (MAPX3). */
+/**
+ * A URL selection resolves only once its dataset settles, and never errors (MAPX3). Absence is
+ * proven only by a settled read: a seeded or retained value may predate the item. An item that
+ * the feed holds outside the saved town is named as such, not as gone.
+ */
 export function selOutcome(
 	sel: string,
-	read: { state: 'loading' | 'value' | 'unknown' | 'unavailable'; found: boolean }
+	read: {
+		state: 'loading' | 'value' | 'unknown' | 'unavailable';
+		found: boolean;
+		/** Every controller read has landed (the seed has been refreshed). */
+		settled: boolean;
+		/** The saved town's name, when the feed holds the item outside it. */
+		outside?: string | null;
+	}
 ): SelOutcome {
 	if (read.found) return { kind: 'found' };
-	if (read.state === 'loading') return { kind: 'pending' };
+	if (read.state === 'loading' || (read.state === 'value' && !read.settled))
+		return { kind: 'pending' };
 	if (read.state === 'value')
-		return { kind: 'missing', text: 'That item is no longer in the feed' };
+		return {
+			kind: 'missing',
+			text: read.outside
+				? `That item is outside ${read.outside}. Choose All of Marin to see it.`
+				: 'That item is no longer in the feed'
+		};
 	return { kind: 'missing', text: `${SOURCE_NAME[layerOf(sel)]} is unavailable right now` };
 }
 
 /**
  * Every switch that is on, in switch order: a data layer's saved choice over its default, road
- * speeds on unless switched off, and the stories and 311 as the map currently draws them.
+ * speeds on unless switched off, and the stories and 311 as saved, else as the map draws them.
  */
 export function layersOn(
 	prefs: Readonly<Partial<Record<LayerPrefId, boolean>>>,
@@ -124,6 +141,6 @@ export function layersOn(
 		const fallback = dataDefault.get(id);
 		if (fallback !== undefined) return prefs[id] ?? fallback;
 		if (id === 'roads') return prefs.roads ?? true;
-		return activeLayers[id as MapLayer] ?? true;
+		return prefs[id] ?? activeLayers[id as MapLayer] ?? true;
 	});
 }

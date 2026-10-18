@@ -23,7 +23,7 @@
 		type MapClickOutcome
 	} from '$lib/components/map/map-inspection';
 	import { TOWN_BY_SLUG } from '$lib/config';
-	import { mapStore, selectedTown } from '$lib/stores/map';
+	import { CATEGORY_TO_LAYER, mapStore, selectedTown } from '$lib/stores/map';
 	import { townFilter } from '$lib/stores/town-filter';
 	import type { MapFeatureInspectorData, MapLayer } from '$lib/types';
 	import { v2FeatureView, v2Inspector, type V2MapData } from '$lib/dashboard/v2-map-data';
@@ -67,7 +67,8 @@
 		initialSel = null,
 		onselect,
 		oncamera,
-		onexit
+		onexit,
+		readsSettled = true
 	}: {
 		data: V2MapData;
 		/** The data layers (MAPX2b); absent, the map draws only news, 311 and quakes. */
@@ -88,6 +89,8 @@
 		oncamera?: (view: ExploreView) => void;
 		/** Esc with no detail open (/map: back to the dashboard). */
 		onexit?: () => void;
+		/** The controller's first full read has landed: a seeded value can now prove absence. */
+		readsSettled?: boolean;
 	} = $props();
 	const explore = untrack(() => mode === 'explore');
 	const layerPrefs = $derived(prefs ?? $sectionPrefs.layers);
@@ -224,16 +227,47 @@
 				: layer === 'quake'
 					? data.layers.earthquakes
 					: (dataLayers?.[layer as DataLayerId]?.state ?? 'unavailable');
+	/** Whether the unfiltered feed holds a selection (the list is filtered by the saved town). */
+	function held(layer: string, raw: string): boolean {
+		const pool =
+			layer === 'news'
+				? data.layerData.news
+				: layer === '311'
+					? data.layerData.threeOneOne
+					: layer === 'quake'
+						? data.earthquakes
+						: [];
+		return pool.some((i) => i.id === raw);
+	}
 	$effect(() => {
 		const id = pendingSel;
 		if (!id) return;
-		const found = resolveSelection(allItems, id) !== null;
-		const outcome = selOutcome(id, { state: stateOf(id.slice(0, id.indexOf(':'))), found });
+		const layer = id.slice(0, id.indexOf(':'));
+		const raw = id.slice(id.indexOf(':') + 1);
+		// A story's switch is its category, known once the feed holds it: it comes on for the visit.
+		const story = layer === 'news' ? data.layerData.news.find((i) => i.id === raw) : undefined;
+		const category = story ? CATEGORY_TO_LAYER[story.category] : undefined;
+		if (category && !$mapStore.activeLayers[category])
+			return untrack(() => toggleLayer(category, true));
+		const town = $townFilter;
+		const outcome = selOutcome(id, {
+			state: stateOf(layer),
+			found: resolveSelection(allItems, id) !== null,
+			settled: readsSettled && data.loading.length === 0,
+			outside: town && held(layer, raw) ? (TOWN_BY_SLUG[town]?.name ?? town) : null
+		});
 		if (outcome.kind === 'pending') return;
 		pendingSel = null;
 		if (outcome.kind === 'found') return untrack(() => select(id, !initialView));
 		notice = outcome.text;
+		// The phone's sheet rises so the notice is seen, not hidden under its peek.
+		sheet = 'half';
 		untrack(() => onselect?.(null));
+	});
+	// A selection whose item leaves the list (its layer switched off, a new town, the feed moved
+	// on) is cleared with its URL, so nothing invisible blocks Esc or rides on a copied link.
+	$effect(() => {
+		if (selectedId && !pendingSel && !resolveSelection(allItems, selectedId)) untrack(back);
 	});
 	/** The page's own query (`?probe`, `utm_*`), carried into /map. */
 	const carried = new URLSearchParams(typeof location === 'undefined' ? '' : location.search);
@@ -245,8 +279,10 @@
 		)
 	);
 	function onkeydown(e: KeyboardEvent) {
-		// The panel's Back takes Esc first while a detail shows (it marks the key handled).
-		if (e.key !== 'Escape' || e.defaultPrevented || selectedId || !onexit) return;
+		// The panel's Back takes Esc first while a detail shows (it marks the key handled); an
+		// open popup (the town picker, the Layers list) closes itself on the same key.
+		const openControl = document.querySelector('[aria-expanded="true"][aria-controls]');
+		if (e.key !== 'Escape' || e.defaultPrevented || selectedId || openControl || !onexit) return;
 		e.preventDefault();
 		onexit();
 	}

@@ -63,6 +63,8 @@
 	let urlLayers = false;
 
 	let mapFull = $state(false);
+	/** The first full read cycle has landed (the seed has been refreshed). */
+	let readsSettled = $state(false);
 	const mapSource = controller
 		? createMapFeed(controller, {
 				full: toStore(() => mapFull),
@@ -104,7 +106,7 @@
 		// The story switches are shared with the dashboard: leaving puts them back as they were.
 		const before = get(mapStore).activeLayers;
 		hydrated = true;
-		void controller?.start();
+		void controller?.start().then(() => (readsSettled = true));
 		const timer = setInterval(() => void controller?.refresh(), V2_REFRESH_MS);
 		const onVisible = () => {
 			if (document.visibilityState === 'visible') void controller?.refresh();
@@ -154,6 +156,7 @@
 					writeUrl();
 				}}
 				onexit={() => goto('/')}
+				{readsSettled}
 			/>
 		{:else}
 			<div class="shell">

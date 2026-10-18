@@ -61,7 +61,18 @@
 	</li>
 {/snippet}
 
-<div class="layers" data-layer-panel data-rail={rail ? 'true' : undefined}>
+<!-- Esc closes the open list and nothing else (/map's Esc-to-dashboard waits its turn). -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+	class="layers"
+	data-layer-panel
+	data-rail={rail ? 'true' : undefined}
+	onkeydown={(e) => {
+		if (e.key !== 'Escape' || rail || !open) return;
+		e.preventDefault();
+		open = false;
+	}}
+>
 	{#if !rail}
 		<div class="bar">
 			<button

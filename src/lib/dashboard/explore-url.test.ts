@@ -99,26 +99,45 @@ describe('selLayer', () => {
 
 describe('selOutcome', () => {
 	it('waits while its dataset is still loading', () => {
-		expect(selOutcome('311:1', { state: 'loading', found: false })).toEqual({ kind: 'pending' });
+		expect(selOutcome('311:1', { state: 'loading', found: false, settled: true })).toEqual({
+			kind: 'pending'
+		});
 	});
 
 	it('shows the item once found', () => {
-		expect(selOutcome('311:1', { state: 'value', found: true })).toEqual({ kind: 'found' });
+		expect(selOutcome('311:1', { state: 'value', found: true, settled: true })).toEqual({
+			kind: 'found'
+		});
 	});
 
 	it('says the source is unavailable, by name, when its read failed', () => {
-		expect(selOutcome('311:1', { state: 'unavailable', found: false })).toEqual({
+		expect(selOutcome('311:1', { state: 'unavailable', found: false, settled: true })).toEqual({
 			kind: 'missing',
 			text: 'Fix It Marin is unavailable right now'
 		});
-		expect(selOutcome('traffic:t1', { state: 'unknown', found: false })).toEqual({
+		expect(selOutcome('traffic:t1', { state: 'unknown', found: false, settled: true })).toEqual({
 			kind: 'missing',
 			text: '511 is unavailable right now'
 		});
 	});
 
+	it('a value that is not yet the settled read (a seed, a retained copy) proves nothing absent', () => {
+		expect(selOutcome('news:x', { state: 'value', found: false, settled: false })).toEqual({
+			kind: 'pending'
+		});
+	});
+
+	it('names the saved town when the item is in the feed but outside it', () => {
+		expect(
+			selOutcome('311:1', { state: 'value', found: false, settled: true, outside: 'Novato' })
+		).toEqual({
+			kind: 'missing',
+			text: 'That item is outside Novato. Choose All of Marin to see it.'
+		});
+	});
+
 	it('says the item has gone when the read is fine but the id is absent', () => {
-		expect(selOutcome('quake:usgs-zz', { state: 'value', found: false })).toEqual({
+		expect(selOutcome('quake:usgs-zz', { state: 'value', found: false, settled: true })).toEqual({
 			kind: 'missing',
 			text: 'That item is no longer in the feed'
 		});
@@ -126,6 +145,11 @@ describe('selOutcome', () => {
 });
 
 describe('layersOn', () => {
+	it('a saved story choice wins over the map store (a direct /map load has a fresh store)', () => {
+		expect(layersOn({ news: false, '311': false }, {})).not.toContain('news');
+		expect(layersOn({ news: false, '311': false }, {})).not.toContain('311');
+	});
+
 	it('names every switch that is on: saved data choices over defaults, stories from the map', () => {
 		expect(
 			layersOn(

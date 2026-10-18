@@ -94,6 +94,13 @@ test.describe('desktop 1440×900', () => {
 		expect(search(page).get('sel')).toBe(SEL);
 		await drawer(page).getByRole('button', { name: '← Back to list' }).click();
 		expect(search(page).get('sel')).toBeNull();
+		// The row's flight lands and is written before the baseline (Codex MAPX3 #10).
+		await expect
+			.poll(() => {
+				const [, lat, lng] = new URL(page.url()).hash.slice(1).split('/').map(Number);
+				return Math.hypot(lng + 122.49, lat - 37.955);
+			})
+			.toBeLessThan(0.01);
 		const before = new URL(page.url()).hash;
 		const box = (await page.locator('.v2-map-canvas').boundingBox())!;
 		await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -146,6 +153,63 @@ test.describe('desktop 1440×900', () => {
 			'That item is no longer in the feed'
 		);
 		expect(search(page).get('sel')).toBeNull();
+	});
+
+	test('a saved story switch holds on a bare /map (Codex MAPX3 #1)', async ({ page }) => {
+		await stub(page);
+		await page.addInitScript(() =>
+			localStorage.setItem(
+				'mm_sections_v2',
+				JSON.stringify({ version: 3, open: {}, layers: { news: false } })
+			)
+		);
+		await explore(page, '/map');
+		await expect(layer(page, 'news')).not.toBeChecked();
+		await expect(layer(page, '311')).toBeChecked();
+	});
+
+	test("a story's selection turns its category on (Codex MAPX3 #3)", async ({ page }) => {
+		await stub(page);
+		await explore(page, '/map?layers=311&sel=news:point-reyes-light:a');
+		await expect(layer(page, 'news')).toBeChecked();
+		await expect(drawer(page).locator('[data-detail]')).toContainText('Miller Avenue bike lane');
+	});
+
+	test('an item outside the saved town is named as such, not as gone (Codex MAPX3 #2)', async ({
+		page
+	}) => {
+		await stub(page);
+		await page.addInitScript(() => localStorage.setItem('mm_town', 'novato'));
+		await explore(page, '/map?sel=news:point-reyes-light:a');
+		await expect(drawer(page).locator('[data-in-view-notice]')).toHaveText(
+			'That item is outside Novato. Choose All of Marin to see it.'
+		);
+	});
+
+	test('switching off a selected layer clears the selection and its URL (Codex MAPX3 #6)', async ({
+		page
+	}) => {
+		await stub(page);
+		await explore(page, `/map?sel=${SEL}`);
+		await expect(drawer(page).locator('[data-detail]')).toBeVisible();
+		await layer(page, '311').uncheck();
+		await expect(drawer(page).locator('[data-detail]')).toHaveCount(0);
+		expect(search(page).get('sel')).toBeNull();
+		await page.locator('body').press('Escape');
+		await expect(page.locator('[data-layout="v2"]')).toBeVisible();
+	});
+
+	test('Esc in the open town picker closes it and stays on /map (Codex MAPX3 #5)', async ({
+		page
+	}) => {
+		await stub(page);
+		await explore(page, '/map');
+		await page.locator('[data-layout="explore"] .picker-trigger').click();
+		await expect(page.getByRole('listbox', { name: 'Marin towns' })).toBeVisible();
+		await page.keyboard.press('Escape');
+		await expect(page.getByRole('listbox', { name: 'Marin towns' })).toHaveCount(0);
+		await expect(page).toHaveURL(/\/map/);
+		await expect(page.locator('[data-layout="explore"]')).toBeVisible();
 	});
 
 	test('Esc goes back from a detail to the list, then back to the dashboard', async ({ page }) => {
@@ -233,6 +297,27 @@ test.describe('phone 390×844', () => {
 		await expect(handle(page)).toHaveAttribute('aria-expanded', 'true');
 		await swipe(120);
 		await expect(handle(page)).toHaveAttribute('aria-expanded', 'false');
+	});
+
+	test("a linked item that can't be shown raises the sheet with the reason (Codex MAPX3 #9)", async ({
+		page
+	}) => {
+		await stub(page, (r) => r.fulfill({ status: 503, body: 'down' }));
+		await explore(page, `/map?sel=${SEL}`);
+		await expect(handle(page)).toHaveAttribute('aria-expanded', 'true');
+		await expect(sheet(page).locator('[data-in-view-notice]')).toHaveText(
+			'Fix It Marin is unavailable right now'
+		);
+	});
+
+	test('Esc closes the open Layers list and stays on /map (Codex MAPX3 #5)', async ({ page }) => {
+		await stub(page);
+		await explore(page, '/map');
+		await page.getByRole('button', { name: 'Layers' }).click();
+		await layer(page, 'gas').focus();
+		await page.keyboard.press('Escape');
+		await expect(page.getByRole('group', { name: 'Map layers' })).toHaveCount(0);
+		await expect(page.locator('[data-layout="explore"]')).toBeVisible();
 	});
 
 	test('layers sit behind a button; a choice with no URL layers is saved', async ({ page }) => {
