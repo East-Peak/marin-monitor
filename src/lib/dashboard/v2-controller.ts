@@ -58,7 +58,7 @@ import { AIR_MAX_AGE_MS, OUTDOORS_DATASETS, OUTDOORS_MAX_AGE_MS } from './outdoo
 import { COST_DATASETS, costMaxAgeMs } from './cost';
 import { CIVIC_DATASETS } from './news-civic';
 import { EVENTS_DATASETS } from './events';
-import { fetchActivityDataWithStatus } from '$lib/api/marin/activity';
+import { fetchActivityReadWithStatus, type ActivityRead } from '$lib/api/marin/activity';
 import { fetchPoliceLogsDataWithStatus } from '$lib/api/marin/police-logs';
 import { fetchNpsAlertsWithStatus, type NpsAlert } from '$lib/api/marin/nps';
 import { fetchCompositeDataWithStatus } from '$lib/api/marin/composite';
@@ -328,7 +328,10 @@ export interface CivicReads {
 	activity: NewsItem[] | null;
 }
 
-/** Loaded through ensure() when News & Civic or Events opens; the payloads carry no time of their own. */
+/**
+ * Loaded through ensure() when News & Civic or Events opens, or the map's Shows layer is on.
+ * Police and parks payloads carry no time of their own; activity's is the cron's sync time.
+ */
 function civicDatasets(store: Writable<CivicReads>): DatasetDef[] {
 	const def = <K extends keyof CivicReads>(
 		key: K,
@@ -346,7 +349,14 @@ function civicDatasets(store: Writable<CivicReads>): DatasetDef[] {
 	return [
 		def('police', CIVIC_DATASETS.police, (signal) => fetchPoliceLogsDataWithStatus({ signal })),
 		def('nps', CIVIC_DATASETS.nps, (signal) => fetchNpsAlertsWithStatus({ signal })),
-		def('activity', EVENTS_DATASETS.activity, (signal) => fetchActivityDataWithStatus({ signal }))
+		dataset<ActivityRead>({
+			...EVENTS_DATASETS.activity,
+			tier: 'detail',
+			load: (signal) => fetchActivityReadWithStatus({ signal }),
+			commit: (d) => store.update((all) => ({ ...all, activity: d.items })),
+			observedAtOf: (d) => d.syncedAt,
+			maxAgeMs: null
+		})
 	];
 }
 

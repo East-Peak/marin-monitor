@@ -36,6 +36,7 @@ const { GET: getComposite } = await import('./composite/+server');
 const { GET: getStravaLeaderboards } = await import('./strava-leaderboards/+server');
 const { GET: getCappuccino } = await import('./cappuccino/+server');
 const { GET: getGroceryBasket } = await import('./grocery-basket/+server');
+const { GET: getActivity } = await import('./activity/+server');
 
 function jsonResponse(body: unknown): Response {
 	return new Response(JSON.stringify(body), {
@@ -300,5 +301,32 @@ describe('/api/data/grocery-basket', () => {
 		mockBlobSuccess(samplePayload);
 		await getGroceryBasket({} as any);
 		expect(mockHead).toHaveBeenCalledWith('marin-grocery-basket.json', { token: 'test-token' });
+	});
+});
+
+// ── /api/data/activity ─────────────────────────────────
+
+describe('/api/data/activity', () => {
+	const items = [{ id: 'shows:x', title: 'A show' }];
+	const event = { url: new URL('https://marin.test/api/data/activity') } as any;
+
+	it('returns the blob’s own sync time with its items (NEWSPIN1)', async () => {
+		mockHead.mockResolvedValueOnce({
+			downloadUrl: 'https://blob.test/data.json',
+			uploadedAt: new Date('2026-10-18T18:00:05Z')
+		});
+		mockFetchWithTimeout.mockResolvedValueOnce(jsonResponse(items));
+		const response = await getActivity(event);
+		expect(response.status).toBe(200);
+		expect(await response.json()).toEqual(items);
+		expect(response.headers.get('X-Synced-At')).toBe('2026-10-18T18:00:05.000Z');
+	});
+
+	it('reports no sync time for the static fallback', async () => {
+		mockBlobMissing();
+		mockFetchWithTimeout.mockResolvedValueOnce(jsonResponse(items));
+		const response = await getActivity(event);
+		expect(response.headers.get('X-Data-Source')).toBe('static-fallback');
+		expect(response.headers.get('X-Synced-At')).toBeNull();
 	});
 });

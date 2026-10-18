@@ -16,7 +16,13 @@ export interface BlobErrorPayload {
 	upstreamStatus?: number;
 }
 
-export type BlobReadResult = { ok: true; text: string } | { ok: false; error: BlobErrorPayload };
+export type BlobReadResult =
+	| {
+			ok: true;
+			text: string;
+			/** The blob's own upload time, when the store reports one. */ uploadedAt: string | null;
+	  }
+	| { ok: false; error: BlobErrorPayload };
 
 const ERROR_CACHE_CONTROL = 'public, s-maxage=10';
 
@@ -46,9 +52,12 @@ export async function tryReadBlobText(blobKey: string, timeoutMs = 8000): Promis
 	}
 
 	let downloadUrl: string;
+	let uploadedAt: string | null = null;
 	try {
 		const blob = await head(blobKey, { token });
 		downloadUrl = blob.downloadUrl;
+		const at = blob.uploadedAt instanceof Date ? blob.uploadedAt.getTime() : NaN;
+		if (Number.isFinite(at)) uploadedAt = new Date(at).toISOString();
 	} catch (err) {
 		return {
 			ok: false,
@@ -93,7 +102,7 @@ export async function tryReadBlobText(blobKey: string, timeoutMs = 8000): Promis
 		};
 	}
 
-	return { ok: true, text: await response.text() };
+	return { ok: true, text: await response.text(), uploadedAt };
 }
 
 export async function serveBlobJson(options: ServeBlobJsonOptions): Promise<Response> {

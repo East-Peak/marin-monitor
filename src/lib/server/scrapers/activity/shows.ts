@@ -7,57 +7,44 @@ import type { NewsItem } from '$lib/types';
 import { stripHtml, safeFetch } from '../shared';
 import type { SourceConfig } from './types';
 import { buildItem } from './helpers';
+import { venueOfSource } from '$lib/config/venues';
 import { parseRssFeed, parseJsonLdEventPage, parseSinglePageItem } from './parsers';
 
-const SHOW_SOURCES: SourceConfig[] = [
+/** A reviewed venue's calendar fields: its town and its own building's point. */
+function atVenue(source: string) {
+	const v = venueOfSource(source);
+	return { source, town: v.town, townSlug: v.townSlug, lat: v.lat, lon: v.lon, venueId: v.id };
+}
+
+const SHOW_SOURCES = [
+	// Sweetwater's pubDate is the post's update time, not the show's: no start (NEWSPIN1).
+	{ ...atVenue('Sweetwater Music Hall'), url: 'https://sweetwatermusichall.org/events/feed/' },
 	{
-		source: 'Sweetwater Music Hall',
-		url: 'https://sweetwatermusichall.org/events/feed/',
-		town: 'Mill Valley',
-		townSlug: 'mill-valley',
-		lat: 37.9059,
-		lon: -122.5491
-	},
-	{
-		source: 'Rancho Nicasio',
+		...atVenue('Rancho Nicasio'),
 		url: 'https://ranchonicasio.com/events/feed/',
-		town: 'Nicasio',
-		townSlug: 'nicasio',
-		lat: 38.0615,
-		lon: -122.6983
+		pubDateIsShowDay: true
 	}
 ];
 
 const SHOW_EVENT_PAGES = [
 	{
-		source: 'Dance Palace',
+		...atVenue('Dance Palace'),
 		url: 'https://dancepalace.org/events/',
-		town: 'Point Reyes Station',
-		townSlug: 'point-reyes',
-		lat: 38.0699,
-		lon: -122.8089,
 		topics: ['music', 'community-events', 'west-marin']
 	},
 	{
-		source: 'Osher Marin JCC',
+		...atVenue('Osher Marin JCC'),
 		url: 'https://www.marinjcc.org/events/',
-		town: 'San Rafael',
-		townSlug: 'san-rafael',
-		lat: 37.9997,
-		lon: -122.5231,
 		topics: ['community-events', 'arts']
 	},
 	{
-		source: 'Tourist Club',
+		...atVenue('Tourist Club'),
 		url: 'https://touristclubsf.org/calendar/',
-		town: 'Mill Valley',
-		townSlug: 'mill-valley',
-		lat: 37.8992,
-		lon: -122.5554,
 		topics: ['community-events', 'club']
 	}
 ];
 
+/** Hub pages: a calendar to check directly, dated by fetch; not venues (no start, no venue). */
 const SHOW_HUBS: SourceConfig[] = [
 	{
 		source: "Peri's Tavern",
@@ -159,6 +146,17 @@ const SHOW_HUBS: SourceConfig[] = [
 	}
 ];
 
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+
+/** A card's "WEDNESDAY, OCT 14, 2026" as that calendar day; no time of day is claimed. */
+function cardDay(text: string): Pick<NewsItem, 'startSource' | 'startDay'> {
+	const m = text.match(/\b([a-z]{3})[a-z]*\.?\s+(\d{1,2}),\s*(\d{4})\b/i);
+	const month = m ? MONTHS.indexOf(m[1].toLowerCase()) : -1;
+	if (!m || month < 0) return {};
+	const day = `${m[3]}-${String(month + 1).padStart(2, '0')}-${m[2].padStart(2, '0')}`;
+	return { startSource: 'calendar', startDay: day };
+}
+
 export async function parseMacsEvents(now: number): Promise<NewsItem[]> {
 	const html = await safeFetch('https://macsat19broadway.com/events/');
 	const cards = [
@@ -172,18 +170,15 @@ export async function parseMacsEvents(now: number): Promise<NewsItem[]> {
 			buildItem(
 				{
 					category: 'shows',
-					source: "Mac's at 19 Broadway",
 					title: stripHtml(match[2]),
 					link: stripHtml(match[3]),
 					pubDate: stripHtml(match[1]),
 					description: "Upcoming Fairfax show at Mac's at 19 Broadway.",
 					content: 'Fairfax live music, comedy, and nightlife calendar.',
 					verification: 'community',
-					town: 'Fairfax',
-					townSlug: 'fairfax',
-					lat: 37.9871,
-					lon: -122.5889,
-					topics: ['music', 'shows']
+					...atVenue("Mac's at 19 Broadway"),
+					topics: ['music', 'shows'],
+					...cardDay(stripHtml(match[1]))
 				},
 				now
 			)
@@ -211,17 +206,7 @@ export async function scrapeShowsHubs(now: number): Promise<NewsItem[]> {
 	for (const page of SHOW_EVENT_PAGES) {
 		items.push(
 			...(await parseJsonLdEventPage(
-				{
-					source: page.source,
-					url: page.url,
-					category: 'shows',
-					town: page.town,
-					townSlug: page.townSlug,
-					lat: page.lat,
-					lon: page.lon,
-					verification: 'community',
-					topics: page.topics
-				},
+				{ ...page, category: 'shows', verification: 'community' },
 				now
 			))
 		);

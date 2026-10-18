@@ -6,6 +6,7 @@
 import type { NewsItem } from '$lib/types';
 import { mapMeasured, measuredFromEntry, type Measured } from './measured';
 import { PACIFIC, nextDate, pacificDate } from './pacific-time';
+import { SHOW_DAYS, upcomingShows, type UpcomingShow } from './upcoming-shows';
 import { datasetEntry, type DatasetFetch } from './source-adapters';
 import { presentSection, type SectionPresentation } from './source-status';
 
@@ -13,7 +14,7 @@ export const EVENTS_DATASETS = {
 	activity: { id: 'activity', name: 'Events calendar' }
 } as const;
 
-export const SHOW_DAYS = 10;
+export { SHOW_DAYS };
 const SHOWS_LISTED = 5;
 const RACES_LISTED = 6;
 const RACE_CATEGORIES: ReadonlySet<string> = new Set(['endurance', 'cycling']);
@@ -66,12 +67,9 @@ const MONTH_DAY_YEAR = fmt({ month: 'short', day: 'numeric', year: 'numeric' });
 /** Noon UTC on a date reads as that same date in Pacific time. */
 const noonOf = (key: string) => Date.parse(`${key}T12:00:00Z`);
 
-function showDays(shows: readonly NewsItem[], now: number): ShowDay[] {
+function showDays(shows: readonly UpcomingShow[], now: number): ShowDay[] {
 	const counts = new Map<string, number>();
-	for (const s of shows) {
-		const key = pacificDate(s.timestamp);
-		counts.set(key, (counts.get(key) ?? 0) + 1);
-	}
+	for (const s of shows) counts.set(s.day, (counts.get(s.day) ?? 0) + 1);
 	const days: ShowDay[] = [];
 	for (let i = 0, key = pacificDate(now); i < SHOW_DAYS; i++, key = nextDate(key)) {
 		const count = counts.get(key) ?? 0;
@@ -86,32 +84,21 @@ function showDays(shows: readonly NewsItem[], now: number): ShowDay[] {
 	return days;
 }
 
-/**
- * Only a time still ahead can be a show's start: the producer stamps a venue's calendar page
- * with its fetch time and an RSS post with its publication time, both already past
- * (Codex desk4 #1).
- */
+/** A race's time still ahead is its start (Codex desk4 #1); shows go through upcomingShows. */
 const isUpcoming = (i: NewsItem, now: number) => Number.isFinite(i.timestamp) && i.timestamp >= now;
 
-function showsOf(items: readonly NewsItem[], now: number) {
-	const shows = items.filter((i) => i.category === 'shows' && isUpcoming(i, now));
-	const days = showDays(shows, now);
-	const inStrip = new Set(days.map((d) => d.key));
-	const total = shows.filter((s) => inStrip.has(pacificDate(s.timestamp))).length;
+function showsOf(shows: readonly UpcomingShow[], now: number) {
 	return {
-		days,
-		total: total || null,
-		next: [...shows]
-			.sort((a, b) => a.timestamp - b.timestamp)
-			.slice(0, SHOWS_LISTED)
-			.map((s) => ({
-				id: s.id,
-				title: s.title.split(' | ')[0],
-				link: s.link,
-				weekday: WEEKDAY_SHORT.format(s.timestamp),
-				day: MONTH_DAY.format(s.timestamp),
-				meta: s.town ? `${s.source} · ${s.town}` : s.source
-			}))
+		days: showDays(shows, now),
+		total: shows.length || null,
+		next: shows.slice(0, SHOWS_LISTED).map(({ item: s, day }) => ({
+			id: s.id,
+			title: s.title.split(' | ')[0],
+			link: s.link,
+			weekday: WEEKDAY_SHORT.format(noonOf(day)),
+			day: MONTH_DAY.format(noonOf(day)),
+			meta: s.town ? `${s.source} · ${s.town}` : s.source
+		}))
 	};
 }
 
@@ -139,14 +126,16 @@ export function eventsView(input: {
 	const A = EVENTS_DATASETS.activity;
 	const entry = datasetEntry(A.id, A.name, input.outcomes[A.id], null);
 	const read = measuredFromEntry(entry, input.activity, 'Venue and race calendars', now);
-	const shows = mapMeasured(read, (items) => showsOf(items, now));
+	const shows = mapMeasured(read, (items) => showsOf(upcomingShows(items, now), now));
 	const races = mapMeasured(read, (items) => racesOf(items, now));
 	const valued = read.kind === 'value' ? 1 : 0;
+	const upcoming = (items: readonly NewsItem[]) =>
+		upcomingShows(items, now).length +
+		items.filter((i) => RACE_CATEGORIES.has(i.category) && isUpcoming(i, now)).length;
 	return {
 		shows,
 		races,
-		upcoming:
-			read.kind === 'value' ? read.value.filter((i) => isUpcoming(i, now)).length || null : null,
+		upcoming: read.kind === 'value' ? upcoming(read.value) || null : null,
 		status: presentSection([entry], { total: valued, matching: valued }, now)
 	};
 }

@@ -103,7 +103,7 @@ vi.mock('$lib/api/marin/housing', async (orig) => ({
 }));
 vi.mock('$lib/api/marin/activity', async (orig) => ({
 	...(await orig<object>()),
-	fetchActivityDataWithStatus: fetchers.activity
+	fetchActivityReadWithStatus: fetchers.activity
 }));
 vi.mock('$lib/api/marin/police-logs', async (orig) => ({
 	...(await orig<object>()),
@@ -268,8 +268,13 @@ beforeEach(() => {
 			dataSource: 'live'
 		});
 	fetchers.housing.mockResolvedValue({ ok: true, data: [], dataSource: 'live' });
-	for (const f of [fetchers.activity, fetchers.police, fetchers.nps])
+	for (const f of [fetchers.police, fetchers.nps])
 		f.mockResolvedValue({ ok: true, data: [], dataSource: 'live' });
+	fetchers.activity.mockResolvedValue({
+		ok: true,
+		data: { items: [], syncedAt: null },
+		dataSource: 'live'
+	});
 	for (const s of [gasPriceStore, evChargingStore, coffeeIndexStore, fitnessStore]) {
 		s.set({ current: null, history: [] } as never);
 	}
@@ -721,8 +726,34 @@ describe('createDashboardV2Controller', () => {
 			retained: false,
 			observedAt: null
 		});
-		// The payloads carry no time of their own.
+		// Police and parks payloads carry no time of their own; this activity payload reported none.
 		expect(get(c.datasetOutcomes).activity).toEqual({ kind: 'live', observedAt: null });
+	});
+
+	it('activity is dated by the sync time its own payload carries, kept with it (NEWSPIN1)', async () => {
+		const items = [story('shows:1')];
+		fetchers.activity.mockResolvedValueOnce({
+			ok: true,
+			data: { items, syncedAt: '2026-09-29T12:00:05.000Z' },
+			dataSource: 'live'
+		});
+		const c = controller();
+		await c.start();
+		await c.ensure(EVENTS_DATASETS.activity.id);
+		expect(get(c.civic).activity).toEqual(items);
+		const synced = Date.parse('2026-09-29T12:00:05.000Z');
+		expect(get(c.datasetOutcomes).activity).toEqual({ kind: 'live', observedAt: synced });
+		// A failed refresh keeps the items with the time they came with, never the request's.
+		fetchers.activity.mockResolvedValueOnce({ ok: false, error: 'HTTP 503', fallback: null });
+		clock = NOW + V2_MIN_REFRESH_GAP_MS;
+		await c.refresh({ force: true });
+		expect(get(c.civic).activity).toEqual(items);
+		expect(get(c.datasetOutcomes).activity).toEqual({
+			kind: 'failed',
+			error: 'HTTP 503',
+			retained: true,
+			observedAt: synced
+		});
 	});
 
 	it('Outdoors reads (marine, fires, 7-day quakes) load only through ensure, with their own times', async () => {

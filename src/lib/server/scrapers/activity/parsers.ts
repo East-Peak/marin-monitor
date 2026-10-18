@@ -17,6 +17,9 @@ export async function parseRssFeed(
 		lon?: number;
 		category: string;
 		topics?: string[];
+		venueId?: string;
+		/** The calendar publishes each show's date as its pubDate's UTC day (Rancho Nicasio). */
+		pubDateIsShowDay?: boolean;
 	},
 	now: number
 ): Promise<NewsItem[]> {
@@ -43,13 +46,48 @@ export async function parseRssFeed(
 				townSlug: config.townSlug,
 				lat: config.lat,
 				lon: config.lon,
-				topics: config.topics
+				topics: config.topics,
+				venueId: config.venueId,
+				...(config.pubDateIsShowDay ? showDayOf(pubDate) : {})
 			},
 			now
 		);
 		if (newsItem) items.push(newsItem);
 	}
 	return items;
+}
+
+/** A pubDate whose UTC day is the show's date: that day, with no time claimed. */
+function showDayOf(pubDate: string): Pick<NewsItem, 'startSource' | 'startDay'> {
+	const t = Date.parse(pubDate);
+	return Number.isFinite(t)
+		? { startSource: 'calendar', startDay: new Date(t).toISOString().slice(0, 10) }
+		: {};
+}
+
+/** JSON-LD's `startDate` is the event's start; a bare date is a day, not a midnight. */
+function jsonLdStart(startDate: unknown): Pick<NewsItem, 'startSource' | 'startDay'> {
+	if (typeof startDate !== 'string' || !Number.isFinite(Date.parse(startDate))) return {};
+	return /^\d{4}-\d{2}-\d{2}$/.test(startDate)
+		? { startSource: 'startDate', startDay: startDate }
+		: { startSource: 'startDate' };
+}
+
+/** The event's own location words: its place's name and street address. */
+function jsonLdLocationText(location: unknown): string | undefined {
+	const place = Array.isArray(location) ? location[0] : location;
+	if (typeof place === 'string') return stripHtml(place) || undefined;
+	if (!place || typeof place !== 'object') return undefined;
+	const { name, address } = place as { name?: unknown; address?: unknown };
+	const street =
+		typeof address === 'string'
+			? address
+			: (address as { streetAddress?: unknown } | undefined)?.streetAddress;
+	const parts = [name, street]
+		.filter((p): p is string => typeof p === 'string')
+		.map((p) => stripHtml(p))
+		.filter(Boolean);
+	return parts.length ? parts.join(' · ') : undefined;
 }
 
 export async function parseAtomFeed(
@@ -116,6 +154,7 @@ export async function parseJsonLdEventPage(
 		verification?: string;
 		topics?: string[];
 		limit?: number;
+		venueId?: string;
 	},
 	now: number
 ): Promise<NewsItem[]> {
@@ -160,7 +199,10 @@ export async function parseJsonLdEventPage(
 					townSlug: config.townSlug,
 					lat: config.lat,
 					lon: config.lon,
-					topics: config.topics
+					topics: config.topics,
+					venueId: config.venueId,
+					locationText: jsonLdLocationText(event.location),
+					...jsonLdStart(event.startDate)
 				},
 				now
 			)

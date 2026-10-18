@@ -63,7 +63,11 @@ export function buildItem(params: BuildItemParams, now: number): NewsItem | null
 		townSlug,
 		lat,
 		lon,
-		topics = []
+		topics = [],
+		startSource,
+		startDay,
+		locationText,
+		venueId
 	} = params;
 
 	const iso = toIsoDate(pubDate);
@@ -91,7 +95,11 @@ export function buildItem(params: BuildItemParams, now: number): NewsItem | null
 		lon: hasCoords ? lon : undefined,
 		locationConfidence: hasCoords ? 'exact' : townSlug ? 'town' : undefined,
 		locationEvidence: hasCoords ? source : town ? town : undefined,
-		topics
+		topics,
+		...(startSource ? { startSource } : {}),
+		...(startDay ? { startDay } : {}),
+		...(locationText ? { locationText } : {}),
+		...(venueId ? { venueId } : {})
 	};
 }
 

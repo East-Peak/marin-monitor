@@ -48,7 +48,9 @@ function parseDataSource(headerValue: string | null): DataSource {
 export function createDataFetcherWithStatus<T>(
 	endpoint: string,
 	serviceId: string,
-	fallback: T
+	fallback: T,
+	/** The value from the body and its response (e.g. a time the server sends as a header). */
+	shape: (body: unknown, response: Response) => T = (body) => body as T
 ): (options?: OwnerOptions) => Promise<FetchResult<T>> {
 	return async ({ signal }: OwnerOptions = {}): Promise<FetchResult<T>> => {
 		try {
@@ -63,7 +65,7 @@ export function createDataFetcherWithStatus<T>(
 				if (dataSource !== 'live') {
 					logger.warn(serviceId, `Served from ${dataSource} (live blob unavailable)`);
 				}
-				return { ok: true, data: (await response.json()) as T, dataSource };
+				return { ok: true, data: shape(await response.json(), response), dataSource };
 			});
 		} catch (error) {
 			const message = (error as Error).message;

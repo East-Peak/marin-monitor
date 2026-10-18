@@ -61,6 +61,18 @@ export interface NewsItem {
 	publishedAtStatus?: PublishedAtStatus;
 	/** Event-start sources (e.g. Granicus agendas): when the meeting happens. */
 	eventAt?: string;
+	/**
+	 * Activity items: where the event's start came from — a date the venue's calendar publishes
+	 * as the show date, or JSON-LD `startDate`. Absent: no event start (a publication, end or
+	 * fetch time), never listed as upcoming or mapped.
+	 */
+	startSource?: 'calendar' | 'startDate';
+	/** A date-only start: its Pacific calendar day (YYYY-MM-DD); no time of day is claimed. */
+	startDay?: string;
+	/** The event's own location words (JSON-LD location name · street address), when given. */
+	locationText?: string;
+	/** The reviewed venue whose calendar listed the event (config/venues.ts). */
+	venueId?: string;
 	/** 'county' only when the item is explicitly county-scoped (COUNTY_WIDE_RULE). Absence means unlocated, not county-wide. */
 	geoScope?: 'county';
 	timestamp: number;

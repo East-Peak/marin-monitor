@@ -1,6 +1,7 @@
 /**
  * Shared types and interfaces for activity scraper sub-modules.
  */
+import type { NewsItem } from '$lib/types';
 
 export interface SourceConfig {
 	source: string;
@@ -45,4 +46,8 @@ export interface BuildItemParams {
 	lat?: number;
 	lon?: number;
 	topics?: string[];
+	startSource?: NewsItem['startSource'];
+	startDay?: string;
+	locationText?: string;
+	venueId?: string;
 }

@@ -8,7 +8,9 @@ export const GET: RequestHandler = async ({ url }) => {
 		return new Response(blob.text, {
 			headers: {
 				'Content-Type': 'application/json',
-				'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+				'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+				// The payload's own sync time: when the cron wrote these items (NEWSPIN1).
+				...(blob.uploadedAt ? { 'X-Synced-At': blob.uploadedAt } : {})
 			}
 		});
 	}

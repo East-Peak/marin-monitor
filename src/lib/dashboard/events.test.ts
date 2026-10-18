@@ -16,7 +16,9 @@ const ev = (category: string, at: number, title = `Event ${++n}`): NewsItem => (
 	source: 'Sweetwater Music Hall',
 	category: category as NewsItem['category'],
 	verification: 'official',
-	town: 'Mill Valley'
+	town: 'Mill Valley',
+	// A show's time is its event start only when the calendar says so (NEWSPIN1).
+	...(category === 'shows' ? { startSource: 'startDate' as const } : {})
 });
 const live = { [EVENTS_DATASETS.activity.id]: { kind: 'live' as const, observedAt: null } };
 
@@ -51,6 +53,27 @@ describe('Events & Sports (Goal 4)', () => {
 		if (out.shows.kind !== 'value') throw new Error('expected a value');
 		expect(out.shows.value.days[0].count).toBe(0);
 		expect(out.shows.value.total).toBe(1);
+	});
+
+	it('a show with no event start is never listed, however future its time (NEWSPIN1)', () => {
+		const { startSource: _, ...posted } = ev('shows', NOW + 2 * D, 'Sweetwater post');
+		const out = eventsView({ activity: [posted], outcomes: live, now: NOW });
+		if (out.shows.kind !== 'value') throw new Error('expected a value');
+		expect(out.shows.value.total).toBeNull();
+		expect(out.shows.value.next).toEqual([]);
+		expect(out.upcoming).toBeNull();
+	});
+
+	it('a date-only show is listed on its own day, whatever instant it was stamped with (NEWSPIN1)', () => {
+		const rancho = {
+			...ev('shows', Date.parse('2026-10-16T00:00:00Z'), 'THE CHRIS CAIN BAND'),
+			startSource: 'calendar' as const,
+			startDay: '2026-10-16'
+		};
+		const out = eventsView({ activity: [rancho], outcomes: live, now: NOW });
+		if (out.shows.kind !== 'value') throw new Error('expected a value');
+		expect(out.shows.value.days.find((d) => d.key === '2026-10-16')?.count).toBe(1);
+		expect(out.shows.value.next[0]).toMatchObject({ weekday: 'Fri', day: 'Oct 16' });
 	});
 
 	it('no dated shows: no "0 listed" and no "0 upcoming" (Codex desk4 #2)', () => {
