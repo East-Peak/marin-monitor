@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { buildChart } from '$lib/utils/chart';
+	import { barGeometry, buildChart } from '$lib/utils/chart';
 	import type { OutdoorsView } from '$lib/dashboard/outdoors';
 	import { formatAsOf } from '$lib/dashboard/pacific-time';
 	import CardSource from './CardSource.svelte';
@@ -14,7 +14,7 @@
 	const W = 760;
 	const TEMP = { width: W, height: 190, margins: { top: 22, right: 12, bottom: 22, left: 34 } };
 	const RAIN = { height: 78, top: 6, bottom: 18, left: 34, right: 12 };
-	const SMALL = { width: 320, height: 110, margins: { top: 8, right: 6, bottom: 18, left: 26 } };
+	const SMALL = { width: 320, height: 110, margins: { top: 8, right: 6, bottom: 18, left: 46 } };
 	const clock = (ms: number) => formatAsOf(ms, ms).replace(':00', '');
 
 	const temp = $derived(view.forecast.temp);
@@ -83,7 +83,12 @@
 	const rain = $derived(view.forecast.rain);
 	const rainInnerW = W - RAIN.left - RAIN.right;
 	const rainInnerH = RAIN.height - RAIN.top - RAIN.bottom;
-	const rainStep = $derived(rain && rain.bars.length ? rainInnerW / rain.bars.length : 0);
+	const rainBars = $derived(
+		rain ? barGeometry(rain.bars, { width: rainInnerW, height: rainInnerH, max: 100 }) : []
+	);
+	const issuedAt = $derived(
+		view.forecast.measured.kind === 'value' ? view.forecast.measured.observedAt : null
+	);
 	const peakRain = $derived(
 		rain ? Math.max(...rain.bars.filter((b): b is number => b !== null), -Infinity) : -Infinity
 	);
@@ -118,6 +123,11 @@
 			: []
 	);
 	const tideNowX = $derived(tideX(now));
+	/** The curve's own ends, not the padded domain's, so the labels are real heights. */
+	const tideEnds = $derived.by(() => {
+		const ft = view.tides.curve.map((p) => p.ft);
+		return ft.length ? [Math.max(...ft), Math.min(...ft)] : [];
+	});
 
 	const airReading = $derived(view.ground.air.kind === 'value' ? view.ground.air.value : null);
 
@@ -190,32 +200,48 @@
 		{#if rain}
 			<div class="card-head">
 				<h4 class="card-title" data-text-role="label">Chance of rain, hourly</h4>
-				<span class="meta" data-text-role="meta" data-rain-meta>{rain.meta}</span>
+				{#if !rain.allDry}
+					<span class="meta" data-text-role="meta" data-rain-meta>{rain.meta}</span>
+				{/if}
 			</div>
-			<svg
-				class="chart"
-				data-text-role="meta"
-				viewBox="0 0 {W} {RAIN.height}"
-				role="img"
-				aria-label="Chance of rain by hour: {rain.meta}"
-			>
-				<g transform="translate({RAIN.left},{RAIN.top})">
-					<line class="grid" x1="0" x2={rainInnerW} y1={rainInnerH / 2} y2={rainInnerH / 2} />
-					<text x="-6" y={rainInnerH / 2 + 4} text-anchor="end">50%</text>
-					{#each rain.bars as pop, i (i)}
-						{#if pop !== null}
-							{@const h = Math.max(2, (pop / 100) * rainInnerH)}
-							<rect
-								x={i * rainStep + 1.5}
-								y={rainInnerH - h}
-								width={Math.max(1, rainStep - 3)}
-								height={h}
-								fill="#3b82f6"
-							/>
-						{/if}
-					{/each}
-				</g>
-			</svg>
+			{#if rain.allDry}
+				<p class="meta" data-text-role="body" data-rain-dry>
+					No rain expected in the next 24 h (peak {peakRain}%){issuedAt !== null
+						? ` · NWS, issued ${formatAsOf(issuedAt, now)}`
+						: ''}
+				</p>
+			{:else}
+				<svg
+					class="chart"
+					data-chart="rain"
+					data-text-role="meta"
+					viewBox="0 0 {W} {RAIN.height}"
+					role="img"
+					aria-label="Chance of rain by hour: {rain.meta}"
+				>
+					<g transform="translate({RAIN.left},{RAIN.top})">
+						{#each [100, 50] as pct (pct)}
+							{@const y = rainInnerH * (1 - pct / 100)}
+							<line class="grid" x1="0" x2={rainInnerW} y1={y} y2={y} />
+							<text x="-6" y={y + 4} text-anchor="end">{pct}%</text>
+						{/each}
+						<line
+							class="base"
+							data-baseline
+							x1="0"
+							x2={rainInnerW}
+							y1={rainInnerH}
+							y2={rainInnerH}
+						/>
+						<text x="-6" y={rainInnerH + 4} text-anchor="end">0%</text>
+						{#each rainBars as bar, i (i)}
+							{#if bar}
+								<rect x={bar.x} y={bar.y} width={bar.width} height={bar.height} fill="#3b82f6" />
+							{/if}
+						{/each}
+					</g>
+				</svg>
+			{/if}
 		{/if}
 
 		{#if temp?.high && temp.low}
@@ -273,7 +299,9 @@
 					data-text-role="meta"
 					viewBox="0 0 {SMALL.width} {SMALL.height}"
 					role="img"
-					aria-label="Predicted tide height, 48 hours"
+					aria-label="Predicted tide height, 48 hours{tideEnds.length
+						? `, ${tideEnds[1].toFixed(1)} to ${tideEnds[0].toFixed(1)} ft`
+						: ''}"
 				>
 					<g transform="translate({SMALL.margins.left},{SMALL.margins.top})">
 						<path d={tideChart.areaPath} fill="#14b8a6" fill-opacity="0.18" />
@@ -281,6 +309,11 @@
 						{#if tideNowX !== null}
 							<line class="now" x1={tideNowX} x2={tideNowX} y1="0" y2={SMALL.height - 26} />
 						{/if}
+						{#each tideEnds as ft, i (i)}
+							<text x="-6" y={tideChart.yScale(ft) + (i ? 0 : 10)} text-anchor="end"
+								>{ft.toFixed(1)} ft</text
+							>
+						{/each}
 						{#each tideDots as d (d.key)}
 							<circle cx={d.x} cy={d.y} r="2.6" fill="#14b8a6" />
 						{/each}
@@ -328,7 +361,9 @@
 				</svg>
 			{/if}
 			<p class="meta" data-text-role="meta">
-				Wave height, next 48 h{surf.current?.directionDeg != null
+				Wave height, next 48 h{surfKnown.length
+					? ` · ${Math.min(...surfKnown).toFixed(1)}–${Math.max(...surfKnown).toFixed(1)} ft`
+					: ''}{surf.current?.directionDeg != null
 					? ` · from ${Math.round(surf.current.directionDeg)}°`
 					: ''}
 			</p>
@@ -427,6 +462,9 @@
 	}
 	.chart .grid {
 		stroke: var(--border);
+	}
+	.chart .base {
+		stroke: var(--text-muted);
 	}
 	.stats {
 		display: grid;

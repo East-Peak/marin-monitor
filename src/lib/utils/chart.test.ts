@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { buildChart } from './chart';
+import { barGeometry, buildChart } from './chart';
 import type { ChartConfig } from './chart';
 
 // ---------------------------------------------------------------------------
@@ -322,5 +322,43 @@ describe('buildChart — time axis and gaps (MAPX1)', () => {
 			{ value: Number.NaN, x: 5 }
 		];
 		expect(buildChart(makeConfig({ data, xDomain: [0, 5] }))).toBeNull();
+	});
+});
+
+describe('barGeometry (RAIN1: a zero draws nothing above the baseline)', () => {
+	const box = { width: 240, height: 100, max: 100 };
+	const [zero, four, fifty, gap] = barGeometry([0, 4, 50, null], box);
+
+	it('0 draws no bar', () => {
+		expect(zero).toBeNull();
+	});
+
+	it('4 is a bar above the baseline and below the 50 line', () => {
+		expect(four).not.toBeNull();
+		expect(four!.height).toBeGreaterThan(0);
+		expect(four!.y + four!.height).toBe(100);
+		expect(four!.y).toBeGreaterThan(50);
+	});
+
+	it("50's top sits on the 50 line", () => {
+		expect(fifty!.y).toBe(50);
+	});
+
+	it('a null hour stays a gap', () => {
+		expect(gap).toBeNull();
+	});
+
+	it('a non-finite value is a gap; one over max stops at the top (Codex RAIN1 #2)', () => {
+		const [nan, over] = barGeometry([Number.NaN, 150], box);
+		expect(nan).toBeNull();
+		expect(over!.y).toBe(0);
+		expect(over!.height).toBe(100);
+	});
+
+	it('a bar under a pixel is skipped; slots keep their place', () => {
+		const bars = barGeometry([0.5, 100], box);
+		expect(bars[0]).toBeNull();
+		expect(bars[1]!.x).toBeGreaterThan(120);
+		expect(bars[1]!.y).toBe(0);
 	});
 });

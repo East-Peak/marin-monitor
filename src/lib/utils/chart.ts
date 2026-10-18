@@ -4,6 +4,13 @@
  * Pure TypeScript: takes data + dimensions + config, returns computed SVG
  * path strings, scale functions, axis labels, and dot positions. No DOM
  * manipulation — panels use the output to render their own SVGs.
+ *
+ * The v2 chart rule (RAIN1). Every chart:
+ *  - labels its scale's ends with units, never one mid gridline on its own, which reads
+ *    as the value. A count or chance starts at 0 on a drawn baseline; a level that
+ *    isn't one (a tide, a temperature) labels its own low and high instead;
+ *  - draws no bar for a zero count or chance: no minimum bar height;
+ *  - sits beside a one-line takeaway in words ("Dry all day", "High 5.8 ft at 2:14 pm").
  */
 
 import { scaleLinear } from 'd3-scale';
@@ -156,4 +163,28 @@ export function buildChart(config: ChartConfig): ChartPaths | null {
 		yScale,
 		axisLabels: { x: xLabels }
 	};
+}
+
+export interface Bar {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+}
+
+/**
+ * One slot per value on a 0–`max` scale, measured up from the box's bottom edge. A gap
+ * (null or non-finite) and a bar under a pixel are null: zero draws nothing above the
+ * baseline. A value over `max` stops at the top.
+ */
+export function barGeometry(
+	values: readonly (number | null)[],
+	box: { width: number; height: number; max: number }
+): (Bar | null)[] {
+	const step = values.length ? box.width / values.length : 0;
+	return values.map((v, i) => {
+		const height = Math.min(box.height, v === null ? 0 : (v / box.max) * box.height);
+		if (!(height >= 1)) return null;
+		return { x: i * step + 1.5, y: box.height - height, width: Math.max(1, step - 3), height };
+	});
 }

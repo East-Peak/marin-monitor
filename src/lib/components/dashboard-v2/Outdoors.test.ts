@@ -101,7 +101,7 @@ describe('Outdoors', () => {
 		expect(
 			container.querySelector('[data-card="forecast"] svg path')?.getAttribute('d')
 		).toBeTruthy();
-		expect(container.textContent).toContain('0% every hour');
+		expect(container.textContent).toContain('No rain expected in the next 24 h (peak 0%)');
 		expect(container.textContent).toContain('None near');
 		expect(container.textContent).toContain('None in 7 days');
 		const air = container.querySelector('[data-card="ground"] [data-row="air"]');
@@ -179,6 +179,7 @@ describe('Outdoors', () => {
 			onopen: vi.fn()
 		});
 		expect(container.textContent).not.toContain('dry all day');
+		expect(container.textContent).not.toContain('No rain expected');
 	});
 
 	it('a missing temperature breaks the line; the high marker sits at its own hour (Codex desk2 #4)', () => {
@@ -194,6 +195,66 @@ describe('Outdoors', () => {
 		});
 		const line = container.querySelector('[data-card="forecast"] [data-temp-line]')!;
 		expect(line.getAttribute('d')!.match(/M/g)).toHaveLength(2);
+	});
+
+	it('a dry day draws no rain bars: 0% sits on a labelled baseline (RAIN1)', () => {
+		// NWS for Novato, 6:45 pm 2026-10-17: 0 ×21, then 1, 1, 4.
+		const pops = [...Array(21).fill(0), 1, 1, 4];
+		const periods = forecast.periods.map((p, i) => ({ ...p, pop: pops[i] ?? 0 }));
+		const dry: BriefState = {
+			...brief,
+			forecast: { ...brief.forecast, value: { ...forecast, periods } }
+		};
+		const { container } = render(Outdoors, {
+			view: outdoorsView(input({ brief: dry })),
+			now: NOW,
+			onopen: vi.fn()
+		});
+		const chart = container.querySelector('[data-chart="rain"]')!;
+		// Only the 4% hour draws: 1% is half a pixel at this height, and 0% is nothing.
+		expect(chart.querySelectorAll('rect')).toHaveLength(1);
+		expect(chart.querySelector('[data-baseline]')).not.toBeNull();
+		const labels = [...chart.querySelectorAll('text')].map((t) => t.textContent);
+		expect(labels).toEqual(expect.arrayContaining(['0%', '50%', '100%']));
+		expect(container.querySelector('[data-rain-meta]')?.textContent).toBe('peak 4%');
+	});
+
+	it('an all-dry forecast says so in words, with its as-of, instead of bars (RAIN1)', () => {
+		const { container } = render(Outdoors, {
+			view: outdoorsView(input()),
+			now: NOW,
+			onopen: vi.fn()
+		});
+		const card = container.querySelector('[data-card="forecast"]')!;
+		expect(card.textContent).toContain('Chance of rain, hourly');
+		expect(card.querySelector('[data-chart="rain"]')).toBeNull();
+		expect(card.querySelector('[data-rain-dry]')?.textContent).toMatch(
+			/No rain expected in the next 24 h \(peak 0%\) · NWS, issued 7:50 AM/
+		);
+	});
+
+	it('tide and surf charts give their scale in feet (RAIN1 chart rule)', () => {
+		const marine = {
+			points: [
+				{ atMs: HOUR0, waveFt: 4.3, periodS: 12, directionDeg: 250 },
+				{ atMs: HOUR0 + H, waveFt: 2.1, periodS: 12, directionDeg: 250 }
+			],
+			checkedAt: NOW - 60_000
+		};
+		const { container } = render(Outdoors, {
+			view: outdoorsView(input({ marine })),
+			now: NOW,
+			onopen: vi.fn()
+		});
+		const tide = [...container.querySelectorAll('[data-card="tides"] svg text')].map(
+			(t) => t.textContent
+		);
+		expect(tide.length).toBe(2);
+		expect(container.querySelector('[data-card="tides"] svg')?.getAttribute('aria-label')).toMatch(
+			/, -?\d+\.\d to -?\d+\.\d ft$/
+		);
+		for (const t of tide) expect(t).toMatch(/^-?\d+\.\d ft$/);
+		expect(container.querySelector('[data-card="surf"]')?.textContent).toContain('2.1–4.3 ft');
 	});
 
 	it('mounting is opening: it asks its owner for the detail reads', () => {

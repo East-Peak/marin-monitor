@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-17',
+		title: 'The rain chart no longer looks like 50% on a dry day',
+		description:
+			'A dry hour now draws nothing above a labelled 0% line, with 50% and 100% marked above it. When the whole next day is dry, the card says “No rain expected” in words instead of drawing bars. The tide chart now labels its high and low in feet, and the surf card gives the wave range.'
+	},
+	{
+		date: '2026-10-17',
 		title: 'Every map layer starts on',
 		description:
 			'EV chargers, coffee and fitness studios now start switched on, like every other layer, on the dashboard map and full-screen. Anything you have switched off stays off.'
