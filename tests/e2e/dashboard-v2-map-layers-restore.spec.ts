@@ -109,15 +109,13 @@ test.beforeEach(async ({ page }) => {
 test.describe('desktop 1440×900 (MAPX2c)', () => {
 	test.use({ viewport: { width: 1440, height: 900 } });
 
-	test('fitness: off by default; on, an ok read is drawn with its source and as-of, and opens in the panel', async ({
+	test('fitness: on by default; an ok read is drawn with its source and as-of, and opens in the panel', async ({
 		page
 	}) => {
 		await open(page, (p) => p.route('**/api/data/fitness', (r) => json(r, FITNESS)));
 		await settled(page);
 		await page.getByRole('button', { name: 'Layers' }).click();
-		const box = layerRow(page, 'fitness').getByRole('checkbox');
-		await expect(box).not.toBeChecked();
-		await box.check();
+		await expect(layerRow(page, 'fitness').getByRole('checkbox')).toBeChecked();
 		await expect.poll(async () => (await settled(page)).synced?.counts['fitness-studios']).toBe(1);
 		await expect(status(page, 'fitness')).toHaveText(
 			/^Fitness Drop-in Index · as of \d{1,2}:\d{2} [AP]M$/
@@ -279,8 +277,10 @@ test.describe('phone 390×844 (MAPX2c)', () => {
 		await expect(status(page, 'airport')).toHaveText(/^FAA · as of \d{1,2}:\d{2} [AP]M$/);
 		expect(airportReads.length).toBeGreaterThan(0);
 
-		await layerRow(page, 'fitness').getByRole('checkbox').check();
+		// On by default: drawn at once; switching it off is the saved choice.
 		await expect.poll(async () => (await settled(page)).synced?.counts['fitness-studios']).toBe(1);
-		expect(await prefs(page)).toMatchObject({ layers: { fitness: true } });
+		await layerRow(page, 'fitness').getByRole('checkbox').uncheck();
+		await expect.poll(async () => (await settled(page)).synced?.counts['fitness-studios']).toBe(0);
+		expect(await prefs(page)).toMatchObject({ layers: { fitness: false } });
 	});
 });

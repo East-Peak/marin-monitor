@@ -325,11 +325,11 @@ test.describe('phone 390×844', () => {
 		await explore(page, '/map');
 		await expect(page.locator('[data-layer-panel][data-rail]')).toHaveCount(0);
 		await page.getByRole('button', { name: 'Layers' }).click();
-		await layer(page, 'ev').check();
-		expect(search(page).get('layers')?.split(',')).toContain('ev');
+		await layer(page, 'ev').uncheck();
+		expect(search(page).get('layers')?.split(',')).not.toContain('ev');
 		expect(
 			JSON.parse((await page.evaluate(() => localStorage.getItem('mm_sections_v2')))!)
-		).toMatchObject({ layers: { ev: true } });
+		).toMatchObject({ layers: { ev: false } });
 	});
 });
 

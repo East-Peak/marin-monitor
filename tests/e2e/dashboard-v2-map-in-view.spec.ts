@@ -260,16 +260,17 @@ test.describe('desktop 1440×900: layers (MAPX2b)', () => {
 	test('a layer choice persists with the section prefs (version 3)', async ({ page }) => {
 		await open(page);
 		await page.getByRole('button', { name: 'Layers' }).click();
+		// Every layer starts on (Stuart, 2026-10-17); switching one off is the saved choice.
 		const ev = layerRow(page, 'ev').getByRole('checkbox');
-		await expect(ev).not.toBeChecked();
-		await ev.check();
+		await expect(ev).toBeChecked();
+		await ev.uncheck();
 		expect(
 			JSON.parse((await page.evaluate(() => localStorage.getItem('mm_sections_v2'))) ?? '{}')
-		).toMatchObject({ version: 3, layers: { ev: true } });
+		).toMatchObject({ version: 3, layers: { ev: false } });
 		await page.reload();
 		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 		await page.getByRole('button', { name: 'Layers' }).click();
-		await expect(layerRow(page, 'ev').getByRole('checkbox')).toBeChecked();
+		await expect(layerRow(page, 'ev').getByRole('checkbox')).not.toBeChecked();
 	});
 });
 

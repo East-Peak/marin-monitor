@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-17',
+		title: 'Every map layer starts on',
+		description:
+			'EV chargers, coffee and fitness studios now start switched on, like every other layer, on the dashboard map and full-screen. Anything you have switched off stays off.'
+	},
+	{
+		date: '2026-10-17',
 		title: 'Explore mode: the map on the whole screen',
 		description:
 			'On a computer, “Explore ↗” on the map opens it full screen: layers down the left, what is in view and each item’s detail on the right. On a phone, “Expand map” opens the same page, with what is in view in a sheet you swipe up from the bottom. The address keeps where you are, which layers are on and what you opened, so you can copy it and send it. Esc steps back from an item to the list, then to the dashboard.'

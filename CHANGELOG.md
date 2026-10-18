@@ -6,6 +6,10 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-17
 
+### Changed — Every map layer starts on
+
+- EV chargers, coffee and fitness studios now start switched on, like everything else, on the dashboard map and on `/map`. Anything you've switched off stays off.
+
 ### Added — Explore mode: the map on the whole screen (/map)
 
 - **Phone:** "Expand map" now opens `/map` instead of growing the map in place. There, a sheet at the bottom shows how many things are in view; tap it, press ↑ or swipe it up for the list, and pick one to read its detail over the map. Layers sit behind the map's Layers button. The dashboard's small preview is unchanged.

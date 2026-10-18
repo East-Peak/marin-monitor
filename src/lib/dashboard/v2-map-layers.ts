@@ -92,7 +92,7 @@ export const DATA_LAYERS: readonly {
 		name: 'EV chargers',
 		dataset: 'ev',
 		source: 'NREL AFDC',
-		defaultOn: false,
+		defaultOn: true,
 		swatch: '#06b6d4'
 	},
 	{
@@ -100,7 +100,7 @@ export const DATA_LAYERS: readonly {
 		name: 'Coffee',
 		dataset: 'coffee',
 		source: 'Marin Coffee Index',
-		defaultOn: false,
+		defaultOn: true,
 		swatch: '#a16207'
 	},
 	{
@@ -108,7 +108,7 @@ export const DATA_LAYERS: readonly {
 		name: 'Fitness studios',
 		dataset: 'fitness',
 		source: 'Fitness Drop-in Index',
-		defaultOn: false,
+		defaultOn: true,
 		swatch: FITNESS_ACCENT
 	},
 	{

@@ -96,20 +96,6 @@ const AIRPORTS: AirportStatusData = {
 	airports: [airport('SFO'), airport('OAK')]
 };
 
-describe('defaultDataLayers', () => {
-	it('traffic, fire, gas and airports start on; EV, coffee and fitness start off', () => {
-		expect(defaultDataLayers()).toEqual({
-			traffic: true,
-			fire: true,
-			gas: true,
-			ev: false,
-			coffee: false,
-			fitness: false,
-			airport: true
-		});
-	});
-});
-
 describe('v2DataLayers', () => {
 	it('traffic: Marin events only, every severity kept, located ones drawn; the rest counted', () => {
 		const { traffic } = v2DataLayers({
@@ -399,5 +385,11 @@ describe("airports (MAPX2c): Getting Around's reads, in its card's words", () =>
 			values: { ...base.values, airport: AIRPORTS }
 		}).airport;
 		expect(v.points).toHaveLength(2);
+	});
+});
+
+describe('defaults (Stuart, 2026-10-17: "flooding the zone is kind of fun")', () => {
+	it('every data layer starts on; only a saved choice turns one off', () => {
+		expect(Object.values(defaultDataLayers()).every(Boolean)).toBe(true);
 	});
 });

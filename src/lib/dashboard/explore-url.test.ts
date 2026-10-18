@@ -168,6 +168,8 @@ describe('layersOn', () => {
 			'fire',
 			'gas',
 			'ev',
+			'coffee',
+			'fitness',
 			'airport',
 			'roads',
 			'news',
