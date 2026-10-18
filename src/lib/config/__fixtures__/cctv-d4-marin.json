@@ -1,0 +1,68 @@
+{
+	"data": [
+		{
+			"cctv": {
+				"location": {
+					"locationName": "TVE73 -- US-101 : Spencer Avenue",
+					"latitude": "37.85081",
+					"longitude": "-122.48975",
+					"direction": "North",
+					"route": "US-101"
+				},
+				"imageData": {
+					"static": {
+						"currentImageURL": "https://cwwp2.dot.ca.gov/data/d4/cctv/image/tve73us101spenceravenue/tve73us101spenceravenue.jpg"
+					}
+				}
+			}
+		},
+		{
+			"cctv": {
+				"location": {
+					"locationName": "TVE75 -- US-101 : Marin SR-1",
+					"latitude": "37.88161",
+					"longitude": "-122.51698",
+					"direction": "South",
+					"route": "US-101"
+				},
+				"imageData": {
+					"static": {
+						"currentImageURL": "https://cwwp2.dot.ca.gov/data/d4/cctv/image/tve75us101marinsr1/tve75us101marinsr1.jpg"
+					}
+				}
+			}
+		},
+		{
+			"cctv": {
+				"location": {
+					"locationName": "TVE83 -- US-101 : I-580",
+					"latitude": "37.96194",
+					"longitude": "-122.50975",
+					"direction": "East",
+					"route": "US-101"
+				},
+				"imageData": {
+					"static": {
+						"currentImageURL": "https://cwwp2.dot.ca.gov/data/d4/cctv/image/tve83us101i580/tve83us101i580.jpg"
+					}
+				}
+			}
+		},
+		{
+			"cctv": {
+				"location": {
+					"locationName": "TVE86 -- US-101 : Ignacio Blvd",
+					"latitude": "38.06618",
+					"longitude": "-122.53708",
+					"direction": "South",
+					"route": "US-101"
+				},
+				"imageData": {
+					"static": {
+						"currentImageURL": "https://cwwp2.dot.ca.gov/data/d4/cctv/image/tve86us101ignacioblvd/tve86us101ignacioblvd.jpg"
+					}
+				}
+			}
+		}
+	]
+}
