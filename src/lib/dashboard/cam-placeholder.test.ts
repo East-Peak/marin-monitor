@@ -60,6 +60,11 @@ describe('isPlaceholderFingerprint', () => {
 		);
 	});
 
+	it('a blank, white-out or bright-fog frame is not a card: a card has ink (Codex MAPX4 #1)', () => {
+		for (const level of [255, 248, 240, 235, 230, 216])
+			expect(isPlaceholderFingerprint(Array(192).fill(level))).toBe(false);
+	});
+
 	it('a fingerprint of the wrong size never matches', () => {
 		expect(isPlaceholderFingerprint([])).toBe(false);
 	});

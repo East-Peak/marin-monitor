@@ -235,11 +235,9 @@
 		bottom: 0.375rem;
 		color: #e2e8f0;
 	}
+	/* Its own row above the credit, so the required attribution is never covered (Codex MAPX4 #8). */
 	.cam-heading {
-		left: auto;
-		right: 0.375rem;
-		bottom: 0.375rem;
-		max-width: 45%;
+		bottom: calc(0.375rem + 1.6em);
 		color: #e2e8f0;
 	}
 	.cam-old {

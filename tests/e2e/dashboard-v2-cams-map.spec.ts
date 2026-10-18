@@ -100,6 +100,23 @@ test.describe('desktop 1440×900', () => {
 		await page.screenshot({ path: '/tmp/claude-501/mapx4/wedge-click-1440.png' });
 	});
 
+	test('a tile shows its heading on its own row: the full credit stays readable (Codex MAPX4 #8)', async ({
+		page
+	}) => {
+		await open(page, (r) => json(r, HEADINGS));
+		const tile = page.locator('section#cams [data-camera-id="alert-muir-beach"]');
+		await tile.scrollIntoViewIfNeeded();
+		const heading = tile.locator('[data-cam-heading]');
+		await expect(heading).toHaveText('Looking SSW · 200°');
+		const h = (await heading.boundingBox())!;
+		const credit = (await tile.locator('[data-cam-meta]').boundingBox())!;
+		expect(h.y + h.height).toBeLessThanOrEqual(credit.y + 1);
+		await expect(tile.locator('[data-cam-meta]')).toHaveText('ALERTCalifornia | UC San Diego');
+		expect(
+			await tile.locator('[data-cam-meta]').evaluate((el) => el.scrollWidth <= el.clientWidth)
+		).toBe(true);
+	});
+
 	test('the Layers row names the source and its time, and says what a wedge means', async ({
 		page
 	}) => {

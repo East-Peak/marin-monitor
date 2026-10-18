@@ -38,15 +38,19 @@ export function createCamHeadings(deps: {
 	let holders = 0;
 	let timer: ReturnType<typeof setInterval> | null = null;
 	let lastReadAt = -Infinity;
+	/** The latest read's number: an older reply landing late is dropped (Codex MAPX4 #2). */
+	let latest = 0;
 
 	async function read() {
 		if (deps.signal.aborted) return;
 		lastReadAt = Date.now();
+		const n = ++latest;
+		const current = () => n === latest && !deps.signal.aborted;
 		try {
 			const value = await deps.load(deps.signal);
-			if (!deps.signal.aborted) store.set({ state: 'ok', read: value });
+			if (current()) store.set({ state: 'ok', read: value });
 		} catch {
-			if (!deps.signal.aborted) store.set({ state: 'unavailable', read: null });
+			if (current()) store.set({ state: 'unavailable', read: null });
 		}
 	}
 	function stop() {

@@ -40,4 +40,16 @@ describe('DetailContent image', () => {
 		unmount();
 		expect(vi.getTimerCount()).toBe(0);
 	});
+
+	it('a frame that fails to load says so, then tries again on the next refresh (Codex MAPX4 #5)', async () => {
+		const { container } = render(DetailContent, { detail: detail(15), titleId: 't' });
+		container.querySelector('img')!.dispatchEvent(new Event('error'));
+		await tick();
+		expect(container.textContent).toContain('Latest frame unavailable');
+		expect(container.querySelector('img')!.hidden).toBe(true);
+		await vi.advanceTimersByTimeAsync(15_000);
+		await tick();
+		expect(container.querySelector('img')!.hidden).toBe(false);
+		expect(container.textContent).not.toContain('Latest frame unavailable');
+	});
 });

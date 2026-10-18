@@ -25,6 +25,8 @@
 		const timer = setInterval(() => (loadedAt = Date.now()), every * 1000);
 		return () => clearInterval(timer);
 	});
+	/** The shown src failed to load; a new src (the next refresh) clears it. */
+	let failedSrc = $state<string | null>(null);
 	const imageSrc = $derived(
 		detail.image?.refreshS ? `${detail.image.src}?t=${loadedAt}` : detail.image?.src
 	);
@@ -36,7 +38,16 @@
 		<p class="muted" data-text-role="meta">{detail.meta.join(' · ')}</p>
 	{/if}
 	{#if detail.image}
-		<img src={imageSrc} alt={detail.image.alt} loading={detail.image.refreshS ? 'eager' : 'lazy'} />
+		<img
+			src={imageSrc}
+			alt={detail.image.alt}
+			loading={detail.image.refreshS ? 'eager' : 'lazy'}
+			hidden={failedSrc === imageSrc}
+			onerror={() => (failedSrc = imageSrc ?? null)}
+		/>
+		{#if failedSrc === imageSrc}
+			<p class="muted" data-text-role="meta">Latest frame unavailable</p>
+		{/if}
 	{/if}
 	{#each detail.paragraphs as p, i (i)}
 		<p class="para" data-text-role="body">{p}</p>

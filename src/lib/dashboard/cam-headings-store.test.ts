@@ -74,6 +74,23 @@ describe('createCamHeadings', () => {
 		expect(get(headings)).toEqual({ state: 'unavailable', read: null });
 	});
 
+	it('only the latest read lands: an older reply never overwrites a newer one (Codex MAPX4 #2)', async () => {
+		const replies: { resolve: (r: HeadingRead) => void; reject: (e: Error) => void }[] = [];
+		const load = vi.fn(
+			() => new Promise<HeadingRead>((resolve, reject) => replies.push({ resolve, reject }))
+		);
+		const headings = createCamHeadings({ load, signal: new AbortController().signal });
+		headings.hold();
+		await flush();
+		await vi.advanceTimersByTimeAsync(HEADING_REFRESH_MS);
+		expect(replies).toHaveLength(2);
+		replies[1].reject(new Error('503'));
+		await flush();
+		replies[0].resolve(read(1));
+		await flush();
+		expect(get(headings)).toEqual({ state: 'unavailable', read: null });
+	});
+
 	it('stops when its owner is aborted', async () => {
 		const load = vi.fn().mockResolvedValue(read(1));
 		const ctl = new AbortController();

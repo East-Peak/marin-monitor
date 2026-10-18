@@ -1,7 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { fetchWithTimeout } = vi.hoisted(() => ({ fetchWithTimeout: vi.fn() }));
-vi.mock('$lib/server/fetch-utils', () => ({ fetchWithTimeout }));
+const fetchMock = vi.fn();
 
 const { GET } = await import('./+server');
 const get = () => GET({} as never) as Promise<Response>;
@@ -22,21 +21,26 @@ const tamEast = {
 };
 
 beforeEach(() => {
-	fetchWithTimeout.mockReset();
-	vi.useFakeTimers({ now: 1_792_293_800_000, toFake: ['Date'] });
+	fetchMock.mockReset();
+	vi.stubGlobal('fetch', fetchMock);
+	vi.useFakeTimers({ now: 1_792_293_800_000, toFake: ['Date', 'setTimeout', 'clearTimeout'] });
+});
+afterEach(() => {
+	vi.unstubAllGlobals();
+	vi.useRealTimers();
 });
 
 describe('GET /api/cams/heading', () => {
 	it("reads ALERTCalifornia's all_cameras-v3.json", async () => {
-		fetchWithTimeout.mockResolvedValueOnce(upstream({ features: [tamEast] }));
+		fetchMock.mockResolvedValueOnce(upstream({ features: [tamEast] }));
 		await get();
-		expect(fetchWithTimeout.mock.calls[0][0]).toBe(
+		expect(fetchMock.mock.calls[0][0]).toBe(
 			'https://cameras.alertcalifornia.org/public-camera-data/all_cameras-v3.json'
 		);
 	});
 
 	it('returns our cams with the time we read the feed, cached 30 s publicly', async () => {
-		fetchWithTimeout.mockResolvedValueOnce(upstream({ features: [tamEast] }));
+		fetchMock.mockResolvedValueOnce(upstream({ features: [tamEast] }));
 		const res = await get();
 		expect(res.status).toBe(200);
 		expect(res.headers.get('cache-control')).toBe('public, max-age=30, s-maxage=30');
@@ -55,7 +59,7 @@ describe('GET /api/cams/heading', () => {
 	});
 
 	it('a renamed file (404 upstream) is 503 with a reason, not cached', async () => {
-		fetchWithTimeout.mockResolvedValueOnce(upstream('Not Found', 404));
+		fetchMock.mockResolvedValueOnce(upstream('Not Found', 404));
 		const res = await get();
 		expect(res.status).toBe(503);
 		expect(res.headers.get('cache-control')).toBe('no-store');
@@ -63,16 +67,32 @@ describe('GET /api/cams/heading', () => {
 	});
 
 	it('a schema miss is 503 with the reason', async () => {
-		fetchWithTimeout.mockResolvedValueOnce(upstream({ cameras: [] }));
+		fetchMock.mockResolvedValueOnce(upstream({ cameras: [] }));
 		const res = await get();
 		expect(res.status).toBe(503);
 		expect((await res.json()).error).toMatch(/features/);
 	});
 
+	it('headers arrive but the 2.8 MB body stalls: one deadline covers both, then 503 (Codex MAPX4 #4)', async () => {
+		fetchMock.mockImplementationOnce(
+			async (_url: string, init: RequestInit) =>
+				new Response(
+					new ReadableStream({
+						start(c) {
+							init.signal?.addEventListener('abort', () => c.error(new Error('aborted')));
+						}
+					})
+				)
+		);
+		const res = get();
+		await vi.advanceTimersByTimeAsync(10_000);
+		expect((await res).status).toBe(503);
+	});
+
 	it('a network failure or non-JSON body is 503', async () => {
-		fetchWithTimeout.mockRejectedValueOnce(new Error('timeout'));
+		fetchMock.mockRejectedValueOnce(new Error('timeout'));
 		expect((await get()).status).toBe(503);
-		fetchWithTimeout.mockResolvedValueOnce(upstream('<html>'));
+		fetchMock.mockResolvedValueOnce(upstream('<html>'));
 		expect((await get()).status).toBe(503);
 	});
 });

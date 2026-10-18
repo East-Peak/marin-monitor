@@ -15,6 +15,10 @@ const PICTURE_SHARE = 0.88;
  * was within 15 of a fixture and every real frame at least 85 away.
  */
 const MAX_DISTANCE = 20;
+/** A card's ink (its text or icon: cells darker than this) must be there too, so a blank,
+ * white-out or bright-fog frame never passes as a card (Codex MAPX4 #1). */
+const INK_BELOW = 235;
+const MAX_INK_DISTANCE = 15;
 
 const hex = (s: string) =>
 	Array.from({ length: s.length / 2 }, (_, i) => parseInt(s.slice(i * 2, i * 2 + 2), 16));
@@ -61,9 +65,12 @@ export function frameFingerprint(img: {
 
 export function isPlaceholderFingerprint(fp: readonly number[]): boolean {
 	if (fp.length !== COLS * ROWS) return false;
-	return Object.values(PLACEHOLDER_FINGERPRINTS).some(
-		(card) => fp.reduce((d, v, i) => d + Math.abs(v - card[i]), 0) / fp.length <= MAX_DISTANCE
-	);
+	const mean = (cells: number[], card: readonly number[]) =>
+		cells.reduce((d, i) => d + Math.abs(fp[i] - card[i]), 0) / cells.length;
+	return Object.values(PLACEHOLDER_FINGERPRINTS).some((card) => {
+		const ink = card.flatMap((v, i) => (v < INK_BELOW ? [i] : []));
+		return mean([...card.keys()], card) <= MAX_DISTANCE && mean(ink, card) <= MAX_INK_DISTANCE;
+	});
 }
 
 /** A decoded frame is one of Caltrans' cards; false when the pixels can't be read. */

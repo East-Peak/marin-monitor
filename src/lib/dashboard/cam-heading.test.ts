@@ -81,6 +81,17 @@ describe('parseHeadingFeed', () => {
 		).toThrow(/az_current/);
 	});
 
+	it('no patrol flag is a schema miss, never "holding still" (Codex MAPX4 #3)', () => {
+		expect(() =>
+			parseHeadingFeed(
+				feed({
+					type: 'Feature',
+					properties: { id: 'Axis-TamEast', az_current: 1, fov: 60, last_frame_ts: 1 }
+				})
+			)
+		).toThrow(/is_patrol_mode/);
+	});
+
 	it('none of our cams in the feed (ids renamed) is a schema miss, not an empty map', () => {
 		expect(() => parseHeadingFeed(feed(feature({ id: 'AXIS-Elsewhere' })))).toThrow(
 			/none of the 17 Marin cameras/

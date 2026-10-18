@@ -51,7 +51,7 @@ export function parseHeadingFeed(json: unknown): CamHeading[] {
 		const p = (f as { properties?: Record<string, unknown> } | null)?.properties;
 		const id = typeof p?.id === 'string' ? ALERT_AXIS_IDS.get(p.id) : undefined;
 		if (!p || !id) continue;
-		for (const key of ['az_current', 'last_frame_ts'])
+		for (const key of ['az_current', 'last_frame_ts', 'is_patrol_mode'])
 			if (!(key in p)) throw new HeadingFeedError(`${p.id} has no ${key}`);
 		const az = num(p.az_current);
 		const fov = num(p.fov);
