@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-17',
+		title: 'Traffic cameras on the map; a down camera says so',
+		description:
+			'The four Caltrans cameras on 101 are on the map now too, each with a short wedge showing the way its road runs (approximate: Caltrans only says north, south, east or west). And when Caltrans shows its “Temporarily Unavailable” card instead of a picture, the camera tile now says the camera is unavailable instead of claiming it was just updated.'
+	},
+	{
+		date: '2026-10-17',
 		title: 'Fire cameras on the map, pointing the way they look',
 		description:
 			'The ridge cameras are now on the map, each with a wedge showing the direction it last reported looking: solid while it holds still, dashed while it sweeps, gone when its picture is old. Click one to see its latest picture, refreshed every 15 seconds, and its last reported heading. Camera tiles now say which way they look too (“Looking SSE · 163°”). The wedge shows direction, not how far a camera can see.'

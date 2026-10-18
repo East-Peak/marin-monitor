@@ -143,4 +143,18 @@ describe('releaseFrame', () => {
 		releaseFrame(null, revoke);
 		expect(revoke.mock.calls).toEqual([['blob:a']]);
 	});
+
+	it('a Caltrans stand-in card is flagged, not shown as a picture (MAPX4b)', async () => {
+		const isPlaceholder = vi.fn((_i: HTMLImageElement) => true);
+		const f = await loadFrame(URL_, true, { ...opts(), isPlaceholder });
+		expect(isPlaceholder).toHaveBeenCalledWith(f?.img);
+		expect(f?.placeholder).toBe(true);
+	});
+	it('a real Caltrans frame is not flagged; a plain load is never checked', async () => {
+		const isPlaceholder = vi.fn((_i: HTMLImageElement) => false);
+		expect((await loadFrame(URL_, true, { ...opts(), isPlaceholder }))?.placeholder).toBe(false);
+		isPlaceholder.mockClear();
+		expect((await loadFrame(URL_, false, { ...opts(), isPlaceholder }))?.placeholder).toBe(false);
+		expect(isPlaceholder).not.toHaveBeenCalled();
+	});
 });

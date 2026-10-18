@@ -14,7 +14,13 @@ export const PNG = Buffer.from(
  */
 export async function stubCams(
 	page: Page,
-	opts: { fail?: (url: string) => boolean; lastModified?: number; cors?: boolean } = {}
+	opts: {
+		fail?: (url: string) => boolean;
+		lastModified?: number;
+		cors?: boolean;
+		/** A real frame's bytes (JPEG) for some URLs; the rest get the stub PNG. */
+		jpeg?: (url: string) => Buffer | undefined;
+	} = {}
 ): Promise<string[]> {
 	const seen: string[] = [];
 	await page.route(CAM_HOSTS, (r: Route) => {
@@ -29,7 +35,10 @@ export async function stubCams(
 			opts.cors === false ? 'https://not-marinmonitor.example' : '*';
 		if (opts.lastModified !== undefined)
 			headers['last-modified'] = new Date(opts.lastModified).toUTCString();
-		return r.fulfill({ status: 200, contentType: 'image/png', headers, body: PNG });
+		const jpeg = opts.jpeg?.(url);
+		return jpeg
+			? r.fulfill({ status: 200, contentType: 'image/jpeg', headers, body: jpeg })
+			: r.fulfill({ status: 200, contentType: 'image/png', headers, body: PNG });
 	});
 	return seen;
 }

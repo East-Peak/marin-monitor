@@ -6,6 +6,11 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-17
 
+### Added — Traffic cameras on the map; a down camera says so
+
+- **The four Caltrans cameras on 101** are on the map too, where Caltrans places them, each with a short wedge on the road direction it faces. Caltrans gives only a compass quadrant, so these wedges are labelled "approximate (road direction)". The layer is now called **Cameras**.
+- **"Temporarily Unavailable" is no longer a picture.** When Caltrans serves its stand-in card ("Temporarily Unavailable", "Down for Construction" or a crossed-out camera) instead of a picture, the tile says "Camera temporarily unavailable" and makes no "updated N min ago" claim. Its clock bar changes every frame, so the card is recognised by a coarse picture of it compared with captured copies, never by reading its text.
+
 ### Added — Fire cameras on the map, with the way each one looks
 
 - **A wedge per camera.** The 17 ALERTCalifornia ridge cameras are pins on the v2 map, each with a wedge pointing the way it last reported looking. The wedge is solid while the camera holds still, dashed while it sweeps on patrol, and gone when its last frame is more than 5 minutes old. Its length is a drawing convention, not how far the camera sees; the Layers list says so.

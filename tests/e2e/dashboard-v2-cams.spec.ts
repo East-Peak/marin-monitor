@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { expect, test, type Locator, type Page, type Request } from '@playwright/test';
 import { requestsFor, stubCams } from './fixtures/cams';
 
@@ -273,6 +274,35 @@ test.describe('desktop 1440', () => {
 		await expect(page.locator('[data-camera-id="alert-tam-east"] [data-cam-meta]')).toHaveText(
 			'ALERTCalifornia | UC San Diego'
 		);
+	});
+
+	test("Caltrans' stand-in cards read unavailable, never 'updated' (MAPX4b, real captured frames)", async ({
+		page
+	}) => {
+		const fixture = (name: string) =>
+			readFileSync(new URL(`../../src/lib/dashboard/__fixtures__/${name}`, import.meta.url));
+		const cards: Record<string, Buffer> = {
+			tve75us101marinsr1: fixture('caltrans-temporarily-unavailable.jpg'),
+			tve83us101i580: fixture('caltrans-down-for-construction.jpg'),
+			tve73us101spenceravenue: fixture('caltrans-frame.jpg')
+		};
+		await stubRest(page);
+		await stubCams(page, {
+			lastModified: Date.now() - 4 * 60_000,
+			jpeg: (url) => Object.entries(cards).find(([id]) => url.includes(id))?.[1]
+		});
+		await open(page);
+		await page.locator('[data-cam-slot="caltrans-sr1"]').scrollIntoViewIfNeeded();
+		for (const id of ['caltrans-sr1', 'caltrans-580']) {
+			const tile = page.locator(`[data-camera-id="${id}"]`);
+			await expect(tile).toHaveAttribute('data-status', 'offline');
+			await expect(tile).toContainText('Camera temporarily unavailable');
+			await expect(tile.locator('[data-cam-meta]')).toHaveText('Caltrans');
+			await expect(tile.locator('img')).toHaveCount(0);
+		}
+		const real = page.locator('[data-camera-id="caltrans-spencer"]');
+		await expect(real.locator('[data-cam-meta]')).toContainText(/Caltrans · updated [45] min ago/);
+		expect(await decodedImages(real)).toBe(1);
 	});
 
 	test('Caltrans without CORS still shows its picture, with no age claim (Decision 3 fallback)', async ({

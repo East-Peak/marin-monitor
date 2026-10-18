@@ -40,6 +40,25 @@ afterEach(() => {
 });
 
 describe('CamTile', () => {
+	it("Caltrans' stand-in card reads unavailable at once, never 'updated N min ago' (MAPX4b)", async () => {
+		const card: LoadedFrame = { ...frame(T0 - 60_000, 'blob:card'), placeholder: true };
+		const load = vi
+			.fn<Load>()
+			.mockResolvedValueOnce(card)
+			.mockResolvedValue(frame(T0 - 30_000, 'blob:real'));
+		const { container } = render(CamTile, { cam: caltrans, active: true, now: T0, load });
+		await flush();
+		expect(root(container).querySelector('img')).toBeNull();
+		expect(root(container).dataset.status).toBe('offline');
+		expect(container.textContent).toContain('Camera temporarily unavailable');
+		expect(container.querySelector('[data-cam-meta]')!.textContent!.trim()).toBe('Caltrans');
+		expect(revoke).toHaveBeenCalledWith('blob:card');
+		// A real picture comes back: shown, with its own age.
+		await vi.advanceTimersByTimeAsync(60_000);
+		await flush();
+		expect(root(container).querySelector('img')).not.toBeNull();
+		expect(container.textContent).not.toContain('temporarily unavailable');
+	});
 	it('a heading footer says which way the camera looks (MAPX4)', async () => {
 		const load = vi.fn<Load>(async () => frame());
 		const { container } = render(CamTile, {

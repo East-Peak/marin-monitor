@@ -417,10 +417,36 @@ describe('cams layer (MAPX4)', () => {
 		const v = run(okRead(heading('alert-tam-east')));
 		expect(v.state).toBe('value');
 		expect(v.asOf).toBe(NOW - 20_000);
-		expect(v.points).toHaveLength(17);
+		expect(v.points.filter((p) => p.id.startsWith('alert-'))).toHaveLength(17);
 		const tam = v.points.find((p) => p.id === 'alert-tam-east')!;
 		expect([tam.lon, tam.lat]).toEqual([-122.5816, 37.9235]);
-		expect(v.count).toBe(17);
+		expect(v.count).toBe(21);
+	});
+
+	it('pins the four Caltrans cameras where D4 places them (MAPX4b)', () => {
+		const v = run(okRead());
+		const spencer = v.points.find((p) => p.id === 'caltrans-spencer')!;
+		expect([spencer.lon, spencer.lat]).toEqual([-122.48975, 37.85081]);
+		expect(v.points.filter((p) => p.id.startsWith('caltrans-'))).toHaveLength(4);
+		expect(spencer.detail).toMatchObject({
+			title: '101 at Spencer Ave',
+			meta: ['Caltrans', 'Facing N · approximate (road direction)'],
+			image: { src: expect.stringContaining('tve73us101spenceravenue.jpg'), refreshS: 15 }
+		});
+	});
+
+	it('a Caltrans wedge is a fixed 60° on its road direction, drawn whatever the heading read', () => {
+		for (const cams of [okRead(), { state: 'unavailable', read: null }, null]) {
+			const wedges = camWedgeFeatures(run(cams), NOW).filter((w) =>
+				String(w.properties?.itemId).startsWith('caltrans-')
+			);
+			expect(wedges.map((w) => [w.properties?.itemId, w.properties?.style])).toEqual([
+				['caltrans-spencer', 'approximate'],
+				['caltrans-sr1', 'approximate'],
+				['caltrans-580', 'approximate'],
+				['caltrans-ignacio', 'approximate']
+			]);
+		}
 	});
 
 	it("the detail is the latest frame, refreshed every 15 s, with the camera's own credit", () => {
@@ -445,7 +471,11 @@ describe('cams layer (MAPX4)', () => {
 			)
 		);
 		const wedges = camWedgeFeatures(v, NOW);
-		expect(wedges.map((w) => [w.properties?.itemId, w.properties?.style])).toEqual([
+		expect(
+			wedges
+				.filter((w) => String(w.properties?.itemId).startsWith('alert-'))
+				.map((w) => [w.properties?.itemId, w.properties?.style])
+		).toEqual([
 			['alert-tam-east', 'solid'],
 			['alert-tam-west', 'sweeping']
 		]);
@@ -454,17 +484,19 @@ describe('cams layer (MAPX4)', () => {
 
 	it('the legend says the wedge is direction, not reach', () => {
 		expect(run(okRead(heading('alert-tam-east'))).note).toBe(
-			'Wedge: direction of view, not how far it sees'
+			'Wedge: direction of view, not how far it sees · Caltrans wedges are approximate (road direction)'
 		);
 	});
 
 	it('a failed heading read: unavailable, no wedges, the cameras still open', () => {
 		const v = run({ state: 'unavailable', read: null });
 		expect(v.state).toBe('unavailable');
-		expect(v.points).toHaveLength(17);
+		expect(v.points).toHaveLength(21);
 		expect(v.count).toBeNull();
-		expect(v.note).toBe('Directions unavailable; the cameras still open');
-		expect(camWedgeFeatures(v, NOW)).toEqual([]);
+		expect(v.note).toBe('ALERTCalifornia directions unavailable; the cameras still open');
+		expect(
+			camWedgeFeatures(v, NOW).filter((w) => String(w.properties?.itemId).startsWith('alert-'))
+		).toEqual([]);
 		expect(v.points[0].detail.meta).toContain('Heading unavailable');
 	});
 

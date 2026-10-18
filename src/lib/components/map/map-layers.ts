@@ -718,6 +718,18 @@ function addLayers(map: MapLibreMap): void {
 		}
 	});
 	map.addLayer({
+		id: 'camera-wedges-approximate',
+		type: 'line',
+		source: 'camera-wedges',
+		filter: ['==', ['get', 'style'], 'approximate'],
+		paint: {
+			'line-color': CAMERA_COLOR,
+			'line-width': 1,
+			'line-opacity': 0.7,
+			'line-dasharray': [0.5, 1.5]
+		}
+	});
+	map.addLayer({
 		id: 'cameras-layer',
 		type: 'circle',
 		source: 'cameras',

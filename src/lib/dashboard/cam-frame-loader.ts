@@ -4,11 +4,14 @@
  * Last-Modified on the very bytes shown, never from our own clock (Decision 3).
  */
 import { preloadImage } from '$lib/components/tv/image-preload';
+import { isCaltransPlaceholder } from './cam-placeholder';
 
 export interface LoadedFrame {
 	img: HTMLImageElement;
 	/** The source's capture time (ms), or null: then the strip claims no age. */
 	capturedAt: number | null;
+	/** Caltrans' stand-in card ("Temporarily Unavailable"), not a picture (MAPX4b). */
+	placeholder?: boolean;
 }
 
 interface FrameLoaderOptions {
@@ -18,6 +21,8 @@ interface FrameLoaderOptions {
 	preload?: (url: string, signal?: AbortSignal) => Promise<HTMLImageElement | null>;
 	toObjectUrl?: (b: Blob) => string;
 	revoke?: (url: string) => void;
+	/** Reads the decoded bytes for a stand-in card; only frames we fetched ourselves. */
+	isPlaceholder?: (img: HTMLImageElement) => boolean;
 }
 
 const FETCH_TIMEOUT_MS = 8_000;
@@ -36,7 +41,7 @@ export async function loadFrame(
 	const plain = async () => {
 		if (signal?.aborted) return null;
 		const img = await preload(url, signal); // the download itself stops on cancel (Codex r3 #5)
-		return img && !signal?.aborted ? { img, capturedAt: null } : null;
+		return img && !signal?.aborted ? { img, capturedAt: null, placeholder: false } : null;
 	};
 	if (!withCaptureTime) return plain();
 
@@ -79,7 +84,11 @@ export async function loadFrame(
 			revoke(objectUrl);
 			return null;
 		}
-		return { img, capturedAt: Number.isFinite(parsed) ? parsed : null };
+		return {
+			img,
+			capturedAt: Number.isFinite(parsed) ? parsed : null,
+			placeholder: (opts.isPlaceholder ?? isCaltransPlaceholder)(img)
+		};
 	} finally {
 		clearTimeout(timer);
 	}

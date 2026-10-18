@@ -40,14 +40,16 @@ import {
 } from './getting-around';
 import { OUTDOORS_MAX_AGE_MS } from './outdoors';
 import { CAMERAS } from '$lib/config/cameras';
+import { CALTRANS_CAMS, CALTRANS_WEDGE_FOV, directionAz } from '$lib/config/caltrans-cams';
 import { ALERT_AXIS_IDS, headingLine, sector, wedgeState, type CamHeading } from './cam-heading';
 import type { HeadingsState } from './cam-headings-store';
 
 const DAY_MS = 86_400_000;
 /** The cameras' pins and wedges. */
 export const CAM_SWATCH = '#38bdf8';
-/** A wedge's radius: a display convention, not how far a camera sees. */
+/** A wedge's radius: a display convention, not how far a camera sees. A road cam's is short. */
 const WEDGE_KM = 6;
+const ROAD_WEDGE_KM = 2;
 /** An open camera's frame refreshes this often. */
 const FRAME_REFRESH_S = 15;
 /** Each layer's freshness rule: its section's for traffic and fire, G0a's for the places. */
@@ -140,7 +142,7 @@ export const DATA_LAYERS: readonly {
 	},
 	{
 		id: 'cams',
-		name: 'Fire cameras',
+		name: 'Cameras',
 		dataset: 'cam-headings',
 		source: 'ALERTCalifornia | UC San Diego',
 		defaultOn: true,
@@ -459,9 +461,15 @@ const ALERT_CAMS = CAMERAS.filter(
 	(c) => [...ALERT_AXIS_IDS.values()].includes(c.id) && c.lat !== undefined && c.lon !== undefined
 );
 
+const CALTRANS = CAMERAS.flatMap((c) => {
+	const at = CALTRANS_CAMS[c.id];
+	return at ? [{ cam: c, at }] : [];
+});
+
 /**
- * The fire cameras: our own pins, always (the frame opens whatever the heading read did), and
- * the layer judged by its heading read, the only thing it adds. A failed read draws no wedge.
+ * The cameras: our own pins, always (the frame opens whatever the heading read did), and the
+ * layer judged by ALERTCalifornia's heading read, the only thing it adds. A failed read draws
+ * no ridge wedge. Caltrans cams sit where D4 places them, facing their road (MAPX4b).
  */
 function camLayer(
 	headings: HeadingsState | null,
@@ -487,6 +495,24 @@ function camLayer(
 			}
 		})
 	);
+	const roadside = CALTRANS.map(
+		({ cam, at }): LayerPoint => ({
+			id: cam.id,
+			lon: at.lon,
+			lat: at.lat,
+			title: cam.name,
+			at: null,
+			props: { itemId: cam.id, name: cam.name },
+			detail: {
+				title: cam.name,
+				meta: [cam.source, `Facing ${at.direction} · approximate (road direction)`],
+				image: { src: cam.url, alt: `Latest frame from ${cam.name}`, refreshS: FRAME_REFRESH_S },
+				paragraphs: [],
+				empty: 'A Caltrans traffic camera on 101.',
+				source: { label: 'Caltrans QuickMap', href: 'https://quickmap.dot.ca.gov/' }
+			}
+		})
+	);
 	const state = headings === null ? 'loading' : read ? 'value' : headings.state;
 	return {
 		state: state === 'ok' ? 'value' : state,
@@ -494,23 +520,41 @@ function camLayer(
 		kept: null,
 		note:
 			state === 'value'
-				? 'Wedge: direction of view, not how far it sees'
+				? 'Wedge: direction of view, not how far it sees · Caltrans wedges are approximate (road direction)'
 				: state === 'unavailable'
-					? 'Directions unavailable; the cameras still open'
+					? 'ALERTCalifornia directions unavailable; the cameras still open'
 					: null,
-		points,
+		points: [...points, ...roadside],
 		complete: state === 'value',
 		headings: read?.cams ?? []
 	};
 }
 
-/** The drawn cameras' view wedges: solid, dashed while sweeping, none when stale. */
+/**
+ * The drawn cameras' view wedges: a ridge cam's solid, dashed while sweeping, none when stale; a
+ * Caltrans cam's a fixed 60° on its road direction, "approximate".
+ */
 export function camWedgeFeatures(
 	view: Pick<DataLayerView, 'points' | 'headings'>,
 	now: number
 ): GeoJSON.Feature[] {
 	const byId = new Map((view.headings ?? []).map((h) => [h.id, h]));
 	return view.points.flatMap((p): GeoJSON.Feature[] => {
+		const road = CALTRANS_CAMS[p.id];
+		if (road)
+			return [
+				{
+					type: 'Feature',
+					id: p.id,
+					properties: { itemId: p.id, style: 'approximate' },
+					geometry: sector(
+						[p.lon, p.lat],
+						directionAz(road.direction),
+						CALTRANS_WEDGE_FOV,
+						ROAD_WEDGE_KM
+					)
+				}
+			];
 		const h = byId.get(p.id);
 		const style = h ? wedgeState(h, now) : null;
 		if (!h || !style) return [];

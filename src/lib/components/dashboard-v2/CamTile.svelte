@@ -47,6 +47,8 @@
 	let shownImg = $state.raw<HTMLImageElement | null>(null);
 	let capturedAt = $state<number | null>(null);
 	let attempted = $state(false);
+	/** The source answered with its stand-in card (Caltrans "Temporarily Unavailable"; MAPX4b). */
+	let unavailable = $state(false);
 	/** A request is out (reactive, unlike `pending`). */
 	let requesting = $state(false);
 	/** The request in flight; aborted when the tile deactivates or unmounts. */
@@ -55,7 +57,7 @@
 	const machine = $derived(tileStatus(tile, now, staleAfterMs(STRIP_REFRESH_S)));
 	/** No picture yet and a request out: connecting, even after earlier failures (Codex r2 #3). */
 	const status = $derived<TileStatus>(
-		requesting && tile.shownUrl === null ? 'connecting' : machine
+		unavailable ? 'offline' : requesting && tile.shownUrl === null ? 'connecting' : machine
 	);
 	/**
 	 * What the strip aggregates: refresh progress, not frame age (Codex r6 #1). A request out is
@@ -63,7 +65,13 @@
 	 * or a hidden tab) is not evidence of an outage, so it reports "live" until a refresh fails.
 	 */
 	const reported = $derived<TileStatus>(
-		requesting ? 'connecting' : machine === 'stale' && tile.failures === 0 ? 'live' : machine
+		unavailable
+			? 'offline'
+			: requesting
+				? 'connecting'
+				: machine === 'stale' && tile.failures === 0
+					? 'live'
+					: machine
 	);
 	const hasFrame = $derived(tile.shownUrl !== null);
 	const age = $derived(captureAgeLabel(capturedAt, now));
@@ -89,7 +97,16 @@
 		if (ctrl.signal.aborted) return releaseFrame(frame?.img ?? null); // cancel() reset the flags
 		pending = null;
 		requesting = false;
-		if (frame) {
+		if (frame?.placeholder) {
+			// A definite answer, not a failed load: no picture and no age until a real one returns.
+			releaseFrame(frame.img);
+			releaseFrame(shownImg);
+			shownImg = null;
+			capturedAt = null;
+			tile = initialTileState();
+			unavailable = true;
+		} else if (frame) {
+			unavailable = false;
 			const previous = shownImg;
 			tile = onFrameLoaded(tile, url, clock());
 			shownImg = frame.img;
@@ -149,7 +166,9 @@
 		<div class="cam-frame" use:showFrame={shownImg}></div>
 	{/if}
 	{#if attempted && status === 'offline'}
-		<span class="cam-state" data-text-role="meta">Camera offline</span>
+		<span class="cam-state" data-text-role="meta"
+			>{unavailable ? 'Camera temporarily unavailable' : 'Camera offline'}</span
+		>
 	{:else if active && !shownImg}
 		<span class="cam-state" data-text-role="meta">Connecting…</span>
 	{/if}

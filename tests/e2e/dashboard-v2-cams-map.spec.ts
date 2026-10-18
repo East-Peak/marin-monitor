@@ -80,9 +80,10 @@ test.describe('desktop 1440×900', () => {
 		page
 	}) => {
 		await open(page, (r) => json(r, HEADINGS));
-		await expect.poll(() => sourceCount(page, 'cameras')).toBe(17);
-		// Muir Beach is still and fresh, Tam West sweeping; Bolinas' frame is stale.
-		await expect.poll(() => sourceCount(page, 'camera-wedges')).toBe(2);
+		await expect.poll(() => sourceCount(page, 'cameras')).toBe(21);
+		// Muir Beach is still and fresh, Tam West sweeping; Bolinas' frame is stale. Plus the four
+		// Caltrans wedges, which need no heading.
+		await expect.poll(() => sourceCount(page, 'camera-wedges')).toBe(6);
 		// The whole map on screen: Muir Beach's wedge reaches the map's south edge.
 		await page.locator('#v2-map-canvas').evaluate((el) => el.scrollIntoView({ block: 'end' }));
 		await page.waitForTimeout(500); // the map's paint after the synced revision
@@ -114,10 +115,10 @@ test.describe('desktop 1440×900', () => {
 		page
 	}) => {
 		await open(page, (r) => json(r, { error: 'ALERTCalifornia feed HTTP 404' }, 503));
-		await expect.poll(() => sourceCount(page, 'cameras')).toBe(17);
-		expect(await sourceCount(page, 'camera-wedges')).toBe(0);
+		await expect.poll(() => sourceCount(page, 'cameras')).toBe(21);
+		expect(await sourceCount(page, 'camera-wedges')).toBe(4); // Caltrans only
 		await page.getByRole('button', { name: 'Layers' }).click();
 		await expect(layerRow(page, 'cams')).toContainText('unavailable');
-		await expect(layerRow(page, 'cams')).toContainText('Directions unavailable');
+		await expect(layerRow(page, 'cams')).toContainText('ALERTCalifornia directions unavailable');
 	});
 });
