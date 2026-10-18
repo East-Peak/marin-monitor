@@ -23,7 +23,9 @@ function source(): MapFeedSource & {
 		traffic: none,
 		fires: none,
 		airport: none,
-		places: { gas: none, ev: none, coffee: none, fitness: none }
+		places: { gas: none, ev: none, coffee: none, fitness: none },
+		civic: readable({ police: null, nps: null, activity: null }),
+		blotter: none
 	};
 }
 
@@ -67,6 +69,21 @@ describe('createMapFeed', () => {
 		const views = get(f.feed).dataLayers;
 		expect(views.ev.on).toBe(true);
 		expect(views.traffic.on).toBe(false);
+		f.stop();
+	});
+
+	it('the Shows layer loads the activity calendar itself, with Events never opened (NEWSPIN1)', () => {
+		const { src, full, f } = feed();
+		full.set(true);
+		expect(src.ensure).toHaveBeenCalledWith('activity');
+		f.stop();
+	});
+
+	it('the Shows layer switched off asks for no calendar', () => {
+		const { src, full, layers, f } = feed();
+		layers.set({ shows: false });
+		full.set(true);
+		expect(src.ensure).not.toHaveBeenCalledWith('activity');
 		f.stop();
 	});
 

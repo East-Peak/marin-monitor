@@ -10,6 +10,7 @@ import type { LayerPrefId } from './section-prefs';
 import type { MapLayer } from '$lib/types';
 import { v2MapData, type V2MapData } from './v2-map-data';
 import { DATA_LAYERS, v2DataLayers, type DataLayerId, type DataLayerView } from './v2-map-layers';
+import { blotterView } from './v2-blotter';
 
 export type MapFeedSource = Pick<
 	DashboardV2Controller,
@@ -24,6 +25,8 @@ export type MapFeedSource = Pick<
 	| 'airport'
 	| 'places'
 	| 'camHeadings'
+	| 'civic'
+	| 'blotter'
 >;
 
 export interface MapFeed {
@@ -31,8 +34,16 @@ export interface MapFeed {
 	dataLayers: Record<DataLayerId, DataLayerView>;
 }
 
-/** Loaded on demand through ensure(); the rest arrive with the controller's essentials. */
-const DETAIL_LAYER_DATASETS: ReadonlySet<string> = new Set(['traffic', 'fires', 'airport']);
+/**
+ * Loaded on demand through ensure(); the rest arrive with the controller's essentials. The
+ * Shows layer reads Events' own calendar, so it loads whether or not Events was opened.
+ */
+const DETAIL_LAYER_DATASETS: ReadonlySet<string> = new Set([
+	'traffic',
+	'fires',
+	'airport',
+	'activity'
+]);
 
 export function createMapFeed(
 	src: MapFeedSource,
@@ -92,9 +103,13 @@ export function createMapFeed(
 			src.places.coffee,
 			src.places.fitness,
 			src.airport,
-			src.camHeadings
+			src.camHeadings,
+			src.civic,
+			src.blotter,
+			src.sources,
+			opts.clock
 		],
-		([traffic, fire, gas, ev, coffee, fitness, airport, cams]) => ({
+		([traffic, fire, gas, ev, coffee, fitness, airport, cams, civic, blotter, sources, now]) => ({
 			traffic,
 			fire,
 			gas,
@@ -102,7 +117,13 @@ export function createMapFeed(
 			coffee,
 			fitness,
 			airport,
-			cams
+			cams,
+			activity: civic.activity,
+			blotter: blotterView(
+				sources.find((e) => e.id === 'part:sheriff-blotter'),
+				blotter,
+				now
+			)
 		})
 	);
 	const dataLayers = derived(

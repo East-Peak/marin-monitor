@@ -280,6 +280,8 @@
 		const threeOneOneTriggerLayers = ['311-reports-layer', '311-reports-hit-layer'];
 		const fireIncidentTriggerLayers = ['fire-incidents-layer', 'fire-incidents-label'];
 		const airportTriggerLayers = ['airports-layer', 'airports-hit-layer', 'airports-label'];
+		const venueTriggerLayers = ['show-venues-layer', 'show-venues-hit-layer'];
+		const blotterTriggerLayers = ['blotter-towns-layer', 'blotter-towns-label'];
 
 		// --- Click handlers ---
 
@@ -458,6 +460,17 @@
 			onFeatureClick?.({ kind: 'camera', title, source: 'ALERTCalifornia | UC San Diego', itemId })
 		);
 
+		// v2's venue dots and towns' report counts (NEWSPIN1): the owner's list holds the detail.
+		for (const [layers, kind] of [
+			[venueTriggerLayers, 'show-venue'],
+			[blotterTriggerLayers, 'blotter-town']
+		] as const)
+			bindLayerGroupClick(map, layers, (e: MapLayerMouseEvent) => {
+				const props = e.features?.[0]?.properties;
+				if (props?.itemId)
+					onFeatureClick?.({ kind, title: String(props.name ?? ''), itemId: String(props.itemId) });
+			});
+
 		bindLayerGroupClick(map, airportTriggerLayers, (e: MapLayerMouseEvent) => {
 			if (clickHitsVisibleStravaFeature(map, e)) return;
 			const feature = e.features?.[0];
@@ -509,6 +522,8 @@
 			triggerLayerIds: threeOneOneTriggerLayers,
 			sourceId: '311-reports'
 		});
+		bindInteractiveHover(map, { triggerLayerIds: venueTriggerLayers, sourceId: 'show-venues' });
+		bindInteractiveHover(map, { triggerLayerIds: blotterTriggerLayers, sourceId: 'blotter-towns' });
 		bindInteractiveHover(map, {
 			triggerLayerIds: fireIncidentTriggerLayers,
 			sourceId: 'fire-incidents'

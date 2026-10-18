@@ -50,10 +50,17 @@ import {
 	type CamHeading
 } from './cam-heading';
 import type { HeadingsState } from './cam-headings-store';
+import type { NewsItem } from '$lib/types';
+import type { BlotterView } from './v2-blotter';
+import { blotterLayer, showsLayer } from './v2-map-news-pins';
 
 const DAY_MS = 86_400_000;
 /** The cameras' pins and wedges. */
 export const CAM_SWATCH = '#38bdf8';
+/** A venue's dot (NEWSPIN1). */
+export const SHOW_SWATCH = '#e879f9';
+/** A town's sheriff-report count (NEWSPIN1). */
+export const BLOTTER_SWATCH = '#94a3b8';
 /** A wedge's radius: a display convention, not how far a camera sees. A road cam's is short. */
 const WEDGE_KM = 6;
 const ROAD_WEDGE_KM = 2;
@@ -68,8 +75,11 @@ const MAX_AGE_MS: Record<DataLayerId, number> = {
 	coffee: DATASET_POLICY.coffee.maxAgeDays * DAY_MS,
 	fitness: DATASET_POLICY.fitness.maxAgeDays * DAY_MS,
 	airport: AIRPORT_MAX_AGE_MS,
-	// Unused: the cams layer is judged by its heading read (camLayer).
-	cams: 0
+	// Unused: the cams layer is judged by its heading read (camLayer), shows and the blotter by
+	// their own reads (v2-map-news-pins).
+	cams: 0,
+	shows: 0,
+	blotter: 0
 };
 
 export type DataLayerId =
@@ -80,7 +90,9 @@ export type DataLayerId =
 	| 'coffee'
 	| 'fitness'
 	| 'airport'
-	| 'cams';
+	| 'cams'
+	| 'shows'
+	| 'blotter';
 
 export const DATA_LAYERS: readonly {
 	id: DataLayerId;
@@ -154,6 +166,22 @@ export const DATA_LAYERS: readonly {
 		source: 'ALERTCalifornia | UC San Diego',
 		defaultOn: true,
 		swatch: CAM_SWATCH
+	},
+	{
+		id: 'shows',
+		name: 'Shows · next 10 days',
+		dataset: 'activity',
+		source: 'venue calendars',
+		defaultOn: true,
+		swatch: SHOW_SWATCH
+	},
+	{
+		id: 'blotter',
+		name: 'Sheriff blotter · last 36 h',
+		dataset: 'sheriff-blotter',
+		source: 'Marin Sheriff',
+		defaultOn: true,
+		swatch: BLOTTER_SWATCH
 	}
 ];
 
@@ -174,6 +202,14 @@ export interface LayerPoint {
 	detail: Detail;
 	/** Properties the shared MapLibre layer styles and clicks read (with `itemId`). */
 	props: Record<string, unknown>;
+	/** A group's heading (a venue, a town): drawn and listed, never counted (NEWSPIN1). */
+	heading?: true;
+	/** A row under its heading: listed, never drawn as a feature of its own. */
+	listOnly?: true;
+	/** The layer's own list order (a heading, then its rows); absent, newest first. */
+	rank?: number;
+	/** Its reviewed town, over the nearest centroid's (Codex NEWSPIN1 #3). */
+	townSlug?: string;
 }
 
 export interface DataLayerView {
@@ -206,6 +242,9 @@ interface Values {
 	airport: AirportStatusData | null;
 	/** Null until something holds the headings. */
 	cams: HeadingsState | null;
+	/** The activity read (Events' own), and the controller's blotter view (NEWSPIN1). */
+	activity: readonly NewsItem[] | null;
+	blotter: BlotterView;
 }
 
 const ms = (iso: string | null | undefined) => {
@@ -217,7 +256,7 @@ const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
 const SEVERITY = { Major: 'MAJOR', Moderate: 'MODERATE', Minor: 'MINOR' } as const;
 
 function pointsOf(
-	id: Exclude<DataLayerId, 'airport' | 'cams'>,
+	id: Exclude<DataLayerId, 'airport' | 'cams' | 'shows' | 'blotter'>,
 	values: Values,
 	time: (t: number) => string
 ): { points: LayerPoint[]; note: string | null; complete?: boolean } {
@@ -400,7 +439,7 @@ function pointsOf(
  * and "no delays" only from a fresh ok read. Out of date or failed, the card's one line goes in
  * the row and nothing is drawn; a read the card can't call current is drawn but not vouched.
  */
-type LayerRead = Pick<DataLayerView, 'state' | 'asOf' | 'kept' | 'note' | 'points'> & {
+export type LayerRead = Pick<DataLayerView, 'state' | 'asOf' | 'kept' | 'note' | 'points'> & {
 	/** False when the count can't be vouched for (records unread, a read not current). */
 	complete: boolean;
 };
@@ -590,6 +629,8 @@ export function v2DataLayers(input: {
 	const read = (layer: (typeof DATA_LAYERS)[number]): LayerRead => {
 		if (layer.id === 'airport') return airportLayer(outcomes.airport, values.airport, now);
 		if (layer.id === 'cams') return camLayer(values.cams, now);
+		if (layer.id === 'shows') return showsLayer(outcomes.activity, values.activity, now);
+		if (layer.id === 'blotter') return blotterLayer(values.blotter, now);
 		const entry = datasetEntry(
 			layer.dataset,
 			layer.source,
@@ -616,8 +657,9 @@ export function v2DataLayers(input: {
 		const r = read(layer);
 		// An airport is in no Marin town: a town choice doesn't hide it.
 		const inTown = (p: LayerPoint) =>
-			!town || layer.id === 'airport' || findNearestTown(p.lat, p.lon) === town;
+			!town || layer.id === 'airport' || (p.townSlug ?? findNearestTown(p.lat, p.lon)) === town;
 		const shown = on[layer.id] ? r.points.filter(inTown) : [];
+		const counted = shown.filter((p) => !p.heading).length;
 		out[layer.id] = {
 			id: layer.id,
 			name: layer.name,
@@ -629,19 +671,32 @@ export function v2DataLayers(input: {
 			kept: r.kept,
 			note: r.note,
 			points: shown,
-			count: r.state === 'value' && r.complete && on[layer.id] ? shown.length : null,
+			// A kept read of shows or reports never says "0": it can't see what's new (Codex NEWSPIN1 #2).
+			count:
+				r.state === 'value' &&
+				r.complete &&
+				on[layer.id] &&
+				!(keptNeverZero(layer.id, r) && !counted)
+					? counted
+					: null,
 			...('headings' in r ? { headings: r.headings as CamHeading[] } : {})
 		};
 	}
 	return out;
 }
 
+/** Shows and the blotter: a kept read vouches for what it holds, never for an absence. */
+export const keptNeverZero = (id: DataLayerId, view: Pick<DataLayerView, 'kept'>) =>
+	(id === 'shows' || id === 'blotter') && view.kept !== null;
+
 /** A layer's drawn points as GeoJSON for its shared MapLibre source. */
 export function layerFeatures(view: Pick<DataLayerView, 'points'>): GeoJSON.Feature[] {
-	return view.points.map((p) => ({
-		type: 'Feature',
-		id: p.id,
-		properties: { ...p.props, itemId: p.id },
-		geometry: { type: 'Point', coordinates: [p.lon, p.lat] }
-	}));
+	return view.points
+		.filter((p) => !p.listOnly)
+		.map((p) => ({
+			type: 'Feature',
+			id: p.id,
+			properties: { ...p.props, itemId: p.id },
+			geometry: { type: 'Point', coordinates: [p.lon, p.lat] }
+		}));
 }

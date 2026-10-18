@@ -53,7 +53,9 @@
 		coffee: 'Coffee',
 		fitness: 'Fitness studios',
 		airport: 'Airports',
-		cams: 'Cameras'
+		cams: 'Cameras',
+		shows: 'Shows',
+		blotter: 'Sheriff reports'
 	};
 	// Keyboard users keep their place (Codex MAPX2 #6): a selection takes focus to its detail's
 	// heading; Back returns it to the row it came from, else to the panel's list heading.
@@ -130,6 +132,8 @@
 					<button
 						type="button"
 						class="row"
+						class:heading={row.heading}
+						class:under={!row.heading && row.rank !== undefined}
 						data-in-view-row={row.id}
 						data-hovered={hovered === row.id ? 'true' : undefined}
 						onclick={(e) => choose(row.id, e.detail === 0)}
@@ -215,6 +219,13 @@
 		color: var(--text-primary);
 		text-align: left;
 		cursor: pointer;
+	}
+	/* A venue or town heads its shows or reports (NEWSPIN1). */
+	.row.heading {
+		font-weight: 600;
+	}
+	.row.under {
+		padding-left: 1.25rem;
 	}
 	.row:hover,
 	.row[data-hovered='true'] {

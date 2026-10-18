@@ -79,7 +79,17 @@ const base = {
 		coffee: null,
 		fitness: null,
 		airport: null,
-		cams: null
+		cams: null,
+		activity: null,
+		blotter: {
+			state: 'loading' as const,
+			asOf: null,
+			kept: null,
+			reports: [],
+			count: null,
+			hidden: null,
+			capped: false
+		}
 	}
 };
 const airport = (code: string, over: Partial<AirportStatus> = {}): AirportStatus => ({
@@ -129,8 +139,9 @@ describe('v2DataLayers', () => {
 		});
 	});
 
-	// The cams layer is judged by its heading read, not a dataset outcome (its own tests below).
-	it.each(DATA_LAYERS.map((l) => l.id).filter((id) => id !== 'cams'))(
+	// The cams layer is judged by its heading read and the blotter by its part's entry, not a
+	// dataset outcome (their own tests: below, and v2-map-news-pins.test.ts).
+	it.each(DATA_LAYERS.map((l) => l.id).filter((id) => id !== 'cams' && id !== 'blotter'))(
 		'%s: a failed read is "unavailable", draws nothing and claims no count',
 		(id) => {
 			const dataset = DATA_LAYERS.find((l) => l.id === id)!.dataset;

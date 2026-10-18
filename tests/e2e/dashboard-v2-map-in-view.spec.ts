@@ -69,7 +69,7 @@ const STORIES = [
 async function open(page: Page, extra: (page: Page) => Promise<unknown> = async () => {}) {
 	await camsOff(page);
 	await page.route(
-		/\/api\/(data|nps|transit|health|feeds|article|geocode|calfire|traffic)\b|earthquake\.usgs\.gov|api\.weather\.gov|tidesandcurrents/,
+		/\/api\/(data|nps|transit|health|feeds|article|geocode|calfire|traffic)\b|earthquake\.usgs\.gov|api\.weather\.gov|tidesandcurrents|data\.marincounty\.gov/,
 		(r) => r.fulfill({ status: 503, body: 'stubbed' })
 	);
 	await page.route('**/api/data/311', (r) => json(r, FIX_IT));

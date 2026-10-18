@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-18',
+		title: 'Shows and sheriff reports back on the map',
+		description:
+			'The map shows the next ten days of shows at the venues we have checked, a dot on each venue’s own building, with its shows listed under it. A show is placed only when its own listing says it is at that venue. Sheriff reports from the last 36 hours are counted on each town’s dot, with the county’s hundred-block address as text and never as a point, and only for property and public-place reports.'
+	},
+	{
+		date: '2026-10-18',
 		title: 'Camera pictures show whole, with nothing on them',
 		description:
 			'Each camera’s name, credit and heading now sit under its picture, not on it, and pictures are never trimmed to fit their tile. ALERTCalifornia asks that their frames stay whole and their info bar along the bottom stay uncovered.'

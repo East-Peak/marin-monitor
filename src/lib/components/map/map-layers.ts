@@ -67,6 +67,9 @@ export function retainedDim<T>(expr: T): ['case', ['==', ['get', 'retained'], tr
 	return ['case', ['==', ['get', 'retained'], true], 0.4, expr];
 }
 
+/** The blotter badge sits up and right of its town's dot. */
+const BLOTTER_BADGE_OFFSET_PX: [number, number] = [11, -11];
+
 export function setupSources(map: MapLibreMap): void {
 	// Style swaps remove custom sources/layers. Re-add when missing.
 	if (map.getSource('towns')) return;
@@ -218,6 +221,18 @@ function addSources(map: MapLibreMap): void {
 		promoteId: 'itemId'
 	});
 	map.addSource('camera-wedges', {
+		type: 'geojson',
+		data: { type: 'FeatureCollection', features: [] },
+		promoteId: 'itemId'
+	});
+
+	// v2's venue dots and towns' sheriff-report counts (NEWSPIN1); empty unless an owner draws them.
+	map.addSource('show-venues', {
+		type: 'geojson',
+		data: { type: 'FeatureCollection', features: [] },
+		promoteId: 'itemId'
+	});
+	map.addSource('blotter-towns', {
 		type: 'geojson',
 		data: { type: 'FeatureCollection', features: [] },
 		promoteId: 'itemId'
@@ -921,6 +936,54 @@ function addLayers(map: MapLibreMap): void {
 			'text-halo-color': 'rgba(10, 10, 10, 0.9)',
 			'text-halo-width': 1,
 			'text-opacity': hoverCase(0.96, townLabelOpacity)
+		}
+	});
+
+	// --- Venue dots (NEWSPIN1): a solid dot at a reviewed venue's own building ---
+	map.addLayer({
+		id: 'show-venues-layer',
+		type: 'circle',
+		source: 'show-venues',
+		paint: {
+			'circle-radius': hoverCase(8, 5.5),
+			'circle-color': '#e879f9',
+			'circle-stroke-width': hoverCase(3, 1.5),
+			'circle-stroke-color': hoverCase('rgba(255, 247, 220, 0.98)', 'rgba(10, 10, 10, 0.85)')
+		}
+	});
+	map.addLayer({
+		id: 'show-venues-hit-layer',
+		type: 'circle',
+		source: 'show-venues',
+		paint: { 'circle-radius': 14, 'circle-color': 'rgba(0, 0, 0, 0)' }
+	});
+
+	// --- A town's sheriff-report count (NEWSPIN1): a badge on the town's dot, never a point ---
+	map.addLayer({
+		id: 'blotter-towns-layer',
+		type: 'circle',
+		source: 'blotter-towns',
+		paint: {
+			'circle-radius': hoverCase(9, 7.5),
+			'circle-color': '#475569',
+			'circle-stroke-width': hoverCase(2.5, 1.5),
+			'circle-stroke-color': hoverCase('rgba(255, 247, 220, 0.98)', '#94a3b8'),
+			'circle-translate': BLOTTER_BADGE_OFFSET_PX
+		}
+	});
+	map.addLayer({
+		id: 'blotter-towns-label',
+		type: 'symbol',
+		source: 'blotter-towns',
+		layout: {
+			'text-field': ['to-string', ['get', 'count']],
+			'text-size': 10,
+			'text-allow-overlap': true,
+			'text-ignore-placement': true
+		},
+		paint: {
+			'text-color': '#f8fafc',
+			'text-translate': BLOTTER_BADGE_OFFSET_PX
 		}
 	});
 }

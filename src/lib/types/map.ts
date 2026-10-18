@@ -10,7 +10,9 @@ export type MapFeatureKind =
 	| 'fitness-studio'
 	| 'airport'
 	| '311-report'
-	| 'camera';
+	| 'camera'
+	| 'show-venue'
+	| 'blotter-town';
 
 export interface MapFeatureInspectorData {
 	kind: MapFeatureKind;

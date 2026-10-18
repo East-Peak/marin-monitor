@@ -91,6 +91,31 @@ describe('cameras (MAPX4)', () => {
 	});
 });
 
+describe('shows and the blotter (NEWSPIN1)', () => {
+	it('a venue dot names its venue row; a town’s count names its town row', () => {
+		expect(clickSelection({ kind: 'show-venue', itemId: 'venue:marin-jcc' })).toBe(
+			'shows:venue:marin-jcc'
+		);
+		expect(featureSelection({ source: 'show-venues', properties: { itemId: 'venue:macs' } })).toBe(
+			'shows:venue:macs'
+		);
+		expect(clickSelection({ kind: 'blotter-town', itemId: 'town:kentfield' })).toBe(
+			'blotter:town:kentfield'
+		);
+		expect(
+			featureSelection({ source: 'blotter-towns', properties: { itemId: 'town:kentfield' } })
+		).toBe('blotter:town:kentfield');
+	});
+
+	it('a show’s row flies to its venue’s point', () => {
+		const rows = [
+			{ ...item('shows:venue:marin-jcc', -122.5231, 37.9994), layer: 'shows' as const },
+			{ ...item('shows:event:shows:yoga', -122.5231, 37.9994), layer: 'shows' as const }
+		];
+		expect(flyTarget(rows, 'shows:event:shows:yoga')).toEqual([-122.5231, 37.9994]);
+	});
+});
+
 describe('mapEmphasis: what a pick lights (CAMDESEL1)', () => {
 	const items = [item('cams:alert-muir-beach', -122.586, 37.863)];
 

@@ -19,10 +19,14 @@ export type InViewLayer =
 	| 'coffee'
 	| 'fitness'
 	| 'airport'
-	| 'cams';
+	| 'cams'
+	| 'shows'
+	| 'blotter';
 /** List order: one group per layer. */
 const LAYER_ORDER: readonly InViewLayer[] = [
 	'news',
+	'shows',
+	'blotter',
 	'311',
 	'quake',
 	'traffic',
@@ -47,6 +51,10 @@ export interface InViewItem {
 	detail: Detail;
 	/** Kept-after-failure note from the owner, shown with the detail. */
 	note?: string | null;
+	/** A group's heading (a venue, a town): listed, not counted (NEWSPIN1). */
+	heading?: true;
+	/** The layer's own order; absent, newest first. */
+	rank?: number;
 }
 
 export interface Bounds {
@@ -75,7 +83,12 @@ export function inView(items: readonly InViewItem[], bounds: Bounds): InViewItem
 	const seen = new Set<string>();
 	const kept = items.filter(inside(bounds)).filter((i) => !seen.has(i.id) && seen.add(i.id));
 	const rank = (i: InViewItem) => LAYER_ORDER.indexOf(i.layer);
-	return kept.sort((a, b) => rank(a) - rank(b) || (b.at ?? -Infinity) - (a.at ?? -Infinity));
+	return kept.sort(
+		(a, b) =>
+			rank(a) - rank(b) ||
+			(a.rank ?? 0) - (b.rank ?? 0) ||
+			(b.at ?? -Infinity) - (a.at ?? -Infinity)
+	);
 }
 
 interface TownPoint {
@@ -176,7 +189,9 @@ export function inViewItems(input: {
 				lon: p.lon,
 				lat: p.lat,
 				detail: p.detail,
-				note: layer.kept
+				note: layer.kept,
+				...(p.heading ? { heading: p.heading } : {}),
+				...(p.rank === undefined ? {} : { rank: p.rank })
 			});
 	return out;
 }

@@ -172,6 +172,8 @@ describe('layersOn', () => {
 			'fitness',
 			'airport',
 			'cams',
+			'shows',
+			'blotter',
 			'roads',
 			'news',
 			'civic',

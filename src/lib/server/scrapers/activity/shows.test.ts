@@ -122,4 +122,55 @@ describe('show calendars carry their start and location evidence (NEWSPIN1)', ()
 		);
 		expect(item).toMatchObject({ startSource: 'startDate', startDay: '2026-10-03' });
 	});
+
+	describe('Codex NEWSPIN1 review', () => {
+		const page = (event: Record<string, unknown>) =>
+			'<script type="application/ld+json">' +
+			JSON.stringify({ '@type': 'Event', name: 'X', ...event }) +
+			'</script>';
+		const read = async (event: Record<string, unknown>, now = NOW) => {
+			const { parseJsonLdEventPage } = await import('./parsers');
+			const { safeFetch } = await import('../shared');
+			vi.mocked(safeFetch).mockResolvedValueOnce(page(event));
+			return parseJsonLdEventPage(
+				{ source: 'Osher Marin JCC', url: 'https://example.test/', category: 'shows' },
+				now
+			);
+		};
+
+		it('#1 a VirtualLocation is said, never read as no location', async () => {
+			const [item] = await read({
+				startDate: '2026-10-01T19:00:00-07:00',
+				location: { '@type': 'VirtualLocation', url: 'https://zoom.us/j/1' }
+			});
+			expect(item.locationText).toMatch(/virtual/i);
+		});
+
+		it('#1 a location given but unreadable is not "no location"', async () => {
+			const [item] = await read({
+				startDate: '2026-10-01T19:00:00-07:00',
+				location: { '@type': 'Place', url: 'https://example.test/somewhere' }
+			});
+			expect(item.locationText).toBeDefined();
+		});
+
+		it('#4 a start with no zone is Pacific wall time, whatever the server’s zone', async () => {
+			const original = process.env.TZ;
+			process.env.TZ = 'UTC';
+			try {
+				const [item] = await read({ startDate: '2026-10-01T19:00:00' });
+				expect(item.timestamp).toBe(Date.parse('2026-10-01T19:00:00-07:00'));
+				expect(item.startSource).toBe('startDate');
+			} finally {
+				if (original === undefined) delete process.env.TZ;
+				else process.env.TZ = original;
+			}
+		});
+
+		it('#5 a date-only show is kept all of its Pacific day', async () => {
+			const sixPm = Date.parse('2026-10-18T18:00:00-07:00');
+			const items = await read({ startDate: '2026-10-18' }, sixPm);
+			expect(items.map((i) => i.startDay)).toEqual(['2026-10-18']);
+		});
+	});
 });

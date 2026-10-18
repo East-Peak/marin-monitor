@@ -6,6 +6,7 @@ import type { NewsItem } from '$lib/types';
 import { stripHtml, safeFetch, fetchLastModified, parseXml } from '../shared';
 import type { EventPageConfig } from './types';
 import { buildItem, getTagText, flattenJsonLdEvents, buildEventTitle } from './helpers';
+import { pacificDate, parsePacificWallTime } from '$lib/dashboard/pacific-time';
 
 export async function parseRssFeed(
 	config: {
@@ -65,18 +66,35 @@ function showDayOf(pubDate: string): Pick<NewsItem, 'startSource' | 'startDay'> 
 		: {};
 }
 
-/** JSON-LD's `startDate` is the event's start; a bare date is a day, not a midnight. */
-function jsonLdStart(startDate: unknown): Pick<NewsItem, 'startSource' | 'startDay'> {
-	if (typeof startDate !== 'string' || !Number.isFinite(Date.parse(startDate))) return {};
-	return /^\d{4}-\d{2}-\d{2}$/.test(startDate)
-		? { startSource: 'startDate', startDay: startDate }
-		: { startSource: 'startDate' };
+/**
+ * JSON-LD's `startDate` as the event's start: a bare date is a day, not a midnight; a time with
+ * no zone is the calendar's own (Pacific) wall time, never the server's (Codex NEWSPIN1 #4).
+ */
+function jsonLdStart(
+	startDate: unknown
+): Pick<NewsItem, 'startSource' | 'startDay'> & { at?: string } {
+	if (typeof startDate !== 'string') return {};
+	if (/^\d{4}-\d{2}-\d{2}$/.test(startDate))
+		return { startSource: 'startDate', startDay: startDate };
+	const floating = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(startDate);
+	const t = floating ? parsePacificWallTime(startDate.slice(0, 16)) : Date.parse(startDate);
+	return t !== null && Number.isFinite(t)
+		? { startSource: 'startDate', at: new Date(t).toISOString() }
+		: {};
 }
 
-/** The event's own location words: its place's name and street address. */
+/**
+ * The event's own location words: its place's name and street address. A virtual place says so,
+ * and a place given but unreadable is never "no location" (Codex NEWSPIN1 #1).
+ */
 function jsonLdLocationText(location: unknown): string | undefined {
-	const place = Array.isArray(location) ? location[0] : location;
-	if (typeof place === 'string') return stripHtml(place) || undefined;
+	const places = Array.isArray(location) ? location : [location];
+	const virtual = places.some(
+		(p) => p && typeof p === 'object' && (p as { '@type'?: unknown })['@type'] === 'VirtualLocation'
+	);
+	if (virtual) return 'Virtual location';
+	const place = places[0];
+	if (typeof place === 'string') return stripHtml(place) || 'Location not readable';
 	if (!place || typeof place !== 'object') return undefined;
 	const { name, address } = place as { name?: unknown; address?: unknown };
 	const street =
@@ -87,7 +105,7 @@ function jsonLdLocationText(location: unknown): string | undefined {
 		.filter((p): p is string => typeof p === 'string')
 		.map((p) => stripHtml(p))
 		.filter(Boolean);
-	return parts.length ? parts.join(' · ') : undefined;
+	return parts.length ? parts.join(' · ') : 'Location not readable';
 }
 
 export async function parseAtomFeed(
@@ -173,44 +191,54 @@ export async function parseJsonLdEventPage(
 	}
 
 	const limit = config.limit ?? 10;
-	return events
-		.map((event) =>
-			buildItem(
-				{
-					category: config.category,
-					source: config.source,
-					title: stripHtml((event.name as string) || 'Upcoming event'),
-					link: (event.url as string) || config.url,
-					pubDate:
-						(event.startDate as string) || (event.endDate as string) || new Date().toISOString(),
-					description: stripHtml((event.description as string) || ''),
-					content: stripHtml(
-						[
-							(event.location as Record<string, unknown>)?.name,
-							(event.organizer as Record<string, unknown>)?.name,
-							event.eventAttendanceMode,
-							event.eventStatus
-						]
-							.filter(Boolean)
-							.join(' · ') as string
-					),
-					verification: config.verification || 'community',
-					town: config.town,
-					townSlug: config.townSlug,
-					lat: config.lat,
-					lon: config.lon,
-					topics: config.topics,
-					venueId: config.venueId,
-					locationText: jsonLdLocationText(event.location),
-					...jsonLdStart(event.startDate)
-				},
-				now
+	const today = pacificDate(now);
+	return (
+		events
+			.map((event) => {
+				const { at, ...start } = jsonLdStart(event.startDate);
+				return buildItem(
+					{
+						category: config.category,
+						source: config.source,
+						title: stripHtml((event.name as string) || 'Upcoming event'),
+						link: (event.url as string) || config.url,
+						pubDate:
+							at ||
+							(event.startDate as string) ||
+							(event.endDate as string) ||
+							new Date().toISOString(),
+						description: stripHtml((event.description as string) || ''),
+						content: stripHtml(
+							[
+								(event.location as Record<string, unknown>)?.name,
+								(event.organizer as Record<string, unknown>)?.name,
+								event.eventAttendanceMode,
+								event.eventStatus
+							]
+								.filter(Boolean)
+								.join(' · ') as string
+						),
+						verification: config.verification || 'community',
+						town: config.town,
+						townSlug: config.townSlug,
+						lat: config.lat,
+						lon: config.lon,
+						topics: config.topics,
+						venueId: config.venueId,
+						locationText: jsonLdLocationText(event.location),
+						...start
+					},
+					now
+				);
+			})
+			.filter((item): item is NewsItem => item !== null)
+			// A date-only show lasts all of its Pacific day (Codex NEWSPIN1 #5).
+			.filter((item) =>
+				item.startDay ? item.startDay >= today : item.timestamp >= now - 24 * 60 * 60 * 1000
 			)
-		)
-		.filter((item): item is NewsItem => item !== null)
-		.filter((item) => item.timestamp >= now - 24 * 60 * 60 * 1000)
-		.sort((a, b) => a.timestamp - b.timestamp)
-		.slice(0, limit);
+			.sort((a, b) => a.timestamp - b.timestamp)
+			.slice(0, limit)
+	);
 }
 
 export async function parseSinglePageItem(

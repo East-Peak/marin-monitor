@@ -56,6 +56,7 @@
 	import {
 		DATA_LAYERS,
 		camWedgeFeatures,
+		keptNeverZero,
 		layerFeatures,
 		type DataLayerId,
 		type DataLayerView
@@ -296,8 +297,15 @@
 	});
 	// A selection whose item leaves the list (its layer switched off, a new town, the feed moved
 	// on) is cleared with its URL, so nothing invisible blocks Esc or rides on a copied link.
+	// A show or report that leaves its window or its read while its layer is on says so (NEWSPIN1).
 	$effect(() => {
-		if (selectedId && !pendingSel && !resolveSelection(allItems, selectedId)) untrack(deselect);
+		if (!selectedId || pendingSel || resolveSelection(allItems, selectedId)) return;
+		const layer = selectedId.slice(0, selectedId.indexOf(':'));
+		untrack(() => {
+			deselect();
+			if ((layer === 'shows' || layer === 'blotter') && dataLayers?.[layer].on)
+				notice = 'No longer listed';
+		});
 	});
 	/** The page's own query (`?probe`, `utm_*`), carried into /map. */
 	const carried = new URLSearchParams(typeof location === 'undefined' ? '' : location.search);
@@ -334,7 +342,9 @@
 	}
 
 	// The layer panel (MAPX2b): every row says its source and time, or why it has none.
-	const inViewCount = (layer: string) => listed.filter((i) => i.layer === layer).length;
+	/** A venue or town heading is listed, never counted (NEWSPIN1). */
+	const inViewCount = (layer: string) =>
+		listed.filter((i) => i.layer === layer && !i.heading).length;
 	const statusOf = (
 		source: string,
 		kind: 'loading' | 'value' | 'unknown' | 'unavailable',
@@ -408,12 +418,13 @@
 		...(dataLayers
 			? DATA_LAYERS.flatMap((l): LayerRow[] => {
 					const v = dataLayers[l.id];
+					const n = inViewCount(l.id);
 					const row: LayerRow = {
 						id: l.id,
 						name: l.name,
 						swatch: l.swatch,
 						on: v.on,
-						count: v.count === null ? null : inViewCount(l.id),
+						count: v.count === null || (keptNeverZero(l.id, v) && n === 0) ? null : n,
 						status: statusOf(v.source, v.state, v.asOf),
 						note: [v.kept, v.note].filter(Boolean).join(' · ') || null
 					};

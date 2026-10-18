@@ -6,6 +6,13 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-18
 
+### Added — Shows and sheriff reports back on the map
+
+- **Shows · next 10 days.** A dot at each venue we have checked (Sweetwater, Rancho Nicasio, Mac's at 19 Broadway, Dance Palace, the Osher Marin JCC, the Tourist Club), placed on the venue's own building. Click it for its shows; each show is a row under its venue in the In view list. A show is mapped only when its own listing agrees it is at that venue: an event the JCC lists at Rodef Sholom, a West Point Inn screening on the Tourist Club's calendar, a virtual briefing or a cancelled matinee stays off the map. The Layers row says how many upcoming shows are mapped and how many are not.
+- **Events and the map agree on what's on.** Both read the same next ten Pacific days. A listing counts only with the venue's own show date: Sweetwater's feed dates are post times and the hub pages are dated when we read them, so neither is listed. Rancho Nicasio's and Mac's dates are now the show's day (Rancho's shows had been landing on the evening before).
+- **Sheriff blotter · last 36 h**, counted on each town's dot ("San Anselmo · 2 sheriff reports"). The county publishes a hundred-block ("5XX The Alameda") but a much finer point; we show the hundred-block as text and never draw the point. Only property and public-place reports (theft, shoplifting, burglary, vandalism, stolen property, trespass) are shown; the rest are counted in the row as "not shown". A failed read says unavailable; a read kept after a failure says from when, and its reports still drop off after 36 hours.
+- **Venue points checked against their addresses.** The Tourist Club's point was 1.3 km off; five others were 80–150 m off.
+
 ### Fixed — A selected camera lets go
 
 - **Back to list, Esc, or a click on empty map now unselects** a camera or any other selected item. Its wedge goes quiet, the white ring goes away and the list comes back, on the dashboard map and on /map (where the link's `sel` is cleared too). A drag still keeps the selection. On a tablet the same three close the inspector; on a phone, the detail's Close does it.
