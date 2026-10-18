@@ -46,6 +46,7 @@ beforeEach(() => {
 afterEach(() => {
 	vi.unstubAllGlobals();
 	vi.useRealTimers();
+	vi.restoreAllMocks();
 });
 
 describe('GET /api/traffic/corridors', () => {
@@ -114,6 +115,28 @@ describe('GET /api/traffic/corridors', () => {
 		const { res } = await call();
 		expect(res.status).toBe(502);
 		expect(res.headers.get('cache-control')).toBe('no-store');
+	});
+
+	it('a 429 says so: the 502 carries the upstream status, and the read is logged without the key', async () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		fetchMock.mockResolvedValueOnce(
+			new Response('Too Many Requests', { status: 429, headers: { 'Retry-After': '1800' } })
+		);
+		const { res, json } = await call();
+		expect([res.status, json]).toEqual([
+			502,
+			{ error: 'Traffic events unavailable', upstreamStatus: 429 }
+		]);
+		const lines = warn.mock.calls.map((c) => JSON.parse(String(c[0])));
+		expect(lines).toEqual([
+			expect.objectContaining({
+				evt: '511-read',
+				route: 'traffic/corridors',
+				status: 429,
+				retryAfter: '1800'
+			})
+		]);
+		expect(JSON.stringify(warn.mock.calls)).not.toContain('test-key');
 	});
 
 	it('records it cannot read are reported, so no client reads them as "nothing listed" (Codex r1 #3)', async () => {

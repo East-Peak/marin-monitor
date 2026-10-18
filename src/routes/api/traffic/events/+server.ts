@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import { get511ApiKey } from '$lib/server/api-keys';
+import { log511Read, read511Of } from '$lib/server/upstream-511';
 
 const API_BASE = 'https://api.511.org/traffic/events';
 
@@ -26,9 +27,22 @@ export async function GET() {
 	}
 
 	const url = `${API_BASE}?api_key=${encodeURIComponent(apiKey)}&format=json`;
-	const response = await fetchWithTimeout(url, {
-		headers: { Accept: 'application/json' }
-	});
+	const started = Date.now();
+	let response: Response;
+	try {
+		response = await fetchWithTimeout(url, { headers: { Accept: 'application/json' } });
+	} catch {
+		log511Read(
+			'traffic/events',
+			{ status: null, retryAfter: null, remaining: null },
+			Date.now() - started
+		);
+		return json(
+			{ events: [], error: 'Upstream traffic API error' },
+			{ status: 502, headers: { 'cache-control': 'no-store' } }
+		);
+	}
+	log511Read('traffic/events', read511Of(response), Date.now() - started);
 
 	if (!response.ok) {
 		return json(

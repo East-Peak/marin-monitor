@@ -8,6 +8,7 @@
 import { error, json } from '@sveltejs/kit';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import { get511ApiKey } from '$lib/server/api-keys';
+import { log511Read, read511Of } from '$lib/server/upstream-511';
 import type { RequestHandler } from './$types';
 
 const API_BASE = 'https://api.511.org/transit';
@@ -45,12 +46,14 @@ export const GET: RequestHandler = async ({ url }) => {
 		return json({ error: 'Service unavailable' }, { status: 503 });
 	}
 
+	const started = Date.now();
 	try {
 		const apiUrl = `${API_BASE}/servicealerts?api_key=${apiKey}&agency=${agency}&format=json`;
 
 		const response = await fetchWithTimeout(apiUrl, {
 			headers: { Accept: 'application/json' }
 		});
+		log511Read('transit', read511Of(response), Date.now() - started);
 
 		if (!response.ok) {
 			throw error(response.status, `511 API returned ${response.status}`);
@@ -72,7 +75,11 @@ export const GET: RequestHandler = async ({ url }) => {
 		});
 	} catch (e) {
 		if ((e as { status?: number }).status) throw e;
-		console.error('Transit fetch failed:', (e as Error).message);
+		log511Read(
+			'transit',
+			{ status: null, retryAfter: null, remaining: null },
+			Date.now() - started
+		);
 		throw error(502, 'Failed to fetch transit alerts');
 	}
 };

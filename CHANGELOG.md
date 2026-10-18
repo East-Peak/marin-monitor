@@ -6,6 +6,10 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-18
 
+### Changed — 511 reads say why they fail
+
+- **Every read from 511 (road events, transit alerts) now logs one line** with 511's answer, its `Retry-After` and the requests left on our hourly allowance, so an intermittent "Traffic events unavailable" can be traced to a cause. A failed road read also says 511's status in its reply.
+
 ### Changed — Quieter camera wedges, a bigger picture, cameras where they are
 
 - **Camera wedges are quiet until you ask.** At rest each wedge is a faint tint with a hairline outline, drawn under every dot on the map. Hovering a wedge, its camera's pin or its row in the list, or opening the camera, shows its wedge at full strength. A tap does the same on a phone.
