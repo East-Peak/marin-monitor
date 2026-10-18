@@ -1,19 +1,20 @@
 <!-- The v2 map (§2.4, Decision 3): owner-supplied layers only (news, 311, earthquakes), kept
      features dimmed and explained, a status line for every enabled layer's source, and a
      test hook under ?probe. Desktop (≥1024): a docked in-view list replaces the popups (MAPX2).
-     Phone: a compact preview that expands on tap. A pin never changes the global town; only
-     an explicit town choice does. -->
+     Phone: a compact preview that expands on tap. Every width shows the same Layers panel
+     (MAPX2c); the phone's preview draws no data layer until it is expanded. A pin never
+     changes the global town; only an explicit town choice does. -->
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
 	import {
 		MapContainer,
 		MapDataLayer,
-		MapControls,
 		MapTooltip,
 		MapInspector,
 		MapFeatureInspector
 	} from '$lib/components/map';
-	import { OWNED_MAP_LAYERS } from '$lib/components/map/map-layer-switches';
+	import type { RoadSpeeds } from '$lib/components/map/road-speeds';
+	import { MAPBOX_TOKEN } from '$lib/config/api';
 	import {
 		pinClickOutcome,
 		townClickOutcome,
@@ -55,17 +56,24 @@
 	let {
 		data,
 		dataLayers,
-		now
+		now,
+		full = $bindable(false)
 	}: {
 		data: V2MapData;
-		/** Desktop's data layers (MAPX2b); absent, the map draws only news, 311 and quakes. */
+		/** The data layers (MAPX2b); absent, the map draws only news, 311 and quakes. */
 		dataLayers?: Record<DataLayerId, DataLayerView>;
 		now: number;
+		/** Out: the whole map is showing (not the phone's preview), so its layers may load. */
+		full?: boolean;
 	} = $props();
 
 	let expanded = $state(false);
 	let phone = $state(false);
 	let desktop = $state(false);
+	let mounted = $state(false);
+	$effect(() => {
+		full = mounted && (!phone || expanded);
+	});
 	const probe = createV2Probe(
 		typeof location === 'undefined' ? '' : location.search,
 		(typeof window === 'undefined' ? {} : window) as unknown as Record<string, unknown>
@@ -79,6 +87,7 @@
 		desktop = wide.matches;
 		const followWide = (e: MediaQueryListEvent) => (desktop = e.matches);
 		wide.addEventListener('change', followWide);
+		mounted = true;
 		return () => {
 			mq.removeEventListener('change', follow);
 			wide.removeEventListener('change', followWide);
@@ -93,7 +102,7 @@
 		void dataLayers;
 		revision = untrack(() => revision) + 1;
 	});
-	const drawn = $derived(desktop && dataLayers ? DATA_LAYERS.map((l) => dataLayers[l.id]) : []);
+	const drawn = $derived(dataLayers ? DATA_LAYERS.map((l) => dataLayers[l.id]) : []);
 	const layerData = $derived({
 		...data.layerData,
 		revision,
@@ -120,8 +129,12 @@
 	// Only the enabled, drawable layers; no zero claims without coverage (Codex 9b #2, #3).
 	const visible = $derived(data.inspectable);
 	const model = $derived(v2Inspector(inspector, data, (slug) => TOWN_BY_SLUG[slug]?.name ?? slug));
-	// Re-read on every data change: the kept note follows the latest refresh (Codex 9b #4).
-	const shownFeature = $derived(v2FeatureView(feature, data));
+	// Re-read on every data change: the kept note follows the latest refresh (Codex 9b #4); a
+	// data layer's pin stays open while its layer still draws it.
+	const drawnPlaces = $derived(
+		new Map(drawn.flatMap((v) => v.points.map((p) => [selectionId(v.id, p.id), p.detail] as const)))
+	);
+	const shownFeature = $derived(v2FeatureView(feature, data, drawnPlaces));
 
 	// Desktop's in-view list (MAPX2): recomputed on a settled move and on every data, layer,
 	// town or freshness change (all of which arrive as a new `data`).
@@ -200,6 +213,28 @@
 			})
 		)
 	});
+	// Road speeds (MAPX2c): Mapbox's congestion lines, with their tiles' own status. Lines, not
+	// places: no count and no in-view rows. Without a token there is no layer and no row.
+	const roadsOn = $derived(Boolean(MAPBOX_TOKEN) && ($sectionPrefs.layers.roads ?? true));
+	let roadSpeeds = $state<RoadSpeeds>({ state: 'loading', asOf: null, drawn: false });
+	const roadsRow = $derived<LayerRow[]>(
+		MAPBOX_TOKEN
+			? [
+					{
+						id: 'roads',
+						name: 'Road speeds',
+						swatch: '#f97316',
+						on: roadsOn,
+						count: null,
+						status: roadsOn ? statusOf('Mapbox', roadSpeeds.state, roadSpeeds.asOf) : 'Mapbox',
+						note:
+							roadsOn && roadSpeeds.state === 'unavailable'
+								? 'Lines hidden: Mapbox tiles failed to load'
+								: null
+					}
+				]
+			: []
+	);
 	const layerRows = $derived<LayerRow[]>([
 		{
 			id: '311',
@@ -219,9 +254,9 @@
 			status: statusOf('USGS', data.layers.earthquakes, data.asOf.earthquakes)
 		},
 		...(dataLayers
-			? DATA_LAYERS.map((l): LayerRow => {
+			? DATA_LAYERS.flatMap((l): LayerRow[] => {
 					const v = dataLayers[l.id];
-					return {
+					const row: LayerRow = {
 						id: l.id,
 						name: l.name,
 						swatch: l.swatch,
@@ -230,8 +265,10 @@
 						status: statusOf(v.source, v.state, v.asOf),
 						note: [v.kept, v.note].filter(Boolean).join(' · ') || null
 					};
+					// Road speeds sit with the 511 incidents: both are the roads.
+					return l.id === 'traffic' ? [row, ...roadsRow] : [row];
 				})
-			: [])
+			: roadsRow)
 	]);
 	// "Nothing here" needs every enabled layer read fresh, with a count it can vouch for (Codex
 	// MAPX2 #5); a layer that can't is named beside the list.
@@ -248,10 +285,10 @@
 			mapStore.toggleLayer(id as MapLayer);
 		sectionPrefs.setLayer(id as LayerPrefId, on);
 	}
-	// Saved story choices apply once on desktop (the data layers read the prefs directly).
+	// Saved story choices apply once (the data layers read the prefs directly).
 	let storiesRestored = false;
 	$effect(() => {
-		if (!desktop || storiesRestored) return;
+		if (!mounted || storiesRestored) return;
 		storiesRestored = true;
 		const saved = untrack(() => $sectionPrefs.layers);
 		for (const [id] of [...STORY_LAYERS, ['311']] as const) {
@@ -310,6 +347,8 @@
 				trafficEvents={false}
 				{layerData}
 				v2Paint={desktop}
+				roadSpeeds={full && roadsOn}
+				onRoadSpeeds={(s) => (roadSpeeds = s)}
 				onSynced={(s) => probe.set({ synced: s })}
 				onTownClick={(slug) => apply(townClickOutcome($selectedTown, slug))}
 				onTownHover={(slug) => mapStore.hoverTown(slug)}
@@ -325,16 +364,13 @@
 					inspector = null;
 				}}
 			/>
-			{#if desktop}
-				<LayerPanel {stories} layers={layerRows} ontoggle={toggleLayer} />
-			{:else}
-				<MapControls traffic={false} layers={OWNED_MAP_LAYERS} />
-			{/if}
+			<LayerPanel {stories} layers={layerRows} ontoggle={toggleLayer} />
 			<MapTooltip
 				items={data.inspectable}
 				emptyText={data.established ? 'No active stories for this town.' : null}
 			/>
-			{#if desktop}
+			{#if full}
+				<!-- Every full map tracks its bounds, so the Layers counts are in-view counts. -->
 				<InViewSync
 					{panelPx}
 					highlight={ring}
@@ -342,6 +378,9 @@
 					onbounds={(bounds, width) => (view = { bounds, width })}
 					onhover={(id) => (hoveredId = id)}
 				/>
+			{/if}
+			{#if desktop}
+				<!-- The docked list shows detail. -->
 			{:else if model}
 				<MapInspector
 					mode={model.mode}
@@ -425,7 +464,7 @@
 		.v2-map[data-expanded='true'] .v2-map-canvas {
 			height: 70vh;
 		}
-		.v2-map[data-expanded='false'] .v2-map-canvas :global(.map-controls),
+		.v2-map[data-expanded='false'] .v2-map-canvas :global([data-layer-panel]),
 		.v2-map[data-expanded='false'] .v2-map-canvas :global(.inspector),
 		.v2-map[data-expanded='false'] .v2-map-canvas :global(.feature-inspector) {
 			display: none;

@@ -183,6 +183,13 @@ function caveated(a: AirportStatus, words: string, state: SourceEntryState): str
 	return words + (stale ? OUT_OF_DATE : NOT_VERIFIED);
 }
 
+/** The airports part on its own (the map's pins, MAPX2c): the same read, the same words. */
+export const airportsPart = (
+	fetch: DatasetFetch | undefined,
+	data: AirportStatusData | null,
+	now: number
+): Part => airports(fetch, data, now).part;
+
 function airports(
 	fetch: DatasetFetch | undefined,
 	data: AirportStatusData | null,
@@ -570,12 +577,30 @@ export function gettingAroundCard(
 	return [...airportItems(a), ...roadItems(r, input.traffic), transitItem(t, input)];
 }
 
-function airportItems(a: Part): CardItem[] {
-	if (a.state === null) return [];
+/** Lowers a leading capitalised word ("Delays" → "delays"); an acronym ("FAA") stays. */
+const lowerFirst = (s: string) => (/^[A-Z][a-z]/.test(s) ? s[0].toLowerCase() + s.slice(1) : s);
+
+/**
+ * Each airport's card words, keyed by code (the map's pins, MAPX2c); empty when the part has
+ * none per airport (unread, loading, out of date or failed): the card then says one line.
+ */
+export function airportWords(a: Part): (CardItem & { code: string })[] {
 	if (a.state === 'ok' && a.note)
-		return SUMMARY_AIRPORTS.map((code) => ({ text: `${code} no delays`, state: 'ok' }));
+		return SUMMARY_AIRPORTS.map((code) => ({ code, text: `${code} no delays`, state: 'ok' }));
 	if (a.state === 'ok' || (a.lines.length && a.state !== 'stale'))
-		return a.lines.map((l) => ({ text: `${l.label} ${l.text.toLowerCase()}`, state: l.state }));
+		return a.lines.map((l) => ({
+			code: l.label,
+			text: `${l.label} ${lowerFirst(l.text)}`,
+			state: l.state
+		}));
+	return [];
+}
+
+/** The card's airport items: each airport's words, or one line saying why there are none. */
+export function airportItems(a: Part): CardItem[] {
+	if (a.state === null) return [];
+	const words = airportWords(a);
+	if (words.length) return words.map(({ text, state }) => ({ text, state }));
 	return [
 		{
 			text:

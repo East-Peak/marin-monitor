@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-17',
+		title: 'Road speeds, airports and fitness studios back on the map',
+		description:
+			'The map’s Layers list now has Road speeds (Mapbox’s congestion lines, on by default), Airports (SFO and OAK, on by default, in the same words as the Getting Around card) and Fitness studios (off by default). Each says where it comes from and when it was read. If the road-speed tiles fail to load, the lines come off the roads and the list says so, instead of leaving old colours behind. On the phone, the same Layers list is in the map’s corner once you expand it.'
+	},
+	{
+		date: '2026-10-17',
 		title: 'A bigger map with an “In view” list and more layers',
 		description:
 			'On a computer, the map now runs the full width of the page, with the latest five headlines in a row underneath. A list inside the map shows what is in view, newest first; click a row or a pin to fly there and read it in the list, photo and source link included. A Layers button turns on traffic, fire, gas prices, EV chargers and coffee, and says where each comes from and when it was read, or that it is unavailable. Town circles are brighter and Fix It Marin dots smaller, so the news stands out. The phone is unchanged.'

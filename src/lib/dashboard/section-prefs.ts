@@ -17,13 +17,16 @@ export const SECTION_IDS = [
 ] as const;
 export type SectionId = (typeof SECTION_IDS)[number];
 
-/** The map's layer switches (MAPX2b): the data layers, then the story chips. */
+/** The map's layer switches (MAPX2b, MAPX2c): the data layers, road speeds, the story chips. */
 export const LAYER_PREF_IDS = [
 	'traffic',
 	'fire',
 	'gas',
 	'ev',
 	'coffee',
+	'fitness',
+	'airport',
+	'roads',
 	'news',
 	'safety',
 	'civic',

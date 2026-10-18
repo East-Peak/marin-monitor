@@ -10,12 +10,20 @@
  * requiring imperative paint updates.
  */
 
-import type { Map as MapLibreMap } from 'maplibre-gl';
+import type { ExpressionSpecification, Map as MapLibreMap } from 'maplibre-gl';
 import { FIRE_ZONES, LANDMARKS, AIRPORT_PINS } from '$lib/config/map';
 import { MAPBOX_TOKEN } from '$lib/config/api';
 import { hoverCase, hoverAdd, hoveredFeatureIds } from './map-interactions';
 
 const mapboxToken = MAPBOX_TOKEN.trim();
+
+/** The congestion lines' opacity; v2 swaps it for 0 while the tiles can't vouch (road-speeds). */
+export const CONGESTION_LINE_OPACITY: ExpressionSpecification = [
+	'case',
+	['==', ['get', 'congestion'], 'moderate'],
+	0.46,
+	0.78
+];
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -311,7 +319,7 @@ function addLayers(map: MapLibreMap): void {
 					'#f97316',
 					'#f59e0b'
 				],
-				'line-opacity': ['case', ['==', ['get', 'congestion'], 'moderate'], 0.46, 0.78],
+				'line-opacity': CONGESTION_LINE_OPACITY,
 				'line-width': ['interpolate', ['linear'], ['zoom'], 8, 1.6, 11, 2.9, 14, 5.2]
 			}
 		});

@@ -1,4 +1,4 @@
-<!-- The map's "Layers" checklist (MAPX2b, desktop): each layer's swatch, count in view, source
+<!-- The map's "Layers" checklist (MAPX2b; every width since MAPX2c): each layer's swatch, count in view, source
      and as-of time, or why it has none. A layer that can't vouch for a number shows no count;
      unknown is never zero. The old category chips are its "Stories" group. -->
 <script lang="ts" module>
@@ -149,5 +149,11 @@
 	.meta {
 		margin: 0.1rem 0 0 1.95rem;
 		color: var(--text-muted);
+	}
+	@media (max-width: 767px) {
+		/* The expanded phone map (70vh): the list ends above the Collapse button (MAPX2c). */
+		.list {
+			max-height: calc(70vh - 7.5rem);
+		}
 	}
 </style>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext, onMount, onDestroy } from 'svelte';
+	import { getContext, onMount, onDestroy, untrack } from 'svelte';
 	import { get, type Writable } from 'svelte/store';
 	import type { Map as MapLibreMap, GeoJSONSource, MapLayerMouseEvent } from 'maplibre-gl';
 	import { allNewsItems, threeOneOneNews } from '$lib/stores/news';
@@ -39,6 +39,12 @@
 		refreshAirportPins
 	} from './map-data';
 	import { setupSources } from './map-layers';
+	import {
+		applyRoadSpeeds,
+		watchRoadSpeeds,
+		type RoadSpeeds,
+		type RoadSpeedsTarget
+	} from './road-speeds';
 	import { applyV2Paint } from './v2-paint';
 	import {
 		alertPulseFeatures,
@@ -92,6 +98,9 @@
 		v2Paint?: boolean;
 		/** Called after each sync of owner data (the v2 e2e hook). */
 		onSynced?: (sync: { revision: number; counts: Record<string, number> }) => void;
+		/** v2's road speeds (MAPX2c): the congestion lines' switch, with their tile status. */
+		roadSpeeds?: boolean;
+		onRoadSpeeds?: (status: RoadSpeeds) => void;
 	}
 
 	let {
@@ -103,6 +112,8 @@
 		layerData,
 		v2Paint = false,
 		onSynced,
+		roadSpeeds = false,
+		onRoadSpeeds,
 		onTownClick,
 		onTownHover,
 		onPinClick,
@@ -179,12 +190,37 @@
 		}
 	}
 
+	// v2's road speeds: drawn only while their tiles vouch for them (MAPX2c).
+	let roadStatus: RoadSpeeds = { state: 'loading', asOf: null, drawn: false };
+	let roadWatch: ReturnType<typeof watchRoadSpeeds> | null = null;
+	$effect(() => {
+		if (!roadSpeeds) return;
+		// Only the switch is tracked: the lines show or hide as it flips, judged by the tiles.
+		untrack(() => {
+			const m = getMap();
+			if (m) applyTrafficVisibility(m);
+		});
+		return () =>
+			untrack(() => {
+				const m = getMap();
+				if (m) applyTrafficVisibility(m);
+			});
+	});
+
+	/** The map, plus the congestion tiles in view (MapLibre's SourceCache ids). */
+	const roadSpeedsTarget = (map: MapLibreMap): RoadSpeedsTarget => ({
+		on: (type, fn) => map.on(type as 'idle', fn),
+		off: (type, fn) => map.off(type as 'idle', fn),
+		getSource: (id) => map.getSource(id),
+		isSourceLoaded: (id) => map.isSourceLoaded(id),
+		tileIds: () => map.style?.sourceCaches?.['traffic-congestion']?.getIds() ?? []
+	});
+
 	function applyTrafficVisibility(map: MapLibreMap) {
 		const { showTrafficCongestion, showTrafficEvents } = get(mapStore);
-		// v2's owned 511 events are shown by applyOwnedPlaces; its congestion tiles have no status.
+		// v2's owned 511 events are shown by applyOwnedPlaces; its congestion lines by their status.
 		if (owned()?.places) {
-			if (map.getLayer('traffic-congestion-layer'))
-				map.setLayoutProperty('traffic-congestion-layer', 'visibility', 'none');
+			applyRoadSpeeds(map, Boolean(onRoadSpeeds) && roadSpeeds, roadStatus.drawn);
 			return;
 		}
 		const vis = trafficVisibility(reads.traffic, showTrafficCongestion, showTrafficEvents);
@@ -368,7 +404,8 @@
 				title: name,
 				subtitle: price ? `Drop-in: ${price}` : 'Price unavailable',
 				description: [typeName, town].filter(Boolean).join(' \u00b7 '),
-				source: 'Marin Monitor'
+				source: 'Marin Monitor',
+				itemId: feature?.properties?.itemId ? String(feature.properties.itemId) : undefined
 			});
 		});
 
@@ -416,7 +453,8 @@
 				title: `${code} \u2014 ${name}`,
 				subtitle: statusLabel,
 				description: weatherSummary || undefined,
-				source: 'FAA / Aviation Weather'
+				source: String(feature?.properties?.source ?? 'FAA / Aviation Weather'),
+				itemId: feature?.properties?.itemId ? String(feature.properties.itemId) : undefined
 			});
 		});
 
@@ -789,6 +827,13 @@
 			updateData(map);
 			if (reads.traffic) void refreshTrafficEvents(map);
 			if (reads.airports) void refreshAirportStatus(map);
+			if (onRoadSpeeds && !roadWatch)
+				roadWatch = watchRoadSpeeds(roadSpeedsTarget(map), Date.now, (s) => {
+					roadStatus = s;
+					const m = getMap();
+					if (m) applyTrafficVisibility(m);
+					onRoadSpeeds(s);
+				});
 
 			removeStyleLoadListener?.();
 			const handleStyleLoad = () => {
@@ -972,6 +1017,7 @@
 			map.getCanvas().style.cursor = '';
 		}
 		removeStyleLoadListener?.();
+		roadWatch?.dispose();
 		unsubscribeNews?.();
 		unsubscribeMap?.();
 		unsubscribeGas?.();

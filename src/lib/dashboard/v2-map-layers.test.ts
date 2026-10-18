@@ -3,6 +3,7 @@ import type { DatasetFetch } from './source-adapters';
 import type { TrafficCorridorsData } from '$lib/api/marin/traffic-corridors';
 import type { CorridorEvent } from '$lib/traffic/corridors';
 import type { GasPriceData } from '$lib/types/gas';
+import type { AirportStatus, AirportStatusData } from '$lib/types/airport';
 import {
 	DATA_LAYERS,
 	defaultDataLayers,
@@ -69,17 +70,42 @@ const base = {
 	on: allOn,
 	now: NOW,
 	town: null,
-	values: { traffic: null, fire: null, gas: null, ev: null, coffee: null }
+	values: {
+		traffic: null,
+		fire: null,
+		gas: null,
+		ev: null,
+		coffee: null,
+		fitness: null,
+		airport: null
+	}
+};
+const airport = (code: string, over: Partial<AirportStatus> = {}): AirportStatus => ({
+	code,
+	icao: `K${code}`,
+	name: code,
+	status: 'on-time',
+	delays: [],
+	weather: null,
+	forecastNotes: [],
+	tsa: null,
+	...over
+});
+const AIRPORTS: AirportStatusData = {
+	lastUpdated: new Date(NOW - 60_000).toISOString(),
+	airports: [airport('SFO'), airport('OAK')]
 };
 
 describe('defaultDataLayers', () => {
-	it('traffic, fire and gas start on; EV and coffee start off', () => {
+	it('traffic, fire, gas and airports start on; EV, coffee and fitness start off', () => {
 		expect(defaultDataLayers()).toEqual({
 			traffic: true,
 			fire: true,
 			gas: true,
 			ev: false,
-			coffee: false
+			coffee: false,
+			fitness: false,
+			airport: true
 		});
 	});
 });
@@ -118,7 +144,13 @@ describe('v2DataLayers', () => {
 	it.each(DATA_LAYERS.map((l) => l.id))(
 		'%s: a failed read is "unavailable", draws nothing and claims no count',
 		(id) => {
-			const view = v2DataLayers({ ...base, outcomes: failed(id === 'fire' ? 'fires' : id) })[id];
+			const dataset = DATA_LAYERS.find((l) => l.id === id)!.dataset;
+			const view = v2DataLayers({
+				...base,
+				outcomes: failed(dataset),
+				// A failed read with a value still in hand: nothing of it is drawn.
+				values: { ...base.values, airport: AIRPORTS }
+			})[id];
 			expect(view.state).toBe('unavailable');
 			expect(view.points).toEqual([]);
 			expect(view.count).toBeNull();
@@ -232,5 +264,140 @@ describe('v2DataLayers', () => {
 		});
 		expect(gas.points).toHaveLength(1);
 		expect(gas.kept).toMatch(/^Kept from /);
+	});
+});
+
+describe('fitness (MAPX2c)', () => {
+	const FITNESS = {
+		current: {
+			timestamp: '2026-10-01T00:00:00Z',
+			lastSuccessfulScrapeAt: '2026-10-01T00:00:00Z',
+			studioCount: 1,
+			medianPrice: 30,
+			avgPrice: 30,
+			minPrice: 30,
+			maxPrice: 30,
+			medianByType: { yoga: 30 },
+			studios: [
+				{
+					id: 'yoga-1',
+					name: 'Sun Yoga',
+					town: 'Mill Valley',
+					type: 'yoga' as const,
+					dropInPrice: 30,
+					lat: 37.906,
+					lon: -122.545
+				}
+			]
+		},
+		history: []
+	};
+
+	it('an ok read draws each studio through the shared fitness layer, with its drop-in price', () => {
+		const { fitness } = v2DataLayers({
+			...base,
+			outcomes: ok('fitness'),
+			values: { ...base.values, fitness: FITNESS }
+		});
+		expect(fitness).toMatchObject({
+			state: 'value',
+			source: 'Fitness Drop-in Index',
+			asOf: NOW - 60_000,
+			count: 1
+		});
+		expect(fitness.points[0]).toMatchObject({ id: 'yoga-1', title: 'Sun Yoga' });
+		expect(fitness.points[0].detail.meta).toEqual(['Fitness Drop-in Index', 'Yoga', 'Drop-in $30']);
+		expect(fitness.points[0].detail.paragraphs).toEqual(['Mill Valley']);
+		expect(layerFeatures(fitness)[0].properties).toMatchObject({
+			name: 'Sun Yoga',
+			price: '$30',
+			typeName: 'Yoga',
+			color: '#a78bfa',
+			itemId: 'yoga-1'
+		});
+	});
+});
+
+describe("airports (MAPX2c): Getting Around's reads, in its card's words", () => {
+	const read = (data: AirportStatusData, outcome: DatasetFetch = ok('airport').airport) =>
+		v2DataLayers({
+			...base,
+			outcomes: { airport: outcome },
+			values: { ...base.values, airport: data }
+		}).airport;
+
+	it('a fresh ok read: SFO and OAK pins, each saying "no delays" as the card does', () => {
+		const v = read(AIRPORTS);
+		expect(v).toMatchObject({
+			state: 'value',
+			source: 'FAA',
+			asOf: NOW - 60_000,
+			kept: null,
+			count: 2
+		});
+		expect(v.points.map((p) => [p.id, p.title, p.detail.paragraphs])).toEqual([
+			['SFO', 'SFO · San Francisco Intl', ['SFO no delays']],
+			['OAK', 'OAK · Oakland Intl', ['OAK no delays']]
+		]);
+		expect(layerFeatures(v)[0].properties).toMatchObject({
+			code: 'SFO',
+			statusLabel: 'SFO no delays',
+			color: '#22c55e',
+			itemId: 'SFO'
+		});
+	});
+
+	it('a delay keeps the FAA figures, coloured by the FAA status', () => {
+		const v = read({
+			...AIRPORTS,
+			airports: [
+				airport('SFO', { status: 'delays', delays: [{ type: 'arrival-delay', avgMinutes: 45 }] }),
+				airport('OAK')
+			]
+		});
+		expect(v.points.map((p) => p.detail.paragraphs[0])).toEqual([
+			'SFO arrival delays, avg 45 min',
+			'OAK no delays reported'
+		]);
+		expect(layerFeatures(v)[0].properties).toMatchObject({ color: '#f59e0b' });
+	});
+
+	it('an airport the FAA could not read is drawn grey and says so, never "no delays"', () => {
+		const v = read({
+			...AIRPORTS,
+			airports: [airport('SFO', { status: 'unknown' }), airport('OAK')]
+		});
+		expect(v.points.map((p) => p.detail.paragraphs[0])).toEqual([
+			'SFO FAA status unavailable',
+			'OAK no delays reported'
+		]);
+		expect(layerFeatures(v)[0].properties).toMatchObject({ color: '#6b7280' });
+	});
+
+	it("an out-of-date read: no pins, no count, and the card's words in the row", () => {
+		const v = read(AIRPORTS, { kind: 'live', observedAt: NOW - 31 * 60_000 });
+		expect(v).toMatchObject({ points: [], count: null, note: 'Airport status out of date' });
+		expect(v.state).not.toBe('value');
+	});
+
+	it('a value kept after a failed refresh: the card\'s caveat, never "no delays"; no count', () => {
+		const v = read(AIRPORTS, {
+			kind: 'failed',
+			error: 'HTTP 503',
+			retained: true,
+			observedAt: NOW - 60_000
+		});
+		for (const p of v.points) expect(p.detail.paragraphs[0]).not.toMatch(/no delays/);
+		expect(v.count).toBeNull();
+	});
+
+	it('stays drawn with a town chosen: an airport is in no Marin town', () => {
+		const v = v2DataLayers({
+			...base,
+			town: 'mill-valley',
+			outcomes: ok('airport'),
+			values: { ...base.values, airport: AIRPORTS }
+		}).airport;
+		expect(v.points).toHaveLength(2);
 	});
 });

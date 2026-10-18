@@ -54,7 +54,9 @@ describe('the data layers (MAPX2b)', () => {
 		['fire-incidents', 'fire:511.org/1'],
 		['gas-stations', 'gas:511.org/1'],
 		['ev-charging-stations', 'ev:511.org/1'],
-		['coffee-shops', 'coffee:511.org/1']
+		['coffee-shops', 'coffee:511.org/1'],
+		['fitness-studios', 'fitness:511.org/1'],
+		['airports', 'airport:511.org/1']
 	])('a hovered %s feature names its row', (source, id) => {
 		expect(featureSelection({ source, properties: { itemId: '511.org/1' } })).toBe(id);
 	});
@@ -63,6 +65,8 @@ describe('the data layers (MAPX2b)', () => {
 		expect(clickSelection({ kind: 'gas-station', itemId: 'p1' })).toBe('gas:p1');
 		expect(clickSelection({ kind: '311-report', itemId: 's' })).toBe('311:s');
 		expect(clickSelection({ kind: 'earthquake', itemId: 'q' })).toBe('quake:q');
+		expect(clickSelection({ kind: 'fitness-studio', itemId: 'y1' })).toBe('fitness:y1');
+		expect(clickSelection({ kind: 'airport', itemId: 'SFO' })).toBe('airport:SFO');
 		expect(clickSelection({ kind: 'landmark', itemId: 'l' })).toBeNull();
 		expect(clickSelection({ kind: 'fire-incident' })).toBeNull();
 	});

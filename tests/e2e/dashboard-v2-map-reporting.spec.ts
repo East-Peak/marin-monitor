@@ -221,13 +221,8 @@ test.describe('desktop 1440×900', () => {
 		expect(p.synced!.counts['alert-pulses']).toBe(0);
 		await expect(mapStatus(page)).toHaveAttribute('data-section-status', 'partial');
 		await expect(mapStatus(page)).toContainText('USGS earthquakes'); // USGS is stubbed down
-		for (const place of [
-			'gas-stations',
-			'ev-charging-stations',
-			'coffee-shops',
-			'fitness-studios',
-			'airports'
-		])
+		// Airports are Getting Around's own read since MAPX2c (dashboard-v2-map-layers-restore).
+		for (const place of ['gas-stations', 'ev-charging-stations', 'coffee-shops', 'fitness-studios'])
 			expect(await sourceCount(page, place), place).toBe(0);
 		await expect(
 			page.locator('.v2-map').getByRole('button', { name: /^(Gas|EV|Coffee|Fitness)/ })

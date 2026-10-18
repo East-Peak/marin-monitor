@@ -160,7 +160,9 @@ describe('owned data layers (MAPX2b)', () => {
 			{ id: 'gas-stations-label', source: 'gas-stations' },
 			{ id: 'fire-incidents-layer', source: 'fire-incidents' },
 			{ id: 'ev-charging-stations-layer', source: 'ev-charging-stations' },
-			{ id: 'coffee-shops-layer', source: 'coffee-shops' }
+			{ id: 'coffee-shops-layer', source: 'coffee-shops' },
+			{ id: 'fitness-studios-label', source: 'fitness-studios' },
+			{ id: 'airports-hit-layer', source: 'airports' }
 		];
 		return {
 			data,
@@ -177,15 +179,21 @@ describe('owned data layers (MAPX2b)', () => {
 			fire: [],
 			gas: [point('g')],
 			ev: [],
-			coffee: []
+			coffee: [],
+			fitness: [point('y')],
+			airport: [point('SFO'), point('OAK')]
 		});
 		expect(counts).toEqual({
 			'traffic-events': 2,
 			'fire-incidents': 0,
 			'gas-stations': 1,
 			'ev-charging-stations': 0,
-			'coffee-shops': 0
+			'coffee-shops': 0,
+			'fitness-studios': 1,
+			airports: 2
 		});
+		expect(map.vis['fitness-studios-label']).toBe('visible');
+		expect(map.vis['airports-hit-layer']).toBe('visible');
 		expect((map.data['traffic-events'] as GeoJSON.FeatureCollection).features).toHaveLength(2);
 		expect(map.vis['gas-stations-label']).toBe('visible');
 		expect(map.vis['traffic-events-hit-layer']).toBe('visible');

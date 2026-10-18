@@ -69,6 +69,7 @@ import type { FetchResult } from '$lib/api/marin/data-fetcher';
 import type { CompositeData } from '$lib/types/composite';
 import type { CoffeeData, CoffeeIndexData } from '$lib/types/coffee';
 import type { EvChargingData } from '$lib/types/ev-charging';
+import type { FitnessData } from '$lib/types/fitness';
 import type { GasPriceData } from '$lib/types/gas';
 import type { GroceryBasketData } from '$lib/types/grocery';
 import type { WineIndexData } from '$lib/types/wine';
@@ -111,9 +112,10 @@ export interface PlaceStores {
 	gas: Writable<GasPriceData | null>;
 	ev: Writable<EvChargingData | null>;
 	coffee: Writable<CoffeeIndexData | null>;
+	fitness: Writable<FitnessData | null>;
 }
 
-/** Brief/map essentials. Gas, EV and coffee also fill the shared stores the Cost section reads. */
+/** Brief/map essentials. Gas, EV, coffee and fitness also fill the shared stores Cost reads. */
 function essentialDatasets(places: PlaceStores): DatasetDef[] {
 	return [
 		dataset({
@@ -157,7 +159,10 @@ function essentialDatasets(places: PlaceStores): DatasetDef[] {
 			name: 'Fitness drop-ins',
 			tier: 'essential',
 			load: (signal) => fetchFitnessDataWithStatus({ signal }),
-			commit: (d) => fitnessStore.set(d),
+			commit: (d) => {
+				fitnessStore.set(d);
+				places.fitness.set(d);
+			},
 			observedAtOf: scrapedAt,
 			maxAgeMs: maxAge('fitness')
 		})
@@ -446,7 +451,7 @@ export interface DashboardV2Controller {
 	/** Getting Around's details, loaded through ensure('airport' | 'traffic'). */
 	airport: Readable<AirportStatusData | null>;
 	traffic: Readable<TrafficCorridorsData | null>;
-	/** The map's gas, EV and coffee, committed by the essentials (MAPX2b). */
+	/** The map's gas, EV, coffee and fitness, committed by the essentials (MAPX2b, MAPX2c). */
 	places: {
 		[K in keyof PlaceStores]: Readable<PlaceStores[K] extends Writable<infer T> ? T : never>;
 	};
@@ -466,7 +471,12 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 	const healthReport = writable<HealthReportJson | null>(null);
 	const airport = writable<AirportStatusData | null>(null);
 	const traffic = writable<TrafficCorridorsData | null>(null);
-	const places: PlaceStores = { gas: writable(null), ev: writable(null), coffee: writable(null) };
+	const places: PlaceStores = {
+		gas: writable(null),
+		ev: writable(null),
+		coffee: writable(null),
+		fitness: writable(null)
+	};
 	const transit = writable<TransitState>({ reads: null, error: null });
 	const outdoors: OutdoorsStores = {
 		marine: writable(null),
@@ -637,7 +647,8 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		places: {
 			gas: { subscribe: places.gas.subscribe },
 			ev: { subscribe: places.ev.subscribe },
-			coffee: { subscribe: places.coffee.subscribe }
+			coffee: { subscribe: places.coffee.subscribe },
+			fitness: { subscribe: places.fitness.subscribe }
 		},
 		marine: { subscribe: outdoors.marine.subscribe },
 		fires: { subscribe: outdoors.fires.subscribe },

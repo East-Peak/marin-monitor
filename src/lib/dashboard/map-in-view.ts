@@ -8,7 +8,17 @@ import type { Detail } from '$lib/components/dashboard-v2/DetailContent.svelte';
 import type { NewsItem } from '$lib/types';
 import type { DataLayerView } from './v2-map-layers';
 
-export type InViewLayer = 'news' | '311' | 'quake' | 'traffic' | 'fire' | 'gas' | 'ev' | 'coffee';
+export type InViewLayer =
+	| 'news'
+	| '311'
+	| 'quake'
+	| 'traffic'
+	| 'fire'
+	| 'gas'
+	| 'ev'
+	| 'coffee'
+	| 'fitness'
+	| 'airport';
 /** List order: one group per layer. */
 const LAYER_ORDER: readonly InViewLayer[] = [
 	'news',
@@ -18,7 +28,9 @@ const LAYER_ORDER: readonly InViewLayer[] = [
 	'fire',
 	'gas',
 	'ev',
-	'coffee'
+	'coffee',
+	'fitness',
+	'airport'
 ];
 
 export interface InViewItem {

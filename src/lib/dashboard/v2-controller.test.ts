@@ -300,9 +300,17 @@ describe('createDashboardV2Controller', () => {
 		gasPriceStore.set({ current: { stations: [{ placeId: 'stale' }] }, history: [] } as never);
 		expect(get(c.places.gas)).toBeNull();
 		await c.start();
-		expect(get(c.places.gas)?.current).not.toBeNull();
-		expect(get(c.places.ev)?.current).not.toBeNull();
-		expect(get(c.places.coffee)?.current).not.toBeNull();
+		expect(get(c.places.gas)?.current).toBeTruthy();
+		expect(get(c.places.ev)?.current).toBeTruthy();
+		expect(get(c.places.coffee)?.current).toBeTruthy();
+	});
+
+	it('fitness too, from its own store (MAPX2c)', async () => {
+		const c = controller();
+		fitnessStore.set({ current: { studios: [{ id: 'stale' }] }, history: [] } as never);
+		expect(get(c.places.fitness)).toBeNull();
+		await c.start();
+		expect(get(c.places.fitness)?.current).toBeTruthy();
 	});
 
 	it('the dataset freshness policy is G0a’s own (pinned to SOURCE_INVENTORY)', () => {

@@ -84,9 +84,23 @@ describe('map layer choices (MAPX2b, version 3)', () => {
 		const raw = JSON.stringify({
 			version: 3,
 			open: {},
-			layers: { traffic: false, coffee: true, airports: true, gas: 'no' }
+			layers: {
+				traffic: false,
+				coffee: true,
+				airports: true,
+				gas: 'no',
+				fitness: true,
+				airport: false,
+				roads: false
+			}
 		});
-		expect(parseSectionPrefs(raw).layers).toEqual({ traffic: false, coffee: true });
+		expect(parseSectionPrefs(raw).layers).toEqual({
+			traffic: false,
+			coffee: true,
+			fitness: true,
+			airport: false,
+			roads: false
+		});
 	});
 	it('a version 3 value with a malformed layers field keeps its section choices', () => {
 		expect(parseSectionPrefs('{"version":3,"open":{"cost":true},"layers":[]}')).toEqual({

@@ -6,6 +6,15 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-17
 
+### Added — Road speeds, airports and fitness studios on the v2 map
+
+- **Road speeds** (Mapbox congestion lines) are back, on by default, with their own status: "Mapbox · as of …" once the tiles in view have loaded, or "Mapbox unavailable" when one fails. A failure takes the colour off the roads instead of leaving stale lines.
+- **Airports**: SFO and OAK pins from Getting Around's FAA read, in the card's words ("SFO no delays" only from a fresh read). On by default. Santa Rosa and San José stay off until Getting Around reads them.
+- **Fitness studios** (Fitness Drop-in Index), off by default, listed in "In view" like the other places.
+- **Phone:** the same Layers list, once the map is expanded. The collapsed preview loads nothing new.
+- The Getting Around card keeps acronyms when it lowers a line ("SFO FAA status unavailable", not "faa").
+- Still off, on purpose: keyword alert pulses, and news pins placed by guessing an address from the article text.
+
 ### Changed — The phone and tablet say what desktop says
 
 - **On the phone, the "Getting around" line under the brief now shows status**, in the desktop card's own words, instead of a bare link: for example "Marin Transit: 511 lists no alerts". It is still one tap to the section. Airports and roads join the line once the section has been opened (the phone loads them only then). Anything out of date or unverified comes first, so a cut-off line never hides a warning.

@@ -5,6 +5,8 @@
  * Kept-after-failure features are marked, and the inspector says from when. Coverage counts
  * the enabled layers' drawable, town-filtered inputs and names only their sources.
  */
+import type { Detail } from '$lib/components/dashboard-v2/DetailContent.svelte';
+import { clickSelection } from './map-selection';
 import { snapshotItemToNewsItem } from '$lib/api/marin/news-snapshot';
 import { CATEGORY_TO_LAYER } from '$lib/stores/map';
 import type { NewsSnapshotView } from '$lib/news/snapshot';
@@ -262,9 +264,23 @@ export function v2Inspector(
  */
 export function v2FeatureView(
 	feature: MapFeatureInspectorData | null,
-	data: Pick<V2MapData, 'layerData' | 'earthquakes' | 'notes'>
+	data: Pick<V2MapData, 'layerData' | 'earthquakes' | 'notes'>,
+	/** The data layers' drawn items' current detail, by selection id (MAPX2c: the phone's pins). */
+	drawnPlaces: ReadonlyMap<string, Detail> = new Map()
 ): MapFeatureInspectorData | null {
 	if (!feature?.itemId) return feature;
+	const place = clickSelection(feature);
+	const now = place ? drawnPlaces.get(place) : undefined;
+	// The layer's words now, not the tap's: an all-clear never outlives the read that said it.
+	if (now)
+		return {
+			kind: feature.kind,
+			itemId: feature.itemId,
+			title: now.title,
+			subtitle: now.meta.join(' · '),
+			...(now.paragraphs.length ? { description: now.paragraphs.join('\n') } : {}),
+			...(now.source ? { source: now.source.label } : {})
+		};
 	const id = feature.itemId;
 	const drawn = [...data.layerData.threeOneOne, ...data.earthquakes].some((i) => i.id === id);
 	if (!drawn) return null;

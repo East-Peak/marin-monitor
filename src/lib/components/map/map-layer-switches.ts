@@ -30,7 +30,9 @@ export const OWNED_PLACE_SOURCES = {
 	fire: 'fire-incidents',
 	gas: 'gas-stations',
 	ev: 'ev-charging-stations',
-	coffee: 'coffee-shops'
+	coffee: 'coffee-shops',
+	fitness: 'fitness-studios',
+	airport: 'airports'
 } as const;
 export type OwnedPlace = keyof typeof OWNED_PLACE_SOURCES;
 

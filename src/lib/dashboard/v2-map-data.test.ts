@@ -349,6 +349,46 @@ describe('the inspector and tooltip see only what the map vouches for (Codex 9b 
 	});
 });
 
+describe('v2FeatureView on the phone (MAPX2c): a data layer pin opens while it is drawn', () => {
+	const d = run({ view: view([]), fixIt: [], sources: sources(view([]), ok, ok, true, ok, true) });
+	const gas = { kind: 'gas-station' as const, title: 'Shell', itemId: 'p1' };
+	const sfo = {
+		kind: 'airport' as const,
+		title: 'SFO — San Francisco Intl',
+		subtitle: 'SFO no delays',
+		source: 'FAA',
+		itemId: 'SFO'
+	};
+	const detail = (title: string, meta: string[], paragraphs: string[]) => ({
+		title,
+		meta,
+		paragraphs,
+		source: null
+	});
+	it('opens when its layer draws it, and closes when it no longer does', () => {
+		const drawn = new Map([['gas:p1', detail('Shell', ['Google Places', 'Regular $5.299'], [])]]);
+		expect(v2FeatureView(gas, d, drawn)).toMatchObject({ kind: 'gas-station', title: 'Shell' });
+		expect(v2FeatureView(gas, d, new Map())).toBeNull();
+	});
+	it('says what the layer says now, not what it said when tapped (Codex MAPX2c #1)', () => {
+		const now = new Map([
+			[
+				'airport:SFO',
+				detail('SFO · San Francisco Intl', ['FAA', '4:52 PM'], ['SFO ground delay, avg 45 min'])
+			]
+		]);
+		const shown = v2FeatureView(sfo, d, now)!;
+		expect(shown).toMatchObject({
+			kind: 'airport',
+			itemId: 'SFO',
+			title: 'SFO · San Francisco Intl',
+			subtitle: 'FAA · 4:52 PM',
+			description: 'SFO ground delay, avg 45 min'
+		});
+		expect(JSON.stringify(shown)).not.toMatch(/no delays/);
+	});
+});
+
 describe('no-match with only failed (not kept) layers stays no-match (batch 2 contract)', () => {
 	it('fresh news for the town, 311 and quakes down: "nothing for this town" with the failures named', () => {
 		const v = view([pinStory('a')]);

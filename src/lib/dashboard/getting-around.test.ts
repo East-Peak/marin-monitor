@@ -6,6 +6,7 @@ import type { DatasetFetch } from './source-adapters';
 import { describePresentation } from './source-status';
 import {
 	faaText,
+	airportWords,
 	gettingAroundCard,
 	gettingAroundView,
 	PROMO_HEADLINES,
@@ -1001,6 +1002,25 @@ describe("gettingAroundCard (MAPX1: the brief's status card)", () => {
 		// Transit's read in `stale` is fresh, so only the stale parts are held to this.
 		for (const line of [...out.slice(0, 2), ...unverified.slice(2, 3), ...failedReads])
 			expect(line).not.toMatch(/no delays|no incidents|no alerts/i);
+	});
+	it('an airport line keeps its acronyms: only its first letter is lowered (MAPX2c)', () => {
+		const i = input({
+			airport: { ...AIRPORTS, airports: [airport('SFO', { status: 'unknown' }), airport('OAK')] }
+		});
+		expect(card(i).slice(0, 2)).toEqual([
+			'unavailable: SFO FAA status unavailable',
+			'ok: OAK no delays reported'
+		]);
+	});
+	it("airportWords: each airport's card words, keyed by code; none without per-airport words (MAPX2c)", () => {
+		const words = (i: GettingAroundInput) => airportWords(gettingAroundView(i).airports);
+		expect(words(input())).toEqual([
+			{ code: 'SFO', text: 'SFO no delays', state: 'ok' },
+			{ code: 'OAK', text: 'OAK no delays', state: 'ok' }
+		]);
+		expect(words(input({ now: NOW + 45 * MIN }))).toEqual([]);
+		expect(words(input({ outcomes: {}, airport: null }))).toEqual([]);
+		expect(words(input({ open: false }))).toEqual([]);
 	});
 	it('loading reads as loading', () => {
 		expect(
