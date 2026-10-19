@@ -10,6 +10,7 @@ import {
 	optionalReads,
 	placeLayersOn,
 	syncCounts,
+	townCounted,
 	trafficVisibility,
 	type OwnedLayerData
 } from './map-layer-switches';
@@ -185,7 +186,8 @@ describe('owned data layers (MAPX2b)', () => {
 			cams: [point('alert-tam-east')],
 			camWedges: [point('alert-tam-east')],
 			shows: [point('venue:macs')],
-			blotter: []
+			blotter: [],
+			stories: [point('bay')]
 		});
 		expect(counts).toEqual({
 			'traffic-events': 2,
@@ -198,12 +200,36 @@ describe('owned data layers (MAPX2b)', () => {
 			cameras: 1,
 			'camera-wedges': 1,
 			'show-venues': 1,
-			'blotter-towns': 0
+			'blotter-towns': 0,
+			'story-places': 1
 		});
 		expect(map.vis['fitness-studios-label']).toBe('visible');
 		expect(map.vis['airports-hit-layer']).toBe('visible');
 		expect((map.data['traffic-events'] as GeoJSON.FeatureCollection).features).toHaveLength(2);
 		expect(map.vis['gas-stations-label']).toBe('visible');
 		expect(map.vis['traffic-events-hit-layer']).toBe('visible');
+	});
+});
+
+describe('stories placed by their headline leave the town counts (NEWSPIN2)', () => {
+	const item = (id: string): NewsItem => ({
+		id,
+		title: id,
+		link: '',
+		timestamp: 0,
+		source: 'Marin IJ',
+		category: 'local',
+		verification: 'local_media',
+		townSlug: 'tomales'
+	});
+	it('v2: a placed story is not counted on its town; the rest are', () => {
+		const owned = { placed: new Set(['bay']) } as unknown as OwnedLayerData;
+		expect(townCounted([item('bay'), item('town')], owned).map((i) => i.id)).toEqual(['town']);
+	});
+	it('legacy and /tv (no owner) count every story, as before', () => {
+		expect(townCounted([item('bay'), item('town')], undefined).map((i) => i.id)).toEqual([
+			'bay',
+			'town'
+		]);
 	});
 });

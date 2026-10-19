@@ -4,6 +4,14 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-10-19
+
+### Added — Stories placed by the place in their headline
+
+- **A story whose headline names one place we have checked is drawn there**, only as precisely as that place: a bay, beach, park, peak or bridge is a soft halo labelled "(area)" ("Tomales Bay (area)"); a building (a ferry terminal, a SMART station, the Point Reyes Lighthouse, a show venue) is a dot. The story's detail says where the place came from: "Tomales Bay (area) · matched in the headline". A placed story is no longer counted on a town's dot. The Stories group in Layers says how the stories in view are placed: by their headline, on their town, or at their feed's own point.
+- **Only the headline, and only one place.** A summary's place is too often a meeting room, so it is never read. A headline naming two places, or a school, college or agency named after a place ("Mount Tam School", "Golden Gate Bridge District"), places nothing; a building must agree with any town the headline names. "Point Reyes Station" is the town, not the Lighthouse. A feed's own point still wins.
+- **The places were checked against OpenStreetMap.** Three of the map's landmark buildings were off (the Sausalito Ferry Terminal by 716 m, the Novato Downtown SMART station by 1.4 km); stories use the checked points. The landmarks layer itself is unchanged.
+
 ## 2026-10-18
 
 ### Added — Shows and sheriff reports back on the map

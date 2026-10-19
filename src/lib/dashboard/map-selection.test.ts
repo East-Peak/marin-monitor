@@ -92,6 +92,15 @@ describe('cameras (MAPX4)', () => {
 });
 
 describe('shows and the blotter (NEWSPIN1)', () => {
+	it('a story’s place (NEWSPIN2) names the story’s own row', () => {
+		expect(clickSelection({ kind: 'story-place', itemId: 'marin-ij:bay' })).toBe(
+			'news:marin-ij:bay'
+		);
+		expect(
+			featureSelection({ source: 'story-places', properties: { itemId: 'marin-ij:bay' } })
+		).toBe('news:marin-ij:bay');
+	});
+
 	it('a venue dot names its venue row; a town’s count names its town row', () => {
 		expect(clickSelection({ kind: 'show-venue', itemId: 'venue:marin-jcc' })).toBe(
 			'shows:venue:marin-jcc'

@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-10-19',
+		title: 'Stories placed by the place in their headline',
+		description:
+			'A story whose headline names one place we have checked is drawn there, only as precisely as that place: a bay, beach, park or bridge is a soft halo labelled “(area)”, a building is a dot, and its detail says “matched in the headline”. A headline naming two places, or a school or agency named after a place, places nothing, and a summary is never read. Placed stories are no longer counted on a town’s dot.'
+	},
+	{
 		date: '2026-10-18',
 		title: 'Shows and sheriff reports back on the map',
 		description:

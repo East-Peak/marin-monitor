@@ -9,6 +9,7 @@ import type { Detail } from '$lib/components/dashboard-v2/DetailContent.svelte';
 import { clickSelection } from './map-selection';
 import { snapshotItemToNewsItem } from '$lib/api/marin/news-snapshot';
 import { CATEGORY_TO_LAYER } from '$lib/stores/map';
+import { LAYER_COLORS } from '$lib/config/map';
 import type { NewsSnapshotView } from '$lib/news/snapshot';
 import type { MapFeatureInspectorData, MapLayer, NewsItem } from '$lib/types';
 import {
@@ -20,6 +21,7 @@ import type { OwnedLayerData } from '$lib/components/map/map-layer-switches';
 import { feedCoverage } from './latest-reporting';
 import { emptyWording, mapMeasured, measuredFromEntry, type Measured } from './measured';
 import { formatAsOf } from './pacific-time';
+import { placeOf, type MapPlace } from './map-place';
 import { SNAPSHOT_OBSERVATION_MAX_AGE_MS } from './source-adapters';
 import {
 	effectiveState,
@@ -52,10 +54,13 @@ export interface V2MapData {
 	/** Every enabled layer read fresh by this owner, with a known time: only then is "nothing here" a fact (Codex 9b #2). */
 	established: boolean;
 	provenance: V2Provenance;
+	/** Stories placed by their headline (NEWSPIN2), by id: drawn at the place, not on a town. */
+	placed: ReadonlyMap<string, MapPlace>;
+	/** The placed stories as drawn: the enabled layers, in the town; kept ones marked. */
+	storyPlaces: GeoJSON.Feature[];
 }
 
-const drawable = (i: NewsItem) =>
-	(typeof i.lat === 'number' && typeof i.lon === 'number') || Boolean(i.townSlug);
+const pinned = (i: NewsItem) => typeof i.lat === 'number' && typeof i.lon === 'number';
 const inTown = (town: string | null) => (i: NewsItem) => !town || i.townSlug === town;
 
 function keptNote(m: Measured<unknown>, now: number): string | null {
@@ -95,6 +100,12 @@ export function v2MapData(input: {
 
 	const stories = newsM.kind === 'value' ? newsM.value.items : [];
 	const news = stories.map(snapshotItemToNewsItem);
+	const placed = new Map<string, MapPlace>();
+	for (const i of news) {
+		const p = placeOf(i);
+		if (p.kind === 'place') placed.set(i.id, p.place);
+	}
+	const drawable = (i: NewsItem) => pinned(i) || placed.has(i.id) || Boolean(i.townSlug);
 	const threeOneOne = fixM.kind === 'value' ? fixM.value : [];
 	const earthquakes = quakeM.kind === 'value' ? quakeM.value : [];
 
@@ -210,10 +221,30 @@ export function v2MapData(input: {
 				asOf: null
 			};
 
+	const storyPlaces = shownNews.flatMap((i): GeoJSON.Feature[] => {
+		const place = placed.get(i.id);
+		if (!place) return [];
+		return [
+			{
+				type: 'Feature',
+				id: i.id,
+				geometry: { type: 'Point', coordinates: [place.lon, place.lat] },
+				properties: {
+					itemId: i.id,
+					precision: place.precision,
+					label: place.precision === 'area' ? `${place.label} (area)` : place.label,
+					color: LAYER_COLORS[CATEGORY_TO_LAYER[i.category]] ?? LAYER_COLORS.news,
+					...(retainedNews.has(i.id) ? { retained: true } : {})
+				}
+			}
+		];
+	});
+
 	return {
 		layerData: {
 			revision: 0,
 			news,
+			placed: new Set(placed.keys()),
 			threeOneOne,
 			retained: {
 				news: retainedNews,
@@ -233,6 +264,8 @@ export function v2MapData(input: {
 		},
 		inspectable: [...newsOn, ...fixOn],
 		established,
+		placed,
+		storyPlaces,
 		provenance: {
 			'311': provenanceOf(entry('part:seeclickfix'), now),
 			earthquakes: provenanceOf(entry('part:earthquakes'), now)
@@ -272,6 +305,8 @@ export function v2FeatureView(
 	const place = clickSelection(feature);
 	const now = place ? drawnPlaces.get(place) : undefined;
 	// The layer's words now, not the tap's: an all-clear never outlives the read that said it.
+	// A placed story keeps its kept note (NEWSPIN2).
+	const kept = data.notes.get(feature.itemId);
 	if (now)
 		return {
 			kind: feature.kind,
@@ -279,7 +314,8 @@ export function v2FeatureView(
 			title: now.title,
 			subtitle: now.meta.join(' · '),
 			...(now.paragraphs.length ? { description: now.paragraphs.join('\n') } : {}),
-			...(now.source ? { source: now.source.label } : {})
+			...(now.source ? { source: now.source.label } : {}),
+			...(kept ? { note: kept } : {})
 		};
 	const id = feature.itemId;
 	const drawn = [...data.layerData.threeOneOne, ...data.earthquakes].some((i) => i.id === id);
@@ -287,4 +323,31 @@ export function v2FeatureView(
 	const note = data.notes.get(id);
 	const { note: _old, ...rest } = feature;
 	return note ? { ...rest, note } : rest;
+}
+
+/** The stories a town's dot counts, and so its tooltip lists: the placed ones are elsewhere. */
+export const townLevel = (data: Pick<V2MapData, 'inspectable' | 'placed'>) =>
+	data.inspectable.filter((i) => !data.placed.has(i.id));
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+/**
+ * The Stories group's note over the stories in view (NEWSPIN2): how many are placed by their
+ * headline, and how the rest are placed (their town's dot, or the feed's own point).
+ */
+export function storiesNote(
+	inView: readonly string[],
+	data: Pick<V2MapData, 'placed' | 'layerData'>
+): string | null {
+	const ids = new Set(inView.filter((id) => id.startsWith('news:')).map((id) => id.slice(5)));
+	const items = data.layerData.news.filter((i) => ids.has(i.id));
+	const byHeadline = items.filter((i) => data.placed.has(i.id)).length;
+	const atPoint = items.filter((i) => !data.placed.has(i.id) && pinned(i)).length;
+	const onTown = items.length - byHeadline - atPoint;
+	const parts = [
+		byHeadline ? plural(byHeadline, 'placed by its headline', 'placed by their headline') : null,
+		onTown ? plural(onTown, 'counted on its town', 'counted on their town') : null,
+		atPoint ? plural(atPoint, 'at its feed’s point', 'at their feed’s point') : null
+	].filter(Boolean);
+	return parts.length ? parts.join(' · ') : null;
 }

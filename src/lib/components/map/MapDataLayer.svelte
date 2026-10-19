@@ -53,6 +53,7 @@
 		markRetained,
 		optionalReads,
 		placeLayersOn,
+		townCounted,
 		syncCounts,
 		trafficVisibility,
 		type AirportSwitchTarget,
@@ -64,6 +65,8 @@
 		hoveredFeatureIds,
 		bindInteractiveHover,
 		bindCameraClick,
+		bindStoryPlaceClick,
+		clickHitsStoryPlace,
 		bindEmptyClick,
 		bindLayerGroupClick,
 		bindTownSelectionClick,
@@ -281,6 +284,12 @@
 		const fireIncidentTriggerLayers = ['fire-incidents-layer', 'fire-incidents-label'];
 		const airportTriggerLayers = ['airports-layer', 'airports-hit-layer', 'airports-label'];
 		const venueTriggerLayers = ['show-venues-layer', 'show-venues-hit-layer'];
+		const storyPlaceTriggerLayers = [
+			'story-places-dot',
+			'story-places-hit-layer',
+			'story-places-halo',
+			'story-places-label'
+		];
 		const blotterTriggerLayers = ['blotter-towns-layer', 'blotter-towns-label'];
 
 		// --- Click handlers ---
@@ -294,8 +303,11 @@
 			if (id && onPinClick) onPinClick(String(id));
 		});
 
+		// A story at its headline's place (NEWSPIN2) opens as its news pin would.
+		bindStoryPlaceClick(map, (id) => onPinClick?.(id));
+
 		bindLayerGroupClick(map, landmarkTriggerLayers, (e: MapLayerMouseEvent) => {
-			if (clickHitsVisibleStravaFeature(map, e)) return;
+			if (clickHitsVisibleStravaFeature(map, e) || clickHitsStoryPlace(map, e)) return;
 			const feature = e.features?.[0];
 			const name = String(feature?.properties?.name ?? 'Landmark');
 			const type = String(feature?.properties?.type ?? 'reference point');
@@ -523,6 +535,10 @@
 			sourceId: '311-reports'
 		});
 		bindInteractiveHover(map, { triggerLayerIds: venueTriggerLayers, sourceId: 'show-venues' });
+		bindInteractiveHover(map, {
+			triggerLayerIds: storyPlaceTriggerLayers,
+			sourceId: 'story-places'
+		});
 		bindInteractiveHover(map, { triggerLayerIds: blotterTriggerLayers, sourceId: 'blotter-towns' });
 		bindInteractiveHover(map, {
 			triggerLayerIds: fireIncidentTriggerLayers,
@@ -593,7 +609,7 @@
 			const layer = CATEGORY_TO_LAYER[item.category];
 			return Boolean(layer && mapState.activeLayers[layer]);
 		});
-		const storyCounts = getStoryCountsByTown(activeItems, CATEGORY_TO_LAYER);
+		const storyCounts = getStoryCountsByTown(townCounted(activeItems, owned()), CATEGORY_TO_LAYER);
 
 		// Town dots GeoJSON
 		const townFeatures = buildTownFeatures(

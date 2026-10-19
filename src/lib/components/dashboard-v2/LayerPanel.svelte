@@ -29,8 +29,8 @@
 		rail = false,
 		extra
 	}: {
-		/** The Stories group: its rows, under one status line. */
-		stories: { rows: LayerRow[]; count: number | null; status: string };
+		/** The Stories group: its rows, under one status line, and how the stories in view are placed. */
+		stories: { rows: LayerRow[]; count: number | null; status: string; note?: string | null };
 		layers: LayerRow[];
 		ontoggle: (id: string, on: boolean) => void;
 		/** /map on desktop (MAPX3): a column beside the map, always open, with no trigger. */
@@ -105,6 +105,9 @@
 					>{/if}
 			</h3>
 			<p class="meta" data-text-role="meta">{stories.status}</p>
+			{#if stories.note}<p class="meta" data-stories-note data-text-role="meta">
+					{stories.note}
+				</p>{/if}
 			<ul>
 				{#each stories.rows as r (r.id)}{@render row(r)}{/each}
 			</ul>

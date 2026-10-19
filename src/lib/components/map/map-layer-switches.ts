@@ -17,6 +17,8 @@ export interface OwnedLayerData {
 	/** Bumped by the owner on every change; echoed back by onSynced. */
 	revision: number;
 	news: readonly NewsItem[];
+	/** Stories v2 draws at their headline's place (NEWSPIN2): not counted on a town's dot. */
+	placed?: ReadonlySet<string>;
 	threeOneOne: readonly NewsItem[];
 	/** What was kept after a failure: news per item id; 311 and quakes per part. */
 	retained: { news: ReadonlySet<string>; threeOneOne: boolean; earthquakes: boolean };
@@ -38,7 +40,9 @@ export const OWNED_PLACE_SOURCES = {
 	camWedges: 'camera-wedges',
 	/** Venue dots and towns' sheriff-report counts (NEWSPIN1). */
 	shows: 'show-venues',
-	blotter: 'blotter-towns'
+	blotter: 'blotter-towns',
+	/** Stories at their headline's place (NEWSPIN2): an area's halo, a venue's dot. */
+	stories: 'story-places'
 } as const;
 export type OwnedPlace = keyof typeof OWNED_PLACE_SOURCES;
 
@@ -126,6 +130,12 @@ export function layerItems(
 	store: () => readonly NewsItem[]
 ): readonly NewsItem[] {
 	return owned ? pick(owned) : store();
+}
+
+/** The stories counted on their town's dot: all of them, less those v2 draws at a place. */
+export function townCounted(items: NewsItem[], owned: OwnedLayerData | undefined): NewsItem[] {
+	const placed = owned?.placed;
+	return placed ? items.filter((i) => !placed.has(i.id)) : items;
 }
 
 export function placeLayersOn(owned: OwnedLayerData | undefined): boolean {

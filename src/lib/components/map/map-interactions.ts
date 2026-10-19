@@ -209,6 +209,10 @@ export const INSPECTION_CLICK_LAYERS = [
 	'camera-wedges-fill',
 	'show-venues-layer',
 	'show-venues-hit-layer',
+	'story-places-dot',
+	'story-places-hit-layer',
+	'story-places-halo',
+	'story-places-label',
 	'blotter-towns-layer',
 	'blotter-towns-label',
 	'311-reports-layer',
@@ -243,6 +247,10 @@ export function clickHitsInspectionTarget(
 
 const CAMERA_PIN_LAYERS = ['cameras-layer', 'cameras-hit-layer'];
 const CAMERA_WEDGE_LAYER = 'camera-wedges-fill';
+/** A story's area halo and its "(area)" label (NEWSPIN2): wide, so low priority, like a wedge. */
+const AREA_LAYERS = ['story-places-halo', 'story-places-label'];
+/** The big, low-priority targets: a click on anything else under them is that thing's. */
+const UNDERLAYS = [CAMERA_WEDGE_LAYER, ...AREA_LAYERS];
 
 /**
  * The fire cameras (MAPX4). A pin opens its camera. A wedge covers kilometres of map, so it is
@@ -264,17 +272,39 @@ export function bindCameraClick(map: MapLibreMap, onCamera: (id: string, name: s
 	});
 }
 
+/** A story's place under the click (NEWSPIN2): a placed area sits on its own landmark. */
+export function clickHitsStoryPlace(map: MapLibreMap, e: MapLayerMouseEvent): boolean {
+	return hitsVisible(map, e, ['story-places-dot', 'story-places-hit-layer']);
+}
+
+/**
+ * A story at its headline's place (NEWSPIN2). A venue's dot opens it as a pin does; an area's
+ * halo or label yields to every other target and to a town circle, but beats a wedge.
+ */
+export function bindStoryPlaceClick(map: MapLibreMap, onStory: (id: string) => void) {
+	const open = (e: MapLayerMouseEvent) => {
+		const id = e.features?.[0]?.properties?.itemId;
+		if (id) onStory(String(id));
+	};
+	bindLayerGroupClick(map, ['story-places-dot', 'story-places-hit-layer'], (e) => {
+		if (!clickHitsVisibleStravaFeature(map, e)) open(e);
+	});
+	bindLayerGroupClick(map, AREA_LAYERS, (e) => {
+		if (clickHitsVisibleStravaFeature(map, e)) return;
+		if (clickHitsInspectionTarget(map, e, UNDERLAYS)) return;
+		if (hitsVisible(map, e, TOWN_CLICK_LAYERS)) return;
+		open(e);
+	});
+}
+
 /**
  * Town selection by map click. It yields to Strava and to every inspection target,
  * so inspecting a pin, station or incident never changes the global town.
  */
 export function bindTownSelectionClick(map: MapLibreMap, onTownClick: (townSlug: string) => void) {
 	bindLayerGroupClick(map, [...TOWN_CLICK_LAYERS], (e: MapLayerMouseEvent) => {
-		// A wedge yields to towns (bindCameraClick), so it can't block one either.
-		if (
-			clickHitsVisibleStravaFeature(map, e) ||
-			clickHitsInspectionTarget(map, e, [CAMERA_WEDGE_LAYER])
-		)
+		// A wedge or an area halo yields to towns, so it can't block one either.
+		if (clickHitsVisibleStravaFeature(map, e) || clickHitsInspectionTarget(map, e, UNDERLAYS))
 			return;
 		const slug = e.features?.[0]?.properties?.slug;
 		if (slug) onTownClick(String(slug));

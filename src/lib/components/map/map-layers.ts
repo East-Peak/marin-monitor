@@ -237,6 +237,12 @@ function addSources(map: MapLibreMap): void {
 		data: { type: 'FeatureCollection', features: [] },
 		promoteId: 'itemId'
 	});
+	// v2's stories at their headline's place (NEWSPIN2); empty unless an owner draws them.
+	map.addSource('story-places', {
+		type: 'geojson',
+		data: { type: 'FeatureCollection', features: [] },
+		promoteId: 'itemId'
+	});
 
 	// 311 reports source (SeeClickFix / Fix It Marin)
 	map.addSource('311-reports', {
@@ -937,6 +943,57 @@ function addLayers(map: MapLibreMap): void {
 			'text-halo-width': 1,
 			'text-opacity': hoverCase(0.96, townLabelOpacity)
 		}
+	});
+
+	// --- Stories at their headline's place (NEWSPIN2): an area is a soft halo with no centre
+	// dot, labelled "(area)"; a venue is the venue dot below, in the story's colour ---
+	const isArea = ['==', ['get', 'precision'], 'area'];
+	map.addLayer({
+		id: 'story-places-halo',
+		type: 'circle',
+		source: 'story-places',
+		filter: isArea as never,
+		paint: {
+			'circle-radius': ['interpolate', ['linear'], ['zoom'], 9, 16, 13, 44],
+			'circle-color': ['coalesce', ['get', 'color'], '#8b5cf6'],
+			'circle-opacity': hoverCase(0.45, retainedDim(0.28) as never),
+			'circle-blur': 0.75
+		}
+	});
+	map.addLayer({
+		id: 'story-places-label',
+		type: 'symbol',
+		source: 'story-places',
+		filter: isArea as never,
+		layout: {
+			'text-field': ['get', 'label'],
+			'text-size': 11,
+			'text-offset': [0, 1.6]
+		},
+		paint: {
+			'text-color': 'rgba(232, 232, 232, 0.85)',
+			'text-halo-color': 'rgba(10, 10, 10, 0.9)',
+			'text-halo-width': 1.5
+		}
+	});
+	map.addLayer({
+		id: 'story-places-dot',
+		type: 'circle',
+		source: 'story-places',
+		filter: ['!', isArea] as never,
+		paint: {
+			'circle-radius': hoverCase(8, 5.5),
+			'circle-color': ['coalesce', ['get', 'color'], '#8b5cf6'],
+			'circle-opacity': retainedDim(1) as never,
+			'circle-stroke-width': hoverCase(3, 1.5),
+			'circle-stroke-color': hoverCase('rgba(255, 247, 220, 0.98)', 'rgba(10, 10, 10, 0.85)')
+		}
+	});
+	map.addLayer({
+		id: 'story-places-hit-layer',
+		type: 'circle',
+		source: 'story-places',
+		paint: { 'circle-radius': 14, 'circle-color': 'rgba(0, 0, 0, 0)' }
 	});
 
 	// --- Venue dots (NEWSPIN1): a solid dot at a reviewed venue's own building ---

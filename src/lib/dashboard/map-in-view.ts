@@ -7,6 +7,7 @@
 import type { Detail } from '$lib/components/dashboard-v2/DetailContent.svelte';
 import type { NewsItem } from '$lib/types';
 import type { DataLayerView } from './v2-map-layers';
+import type { MapPlace } from './map-place';
 
 export type InViewLayer =
 	| 'news'
@@ -125,6 +126,8 @@ export function inViewItems(input: {
 	towns: Readonly<Record<string, TownPoint>>;
 	notes?: ReadonlyMap<string, string>;
 	formatTime?: (ms: number) => string;
+	/** Stories placed by their headline (NEWSPIN2): listed at the place, not the town. */
+	placed?: ReadonlyMap<string, MapPlace>;
 	/** The drawn data layers (MAPX2b): their points as they are on the map. */
 	layers?: readonly Pick<DataLayerView, 'id' | 'points' | 'kept'>[];
 }): InViewItem[] {
@@ -153,15 +156,19 @@ export function inViewItems(input: {
 
 	for (const i of input.news.filter(inTown)) {
 		const home = i.townSlug ? towns[i.townSlug] : undefined;
-		const point = pinned(i) ? { lon: i.lon!, lat: i.lat! } : home;
+		const place = pinned(i) ? undefined : input.placed?.get(i.id);
+		const point = pinned(i) ? { lon: i.lon!, lat: i.lat! } : (place ?? home);
 		if (!point) continue;
+		const where = place
+			? `${place.label}${place.precision === 'area' ? ' (area)' : ''} · ${place.provenance}`
+			: home?.name;
 		push(
 			'news',
 			i,
 			{ lon: point.lon, lat: point.lat },
 			{
 				title: i.title,
-				meta: [i.source, ...time(i), ...(home ? [home.name] : [])],
+				meta: [i.source, ...time(i), ...(where ? [where] : [])],
 				paragraphs: i.description ? [i.description] : [],
 				empty: 'No excerpt from the source.',
 				source: { label: `Read on ${i.source}`, href: i.link }

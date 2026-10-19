@@ -4,7 +4,7 @@ import type { NewsItem } from '$lib/types';
 import type { SourceStatusEntry } from './source-status';
 import { fromLoaderPart, fromSnapshotRead, fromSnapshotSource } from './source-adapters';
 import { describePresentation } from './source-status';
-import { v2FeatureView, v2Inspector, v2MapData } from './v2-map-data';
+import { storiesNote, townLevel, v2FeatureView, v2Inspector, v2MapData } from './v2-map-data';
 
 const NOW = Date.parse('2026-10-01T15:00:00Z'); // 8:00 AM PDT
 const H = 3_600_000;
@@ -387,6 +387,28 @@ describe('v2FeatureView on the phone (MAPX2c): a data layer pin opens while it i
 		});
 		expect(JSON.stringify(shown)).not.toMatch(/no delays/);
 	});
+	it('a story at its headline’s place opens on a tablet with its place, and its kept note (NEWSPIN2)', () => {
+		const kept = { ...d, notes: new Map([['bay', 'Kept from 7:40 AM · read failed']]) };
+		const placedNow = new Map([
+			[
+				'news:bay',
+				detail(
+					'Kayak capsizes in Tomales Bay',
+					['Marin IJ', '8:00 AM', 'Tomales Bay (area) · matched in the headline'],
+					[]
+				)
+			]
+		]);
+		const story = { kind: 'story-place' as const, title: '', itemId: 'bay' };
+		expect(v2FeatureView(story, kept, placedNow)).toMatchObject({
+			kind: 'story-place',
+			title: 'Kayak capsizes in Tomales Bay',
+			subtitle: 'Marin IJ · 8:00 AM · Tomales Bay (area) · matched in the headline',
+			note: 'Kept from 7:40 AM · read failed'
+		});
+		// No longer placed (or drawn): it closes.
+		expect(v2FeatureView(story, kept, new Map())).toBeNull();
+	});
 });
 
 describe('no-match with only failed (not kept) layers stays no-match (batch 2 contract)', () => {
@@ -465,5 +487,95 @@ describe('311 and quakes carry their payload time (map coverage label)', () => {
 		const untimed = run({ view: v, fixIt: [], sources: sources(v, ok, ok, true, ok, true) });
 		expect(untimed.provenance['311']).toEqual({ state: 'unknown', observedAt: null });
 		expect(run({}).provenance.earthquakes).toEqual({ state: 'loading', observedAt: null });
+	});
+});
+
+describe('stories placed by their headline (NEWSPIN2)', () => {
+	const bay = pinStory('bay', {
+		title: 'Woman from Los Angeles dies after kayak capsizes in Tomales Bay',
+		town: { name: 'Tomales', slug: 'tomales', source: 'title-match' },
+		point: null
+	});
+	const lighthouse = pinStory('light', {
+		title: 'Whale watchers crowd the Point Reyes Lighthouse',
+		town: null,
+		point: null
+	});
+	const townOnly = pinStory('town', { title: 'Mill Valley forum on fire alerts', point: null });
+	const fed = pinStory('fed', { title: 'Tomales Bay oyster farms reopen', town: null });
+	const read = (items: NewsSnapshotItem[]) => {
+		const v = view(items);
+		return run({ view: v, sources: sources(v, { ok: true, view: v } as never) });
+	};
+
+	it('places a story at its headline’s place; the feed’s point and a town stay as they were', () => {
+		const d = read([bay, lighthouse, townOnly, fed]);
+		expect([...d.placed.keys()]).toEqual(['bay', 'light']);
+		expect(d.placed.get('bay')).toMatchObject({ precision: 'area', label: 'Tomales Bay' });
+		// Placed stories aren't counted on a town's dot; nothing sets a point on the item.
+		expect([...(d.layerData.placed ?? [])]).toEqual(['bay', 'light']);
+		expect(d.layerData.news.find((i) => i.id === 'bay')).not.toHaveProperty('lat');
+	});
+
+	it('draws an area as a labelled halo and a venue as a dot, at the place', () => {
+		const d = read([bay, lighthouse, townOnly, fed]);
+		expect(d.storyPlaces).toEqual([
+			{
+				type: 'Feature',
+				id: 'bay',
+				geometry: { type: 'Point', coordinates: [-122.88, 38.16] },
+				properties: expect.objectContaining({
+					itemId: 'bay',
+					precision: 'area',
+					label: 'Tomales Bay (area)'
+				})
+			},
+			{
+				type: 'Feature',
+				id: 'light',
+				geometry: { type: 'Point', coordinates: [-123.0232, 37.9956] },
+				properties: expect.objectContaining({
+					itemId: 'light',
+					precision: 'venue',
+					label: 'Point Reyes Lighthouse'
+				})
+			}
+		]);
+	});
+
+	it('a placed story without a town is drawable and inspectable', () => {
+		const d = read([lighthouse]);
+		expect(d.inspectable.map((i) => i.id)).toEqual(['light']);
+	});
+
+	it('follows the layer switches and the town filter', () => {
+		const v = view([bay, lighthouse]);
+		const s = sources(v, { ok: true, view: v } as never);
+		expect(
+			run({ view: v, sources: s, activeLayers: { ...ALL_ON, news: false } }).storyPlaces
+		).toEqual([]);
+		expect(run({ view: v, sources: s, town: 'tomales' }).storyPlaces.map((f) => f.id)).toEqual([
+			'bay'
+		]);
+	});
+
+	it('a kept snapshot marks its placed stories too', () => {
+		const v = view([bay], NOW - 20 * 60_000);
+		const d = run({ view: v, sources: sources(v, fail('news-snapshot: unknown (read-failed)')) });
+		expect(d.storyPlaces[0].properties).toMatchObject({ retained: true });
+	});
+
+	it('a town’s tooltip lists only the stories counted on it (Codex NEWSPIN2 #4)', () => {
+		const d = read([bay, townOnly]);
+		expect(townLevel(d).map((i) => i.id)).toEqual(['town']);
+	});
+
+	it('the Stories note counts the placed stories in view; the rest stay town counts', () => {
+		const d = read([bay, lighthouse, townOnly, fed]);
+		expect(storiesNote(['news:bay', 'news:light', 'news:town', 'news:fed', '311:x'], d)).toBe(
+			'2 placed by their headline · 1 counted on its town · 1 at its feed’s point'
+		);
+		expect(storiesNote(['news:town'], d)).toBe('1 counted on its town');
+		expect(storiesNote([], d)).toBeNull();
 	});
 });

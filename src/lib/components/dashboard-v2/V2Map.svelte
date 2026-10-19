@@ -30,7 +30,13 @@
 	import { CATEGORY_TO_LAYER, mapStore, selectedTown } from '$lib/stores/map';
 	import { townFilter } from '$lib/stores/town-filter';
 	import type { MapFeatureInspectorData, MapLayer } from '$lib/types';
-	import { v2FeatureView, v2Inspector, type V2MapData } from '$lib/dashboard/v2-map-data';
+	import {
+		storiesNote,
+		townLevel,
+		v2FeatureView,
+		v2Inspector,
+		type V2MapData
+	} from '$lib/dashboard/v2-map-data';
 	import { createV2Probe } from '$lib/dashboard/v2-probe';
 	import SectionStatus from './SectionStatus.svelte';
 	import MapProbe from './MapProbe.svelte';
@@ -153,7 +159,8 @@
 							DataLayerId,
 							GeoJSON.Feature[]
 						>),
-						camWedges: dataLayers ? camWedgeFeatures(dataLayers.cams, now) : []
+						camWedges: dataLayers ? camWedgeFeatures(dataLayers.cams, now) : [],
+						stories: data.storyPlaces
 					}
 				}
 			: {})
@@ -172,12 +179,6 @@
 	// Only the enabled, drawable layers; no zero claims without coverage (Codex 9b #2, #3).
 	const visible = $derived(data.inspectable);
 	const model = $derived(v2Inspector(inspector, data, (slug) => TOWN_BY_SLUG[slug]?.name ?? slug));
-	// Re-read on every data change: the kept note follows the latest refresh (Codex 9b #4); a
-	// data layer's pin stays open while its layer still draws it.
-	const drawnPlaces = $derived(
-		new Map(drawn.flatMap((v) => v.points.map((p) => [selectionId(v.id, p.id), p.detail] as const)))
-	);
-	const shownFeature = $derived(v2FeatureView(feature, data, drawnPlaces));
 
 	// Desktop's in-view list (MAPX2): recomputed on a settled move and on every data, layer,
 	// town or freshness change (all of which arrive as a new `data`).
@@ -191,9 +192,22 @@
 			towns: TOWN_BY_SLUG,
 			notes: data.notes,
 			formatTime: (ms) => formatAsOf(ms, now),
+			placed: data.placed,
 			layers: drawn
 		})
 	);
+	// Re-read on every data change: the kept note follows the latest refresh (Codex 9b #4); a
+	// data layer's pin stays open while its layer still draws it, and a story at its headline's
+	// place while it is still placed (NEWSPIN2).
+	const drawnPlaces = $derived(
+		new Map([
+			...drawn.flatMap((v) => v.points.map((p) => [selectionId(v.id, p.id), p.detail] as const)),
+			...allItems
+				.filter((i) => i.layer === 'news' && data.placed.has(i.id.slice('news:'.length)))
+				.map((i) => [i.id, i.detail] as const)
+		])
+	);
+	const shownFeature = $derived(v2FeatureView(feature, data, drawnPlaces));
 	let view = $state<{ bounds: Bounds; width: number } | null>(null);
 	let collapsed = $state(false);
 	/** /map below desktop: the sheet's resting state (its detail is a dialog over it). */
@@ -366,6 +380,13 @@
 	const stories = $derived({
 		count: data.layers.news === 'value' ? inViewCount('news') : null,
 		status: statusOf('News snapshot', data.layers.news, data.asOf.news),
+		note:
+			data.layers.news === 'value'
+				? storiesNote(
+						listed.map((i) => i.id),
+						data
+					)
+				: null,
 		rows: STORY_LAYERS.map(
 			([id, name]): LayerRow => ({
 				id,
@@ -472,6 +493,12 @@
 	}
 	function onPinClick(itemId: string) {
 		if (desktop || explore) return select(selectionId('news', itemId));
+		// A story at its headline's place opens with where the place came from (NEWSPIN2).
+		if (data.placed.has(itemId)) {
+			feature = { kind: 'story-place', itemId, title: '' };
+			inspector = null;
+			return;
+		}
 		const item = visible.find((candidate) => candidate.id === itemId);
 		if (item) apply(pinClickOutcome(item));
 	}
@@ -541,7 +568,7 @@
 				{@render layerPanel(false)}
 			{/if}
 			<MapTooltip
-				items={data.inspectable}
+				items={townLevel(data)}
 				emptyText={data.established ? 'No active stories for this town.' : null}
 			/>
 			{#if full}

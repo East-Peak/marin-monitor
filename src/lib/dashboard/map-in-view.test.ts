@@ -167,6 +167,53 @@ describe('inViewItems', () => {
 		});
 		expect(out.map((i) => i.id)).toEqual(['news:mv', 'quake:nc1']);
 	});
+	it('a story placed by its headline sits at the place, and says where the place came from (NEWSPIN2)', () => {
+		const [area, venue] = inViewItems({
+			news: [
+				news({ id: 'bay', townSlug: 'mill-valley', source: 'Marin IJ' }),
+				news({ id: 'light', source: 'KQED' })
+			],
+			threeOneOne: [],
+			earthquakes: [],
+			town: null,
+			towns,
+			formatTime: () => '8:00 AM',
+			placed: new Map([
+				[
+					'bay',
+					{
+						lat: 38.16,
+						lon: -122.88,
+						precision: 'area',
+						label: 'Tomales Bay',
+						provenance: 'matched in the headline'
+					}
+				],
+				[
+					'light',
+					{
+						lat: 37.9956,
+						lon: -123.0232,
+						precision: 'venue',
+						label: 'Point Reyes Lighthouse',
+						provenance: 'matched in the headline'
+					}
+				]
+			])
+		});
+		expect(area).toMatchObject({ id: 'news:bay', lon: -122.88, lat: 38.16 });
+		expect(area.detail.meta).toEqual([
+			'Marin IJ',
+			'8:00 AM',
+			'Tomales Bay (area) · matched in the headline'
+		]);
+		expect(venue).toMatchObject({ id: 'news:light', lon: -123.0232, lat: 37.9956 });
+		expect(venue.detail.meta).toEqual([
+			'KQED',
+			'8:00 AM',
+			'Point Reyes Lighthouse · matched in the headline'
+		]);
+	});
 	it('carries a kept note when the owner supplies one', () => {
 		const [s] = inViewItems({
 			news: [news({ id: 'a', lat: 38, lon: -122.6 })],

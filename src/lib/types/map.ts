@@ -12,7 +12,8 @@ export type MapFeatureKind =
 	| '311-report'
 	| 'camera'
 	| 'show-venue'
-	| 'blotter-town';
+	| 'blotter-town'
+	| 'story-place';
 
 export interface MapFeatureInspectorData {
 	kind: MapFeatureKind;

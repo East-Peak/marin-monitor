@@ -1,11 +1,13 @@
 /**
  * Where the v2 map may put an item (NEWSPIN1), placed only as precisely as its evidence: a show
- * at its reviewed venue when the event's own words agree, a blotter report on its town's dot.
- * Precision is shown and never upgraded: a source's coordinates say where the source is, not
- * where its event happens, so nothing else is placed. v2 builds its own features from a
- * MapPlace; it never sets lat/lon on a NewsItem.
+ * at its reviewed venue when the event's own words agree, a blotter report on its town's dot, a
+ * snapshot story at the one reviewed place its headline names (NEWSPIN2) unless the feed gave
+ * its own point. Precision is shown and never upgraded: a source's coordinates say where the
+ * source is, not where its event happens, so nothing else is placed. v2 builds its own features
+ * from a MapPlace; it never sets lat/lon on a NewsItem.
  */
 import { namesVenue, venueById } from '$lib/config/venues';
+import { matchHeadline } from '$lib/news/gazetteer';
 import { TOWN_BY_SLUG } from '$lib/config/towns';
 import type { NewsItem } from '$lib/types';
 
@@ -34,7 +36,8 @@ export function placeOf(item: NewsItem): Placement {
 		return item.townSlug && TOWN_BY_SLUG[item.townSlug]
 			? { kind: 'town', townSlug: item.townSlug }
 			: NONE;
-	const venue = item.category === 'shows' ? venueById(item.venueId) : undefined;
+	if (item.category !== 'shows') return headlinePlace(item);
+	const venue = venueById(item.venueId);
 	if (!venue) return NONE;
 	if (NOT_THERE.test(`${item.title} ${item.locationText ?? ''}`)) return NONE;
 	if (NOT_THERE_STATUS.test(item.content ?? '')) return NONE;
@@ -50,6 +53,24 @@ export function placeOf(item: NewsItem): Placement {
 			precision: 'venue',
 			label: venue.name,
 			provenance: 'venue list'
+		}
+	};
+}
+
+/** A story's place from its title, unless the feed's own point already places it. */
+function headlinePlace(item: NewsItem): Placement {
+	if (typeof item.lat === 'number' && typeof item.lon === 'number') return NONE;
+	const place = matchHeadline(item.title);
+	if (!place) return NONE;
+	return {
+		kind: 'place',
+		id: `place:${place.id}`,
+		place: {
+			lat: place.lat,
+			lon: place.lon,
+			precision: place.precision,
+			label: place.name,
+			provenance: 'matched in the headline'
 		}
 	};
 }

@@ -143,3 +143,67 @@ describe('placeOf: a blotter report is a town, never a point (NEWSPIN1)', () => 
 		expect(placeOf(report({ townSlug: 'nowhere' }))).toEqual({ kind: 'none' });
 	});
 });
+
+describe('placeOf: a snapshot story by its headline (NEWSPIN2)', () => {
+	const story = (title: string, over: Partial<NewsItem> = {}): NewsItem => ({
+		id: `marin-ij:${title.length}`,
+		title,
+		link: 'https://news.example/s',
+		timestamp: 0,
+		source: 'Marin IJ',
+		category: 'local',
+		verification: 'local_media',
+		...over
+	});
+
+	it('an area named in the headline → an area place, from the headline', () => {
+		expect(
+			placeOf(
+				story('Woman from Los Angeles dies after kayak capsizes in Tomales Bay', {
+					town: 'Tomales',
+					townSlug: 'tomales'
+				})
+			)
+		).toEqual({
+			kind: 'place',
+			id: 'place:tomales-bay',
+			place: {
+				lat: 38.16,
+				lon: -122.88,
+				precision: 'area',
+				label: 'Tomales Bay',
+				provenance: 'matched in the headline'
+			}
+		});
+	});
+
+	it('a venue named in the headline → a venue place', () => {
+		const p = placeOf(story('Whale watchers crowd the Point Reyes Lighthouse'));
+		expect(p).toMatchObject({
+			kind: 'place',
+			id: 'place:point-reyes-lighthouse',
+			place: { precision: 'venue', label: 'Point Reyes Lighthouse' }
+		});
+	});
+
+	it('the feed’s own point still wins: no headline place', () => {
+		expect(placeOf(story('Tomales Bay oyster farms reopen', { lat: 38.1, lon: -122.9 }))).toEqual({
+			kind: 'none'
+		});
+	});
+
+	it('a town alone, or no place, stays as it was: nothing placed', () => {
+		expect(
+			placeOf(story('San Rafael selects developer for housing', { townSlug: 'san-rafael' }))
+		).toEqual({ kind: 'none' });
+		expect(placeOf(story('Marin policy proposal aims to inconvenience ICE'))).toEqual({
+			kind: 'none'
+		});
+	});
+
+	it('a show is never placed from its title, only at a confirmed venue', () => {
+		expect(
+			placeOf(story('Sunset paddle on Tomales Bay', { category: 'shows', id: 'shows:x' }))
+		).toEqual({ kind: 'none' });
+	});
+});

@@ -114,6 +114,67 @@ describe('camera wedges are the lowest click priority (MAPX4)', () => {
 	});
 });
 
+describe('a story’s area halo is a low click priority, like a wedge (NEWSPIN2)', () => {
+	async function wireAreas(hits: Hits) {
+		const { bindCameraClick, bindLayerGroupClick, bindStoryPlaceClick, bindTownSelectionClick } =
+			await import('./map-interactions');
+		const map = await delegatingMap(hits);
+		const calls: string[] = [];
+		bindTownSelectionClick(map, (slug) => calls.push(`town:${slug}`));
+		bindLayerGroupClick(map, ['gas-stations-layer'], (e) =>
+			calls.push(`gas:${e.features?.[0]?.properties?.id}`)
+		);
+		bindCameraClick(map, (id) => calls.push(`cam:${id}`));
+		bindStoryPlaceClick(map, (id) => calls.push(`story:${id}`));
+		return { map, calls };
+	}
+	const HALO = { 'story-places-halo': [{ properties: { itemId: 'bay' } }] };
+
+	it.each([
+		['its halo', 'story-places-halo'],
+		['its "(area)" label', 'story-places-label'],
+		['a venue’s dot', 'story-places-dot']
+	])('a click on %s opens the story', async (_name, layer) => {
+		const { map, calls } = await wireAreas({ [layer]: [{ properties: { itemId: 'bay' } }] });
+		map.click();
+		expect(calls).toEqual(['story:bay']);
+	});
+	it('a town circle under a halo still selects the town', async () => {
+		const { map, calls } = await wireAreas({ ...HALO, ...TOWN });
+		map.click();
+		expect(calls).toEqual(['town:novato']);
+	});
+	it('a station under a halo is the station', async () => {
+		const { map, calls } = await wireAreas({
+			...HALO,
+			'gas-stations-layer': [{ properties: { id: 'g1' } }]
+		});
+		map.click();
+		expect(calls).toEqual(['gas:g1']);
+	});
+	it('a landmark under a story’s place yields to the story (a placed area sits on its landmark)', async () => {
+		const { clickHitsStoryPlace } = await import('./map-interactions');
+		const at = { point: { x: 10, y: 10 } } as never;
+		const landmarkOnly = await delegatingMap({
+			'landmarks-layer': [{ properties: { name: 'Tomales Bay' } }]
+		});
+		expect(clickHitsStoryPlace(landmarkOnly, at)).toBe(false);
+		const both = await delegatingMap({
+			'landmarks-layer': [{ properties: { name: 'Tomales Bay' } }],
+			'story-places-hit-layer': [{ properties: { itemId: 'bay' } }]
+		});
+		expect(clickHitsStoryPlace(both, at)).toBe(true);
+	});
+	it('a halo over a camera’s wedge is the story', async () => {
+		const { map, calls } = await wireAreas({
+			...HALO,
+			'camera-wedges-fill': [{ properties: { itemId: 'alert-tam-east' } }]
+		});
+		map.click();
+		expect(calls).toEqual(['story:bay']);
+	});
+});
+
 describe('a click on empty map (CAMDESEL1)', () => {
 	async function wireEmpty(hits: Hits) {
 		const { bindEmptyClick } = await import('./map-interactions');
@@ -131,6 +192,7 @@ describe('a click on empty map (CAMDESEL1)', () => {
 	it.each([
 		['a camera pin', 'cameras-layer'],
 		['a wedge', 'camera-wedges-fill'],
+		['a story’s area halo', 'story-places-halo'],
 		['a data layer', 'gas-stations-layer'],
 		['a news pin', 'news-pins-layer'],
 		['a town dot', 'towns-layer'],
