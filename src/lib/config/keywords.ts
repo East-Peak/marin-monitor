@@ -242,7 +242,7 @@ export function containsAlertKeyword(
 const TOWNS_BY_LENGTH = [...MARIN_TOWNS].sort((a, b) => b.name.length - a.name.length);
 
 // Common abbreviations and alternate names
-const TOWN_ALIASES: Record<string, string> = {
+export const TOWN_ALIASES: Readonly<Record<string, string>> = {
 	'pt reyes': 'point-reyes',
 	'pt. reyes': 'point-reyes',
 	'point reyes': 'point-reyes',

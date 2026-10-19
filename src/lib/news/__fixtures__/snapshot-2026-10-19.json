@@ -1,0 +1,696 @@
+{
+ "status": "ok",
+ "snapshot": {
+  "schemaVersion": 1,
+  "revision": 1893,
+  "generatedAt": "2026-10-19T10:15:23.280Z",
+  "lastSuccessfulScrapeAt": "2026-10-19T10:15:23.280Z",
+  "sources": [
+   {
+    "id": "marin-independent-journal",
+    "name": "Marin Independent Journal",
+    "category": "local",
+    "verification": "local_media",
+    "lastAttemptAt": "2026-10-19T10:15:22.095Z",
+    "status": "ok",
+    "lastSuccessAt": "2026-10-19T10:15:22.095Z",
+    "lastError": null,
+    "consecutiveFailures": 0,
+    "itemCount": 9
+   },
+   {
+    "id": "pacific-sun",
+    "name": "Pacific Sun",
+    "category": "local",
+    "verification": "local_media",
+    "lastAttemptAt": "2026-10-19T10:15:21.592Z",
+    "status": "ok",
+    "lastSuccessAt": "2026-10-19T10:15:21.592Z",
+    "lastError": null,
+    "consecutiveFailures": 0,
+    "itemCount": 10
+   },
+   {
+    "id": "marin-magazine",
+    "name": "Marin Magazine",
+    "category": "local",
+    "verification": "local_media",
+    "lastAttemptAt": "2026-10-19T10:15:21.811Z",
+    "status": "ok",
+    "lastSuccessAt": "2026-10-19T10:15:21.811Z",
+    "lastError": null,
+    "consecutiveFailures": 0,
+    "itemCount": 10
+   },
+   {
+    "id": "nbc-bay-area-marin",
+    "name": "NBC Bay Area – Marin",
+    "category": "local",
+    "verification": "local_media",
+    "lastAttemptAt": "2026-10-19T10:15:21.630Z",
+    "status": "ok",
+    "lastSuccessAt": "2026-10-19T10:15:21.630Z",
+    "lastError": null,
+    "consecutiveFailures": 0,
+    "itemCount": 30
+   },
+   {
+    "id": "kqed-news",
+    "name": "KQED News",
+    "category": "local",
+    "verification": "local_media",
+    "lastAttemptAt": "2026-10-19T10:15:23.220Z",
+    "status": "ok",
+    "lastSuccessAt": "2026-10-19T10:15:23.220Z",
+    "lastError": null,
+    "consecutiveFailures": 0,
+    "itemCount": 5
+   },
+   {
+    "id": "city-of-san-rafael",
+    "name": "City of San Rafael",
+    "category": "civic",
+    "verification": "official",
+    "lastAttemptAt": "2026-10-19T10:15:22.453Z",
+    "status": "ok",
+    "lastSuccessAt": "2026-10-19T10:15:22.453Z",
+    "lastError": null,
+    "consecutiveFailures": 0,
+    "itemCount": 10
+   },
+   {
+    "id": "city-of-belvedere",
+    "name": "City of Belvedere",
+    "category": "civic",
+    "verification": "official",
+    "lastAttemptAt": "2026-10-19T10:15:22.369Z",
+    "status": "ok",
+    "lastSuccessAt": "2026-10-19T10:15:22.369Z",
+    "lastError": null,
+    "consecutiveFailures": 0,
+    "itemCount": 10
+   },
+   {
+    "id": "marin-ij-politics",
+    "name": "Marin IJ – Politics",
+    "category": "civic",
+    "verification": "local_media",
+    "lastAttemptAt": "2026-10-19T10:15:22.415Z",
+    "status": "ok",
+    "lastSuccessAt": "2026-10-19T10:15:22.415Z",
+    "lastError": null,
+    "consecutiveFailures": 0,
+    "itemCount": 4
+   },
+   {
+    "id": "marin-ij-fire",
+    "name": "Marin IJ – Fire",
+    "category": "safety",
+    "verification": "local_media",
+    "lastAttemptAt": "2026-10-19T10:15:22.850Z",
+    "status": "ok",
+    "lastSuccessAt": "2026-10-19T10:15:22.850Z",
+    "lastError": null,
+    "consecutiveFailures": 0,
+    "itemCount": 10
+   },
+   {
+    "id": "marin-ij-housing",
+    "name": "Marin IJ – Housing",
+    "category": "housing",
+    "verification": "local_media",
+    "lastAttemptAt": "2026-10-19T10:15:22.999Z",
+    "status": "ok",
+    "lastSuccessAt": "2026-10-19T10:15:22.999Z",
+    "lastError": null,
+    "consecutiveFailures": 0,
+    "itemCount": 6
+   }
+  ],
+  "items": [
+   {
+    "id": "marin-independent-journal:https://www.marinij.com/?p=9172898",
+    "sourceId": "marin-independent-journal",
+    "source": "Marin Independent Journal",
+    "category": "local",
+    "verification": "local_media",
+    "title": "North Bay race for Assembly tops local election fundraising",
+    "link": "https://www.marinij.com/2026/10/17/north-bay-race-for-assembly-tops-local-election-fundraising/",
+    "canonicalUrl": "https://marinij.com/2026/10/17/north-bay-race-for-assembly-tops-local-election-fundraising",
+    "summary": "Rohnert Park Councilmember Jackie Elward and Marin County Supervisor Eric Lucan have collected more than $1 million combined, not including support from political action committees.",
+    "publishedAtRaw": "Sat, 17 Oct 2026 16:44:47 +0000",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": null,
+    "publishedAt": "2026-10-17T16:44:47.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": null,
+    "point": null,
+    "topics": [
+     "ENVIRONMENT",
+     "SCHOOLS",
+     "CIVIC"
+    ],
+    "fetchedAt": "2026-10-19T10:15:22.095Z",
+    "categories": [
+     "local",
+     "civic"
+    ],
+    "alsoReportedBy": [
+     "marin-ij-politics"
+    ]
+   },
+   {
+    "id": "kqed-news:https://ww2.kqed.org/news/?p=12104544",
+    "sourceId": "kqed-news",
+    "source": "KQED News",
+    "category": "local",
+    "verification": "local_media",
+    "title": "In This North Bay Assembly Race, Big Tech and Labor Battle It Out",
+    "link": "https://ww2.kqed.org/news/2026/10/16/in-this-north-bay-assembly-race-big-tech-and-labor-battle-it-out/",
+    "canonicalUrl": "https://ww2.kqed.org/news/2026/10/16/in-this-north-bay-assembly-race-big-tech-and-labor-battle-it-out",
+    "summary": "Tech interests are spending tens of millions in California’s state legislative races this election cycle. But for many voters, Big Tech is joining the ranks of the “big bad boogeymen,” one political analyst says.",
+    "publishedAtRaw": "Fri, 16 Oct 2026 16:55:40 +0000",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": null,
+    "publishedAt": "2026-10-16T16:55:40.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": null,
+    "point": null,
+    "topics": [
+     "HOUSING",
+     "ENVIRONMENT",
+     "SCHOOLS",
+     "CIVIC"
+    ],
+    "fetchedAt": "2026-10-19T10:15:23.220Z",
+    "categories": [
+     "local"
+    ],
+    "alsoReportedBy": []
+   },
+   {
+    "id": "kqed-news:https://ww2.kqed.org/news/?p=12104659",
+    "sourceId": "kqed-news",
+    "source": "KQED News",
+    "category": "local",
+    "verification": "local_media",
+    "title": "Why Angel Island Needs Fire",
+    "link": "https://ww2.kqed.org/news/2026/10/16/why-angel-island-needs-fire/",
+    "canonicalUrl": "https://ww2.kqed.org/news/2026/10/16/why-angel-island-needs-fire",
+    "summary": "Prescribed burns on Angel Island sent smoke and at-times dangerous air quality to residents around the Bay Area. Still, environmental managers say the operation was a win.",
+    "publishedAtRaw": "Fri, 16 Oct 2026 10:00:00 +0000",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": null,
+    "publishedAt": "2026-10-16T10:00:00.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": null,
+    "point": null,
+    "topics": [
+     "FIRE",
+     "WEATHER",
+     "TRAFFIC",
+     "HOUSING",
+     "ENVIRONMENT",
+     "SCHOOLS",
+     "CIVIC"
+    ],
+    "fetchedAt": "2026-10-19T10:15:23.220Z",
+    "categories": [
+     "local"
+    ],
+    "alsoReportedBy": []
+   },
+   {
+    "id": "city-of-san-rafael:https://www.cityofsanrafael.org/?p=116642&preview=true&preview_id=116642",
+    "sourceId": "city-of-san-rafael",
+    "source": "City of San Rafael",
+    "category": "civic",
+    "verification": "official",
+    "title": "10/17: Temporary Road Closure Notification – Tamalpais Ave",
+    "link": "https://www.cityofsanrafael.org/10-17-temporary-road-closure-notification-tamalpais-ave/",
+    "canonicalUrl": "https://cityofsanrafael.org/10-17-temporary-road-closure-notification-tamalpais-ave",
+    "summary": "As part of the ongoing construction project at 703 3rd St, DesCor Builders will be closing down Tamalpais Ave between 2nd and 3rd streets for roadway improvements. The closure will occur on Saturday, 10/17, between approximately 9am – 6pm. DesCor has an approved encroachment permit EP-25-201 and the",
+    "publishedAtRaw": "Wed, 14 Oct 2026 17:13:17 +0000",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": null,
+    "publishedAt": "2026-10-14T17:13:17.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": null,
+    "point": null,
+    "topics": [
+     "TRAFFIC",
+     "CIVIC"
+    ],
+    "fetchedAt": "2026-10-19T10:15:22.453Z",
+    "categories": [
+     "civic"
+    ],
+    "alsoReportedBy": []
+   },
+   {
+    "id": "pacific-sun:https://pacificsun.com/?p=491351",
+    "sourceId": "pacific-sun",
+    "source": "Pacific Sun",
+    "category": "local",
+    "verification": "local_media",
+    "title": "Bay Area Burger Week Specialty Burger",
+    "link": "https://pacificsun.com/bay-area-burger-week-giveaway/",
+    "canonicalUrl": "https://pacificsun.com/bay-area-burger-week-giveaway",
+    "summary": "Enter for a chance to win a gift card good for a Specialty Burger presented by Bay Area Burger Week. Drawing Date is October 21, 2026.",
+    "publishedAtRaw": "Fri, 09 Oct 2026 22:00:00 +0000",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": null,
+    "publishedAt": "2026-10-09T22:00:00.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": null,
+    "point": null,
+    "topics": [],
+    "fetchedAt": "2026-10-19T10:15:21.592Z",
+    "categories": [
+     "local"
+    ],
+    "alsoReportedBy": []
+   },
+   {
+    "id": "marin-magazine:https://marinmagazine.com/?p=144092",
+    "sourceId": "marin-magazine",
+    "source": "Marin Magazine",
+    "category": "local",
+    "verification": "local_media",
+    "title": "A Night in Tuscany: North Bay Children’s Center Hosts 37th Annual Fundraiser",
+    "link": "https://marinmagazine.com/arts-events/on-the-scene/another-night-in-tuscany-north-bay-childrens-center-hosts-37th-annual-fundraiser/",
+    "canonicalUrl": "https://marinmagazine.com/arts-events/on-the-scene/another-night-in-tuscany-north-bay-childrens-center-hosts-37th-annual-fundraiser",
+    "summary": "North Bay Children’s Center raises a record $445,000 at its 37th annual A Night in Tuscany fundraiser in Petaluma. The post A Night in Tuscany: North Bay Children’s Center Hosts 37th Annual Fundraiser appeared first on Marin Magazine.",
+    "publishedAtRaw": "Mon, 05 Oct 2026 16:31:35 +0000",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": null,
+    "publishedAt": "2026-10-05T16:31:35.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": null,
+    "point": null,
+    "topics": [
+     "ENVIRONMENT",
+     "SCHOOLS"
+    ],
+    "fetchedAt": "2026-10-19T10:15:21.811Z",
+    "categories": [
+     "local"
+    ],
+    "alsoReportedBy": []
+   },
+   {
+    "id": "marin-magazine:https://marinmagazine.com/?p=144070",
+    "sourceId": "marin-magazine",
+    "source": "Marin Magazine",
+    "category": "local",
+    "verification": "local_media",
+    "title": "When Opposites Attract: Local Groups Trying to Bridge Political Divide",
+    "link": "https://marinmagazine.com/community/when-opposites-attract-local-groups-trying-to-bridge-political-divide/",
+    "canonicalUrl": "https://marinmagazine.com/community/when-opposites-attract-local-groups-trying-to-bridge-political-divide",
+    "summary": "Explore Depolarization Dialogues in Marin, fostering respectful political dialogue and community connections across differences. The post When Opposites Attract: Local Groups Trying to Bridge Political Divide appeared first on Marin Magazine.",
+    "publishedAtRaw": "Fri, 02 Oct 2026 16:45:28 +0000",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": null,
+    "publishedAt": "2026-10-02T16:45:28.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": null,
+    "point": null,
+    "topics": [
+     "WEATHER",
+     "HOUSING",
+     "SCHOOLS",
+     "CIVIC"
+    ],
+    "fetchedAt": "2026-10-19T10:15:21.811Z",
+    "categories": [
+     "local"
+    ],
+    "alsoReportedBy": []
+   },
+   {
+    "id": "nbc-bay-area-marin:4147399",
+    "sourceId": "nbc-bay-area-marin",
+    "source": "NBC Bay Area – Marin",
+    "category": "local",
+    "verification": "local_media",
+    "title": "Prescribed burn on Angel Island finishes for the day, won't resume rest of this week",
+    "link": "https://www.nbcbayarea.com/news/local/angel-island-prescribed-burn/4147399/",
+    "canonicalUrl": "https://nbcbayarea.com/news/local/angel-island-prescribed-burn/4147399",
+    "summary": "A prescribed burn on Angel Island in San Francisco Bay wrapped up for the day Wednesday afternoon after sending smoke into the air that could be seen elsewhere around the region. Cal Fire, the Marin County Fire Department and California State Parks on Sept. 8 began a planned burn of 260 acres at Ang",
+    "publishedAtRaw": "Wed, Sep 23 2026 11:38:02 AM",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": "America/Los_Angeles",
+    "publishedAt": "2026-09-23T18:38:02.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": null,
+    "point": null,
+    "topics": [
+     "FIRE",
+     "ENVIRONMENT",
+     "CIVIC"
+    ],
+    "fetchedAt": "2026-10-19T10:15:21.630Z",
+    "categories": [
+     "local"
+    ],
+    "alsoReportedBy": []
+   },
+   {
+    "id": "city-of-belvedere:https://www.cityofbelvedere.gov/?p=21752",
+    "sourceId": "city-of-belvedere",
+    "source": "City of Belvedere",
+    "category": "civic",
+    "verification": "official",
+    "title": "Richardson Bay Wildlife Sanctuary Seasonal Boat Closure",
+    "link": "https://cityofbelvedere.gov/richardson-bay-wildlife-sanctuary-seasonal-boat-closure/",
+    "canonicalUrl": "https://cityofbelvedere.gov/richardson-bay-wildlife-sanctuary-seasonal-boat-closure",
+    "summary": "The Richardson Bay Audubon Center & Sanctuary reminds the community that Sanctuary waters are closed to all boat traffic—including paddle boards, kayaks, and canoes—from October 1, 2026 through March 31, 2027 to protect tens of thousands of migratory birds. The 900-acre closure area, managed as a wi",
+    "publishedAtRaw": "Mon, 21 Sep 2026 15:35:03 +0000",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": null,
+    "publishedAt": "2026-09-21T15:35:03.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": null,
+    "point": null,
+    "topics": [
+     "TRAFFIC",
+     "ENVIRONMENT"
+    ],
+    "fetchedAt": "2026-10-19T10:15:22.369Z",
+    "categories": [
+     "civic"
+    ],
+    "alsoReportedBy": []
+   },
+   {
+    "id": "nbc-bay-area-marin:4135682",
+    "sourceId": "nbc-bay-area-marin",
+    "source": "NBC Bay Area – Marin",
+    "category": "local",
+    "verification": "local_media",
+    "title": "1 of 2 canoers found dead in Tomales Bay identified as San Francisco man",
+    "link": "https://www.nbcbayarea.com/news/local/victims-canoers-found-dead-tomales-bay/4135682/",
+    "canonicalUrl": "https://nbcbayarea.com/news/local/victims-canoers-found-dead-tomales-bay/4135682",
+    "summary": "Authorities said Monday that one of two people who died after a canoeing trip in Tomales Bay over the weekend was a San Francisco resident. Casey Flynn Melia, 36, and a companion who hasn’t been identified left their campsite on the bay in a canoe just before midnight on Saturday, according to the M",
+    "publishedAtRaw": "Mon, Aug 31 2026 12:37:18 PM",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": "America/Los_Angeles",
+    "publishedAt": "2026-08-31T19:37:18.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": {
+     "name": "Tomales",
+     "slug": "tomales",
+     "source": "title-match"
+    },
+    "point": null,
+    "topics": [],
+    "fetchedAt": "2026-10-19T10:15:21.630Z",
+    "categories": [
+     "local"
+    ],
+    "alsoReportedBy": []
+   },
+   {
+    "id": "marin-ij-fire:https://www.marinij.com/?p=9144751",
+    "sourceId": "marin-ij-fire",
+    "source": "Marin IJ – Fire",
+    "category": "safety",
+    "verification": "local_media",
+    "title": "Marin Headlands fire capped at 3 acres",
+    "link": "https://www.marinij.com/2026/08/27/marin-headlands-fire-capped-at-3-acres/",
+    "canonicalUrl": "https://marinij.com/2026/08/27/marin-headlands-fire-capped-at-3-acres",
+    "summary": "The fire started just after noon on Thursday above Rodeo Beach in the Marin Headlands.",
+    "publishedAtRaw": "Thu, 27 Aug 2026 22:01:36 +0000",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": null,
+    "publishedAt": "2026-08-27T22:01:36.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": null,
+    "point": null,
+    "topics": [
+     "FIRE",
+     "CIVIC"
+    ],
+    "fetchedAt": "2026-10-19T10:15:22.850Z",
+    "categories": [
+     "safety"
+    ],
+    "alsoReportedBy": []
+   },
+   {
+    "id": "city-of-belvedere:https://www.cityofbelvedere.gov/?p=21563",
+    "sourceId": "city-of-belvedere",
+    "source": "City of Belvedere",
+    "category": "civic",
+    "verification": "official",
+    "title": "Update on the Beach Road Seawall Stabilization Project",
+    "link": "https://cityofbelvedere.gov/update-on-the-beach-road-seawall-stabilization-project/",
+    "canonicalUrl": "https://cityofbelvedere.gov/update-on-the-beach-road-seawall-stabilization-project",
+    "summary": "Activity at the Beach Road Stabilization Project construction site has ramped up over the past month. PG&E and Comcast have completed work to realign their communications, electric and gas pipelines, while MMWD has installed a temporary shut-off valve that will be activated when the project’s sheet ",
+    "publishedAtRaw": "Tue, 18 Aug 2026 21:15:20 +0000",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": null,
+    "publishedAt": "2026-08-18T21:15:20.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": null,
+    "point": null,
+    "topics": [
+     "TRAFFIC",
+     "ENVIRONMENT"
+    ],
+    "fetchedAt": "2026-10-19T10:15:22.369Z",
+    "categories": [
+     "civic"
+    ],
+    "alsoReportedBy": []
+   },
+   {
+    "id": "nbc-bay-area-marin:4116279",
+    "sourceId": "nbc-bay-area-marin",
+    "source": "NBC Bay Area – Marin",
+    "category": "local",
+    "verification": "local_media",
+    "title": "Meet the Bay Area artist crafting a national monument to service animals",
+    "link": "https://www.nbcbayarea.com/news/local/bay-area-artist-national-monument-service-animals/4116279/",
+    "canonicalUrl": "https://nbcbayarea.com/news/local/bay-area-artist-national-monument-service-animals/4116279",
+    "summary": "The pages of history are filled with the achievements of heroes. However, the pages concerning the contributions of the four-legged variety, from horses to dogs, remain a bit skimpy. Marin County sculptor Susan Bahary wants to change that. And her plan to create a large bronze memorial honoring serv",
+    "publishedAtRaw": "Mon, Jul 20 2026 05:24:17 PM",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": "America/Los_Angeles",
+    "publishedAt": "2026-07-21T00:24:17.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": null,
+    "point": null,
+    "topics": [
+     "CIVIC"
+    ],
+    "fetchedAt": "2026-10-19T10:15:21.630Z",
+    "categories": [
+     "local"
+    ],
+    "alsoReportedBy": []
+   },
+   {
+    "id": "nbc-bay-area-marin:4056450",
+    "sourceId": "nbc-bay-area-marin",
+    "source": "NBC Bay Area – Marin",
+    "category": "local",
+    "verification": "local_media",
+    "title": "Woman from Los Angeles dies after kayak capsizes in Tomales Bay",
+    "link": "https://www.nbcbayarea.com/news/local/kayak-capsizes-tomales-bay/4056450/",
+    "canonicalUrl": "https://nbcbayarea.com/news/local/kayak-capsizes-tomales-bay/4056450",
+    "summary": "A woman who died after her kayak capsized in Tomales Bay on Saturday has been identified as 37-year-old Brigitte Manspeaker of Los Angeles, according to the Sonoma County Sheriff’s Office. Manspeaker was transported to Santa Rosa Memorial Hospital on Saturday evening, where she was pronounced dead. ",
+    "publishedAtRaw": "Mon, Mar 23 2026 09:34:24 AM",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": "America/Los_Angeles",
+    "publishedAt": "2026-03-23T16:34:24.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": {
+     "name": "Tomales",
+     "slug": "tomales",
+     "source": "title-match"
+    },
+    "point": null,
+    "topics": [
+     "CIVIC"
+    ],
+    "fetchedAt": "2026-10-19T10:15:21.630Z",
+    "categories": [
+     "local"
+    ],
+    "alsoReportedBy": []
+   },
+   {
+    "id": "nbc-bay-area-marin:4007807",
+    "sourceId": "nbc-bay-area-marin",
+    "source": "NBC Bay Area – Marin",
+    "category": "local",
+    "verification": "local_media",
+    "title": "Parts of North Bay dealing with flooding caused by King Tides",
+    "link": "https://www.nbcbayarea.com/news/local/north-bay-king-tides-flooding/4007807/",
+    "canonicalUrl": "https://nbcbayarea.com/news/local/north-bay-king-tides-flooding/4007807",
+    "summary": "Parts of the North Bay were once again facing storm surge and King Tides on Sunday. Some areas were slowly drying out or trying to keep water away after days of rain, plus some flooding. On Sunday, in some low-lying areas in Marin County, water flooded roads and around businesses once again. Just ea",
+    "publishedAtRaw": "Sun, Jan 04 2026 05:20:37 PM",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": "America/Los_Angeles",
+    "publishedAt": "2026-01-05T01:20:37.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": null,
+    "point": null,
+    "topics": [
+     "WEATHER",
+     "ENVIRONMENT",
+     "CIVIC"
+    ],
+    "fetchedAt": "2026-10-19T10:15:21.630Z",
+    "categories": [
+     "local"
+    ],
+    "alsoReportedBy": []
+   },
+   {
+    "id": "nbc-bay-area-marin:4000892",
+    "sourceId": "nbc-bay-area-marin",
+    "source": "NBC Bay Area – Marin",
+    "category": "local",
+    "verification": "local_media",
+    "title": "Pair wanted for throwing rocks at seal at Marin County beach, authorities say",
+    "link": "https://www.nbcbayarea.com/news/local/pair-throwing-rocks-seal-point-reyes-national-seashore/4000892/",
+    "canonicalUrl": "https://nbcbayarea.com/news/local/pair-throwing-rocks-seal-point-reyes-national-seashore/4000892",
+    "summary": "Officials with the Point Reyes National Seashore in Marin County said Friday they are looking for two people reportedly seen throwing rocks toward an elephant seal earlier this month. On Dec. 6, video footage from the Chimney Rock livestream at Point Reyes National Seashore captured two people throw",
+    "publishedAtRaw": "Fri, Dec 19 2025 05:20:08 PM",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": "America/Los_Angeles",
+    "publishedAt": "2025-12-20T01:20:08.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": null,
+    "point": null,
+    "topics": [
+     "CIVIC"
+    ],
+    "fetchedAt": "2026-10-19T10:15:21.630Z",
+    "categories": [
+     "local"
+    ],
+    "alsoReportedBy": []
+   },
+   {
+    "id": "nbc-bay-area-marin:3880183",
+    "sourceId": "nbc-bay-area-marin",
+    "source": "NBC Bay Area – Marin",
+    "category": "local",
+    "verification": "local_media",
+    "title": "Westbound lanes on Richmond-San Rafael Bridge reopen after crash",
+    "link": "https://www.nbcbayarea.com/news/local/crash-richmond-san-rafael-bridge/3880183/",
+    "canonicalUrl": "https://nbcbayarea.com/news/local/crash-richmond-san-rafael-bridge/3880183",
+    "summary": "A multi-car crash that blocked all westbound lanes of the Richmond-San Rafael Bridge on Thursday has been cleared from the roadway, according to the California Highway Patrol. The crash was reported at about 10:20 a.m. midspan on the bridge, which is part of Interstate 580. About two hours later, CH",
+    "publishedAtRaw": "Thu, May 29 2025 11:11:27 AM",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": "America/Los_Angeles",
+    "publishedAt": "2025-05-29T18:11:27.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": {
+     "name": "San Rafael",
+     "slug": "san-rafael",
+     "source": "title-match"
+    },
+    "point": null,
+    "topics": [
+     "TRAFFIC"
+    ],
+    "fetchedAt": "2026-10-19T10:15:21.630Z",
+    "categories": [
+     "local"
+    ],
+    "alsoReportedBy": []
+   },
+   {
+    "id": "marin-ij-housing:https://www.marinij.com/?p=9178935",
+    "sourceId": "marin-ij-housing",
+    "source": "Marin IJ – Housing",
+    "category": "housing",
+    "verification": "local_media",
+    "title": "San Rafael selects developer for low-income housing project",
+    "link": "https://www.marinij.com/2026/10/18/san-rafael-selects-developer-for-low-income-housing-project/",
+    "canonicalUrl": "https://marinij.com/2026/10/18/san-rafael-selects-developer-for-low-income-housing-project",
+    "summary": "Eden Housing has proposed 111 apartments in five stories on the property at 350 Merrydale Road.",
+    "publishedAtRaw": "Sun, 18 Oct 2026 17:05:08 +0000",
+    "publishedAtSource": "rss:pubDate",
+    "publishedAtAssumedZone": null,
+    "publishedAt": "2026-10-18T17:05:08.000Z",
+    "publishedAtStatus": "valid",
+    "eventAt": null,
+    "eventAtSource": null,
+    "updatedAt": null,
+    "town": {
+     "name": "San Rafael",
+     "slug": "san-rafael",
+     "source": "title-match"
+    },
+    "point": null,
+    "topics": [
+     "TRAFFIC",
+     "HOUSING",
+     "ENVIRONMENT",
+     "CIVIC"
+    ],
+    "fetchedAt": "2026-10-19T10:15:22.999Z",
+    "categories": [
+     "housing"
+    ],
+    "alsoReportedBy": []
+   }
+  ]
+ }
+}

@@ -40,3 +40,6 @@ src/lib/server/__fixtures__/
 
 # Written by src/lib/server/news/snapshot-fixture.test.ts
 tests/e2e/fixtures/news-snapshot-producer.json
+
+# Today's real snapshot, and the golden written by src/lib/api/marin/news-snapshot.golden.test.ts
+src/lib/news/__fixtures__/
