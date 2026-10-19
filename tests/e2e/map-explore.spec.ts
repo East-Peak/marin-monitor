@@ -1,6 +1,6 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
 import { MILL_VALLEY, SOURCES, reportingSnapshot } from './fixtures/v2-reporting';
-import { mapCenter, settled } from './fixtures/v2-probe';
+import { mapCenter, pixelAtRest, settled } from './fixtures/v2-probe';
 import {
 	INSPECTION_CLICK_LAYERS,
 	TOWN_CLICK_LAYERS
@@ -275,6 +275,23 @@ test.describe('desktop 1440×900', () => {
 		await expect(drawer(page).locator('[data-in-view-count]')).toBeVisible();
 		await expect(drawer(page).locator('[data-detail]')).toHaveCount(0);
 		expect(search(page).get('sel')).toBeNull();
+	});
+
+	test('Hide and Show in view leave the map where it was (PANELSTEADY1)', async ({ page }) => {
+		await stub(page);
+		await explore(page, '/map');
+		const AT: [number, number] = [-122.531, 37.974];
+		const before = (await pixelAtRest(page, AT))!;
+		await drawer(page).getByRole('button', { name: 'Hide' }).click();
+		await expect(drawer(page).locator('[data-in-view-count]')).toHaveCount(0);
+		const hidden = (await pixelAtRest(page, AT))!;
+		expect(Math.abs(hidden.x - before.x)).toBeLessThanOrEqual(1);
+		expect(Math.abs(hidden.y - before.y)).toBeLessThanOrEqual(1);
+		await drawer(page).getByRole('button', { name: 'Show in view' }).click();
+		await expect(drawer(page).locator('[data-in-view-count]')).toBeVisible();
+		const shown = (await pixelAtRest(page, AT))!;
+		expect(Math.abs(shown.x - before.x)).toBeLessThanOrEqual(1);
+		expect(Math.abs(shown.y - before.y)).toBeLessThanOrEqual(1);
 	});
 
 	test('Esc goes back from a detail to the list, then back to the dashboard', async ({ page }) => {

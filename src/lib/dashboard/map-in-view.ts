@@ -76,6 +76,23 @@ export function visibleBounds(b: Bounds, mapWidthPx: number, panelPx: number): B
 	return { ...b, east: b.west + (b.east - b.west) * share };
 }
 
+/**
+ * The centre that keeps the geography still when the right padding changes (PANELSTEADY1).
+ * MapLibre holds the centre at the middle of the padded viewport, so a padding change slides
+ * the map by half the change; moving the centre by that half, in degrees, cancels it. Exact for
+ * the north-up map: longitude is linear in screen x, and nothing moves vertically.
+ */
+export function steadyCenter(
+	center: { lng: number; lat: number },
+	zoom: number,
+	fromRightPx: number,
+	toRightPx: number
+): { lng: number; lat: number } {
+	if (fromRightPx === toRightPx) return center;
+	const degPerPx = 360 / (512 * 2 ** zoom);
+	return { lng: center.lng + ((fromRightPx - toRightPx) / 2) * degPerPx, lat: center.lat };
+}
+
 const inside = (b: Bounds) => (i: InViewItem) =>
 	i.lon >= b.west && i.lon <= b.east && i.lat >= b.south && i.lat <= b.north;
 

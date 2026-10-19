@@ -8,7 +8,7 @@
 	import { getContext, onMount, untrack } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import type { GeoJSONSource, Map as MapLibreMap, MapMouseEvent } from 'maplibre-gl';
-	import type { Bounds } from '$lib/dashboard/map-in-view';
+	import { steadyCenter, type Bounds } from '$lib/dashboard/map-in-view';
 	import { featureSelection, SELECTABLE_SOURCES } from '$lib/dashboard/map-selection';
 	import { fitMarinOverview } from '$lib/components/map/map-overview';
 	import { get } from 'svelte/store';
@@ -100,6 +100,11 @@
 		};
 		// Off the map, nothing on it is hovered (CAMQUIET1: a camera's wedge goes quiet again).
 		const onLeave = () => onhover(null);
+		// A re-aimed flight ends its first leg with a moveend too: done only once nothing moves.
+		const onSettle = () =>
+			queueMicrotask(() => {
+				if (bound && !bound.isMoving()) flying = null;
+			});
 		// A style swap (theme) drops our source; put it back.
 		const onStyle = () => bound && ensureHighlight(bound);
 		const stop = mapReady.subscribe((ready) => {
@@ -114,6 +119,7 @@
 			m.setPitch(0);
 			ensureHighlight(m);
 			m.on('moveend', onMove);
+			m.on('moveend', onSettle);
 			m.on('resize', onMove);
 			m.on('mousemove', onPointer);
 			m.on('mouseout', onLeave);
@@ -125,6 +131,7 @@
 			if (timer) clearTimeout(timer);
 			if (!bound) return;
 			bound.off('moveend', onMove);
+			bound.off('moveend', onSettle);
 			bound.off('resize', onMove);
 			bound.off('mousemove', onPointer);
 			bound.off('mouseout', onLeave);
@@ -142,9 +149,24 @@
 	// The load-time county fit ran before the panel existed: refit once under the padding, so
 	// the east of Marin doesn't start under the list (a saved town is V2MapNav's to fly to).
 	let refitted = false;
+	let docked = false;
+	/** Our flight's target while it flies: a padding change re-aims it rather than stopping it. */
+	let flying: { center: [number, number]; zoom: number } | null = null;
 	$effect(() => {
 		if (!map) return;
-		map.setPadding({ top: 0, bottom: 0, left: 0, right: panelPx });
+		const padding = { top: 0, bottom: 0, left: 0, right: panelPx };
+		const from = map.getPadding().right;
+		// Any padding change stops a flight (setPadding is a jumpTo). Ours lands under the new
+		// padding instead; after the first dock, Hide and Show otherwise change only the padding,
+		// the geography staying on its pixels (PANELSTEADY1). The first dock keeps the bare
+		// change, so a URL's centre stays the padded centre it was written as.
+		if (from === panelPx) {
+			// Nothing to change, and nothing to stop.
+		} else if (flying && map.isMoving()) map.flyTo({ ...flying, padding, duration: 600 });
+		else if (!docked || map.isMoving()) map.setPadding(padding);
+		else
+			map.jumpTo({ padding, center: steadyCenter(map.getCenter(), map.getZoom(), from, panelPx) });
+		if (panelPx > 0) docked = true;
 		if (refit && !refitted && panelPx > 0) {
 			refitted = true;
 			if (get(townFilter) === null) fitMarinOverview(map, 0);
@@ -156,7 +178,9 @@
 		source?.setData(ring(highlight));
 	});
 	$effect(() => {
-		if (map && flyTo)
-			map.flyTo({ center: flyTo, zoom: Math.max(map.getZoom(), 13), duration: 600 });
+		if (!map || !flyTo) return;
+		const m = map;
+		flying = { center: flyTo, zoom: Math.max(m.getZoom(), 13) };
+		m.flyTo({ ...flying, duration: 600 });
 	});
 </script>

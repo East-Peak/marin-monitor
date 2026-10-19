@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { NewsItem } from '$lib/types';
-import { inView, inViewItems, selectionId, visibleBounds, type InViewItem } from './map-in-view';
+import {
+	inView,
+	inViewItems,
+	selectionId,
+	steadyCenter,
+	visibleBounds,
+	type InViewItem
+} from './map-in-view';
 
 const T0 = Date.UTC(2026, 9, 17, 15);
 const news = (over: Partial<NewsItem>): NewsItem => ({
@@ -42,6 +49,25 @@ describe('visibleBounds', () => {
 	it('a collapsed panel (0 px) or an unsized map keeps the full bounds', () => {
 		expect(visibleBounds(MARIN, 1200, 0)).toEqual(MARIN);
 		expect(visibleBounds(MARIN, 0, 360)).toEqual(MARIN);
+	});
+});
+
+describe('steadyCenter', () => {
+	// MapLibre's world is 512 px wide at zoom 0, so a pixel spans 360 / (512 · 2^z) degrees.
+	const degPerPx = (zoom: number) => 360 / (512 * 2 ** zoom);
+	const SR = { lng: -122.531, lat: 37.974 };
+	it.each([10, 12.5])('hiding the panel moves the centre east by half its width (z%s)', (zoom) => {
+		const c = steadyCenter(SR, zoom, 412, 0);
+		expect(c.lng).toBeCloseTo(SR.lng + 206 * degPerPx(zoom), 10);
+		expect(c.lat).toBe(SR.lat);
+	});
+	it.each([10, 12.5])('showing it again undoes the hide exactly (z%s)', (zoom) => {
+		const back = steadyCenter(steadyCenter(SR, zoom, 412, 0), zoom, 0, 412);
+		expect(back.lng).toBeCloseTo(SR.lng, 12);
+		expect(back.lat).toBe(SR.lat);
+	});
+	it('unchanged padding keeps the centre', () => {
+		expect(steadyCenter(SR, 11, 300, 300)).toEqual(SR);
 	});
 });
 

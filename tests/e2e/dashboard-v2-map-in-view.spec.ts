@@ -1,6 +1,6 @@
 import { expect, test, type Page, type Route } from '@playwright/test';
 import { MILL_VALLEY, SAN_RAFAEL, SOURCES, reportingSnapshot } from './fixtures/v2-reporting';
-import { camsOff, pinAt, probe, settled } from './fixtures/v2-probe';
+import { camsOff, pinAt, pixelAtRest, probe, settled } from './fixtures/v2-probe';
 
 /** MAPX2: the full-width map, its docked in-view list, and detail in the panel (no popup). */
 test.skip(({ baseURL }) => baseURL?.startsWith('https://') ?? false, 'stubbed');
@@ -88,6 +88,25 @@ async function open(page: Page, extra: (page: Page) => Promise<unknown> = async 
 }
 const panel = (page: Page) => page.getByRole('complementary', { name: 'In view' });
 const listed = (page: Page) => panel(page).locator('[data-in-view-row]');
+
+const padRight = (page: Page) =>
+	page.evaluate(
+		() =>
+			(
+				window as unknown as { __v2ProbeMap?: { getPadding(): { right: number } } }
+			).__v2ProbeMap?.getPadding().right ?? -1
+	);
+/** Once at rest, the point sits centred in the part of the map the panel leaves uncovered. */
+async function expectCentredLeftOfPanel(page: Page, at: [number, number]) {
+	const map = (await page.locator('.v2-map-canvas').boundingBox())!;
+	const list = (await panel(page).boundingBox())!;
+	await expect
+		.poll(async () => {
+			const p = (await pixelAtRest(page, at))!;
+			return Math.abs(p.x - (list.x - map.x) / 2);
+		})
+		.toBeLessThanOrEqual(2);
+}
 
 test.beforeEach(async ({ page }) => {
 	await page.clock.install({ time: T0 });
@@ -188,6 +207,65 @@ test.describe('desktop 1440×900', () => {
 		await expect(listed(page)).toHaveCount(0);
 		await panel(page).getByRole('button', { name: 'Show in view' }).click();
 		await expect(listed(page).first()).toBeVisible();
+	});
+
+	test('Hide and Show in view leave the map where it was (PANELSTEADY1)', async ({ page }) => {
+		await open(page);
+		const SAN_RAFAEL_AT: [number, number] = [-122.531, 37.974];
+		const before = (await pixelAtRest(page, SAN_RAFAEL_AT))!;
+		await panel(page).getByRole('button', { name: 'Hide' }).click();
+		await expect(listed(page)).toHaveCount(0);
+		await expect.poll(() => padRight(page)).toBe(0);
+		const hidden = (await pixelAtRest(page, SAN_RAFAEL_AT))!;
+		expect(Math.abs(hidden.x - before.x)).toBeLessThanOrEqual(1);
+		expect(Math.abs(hidden.y - before.y)).toBeLessThanOrEqual(1);
+		await panel(page).getByRole('button', { name: 'Show in view' }).click();
+		await expect(listed(page).first()).toBeVisible();
+		await expect.poll(() => padRight(page)).toBeGreaterThan(300);
+		const shown = (await pixelAtRest(page, SAN_RAFAEL_AT))!;
+		expect(Math.abs(shown.x - before.x)).toBeLessThanOrEqual(1);
+		expect(Math.abs(shown.y - before.y)).toBeLessThanOrEqual(1);
+	});
+
+	test('a pin clicked while the panel is hidden flies clear of the panel it opens (PANELSTEADY1)', async ({
+		page
+	}) => {
+		await open(page);
+		await panel(page).getByRole('button', { name: 'Hide' }).click();
+		await expect(listed(page)).toHaveCount(0);
+		await expect.poll(() => pinAt(page, '311-reports-layer'), { timeout: 20_000 }).not.toBeNull();
+		const at = (await pinAt(page, '311-reports-layer'))!;
+		await page.mouse.click(at.x, at.y);
+		await expect(panel(page).locator('[data-detail]')).toContainText('Deep pothole');
+		await expectCentredLeftOfPanel(page, [-122.49, 37.955]);
+	});
+
+	test('Hide during a flight still lands the flight on its item (PANELSTEADY1)', async ({
+		page
+	}) => {
+		await open(page);
+		await panel(page).locator('[data-in-view-row="quake:usgs-nc1"]').click();
+		await panel(page).getByRole('button', { name: 'Hide' }).click();
+		await expect.poll(() => padRight(page)).toBe(0);
+		const map = (await page.locator('.v2-map-canvas').boundingBox())!;
+		await expect
+			.poll(async () => {
+				const p = (await pixelAtRest(page, [-122.57, 38.15]))!;
+				return Math.abs(p.x - map.width / 2);
+			})
+			.toBeLessThanOrEqual(2);
+	});
+
+	test("after Hide and Show, a row's flight still lands clear of the panel (PANELSTEADY1)", async ({
+		page
+	}) => {
+		await open(page);
+		await panel(page).getByRole('button', { name: 'Hide' }).click();
+		await panel(page).getByRole('button', { name: 'Show in view' }).click();
+		const row = panel(page).locator('[data-in-view-row="quake:usgs-nc1"]');
+		await row.click();
+		await expect(panel(page).locator('[data-detail]')).toContainText('USGS');
+		await expectCentredLeftOfPanel(page, [-122.57, 38.15]);
 	});
 });
 

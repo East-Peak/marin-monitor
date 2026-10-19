@@ -13,6 +13,10 @@ All notable changes to Marin Monitor are documented here.
 - **Sheriff blotter · last 36 h**, counted on each town's dot ("San Anselmo · 2 sheriff reports"). The county publishes a hundred-block ("5XX The Alameda") but a much finer point; we show the hundred-block as text and never draw the point. Only property and public-place reports (theft, shoplifting, burglary, vandalism, stolen property, trespass) are shown; the rest are counted in the row as "not shown". A failed read says unavailable; a read kept after a failure says from when, and its reports still drop off after 36 hours.
 - **Venue points checked against their addresses.** The Tourist Club's point was 1.3 km off; five others were 80–150 m off.
 
+### Fixed — Hide and Show in view leave the map still
+
+- **The map no longer slides when the In view list hides or comes back.** Every town, pin and road stays where it was; the list and Layers counts still update to the newly uncovered (or covered) part of the map, and later fits and flights still land clear of the list. A pin picked while the list is hidden, or a Hide during a flight, still lands its item in the open part of the map.
+
 ### Fixed — A selected camera lets go
 
 - **Back to list, Esc, or a click on empty map now unselects** a camera or any other selected item. Its wedge goes quiet, the white ring goes away and the list comes back, on the dashboard map and on /map (where the link's `sel` is cleared too). A drag still keeps the selection. On a tablet the same three close the inspector; on a phone, the detail's Close does it.

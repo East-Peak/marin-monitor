@@ -32,6 +32,7 @@ type ProbeMap = {
 	project(c: number[]): { x: number; y: number };
 	getCanvas(): HTMLCanvasElement;
 	getCenter(): { lng: number; lat: number };
+	isMoving(): boolean;
 };
 /** Features in a GeoJSON source of the v2 map (-1 before the map exists). */
 export const sourceCount = (page: Page, id: string) =>
@@ -60,6 +61,21 @@ export const mapCenter = (page: Page) =>
 	page.evaluate(
 		() => (window as unknown as { __v2ProbeMap?: ProbeMap }).__v2ProbeMap?.getCenter() ?? null
 	);
+
+/** The canvas pixel of a fixed LngLat once the map is at rest (PANELSTEADY1), or null. */
+export async function pixelAtRest(page: Page, at: [number, number]) {
+	await expect
+		.poll(() =>
+			page.evaluate(
+				() => (window as unknown as { __v2ProbeMap?: ProbeMap }).__v2ProbeMap?.isMoving() ?? true
+			)
+		)
+		.toBe(false);
+	return page.evaluate((c) => {
+		const m = (window as unknown as { __v2ProbeMap?: ProbeMap }).__v2ProbeMap;
+		return m ? m.project(c) : null;
+	}, at);
+}
 
 /**
  * Saved prefs with the fire cameras off (MAPX4), for specs whose exact in-view lists and counts
