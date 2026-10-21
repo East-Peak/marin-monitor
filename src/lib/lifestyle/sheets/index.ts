@@ -2,5 +2,9 @@
 import type { HouseholdSheet } from '../model';
 import { defineSheet } from '../price';
 import { larkspur } from './larkspur';
+import { millvalley } from './millvalley';
+import { ross } from './ross';
 
-export const SHEETS: readonly HouseholdSheet[] = Object.freeze([larkspur].map(defineSheet));
+export const SHEETS: readonly HouseholdSheet[] = Object.freeze(
+	[larkspur, millvalley, ross].map(defineSheet)
+);

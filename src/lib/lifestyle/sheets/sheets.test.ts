@@ -74,6 +74,92 @@ const APPROVED: Record<string, Record<string, number>> = {
 		'belong.kqed': 8,
 		give: 292.67,
 		biz: 7788.5
+	},
+	millvalley: {
+		'home.pi': 5675.96,
+		'home.tax': 2133.62,
+		'home.ins': 650,
+		'home.upkeep': 1491.67,
+		'util.electric': 223.5,
+		'util.gas': 125.64,
+		'util.water': 199.26,
+		'util.garbage': 64.24,
+		'util.net': 240,
+		'health.prem': 570.83,
+		'health.oop': 416.67,
+		'car.ex90.lease': 913.69,
+		'car.ex90.charge': 73.6,
+		'car.ex90.reg': 81.58,
+		'car.ex90.ins': 203.33,
+		'car.ex90.maint': 48,
+		'car.modelY.lease': 715.53,
+		'car.modelY.charge': 64.4,
+		'car.modelY.reg': 61.16,
+		'car.modelY.ins': 203.33,
+		'car.modelY.maint': 42,
+		'food.groceries': 1785.2,
+		'food.clean': 157.48,
+		'food.coffee': 260,
+		'food.dining': 750,
+		'kids.foundation': 266.67,
+		'kids.soccer': 920.83,
+		'kids.tutor': 979,
+		'kids.camp': 982.5,
+		'kids.parties': 66.67,
+		'help.cleaner': 595.83,
+		'well.pilates': 478,
+		'well.therapy': 1430,
+		'well.fm': 458.33,
+		'well.retreat': 268,
+		'travel.ikon': 338,
+		'travel.skiweek': 350,
+		'travel.wellness': 1166.67,
+		'belong.kqed': 83.33,
+		'belong.gala': 833.33,
+		give: 376,
+		biz: 294.5
+	},
+	ross: {
+		'home.pi': 0,
+		'home.tax': 3558.05,
+		'home.ins': 1400,
+		'home.upkeep': 4000,
+		'util.electric': 396.4,
+		'util.gas': 251.28,
+		'util.water': 619.34,
+		'util.garbage': 96.92,
+		'util.net': 240,
+		'health.prem': 570.83,
+		'health.oop': 583.33,
+		'car.rangeRover.lease': 1373.79,
+		'car.rangeRover.fuel': 217.25,
+		'car.rangeRover.reg': 79.62,
+		'car.rangeRover.ins': 203.33,
+		'car.rangeRover.maint': 77,
+		'car.vintage': 900,
+		'food.groceries': 1723.6,
+		'food.club': 400,
+		'food.dining': 800,
+		'food.wine': 667.92,
+		'kids.tuition': 10254.17,
+		'kids.crew': 450,
+		'kids.squash': 400,
+		'kids.counsellor': 375,
+		'kids.camp': 995.42,
+		'help.gardener': 3949.38,
+		'help.housekeeper': 6026.16,
+		'help.manager': 9988.54,
+		'well.tennis': 520,
+		'well.physio': 350,
+		'travel.ikon': 443,
+		'travel.cabin': 2192.3,
+		'travel.xmas': 2500,
+		'belong.club': 1800,
+		'belong.galas': 2083.33,
+		'belong.kqed': 83.33,
+		give: 3000,
+		'give.gifts': 209.33,
+		biz: 0
 	}
 };
 
@@ -86,14 +172,26 @@ const APPROVED: Record<string, Record<string, number>> = {
  * Persona × Cited (LIFE0 showed 35% / 27% / 31%).
  */
 const TOTALS = {
-	larkspur: { burn: 42577.15, breakEven: 902662, within: 2, personaOnly: 0.117 }
+	larkspur: {
+		burn: 42577.15,
+		breakEven: 902662,
+		within: 2,
+		personaOnly: 0.117
+	},
+	millvalley: {
+		burn: 27038.37,
+		breakEven: 544766,
+		within: 50,
+		personaOnly: 0.241
+	},
+	ross: { burn: 63778.64, breakEven: 1395342, within: 2, personaOnly: 0.306 }
 } as const;
 
 const priced = (id: string) => priceSheet(SHEETS.find((s) => s.id === id)!, reads, NOW);
 
 describe('the approved household sheets', () => {
-	it('are the launch towns, each answering every coverage item', () => {
-		expect(SHEETS.map((s) => s.id)).toEqual(['larkspur']);
+	it('are the three launch towns, each answering every coverage item', () => {
+		expect(SHEETS.map((s) => s.id)).toEqual(['larkspur', 'millvalley', 'ross']);
 		for (const s of SHEETS) {
 			expect(Object.keys(s.coverage).sort()).toEqual([...COVERAGE_ITEMS].sort());
 			expect(Object.isFrozen(s)).toBe(true);
@@ -122,9 +220,9 @@ describe('the approved household sheets', () => {
 			expect(b.complete).toBe(true);
 			expect(Math.abs(b.burnMonthly - TOTALS[id].burn)).toBeLessThanOrEqual(0.2);
 			expect(b.personaShare.only).toBeCloseTo(TOTALS[id].personaOnly, 2);
-			expect(Math.abs(b.breakEven!.gross - TOTALS[id].breakEven)).toBeLessThanOrEqual(
-				TOTALS[id].within
-			);
+			// Mill Valley's 2026 interest now runs Jan–Dec 2026 (LIFE0's model took Feb 2026–Jan 2027).
+			const tolerance = id === 'millvalley' ? 50 : 2;
+			expect(Math.abs(b.breakEven!.gross - TOTALS[id].breakEven)).toBeLessThanOrEqual(tolerance);
 		}
 	);
 
@@ -142,6 +240,10 @@ describe('the approved household sheets', () => {
 
 	it('names no real business: the shops are kinds of shop, never a name', () => {
 		const biz = SHEETS.map((s) => s.lines.find((l) => l.section === 'business')!.label);
-		expect(biz).toEqual(['The Business: a downtown tinned-fish shop']);
+		expect(biz).toEqual([
+			'The Business: a downtown tinned-fish shop',
+			'The Business: the consultancy’s coworking desk',
+			'The Business'
+		]);
 	});
 });
