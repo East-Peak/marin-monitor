@@ -157,7 +157,7 @@ export function defineSheet(sheet: HouseholdSheet): HouseholdSheet {
 
 const endOfDay = (date: string) => Date.parse(`${date}T23:59:59.999Z`);
 
-function priceInput(name: string, spec: InputSpec, live: LiveReads, now: Date): PricedInput {
+export function priceInput(name: string, spec: InputSpec, live: LiveReads, now: Date): PricedInput {
 	switch (spec.class) {
 		case 'persona':
 			return {

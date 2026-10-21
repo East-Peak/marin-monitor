@@ -358,6 +358,29 @@ export const CITED = {
 		checkedAt: CHECKED,
 		recheckDays: 365
 	})(627.93, 'holiday gifts per person'),
+	// Anchors (Decision 5): pre-assigned, each with its units.
+	'census.marinMedianIncome': from({
+		url: 'https://data.census.gov/table/ACSDT1Y2024.B19013?g=050XX00US06041',
+		period: 'ACS 2024 1-year (2025 not yet published)',
+		scope: 'Marin County median household income, B19013 (MOE ±$11,094)',
+		checkedAt: CHECKED,
+		recheckDays: 365
+	})(147017, 'Marin median household income'),
+	'dir.minimumWage': from({
+		url: 'https://www.dir.ca.gov/dlse/minimum_wage.htm',
+		period: '2026',
+		scope: 'California statewide minimum wage',
+		checkedAt: CHECKED,
+		recheckDays: 365,
+		validUntil: '2026-12-31'
+	})(16.9, 'CA minimum wage, $/h'),
+	'cde.millValleyTeacher': from({
+		url: 'https://www.cde.ca.gov/ds/fd/cs/',
+		period: '2024-25 salary schedule',
+		scope: 'Mill Valley SD teacher, step 10, column 3 (CDE Form J-90, CDS 2165391)',
+		checkedAt: CHECKED,
+		recheckDays: 365
+	})(113029, 'a Mill Valley SD teacher at step 10'),
 	'coworking.millValley': from({
 		url: 'https://www.coworkingcafe.com/coworking-space/memberships/us/ca/mill-valley/',
 		period: 'directory, undated',
