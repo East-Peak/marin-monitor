@@ -99,14 +99,14 @@ export interface HealthReport {
 
 const DAY_MS = 86_400_000;
 /** Timestamps up to this far ahead of `now` are clock skew, not corruption. */
-const FUTURE_TOLERANCE_MS = 5 * 60_000;
+export const FUTURE_TOLERANCE_MS = 5 * 60_000;
 const ACCEPTABLE: ReadonlySet<SourceStatus> = new Set(['ok', 'reference']);
 
 /** Full ISO-8601 date-time with an explicit zone, e.g. 2026-09-28T12:00:00.000Z. */
 const ISO_DATE_TIME = /^(\d{4})-(\d{2})-(\d{2})T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/;
 
 /** Parse a strict ISO timestamp; `Date.parse` alone rolls 2026-02-30 over to March 2. */
-function parseTimestamp(value: unknown): number | null {
+export function parseTimestamp(value: unknown): number | null {
 	if (typeof value !== 'string') return null;
 	const match = ISO_DATE_TIME.exec(value);
 	if (!match) return null;

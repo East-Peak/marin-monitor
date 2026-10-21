@@ -156,6 +156,8 @@ async function main() {
 			leaseMonthly,
 			msrp,
 			scraped: hasLiveData,
+			// The lease itself was read (scraped also covers an MSRP-only read with the default lease).
+			leaseScraped: !!scraped.leaseMonthly,
 			source: hasLiveData ? 'rivian.com' : 'fallback'
 		},
 		{
