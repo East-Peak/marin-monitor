@@ -155,6 +155,29 @@ describe('runLifestyle', () => {
 		expect(doc.current.lastSuccessfulScrapeAt).toBe(NOW.toISOString());
 	});
 
+	it('still succeeds when a fresh run carries a labelled reference price', async () => {
+		const api = createMemoryBlobApi();
+		const grocery = BLOBS[LIVE_BLOBS.grocery] as { current: { items: object[] } };
+		const withRef = {
+			...BLOBS,
+			[LIVE_BLOBS.grocery]: {
+				current: {
+					...grocery.current,
+					items: grocery.current.items.map((i) =>
+						(i as { itemId: string }).itemId === 'marin-kombucha'
+							? { ...i, cheapestStore: "Driver's Market (ref)" }
+							: i
+					)
+				}
+			}
+		};
+		await runLifestyle(deps(api, { readInput: async (key) => withRef[key] ?? null }));
+		const doc = stored(api);
+		const mv = doc.current.budgets.find((b) => b.town === 'millvalley')!;
+		expect(mv.lines.find((l) => l.id === 'millvalley.food.clean')!.availability).toBe('stale');
+		expect(doc.current.lastSuccessfulScrapeAt).toBe(NOW.toISOString());
+	});
+
 	it('gives up on an input read that outlives the run’s deadline', async () => {
 		const api = createMemoryBlobApi();
 		const deadline = new AbortController();

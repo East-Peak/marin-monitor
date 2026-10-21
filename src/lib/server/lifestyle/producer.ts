@@ -12,7 +12,7 @@
  */
 import { priceAnchors, type Anchor } from '$lib/lifestyle/anchors';
 import { historyEntry, mergeHistory, type HistoryEntry } from '$lib/lifestyle/history';
-import type { HouseholdSheet, PricedBudget } from '$lib/lifestyle/model';
+import type { HouseholdSheet, LiveReads, PricedBudget } from '$lib/lifestyle/model';
 import { priceSheet } from '$lib/lifestyle/price';
 import { BlobWriteConflict, type BlobApi } from '$lib/server/news/snapshot-store';
 import { LIVE_BLOBS, readLive, type LiveBlobName, type RawLiveBlobs } from './live';
@@ -25,7 +25,7 @@ export interface LifestyleSnapshot {
 	readonly schema: 1;
 	readonly runId: string;
 	readonly computedAt: string;
-	/** The last run with every budget complete on fresh live reads: what /api/health watches. */
+	/** The last run with every budget complete on in-date live reads: what /api/health watches. */
 	readonly lastSuccessfulScrapeAt: string | null;
 	readonly anchors: readonly Anchor[];
 	readonly budgets: readonly PricedBudget[];
@@ -88,17 +88,22 @@ function parseDoc(text: string): LifestyleDoc | null {
 	}
 }
 
+const DAY_MS = 86_400_000;
+
 /**
- * A run succeeds when every budget is complete and every live input in it is
- * a fresh read. A cited figure past its re-check reads stale on the page; it
- * is a re-check chore, not a pipeline failure, so it does not hold this back.
+ * A run succeeds when every budget is complete and every live read is
+ * available and observed inside its own max age. A labelled fallback inside a
+ * fresh run (a grocery reference price) reads stale on its line but is not a
+ * pipeline failure; nor is a cited figure past its re-check, which is a
+ * re-check chore shown on the page.
  */
-const succeeded = (budgets: readonly PricedBudget[]) =>
-	budgets.every(
-		(b) =>
-			b.complete &&
-			b.lines.every((l) => l.inputs.every((i) => i.class !== 'live' || i.availability === 'ok'))
-	);
+function succeeded(budgets: readonly PricedBudget[], live: LiveReads, now: Date): boolean {
+	const fresh = Object.values(live).every((r) => {
+		const at = r.observedAt === null ? NaN : Date.parse(r.observedAt);
+		return r.availability !== 'unavailable' && now.getTime() - at <= r.maxAgeDays * DAY_MS;
+	});
+	return fresh && budgets.every((b) => b.complete);
+}
 
 async function readInputs(deps: RunDeps): Promise<RawLiveBlobs> {
 	const names = Object.keys(LIVE_BLOBS) as LiveBlobName[];
@@ -125,7 +130,7 @@ export async function runLifestyle(deps: RunDeps): Promise<RunResult> {
 		schema: 1,
 		runId: deps.runId,
 		computedAt,
-		lastSuccessfulScrapeAt: succeeded(budgets)
+		lastSuccessfulScrapeAt: succeeded(budgets, live, deps.now)
 			? computedAt
 			: (previous.current?.lastSuccessfulScrapeAt ?? null),
 		anchors: priceAnchors(deps.now),
