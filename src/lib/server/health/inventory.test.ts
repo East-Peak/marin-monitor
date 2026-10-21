@@ -20,6 +20,8 @@ const EXPECTED_SOURCES = [
 	'Fitness',
 	'Driveway',
 	'Composite Index',
+	// The Lifestyle Index, beside the old composite until LIFE2 switches consumers
+	'Lifestyle Index',
 	'Police Logs',
 	'Activity',
 	'311 (SeeClickFix)',

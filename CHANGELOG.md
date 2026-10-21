@@ -14,6 +14,7 @@ All notable changes to Marin Monitor are documented here.
 - **Our own reads, as the index's live prices, each dated by when it was really observed.** Gas averages only the station prices Google saw in the last two days; the cappuccino is the median of menus read live; a grocery price counts only from a run that itself succeeded; a lease counts only when the lease itself was read. A reference or default price is never treated as current. The first household, the Larkspur strivers, is in as config. Not shown yet.
 - **The other two households: Mill Valley wellness and Ross old money.** Each is a fictional household with modelled spending, priced line by line as approved; Ross's house is paid off, and Mill Valley's mortgage is its 2021 refinance. Not shown yet.
 - **A weekly run that prices all three households and keeps their history** (Mondays, after the old composite, on a new data file beside it; the old Marin Number is untouched). Each run also prices the three yardsticks: Marin's median household income, a full-time minimum-wage take-home and a Mill Valley teacher's salary, each marked gross or net, household or individual. History remembers which version of each sheet and method priced it, so a week-on-week move is only ever like for like. A run that cannot read its history writes nothing. Not shown yet.
+- **The site's health check now watches the Lifestyle Index**: it is healthy while a weekly run has priced every household on in-date reads within the last ten days.
 
 ## 2026-10-19
 

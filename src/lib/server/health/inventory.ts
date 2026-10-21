@@ -86,6 +86,15 @@ const ALL_SOURCES: readonly SourcePolicy[] = freeze<SourcePolicy>([
 		maxAgeDays: 10,
 		observedAt: 'content'
 	},
+	// Vercel cron weekly (/api/cron/sync-lifestyle). Observation = the last run in
+	// which every budget was complete on in-date live reads; any other run does not advance it.
+	{
+		name: 'Lifestyle Index',
+		blobKey: 'lifestyle/v1/index.json',
+		cadence: 'weekly',
+		maxAgeDays: 10,
+		observedAt: 'content'
+	},
 	// Vercel cron 4×/day + local LaunchAgent.
 	{
 		name: 'Police Logs',
