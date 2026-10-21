@@ -4,6 +4,12 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-10-20
+
+### Added — The Lifestyle Index: its tax engine (not shown yet)
+
+- **A 2026 federal and California tax engine for W-2 wages**, and a solver for the pre-tax salary a household needs to break even. Federal and California are computed separately, each with its own itemised rules (the SALT cap and its phase-down, the mortgage-interest limits, the gift floor, §68, California's itemised limitation and credit phase-outs, the 1% tax over $1 million, SDI with no wage cap). It is checked against ten hand-worked reference cases to within $5 a line. Nothing on the site uses it yet.
+
 ## 2026-10-19
 
 ### Added — Stories placed by the place in their headline
