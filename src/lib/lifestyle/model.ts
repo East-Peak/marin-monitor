@@ -87,6 +87,8 @@ export interface LiveRead {
 	readonly value: number | null;
 	/** Upstream observation time (our last successful read), never a blob write time. */
 	readonly observedAt: string | null;
+	/** The source's own max age: past it, a read is stale wherever it is priced. */
+	readonly maxAgeDays: number;
 	readonly source: string;
 	/** Why it is not `ok`, when it isn't. */
 	readonly reason?: string;
