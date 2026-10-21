@@ -158,7 +158,7 @@ describe('runLifestyle', () => {
 	it('still succeeds when a fresh run carries a labelled reference price', async () => {
 		const api = createMemoryBlobApi();
 		const grocery = BLOBS[LIVE_BLOBS.grocery] as { current: { items: object[] } };
-		const withRef = {
+		const withRef: Record<string, unknown> = {
 			...BLOBS,
 			[LIVE_BLOBS.grocery]: {
 				current: {
