@@ -242,7 +242,7 @@
 		if (!ready) return null;
 		if (id === 'news') return newsCivic.status;
 		if (id === 'events') return events.status;
-		if (id === 'cost' && desktop) return cost.status;
+		if (id === 'cost') return desktop ? cost.status : cost.lifestyleStatus;
 		return null;
 	}
 	function metaOf(id: string): string | null {

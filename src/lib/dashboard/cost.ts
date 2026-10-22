@@ -300,6 +300,8 @@ export interface CostView {
 	composite: Measured<CompositeView>;
 	/** Null while the flag is off. */
 	lifestyle: Measured<LifestyleCard> | null;
+	/** The phone's Cost section is the Lifestyle card alone: its status is that read's. Null while off. */
+	lifestyleStatus: SectionPresentation | null;
 	gas: Measured<GasView>;
 	tiles: SubIndexTile[];
 	status: SectionPresentation;
@@ -501,6 +503,16 @@ export function costView(input: CostInput): CostView {
 	return {
 		composite,
 		lifestyle,
+		lifestyleStatus: lifestyle
+			? presentSection(
+					[entries.lifestyle],
+					{
+						total: lifestyle.kind === 'value' ? 1 : 0,
+						matching: lifestyle.kind === 'value' ? 1 : 0
+					},
+					now
+				)
+			: null,
 		gas,
 		tiles,
 		status: presentSection(all, { total: valued, matching: valued }, now)

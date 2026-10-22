@@ -6,6 +6,10 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-22
 
+### Fixed — The Lifestyle Index's display, before it goes live
+
+- **Freshness is never overstated**: with no weekly run that priced every household on in-date reads, the card's source line says so without a green dot, and the TV says its numbers may be out of date and how many lines read stale. On the phone, the Cost section's header carries the card's own status. A household page shows the town's median with where it was published and when, and no longer calls it today's.
+
 ### Added — The Lifestyle Index's household pages and TV screen (off in production)
 
 - **`/cost/larkspur`, `/cost/mill-valley`, `/cost/ross`: each fictional household's whole modelled budget.** Who they are; the break-even worked back through 2026 federal and California tax, line by line, to take-home, spending and savings; every section and line, and under each line its inputs: what each is (live, cited or assumed), its figure, where it was published or read, and when. A stale input says so and why; an incomplete budget hides its break-even and names what's missing; a budget no weekly run has refreshed in ten days says it may be out of date. Not modelled, and the method, are listed.

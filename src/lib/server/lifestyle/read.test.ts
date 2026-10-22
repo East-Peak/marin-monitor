@@ -17,7 +17,11 @@ const budget = (town: string) =>
 		sections: { housing: 100 },
 		burnMonthly: 100,
 		complete: true,
-		breakEven: { gross: 2000, need: 1200, taxes: {} },
+		breakEven: {
+			gross: 2000,
+			need: 1200,
+			taxes: { takeHome: 1200, federal: {}, california: {}, payroll: {} }
+		},
 		personaShare: { only: 0.1, any: 0.5 }
 	}) as unknown as PricedBudget;
 const snapshot = (budgets: PricedBudget[]): LifestyleSnapshot => ({
@@ -77,6 +81,25 @@ describe('where the index is read from', () => {
 			api(JSON.stringify({ current: { ...snapshot([]), budgets } }));
 		expect(await readLifestyle(withBudgets([null]), signal)).toBeNull();
 		expect(await readLifestyle(withBudgets([{ town: 'ross' }]), signal)).toBeNull();
+		// Codex LIFE2-2: and their nested fields.
+		const line = (over: object) => ({
+			id: 'x',
+			label: 'x',
+			section: 'housing',
+			classes: ['persona'],
+			availability: 'ok',
+			monthly: 1,
+			inputs: [],
+			...over
+		});
+		const withLines = (lines: unknown[]) => withBudgets([{ ...budget('ross'), lines }]);
+		expect(await readLifestyle(withLines([line({})]), signal)).not.toBeNull();
+		expect(await readLifestyle(withLines([line({ inputs: [null] })]), signal)).toBeNull();
+		expect(await readLifestyle(withLines([line({ classes: undefined })]), signal)).toBeNull();
+		expect(await readLifestyle(withLines([line({ monthly: 'x' })]), signal)).toBeNull();
+		expect(
+			await readLifestyle(withBudgets([{ ...budget('ross'), burnMonthly: 'x' }]), signal)
+		).toBeNull();
 		const noTimes = { ...snapshot([budget('ross')]), computedAt: undefined };
 		expect(await readLifestyle(api(JSON.stringify({ current: noTimes })), signal)).toBeNull();
 	});

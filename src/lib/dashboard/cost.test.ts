@@ -356,6 +356,20 @@ describe('cost model', () => {
 		expect(view.status.failing.map((f) => f.name)).not.toContain('Composite index');
 	});
 
+	it('gives the phone’s Lifestyle-only Cost section a status of its own read', () => {
+		const on = (fetch: DatasetFetch) =>
+			costView(
+				input({
+					lifestyleOn: true,
+					outcomes: { [COST_DATASETS.lifestyle.id]: fetch, gas: failed }
+				})
+			).lifestyleStatus!;
+		expect(on(failed).state).not.toBe('ok');
+		expect(on(failed).failing.map((f) => f.name)).toEqual(['Lifestyle index']);
+		expect(on(live()).failing).toEqual([]);
+		expect(costView(input()).lifestyleStatus).toBeNull();
+	});
+
 	it('with it off, nothing reads the Lifestyle Index', () => {
 		const view = costView(input({ outcomes: { [COST_DATASETS.lifestyle.id]: failed } }));
 		expect(view.lifestyle).toBeNull();

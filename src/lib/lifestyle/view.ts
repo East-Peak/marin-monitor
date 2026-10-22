@@ -204,20 +204,24 @@ export function householdPage(b: PricedBudget, sheet: HouseholdSheet): Household
 
 const NUMBER = new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 });
 
-/** The numbers written in a label ("$1,800/mo", "+0.121%", "20% down" → 1800, 0.121, 20). */
+/** The numbers written in a label, each with whether it is written as a percentage. */
 const numbersIn = (label: string) =>
-	(label.match(/\d[\d,]*(?:\.\d+)?/g) ?? []).map((n) => Number(n.replace(/,/g, '')));
+	[...label.matchAll(/\d[\d,]*(?:\.\d+)?(%?)/g)].map((m) => ({
+		n: Number(m[0].replace(/[,%]/g, '')),
+		pct: m[1] === '%'
+	}));
+const same = (a: number, b: number) => Math.abs(a - b) <= 1e-9 * Math.max(1, Math.abs(a));
 
 /**
  * An input's label, and its value unless the label already states it: as itself, as a
- * percentage (0.02 → "2%"), or as its complement (0.8 → "20% down").
+ * fraction written as a percentage with "%" (0.02 → "2%"), or as a down payment's complement (0.8 → "20% down").
  */
 export function formatInput(i: Pick<PricedInput, 'label' | 'class' | 'value'>): string {
 	if (i.value === null) return i.label;
 	const v = i.value;
-	const forms = [v, v * 100, ...(v > 0 && v < 1 ? [(1 - v) * 100] : [])];
-	const stated = numbersIn(i.label).some((n) =>
-		forms.some((f) => Math.abs(n - f) < 1e-9 * Math.max(1, n))
+	const down = /\bdown\b/i.test(i.label);
+	const stated = numbersIn(i.label).some(
+		({ n, pct }) => same(n, v) || (pct && (same(n, v * 100) || (down && same(n, (1 - v) * 100))))
 	);
 	return stated ? i.label : `${i.label} · ${NUMBER.format(v)}`;
 }

@@ -210,6 +210,11 @@ describe('an input as shown', () => {
 			'+0.121% bonds'
 		);
 		expect(formatInput({ label: 'rate 6.99%', class: 'persona', value: 6.99 })).toBe('rate 6.99%');
+		// Codex LIFE2-2: a percentage must be written as one; a complement only as a down payment.
+		expect(formatInput({ label: '2024 price', class: 'cited', value: 20.24 })).toBe(
+			'2024 price · 20.24'
+		);
+		expect(formatInput({ label: '2% rate', class: 'persona', value: 0.98 })).toBe('2% rate · 0.98');
 		expect(formatInput({ label: '$1,800/mo (unpublished)', class: 'persona', value: 1800 })).toBe(
 			'$1,800/mo (unpublished)'
 		);

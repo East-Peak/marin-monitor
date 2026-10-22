@@ -2,12 +2,19 @@
 <script lang="ts">
 	import ClassChips from '$lib/components/lifestyle/ClassChips.svelte';
 	import SectionStack from '$lib/components/lifestyle/SectionStack.svelte';
+	import { COST_DATASETS } from '$lib/dashboard/cost';
 	import { dailySlug, FICTION_LABEL, SECTION_COLOR, type LifestyleCard } from '$lib/lifestyle/view';
 
 	let { data }: { data: LifestyleCard | null } = $props();
 
 	const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
 	const pct = (share: number) => (share < 0.005 ? '<1%' : `${Math.round(share * 100)}%`);
+	const MAX_AGE_MS = COST_DATASETS.lifestyle.maxAgeDays * 86_400_000;
+	/** No run has priced every household on in-date reads within the index's max age. */
+	const outOfDate = $derived.by(() => {
+		const at = Date.parse(data?.lastSuccessfulScrapeAt ?? '');
+		return !(Date.now() - at <= MAX_AGE_MS);
+	});
 	const h = $derived.by(() => {
 		const all = data?.households ?? [];
 		if (!all.length) return null;
@@ -32,6 +39,13 @@
 			<span class="text-base font-medium text-amber-400" data-fiction>● {FICTION_LABEL}</span>
 		</div>
 
+		{#if outOfDate || h.stale}
+			<p class="text-lg font-medium text-amber-400 shrink-0" data-tv-stale>
+				{#if outOfDate}No weekly run has priced every household on in-date reads in ten days: these
+					numbers may be out of date.{/if}
+				{#if h.stale}{h.stale} {h.stale === 1 ? 'line reads' : 'lines read'} stale.{/if}
+			</p>
+		{/if}
 		<div class="flex-1 grid grid-cols-2 gap-6 min-h-0">
 			<div class="flex flex-col gap-4 min-w-0">
 				{#if h.complete && h.breakEven !== null}

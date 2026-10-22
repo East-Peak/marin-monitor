@@ -10,6 +10,9 @@
 	let { data }: { data: PageData } = $props();
 	const p = $derived(data.page);
 	const h = $derived(p?.summary ?? null);
+	/** Today's town median: context only, with its own provenance. */
+	const t = $derived(p?.marketTracker ?? null);
+	const trackerLink = $derived(t?.source ? sourceLink(t.source) : null);
 
 	const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
 	const money = (n: number | null) => (n === null ? '—' : usd(n));
@@ -56,10 +59,20 @@
 					<span class="fiction" data-fiction data-text-role="meta">{FICTION_LABEL}</span>
 					<h1 data-text-role="section-title">The {h.name}</h1>
 					<p data-text-role="body">{p.who}. Savings: {p.savingsNote}.</p>
-					<p class="meta" data-text-role="meta">
-						Today’s {h.town} median, {money(p.marketTracker.value)} ({p.marketTracker.label}), is
-						context only: it never reprices this household’s home.
-					</p>
+					{#if t}
+						<p class="meta tracker" data-market-tracker data-text-role="meta">
+							<ClassChips classes={[t.class]} />
+							<span>
+								The {h.town} median, {money(t.value)} ({t.label}){#if trackerLink}, <a
+										href={trackerLink.href}
+										rel="noopener noreferrer"
+										target="_blank">{trackerLink.host}</a
+									>{/if}{#if when(t)}, {when(t)}{/if}{#if t.availability !== 'ok'}<span class="flag"
+										>, {t.availability}{t.reason ? `: ${t.reason}` : ''}</span
+									>{/if}, is context only: it never reprices this household’s home.
+							</span>
+						</p>
+					{/if}
 				</div>
 				<section class="equation" aria-label="Break-even income">
 					<p class="meta" data-text-role="meta">
@@ -241,6 +254,14 @@
 	summary:focus-visible {
 		outline: 2px solid var(--accent);
 		outline-offset: 2px;
+	}
+	.tracker {
+		display: flex;
+		gap: 6px;
+		align-items: baseline;
+	}
+	.tracker > :global(.chips) {
+		margin-left: 0;
 	}
 	.towns {
 		display: inline-flex;

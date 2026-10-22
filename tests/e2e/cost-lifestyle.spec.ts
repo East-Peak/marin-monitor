@@ -64,6 +64,11 @@ for (const [label, viewport] of [
 				'cited persona'
 			);
 
+			// No run in the seed priced every household on in-date reads: never a green dot.
+			const st = c.locator('[data-card-source] [data-source-state]');
+			await expect(st).not.toHaveClass(/\bok\b/);
+			await expect(st).toContainText('no complete run on in-date reads yet');
+
 			await c.locator('[data-town="mill-valley"]').click();
 			await expect(c.locator('[data-break-even]')).toContainText(breakEven('millvalley'));
 			await expect(c.locator('[data-card-source]')).toContainText('2 lines read stale');
@@ -97,6 +102,12 @@ for (const [label, viewport] of [
 				/^https:\/\/redfin-public-data/
 			);
 			await expect(price).toContainText('checked');
+			// The market tracker carries its own provenance and is never called today’s.
+			const tracker = page.locator('[data-market-tracker]');
+			await expect(tracker.locator('[data-classes]')).toHaveAttribute('data-classes', 'cited');
+			await expect(tracker.getByRole('link')).toHaveAttribute('href', /^https:\/\//);
+			await expect(tracker).toContainText('checked');
+			await expect(tracker).not.toContainText('Today');
 			const rate = pi.locator('[data-input="ratePct"]');
 			await expect(rate).toHaveAttribute('data-class', 'persona');
 			// A live input says when its source saw it.
@@ -162,6 +173,8 @@ test.describe('the TV', () => {
 		await expect(hero).toBeVisible({ timeout: 20_000 });
 		await expect(hero.locator('[data-fiction]')).toContainText(FICTION);
 		await expect(hero.locator('[data-break-even], [data-burn]')).toBeVisible();
+		// The seed has no successful run: the TV says its numbers may be out of date.
+		await expect(hero.locator('[data-tv-stale]')).toContainText('may be out of date');
 		expect(await composite).toBeNull();
 	});
 });

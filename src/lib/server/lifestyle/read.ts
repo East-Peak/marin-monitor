@@ -40,19 +40,59 @@ export function lifestyleBlobApi(
 const isObject = (v: unknown): v is Record<string, unknown> =>
 	typeof v === 'object' && v !== null && !Array.isArray(v);
 
-/** The fields the card and the household page read from a budget. */
-function isBudget(b: unknown): boolean {
+const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+const isStr = (v: unknown): v is string => typeof v === 'string';
+
+function isInput(i: unknown): boolean {
 	return (
-		isObject(b) &&
-		typeof b.town === 'string' &&
-		typeof b.pricedAt === 'string' &&
-		typeof b.burnMonthly === 'number' &&
+		isObject(i) &&
+		isStr(i.name) &&
+		isStr(i.label) &&
+		isStr(i.class) &&
+		isStr(i.availability) &&
+		(i.value === null || isNum(i.value))
+	);
+}
+
+function isLine(l: unknown): boolean {
+	return (
+		isObject(l) &&
+		isStr(l.id) &&
+		isStr(l.label) &&
+		isStr(l.section) &&
+		isStr(l.availability) &&
+		Array.isArray(l.classes) &&
+		l.classes.every(isStr) &&
+		(l.monthly === null || isNum(l.monthly)) &&
+		Array.isArray(l.inputs) &&
+		l.inputs.every(isInput)
+	);
+}
+
+/** The fields the card and the household page read from a budget, nested ones included. */
+function isBudget(b: unknown): boolean {
+	if (!isObject(b)) return false;
+	const be = b.breakEven;
+	const taxes = isObject(be) ? be.taxes : null;
+	return (
+		isStr(b.town) &&
+		isStr(b.pricedAt) &&
+		isNum(b.burnMonthly) &&
 		typeof b.complete === 'boolean' &&
 		Array.isArray(b.lines) &&
-		b.lines.every((l) => isObject(l) && typeof l.id === 'string' && Array.isArray(l.inputs)) &&
+		b.lines.every(isLine) &&
 		isObject(b.sections) &&
+		Object.values(b.sections).every(isNum) &&
 		isObject(b.personaShare) &&
-		(b.breakEven === null || isObject(b.breakEven))
+		isNum(b.personaShare.only) &&
+		(be === null ||
+			(isObject(be) &&
+				isNum(be.gross) &&
+				isObject(taxes) &&
+				isNum(taxes.takeHome) &&
+				isObject(taxes.federal) &&
+				isObject(taxes.california) &&
+				isObject(taxes.payroll)))
 	);
 }
 

@@ -112,7 +112,19 @@
 	{:else}
 		<p class="empty" data-text-role="body">{why(view)}</p>
 	{/if}
-	<CardSource lines={[{ measured: view, verb: 'priced' }]} {now} {notes} />
+	<!-- Its time is the last run that priced every household on in-date reads: none yet is never green. -->
+	<CardSource
+		lines={[
+			{
+				measured: view,
+				verb: 'priced',
+				untimed: 'no complete run on in-date reads yet',
+				muted: view.kind === 'value' && view.observedAt === null
+			}
+		]}
+		{now}
+		{notes}
+	/>
 </article>
 
 <style>
