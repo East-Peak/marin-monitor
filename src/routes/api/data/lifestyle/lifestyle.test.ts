@@ -28,7 +28,16 @@ await writeFile(
 					burnMonthly: 1,
 					complete: false,
 					breakEven: null,
-					personaShare: { only: 0, any: 0 }
+					personaShare: { only: 0, any: 0 },
+					marketTracker: {
+						name: 'marketTracker',
+						label: 'Ross SFR median',
+						class: 'cited',
+						value: 1,
+						availability: 'ok',
+						asOf: '2026-10-20',
+						source: null
+					}
 				}
 			]
 		},

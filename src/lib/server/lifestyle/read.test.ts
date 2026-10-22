@@ -20,9 +20,25 @@ const budget = (town: string) =>
 		breakEven: {
 			gross: 2000,
 			need: 1200,
-			taxes: { takeHome: 1200, federal: {}, california: {}, payroll: {} }
+			taxes: {
+				gross: 2000,
+				agi: 2000,
+				takeHome: 1200,
+				federal: { tax: 500 },
+				california: { tax: 200 },
+				payroll: { socialSecurity: 50, medicare: 30, sdi: 20 }
+			}
 		},
-		personaShare: { only: 0.1, any: 0.5 }
+		personaShare: { only: 0.1, any: 0.5 },
+		marketTracker: {
+			name: 'marketTracker',
+			label: 'median',
+			class: 'cited',
+			value: 1,
+			availability: 'ok',
+			asOf: '2026-10-20',
+			source: 'https://example.com/ (May 2026)'
+		}
 	}) as unknown as PricedBudget;
 const snapshot = (budgets: PricedBudget[]): LifestyleSnapshot => ({
 	schema: 1,
@@ -97,6 +113,35 @@ describe('where the index is read from', () => {
 		expect(await readLifestyle(withLines([line({ inputs: [null] })]), signal)).toBeNull();
 		expect(await readLifestyle(withLines([line({ classes: undefined })]), signal)).toBeNull();
 		expect(await readLifestyle(withLines([line({ monthly: 'x' })]), signal)).toBeNull();
+		// Codex LIFE2-4: classes, provenance, the market tracker and the equation's numbers.
+		const input = (over: object) => ({
+			name: 'n',
+			label: 'l',
+			class: 'cited',
+			value: 1,
+			availability: 'ok',
+			asOf: null,
+			source: null,
+			...over
+		});
+		expect(await readLifestyle(withLines([line({ inputs: [input({})] })]), signal)).not.toBeNull();
+		for (const bad of [{ class: 'bogus' }, { source: 42 }, { asOf: 7 }, { availability: 'fine' }])
+			expect(await readLifestyle(withLines([line({ inputs: [input(bad)] })]), signal)).toBeNull();
+		expect(await readLifestyle(withLines([line({ classes: ['bogus'] })]), signal)).toBeNull();
+		const b = budget('ross') as unknown as Record<string, unknown>;
+		expect(await readLifestyle(withBudgets([{ ...b, marketTracker: null }]), signal)).toBeNull();
+		const taxes = (b.breakEven as { taxes: Record<string, unknown> }).taxes;
+		for (const t of [
+			{ ...taxes, federal: {} },
+			{ ...taxes, payroll: { socialSecurity: 1 } },
+			{ ...taxes, agi: undefined }
+		])
+			expect(
+				await readLifestyle(
+					withBudgets([{ ...b, breakEven: { ...(b.breakEven as object), taxes: t } }]),
+					signal
+				)
+			).toBeNull();
 		expect(
 			await readLifestyle(withBudgets([{ ...budget('ross'), burnMonthly: 'x' }]), signal)
 		).toBeNull();

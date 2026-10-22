@@ -43,14 +43,39 @@ const isObject = (v: unknown): v is Record<string, unknown> =>
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const isStr = (v: unknown): v is string => typeof v === 'string';
 
+const CLASSES: ReadonlySet<unknown> = new Set(['live', 'cited', 'persona']);
+const AVAILABILITY: ReadonlySet<unknown> = new Set(['ok', 'stale', 'unavailable']);
+const isStrOrNull = (v: unknown) => v === null || isStr(v);
+
 function isInput(i: unknown): boolean {
 	return (
 		isObject(i) &&
 		isStr(i.name) &&
 		isStr(i.label) &&
-		isStr(i.class) &&
-		isStr(i.availability) &&
-		(i.value === null || isNum(i.value))
+		CLASSES.has(i.class) &&
+		AVAILABILITY.has(i.availability) &&
+		(i.value === null || isNum(i.value)) &&
+		isStrOrNull(i.asOf) &&
+		isStrOrNull(i.source) &&
+		(i.reason === undefined || isStr(i.reason))
+	);
+}
+
+/** Every number the break-even equation reads. */
+function isTaxes(t: unknown): boolean {
+	return (
+		isObject(t) &&
+		isNum(t.gross) &&
+		isNum(t.agi) &&
+		isNum(t.takeHome) &&
+		isObject(t.federal) &&
+		isNum(t.federal.tax) &&
+		isObject(t.california) &&
+		isNum(t.california.tax) &&
+		isObject(t.payroll) &&
+		isNum(t.payroll.socialSecurity) &&
+		isNum(t.payroll.medicare) &&
+		isNum(t.payroll.sdi)
 	);
 }
 
@@ -60,9 +85,9 @@ function isLine(l: unknown): boolean {
 		isStr(l.id) &&
 		isStr(l.label) &&
 		isStr(l.section) &&
-		isStr(l.availability) &&
+		AVAILABILITY.has(l.availability) &&
 		Array.isArray(l.classes) &&
-		l.classes.every(isStr) &&
+		l.classes.every((c) => CLASSES.has(c)) &&
 		(l.monthly === null || isNum(l.monthly)) &&
 		Array.isArray(l.inputs) &&
 		l.inputs.every(isInput)
@@ -73,7 +98,6 @@ function isLine(l: unknown): boolean {
 function isBudget(b: unknown): boolean {
 	if (!isObject(b)) return false;
 	const be = b.breakEven;
-	const taxes = isObject(be) ? be.taxes : null;
 	return (
 		isStr(b.town) &&
 		isStr(b.pricedAt) &&
@@ -85,14 +109,8 @@ function isBudget(b: unknown): boolean {
 		Object.values(b.sections).every(isNum) &&
 		isObject(b.personaShare) &&
 		isNum(b.personaShare.only) &&
-		(be === null ||
-			(isObject(be) &&
-				isNum(be.gross) &&
-				isObject(taxes) &&
-				isNum(taxes.takeHome) &&
-				isObject(taxes.federal) &&
-				isObject(taxes.california) &&
-				isObject(taxes.payroll)))
+		isInput(b.marketTracker) &&
+		(be === null || (isObject(be) && isNum(be.gross) && isTaxes(be.taxes)))
 	);
 }
 
