@@ -40,6 +40,22 @@ export function lifestyleBlobApi(
 const isObject = (v: unknown): v is Record<string, unknown> =>
 	typeof v === 'object' && v !== null && !Array.isArray(v);
 
+/** The fields the card and the household page read from a budget. */
+function isBudget(b: unknown): boolean {
+	return (
+		isObject(b) &&
+		typeof b.town === 'string' &&
+		typeof b.pricedAt === 'string' &&
+		typeof b.burnMonthly === 'number' &&
+		typeof b.complete === 'boolean' &&
+		Array.isArray(b.lines) &&
+		b.lines.every((l) => isObject(l) && typeof l.id === 'string' && Array.isArray(l.inputs)) &&
+		isObject(b.sections) &&
+		isObject(b.personaShare) &&
+		(b.breakEven === null || isObject(b.breakEven))
+	);
+}
+
 /** The current snapshot, or null: a missing, failed or malformed read is never an empty index. */
 export async function readLifestyle(
 	api: BlobApi,
@@ -50,7 +66,9 @@ export async function readLifestyle(
 		if (!stored) return null;
 		const doc = JSON.parse(stored.text) as unknown;
 		const current = isObject(doc) ? doc.current : null;
-		if (!isObject(current) || current.schema !== 1 || !Array.isArray(current.budgets)) return null;
+		if (!isObject(current) || current.schema !== 1 || typeof current.computedAt !== 'string')
+			return null;
+		if (!Array.isArray(current.budgets) || !current.budgets.every(isBudget)) return null;
 		return current as unknown as LifestyleSnapshot;
 	} catch {
 		return null;

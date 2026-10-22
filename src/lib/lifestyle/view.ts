@@ -87,13 +87,13 @@ export interface LifestyleCard {
 	readonly households: readonly HouseholdSummary[];
 }
 
+/** Every section with a line, even one none of whose lines could be priced (it spends 0). */
 function sectionShares(b: PricedBudget): SectionShare[] {
-	return Object.entries(b.sections)
-		.map(([section, monthly]) => ({
-			section: section as Section,
-			monthly: monthly as number,
-			share: b.burnMonthly > 0 ? (monthly as number) / b.burnMonthly : 0
-		}))
+	return [...new Set(b.lines.map((l) => l.section))]
+		.map((section) => {
+			const monthly = b.sections[section] ?? 0;
+			return { section, monthly, share: b.burnMonthly > 0 ? monthly / b.burnMonthly : 0 };
+		})
 		.sort((a, z) => z.monthly - a.monthly);
 }
 
@@ -204,11 +204,22 @@ export function householdPage(b: PricedBudget, sheet: HouseholdSheet): Household
 
 const NUMBER = new Intl.NumberFormat('en-US', { maximumFractionDigits: 3 });
 
-/** An input's label, and its value where the label doesn't already say it. */
+/** The numbers written in a label ("$1,800/mo", "+0.121%", "20% down" → 1800, 0.121, 20). */
+const numbersIn = (label: string) =>
+	(label.match(/\d[\d,]*(?:\.\d+)?/g) ?? []).map((n) => Number(n.replace(/,/g, '')));
+
+/**
+ * An input's label, and its value unless the label already states it: as itself, as a
+ * percentage (0.02 → "2%"), or as its complement (0.8 → "20% down").
+ */
 export function formatInput(i: Pick<PricedInput, 'label' | 'class' | 'value'>): string {
 	if (i.value === null) return i.label;
-	if (i.class === 'persona' && /\d/.test(i.label)) return i.label;
-	return `${i.label} · ${NUMBER.format(i.value)}`;
+	const v = i.value;
+	const forms = [v, v * 100, ...(v > 0 && v < 1 ? [(1 - v) * 100] : [])];
+	const stated = numbersIn(i.label).some((n) =>
+		forms.some((f) => Math.abs(n - f) < 1e-9 * Math.max(1, n))
+	);
+	return stated ? i.label : `${i.label} · ${NUMBER.format(v)}`;
 }
 
 /** A cited source is "<https URL> (<period; scope>)": linked by its host. Anything else is text. */

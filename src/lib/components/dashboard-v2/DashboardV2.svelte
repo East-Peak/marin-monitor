@@ -13,6 +13,7 @@
 	import GettingAround from './GettingAround.svelte';
 	import Outdoors from './Outdoors.svelte';
 	import CostCharacter from './CostCharacter.svelte';
+	import LifestyleCard from './LifestyleCard.svelte';
 	import NewsCivic from './NewsCivic.svelte';
 	import EventsSports from './EventsSports.svelte';
 	import LatelyBand from './LatelyBand.svelte';
@@ -36,7 +37,7 @@
 		type TransitState
 	} from '$lib/dashboard/getting-around';
 	import { OUTDOORS_DATASETS, outdoorsView } from '$lib/dashboard/outdoors';
-	import { COST_DATASETS, costView } from '$lib/dashboard/cost';
+	import { COST_DATASETS, costDatasetIds, costView } from '$lib/dashboard/cost';
 	import type { CivicReads, CostReads } from '$lib/dashboard/v2-controller';
 	import { gasPriceStore } from '$lib/stores/gas-prices';
 	import { coffeeIndexStore } from '$lib/stores/coffee';
@@ -70,12 +71,15 @@
 
 	let {
 		snapshot: serverSnapshot = null,
-		renderedAt
+		renderedAt,
+		lifestyle: lifestyleOn = false
 	}: {
 		/** The server's snapshot read (DASH-FLIP1); null when it failed or ran out of time. */
 		snapshot?: NewsSnapshotView | null;
 		/** The server's render time: SSR and hydration share one clock. */
 		renderedAt?: number;
+		/** The Lifestyle Index's server-side flag (LIFE2): its card replaces the composite's. */
+		lifestyle?: boolean;
 	} = $props();
 	// Read once: the page's first paint, not a prop that later drives anything.
 	const seed = untrack(() => serverSnapshot);
@@ -174,7 +178,8 @@
 			grocery: null,
 			wine: null,
 			school: null,
-			housing: null
+			housing: null,
+			lifestyle: null
 		});
 	/** Cost reads the owner's gas, coffee and fitness essentials plus its own detail reads. */
 	const cost = $derived(
@@ -183,12 +188,17 @@
 			gas: $gasPriceStore,
 			coffee: $coffeeIndexStore,
 			fitness: $fitnessStore,
+			lifestyleOn,
 			outcomes: $outcomes,
 			now: $clock
 		})
 	);
 	function openCost() {
-		for (const d of Object.values(COST_DATASETS)) void controller?.ensure(d.id);
+		for (const id of costDatasetIds(lifestyleOn)) void controller?.ensure(id);
+	}
+	/** The phone's Cost is the Lifestyle card alone: it loads only that read. */
+	function openLifestyle() {
+		void controller?.ensure(COST_DATASETS.lifestyle.id);
 	}
 	/** Below the map, in page order; Outdoors is rendered on its own (desktop pairs it with Getting Around). */
 	const restSections = V2_SECTIONS.filter((s) => s.id !== 'outdoors');
@@ -448,6 +458,9 @@
 				{:else if ready && s.id === 'cost' && desktop}
 					<!-- Cost's content is desktop-only for now: the phone keeps its height budget (§13.3). -->
 					<CostCharacter view={cost} now={$clock} onopen={openCost} />
+				{:else if ready && s.id === 'cost' && cost.lifestyle}
+					<!-- The phone shows the Lifestyle card alone; its height is tested populated (Decision 10). -->
+					<LifestyleCard view={cost.lifestyle} now={$clock} onopen={openLifestyle} />
 				{:else if !ready && (s.id === 'news' || s.id === 'events')}
 					<p class="v2-muted" data-text-role="meta">Loading…</p>
 				{:else}

@@ -4,6 +4,7 @@
  * "Unavailable" / "Unknown", never $0, and a series too short to draw says "No history yet".
  */
 import type { HousingMetric } from '$lib/api/marin/housing';
+import type { LifestyleCard } from '$lib/lifestyle/view';
 import type { CoffeeData, CoffeeIndexData } from '$lib/types/coffee';
 import type { CompositeData, CompositeSnapshot, MarinNumberItem } from '$lib/types/composite';
 import type { FitnessData } from '$lib/types/fitness';
@@ -31,9 +32,21 @@ export const COST_DATASETS = {
 	grocery: { id: 'grocery', name: 'Grocery basket', healthName: 'Grocery Basket', maxAgeDays: 10 },
 	wine: { id: 'wine', name: 'Wine index', healthName: 'Wine Index', maxAgeDays: 10 },
 	school: { id: 'school', name: 'School tuition', healthName: 'School Tuition', maxAgeDays: 45 },
-	housing: { id: 'housing', name: 'Redfin housing', healthName: 'Housing', maxAgeDays: 45 }
+	housing: { id: 'housing', name: 'Redfin housing', healthName: 'Housing', maxAgeDays: 45 },
+	lifestyle: {
+		id: 'lifestyle',
+		name: 'Lifestyle index',
+		healthName: 'Lifestyle Index',
+		maxAgeDays: 10
+	}
 } as const;
 type CostDatasetId = keyof typeof COST_DATASETS;
+
+/** The section's reads: the Lifestyle Index (behind its flag) or the old composite, never both. */
+export const costDatasetIds = (lifestyleOn: boolean): string[] =>
+	Object.values(COST_DATASETS)
+		.filter((d) => d.id !== (lifestyleOn ? 'composite' : 'lifestyle'))
+		.map((d) => d.id);
 
 export const costMaxAgeMs = (id: CostDatasetId) => COST_DATASETS[id].maxAgeDays * DAY_MS;
 
@@ -276,12 +289,17 @@ export interface CostInput {
 	fitness: FitnessData | null;
 	school: SchoolIndexData | null;
 	housing: HousingMetric[] | null;
+	lifestyle: LifestyleCard | null;
+	/** The server-side flag: the Lifestyle Index's card replaces every composite consumer. */
+	lifestyleOn: boolean;
 	outcomes: Readonly<Record<string, DatasetFetch>>;
 	now: number;
 }
 
 export interface CostView {
 	composite: Measured<CompositeView>;
+	/** Null while the flag is off. */
+	lifestyle: Measured<LifestyleCard> | null;
 	gas: Measured<GasView>;
 	tiles: SubIndexTile[];
 	status: SectionPresentation;
@@ -310,7 +328,8 @@ export function costView(input: CostInput): CostView {
 		grocery: own('grocery'),
 		wine: own('wine'),
 		school: own('school'),
-		housing: own('housing')
+		housing: own('housing'),
+		lifestyle: own('lifestyle')
 	};
 	const read = <T>(entry: (typeof entries)[keyof typeof entries], v: T | null, source: string) =>
 		measuredFromEntry(entry, v, source, now);
@@ -452,7 +471,7 @@ export function costView(input: CostInput): CostView {
 					.filter((p) => p.atMs > (g.series.at(-1)?.atMs ?? 0) - 30 * DAY_MS)
 					.map((p) => p.avg)
 		}),
-		...COMPOSITE_ITEM_TILES.map((t) =>
+		...(input.lifestyleOn ? [] : COMPOSITE_ITEM_TILES).map((t) =>
 			tile<MarinNumberItem | null>({
 				...t,
 				measured: item(t.id),
@@ -472,11 +491,16 @@ export function costView(input: CostInput): CostView {
 		)
 	];
 
-	const all = Object.values(entries);
-	const valued =
-		tiles.filter((t) => t.kind === 'value').length + (composite.kind === 'value' ? 1 : 0);
+	const lifestyle = input.lifestyleOn
+		? read(entries.lifestyle, input.lifestyle, 'Lifestyle Index, weekly')
+		: null;
+	const shown = input.lifestyleOn ? lifestyle! : composite;
+	const hidden = input.lifestyleOn ? entries.composite : entries.lifestyle;
+	const all = Object.values(entries).filter((e) => e !== hidden);
+	const valued = tiles.filter((t) => t.kind === 'value').length + (shown.kind === 'value' ? 1 : 0);
 	return {
 		composite,
+		lifestyle,
 		gas,
 		tiles,
 		status: presentSection(all, { total: valued, matching: valued }, now)

@@ -5,6 +5,7 @@
 	import { axisTicks, signed, type CostView, type SubIndexTile } from '$lib/dashboard/cost';
 	import type { Measured } from '$lib/dashboard/measured';
 	import CardSource from './CardSource.svelte';
+	import LifestyleCard from './LifestyleCard.svelte';
 
 	let { view, now, onopen }: { view: CostView; now: number; onopen: () => void } = $props();
 
@@ -123,121 +124,126 @@
 </script>
 
 <div class="cost" data-slot="cost">
-	<div class="cost-top">
-		<article class="card" data-card="composite">
-			<div class="card-head">
-				<h3 class="card-title" data-text-role="label">Cost of being Marin</h3>
-				<span class="meta" data-text-role="meta">composite index, base 100</span>
-			</div>
-			{#if comp}
-				<div class="hero-row">
-					<span class="hero num" data-text-role="value">{comp.score.toFixed(1)}</span>
-					{#if comp.change !== null && comp.previousAtMs !== null}
-						<span class={direction(comp.change)} data-text-role="value"
-							>{comp.change === 0 ? 'no change' : signed(comp.change, 1, '')}</span
+	<div class="cost-top" class:life={!!view.lifestyle}>
+		{#if view.lifestyle}
+			<!-- The Lifestyle Index (behind its flag) replaces the composite and the Marin Number. -->
+			<LifestyleCard view={view.lifestyle} {now} />
+		{:else}
+			<article class="card" data-card="composite">
+				<div class="card-head">
+					<h3 class="card-title" data-text-role="label">Cost of being Marin</h3>
+					<span class="meta" data-text-role="meta">composite index, base 100</span>
+				</div>
+				{#if comp}
+					<div class="hero-row">
+						<span class="hero num" data-text-role="value">{comp.score.toFixed(1)}</span>
+						{#if comp.change !== null && comp.previousAtMs !== null}
+							<span class={direction(comp.change)} data-text-role="value"
+								>{comp.change === 0 ? 'no change' : signed(comp.change, 1, '')}</span
+							>
+							<span class="meta" data-text-role="meta">vs {day(comp.previousAtMs)}</span>
+						{/if}
+					</div>
+					{#if trend}
+						<svg
+							class="chart"
+							data-text-role="meta"
+							viewBox="0 0 {TREND.width} {TREND.height}"
+							role="img"
+							aria-label="Composite index by week, now {comp.score.toFixed(1)}"
 						>
-						<span class="meta" data-text-role="meta">vs {day(comp.previousAtMs)}</span>
+							<g transform="translate({TREND.margins.left},{TREND.margins.top})">
+								<line
+									class="base"
+									x1="0"
+									x2={TREND.width - TREND.margins.left - TREND.margins.right}
+									y1={trend.yScale(100)}
+									y2={trend.yScale(100)}
+								/>
+								<text x="4" y={trend.yScale(100) - 4}>base 100</text>
+								<path d={trend.areaPath} fill="#dc2626" fill-opacity="0.12" />
+								<path d={trend.linePath} fill="none" stroke="#dc2626" stroke-width="2" />
+								<text x="-6" y={trend.yScale(trend.yMax) + 10} text-anchor="end"
+									>{Math.round(trend.yMax)}</text
+								>
+								<text x="-6" y={trend.yScale(trend.yMin)} text-anchor="end"
+									>{Math.round(trend.yMin)}</text
+								>
+							</g>
+						</svg>
 					{/if}
-				</div>
-				{#if trend}
-					<svg
-						class="chart"
-						data-text-role="meta"
-						viewBox="0 0 {TREND.width} {TREND.height}"
-						role="img"
-						aria-label="Composite index by week, now {comp.score.toFixed(1)}"
-					>
-						<g transform="translate({TREND.margins.left},{TREND.margins.top})">
-							<line
-								class="base"
-								x1="0"
-								x2={TREND.width - TREND.margins.left - TREND.margins.right}
-								y1={trend.yScale(100)}
-								y2={trend.yScale(100)}
-							/>
-							<text x="4" y={trend.yScale(100) - 4}>base 100</text>
-							<path d={trend.areaPath} fill="#dc2626" fill-opacity="0.12" />
-							<path d={trend.linePath} fill="none" stroke="#dc2626" stroke-width="2" />
-							<text x="-6" y={trend.yScale(trend.yMax) + 10} text-anchor="end"
-								>{Math.round(trend.yMax)}</text
-							>
-							<text x="-6" y={trend.yScale(trend.yMin)} text-anchor="end"
-								>{Math.round(trend.yMin)}</text
-							>
-						</g>
-					</svg>
+					<div>
+						{#each comp.tiers as t (t.category)}
+							<div class="tier">
+								<span data-text-role="label"
+									>{t.label} <span class="meta" data-text-role="meta">{t.weightPct}%</span></span
+								>
+								<span class="bar"
+									><i
+										style="background:{TIER_COLOR[t.category] ?? '#64748b'};{t.bar.side === 'right'
+											? 'left'
+											: 'right'}:50%;width:{t.bar.widthPct}%"
+									></i></span
+								>
+								<span class="num" data-text-role="value">{t.score.toFixed(1)}</span>
+							</div>
+						{/each}
+					</div>
+					<p class="meta" data-text-role="meta">
+						Bars run from 100 (centre): right is pricier than baseline, left cheaper. {comp.readings}
+						weekly readings since {day(comp.sinceMs)}.
+					</p>
+				{:else}
+					<p class="empty" data-text-role="body">{why(view.composite)}</p>
 				{/if}
-				<div>
-					{#each comp.tiers as t (t.category)}
-						<div class="tier">
-							<span data-text-role="label"
-								>{t.label} <span class="meta" data-text-role="meta">{t.weightPct}%</span></span
-							>
-							<span class="bar"
-								><i
-									style="background:{TIER_COLOR[t.category] ?? '#64748b'};{t.bar.side === 'right'
-										? 'left'
-										: 'right'}:50%;width:{t.bar.widthPct}%"
-								></i></span
-							>
-							<span class="num" data-text-role="value">{t.score.toFixed(1)}</span>
-						</div>
-					{/each}
-				</div>
-				<p class="meta" data-text-role="meta">
-					Bars run from 100 (centre): right is pricier than baseline, left cheaper. {comp.readings}
-					weekly readings since {day(comp.sinceMs)}.
-				</p>
-			{:else}
-				<p class="empty" data-text-role="body">{why(view.composite)}</p>
-			{/if}
-			<CardSource lines={[{ measured: view.composite }]} {now} />
-		</article>
+				<CardSource lines={[{ measured: view.composite }]} {now} />
+			</article>
 
-		<article class="card" data-card="marin-number">
-			<div class="card-head">
-				<h3 class="card-title" data-text-role="label">The Marin Number</h3>
-				<span class="meta" data-text-role="meta">what a month here costs, itemized</span>
-			</div>
-			{#if comp}
-				<div class="hero-row">
-					<span class="hero num plain" data-text-role="value"
-						>{usd(comp.marinNumber.total, 0)}<span class="per" data-text-role="meta">/mo</span
-						></span
-					>
-					<span class="meta" data-text-role="meta">{usd(comp.marinNumber.annualized, 0)}/yr</span>
+			<article class="card" data-card="marin-number">
+				<div class="card-head">
+					<h3 class="card-title" data-text-role="label">The Marin Number</h3>
+					<span class="meta" data-text-role="meta">what a month here costs, itemized</span>
 				</div>
-				<div class="mn-stack" aria-hidden="true">
-					{#each items as it, i (it.label)}
-						<i title={it.label} style="flex:{it.monthly};background:{PALETTE[i % PALETTE.length]}"
-						></i>
-					{/each}
-				</div>
-				<ul class="mn-list">
-					{#each items as it, i (it.label)}
-						<li>
-							<span data-text-role="label"
-								><span class="sw" style="background:{PALETTE[i % PALETTE.length]}"
-								></span>{it.label}<span class="tag {it.source}" data-text-role="meta"
-									>{it.source}</span
-								></span
-							>
-							<span class="num" data-text-role="value">{usd(it.monthly, 0)}</span>
-						</li>
-					{/each}
-				</ul>
-				<p class="meta quip" data-text-role="meta">
-					This does not include your Rivian payment. (It does.)
-				</p>
-			{:else}
-				<p class="empty" data-text-role="body">{why(view.composite)}</p>
-			{/if}
-			<CardSource
-				lines={[{ measured: view.composite }]}
-				{now}
-				notes={comp ? [`${liveCount} live`, `${items.length - liveCount} fixed estimates`] : []}
-			/>
-		</article>
+				{#if comp}
+					<div class="hero-row">
+						<span class="hero num plain" data-text-role="value"
+							>{usd(comp.marinNumber.total, 0)}<span class="per" data-text-role="meta">/mo</span
+							></span
+						>
+						<span class="meta" data-text-role="meta">{usd(comp.marinNumber.annualized, 0)}/yr</span>
+					</div>
+					<div class="mn-stack" aria-hidden="true">
+						{#each items as it, i (it.label)}
+							<i title={it.label} style="flex:{it.monthly};background:{PALETTE[i % PALETTE.length]}"
+							></i>
+						{/each}
+					</div>
+					<ul class="mn-list">
+						{#each items as it, i (it.label)}
+							<li>
+								<span data-text-role="label"
+									><span class="sw" style="background:{PALETTE[i % PALETTE.length]}"
+									></span>{it.label}<span class="tag {it.source}" data-text-role="meta"
+										>{it.source}</span
+									></span
+								>
+								<span class="num" data-text-role="value">{usd(it.monthly, 0)}</span>
+							</li>
+						{/each}
+					</ul>
+					<p class="meta quip" data-text-role="meta">
+						This does not include your Rivian payment. (It does.)
+					</p>
+				{:else}
+					<p class="empty" data-text-role="body">{why(view.composite)}</p>
+				{/if}
+				<CardSource
+					lines={[{ measured: view.composite }]}
+					{now}
+					notes={comp ? [`${liveCount} live`, `${items.length - liveCount} fixed estimates`] : []}
+				/>
+			</article>
+		{/if}
 
 		<article class="card gas" data-card="gas">
 			<div class="card-head">
@@ -429,6 +435,15 @@
 		}
 		.cost-top > .gas {
 			grid-column: auto;
+		}
+	}
+	/* The Lifestyle card takes the composite's and the Marin Number's row. */
+	.cost-top.life > :global([data-card='lifestyle']) {
+		grid-column: 1 / -1;
+	}
+	@media (min-width: 1700px) {
+		.cost-top.life > :global([data-card='lifestyle']) {
+			grid-column: span 2;
 		}
 	}
 	.card {

@@ -72,6 +72,13 @@ describe('where the index is read from', () => {
 		expect(
 			await readLifestyle(api(JSON.stringify({ current: { schema: 2, budgets: [] } })), signal)
 		).toBeNull();
+		// Codex LIFE2-1: every budget the card and page read must have its fields.
+		const withBudgets = (budgets: unknown[]) =>
+			api(JSON.stringify({ current: { ...snapshot([]), budgets } }));
+		expect(await readLifestyle(withBudgets([null]), signal)).toBeNull();
+		expect(await readLifestyle(withBudgets([{ town: 'ross' }]), signal)).toBeNull();
+		const noTimes = { ...snapshot([budget('ross')]), computedAt: undefined };
+		expect(await readLifestyle(api(JSON.stringify({ current: noTimes })), signal)).toBeNull();
 	});
 });
 

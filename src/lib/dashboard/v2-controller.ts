@@ -62,6 +62,7 @@ import { readSheriffBlotterOrThrow, type BlotterRead } from '$lib/api/marin/blot
 import { fetchPoliceLogsDataWithStatus } from '$lib/api/marin/police-logs';
 import { fetchNpsAlertsWithStatus, type NpsAlert } from '$lib/api/marin/nps';
 import { fetchCompositeDataWithStatus } from '$lib/api/marin/composite';
+import { fetchLifestyleWithStatus } from '$lib/api/marin/lifestyle';
 import { fetchCappuccinoDataWithStatus } from '$lib/api/marin/cappuccino';
 import { fetchGroceryBasketDataWithStatus } from '$lib/api/marin/grocery-basket';
 import { fetchWineIndexDataWithStatus } from '$lib/api/marin/wine-index';
@@ -69,6 +70,7 @@ import { fetchSchoolTuitionDataWithStatus } from '$lib/api/marin/school-tuition'
 import { fetchHousingDataWithStatus, type HousingMetric } from '$lib/api/marin/housing';
 import type { FetchResult } from '$lib/api/marin/data-fetcher';
 import type { CompositeData } from '$lib/types/composite';
+import type { LifestyleCard } from '$lib/lifestyle/view';
 import type { CoffeeData, CoffeeIndexData } from '$lib/types/coffee';
 import type { EvChargingData } from '$lib/types/ev-charging';
 import type { FitnessData } from '$lib/types/fitness';
@@ -288,6 +290,7 @@ export interface CostReads {
 	wine: WineIndexData | null;
 	school: SchoolIndexData | null;
 	housing: HousingMetric[] | null;
+	lifestyle: LifestyleCard | null;
 }
 
 /** Cost's detail reads (desktop Goal 3): loaded through ensure() when the section opens. */
@@ -317,6 +320,12 @@ function costDatasets(store: Writable<CostReads>): DatasetDef[] {
 			'housing',
 			() => fetchHousingDataWithStatus(),
 			() => null
+		),
+		// Its observation is the last run that priced every household on in-date reads.
+		def(
+			'lifestyle',
+			(signal) => fetchLifestyleWithStatus({ signal }),
+			(d) => d.lastSuccessfulScrapeAt
 		)
 	];
 }
@@ -521,7 +530,8 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		grocery: null,
 		wine: null,
 		school: null,
-		housing: null
+		housing: null,
+		lifestyle: null
 	});
 	const civic = writable<CivicReads>({ police: null, nps: null, activity: null });
 	// /api/health feeds the header indicator only; it never re-dates a dataset (Codex r1 #3).

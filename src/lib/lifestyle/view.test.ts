@@ -163,6 +163,24 @@ describe('the household page', () => {
 		}
 		expect(p.sections[0].widthPct).toBe(100);
 	});
+
+	it('keeps a section whose every line is unavailable, with its lines and no spending', () => {
+		const b = priced('larkspur', reads({ 'ikon.adult': { availability: 'unavailable' } }));
+		const travel = b.lines.filter((l) => l.section === 'travel');
+		const gone = { ...b, sections: { ...b.sections, travel: undefined } } as PricedBudget;
+		delete (gone.sections as Record<string, unknown>).travel;
+		const p = householdPage(
+			{
+				...gone,
+				lines: b.lines.map((l) => (l.section === 'travel' ? { ...l, monthly: null } : l))
+			},
+			sheet('larkspur')
+		);
+		const sec = p.sections.find((s) => s.section === 'travel')!;
+		expect(sec.lines.map((l) => l.id).sort()).toEqual(travel.map((l) => l.id).sort());
+		expect(sec.monthly).toBe(0);
+		expect(sec.widthPct).toBe(0);
+	});
 });
 
 describe('an input as shown', () => {
@@ -178,6 +196,23 @@ describe('an input as shown', () => {
 			'Marin average regular · 6.179'
 		);
 		expect(formatInput({ label: 'x', class: 'live', value: null })).toBe('x');
+		// Codex LIFE2-1: a digit in the label is not the value.
+		expect(formatInput({ label: 'units per 2 months', class: 'persona', value: 22 })).toBe(
+			'units per 2 months · 22'
+		);
+		expect(
+			formatInput({ label: 'remodel reassessed 2022', class: 'persona', value: 1500000 })
+		).toBe('remodel reassessed 2022 · 1,500,000');
+		expect(formatInput({ label: '2%/yr Prop 13 factor', class: 'persona', value: 0.02 })).toBe(
+			'2%/yr Prop 13 factor'
+		);
+		expect(formatInput({ label: '+0.121% bonds', class: 'persona', value: 0.00121 })).toBe(
+			'+0.121% bonds'
+		);
+		expect(formatInput({ label: 'rate 6.99%', class: 'persona', value: 6.99 })).toBe('rate 6.99%');
+		expect(formatInput({ label: '$1,800/mo (unpublished)', class: 'persona', value: 1800 })).toBe(
+			'$1,800/mo (unpublished)'
+		);
 	});
 
 	it('links a cited source by its host and keeps its period and scope', () => {

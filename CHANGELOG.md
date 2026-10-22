@@ -6,6 +6,10 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-22
 
+### Added — The Lifestyle Index's Cost card (off in production)
+
+- **"What it takes to live here": one fictional household's break-even salary**, picked by town (Larkspur, Mill Valley, Ross; the default turns over daily at Pacific midnight), with its month's spending, a bar of where it goes, its three biggest lines and what their inputs are (L live, C cited, P assumed). A household whose budget is incomplete shows its spending so far, says _incomplete_, names what couldn't be read, and shows no break-even. Every view says "fictional household · modelled spending". On desktop it takes the place of the composite index and the Marin Number; on the phone it fills the Cost section. Switched on only in preview deployments for now; production keeps the composite.
+
 ### Added — The Lifestyle Index's display data (off in production)
 
 - **A summary of each household for the coming Cost card**: its break-even salary (never shown when the budget is incomplete, which names the missing lines), the month's spending by section, its three biggest lines with what their inputs are (live, cited or assumed), how many lines read stale, and the share of spending that rests only on assumptions. Served at `/api/data/lifestyle` only while the Lifestyle Index is switched on, which it is not in production yet.

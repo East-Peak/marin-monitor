@@ -13,7 +13,7 @@
 <DashboardHead choice={{ layout: data.layout, explicit: data.explicit }} />
 
 {#if data.layout === 'v2'}
-	<DashboardV2 snapshot={data.snapshot} renderedAt={data.renderedAt} />
+	<DashboardV2 snapshot={data.snapshot} renderedAt={data.renderedAt} lifestyle={data.lifestyle} />
 {:else}
 	<LegacyDashboard bootstrap={data.bootstrap} />
 {/if}

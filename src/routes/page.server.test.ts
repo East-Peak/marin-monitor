@@ -47,6 +47,15 @@ describe('dashboard page load', () => {
 		expect(headers['Cache-Control']).toBe('s-maxage=60, stale-while-revalidate=300');
 		expect(loadLegacyBootstrap).not.toHaveBeenCalled();
 	});
+	it('carries the Lifestyle Index flag to v2: off unless LIFESTYLE_INDEX is on', async () => {
+		expect(await load(event('/').ev)).toMatchObject({ lifestyle: false });
+		env.LIFESTYLE_INDEX = 'on';
+		try {
+			expect(await load(event('/').ev)).toMatchObject({ lifestyle: true });
+		} finally {
+			delete env.LIFESTYLE_INDEX;
+		}
+	});
 	it('the default v2 without a snapshot is private, no-store', async () => {
 		readNewsSnapshot.mockResolvedValue({ status: 'unavailable', reason: 'missing' });
 		const { ev, headers } = event('/');
@@ -89,7 +98,8 @@ describe('v2 server-rendered first paint (DASH-FLIP1)', () => {
 			explicit: true,
 			bootstrap: null,
 			snapshot: VIEW,
-			renderedAt: Date.parse('2026-10-17T12:03:00.000Z')
+			renderedAt: Date.parse('2026-10-17T12:03:00.000Z'),
+			lifestyle: false
 		});
 		// A 1,200 ms bound passed to the reader too, so its Blob read is aborted.
 		expect(readNewsSnapshot.mock.calls[0][1]).toBe(1_200);

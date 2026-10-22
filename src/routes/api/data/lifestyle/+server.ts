@@ -16,7 +16,8 @@ import type { RequestHandler } from './$types';
 const READ_MS = 8000;
 
 export const GET: RequestHandler = async () => {
-	if (!lifestyleOn(env)) return new Response('Not found', { status: 404 });
+	if (!lifestyleOn(env))
+		return new Response('Not found', { status: 404, headers: { 'Cache-Control': 'no-store' } });
 	const api = lifestyleBlobApi(env);
 	const snapshot = api ? await readLifestyle(api, AbortSignal.timeout(READ_MS)) : null;
 	if (!snapshot) {

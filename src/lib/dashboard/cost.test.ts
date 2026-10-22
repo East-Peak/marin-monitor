@@ -4,7 +4,15 @@ import type { CompositeData, CompositeSnapshot } from '$lib/types/composite';
 import type { GasPriceData, GasPriceSnapshot } from '$lib/types/gas';
 import type { FitnessData } from '$lib/types/fitness';
 import type { DatasetFetch } from './source-adapters';
-import { COST_DATASETS, axisTicks, compositeView, costView, tierBar, type CostInput } from './cost';
+import {
+	COST_DATASETS,
+	axisTicks,
+	compositeView,
+	costDatasetIds,
+	costView,
+	tierBar,
+	type CostInput
+} from './cost';
 
 const NOW = Date.parse('2026-10-15T18:00:00Z');
 const DAY = 86_400_000;
@@ -104,6 +112,8 @@ function input(over: Partial<CostInput> = {}): CostInput {
 		fitness: null,
 		school: null,
 		housing: null,
+		lifestyle: null,
+		lifestyleOn: false,
 		outcomes: {},
 		now: NOW,
 		...over
@@ -319,6 +329,45 @@ describe('cost model', () => {
 			})
 		);
 		expect(view.tiles.find((t) => t.id === 'dog-walker')!.detail).toMatch(/walker \+ upkeep/i);
+	});
+
+	it('with the Lifestyle Index on, its card replaces every composite consumer', () => {
+		const card = {
+			computedAt: iso(NOW - DAY),
+			lastSuccessfulScrapeAt: iso(NOW - 2 * DAY),
+			households: []
+		};
+		const comp: CompositeData = { current: composite(NOW - DAY, 100.6), history: [] };
+		const view = costView(
+			input({
+				lifestyleOn: true,
+				lifestyle: card,
+				composite: comp,
+				outcomes: {
+					[COST_DATASETS.lifestyle.id]: live(2 * DAY),
+					[COST_DATASETS.composite.id]: failed
+				}
+			})
+		);
+		expect(view.lifestyle).toMatchObject({ kind: 'value', value: card, observedAt: NOW - 2 * DAY });
+		// No tile reads the composite, and its failure is not this section's.
+		for (const id of ['rivian-lease', 'dog-walker', 'ikon-pass', 'camp-prices'])
+			expect(view.tiles.map((t) => t.id)).not.toContain(id);
+		expect(view.status.failing.map((f) => f.name)).not.toContain('Composite index');
+	});
+
+	it('with it off, nothing reads the Lifestyle Index', () => {
+		const view = costView(input({ outcomes: { [COST_DATASETS.lifestyle.id]: failed } }));
+		expect(view.lifestyle).toBeNull();
+		expect(view.status.failing.map((f) => f.name)).not.toContain('Lifestyle index');
+		expect(view.tiles.map((t) => t.id)).toContain('rivian-lease');
+	});
+
+	it('loads only the reads its mode shows', () => {
+		expect(costDatasetIds(true)).toContain('lifestyle');
+		expect(costDatasetIds(true)).not.toContain('composite');
+		expect(costDatasetIds(false)).toContain('composite');
+		expect(costDatasetIds(false)).not.toContain('lifestyle');
 	});
 
 	it('freshness policies are G0a’s own (pinned to SOURCE_INVENTORY)', () => {
