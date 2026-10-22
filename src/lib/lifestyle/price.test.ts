@@ -3,6 +3,7 @@ import type { CoverageItem, HouseholdSheet, LineSpec, LiveKey, LiveRead, LiveRea
 import { COVERAGE_ITEMS } from './model';
 import { defineSheet, priceSheet, METHOD_VERSION } from './price';
 import {
+	asFlatTax,
 	asGift,
 	cite,
 	employerTaxInputs,
@@ -75,7 +76,7 @@ const LINES: LineSpec[] = [
 		},
 		terms: [
 			{ kind: 'grow', base: 'price', rate: 'growth', years: 'years', times: ['base'] },
-			yearly('parcels')
+			asFlatTax(yearly('parcels'))
 		]
 	},
 	{
@@ -435,10 +436,11 @@ describe('break-even', () => {
 		expect(taxes.gross).toBeCloseTo(gross, 6);
 	});
 
-	it('files the sheet’s gifts and property tax, and the mortgage’s interest', () => {
+	it('files the sheet’s gifts and ad valorem property tax, and the mortgage’s interest', () => {
 		const b = priceSheet(defineSheet(base()), liveReads(), NOW);
 		expect(b.taxInputs.gifts).toBeCloseTo(96 + 1000, 6);
-		expect(b.taxInputs.propertyTax).toBeCloseTo(line(b, 't.home.tax').monthly! * 12, 6);
+		// A flat parcel tax is paid (it stays in the line) but is not a deductible ad valorem tax.
+		expect(b.taxInputs.propertyTax).toBeCloseTo(line(b, 't.home.tax').monthly! * 12 - 1906, 6);
 		const t = computeTaxes(
 			{
 				status: 'mfj',

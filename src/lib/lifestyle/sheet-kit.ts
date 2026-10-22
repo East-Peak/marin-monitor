@@ -35,6 +35,8 @@ export const less = (...factors: string[]): Term => ({
 	sign: -1
 });
 export const asGift = (term: Term): Term => ({ ...term, gift: true });
+/** A flat parcel tax: paid, but not a deductible ad valorem tax. */
+export const asFlatTax = (term: Term): Term => ({ ...term, flatTax: true });
 
 /** The cited employer-tax inputs an `employer` term reads, plus CA's FUTA credit reduction. */
 export const employerTaxInputs = (): Record<string, InputSpec> => ({

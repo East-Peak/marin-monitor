@@ -1,7 +1,7 @@
 /** Line builders the three sheets share; every quantity is still an argument from the sheet. */
 import type { InputSpec, LineSpec } from '../model';
 import type { CitedId } from '../sources';
-import { cite, live, monthly, persona, spread, yearly } from '../sheet-kit';
+import { asFlatTax, cite, live, monthly, persona, spread, yearly } from '../sheet-kit';
 import type { Term } from '../model';
 
 export const NOT_MODELLED = [
@@ -78,7 +78,7 @@ export function propertyTax(
 	});
 	Object.entries(opts.parcels).forEach(([name, amount], i) => {
 		inputs[`parcel${i}`] = persona(amount, `parcel tax: ${name}`);
-		terms.push(yearly(`parcel${i}`));
+		terms.push(asFlatTax(yearly(`parcel${i}`)));
 	});
 	return {
 		id: `${town}.home.tax`,

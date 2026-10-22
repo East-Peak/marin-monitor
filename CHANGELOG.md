@@ -4,6 +4,12 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-10-22
+
+### Changed — The Lifestyle Index: flat parcel taxes are paid, not deducted (not shown yet)
+
+- **A household's flat parcel taxes (the Tam, school and wildfire parcel taxes) still count in its budget, but no longer in its itemised deductions**: only the ad valorem part of property tax is deductible. Each break-even rises by $400–700 (California tax; the federal SALT cap already binds). Not shown yet.
+
 ## 2026-10-20
 
 ### Added — The Lifestyle Index: its tax engine (not shown yet)

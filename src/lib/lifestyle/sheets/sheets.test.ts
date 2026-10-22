@@ -170,21 +170,23 @@ const APPROVED: Record<string, Record<string, number>> = {
  * input is classed, so lines LIFE0 tagged persona-only but that carry a cited
  * figure (the shop's payroll-tax rates, upkeep's 1% of a cited price) are
  * Persona × Cited (LIFE0 showed 35% / 27% / 31%).
+ * Break-even sits $414 / $440 / $707 above the approved figures: flat parcel
+ * taxes are paid but no longer deducted (Stuart, 2026-10-22).
  */
 const TOTALS = {
 	larkspur: {
 		burn: 42577.15,
-		breakEven: 902662,
+		breakEven: 903076,
 		within: 2,
 		personaOnly: 0.117
 	},
 	millvalley: {
 		burn: 27038.37,
-		breakEven: 544766,
+		breakEven: 545206,
 		within: 50,
 		personaOnly: 0.241
 	},
-	ross: { burn: 63778.64, breakEven: 1395342, within: 2, personaOnly: 0.306 }
+	ross: { burn: 63778.64, breakEven: 1396049, within: 2, personaOnly: 0.306 }
 } as const;
 
 const priced = (id: string) => priceSheet(SHEETS.find((s) => s.id === id)!, reads, NOW);
@@ -223,6 +225,19 @@ describe('the approved household sheets', () => {
 			// Mill Valley's 2026 interest now runs Jan–Dec 2026 (LIFE0's model took Feb 2026–Jan 2027).
 			const tolerance = id === 'millvalley' ? 50 : 2;
 			expect(Math.abs(b.breakEven!.gross - TOTALS[id].breakEven)).toBeLessThanOrEqual(tolerance);
+		}
+	);
+
+	it.each(['larkspur', 'millvalley', 'ross'])(
+		'%s files only the ad valorem property tax: its flat parcel taxes are paid, not deducted',
+		(id) => {
+			const b = priced(id);
+			const tax = b.lines.find((l) => l.id === `${id}.home.tax`)!;
+			const parcels = tax.inputs
+				.filter((i) => i.name.startsWith('parcel'))
+				.reduce((s, i) => s + i.value!, 0);
+			expect(parcels).toBeGreaterThan(0);
+			expect(b.taxInputs.propertyTax).toBeCloseTo(tax.monthly! * 12 - parcels, 6);
 		}
 	);
 

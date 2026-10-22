@@ -25,7 +25,7 @@ import { CITED } from './sources';
 import { solveBreakEven, TAX_2026, type TaxCase, type TaxParameters } from './tax';
 
 /** Bump when the pricing or tax method changes what a sheet costs. */
-export const METHOD_VERSION = 'lifestyle-method-1';
+export const METHOD_VERSION = 'lifestyle-method-2';
 
 const DAY_MS = 86_400_000;
 /** Clock skew, not corruption. */
@@ -385,6 +385,8 @@ interface Priced {
 	readonly line: PricedLine;
 	/** Deductible cash gifts in this line, per year. */
 	readonly gifts: number;
+	/** Deductible property tax in this line, per year: its ad valorem part, never a flat parcel tax. */
+	readonly propertyTax: number;
 	readonly values: Readonly<Record<string, number>> | null;
 }
 
@@ -403,7 +405,7 @@ function priceLine(spec: LineSpec, sheet: HouseholdSheet, live: LiveReads, now: 
 		...(spec.note ? { note: spec.note } : {})
 	};
 	if (availability === 'unavailable')
-		return { line: { ...base, monthly: null }, gifts: 0, values: null };
+		return { line: { ...base, monthly: null }, gifts: 0, propertyTax: 0, values: null };
 
 	const values = Object.fromEntries(inputs.map((i) => [i.name, i.value as number]));
 	const term = (t: Term) => termMonthly(t, values, sheet.purchase, now);
@@ -415,10 +417,13 @@ function priceLine(spec: LineSpec, sheet: HouseholdSheet, live: LiveReads, now: 
 			monthly: null,
 			reason: 'not computable'
 		};
-		return { line, gifts: 0, values: null };
+		return { line, gifts: 0, propertyTax: 0, values: null };
 	}
-	const gifts = spec.terms.filter((t) => t.gift).reduce((s, t) => s + 12 * term(t), 0);
-	return { line: { ...base, monthly }, gifts, values };
+	const annual = (keep: (t: Term) => boolean) =>
+		spec.terms.filter(keep).reduce((s, t) => s + 12 * term(t), 0);
+	const gifts = annual((t) => !!t.gift);
+	const propertyTax = spec.propertyTax ? annual((t) => !t.flatTax) : 0;
+	return { line: { ...base, monthly }, gifts, propertyTax, values };
 }
 
 export function priceSheet(
@@ -452,10 +457,7 @@ export function priceSheet(
 	const loans = mortgage?.values ? loansOf(sheet.purchase, mortgage.values) : [];
 	const { interest, averageBalance } = loanYear(loans, tax.year);
 	const taxInputs = {
-		propertyTax: sheet.lines.reduce(
-			(s, spec, i) => s + (spec.propertyTax ? 12 * (lines[i].monthly ?? 0) : 0),
-			0
-		),
+		propertyTax: priced.reduce((s, p) => s + p.propertyTax, 0),
 		mortgageInterest: interest,
 		mortgageAverageBalance: averageBalance,
 		gifts: priced.reduce((s, p) => s + p.gifts, 0)
