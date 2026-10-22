@@ -12,6 +12,7 @@
 	import TvCommunityScreen from './screens/TvCommunityScreen.svelte';
 	import TvLeaderboardsScreen from './screens/TvLeaderboardsScreen.svelte';
 	import TvCompositeHero from './screens/TvCompositeHero.svelte';
+	import TvLifestyleHero from './screens/TvLifestyleHero.svelte';
 	import TvDailyLifeCard from './screens/TvDailyLifeCard.svelte';
 	import TvLifestyleCard from './screens/TvLifestyleCard.svelte';
 	import TvStructuralCard from './screens/TvStructuralCard.svelte';
@@ -44,6 +45,7 @@
 	import { createTvNewsLoader, TV_NEWS_SOURCES } from './tv-news';
 	import { fetchHourlyForecast } from '$lib/api/marin/nws-hourly';
 	import { fetchCompositeDataWithStatus } from '$lib/api/marin/composite';
+	import { fetchLifestyleWithStatus } from '$lib/api/marin/lifestyle';
 	import { fetchCappuccinoDataWithStatus } from '$lib/api/marin/cappuccino';
 	import { fetchGroceryBasketDataWithStatus } from '$lib/api/marin/grocery-basket';
 	import { fetchWineIndexDataWithStatus } from '$lib/api/marin/wine-index';
@@ -56,6 +58,7 @@
 	import { tvIndexData } from '$lib/stores/tv';
 	import type { NewsItem, AirQualityData, TidePrediction } from '$lib/types';
 	import type { CompositeData } from '$lib/types/composite';
+	import type { LifestyleCard } from '$lib/lifestyle/view';
 	import type { CoffeeData } from '$lib/types/coffee';
 	import type { GroceryBasketData } from '$lib/types/grocery';
 	import type { WineIndexData } from '$lib/types/wine';
@@ -68,8 +71,12 @@
 	import type { HeroDirtScore } from '$lib/analysis/indicators';
 	import { initSwipe, progressSwipe, commitSwipe, shouldBailSwipe, type SwipeState } from './swipe';
 
+	/** The Lifestyle Index's server-side flag (LIFE2): its hero replaces the composite's. */
+	let { lifestyle = false }: { lifestyle?: boolean } = $props();
+
 	// --- Index data state ---
 	let compositeData = $state<CompositeData | null>(null);
+	let lifestyleData = $state<LifestyleCard | null>(null);
 	let cappuccinoData = $state<CoffeeData | null>(null);
 	let groceryData = $state<GroceryBasketData | null>(null);
 	let wineData = $state<WineIndexData | null>(null);
@@ -574,7 +581,7 @@
 	async function loadIndexData(errors: string[]): Promise<void> {
 		const [composite, cappuccino, grocery, wine, fitness, tuition, driveway, gas] =
 			await Promise.all([
-				fetchCompositeDataWithStatus(),
+				lifestyle ? null : fetchCompositeDataWithStatus(),
 				fetchCappuccinoDataWithStatus(),
 				fetchGroceryBasketDataWithStatus(),
 				fetchWineIndexDataWithStatus(),
@@ -584,7 +591,14 @@
 				fetchGasPriceDataWithStatus()
 			]);
 
-		const compositeLive = applyResult('composite', composite, (v) => (compositeData = v), errors);
+		// Under the Lifestyle Index nothing on the TV reads the composite, the ticker included.
+		const compositeLive = composite
+			? applyResult('composite', composite, (v) => (compositeData = v), errors)
+			: null;
+		if (lifestyle) {
+			const read = await fetchLifestyleWithStatus();
+			applyResult('lifestyle', read, (v) => (lifestyleData = v), errors);
+		}
 		const cappuccinoLive = applyResult(
 			'cappuccino',
 			cappuccino,
@@ -809,7 +823,11 @@
 					{:else if screen.id === 'cameras-west-north'}
 						<TvCameraClusterScreen clusterId="west-north" />
 					{:else if screen.id === 'composite'}
-						<TvCompositeHero data={compositeData} />
+						{#if lifestyle}
+							<TvLifestyleHero data={lifestyleData} />
+						{:else}
+							<TvCompositeHero data={compositeData} />
+						{/if}
 					{:else if screen.id === 'daily-life'}
 						<TvDailyLifeCard cappuccino={cappuccinoData} grocery={groceryData} gas={gasData} />
 					{:else if screen.id === 'lifestyle'}

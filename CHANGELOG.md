@@ -6,6 +6,11 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-22
 
+### Added — The Lifestyle Index's household pages and TV screen (off in production)
+
+- **`/cost/larkspur`, `/cost/mill-valley`, `/cost/ross`: each fictional household's whole modelled budget.** Who they are; the break-even worked back through 2026 federal and California tax, line by line, to take-home, spending and savings; every section and line, and under each line its inputs: what each is (live, cited or assumed), its figure, where it was published or read, and when. A stale input says so and why; an incomplete budget hides its break-even and names what's missing; a budget no weekly run has refreshed in ten days says it may be out of date. Not modelled, and the method, are listed.
+- **On the TV, the Cost screen becomes the household of the day**: its break-even, where the money goes by section, its three biggest lines, and the fiction label. The TV's ticker drops the old Marin Number with it. Both switched on only in preview deployments for now.
+
 ### Added — The Lifestyle Index's Cost card (off in production)
 
 - **"What it takes to live here": one fictional household's break-even salary**, picked by town (Larkspur, Mill Valley, Ross; the default turns over daily at Pacific midnight), with its month's spending, a bar of where it goes, its three biggest lines and what their inputs are (L live, C cited, P assumed). A household whose budget is incomplete shows its spending so far, says _incomplete_, names what couldn't be read, and shows no break-even. Every view says "fictional household · modelled spending". On desktop it takes the place of the composite index and the Marin Number; on the phone it fills the Cost section. Switched on only in preview deployments for now; production keeps the composite.

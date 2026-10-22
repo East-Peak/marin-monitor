@@ -2,6 +2,9 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
 	import { TvWallboard } from '$lib/components/tv';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	let originalBodyStyles = {
 		overflow: '',
@@ -34,4 +37,4 @@
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
-<TvWallboard />
+<TvWallboard lifestyle={data.lifestyle} />

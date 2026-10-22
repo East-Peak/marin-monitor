@@ -7,6 +7,17 @@ import { defineConfig, devices } from '@playwright/test';
  */
 const SSR_SPEC = /(dashboard-v2|map-explore)-ssr\.spec\.ts/;
 const SSR_PORT = 4174;
+/**
+ * The Lifestyle Index's specs run against its own preview with the flag on and an engine-written
+ * seed (LIFE2); every other server has the flag off, as production does.
+ */
+const LIFESTYLE_SPEC = /lifestyle.*\.spec\.ts/;
+const LIFESTYLE_PORT = 4175;
+const LIFESTYLE_ENV = {
+	NEWS_SNAPSHOT_FIXTURE: '/dev/null',
+	LIFESTYLE_INDEX: 'on',
+	LIFESTYLE_FIXTURE: 'tests/e2e/fixtures/lifestyle-index.json'
+};
 
 export default defineConfig({
 	testDir: './tests/e2e',
@@ -23,7 +34,12 @@ export default defineConfig({
 		{
 			name: 'chromium',
 			use: { ...devices['Desktop Chrome'] },
-			testIgnore: SSR_SPEC
+			testIgnore: [SSR_SPEC, LIFESTYLE_SPEC]
+		},
+		{
+			name: 'lifestyle',
+			use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${LIFESTYLE_PORT}` },
+			testMatch: LIFESTYLE_SPEC
 		},
 		{
 			name: 'ssr',
@@ -40,6 +56,12 @@ export default defineConfig({
 			env: { NEWS_SNAPSHOT_FIXTURE: '/dev/null' },
 			// Never reuse: a server started without this env (or another app on the port) would
 			// serve live SSR news or the wrong page. A busy port fails loudly instead.
+			reuseExistingServer: false
+		},
+		{
+			command: `npx vite preview --port ${LIFESTYLE_PORT} --strictPort`,
+			url: `http://localhost:${LIFESTYLE_PORT}`,
+			env: LIFESTYLE_ENV,
 			reuseExistingServer: false
 		},
 		{
