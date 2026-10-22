@@ -6,6 +6,10 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-22
 
+### Added — The Lifestyle Index's display data (off in production)
+
+- **A summary of each household for the coming Cost card**: its break-even salary (never shown when the budget is incomplete, which names the missing lines), the month's spending by section, its three biggest lines with what their inputs are (live, cited or assumed), how many lines read stale, and the share of spending that rests only on assumptions. Served at `/api/data/lifestyle` only while the Lifestyle Index is switched on, which it is not in production yet.
+
 ### Changed — The Lifestyle Index: flat parcel taxes are paid, not deducted (not shown yet)
 
 - **A household's flat parcel taxes (the Tam, school and wildfire parcel taxes) still count in its budget, but no longer in its itemised deductions**: only the ad valorem part of property tax is deductible. Each break-even rises by $400–700 (California tax; the federal SALT cap already binds). Not shown yet.
