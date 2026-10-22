@@ -7,7 +7,7 @@
  * production LIFESTYLE_FIXTURE may point at a producer-format file instead.
  */
 import { readFile } from 'node:fs/promises';
-import type { HouseholdSheet } from '$lib/lifestyle/model';
+import { SECTIONS, type HouseholdSheet } from '$lib/lifestyle/model';
 import { householdSummary, type LifestyleCard } from '$lib/lifestyle/view';
 import { abortable } from '$lib/server/news/abortable';
 import type { BlobApi } from '$lib/server/news/snapshot-store';
@@ -46,6 +46,7 @@ const isStr = (v: unknown): v is string => typeof v === 'string';
 const CLASSES: ReadonlySet<unknown> = new Set(['live', 'cited', 'persona']);
 const AVAILABILITY: ReadonlySet<unknown> = new Set(['ok', 'stale', 'unavailable']);
 const isStrOrNull = (v: unknown) => v === null || isStr(v);
+const SECTION_SET: ReadonlySet<unknown> = new Set(SECTIONS);
 
 function isInput(i: unknown): boolean {
 	return (
@@ -84,7 +85,10 @@ function isLine(l: unknown): boolean {
 		isObject(l) &&
 		isStr(l.id) &&
 		isStr(l.label) &&
-		isStr(l.section) &&
+		SECTION_SET.has(l.section) &&
+		typeof l.required === 'boolean' &&
+		(l.note === undefined || isStr(l.note)) &&
+		(l.reason === undefined || isStr(l.reason)) &&
 		AVAILABILITY.has(l.availability) &&
 		Array.isArray(l.classes) &&
 		l.classes.every((c) => CLASSES.has(c)) &&
@@ -100,6 +104,7 @@ function isBudget(b: unknown): boolean {
 	const be = b.breakEven;
 	return (
 		isStr(b.town) &&
+		isNum(b.taxYear) &&
 		isStr(b.pricedAt) &&
 		isNum(b.burnMonthly) &&
 		typeof b.complete === 'boolean' &&
@@ -124,8 +129,8 @@ export async function readLifestyle(
 		if (!stored) return null;
 		const doc = JSON.parse(stored.text) as unknown;
 		const current = isObject(doc) ? doc.current : null;
-		if (!isObject(current) || current.schema !== 1 || typeof current.computedAt !== 'string')
-			return null;
+		if (!isObject(current) || current.schema !== 1 || !isStr(current.computedAt)) return null;
+		if (!isStrOrNull(current.lastSuccessfulScrapeAt)) return null;
 		if (!Array.isArray(current.budgets) || !current.budgets.every(isBudget)) return null;
 		return current as unknown as LifestyleSnapshot;
 	} catch {

@@ -22,6 +22,7 @@ await writeFile(
 			budgets: [
 				{
 					town: 'ross',
+					taxYear: 2026,
 					pricedAt: '2026-10-20T18:00:00.000Z',
 					lines: [],
 					sections: {},

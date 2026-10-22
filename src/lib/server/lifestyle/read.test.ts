@@ -12,6 +12,7 @@ const signal = new AbortController().signal;
 const budget = (town: string) =>
 	({
 		town,
+		taxYear: 2026,
 		pricedAt: '2026-10-20T18:00:00.000Z',
 		lines: [],
 		sections: { housing: 100 },
@@ -102,6 +103,7 @@ describe('where the index is read from', () => {
 			id: 'x',
 			label: 'x',
 			section: 'housing',
+			required: true,
 			classes: ['persona'],
 			availability: 'ok',
 			monthly: 1,
@@ -128,6 +130,19 @@ describe('where the index is read from', () => {
 		for (const bad of [{ class: 'bogus' }, { source: 42 }, { asOf: 7 }, { availability: 'fine' }])
 			expect(await readLifestyle(withLines([line({ inputs: [input(bad)] })]), signal)).toBeNull();
 		expect(await readLifestyle(withLines([line({ classes: ['bogus'] })]), signal)).toBeNull();
+		// Codex LIFE2-5: the line's own fields, the tax year and the run's success time.
+		for (const bad of [
+			{ required: undefined },
+			{ section: 'toString' },
+			{ note: 3 },
+			{ reason: 3 }
+		])
+			expect(await readLifestyle(withLines([line(bad)]), signal)).toBeNull();
+		expect(
+			await readLifestyle(withBudgets([{ ...budget('ross'), taxYear: undefined }]), signal)
+		).toBeNull();
+		const badTime = { ...snapshot([budget('ross')]), lastSuccessfulScrapeAt: { toString: null } };
+		expect(await readLifestyle(api(JSON.stringify({ current: badTime })), signal)).toBeNull();
 		const b = budget('ross') as unknown as Record<string, unknown>;
 		expect(await readLifestyle(withBudgets([{ ...b, marketTracker: null }]), signal)).toBeNull();
 		const taxes = (b.breakEven as { taxes: Record<string, unknown> }).taxes;
