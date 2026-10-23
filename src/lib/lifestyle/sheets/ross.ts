@@ -2,6 +2,7 @@
 import type { HouseholdSheet, LineSpec } from '../model';
 import {
 	asGift,
+	asPropertyTax,
 	cite,
 	employerTaxInputs,
 	live,
@@ -278,7 +279,7 @@ const lines: LineSpec[] = [
 			upkeep: persona(9000, 'upkeep $/yr')
 		},
 		terms: [
-			yearly('median', 'assessed', 'taxRate'),
+			asPropertyTax(yearly('median', 'assessed', 'taxRate')),
 			yearly('insurance'),
 			yearly('utilities'),
 			yearly('upkeep')

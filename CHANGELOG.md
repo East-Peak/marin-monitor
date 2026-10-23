@@ -8,6 +8,7 @@ All notable changes to Marin Monitor are documented here.
 
 ### Changed — The Lifestyle Index's Cost card
 
+- **Ross's Tahoe cabin's property tax is deducted like the house's**: on the California return, and within the same federal SALT cap (which Ross already reaches, so only California's tax falls). Ross's break-even drops about $1,700. A property tax is now marked term by term, so a line can hold a deductible tax beside costs that aren't.
 - **The break-even is the card's headline**: 30 px on desktop and 28 on the phone, where it was the size of any other figure. On the phone the card's spacing tightens by a couple of pixels to keep the page within its height budget.
 
 ## 2026-10-22

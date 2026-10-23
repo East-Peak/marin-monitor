@@ -3,8 +3,8 @@ import type { CoverageItem, HouseholdSheet, LineSpec, LiveKey, LiveRead, LiveRea
 import { COVERAGE_ITEMS } from './model';
 import { defineSheet, priceSheet, METHOD_VERSION } from './price';
 import {
-	asFlatTax,
 	asGift,
+	asPropertyTax,
 	cite,
 	employerTaxInputs,
 	less,
@@ -66,7 +66,6 @@ const LINES: LineSpec[] = [
 		section: 'housing',
 		label: 'Property tax',
 		required: true,
-		propertyTax: true,
 		inputs: {
 			price: cite('redfin.larkspur.2024'),
 			growth: persona(0.02, '2%/yr'),
@@ -75,8 +74,14 @@ const LINES: LineSpec[] = [
 			parcels: persona(1906, 'parcel taxes')
 		},
 		terms: [
-			{ kind: 'grow', base: 'price', rate: 'growth', years: 'years', times: ['base'] },
-			asFlatTax(yearly('parcels'))
+			asPropertyTax({
+				kind: 'grow',
+				base: 'price',
+				rate: 'growth',
+				years: 'years',
+				times: ['base']
+			}),
+			yearly('parcels')
 		]
 	},
 	{
@@ -434,6 +439,28 @@ describe('break-even', () => {
 		expect(taxes.takeHome - need).toBeGreaterThanOrEqual(0);
 		expect(taxes.takeHome - need).toBeLessThanOrEqual(1);
 		expect(taxes.gross).toBeCloseTo(gross, 6);
+	});
+
+	it('files a property-tax term wherever it sits, and nothing else on its line', () => {
+		const cabin: LineSpec = {
+			id: 't.travel.cabin',
+			section: 'travel',
+			label: 'The cabin',
+			required: true,
+			inputs: {
+				value: persona(500000, 'assessed'),
+				rate: persona(0.011, '1.1%'),
+				upkeep: persona(9000, 'upkeep')
+			},
+			terms: [asPropertyTax(yearly('value', 'rate')), yearly('upkeep')]
+		};
+		const without = priceSheet(defineSheet(base()), liveReads(), NOW);
+		const withCabin = priceSheet(
+			defineSheet({ ...base(), lines: [...LINES, cabin] }),
+			liveReads(),
+			NOW
+		);
+		expect(withCabin.taxInputs.propertyTax - without.taxInputs.propertyTax).toBeCloseTo(5500, 6);
 	});
 
 	it('files the sheet’s gifts and ad valorem property tax, and the mortgage’s interest', () => {

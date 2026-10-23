@@ -116,8 +116,9 @@ export type Inputs = Readonly<Record<string, InputSpec>>;
  * - `employer`: a W-2 household employee's all-in annual cost;
  * - `water`: MMWD's tiered bimonthly bill;
  * - `mortgage`: the sheet's frozen purchase facts, amortised.
- * `gift` marks a term whose annual amount is a deductible cash gift; `flatTax`
- * a flat parcel tax on a property-tax line, which is paid but not deductible.
+ * `gift` marks a term whose annual amount is a deductible cash gift; `propertyTax`
+ * one that is a deductible ad valorem property tax, on whichever line it sits (a flat
+ * parcel tax is paid but not deductible, so it is never marked).
  */
 export type Term = (
 	| {
@@ -143,7 +144,7 @@ export type Term = (
 	  }
 	| { readonly kind: 'water'; readonly unitsBimonthly: string }
 	| { readonly kind: 'mortgage' }
-) & { readonly gift?: true; readonly flatTax?: true };
+) & { readonly gift?: true; readonly propertyTax?: true };
 
 export interface LineSpec {
 	/** Stable across sheet versions: history and movers key on it. */
@@ -154,8 +155,6 @@ export interface LineSpec {
 	readonly terms: readonly Term[];
 	/** A required line that cannot be priced makes the budget incomplete. */
 	readonly required: boolean;
-	/** Counts toward property tax on the tax return. */
-	readonly propertyTax?: true;
 	readonly note?: string;
 }
 

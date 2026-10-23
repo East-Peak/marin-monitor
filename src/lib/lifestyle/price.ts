@@ -25,7 +25,7 @@ import { CITED } from './sources';
 import { solveBreakEven, TAX_2026, type TaxCase, type TaxParameters } from './tax';
 
 /** Bump when the pricing or tax method changes what a sheet costs. */
-export const METHOD_VERSION = 'lifestyle-method-2';
+export const METHOD_VERSION = 'lifestyle-method-3';
 
 const DAY_MS = 86_400_000;
 /** Clock skew, not corruption. */
@@ -385,7 +385,7 @@ interface Priced {
 	readonly line: PricedLine;
 	/** Deductible cash gifts in this line, per year. */
 	readonly gifts: number;
-	/** Deductible property tax in this line, per year: its ad valorem part, never a flat parcel tax. */
+	/** Deductible property tax in this line, per year: its ad valorem terms, never a flat parcel tax. */
 	readonly propertyTax: number;
 	readonly values: Readonly<Record<string, number>> | null;
 }
@@ -422,7 +422,7 @@ function priceLine(spec: LineSpec, sheet: HouseholdSheet, live: LiveReads, now: 
 	const annual = (keep: (t: Term) => boolean) =>
 		spec.terms.filter(keep).reduce((s, t) => s + 12 * term(t), 0);
 	const gifts = annual((t) => !!t.gift);
-	const propertyTax = spec.propertyTax ? annual((t) => !t.flatTax) : 0;
+	const propertyTax = annual((t) => !!t.propertyTax);
 	return { line: { ...base, monthly }, gifts, propertyTax, values };
 }
 

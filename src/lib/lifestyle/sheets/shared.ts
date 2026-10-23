@@ -1,7 +1,7 @@
 /** Line builders the three sheets share; every quantity is still an argument from the sheet. */
 import type { InputSpec, LineSpec } from '../model';
 import type { CitedId } from '../sources';
-import { asFlatTax, cite, live, monthly, persona, spread, yearly } from '../sheet-kit';
+import { asPropertyTax, cite, live, monthly, persona, spread, yearly } from '../sheet-kit';
 import type { Term } from '../model';
 
 export const NOT_MODELLED = [
@@ -67,25 +67,26 @@ export function propertyTax(
 		inputs[`base${i}`] = b.value;
 		inputs[`years${i}`] = persona(b.years, 'years of growth');
 		for (const rate of ['rate', 'bonds']) {
-			terms.push({
-				kind: 'grow',
-				base: `base${i}`,
-				rate: 'growth',
-				years: `years${i}`,
-				times: [rate]
-			});
+			terms.push(
+				asPropertyTax({
+					kind: 'grow',
+					base: `base${i}`,
+					rate: 'growth',
+					years: `years${i}`,
+					times: [rate]
+				})
+			);
 		}
 	});
 	Object.entries(opts.parcels).forEach(([name, amount], i) => {
 		inputs[`parcel${i}`] = persona(amount, `parcel tax: ${name}`);
-		terms.push(asFlatTax(yearly(`parcel${i}`)));
+		terms.push(yearly(`parcel${i}`)); // paid, not deductible: never marked
 	});
 	return {
 		id: `${town}.home.tax`,
 		section: 'housing',
 		label: opts.label ?? 'Property tax',
 		required: true,
-		propertyTax: true,
 		inputs,
 		terms,
 		...(opts.note ? { note: opts.note } : {})

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { LiveKey, LiveRead, LiveReads } from '../model';
 import { COVERAGE_ITEMS } from '../model';
-import { priceSheet } from '../price';
+import { METHOD_VERSION, priceSheet } from '../price';
+import { computeTaxes, TAX_2026 } from '../tax';
 import { SHEETS } from './index';
 
 const NOW = new Date('2026-10-20T18:00:00.000Z');
@@ -171,7 +172,8 @@ const APPROVED: Record<string, Record<string, number>> = {
  * figure (the shop's payroll-tax rates, upkeep's 1% of a cited price) are
  * Persona × Cited (LIFE0 showed 35% / 27% / 31%).
  * Break-even sits $414 / $440 / $707 above the approved figures: flat parcel
- * taxes are paid but no longer deducted (Stuart, 2026-10-22).
+ * taxes are paid but no longer deducted (Stuart, 2026-10-22). Ross's then falls
+ * $1,735: the Tahoe cabin's property tax is deducted like the house's (Stuart, 2026-10-23).
  */
 const TOTALS = {
 	larkspur: {
@@ -186,7 +188,7 @@ const TOTALS = {
 		within: 50,
 		personaOnly: 0.241
 	},
-	ross: { burn: 63778.64, breakEven: 1396049, within: 2, personaOnly: 0.306 }
+	ross: { burn: 63778.64, breakEven: 1394314, within: 2, personaOnly: 0.306 }
 } as const;
 
 const priced = (id: string) => priceSheet(SHEETS.find((s) => s.id === id)!, reads, NOW);
@@ -228,7 +230,8 @@ describe('the approved household sheets', () => {
 		}
 	);
 
-	it.each(['larkspur', 'millvalley', 'ross'])(
+	// Ross files its cabin's tax too: the next test.
+	it.each(['larkspur', 'millvalley'])(
 		'%s files only the ad valorem property tax: its flat parcel taxes are paid, not deducted',
 		(id) => {
 			const b = priced(id);
@@ -240,6 +243,44 @@ describe('the approved household sheets', () => {
 			expect(b.taxInputs.propertyTax).toBeCloseTo(tax.monthly! * 12 - parcels, 6);
 		}
 	);
+
+	it('ross deducts the Tahoe cabin’s property tax like the house, under the same federal cap', () => {
+		const sheet = SHEETS.find((s) => s.id === 'ross')!;
+		const b = priced('ross');
+		const value = (lineId: string, name: string) =>
+			b.lines.find((l) => l.id === lineId)!.inputs.find((i) => i.name === name)!.value!;
+		const home = b.lines.find((l) => l.id === 'ross.home.tax')!;
+		const parcels = home.inputs
+			.filter((i) => i.name.startsWith('parcel'))
+			.reduce((s, i) => s + i.value!, 0);
+		const cabin = ['median', 'assessed', 'taxRate']
+			.map((n) => value('ross.travel.cabin', n))
+			.reduce((a, x) => a * x, 1);
+		expect(cabin).toBeGreaterThan(0);
+		expect(b.taxInputs.propertyTax).toBeCloseTo(home.monthly! * 12 - parcels + cabin, 6);
+
+		// The SALT cap binds federally, so the cabin lowers only California's tax.
+		const gross = b.breakEven!.gross;
+		const at = (propertyTax: number) =>
+			computeTaxes(
+				{
+					status: sheet.status,
+					wages: sheet.split.map((share) => gross * share),
+					deferrals: sheet.split.map((share, i) => Math.min(sheet.deferrals[i], gross * share)),
+					children: sheet.children,
+					...b.taxInputs,
+					propertyTax
+				},
+				TAX_2026
+			);
+		const withCabin = at(b.taxInputs.propertyTax);
+		const without = at(b.taxInputs.propertyTax - cabin);
+		expect(withCabin.federal.saltAllowed).toBe(TAX_2026.federal.saltFloor);
+		expect(withCabin.federal.tax).toBeCloseTo(without.federal.tax, 6);
+		expect(withCabin.california.tax).toBeLessThan(without.california.tax);
+		// What a sheet costs changed: movers never pair across the method.
+		expect(METHOD_VERSION).toBe('lifestyle-method-3');
+	});
 
 	it('keeps the frozen purchases frozen: no mortgage input is live, and today’s median is context only', () => {
 		for (const s of SHEETS) {
