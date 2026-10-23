@@ -49,6 +49,7 @@
 	import type { DatasetFetch } from '$lib/dashboard/source-adapters';
 	import type { TrafficCorridorsData } from '$lib/api/marin/traffic-corridors';
 	import type { AirportStatusData } from '$lib/types/airport';
+	import type { GgAlertsBlob } from '$lib/gg-alerts';
 	import { activeLayers } from '$lib/stores/map';
 	import type { SourceStatusEntry } from '$lib/dashboard/source-status';
 	import type { NewsSnapshotView } from '$lib/news/snapshot';
@@ -118,6 +119,7 @@
 	const fixIt = controller?.fixIt ?? readable<NewsItem[] | null>(null);
 	const briefState = controller?.brief ?? readable<BriefState | null>(null);
 	const transitState = controller?.transit ?? readable<TransitState>({ reads: null, error: null });
+	const ggAlerts = controller?.ggAlerts ?? readable<GgAlertsBlob | null>(null);
 	const airport = controller?.airport ?? readable<AirportStatusData | null>(null);
 	const traffic = controller?.traffic ?? readable<TrafficCorridorsData | null>(null);
 	const marine = controller?.marine ?? readable<MarineForecastRead | null>(null);
@@ -132,6 +134,7 @@
 			transit: $transitState,
 			airport: $airport,
 			traffic: $traffic,
+			ggAlerts: $ggAlerts,
 			outcomes: $outcomes,
 			open: desktop || $open['getting-around'],
 			now: $clock

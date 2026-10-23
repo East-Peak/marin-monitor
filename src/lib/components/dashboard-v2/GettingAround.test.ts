@@ -9,6 +9,7 @@ const part = (over: Partial<Part> = {}): Part => ({
 	more: 0,
 	note: null,
 	meta: null,
+	link: null,
 	scope: null,
 	state: null,
 	...over
@@ -192,6 +193,30 @@ describe('GettingAround', () => {
 		expect(
 			['transit', 'roads', 'airports'].map((k) => foot(k).querySelector('a')!.getAttribute('href'))
 		).toEqual([LINKS.transit, LINKS.traffic, LINKS.faa]);
+	});
+
+	it("a part's own link replaces its default: transit's hidden rows all Golden Gate's go to goldengate.org", () => {
+		const { container } = render(GettingAround, {
+			view: {
+				...VIEW,
+				transit: part({
+					more: 1,
+					meta: 'goldengate.org · checked 7:40 AM',
+					link: {
+						url: 'https://www.goldengate.org/alerts/',
+						label: 'All Golden Gate alerts (goldengate.org)'
+					}
+				})
+			},
+			onopen: vi.fn()
+		});
+		const foot = container.querySelector('[data-ga="transit"] [data-ga-foot]')!;
+		expect(foot.textContent).toBe(
+			'goldengate.org · checked 7:40 AM · 1 more · All Golden Gate alerts (goldengate.org) ↗'
+		);
+		expect(foot.querySelector('a')!.getAttribute('href')).toBe(
+			'https://www.goldengate.org/alerts/'
+		);
 	});
 
 	it('every text node carries a type role (§13.4)', () => {

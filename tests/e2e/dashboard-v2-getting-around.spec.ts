@@ -1,4 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { expect, test, type Page, type Route } from '@playwright/test';
+import { parseGgAlertsPage } from '../../src/lib/server/gg-alerts/parse';
 import { stubCams } from './fixtures/cams';
 
 test.skip(
@@ -213,7 +215,13 @@ const BEFORE_390 = { today: 803, heavy: 873 };
 type Handler = (r: Route) => unknown;
 async function stub(
 	page: Page,
-	over: { transit?: Partial<Record<string, Handler>>; airport?: Handler; traffic?: Handler } = {}
+	over: {
+		transit?: Partial<Record<string, Handler>>;
+		airport?: Handler;
+		traffic?: Handler;
+		/** goldengate.org's list (GGALERT1); default: down, with the rest of /api/data. */
+		gg?: Handler;
+	} = {}
 ) {
 	await page.route(
 		/\/api\/(data|nps|health|feeds|article|geocode|calfire)\b|\/api\/news\/snapshot|earthquake\.usgs\.gov|api\.weather\.gov|tidesandcurrents/,
@@ -232,6 +240,7 @@ async function stub(
 	);
 	await page.route('**/api/airport-status', over.airport ?? ((r) => json(r, AIRPORTS)));
 	await page.route('**/api/traffic/corridors', over.traffic ?? ((r) => json(r, TRAFFIC)));
+	if (over.gg) await page.route('**/api/data/gg-alerts', over.gg);
 	await stubCams(page, { lastModified: T0 - 4 * MIN });
 }
 function requests(page: Page, path: string): string[] {
@@ -272,6 +281,21 @@ const section = (page: Page) => page.locator('section#getting-around');
 const status = (page: Page) => section(page).locator('[data-section-status]');
 const ALL_CLEAR =
 	/No alerts on 511|No disruptions listed|reports no incidents|No airport-wide delays|511 lists no alerts|No incidents listed|No delays reported|on time/i;
+
+/** goldengate.org/alerts/ of 2026-10-23, through the producer's own parser (GGALERT1). */
+const GG_PAGE = parseGgAlertsPage(
+	readFileSync('src/lib/server/__fixtures__/gg-alerts-2026-10-23.html', 'utf8')
+).alerts;
+const ggBlob = (
+	alerts: typeof GG_PAGE | null,
+	failure: string | null = null,
+	at = T0 - 5 * MIN
+) => ({
+	checkedAt: iso(T0 - MIN),
+	lastSuccessfulScrapeAt: alerts ? iso(at) : null,
+	alerts,
+	lastFailure: failure ? { at: iso(T0 - MIN), error: failure } : null
+});
 
 test.describe('desktop 1440×900', () => {
 	test.use({ viewport: { width: 1440, height: 900 } });
@@ -320,7 +344,7 @@ test.describe('desktop 1440×900', () => {
 			'https://511.org/alerts/traffic'
 		);
 		await expect(status(page)).toHaveText(
-			'Partial coverage · FAA status for OAK, SMART unavailable'
+			'Partial coverage · FAA status for OAK, SMART, goldengate.org alerts unavailable'
 		);
 		await page.waitForTimeout(2_000);
 		expect(airportReqs).toHaveLength(1);
@@ -334,13 +358,16 @@ test.describe('desktop 1440×900', () => {
 		await stub(page, {
 			transit: { MA: (r) => json(r, gtfs([])), SA: (r) => json(r, gtfs([])) },
 			airport: (r) => json(r, { ...AIRPORTS, airports: [airport('SFO'), airport('OAK')] }),
-			traffic: (r) => json(r, { ...TRAFFIC, events: [] })
+			traffic: (r) => json(r, { ...TRAFFIC, events: [] }),
+			gg: (r) => json(r, ggBlob([]))
 		});
 		await openV2(page);
 		const s = section(page);
+		// goldengate.org's ok read speaks for Golden Gate; 511's empty lists for the rest.
 		await expect(s.locator('[data-ga="transit"] [data-line]')).toHaveText(
 			[
-				'Golden Gate Transit, Golden Gate Ferry, Marin Transit, SMART, Angel Island Ferry · No alerts on 511; check the agencies: goldengate.org ↗, marintransit.gov ↗, sonomamarintrain.org ↗, angelislandferry.com ↗'
+				'Marin Transit, SMART, Angel Island Ferry · No alerts on 511; check the agencies: marintransit.gov ↗, sonomamarintrain.org ↗, angelislandferry.com ↗',
+				'Golden Gate Transit, Golden Gate Ferry · No Golden Gate alerts listed on goldengate.org ↗'
 			],
 			{ timeout: 15_000 }
 		);
@@ -371,8 +398,8 @@ test.describe('desktop 1440×900', () => {
 		await expect(s.locator('[data-line="MA"]')).toHaveAttribute('data-state', 'unavailable', {
 			timeout: 15_000
 		});
-		// Every agency's failed read says so, on its own line; none folds into "No alerts on 511".
-		await expect(s.locator('[data-ga="transit"] [data-state="unavailable"]')).toHaveCount(5);
+		// Every agency's failed read says so, on its own line, and goldengate.org's; none folds into "No alerts on 511".
+		await expect(s.locator('[data-ga="transit"] [data-state="unavailable"]')).toHaveCount(6);
 		await expect(s.locator('[data-line="no-511"]')).toHaveCount(0);
 		await expect(status(page)).toHaveText(/^Source unavailable · /);
 		await expect(s).not.toContainText(ALL_CLEAR);
@@ -406,9 +433,10 @@ test.describe('phone 390×844', () => {
 		await openV2(page);
 		await expect(section(page)).toHaveAttribute('data-open', 'false');
 		// The other agencies read fine, so failing Marin Transit (and the stub's SMART) is partial coverage.
-		await expect(status(page)).toHaveText('Partial coverage · Marin Transit, SMART unavailable', {
-			timeout: 15_000
-		});
+		await expect(status(page)).toHaveText(
+			'Partial coverage · Marin Transit, SMART, goldengate.org alerts unavailable',
+			{ timeout: 15_000 }
+		);
 		await page.waitForTimeout(2_000);
 		expect([airportReqs.length, trafficReqs.length]).toEqual([0, 0]);
 
@@ -557,3 +585,84 @@ test.describe('phone 390×844', () => {
 		}
 	});
 });
+
+for (const [name, viewport] of [
+	['1440×900', { width: 1440, height: 900 }],
+	['390×844', { width: 390, height: 844 }]
+] as const) {
+	test.describe(`Golden Gate's own list (GGALERT1) at ${name}`, () => {
+		test.use({ viewport });
+		const transit = (page: Page) => section(page).locator('[data-ga="transit"]');
+
+		test("the disruption shows first, tagged with its routes, dated by our check; the standing notices don't", async ({
+			page
+		}) => {
+			await stub(page, { gg: (r) => json(r, ggBlob(GG_PAGE)) });
+			await openV2(page, '#getting-around');
+			const rows = transit(page).locator('[data-row]');
+			await expect(rows.first()).toContainText(
+				'10/19-10/23 GGFERRY WEEKDAY SERVICE DISRUPTIONS ON ALL ROUTES',
+				{ timeout: 15_000 }
+			);
+			await expect(rows.first().locator('[data-ga-tag]')).toHaveText([
+				'General Ferry',
+				'Larkspur Ferry',
+				'Sausalito Ferry',
+				'Tiburon Ferry',
+				'Angel Island'
+			]);
+			await expect(rows.first().locator('a')).toHaveAttribute(
+				'href',
+				'https://www.goldengate.org/alerts/#549'
+			);
+			await expect(rows.first().locator('.ga-meta')).toHaveText(
+				/^goldengate\.org · checked \d{1,2}:\d{2} [AP]M$/
+			);
+			await expect(rows.nth(2)).toContainText('ALERT MANZANITA PARK & RIDE MAY FLOOD');
+			await expect(transit(page)).not.toContainText(/GATE C|PARK SMART|TAP ON AND OFF/);
+			// 511's agencies are read one after another: its time arrives after the site's.
+			await expect(transit(page).locator('[data-ga-foot]')).toContainText(
+				/^goldengate\.org · checked \d{1,2}:\d{2} [AP]M; 511 · updated 2 min ago · /,
+				{ timeout: 15_000 }
+			);
+			const overflow = await page.evaluate(
+				() => document.documentElement.scrollWidth - window.innerWidth
+			);
+			expect(overflow).toBeLessThanOrEqual(1);
+		});
+
+		test('a failed read says unavailable, never "no alerts", and 511\'s rows still show', async ({
+			page
+		}) => {
+			await stub(page, {
+				gg: (r) => json(r, ggBlob(null, 'Sausalito Ferry: 2 listed, 1 read')),
+				transit: { GF: (r) => json(r, gtfs([{ id: 'gf1', title: 'Larkspur 10:40 AM cancelled' }])) }
+			});
+			await openV2(page, '#getting-around');
+			await expect(transit(page).locator('[data-line="gg-site"]')).toHaveText(
+				'goldengate.org · Alerts unavailable ↗',
+				{ timeout: 15_000 }
+			);
+			await expect(transit(page).locator('[data-row="511-GF-gf1"]')).toContainText(
+				'511 · Golden Gate Ferry',
+				{ timeout: 15_000 }
+			);
+			await expect(transit(page)).not.toContainText('No Golden Gate alerts');
+		});
+
+		test('4+ Golden Gate alerts: three rows, and "more" goes to goldengate.org', async ({
+			page
+		}) => {
+			const four = [...GG_PAGE, { id: '600', headline: 'ROUTE 130 DETOUR', routes: ['Route 130'] }];
+			await stub(page, {
+				gg: (r) => json(r, ggBlob(four)),
+				transit: { MA: (r) => json(r, gtfs([])) }
+			});
+			await openV2(page, '#getting-around');
+			await expect(transit(page).locator('[data-row]')).toHaveCount(3, { timeout: 15_000 });
+			const more = transit(page).locator('[data-ga-foot] a');
+			await expect(more).toHaveText('1 more · All Golden Gate alerts (goldengate.org) ↗');
+			await expect(more).toHaveAttribute('href', 'https://www.goldengate.org/alerts/');
+		});
+	});
+}

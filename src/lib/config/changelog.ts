@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-23',
+		title: 'Golden Gate ferry and bus disruptions',
+		description:
+			'Getting Around now reads Golden Gate’s own alert page every 15 minutes, so ferry and bus disruptions show even when 511 doesn’t carry them. Each notice shows once, tagged with its routes and linked to the page, and dated by when we last checked: the page gives no posting times. Standing reminders are left out. If the page can’t be read whole, the section says so and keeps the last list it read, with that list’s time.'
+	},
+	{
+		date: '2026-10-23',
 		title: 'What it takes to live here',
 		description:
 			'The Cost section’s old composite index and Marin Number give way to the Lifestyle Index: one fictional household each in Larkspur, Mill Valley and Ross, its whole month priced from live reads, published figures and stated assumptions, and worked back through 2026 federal and California tax to the salary it needs to break even. Pick a town on the card, or open its whole budget to see every line, where each figure comes from and when it was read. On the TV, the Cost screen is the household of the day.'

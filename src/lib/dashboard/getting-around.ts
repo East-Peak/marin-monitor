@@ -1,8 +1,8 @@
 /**
  * Getting Around (spec §2.5, §13.10; v2 design 2026-10-16; cameras live in the Cams strip, decision 5a).
  * Pure: what the section says about Marin roads and the airport routes, transit, and SFO/OAK, and
- * its header status. Nothing is classified by keywords: an alert or incident is whatever 511 lists;
- * the only names matched are the promotions in PROMO_HEADLINES. An all-clear ("No airport-wide
+ * its header status. Nothing is classified by keywords: an alert or incident is whatever 511 (or
+ * goldengate.org, GGALERT1) lists; the only names matched are the promotions in PROMO_HEADLINES. An all-clear ("No airport-wide
  * delays", "No alerts on 511", "511 reports no incidents…") is said only for an ok read: complete,
  * timed, fresh, not retained, nothing unreadable.
  */
@@ -13,6 +13,7 @@ import {
 	type TransitAlertRow
 } from '$lib/api/marin/transit';
 import type { TrafficCorridorsData } from '$lib/api/marin/traffic-corridors';
+import { GG_ALERTS_PAGE, type GgAlertsBlob } from '$lib/gg-alerts';
 import { ROAD_SCOPE, TRIP_LABEL } from '$lib/config/traffic-corridors';
 import type {
 	AirportOperationalStatus,
@@ -21,6 +22,7 @@ import type {
 	DelayInfo
 } from '$lib/types/airport';
 import { formatItemAge } from './latest-reporting';
+import { formatAsOf } from './pacific-time';
 import { datasetEntry, type DatasetFetch } from './source-adapters';
 import {
 	effectiveState,
@@ -35,6 +37,8 @@ import {
 export const AIRPORT_MAX_AGE_MS = 30 * 60_000;
 export const TRAFFIC_MAX_AGE_MS = 15 * 60_000;
 const TRANSIT_MAX_AGE_MS = 30 * 60_000;
+/** sync-gg-alerts runs every 15 min: an hour is 4 missed runs (/api/health's own limit). */
+export const GG_ALERTS_MAX_AGE_MS = 60 * 60_000;
 const PREVIEW = 3;
 const SUMMARY_AIRPORTS = ['SFO', 'OAK'] as const;
 const OUT_OF_DATE = ' · out of date';
@@ -81,8 +85,10 @@ export interface Part {
 	more: number;
 	/** One line instead of content: loading, unavailable, or an honest empty. */
 	note: string | null;
-	/** The source and its time, e.g. "511 · checked 1 min ago". */
+	/** Each source and its own time, e.g. "511 · checked 1 min ago". */
 	meta: string | null;
+	/** "See more" when it isn't the part's default page (transit's hidden rows all Golden Gate's). */
+	link: { url: string; label: string } | null;
 	/** What the part covers, said on screen (roads only). */
 	scope: string | null;
 	/** The part's evaluated state (airports, roads), rendered as data-part-state; null for transit (its lines carry theirs). */
@@ -98,6 +104,8 @@ export interface GettingAroundInput {
 	transit: TransitState;
 	airport: AirportStatusData | null;
 	traffic: TrafficCorridorsData | null;
+	/** goldengate.org's list as sync-gg-alerts last wrote it; its read is outcomes['gg-alerts']. */
+	ggAlerts: GgAlertsBlob | null;
 	outcomes: Readonly<Record<string, DatasetFetch>>;
 	/** Airports and roads load only while the section is open; closed, they are not in its status. */
 	open: boolean;
@@ -116,6 +124,7 @@ const part = (over: Partial<Part> = {}): Part => ({
 	more: 0,
 	note: null,
 	meta: null,
+	link: null,
 	scope: null,
 	state: null,
 	...over
@@ -339,10 +348,11 @@ export const PROMO_HEADLINES: readonly string[] = ['Save Money with Clipper!'];
 /** Names shown in a group row before "…". */
 const GROUP_NAMES = 3;
 
-/** A row and how many alerts it stands for ("N more" counts alerts, call 4). */
+/** A row, how many alerts it stands for ("N more" counts alerts, call 4), and whose list it is. */
 interface Summary {
 	row: Row;
 	alerts: number;
+	source: 'goldengate.org' | '511';
 }
 
 const prefixOf = (a: TransitAlertRow) =>
@@ -382,6 +392,7 @@ function groupRow(
 		members.find((a) => a.url !== null)?.url ?? null,
 		// The qualification before the alert's words: the clamp may hide their end (Codex GA-v2 #5).
 		[
+			'511',
 			agencyName,
 			unverified(members, now),
 			example ? `e.g. ${exampleName ? `${exampleName}: ` : ''}${example.description}` : null
@@ -405,16 +416,22 @@ function summaries(agencyName: string, alerts: TransitAlertRow[], now: number): 
 		if (members.length >= 2) {
 			// The group stands at its first member's place in the feed.
 			if (members[0] === a)
-				out.push({ row: groupRow(agencyName, prefix!, members, now), alerts: members.length });
+				out.push({
+					row: groupRow(agencyName, prefix!, members, now),
+					alerts: members.length,
+					source: '511'
+				});
 			continue;
 		}
 		out.push({
 			row: row(a.id, a.headline.trim(), a.url, [
+				'511',
 				agencyName,
 				unverified([a], now),
 				a.description && clip(a.description, 140)
 			]),
-			alerts: 1
+			alerts: 1,
+			source: '511'
 		});
 	}
 	return out;
@@ -467,20 +484,106 @@ function agencyEntry(
 	return { ...base, state: 'ok', observedAt: read.observedAt, detail: null };
 }
 
-function transit(t: TransitState, now: number): Built {
+// ── Golden Gate's own list (GGALERT1) ──
+
+/** The agencies goldengate.org speaks for when its read is ok. */
+const GOLDEN_GATE = new Set(['GG', 'GF']);
+const GG_SOURCE = 'goldengate.org';
+const GG_ALL = { url: GG_ALERTS_PAGE, label: 'All Golden Gate alerts (goldengate.org)' };
+const GG_SITE_WORDS: Partial<Record<SourceEntryState, string>> = {
+	stale: 'Out of date',
+	unavailable: 'Alerts unavailable',
+	unknown: 'Not verified'
+};
+/** Headlines match only exactly, case and whitespace folded. */
+const folded = (headline: string) => headline.replace(/\s+/g, ' ').trim().toLowerCase();
+
+interface Site {
+	entry: SourceStatusEntry;
+	/** ok: the source for GG and GF. */
+	trusted: boolean;
+	rows: Summary[];
+	line: Line | null;
+	meta: string | null;
+}
+
+/**
+ * The page gives no publish times: each row is dated by our check alone. A failed latest read is
+ * unavailable, its last good list kept under that list's own check time; never "no alerts".
+ */
+function ggSite(fetch: DatasetFetch | undefined, blob: GgAlertsBlob | null, now: number): Site {
+	const read = datasetEntry('gg-alerts', `${GG_SOURCE} alerts`, fetch, GG_ALERTS_MAX_AGE_MS);
+	const entry: SourceStatusEntry =
+		blob?.lastFailure && read.state !== 'loading'
+			? { ...read, state: 'unavailable', detail: blob.lastFailure.error }
+			: read;
+	const state = effectiveState(entry, now);
+	const at = parseObservedAt(blob?.lastSuccessfulScrapeAt);
+	const meta =
+		at === null || at - now > FUTURE_SKEW_MS
+			? null
+			: `${GG_SOURCE} · checked ${formatAsOf(at, now)}${now - at > GG_ALERTS_MAX_AGE_MS ? OUT_OF_DATE : ''}`;
+	const rows = (meta && blob?.alerts ? blob.alerts : []).map(
+		(a): Summary => ({
+			row: {
+				...row(`gg-${a.id}`, a.headline, `${GG_ALERTS_PAGE}#${a.id}`, [meta]),
+				tags: a.routes
+			},
+			alerts: 1,
+			source: GG_SOURCE
+		})
+	);
+	const trusted = state === 'ok';
+	const line = (label: string, text: string): Line => ({
+		id: 'gg-site',
+		label,
+		text,
+		state,
+		url: GG_ALERTS_PAGE,
+		links: []
+	});
+	return {
+		entry,
+		trusted,
+		rows,
+		meta,
+		line:
+			state === 'loading' || (trusted && rows.length)
+				? null
+				: trusted
+					? line(
+							'Golden Gate Transit, Golden Gate Ferry',
+							'No Golden Gate alerts listed on goldengate.org'
+						)
+					: line(
+							GG_SOURCE,
+							state === 'unavailable' && rows.length
+								? 'Latest read failed'
+								: (GG_SITE_WORDS[state] ?? 'Not verified')
+						)
+	};
+}
+
+function transit(t: TransitState, gg: Site, now: number): Built {
 	const entries: SourceStatusEntry[] = [];
 	const lines: Line[] = [];
 	const shown: Summary[] = [];
 	const quiet: (typeof MARIN_AGENCIES)[number][] = [];
 	const claims: TransitAgencyRead[] = [];
+	const onSite = new Set(gg.rows.map((s) => folded(s.row.title)));
 	for (const agency of MARIN_AGENCIES) {
 		const read = t.reads?.find((r) => r.id === agency.id);
 		const entry = agencyEntry(agency, t, read);
 		const state = effectiveState(entry, now);
 		entries.push(entry);
 		if (read?.alerts) claims.push(read);
-		const own = read?.alerts ? summaries(agency.name, read.alerts, now) : [];
+		// The site's ok read speaks for Golden Gate: 511's GG/GF alerts show unless the site lists the
+		// same headline (by 511's own headline, before grouping). A site read we can't trust hides nothing.
+		const speaks = GOLDEN_GATE.has(agency.id) && gg.trusted;
+		const alerts = read?.alerts?.filter((a) => !speaks || !onSite.has(folded(a.headline)));
+		const own = alerts ? summaries(agency.name, alerts, now) : [];
 		shown.push(...own);
+		if (speaks) continue;
 		// ok implies a read with a list (agencyEntry); everything else keeps its own words.
 		if (state === 'ok' && read!.alerts!.length === 0) {
 			quiet.push(agency);
@@ -507,10 +610,11 @@ function transit(t: TransitState, now: number): Built {
 				.map((a) => AGENCY_PAGES[a.id])
 				.filter((p, i, all) => all.findIndex((q) => q.url === p.url) === i)
 		});
+	if (gg.line) lines.push(gg.line);
 	// Every claiming feed's own time must be usable before taking the oldest (Codex r2 #6, r3 #2).
 	const usable = (at: number | null) =>
 		at !== null && Number.isFinite(at) && at - now <= FUTURE_SKEW_MS;
-	const meta =
+	const meta511 =
 		claims.length === 0
 			? null
 			: claims.every((c) => usable(c.observedAt))
@@ -522,22 +626,30 @@ function transit(t: TransitState, now: number): Built {
 						false
 					)
 				: '511 · time unknown';
+	// Golden Gate's own rows first, in page order; then 511's, in feed order.
+	const all = [...gg.rows, ...shown];
+	const hidden = all.slice(PREVIEW);
 	return {
 		part: part({
 			lines,
-			rows: shown.slice(0, PREVIEW).map((s) => s.row),
-			more: shown.slice(PREVIEW).reduce((n, s) => n + s.alerts, 0),
-			meta
+			rows: all.slice(0, PREVIEW).map((s) => s.row),
+			more: hidden.reduce((n, s) => n + s.alerts, 0),
+			meta: [gg.meta, meta511].filter(Boolean).join('; ') || null,
+			link: hidden.length && hidden.every((s) => s.source === GG_SOURCE) ? GG_ALL : null
 		}),
-		entries,
-		answered: claims.length
+		entries: [...entries, gg.entry],
+		answered: claims.length + (gg.meta ? 1 : 0)
 	};
 }
 
 // ── The section ───────────────────────────────────────────────────────────
 
 export function gettingAroundView(input: GettingAroundInput): GettingAroundView {
-	const t = transit(input.transit, input.now);
+	const t = transit(
+		input.transit,
+		ggSite(input.outcomes['gg-alerts'], input.ggAlerts, input.now),
+		input.now
+	);
 	const a = input.open ? airports(input.outcomes.airport, input.airport, input.now) : null;
 	const r = input.open ? roads(input.outcomes.traffic, input.traffic, input.now) : null;
 	const built = [a, r, t].filter((b): b is Built => b !== null);

@@ -65,8 +65,10 @@
 			</ul>
 		{/if}
 		<p class="ga-foot" data-ga-foot data-text-role="meta">
-			{#if p.meta}{p.meta}{' · '}{/if}<a {href} target="_blank" rel="noopener noreferrer"
-				>{moreLabel(p, label)}</a
+			{#if p.meta}{p.meta}{' · '}{/if}<a
+				href={p.link?.url ?? href}
+				target="_blank"
+				rel="noopener noreferrer">{moreLabel(p, p.link?.label ?? label)}</a
 			>
 		</p>
 	</div>

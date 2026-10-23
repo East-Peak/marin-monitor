@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { TransitAgencyRead, TransitAlertRow } from '$lib/api/marin/transit';
 import type { TrafficCorridorsData } from '$lib/api/marin/traffic-corridors';
 import type { AirportStatus, AirportStatusData } from '$lib/types/airport';
+import type { GgAlert, GgAlertsBlob } from '$lib/gg-alerts';
 import type { DatasetFetch } from './source-adapters';
 import { describePresentation } from './source-status';
 import {
@@ -358,6 +359,7 @@ function input(over: Partial<GettingAroundInput> = {}): GettingAroundInput {
 		transit: { reads: reads(), error: null },
 		airport: AIRPORTS,
 		traffic: TRAFFIC,
+		ggAlerts: null,
 		outcomes: { airport: live(NOW - 3 * MIN), traffic: live(NOW - MIN) },
 		open: true,
 		now: NOW,
@@ -472,9 +474,9 @@ describe('gettingAroundView', () => {
 			`Golden Gate Ferry, SMART, Angel Island Ferry · ${NO_511}`
 		]);
 		expect(v.transit.rows.map((r) => [r.id, r.url, r.meta])).toEqual([
-			['511-GG-1', 'https://marintransit.gov/a', 'Golden Gate Transit'],
-			['511-MA-1', 'https://marintransit.gov/a', 'Marin Transit'],
-			['511-MA-2', null, 'Marin Transit']
+			['511-GG-1', 'https://marintransit.gov/a', '511 · Golden Gate Transit'],
+			['511-MA-1', 'https://marintransit.gov/a', '511 · Marin Transit'],
+			['511-MA-2', null, '511 · Marin Transit']
 		]);
 		expect(v.transit.more).toBe(2);
 	});
@@ -605,7 +607,11 @@ describe('gettingAroundView', () => {
 				...AIRPORTS,
 				airports: [airport('SFO', { status: 'unknown' }), airport('OAK', { status: 'unknown' })]
 			},
-			outcomes: { airport: live(NOW - 3 * MIN), traffic: failed(false) },
+			outcomes: {
+				airport: live(NOW - 3 * MIN),
+				traffic: failed(false),
+				'gg-alerts': failed(false)
+			},
 			traffic: null,
 			transit: { reads: null, error: 'transit: HTTP 503' }
 		});
@@ -807,10 +813,10 @@ describe('transitRows (Marin Transit, live 2026-10-16)', () => {
 			'West End Block Party'
 		]);
 		expect(rows[1].meta).toBe(
-			'Marin Transit · timing unverified · e.g. Terra Linda SB: Due to construction, this stop will be closed from 8pm to 6am the next day from 10/12 to 10/16.'
+			'511 · Marin Transit · timing unverified · e.g. Terra Linda SB: Due to construction, this stop will be closed from 8pm to 6am the next day from 10/12 to 10/16.'
 		);
 		expect(rows[2].meta).toBe(
-			'Marin Transit · Due to the West End Block Party, stops between 4th St & E St and 4th St & Ida St will not be served between 5pm and 11pm every Friday…'
+			'511 · Marin Transit · Due to the West End Block Party, stops between 4th St & E St and 4th St & Ida St will not be served between 5pm and 11pm every Friday…'
 		);
 		expect(rows.every((r) => r.tags.length === 0 && r.tone === null)).toBe(true);
 	});
@@ -850,7 +856,7 @@ describe('transitRows (Marin Transit, live 2026-10-16)', () => {
 				[alert('a', 'Delay - Novato'), alert('b', 'Delay - NB Petaluma')],
 				NOW
 			).map((r) => [r.title, r.meta])
-		).toEqual([['Delay · 2 stops: Novato, Petaluma NB', 'SMART']]);
+		).toEqual([['Delay · 2 stops: Novato, Petaluma NB', '511 · SMART']]);
 	});
 });
 
@@ -1081,5 +1087,231 @@ describe('gettingAroundCard road wording (MAPX1 live look)', () => {
 			text: '511 lists no incidents on Marin roads · 2 on airport routes',
 			state: 'ok'
 		});
+	});
+});
+
+describe("Getting Around: Golden Gate's own list (GGALERT1)", () => {
+	const CHECKED = NOW - 20 * MIN; // 3:40 PM PDT
+	const DISRUPTION: GgAlert = {
+		id: '549',
+		headline: '10/19-10/23 GGFERRY WEEKDAY SERVICE DISRUPTIONS ON ALL ROUTES',
+		routes: ['General Ferry', 'Larkspur Ferry', 'Sausalito Ferry']
+	};
+	const ANGEL: GgAlert = {
+		id: '534',
+		headline: '10/19-10/23 GGFERRY ANGEL ISLAND SERVICE DISRUPTIONS',
+		routes: ['Angel Island']
+	};
+	const FLOOD: GgAlert = {
+		id: '155',
+		headline: 'ALERT MANZANITA PARK & RIDE MAY FLOOD',
+		routes: ['Route 114', 'Route 120']
+	};
+	const blob = (
+		alerts: GgAlert[] | null,
+		over: Partial<GgAlertsBlob> = {},
+		at = CHECKED
+	): GgAlertsBlob => ({
+		checkedAt: new Date(at).toISOString(),
+		lastSuccessfulScrapeAt: alerts ? new Date(at).toISOString() : null,
+		alerts,
+		lastFailure: null,
+		...over
+	});
+	const site = (
+		b: GgAlertsBlob | null,
+		over: Partial<GettingAroundInput> = {},
+		fetch: DatasetFetch = live(
+			b?.lastSuccessfulScrapeAt ? Date.parse(b.lastSuccessfulScrapeAt) : NOW
+		)
+	) =>
+		input({
+			ggAlerts: b,
+			outcomes: { airport: live(NOW - 3 * MIN), traffic: live(NOW - MIN), 'gg-alerts': fetch },
+			...over
+		});
+	const transitOf = (i: GettingAroundInput) => gettingAroundView(i).transit;
+
+	it("an ok read lists the page's alerts first, in page order, each tagged with its routes, linked, and dated only by our check", () => {
+		const t = transitOf(site(blob([DISRUPTION, ANGEL])));
+		expect(t.rows).toEqual([
+			{
+				id: 'gg-549',
+				tags: ['General Ferry', 'Larkspur Ferry', 'Sausalito Ferry'],
+				title: '10/19-10/23 GGFERRY WEEKDAY SERVICE DISRUPTIONS ON ALL ROUTES',
+				url: 'https://www.goldengate.org/alerts/#549',
+				meta: 'goldengate.org · checked 3:40 PM',
+				tone: null
+			},
+			expect.objectContaining({ id: 'gg-534', meta: 'goldengate.org · checked 3:40 PM' })
+		]);
+		expect(t.rows.map((r) => r.meta).join('\n')).not.toMatch(/posted|ago/);
+	});
+
+	it('a conditional notice is shown as written', () => {
+		expect(transitOf(site(blob([FLOOD]))).rows[0].title).toBe(
+			'ALERT MANZANITA PARK & RIDE MAY FLOOD'
+		);
+	});
+
+	it("when the site's read is ok it is the source for GG and GF: 511's quiet line no longer names them", () => {
+		const t = transitOf(site(blob([DISRUPTION])));
+		expect(said(t.lines)).toEqual([`Marin Transit, SMART, Angel Island Ferry · ${NO_511}`]);
+	});
+
+	it('an ok, empty read says so for Golden Gate, from goldengate.org', () => {
+		const t = transitOf(site(blob([])));
+		expect(said(t.lines)).toEqual([
+			`Marin Transit, SMART, Angel Island Ferry · ${NO_511}`,
+			'Golden Gate Transit, Golden Gate Ferry · No Golden Gate alerts listed on goldengate.org'
+		]);
+		expect(t.lines[1]).toMatchObject({ state: 'ok', url: 'https://www.goldengate.org/alerts/' });
+	});
+
+	it("511's GG/GF entities show too, labelled 511, unless the headline equals a site row's (case and whitespace folded)", () => {
+		const t = transitOf(
+			site(blob([DISRUPTION]), {
+				transit: {
+					reads: reads({
+						GF: {
+							alerts: [
+								alert(
+									'511-GF-1',
+									'  10/19-10/23 GGFerry weekday   service disruptions on all routes '
+								),
+								alert('511-GF-2', '10/19-10/23 GGFERRY WEEKDAY SERVICE DISRUPTIONS')
+							]
+						}
+					}),
+					error: null
+				}
+			})
+		);
+		expect(t.rows.map((r) => [r.id, r.meta])).toEqual([
+			['gg-549', 'goldengate.org · checked 3:40 PM'],
+			['511-GF-2', '511 · Golden Gate Ferry']
+		]);
+	});
+
+	it("a failed read says so, keeps the last good list with its own check time, and 511's rows still show", () => {
+		const t = transitOf(
+			site(
+				blob([ANGEL], {
+					lastFailure: { at: new Date(NOW - 5 * MIN).toISOString(), error: 'no bus section' }
+				}),
+				{
+					transit: {
+						reads: reads({ GG: { alerts: [alert('511-GG-1', 'Route 101 detour')] } }),
+						error: null
+					}
+				}
+			)
+		);
+		expect(t.rows.map((r) => [r.title, r.meta])).toEqual([
+			['10/19-10/23 GGFERRY ANGEL ISLAND SERVICE DISRUPTIONS', 'goldengate.org · checked 3:40 PM'],
+			['Route 101 detour', '511 · Golden Gate Transit']
+		]);
+		expect(said(t.lines)).toContain('goldengate.org · Latest read failed');
+		expect(t.lines.find((l) => l.label === 'goldengate.org')?.state).toBe('unavailable');
+		// Not ok, so not the source: 511's quiet GF is said as 511's again.
+		expect(said(t.lines)).toContain(
+			`Golden Gate Ferry, Marin Transit, SMART, Angel Island Ferry · ${NO_511}`
+		);
+		expect(
+			header(site(blob([ANGEL], { lastFailure: { at: new Date(NOW).toISOString(), error: 'x' } })))
+		).toMatch(/goldengate\.org alerts unavailable/);
+	});
+
+	it("dedupe is by 511's own headline, before its rows are grouped (Codex GGALERT1 #2)", () => {
+		const t = transitOf(
+			site(blob([{ id: '700', headline: 'Closure - Larkspur', routes: ['Larkspur Ferry'] }]), {
+				transit: {
+					reads: reads({
+						GF: {
+							alerts: [
+								alert('511-GF-1', 'Closure - Larkspur'),
+								alert('511-GF-2', 'Closure - Sausalito')
+							]
+						}
+					}),
+					error: null
+				}
+			})
+		);
+		expect(t.rows.map((r) => r.title)).toEqual(['Closure - Larkspur', 'Closure - Sausalito']);
+	});
+
+	it("a failed site read doesn't hide 511's own rows, nor say 511 lists nothing (Codex GGALERT1 #1)", () => {
+		const t = transitOf(
+			site(blob([ANGEL], { lastFailure: { at: new Date(NOW).toISOString(), error: 'x' } }), {
+				transit: {
+					reads: reads({ GF: { alerts: [alert('511-GF-1', ANGEL.headline)] } }),
+					error: null
+				}
+			})
+		);
+		expect(t.rows.map((r) => r.id)).toEqual(['gg-534', '511-GF-1']);
+		expect(said(t.lines).join('\n')).not.toContain('No disruptions listed on 511');
+	});
+
+	it('a failed read with no good read before it: unavailable, never "no alerts"', () => {
+		const t = transitOf(
+			site(
+				blob(null, { lastFailure: { at: new Date(NOW).toISOString(), error: 'http-status: 503' } })
+			)
+		);
+		expect(t.rows).toEqual([]);
+		expect(said(t.lines)).toContain('goldengate.org · Alerts unavailable');
+		expect(
+			everything(site(blob(null, { lastFailure: { at: new Date(NOW).toISOString(), error: 'x' } })))
+		).not.toMatch(/No Golden Gate alerts/);
+	});
+
+	it('a read past its hour is out of date, and not the source for GG and GF', () => {
+		const old = NOW - 2 * 60 * MIN;
+		const t = transitOf(site(blob([ANGEL], {}, old)));
+		expect(t.rows[0].meta).toBe('goldengate.org · checked 2:00 PM · out of date');
+		expect(said(t.lines)).toContain('goldengate.org · Out of date');
+		expect(t.lines.find((l) => l.id === 'no-511')?.label).toMatch(
+			/^Golden Gate Transit, Golden Gate Ferry/
+		);
+	});
+
+	it('before the first read, the site says nothing and 511 speaks for GG and GF as before', () => {
+		const t = transitOf(input());
+		expect(t.rows).toEqual([]);
+		expect(said(t.lines)).toEqual([
+			`Golden Gate Transit, Golden Gate Ferry, Marin Transit, SMART, Angel Island Ferry · ${NO_511}`
+		]);
+	});
+
+	it('each source keeps its own time in the footer; "511" is no longer the aggregate source', () => {
+		const t = transitOf(site(blob([ANGEL])));
+		expect(t.meta).toBe('goldengate.org · checked 3:40 PM; 511 · updated 2 min ago');
+	});
+
+	it('4+ alerts: three rows, Golden Gate first; "more" goes to goldengate.org only when the hidden rows are its own', () => {
+		const four = [
+			DISRUPTION,
+			ANGEL,
+			FLOOD,
+			{ id: '600', headline: 'Route 130 detour', routes: ['Route 130'] }
+		];
+		const gg = transitOf(site(blob(four)));
+		expect(gg.rows.map((r) => r.id)).toEqual(['gg-549', 'gg-534', 'gg-155']);
+		expect([gg.more, gg.link]).toEqual([
+			1,
+			{
+				url: 'https://www.goldengate.org/alerts/',
+				label: 'All Golden Gate alerts (goldengate.org)'
+			}
+		]);
+		const mixed = transitOf(
+			site(blob([DISRUPTION, ANGEL]), {
+				transit: { reads: reads({ MA: { alerts: alerts(2) } }), error: null }
+			})
+		);
+		expect(mixed.rows.map((r) => r.id)).toEqual(['gg-549', 'gg-534', '511-MA-1']);
+		expect([mixed.more, mixed.link]).toEqual([1, null]);
 	});
 });

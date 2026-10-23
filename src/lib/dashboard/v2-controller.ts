@@ -30,6 +30,7 @@ import {
 } from '$lib/api/marin';
 import { boundedOp, DEFAULT_OP_DEADLINE_MS } from '$lib/api/marin/bounded-op';
 import { fetchAirportStatusOrThrow } from '$lib/api/marin/airport-status';
+import { fetchGgAlertsWithStatus } from '$lib/api/marin/gg-alerts';
 import { readFireIncidentsOrThrow, type FireRead } from '$lib/api/marin/calfire';
 import { readMarineForecastOrThrow, type MarineForecastRead } from '$lib/api/marin/marine';
 import { readAirQualityOrThrow, type AirQualityRead } from '$lib/api/marin/airnow';
@@ -48,11 +49,17 @@ import {
 } from '$lib/api/marin/traffic-corridors';
 import type { TransitAgencyRead } from '$lib/api/marin/transit';
 import type { AirportStatusData } from '$lib/types/airport';
+import type { GgAlertsBlob } from '$lib/gg-alerts';
 import type { LocationPreset } from '$lib/config/locations';
 import type { AdvisoryFeedState, ParsedAlerts } from '$lib/weather/advisories';
 import { createAdvisoryFeed } from './advisory-feed';
 import { createBriefStore, type BriefFetchers, type BriefState } from './brief-store';
-import { AIRPORT_MAX_AGE_MS, TRAFFIC_MAX_AGE_MS, type TransitState } from './getting-around';
+import {
+	AIRPORT_MAX_AGE_MS,
+	GG_ALERTS_MAX_AGE_MS,
+	TRAFFIC_MAX_AGE_MS,
+	type TransitState
+} from './getting-around';
 import { AIR_MAX_AGE_MS, OUTDOORS_DATASETS, OUTDOORS_MAX_AGE_MS } from './outdoors';
 import { COST_DATASETS, costMaxAgeMs } from './cost';
 import { CIVIC_DATASETS } from './news-civic';
@@ -486,6 +493,8 @@ export interface DashboardV2Controller {
 	datasetOutcomes: Readable<Readonly<Record<string, DatasetFetch>>>;
 	/** Each transit agency's last complete read (null until the first) and the latest read's error. */
 	transit: Readable<TransitState>;
+	/** goldengate.org's alert list (GGALERT1): read with transit, whatever sections are open. */
+	ggAlerts: Readable<GgAlertsBlob | null>;
 	/** Getting Around's details, loaded through ensure('airport' | 'traffic'). */
 	airport: Readable<AirportStatusData | null>;
 	traffic: Readable<TrafficCorridorsData | null>;
@@ -518,6 +527,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		fitness: writable(null)
 	};
 	const transit = writable<TransitState>({ reads: null, error: null });
+	const ggAlerts = writable<GgAlertsBlob | null>(null);
 	const outdoors: OutdoorsStores = {
 		marine: writable(null),
 		fires: writable(null),
@@ -545,6 +555,16 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 			commit: (d) => healthReport.set(d),
 			observedAtOf: () => null,
 			maxAgeMs: null
+		}),
+		// Transit's header reads it closed or open (Decision 9), so it loads with the essentials.
+		dataset<GgAlertsBlob | null>({
+			id: 'gg-alerts',
+			name: 'goldengate.org alerts',
+			tier: 'essential',
+			load: (signal) => fetchGgAlertsWithStatus({ signal }),
+			commit: (d) => ggAlerts.set(d),
+			observedAtOf: (d) => d?.lastSuccessfulScrapeAt,
+			maxAgeMs: GG_ALERTS_MAX_AGE_MS
 		}),
 		...detailDatasets(airport, traffic),
 		...outdoorsDatasets(outdoors),
@@ -693,6 +713,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		blotter: { subscribe: blotter.subscribe },
 		healthReport: { subscribe: healthReport.subscribe },
 		transit: { subscribe: transit.subscribe },
+		ggAlerts: { subscribe: ggAlerts.subscribe },
 		airport: { subscribe: airport.subscribe },
 		traffic: { subscribe: traffic.subscribe },
 		places: {

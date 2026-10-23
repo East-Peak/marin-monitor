@@ -6,6 +6,10 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-23
 
+### Added — Golden Gate's own alerts in Getting Around
+
+- **Golden Gate ferry and bus disruptions now show from goldengate.org/alerts/**, read every 15 minutes (`/api/cron/sync-gg-alerts`), first in the Transit list, each notice once with the routes it covers, and dated only by when we checked (the page gives no publish times). Standing notices (Gate C tickets, Park Smart, tap on and off) are dropped by exact headline. A page whose group counts don't match what we read, or that is missing its ferry or bus section, fails the read: it says unavailable and keeps the last good list under that list's own check time, never "no alerts". 511's Golden Gate alerts still show, labelled 511, unless their headline is the site's. Each source keeps its own time in the footer, and `/api/health` watches the new source with a one-hour limit.
+
 ### Changed — The Lifestyle Index is live
 
 - **The Cost section, the household pages and the TV's Cost screen now show the Lifestyle Index in production**, in place of the composite index and the Marin Number (the `?layout=legacy` page keeps the composite). The in-app What's New says so.
