@@ -207,11 +207,13 @@ test.describe('phone 390×844, Cost populated', () => {
 				let tallest = { town: '', height: 0 };
 				for (const b of await c.locator('[data-town]').all()) {
 					await b.click();
+					await expect(b).toHaveAttribute('aria-pressed', 'true');
 					const height = (await c.boundingBox())!.height;
 					if (height > tallest.height)
 						tallest = { town: (await b.getAttribute('data-town'))!, height };
 				}
 				await c.locator(`[data-town="${tallest.town}"]`).click();
+				await expect(c).toHaveAttribute('data-household', tallest.town);
 				console.log(
 					`[lifestyle] tallest household ${tallest.town}: ${Math.round(tallest.height)} px`
 				);
