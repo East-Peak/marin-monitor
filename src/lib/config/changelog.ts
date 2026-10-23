@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-10-23',
+		title: 'What it takes to live here',
+		description:
+			'The Cost section’s old composite index and Marin Number give way to the Lifestyle Index: one fictional household each in Larkspur, Mill Valley and Ross, its whole month priced from live reads, published figures and stated assumptions, and worked back through 2026 federal and California tax to the salary it needs to break even. Pick a town on the card, or open its whole budget to see every line, where each figure comes from and when it was read. On the TV, the Cost screen is the household of the day.'
+	},
+	{
 		date: '2026-10-19',
 		title: 'Stories placed by the place in their headline',
 		description:

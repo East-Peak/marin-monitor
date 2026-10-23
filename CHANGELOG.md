@@ -6,6 +6,10 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-23
 
+### Changed — The Lifestyle Index is live
+
+- **The Cost section, the household pages and the TV's Cost screen now show the Lifestyle Index in production**, in place of the composite index and the Marin Number (the `?layout=legacy` page keeps the composite). The in-app What's New says so.
+
 ### Changed — The Lifestyle Index's Cost card
 
 - **Ross's Tahoe cabin's property tax is deducted like the house's**: on the California return, and within the same federal SALT cap (which Ross already reaches, so only California's tax falls). Ross's break-even drops about $1,700. A property tax is now marked term by term, so a line can hold a deductible tax beside costs that aren't.
