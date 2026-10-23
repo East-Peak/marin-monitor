@@ -277,6 +277,10 @@ describe('the approved household sheets', () => {
 		const without = at(b.taxInputs.propertyTax - cabin);
 		expect(withCabin.federal.saltAllowed).toBe(TAX_2026.federal.saltFloor);
 		expect(withCabin.federal.tax).toBeCloseTo(without.federal.tax, 6);
+		expect(withCabin.california.deduction.amount - without.california.deduction.amount).toBeCloseTo(
+			cabin,
+			6
+		);
 		expect(withCabin.california.tax).toBeLessThan(without.california.tax);
 		// What a sheet costs changed: movers never pair across the method.
 		expect(METHOD_VERSION).toBe('lifestyle-method-3');
