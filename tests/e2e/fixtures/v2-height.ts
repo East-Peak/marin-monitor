@@ -1,4 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { expect, type Page, type Route } from '@playwright/test';
+import { parseGgAlertsPage } from '../../../src/lib/server/gg-alerts/parse';
 import { SOURCES, reportingSnapshot } from './v2-reporting';
 import { settled } from './v2-probe';
 import { stubCams } from './cams';
@@ -100,6 +102,17 @@ export async function phoneHeight(
 					Id: `h${i}`,
 					Alert: { HeaderText: { Translations: [{ Text: LONG(`bus detour ${i}`) }] } }
 				}))
+			})
+		);
+		// goldengate.org's list of 2026-10-23, through the producer's parser (GGALERT1).
+		await page.route('**/api/data/gg-alerts', (r) =>
+			json(r, {
+				checkedAt: iso(T0 - 300_000),
+				lastSuccessfulScrapeAt: iso(T0 - 300_000),
+				alerts: parseGgAlertsPage(
+					readFileSync('src/lib/server/__fixtures__/gg-alerts-2026-10-23.html', 'utf8')
+				).alerts,
+				lastFailure: null
 			})
 		);
 		await page.route('**/api/airport-status', (r) =>
