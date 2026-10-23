@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
+import { roleFontPx } from '../../src/lib/dashboard/type-roles';
 import { phoneHeight, stub } from './fixtures/v2-height';
 
 /**
@@ -58,6 +59,14 @@ for (const [label, viewport] of [
 			await c.locator('[data-town="larkspur"]').click();
 			await expect(c.locator('[data-town="larkspur"]')).toHaveAttribute('aria-pressed', 'true');
 			await expect(c.locator('[data-break-even]')).toContainText(breakEven('larkspur'));
+			// The break-even is the card's headline, not body text; its "/yr" stays small.
+			const be = c.locator('[data-break-even]');
+			await expect(be).toHaveAttribute('data-text-role', 'headline');
+			await expect(be).toHaveCSS('font-size', `${roleFontPx('headline', viewport.width)}px`);
+			await expect(be.locator('.per')).toHaveCSS(
+				'font-size',
+				`${roleFontPx('meta', viewport.width)}px`
+			);
 			await expect(c.locator('[data-line]').first()).toContainText('Mortgage');
 			await expect(c.locator('[data-line]').first().locator('[data-classes]')).toHaveAttribute(
 				'data-classes',
@@ -194,6 +203,18 @@ test.describe('phone 390×844, Cost populated', () => {
 				await expect(c.locator('[data-break-even], [data-burn]')).toBeVisible();
 				await expect(c.locator('[data-line]')).toHaveCount(3);
 				await expect(c.locator('[data-fiction]')).toBeVisible();
+				// Measured with the tallest household, not whichever the day's rotation shows.
+				let tallest = { town: '', height: 0 };
+				for (const b of await c.locator('[data-town]').all()) {
+					await b.click();
+					const height = (await c.boundingBox())!.height;
+					if (height > tallest.height)
+						tallest = { town: (await b.getAttribute('data-town'))!, height };
+				}
+				await c.locator(`[data-town="${tallest.town}"]`).click();
+				console.log(
+					`[lifestyle] tallest household ${tallest.town}: ${Math.round(tallest.height)} px`
+				);
 			}
 		});
 	});

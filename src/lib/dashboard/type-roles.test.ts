@@ -29,6 +29,13 @@ describe('type tokens (spec §6)', () => {
 		expect(MIN_LINE_HEIGHT).toBeGreaterThanOrEqual(1.4);
 		expect(MIN_CARD_PADDING_PX).toBeGreaterThanOrEqual(10);
 	});
+	it('a headline (the Lifestyle card’s break-even) reads larger than any value', () => {
+		expect(TEXT_ROLES.headline).toEqual({ desktop: 30, phone: 28 });
+		for (const role of roles.filter((r) => r !== 'headline')) {
+			expect(TEXT_ROLES.headline.phone, role).toBeGreaterThan(TEXT_ROLES[role].phone);
+			expect(TEXT_ROLES.headline.desktop, role).toBeGreaterThan(TEXT_ROLES[role].desktop);
+		}
+	});
 	it('the CSS tokens equal the inventory, desktop and phone', () => {
 		for (const role of roles) {
 			expect(token(desktopBlock, role), `desktop ${role}`).toBe(TEXT_ROLES[role].desktop);

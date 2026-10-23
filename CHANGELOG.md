@@ -4,6 +4,12 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-10-23
+
+### Changed — The Lifestyle Index's Cost card
+
+- **The break-even is the card's headline**: 30 px on desktop and 28 on the phone, where it was the size of any other figure. On the phone the card's spacing tightens by a couple of pixels to keep the page within its height budget.
+
 ## 2026-10-22
 
 ### Fixed — The Lifestyle Index's display, before it goes live

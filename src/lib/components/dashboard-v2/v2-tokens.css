@@ -5,6 +5,7 @@
 	--v2-fs-label: 13px;
 	--v2-fs-meta: 12px;
 	--v2-fs-value: 20px;
+	--v2-fs-headline: 30px;
 	--v2-fs-section-title: 17px;
 	--v2-fs-brand: 17px;
 	--v2-line-height: 1.45;
@@ -16,6 +17,7 @@
 @media (max-width: 767px) {
 	.dash-v2 {
 		--v2-fs-body: 16px;
+		--v2-fs-headline: 28px;
 	}
 }
 
@@ -34,6 +36,11 @@
 .dash-v2 [data-text-role='value'] {
 	font-size: var(--v2-fs-value);
 	font-weight: 600;
+}
+.dash-v2 [data-text-role='headline'] {
+	font-size: var(--v2-fs-headline);
+	font-weight: 600;
+	letter-spacing: -0.01em;
 }
 .dash-v2 [data-text-role='section-title'] {
 	font-size: var(--v2-fs-section-title);

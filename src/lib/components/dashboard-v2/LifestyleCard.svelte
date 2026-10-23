@@ -70,8 +70,8 @@
 			<div class="half">
 				{#if h.complete && h.breakEven !== null}
 					<div class="hero-row">
-						<span class="num" data-break-even data-text-role="value"
-							>{usd(h.breakEven)}<span class="per">/yr</span></span
+						<span class="num" data-break-even data-text-role="headline"
+							>{usd(h.breakEven)}<span class="per" data-text-role="meta">/yr</span></span
 						>
 						<span class="meta" data-text-role="meta">pre-tax, to break even</span>
 					</div>
@@ -259,11 +259,15 @@
 	.lab :global(.chips) {
 		flex: none;
 	}
+	/* The phone's height budget (§13.3) pays for the headline break-even. */
 	@media (max-width: 767px) {
 		.card,
 		.body,
 		.half {
-			gap: 8px;
+			gap: 6px;
+		}
+		.top li {
+			padding: 3px 0;
 		}
 	}
 	.stale {

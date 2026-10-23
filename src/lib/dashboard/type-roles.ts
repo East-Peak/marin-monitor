@@ -11,6 +11,8 @@ export const TEXT_ROLES = {
 	label: { desktop: 13, phone: 13 },
 	meta: { desktop: 12, phone: 12 },
 	value: { desktop: 20, phone: 20 },
+	/** One figure a card leads with: the Lifestyle card's break-even (the LIFE0 mockup's 30 px). */
+	headline: { desktop: 30, phone: 28 },
 	'section-title': { desktop: 17, phone: 17 },
 	brand: { desktop: 17, phone: 17 }
 } as const;
