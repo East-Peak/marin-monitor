@@ -155,6 +155,17 @@ const ALL_SOURCES: readonly SourcePolicy[] = freeze<SourcePolicy>([
 		observedAt: 'content',
 		note: '3h = 12 missed 15-minute runs'
 	},
+	// Vercel cron every 15 min (/api/cron/sync-gg-alerts). Observation =
+	// lastSuccessfulScrapeAt: the last whole read of goldengate.org/alerts/;
+	// a failed read keeps it, so a failing page goes stale within the hour.
+	{
+		name: 'Golden Gate Alerts',
+		blobKey: 'gg-alerts.json',
+		cadence: 'daily',
+		maxAgeDays: 1 / 24,
+		observedAt: 'content',
+		note: '1h = 4 missed 15-minute runs'
+	},
 	// Composite inputs, unmonitored before G0a. Camp + Rivian: GitHub Actions;
 	// Cappuccino, Dog Walker, Ikon: Mac mini launchd (residential IP).
 	{

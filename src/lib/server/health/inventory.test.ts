@@ -27,6 +27,7 @@ const EXPECTED_SOURCES = [
 	'311 (SeeClickFix)',
 	'EV Charging',
 	'News Snapshot',
+	'Golden Gate Alerts',
 	// Composite inputs that were never monitored before G0a
 	'Cappuccino',
 	'Camp Prices',
@@ -108,6 +109,13 @@ describe('SOURCE_INVENTORY', () => {
 		const news = SOURCE_INVENTORY.find((s) => s.name === 'News Snapshot');
 		expect(news).toMatchObject({ blobKey: NEWS_SNAPSHOT_KEY, observedAt: 'content' });
 		expect(news?.maxAgeDays).toBeLessThanOrEqual(0.25);
+	});
+
+	it('watches the Golden Gate alerts at the key the producer writes, by its good read, for an hour', async () => {
+		const { GG_ALERTS_BLOB_KEY } = await import('$lib/server/gg-alerts/sync');
+		const gg = SOURCE_INVENTORY.find((s) => s.name === 'Golden Gate Alerts');
+		expect(gg).toMatchObject({ blobKey: GG_ALERTS_BLOB_KEY, observedAt: 'content' });
+		expect((gg?.maxAgeDays ?? 0) * 24).toBeCloseTo(1);
 	});
 
 	it('gives every source a positive max age', () => {
