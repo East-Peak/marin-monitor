@@ -19,6 +19,14 @@ const LIFESTYLE_ENV = {
 	LIFESTYLE_HIGHLIGHTS: 'on',
 	LIFESTYLE_FIXTURE: 'tests/e2e/fixtures/lifestyle-index.json'
 };
+/**
+ * The phone audit (MOBILE1): `@phone` tests run on an iPhone (WebKit) and a Pixel (Chromium),
+ * against a preview with production's flags, the lifestyle seed and a populated news snapshot
+ * dated against the clock, so nothing is measured empty. Every other project skips them.
+ */
+const PHONE = /@phone/;
+const PHONE_PORT = 4176;
+export const PHONE_NEWS = 'tests/e2e/fixtures/.phone-news.json';
 
 export default defineConfig({
 	testDir: './tests/e2e',
@@ -35,17 +43,30 @@ export default defineConfig({
 		{
 			name: 'chromium',
 			use: { ...devices['Desktop Chrome'] },
-			testIgnore: [SSR_SPEC, LIFESTYLE_SPEC]
+			testIgnore: [SSR_SPEC, LIFESTYLE_SPEC],
+			grepInvert: PHONE
 		},
 		{
 			name: 'lifestyle',
 			use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${LIFESTYLE_PORT}` },
-			testMatch: LIFESTYLE_SPEC
+			testMatch: LIFESTYLE_SPEC,
+			grepInvert: PHONE
 		},
 		{
 			name: 'ssr',
 			use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${SSR_PORT}` },
-			testMatch: SSR_SPEC
+			testMatch: SSR_SPEC,
+			grepInvert: PHONE
+		},
+		{
+			name: 'phone-webkit',
+			use: { ...devices['iPhone 13'], baseURL: `http://localhost:${PHONE_PORT}` },
+			grep: PHONE
+		},
+		{
+			name: 'phone-chromium',
+			use: { ...devices['Pixel 7'], baseURL: `http://localhost:${PHONE_PORT}` },
+			grep: PHONE
 		}
 	],
 	webServer: [
@@ -71,6 +92,12 @@ export default defineConfig({
 			env: { NEWS_SNAPSHOT_FIXTURE: 'tests/e2e/fixtures/news-snapshot-producer.json' },
 			reuseExistingServer: false,
 			timeout: 120_000
+		},
+		{
+			command: `node tests/e2e/fixtures/phone-news.mjs ${PHONE_NEWS} && npx vite preview --port ${PHONE_PORT} --strictPort`,
+			url: `http://localhost:${PHONE_PORT}`,
+			env: { ...LIFESTYLE_ENV, NEWS_SNAPSHOT_FIXTURE: PHONE_NEWS },
+			reuseExistingServer: false
 		}
 	]
 });

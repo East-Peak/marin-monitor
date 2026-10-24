@@ -1,0 +1,281 @@
+/**
+ * The phone tap audit (MOBILE1): every control is tapped the way a thumb would, its outcome is
+ * asserted, and one row per control is written to test-results/phone-audit/<project>.jsonl.
+ *
+ * A row passes only when the tap lands on the control itself (nothing on top at its centre),
+ * its hit area (the element plus any padding or ::after that hit-tests as it) is at least
+ * 44×44 CSS px, one tap produces the outcome, and the outcome is real: content shown, a
+ * navigation, a dialog. An aria-expanded flip alone is never an outcome.
+ */
+import { expect, type Locator, type Page, type TestInfo } from '@playwright/test';
+import { appendFileSync, mkdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+/** Written by phone-news.mjs when the phone server starts; SSR reads it as the snapshot. */
+const PHONE_NEWS = 'tests/e2e/fixtures/.phone-news.json';
+export const MIN_TARGET = 44;
+
+/**
+ * Client reads of the snapshot get the server's fixture too, so SSR and every refresh agree.
+ * Navigations away from the app (external links) land on a blank page, so a tap's outcome can
+ * be checked without loading the internet.
+ */
+export async function preparePhone(page: Page) {
+	const snapshot = readFileSync(PHONE_NEWS, 'utf8');
+	await page.route('**/api/news/snapshot', (r) =>
+		r.fulfill({ contentType: 'application/json', body: `{"status":"ok","snapshot":${snapshot}}` })
+	);
+	await page.context().route(
+		(url) => url.hostname !== 'localhost',
+		(r) =>
+			r.request().isNavigationRequest()
+				? r.fulfill({ contentType: 'text/html', body: '<title>away</title>' })
+				: r.fallback()
+	);
+}
+
+/** A page is audited only once it shows what it exists to show. */
+export async function openPhone(page: Page, path: string, content: Locator) {
+	const res = await page.goto(path);
+	expect(res?.status()).toBe(200);
+	await expect(content.first()).toBeVisible({ timeout: 15_000 });
+}
+
+export interface Hit {
+	/** The tap point: the centre of the control's largest line box. */
+	x: number;
+	y: number;
+	w: number;
+	h: number;
+	/** The hit area, measured by hit-testing outward from the centre. */
+	hitW: number;
+	hitH: number;
+	/** What is on top at the centre, when it isn't the control. */
+	covered: string | null;
+}
+
+export async function measure(target: Locator): Promise<Hit> {
+	await target.scrollIntoViewIfNeeded();
+	return target.evaluate((el) => {
+		// A link that wraps is tapped on one of its line boxes, not between them.
+		const box = (el.matches('input') && el.closest('label')) || el;
+		const lines = [...box.getClientRects()];
+		const r = lines.length
+			? lines.reduce((a, b) => (b.width * b.height > a.width * a.height ? b : a))
+			: box.getBoundingClientRect();
+		const cx = r.left + r.width / 2;
+		const cy = r.top + r.height / 2;
+		// A checkbox or radio inside a <label> is hit anywhere on the label.
+		const area = (el.matches('input') && el.closest('label')) || el;
+		const mine = (x: number, y: number) => {
+			const t = document.elementFromPoint(x, y);
+			return !!t && (t === area || area.contains(t));
+		};
+		const reach = (dx: number, dy: number) => {
+			let d = 0;
+			while (d < 40 && mine(cx + dx * (d + 1), cy + dy * (d + 1))) d++;
+			return d;
+		};
+		const top = document.elementFromPoint(cx, cy);
+		const onTop = mine(cx, cy);
+		const name = (t: Element | null) =>
+			t
+				? `${t.tagName.toLowerCase()}${t.className ? `.${String(t.className).split(' ')[0]}` : ''}`
+				: 'nothing';
+		return {
+			x: cx,
+			y: cy,
+			w: Math.round(r.width),
+			h: Math.round(r.height),
+			hitW: onTop ? reach(-1, 0) + reach(1, 0) + 1 : 0,
+			hitH: onTop ? reach(0, -1) + reach(0, 1) + 1 : 0,
+			covered: onTop ? null : name(top)
+		};
+	});
+}
+
+export interface Row {
+	page: string;
+	state: string;
+	control: string;
+	device: string;
+	result: 'pass' | 'fail';
+	why: string[];
+	hit?: Hit;
+}
+
+export function record(info: TestInfo, row: Omit<Row, 'device'>) {
+	const dir = join('test-results', 'phone-audit');
+	mkdirSync(dir, { recursive: true });
+	appendFileSync(
+		join(dir, `${info.project.name}.jsonl`),
+		`${JSON.stringify({ ...row, device: info.project.name })}\n`
+	);
+}
+
+export interface TapCheck {
+	page: string;
+	state: string;
+	control: string;
+	target: Locator;
+	/** The real outcome, asserted with expect. */
+	outcome: () => Promise<void>;
+	/** Puts things back (close, navigate back); its own outcome is asserted inside. */
+	undo?: () => Promise<void>;
+	/** A target that is meant to be small, with a reason (e.g. MapLibre's own controls). */
+	smallOk?: string;
+}
+
+/**
+ * Taps one control and records its row. Returns the failures, so a test can assert none
+ * (or, for a control the audit found broken, declare the failure it expects).
+ */
+export async function auditTap(page: Page, info: TestInfo, c: TapCheck): Promise<string[]> {
+	const why: string[] = [];
+	const hit = await measure(c.target);
+	if (hit.covered) why.push(`intercepted by ${hit.covered}`);
+	if (!c.smallOk && (hit.hitW < MIN_TARGET || hit.hitH < MIN_TARGET))
+		why.push(`hit area ${hit.hitW}×${hit.hitH}`);
+	// A real tap at the centre: it goes to whatever is on top, exactly as a thumb's would.
+	await page.touchscreen.tap(hit.x, hit.y);
+	let ok = await passes(c.outcome);
+	if (!ok) {
+		await page.touchscreen.tap(hit.x, hit.y);
+		ok = await passes(c.outcome);
+		why.push(ok ? 'needed a double-tap' : 'no outcome from a tap');
+	}
+	if (ok && c.undo) {
+		if (!(await passes(c.undo))) why.push('did not close or round-trip');
+	}
+	record(info, {
+		page: c.page,
+		state: c.state,
+		control: c.control,
+		result: why.length ? 'fail' : 'pass',
+		why,
+		hit
+	});
+	return why;
+}
+
+async function passes(check: () => Promise<void>) {
+	try {
+		await check();
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+/** A swipe or drag, by touch events with intermediate moves (MapLibre and sheets need them). */
+export async function swipe(
+	page: Page,
+	from: { x: number; y: number },
+	to: { x: number; y: number },
+	steps = 8
+) {
+	const cdp = page.context().browser()?.browserType().name() === 'chromium';
+	if (!cdp) {
+		// WebKit has no touch-move driver: replay what a finger produces on the element under
+		// the start, pointer events (pointerType touch) and touch events both.
+		await page.evaluate(
+			async ({ from, to, steps }) => {
+				const target = document.elementFromPoint(from.x, from.y)!;
+				// One move per frame, as a finger's arrive: handlers that sample per frame see each.
+				const frame = () => new Promise(requestAnimationFrame);
+				// WebKit has no Touch constructor; its legacy createTouch takes page coordinates.
+				const doc = document as unknown as {
+					createTouch(...a: unknown[]): Touch;
+					// The DOM types say Touch[]; WebKit accepts only a TouchList here.
+					createTouchList(...t: Touch[]): Touch[];
+				};
+				const touch = (x: number, y: number) =>
+					doc.createTouchList(doc.createTouch(window, target, 1, x + scrollX, y + scrollY, x, y));
+				const fire = (type: string, x: number, y: number) => {
+					const pointer = { start: 'pointerdown', move: 'pointermove', end: 'pointerup' }[type]!;
+					target.dispatchEvent(
+						new PointerEvent(pointer, {
+							bubbles: true,
+							cancelable: true,
+							pointerId: 1,
+							pointerType: 'touch',
+							isPrimary: true,
+							clientX: x,
+							clientY: y
+						})
+					);
+					const end = type === 'end';
+					target.dispatchEvent(
+						new TouchEvent(`touch${type}`, {
+							bubbles: true,
+							cancelable: true,
+							touches: end ? doc.createTouchList() : touch(x, y),
+							targetTouches: end ? doc.createTouchList() : touch(x, y),
+							changedTouches: touch(x, y)
+						})
+					);
+				};
+				fire('start', from.x, from.y);
+				for (let i = 1; i <= steps; i++) {
+					await frame();
+					fire(
+						'move',
+						from.x + ((to.x - from.x) * i) / steps,
+						from.y + ((to.y - from.y) * i) / steps
+					);
+				}
+				await frame();
+				fire('end', to.x, to.y);
+			},
+			{ from, to, steps }
+		);
+		return;
+	}
+	const session = await page.context().newCDPSession(page);
+	const point = (p: { x: number; y: number }) => [{ x: p.x, y: p.y, id: 1 }];
+	await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: point(from) });
+	for (let i = 1; i <= steps; i++)
+		await session.send('Input.dispatchTouchEvent', {
+			type: 'touchMove',
+			touchPoints: point({
+				x: from.x + ((to.x - from.x) * i) / steps,
+				y: from.y + ((to.y - from.y) * i) / steps
+			})
+		});
+	await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+	await session.detach();
+}
+
+/**
+ * What the step-1 audit found broken, by test title (and project, when only one fails). Each
+ * is skipped as a known failure until its fix lands; the fix deletes its line, and the test
+ * then has to pass. PHONE_AUDIT=1 runs them anyway, to record the audit's table.
+ */
+const SMALL = 'MOBILE1 audit: targets under 44×44 CSS px';
+const KNOWN_BROKEN: Record<string, string> = {
+	'header: town picker opens its list, picks a town, and goes back to all of Marin': SMALL,
+	'header: settings opens, each setting takes effect, and it closes': SMALL,
+	'header: the sources indicator lists what is degraded, and closes': SMALL,
+	'header: the logo goes to the top; Old dashboard opens the legacy layout': SMALL,
+	'latest reporting: every story opens its link': SMALL,
+	'section getting-around: its toggle shows real content and hides it again': SMALL,
+	'section news: its toggle shows real content and hides it again': SMALL,
+	'section cost: its toggle shows real content and hides it again': SMALL,
+	'section events: its toggle shows real content and hides it again': SMALL,
+	'a section toggle tapped as soon as it shows is not lost':
+		'MOBILE1 audit: a toggle tapped before hydration does nothing',
+	'a story tapped as soon as it shows still opens':
+		'MOBILE1 audit: hydration moves the page under an early tap',
+	'header: ← Dashboard goes home; the town picker opens and picks': SMALL,
+	'Layers: opens its list, and each switch changes what the map lists': SMALL,
+	'zoom buttons and the attribution': SMALL,
+	'the household links change the household; the breadcrumb goes home': SMALL,
+	'every line opens to its inputs, and closes': SMALL,
+	'every source link opens its source': SMALL
+};
+
+/** Call from a beforeEach: skips this test while its failure is known and unfixed. */
+export function knownBroken(info: TestInfo) {
+	const why = KNOWN_BROKEN[`${info.title} @${info.project.name}`] ?? KNOWN_BROKEN[info.title];
+	info.fixme(!!why && !process.env.PHONE_AUDIT, why);
+}

@@ -6,6 +6,10 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-24
 
+### Added — A phone test bench (MOBILE1)
+
+- **Phone e2e on an iPhone 13 (WebKit) and a Pixel 7 (Chromium)**: `@phone` tests run only on the two phone projects, against their own preview (port 4176) with production's flags and a populated news snapshot dated to the clock. An interaction timer measures tap to paint at 4× CPU (on request only), and CI's new phone job runs the phone tests with a per-route budget for the compressed initial JS.
+
 ### Changed — The highlights are on in production (LIFE3 step 5)
 
 - **`LIFESTYLE_HIGHLIGHTS=on` in production**, after Stuart's review, with an in-app What's New entry.

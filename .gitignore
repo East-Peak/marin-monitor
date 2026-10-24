@@ -43,3 +43,4 @@ archive/
 .vercel
 .env*.local
 tests/e2e/screenshots/
+tests/e2e/fixtures/.phone-news.json

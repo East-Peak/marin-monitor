@@ -9,7 +9,8 @@
 	"include": ["files", "dependencies", "unlisted", "unresolved"],
 	// Residential syncs run from launchd through scripts/sync-runner.sh, which
 	// knip can't read (2026-09-29). Declared as entries so their imports are traced.
-	"entry": ["scripts/sync-*.mjs"],
+	// The phone server's news seed runs from its webServer command (MOBILE1), also unseen.
+	"entry": ["scripts/sync-*.mjs", "tests/e2e/fixtures/phone-news.mjs"],
 	"ignore": [
 		// Confirmed FALSE POSITIVES — kept permanently (Codex-verified, see the
 		// 2026-07-03 deletion manifest). knip can't see their real callers:
