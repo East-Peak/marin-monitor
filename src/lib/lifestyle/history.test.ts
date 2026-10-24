@@ -77,6 +77,7 @@ describe('historyEntry', () => {
 			{
 				id: 't.coffee',
 				monthly: 220,
+				availability: 'ok',
 				inputs: { cups: [44, null], price: [5, '2026-10-19T10:40:39.208Z'] }
 			}
 		]);
@@ -113,7 +114,8 @@ describe('compareRuns: like-for-like only', () => {
 		const after = historyEntry(budget({}, [pricedLine('t.coffee', 231, 44, 5.25)]), '2026-10-20');
 		expect(compareRuns(before, after)).toEqual({
 			comparable: true,
-			moves: [{ id: 't.coffee', before: 220, after: 231, change: 11 }]
+			moves: [{ id: 't.coffee', before: 220, after: 231, change: 11 }],
+			unpaired: 0
 		});
 	});
 
@@ -146,7 +148,34 @@ describe('compareRuns: like-for-like only', () => {
 
 	it('reports a comparable run in which nothing moved as no moves', () => {
 		const same = historyEntry(budget(), '2026-10-20');
-		expect(compareRuns(before, same)).toEqual({ comparable: true, moves: [] });
+		expect(compareRuns(before, same)).toEqual({ comparable: true, moves: [], unpaired: 0 });
+	});
+
+	it('counts the lines it could not pair, so "nothing moved" is never said of them', () => {
+		const after = historyEntry(
+			budget({}, [pricedLine('t.coffee', 220), pricedLine('t.new', 10)]),
+			'2026-10-20'
+		);
+		expect(compareRuns(before, after)).toEqual({ comparable: true, moves: [], unpaired: 1 });
+	});
+
+	it('pairs a line only when it was ok in both runs, and its quantities are on record in both', () => {
+		const stale = historyEntry(
+			budget({}, [{ ...pricedLine('t.coffee', 200), availability: 'stale' }]),
+			'2026-10-13'
+		);
+		const after = historyEntry(budget({}, [pricedLine('t.coffee', 231, 44, 5.25)]), '2026-10-20');
+		// A stale (or fallback) price is not an observation to move from.
+		expect(compareRuns(stale, after).comparable).toBe(false);
+		// An entry written before lines carried their availability.
+		const old = {
+			...before,
+			lines: before.lines.map(({ availability: _, ...l }) => l)
+		} as unknown as HistoryEntry;
+		expect(compareRuns(old, after).comparable).toBe(false);
+		// Quantities missing on both sides are not quantities held still.
+		const noQ = (e: HistoryEntry) => ({ ...e, quantities: {} });
+		expect(compareRuns(noQ(before), noQ(after)).comparable).toBe(false);
 	});
 
 	it('needs a previous run at all', () => {

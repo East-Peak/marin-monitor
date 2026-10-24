@@ -64,7 +64,7 @@ const isObject = (v: unknown): v is Record<string, unknown> =>
 	typeof v === 'object' && v !== null && !Array.isArray(v);
 
 /** An entry with its model identity, lines and quantities: what movers rely on. */
-function isEntry(e: unknown): e is HistoryEntry {
+export function isEntry(e: unknown): e is HistoryEntry {
 	return (
 		isObject(e) &&
 		['runId', 'town', 'sheetVersion', 'methodVersion', 'pricedAt'].every(

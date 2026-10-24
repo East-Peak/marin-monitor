@@ -7,7 +7,13 @@ import { env } from '$env/dynamic/private';
 import { COST_DATASETS } from '$lib/dashboard/cost';
 import { SHEETS } from '$lib/lifestyle/sheets';
 import { householdPage, sheetForSlug, townSlug } from '$lib/lifestyle/view';
-import { lifestyleBlobApi, lifestyleOn, readLifestyle } from '$lib/server/lifestyle/read';
+import {
+	highlightsOn,
+	lifestyleBlobApi,
+	lifestyleHighlights,
+	lifestyleOn,
+	readLifestyleDoc
+} from '$lib/server/lifestyle/read';
 import type { PageServerLoad } from './$types';
 
 const READ_MS = 8000;
@@ -20,7 +26,8 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
 	if (!sheet) error(404, 'Not found');
 
 	const api = lifestyleBlobApi(env);
-	const snapshot = api ? await readLifestyle(api, AbortSignal.timeout(READ_MS)) : null;
+	const read = api ? await readLifestyleDoc(api, AbortSignal.timeout(READ_MS)) : null;
+	const snapshot = read?.current ?? null;
 	const budget = snapshot?.budgets.find((b) => b.town === sheet.id) ?? null;
 	// A failed read is never edge-cached as the household's page.
 	setHeaders({
@@ -31,6 +38,11 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
 	return {
 		town: sheet.town,
 		page: budget ? householdPage(budget, sheet) : null,
+		// Null while the highlights' own flag is off.
+		highlights:
+			read && budget && highlightsOn(env)
+				? (lifestyleHighlights(read, SHEETS)[sheet.id] ?? [])
+				: null,
 		computedAt: snapshot?.computedAt ?? null,
 		// A stopped run leaves each line's availability as it was: say so for the whole budget.
 		stale:

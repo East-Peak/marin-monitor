@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import type { LiveKey, LiveRead, LiveReads } from '$lib/lifestyle/model';
 import { priceSheet } from '$lib/lifestyle/price';
 import { SHEETS } from '$lib/lifestyle/sheets';
+import type { Highlight } from '$lib/lifestyle/highlight-copy';
 import type { HouseholdPage } from '$lib/lifestyle/view';
 
 const { env } = vi.hoisted(() => ({ env: {} as Record<string, string | undefined> }));
@@ -12,6 +13,7 @@ vi.mock('$env/dynamic/private', () => ({ env }));
 const { load } = await import('./+page.server');
 type PageData = {
 	page: HouseholdPage | null;
+	highlights: Highlight[] | null;
 	town: string;
 	computedAt: string | null;
 	stale: boolean;
@@ -95,6 +97,15 @@ describe('/cost/[town]', () => {
 		expect(data.towns.map((t) => t.slug)).toEqual(['larkspur', 'mill-valley', 'ross']);
 		expect(data.computedAt).toBe(NOW.toISOString());
 		expect(headers['Cache-Control']).toMatch(/^public, s-maxage=/);
+	});
+
+	it('carries the household’s highlights only under their own flag', async () => {
+		Object.assign(env, { LIFESTYLE_INDEX: 'on', LIFESTYLE_FIXTURE: fixture });
+		expect(((await load(event('larkspur').ev)) as PageData).highlights).toBeNull();
+		env.LIFESTYLE_HIGHLIGHTS = 'on';
+		const data = (await load(event('larkspur').ev)) as PageData;
+		// Larkspur and Mill Valley are priced: Larkspur's business leads Mill Valley's.
+		expect(data.highlights?.find((h) => h.rule === 'rank')?.key).toBe('rank:business');
 	});
 
 	it('says the whole budget is out of date when no run has succeeded within ten days', async () => {

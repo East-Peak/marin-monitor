@@ -7,16 +7,23 @@
  * production LIFESTYLE_FIXTURE may point at a producer-format file instead.
  */
 import { readFile } from 'node:fs/promises';
+import type { Anchor } from '$lib/lifestyle/anchors';
+import { renderHighlight, type Highlight } from '$lib/lifestyle/highlight-copy';
+import { highlightFacts } from '$lib/lifestyle/highlights';
+import type { HistoryEntry } from '$lib/lifestyle/history';
 import { SECTIONS, type HouseholdSheet } from '$lib/lifestyle/model';
 import { householdSummary, type LifestyleCard } from '$lib/lifestyle/view';
 import { abortable } from '$lib/server/news/abortable';
 import type { BlobApi } from '$lib/server/news/snapshot-store';
 import { vercelBlobApi } from '$lib/server/news/vercel-blob-api';
-import { LIFESTYLE_KEY, type LifestyleSnapshot } from './producer';
+import { isEntry, LIFESTYLE_KEY, type LifestyleSnapshot } from './producer';
 
 type Env = Readonly<Record<string, string | undefined>>;
 
 export const lifestyleOn = (env: Env) => env.LIFESTYLE_INDEX === 'on';
+
+/** The highlights (LIFE3) have their own flag, under the index's: off in production until Stuart's review. */
+export const highlightsOn = (env: Env) => lifestyleOn(env) && env.LIFESTYLE_HIGHLIGHTS === 'on';
 
 export function lifestyleBlobApi(
 	env: Env,
@@ -119,11 +126,55 @@ function isBudget(b: unknown): boolean {
 	);
 }
 
-/** The current snapshot, or null: a missing, failed or malformed read is never an empty index. */
-export async function readLifestyle(
+const UNITS: ReadonlySet<unknown> = new Set([
+	'gross household',
+	'net individual',
+	'gross individual'
+]);
+
+function isAnchor(a: unknown): a is Anchor {
+	return (
+		isObject(a) &&
+		isStr(a.id) &&
+		isStr(a.label) &&
+		UNITS.has(a.units) &&
+		isNum(a.value) &&
+		AVAILABILITY.has(a.availability) &&
+		Array.isArray(a.inputs) &&
+		a.inputs.every(isInput)
+	);
+}
+
+/** What movers read from an entry, besides its model identity. */
+function isHistoryEntry(e: unknown): e is HistoryEntry {
+	return (
+		isEntry(e) &&
+		e.lines.every(
+			(l) =>
+				(l.monthly === null || isNum(l.monthly)) &&
+				Object.values(l.inputs).every(
+					(v) => Array.isArray(v) && (v[0] === null || isNum(v[0])) && isStrOrNull(v[1])
+				)
+		) &&
+		Object.values(e.quantities).every(isStr)
+	);
+}
+
+export interface LifestyleRead {
+	readonly current: LifestyleSnapshot;
+	/** Null when it can't be read: never an empty history, which would say "no history". */
+	readonly history: readonly HistoryEntry[] | null;
+}
+
+/**
+ * The current snapshot and its history, or null: a missing, failed or malformed
+ * snapshot is never an empty index. Malformed anchors are none, so nothing is
+ * compared against them.
+ */
+export async function readLifestyleDoc(
 	api: BlobApi,
 	signal: AbortSignal
-): Promise<LifestyleSnapshot | null> {
+): Promise<LifestyleRead | null> {
 	try {
 		const stored = await api.read(LIFESTYLE_KEY, signal);
 		if (!stored) return null;
@@ -132,23 +183,57 @@ export async function readLifestyle(
 		if (!isObject(current) || current.schema !== 1 || !isStr(current.computedAt)) return null;
 		if (!isStrOrNull(current.lastSuccessfulScrapeAt)) return null;
 		if (!Array.isArray(current.budgets) || !current.budgets.every(isBudget)) return null;
-		return current as unknown as LifestyleSnapshot;
+		const anchors =
+			Array.isArray(current.anchors) && current.anchors.every(isAnchor) ? current.anchors : [];
+		const history = isObject(doc) && Array.isArray(doc.history) ? doc.history : null;
+		return {
+			current: { ...current, anchors } as unknown as LifestyleSnapshot,
+			history: history?.every(isHistoryEntry) ? history : null
+		};
 	} catch {
 		return null;
 	}
 }
 
-/** One summary per household on a sheet we ship, in sheet order. */
+/** The current snapshot, or null: a missing, failed or malformed read is never an empty index. */
+export async function readLifestyle(
+	api: BlobApi,
+	signal: AbortSignal
+): Promise<LifestyleSnapshot | null> {
+	return (await readLifestyleDoc(api, signal))?.current ?? null;
+}
+
+/** Each complete household's highlights, rendered, by sheet id. */
+export function lifestyleHighlights(
+	read: LifestyleRead,
+	sheets: readonly HouseholdSheet[]
+): Readonly<Record<string, readonly Highlight[]>> {
+	const facts = highlightFacts({
+		runId: read.current.runId,
+		budgets: read.current.budgets,
+		anchors: read.current.anchors,
+		history: read.history,
+		sheets
+	});
+	return Object.fromEntries(
+		Object.entries(facts).map(([town, fs]) => [town, fs.map(renderHighlight)])
+	);
+}
+
+/** One summary per household on a sheet we ship, in sheet order, with its highlights when given them. */
 export function lifestyleCard(
 	snapshot: LifestyleSnapshot,
-	sheets: readonly HouseholdSheet[]
+	sheets: readonly HouseholdSheet[],
+	highlights?: Readonly<Record<string, readonly Highlight[]>>
 ): LifestyleCard {
 	return {
 		computedAt: snapshot.computedAt,
 		lastSuccessfulScrapeAt: snapshot.lastSuccessfulScrapeAt,
 		households: sheets.flatMap((sheet) => {
 			const b = snapshot.budgets.find((x) => x.town === sheet.id);
-			return b ? [householdSummary(b, sheet)] : [];
+			if (!b) return [];
+			const summary = householdSummary(b, sheet);
+			return [highlights ? { ...summary, highlights: highlights[sheet.id] ?? [] } : summary];
 		})
 	};
 }

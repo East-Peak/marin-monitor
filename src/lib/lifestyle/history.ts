@@ -3,11 +3,13 @@
  * model identity (sheet version, method version, tax year) so that movers
  * only ever compare like with like.
  */
-import type { PricedBudget } from './model';
+import type { Availability, PricedBudget } from './model';
 
 export interface HistoryLine {
 	readonly id: string;
 	readonly monthly: number | null;
+	/** Absent in entries written before LIFE3: such a line never pairs, so never moves. */
+	readonly availability?: Availability;
 	/** Each input's value and observation time (live) or check date (cited); persona has none. */
 	readonly inputs: Readonly<Record<string, readonly [value: number | null, asOf: string | null]>>;
 }
@@ -41,6 +43,7 @@ export function historyEntry(b: PricedBudget, runId: string): HistoryEntry {
 		lines: b.lines.map((l) => ({
 			id: l.id,
 			monthly: l.monthly,
+			availability: l.availability,
 			inputs: Object.fromEntries(l.inputs.map((i) => [i.name, [i.value, i.asOf] as const]))
 		})),
 		quantities: Object.fromEntries(
@@ -78,14 +81,17 @@ export type Comparison =
 				after: number;
 				change: number;
 			}[];
+			/** Lines in the later run that could not be paired: while any are, "nothing moved" is not said. */
+			readonly unpaired: number;
 	  };
 
 const NOT_COMPARABLE = { comparable: false, reason: 'not enough comparable history' } as const;
 
 /**
  * Line moves between two runs of the same town, sheet version, method version
- * and tax year. A line counts only if it was priced in both runs and its
- * quantities held still, so a move is always a price moving.
+ * and tax year. A line counts only if it was priced from ok inputs in both runs
+ * and its quantities are on record and held still, so a move is always an
+ * observed price moving.
  */
 export function compareRuns(before: HistoryEntry | null, after: HistoryEntry): Comparison {
 	if (
@@ -101,7 +107,9 @@ export function compareRuns(before: HistoryEntry | null, after: HistoryEntry): C
 	const pairs = after.lines.flatMap((l) => {
 		const prior = earlier.get(l.id);
 		if (!prior || prior.monthly === null || l.monthly === null) return [];
-		if (before.quantities[l.id] !== after.quantities[l.id]) return [];
+		if (prior.availability !== 'ok' || l.availability !== 'ok') return [];
+		const q = after.quantities[l.id];
+		if (typeof q !== 'string' || before.quantities[l.id] !== q) return [];
 		return [{ id: l.id, before: prior.monthly, after: l.monthly }];
 	});
 	// No line pair to compare is no comparable history, not "nothing moved".
@@ -109,5 +117,5 @@ export function compareRuns(before: HistoryEntry | null, after: HistoryEntry): C
 	const moves = pairs
 		.filter((p) => p.after !== p.before)
 		.map((p) => ({ ...p, change: p.after - p.before }));
-	return { comparable: true, moves };
+	return { comparable: true, moves, unpaired: after.lines.length - pairs.length };
 }

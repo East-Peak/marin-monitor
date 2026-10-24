@@ -65,6 +65,18 @@ describe('GET /api/data/lifestyle', () => {
 		const body = await res.json();
 		expect(body.households.map((h: { slug: string }) => h.slug)).toEqual(['ross']);
 		expect(body.households[0].breakEven).toBeNull();
+		// The highlights have their own flag.
+		expect(body.households[0]).not.toHaveProperty('highlights');
+	});
+
+	it('carries highlights under their own flag: none for an incomplete household', async () => {
+		Object.assign(env, {
+			LIFESTYLE_INDEX: 'on',
+			LIFESTYLE_HIGHLIGHTS: 'on',
+			LIFESTYLE_FIXTURE: fixture
+		});
+		const body = await (await GET({} as any)).json();
+		expect(body.households[0].highlights).toEqual([]);
 	});
 
 	it('is a short-cached 503 when the index cannot be read', async () => {

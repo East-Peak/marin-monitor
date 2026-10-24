@@ -6,7 +6,15 @@ import type { BlobApi } from '$lib/server/news/snapshot-store';
 import type { PricedBudget } from '$lib/lifestyle/model';
 import { SHEETS } from '$lib/lifestyle/sheets';
 import { LIFESTYLE_KEY, type LifestyleSnapshot } from './producer';
-import { lifestyleBlobApi, lifestyleCard, lifestyleOn, readLifestyle } from './read';
+import {
+	highlightsOn,
+	lifestyleBlobApi,
+	lifestyleCard,
+	lifestyleHighlights,
+	lifestyleOn,
+	readLifestyle,
+	readLifestyleDoc
+} from './read';
 
 const signal = new AbortController().signal;
 const budget = (town: string) =>
@@ -63,6 +71,15 @@ describe('the Lifestyle Index flag', () => {
 		expect(lifestyleOn({ LIFESTYLE_INDEX: 'on' })).toBe(true);
 		for (const v of [undefined, '', 'off', '1', 'true', 'ON'])
 			expect(lifestyleOn({ LIFESTYLE_INDEX: v })).toBe(false);
+	});
+});
+
+describe('the highlights flag', () => {
+	it('is on only when LIFESTYLE_HIGHLIGHTS is "on" under the Lifestyle Index flag', () => {
+		expect(highlightsOn({ LIFESTYLE_INDEX: 'on', LIFESTYLE_HIGHLIGHTS: 'on' })).toBe(true);
+		expect(highlightsOn({ LIFESTYLE_HIGHLIGHTS: 'on' })).toBe(false);
+		expect(highlightsOn({ LIFESTYLE_INDEX: 'on' })).toBe(false);
+		expect(highlightsOn({ LIFESTYLE_INDEX: 'on', LIFESTYLE_HIGHLIGHTS: 'yes' })).toBe(false);
 	});
 });
 
@@ -165,6 +182,67 @@ describe('where the index is read from', () => {
 	});
 });
 
+describe('the history and anchors highlights read', () => {
+	const entry = (over: object = {}) => ({
+		runId: '2026-10-20',
+		pricedAt: '2026-10-20T18:00:00.000Z',
+		town: 'ross',
+		sheetVersion: 's',
+		methodVersion: 'm',
+		taxYear: 2026,
+		burnMonthly: 100,
+		complete: true,
+		breakEven: 2000,
+		lines: [{ id: 'x', monthly: 100, inputs: { n: [5, null] } }],
+		quantities: { x: '[]' },
+		...over
+	});
+	const doc = (history: unknown, anchors: unknown = []) =>
+		api(JSON.stringify({ current: { ...snapshot([budget('ross')]), anchors }, history }));
+
+	it('returns the history beside the current snapshot', async () => {
+		const d = await readLifestyleDoc(doc([entry()]), signal);
+		expect(d?.current.runId).toBe('2026-10-20');
+		expect(d?.history).toHaveLength(1);
+	});
+
+	it('an unreadable history is null, never an empty one, and the snapshot still reads', async () => {
+		for (const bad of [
+			null,
+			[null],
+			[entry({ town: 3 })],
+			[entry({ lines: [{ id: 'x', monthly: 'x', inputs: {} }] })],
+			[entry({ lines: [{ id: 'x', monthly: 1, inputs: { n: 5 } }] })]
+		]) {
+			const d = await readLifestyleDoc(doc(bad), signal);
+			expect(d?.current.runId).toBe('2026-10-20');
+			expect(d?.history).toBeNull();
+		}
+	});
+
+	it('malformed anchors are none, so no comparison is made against them', async () => {
+		const anchor = {
+			id: 'teacherSalary',
+			label: 'a teacher',
+			units: 'gross individual',
+			value: 1,
+			availability: 'ok',
+			inputs: []
+		};
+		expect((await readLifestyleDoc(doc([], [anchor]), signal))?.current.anchors).toHaveLength(1);
+		for (const bad of [[{ ...anchor, value: 'x' }], [{ ...anchor, units: 'gross' }], 'x', [null]])
+			expect((await readLifestyleDoc(doc([], bad), signal))?.current.anchors).toEqual([]);
+	});
+
+	it('renders each complete household’s highlights, by sheet id', async () => {
+		const d = (await readLifestyleDoc(doc([]), signal))!;
+		const h = lifestyleHighlights(d, SHEETS);
+		// One household is no ranking, there are no anchors, and the run is not in history.
+		expect(h.ross.map((x) => x.template)).toEqual(['moversNotComparable']);
+		expect(h.ross[0].text).toBe('Movers: not enough comparable history yet.');
+	});
+});
+
 describe('the card’s data', () => {
 	it('summarises each budget that has a sheet, in sheet order, with the run’s times', () => {
 		const card = lifestyleCard(
@@ -175,5 +253,22 @@ describe('the card’s data', () => {
 		expect(card.lastSuccessfulScrapeAt).toBe('2026-10-20T18:00:00.000Z');
 		expect(card.households.map((h) => h.slug)).toEqual(['larkspur', 'ross']);
 		expect(card.households[1]).toMatchObject({ breakEven: 2000, burnMonthly: 100 });
+		expect(card.households[1]).not.toHaveProperty('highlights');
+	});
+
+	it('carries each household’s highlights only when given them', () => {
+		const card = lifestyleCard(snapshot([budget('ross'), budget('larkspur')]), SHEETS, {
+			ross: [
+				{
+					key: 'moversNotComparable',
+					rule: 'mover',
+					template: 'moversNotComparable',
+					text: 't',
+					modelled: false,
+					sources: []
+				}
+			]
+		});
+		expect(card.households.map((h) => h.highlights?.length)).toEqual([0, 1]);
 	});
 });

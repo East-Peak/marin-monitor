@@ -4,6 +4,7 @@
  * numbers are the engine's, never re-derived here beyond sums and shares.
  */
 import { pacificDate } from '$lib/dashboard/pacific-time';
+import type { Highlight } from './highlight-copy';
 import type {
 	Availability,
 	HouseholdSheet,
@@ -77,6 +78,8 @@ export interface HouseholdSummary {
 	readonly inputs: Readonly<Record<InputClass, number>>;
 	/** Share of spending in lines whose inputs are all persona. */
 	readonly personaOnly: number;
+	/** Present only under the highlights flag; empty for an incomplete household. */
+	readonly highlights?: readonly Highlight[];
 }
 
 /** The card's data, as /api/data/lifestyle serves it. */
