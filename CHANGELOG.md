@@ -9,6 +9,7 @@ All notable changes to Marin Monitor are documented here.
 ### Added — A phone test bench (MOBILE1)
 
 - **Phone e2e on an iPhone 13 (WebKit) and a Pixel 7 (Chromium)**: `@phone` tests run only on the two phone projects, against their own preview (port 4176) with production's flags and a populated news snapshot dated to the clock. An interaction timer measures tap to paint at 4× CPU (on request only), and CI's new phone job runs the phone tests with a per-route budget for the compressed initial JS.
+- **A tap audit of `/`, `/map` and `/cost/larkspur`**: every control in every reachable state is tapped on both phones and its real outcome asserted (content shown, a navigation, a dialog), with what was on top at its centre, its hit area against 44×44 px, and whether an early or second tap was needed. What it found broken is skipped as known until fixed.
 
 ### Changed — The highlights are on in production (LIFE3 step 5)
 
