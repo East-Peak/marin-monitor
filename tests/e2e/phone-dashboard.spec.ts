@@ -1,5 +1,12 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { auditTap, knownBroken, openPhone, preparePhone, record } from './fixtures/phone-audit';
+import {
+	auditTap,
+	knownBroken,
+	openPhone,
+	preparePhone,
+	record,
+	swipe
+} from './fixtures/phone-audit';
 
 /**
  * MOBILE1: every control on the phone dashboard, tapped on an iPhone (WebKit) and a Pixel
@@ -249,18 +256,17 @@ test.describe('@phone dashboard controls', () => {
 	test('cameras: a tile opens its camera; the strip scrolls sideways', async ({ page }, info) => {
 		const failures = await auditLinks(page, info, 'default', page.locator('a.cam-tile').first());
 		const row = page.locator('.cams-row');
+		await row.scrollIntoViewIfNeeded();
 		const box = (await row.boundingBox())!;
 		const before = await row.evaluate((el) => el.scrollLeft);
 		// A native scroller: a page can only drive it with real touch input (Chromium's CDP).
 		if (info.project.name === 'phone-chromium') {
-			const cdp = await page.context().newCDPSession(page);
-			await cdp.send('Input.synthesizeScrollGesture', {
-				x: Math.round(box.x + box.width * 0.8),
-				y: Math.round(box.y + box.height / 2),
-				xDistance: -250,
-				gestureSourceType: 'touch',
-				speed: 1200
-			});
+			const y = box.y + box.height / 2;
+			await swipe(page, { x: box.x + box.width * 0.85, y }, { x: box.x + box.width * 0.15, y }, 12);
+			await expect
+				.poll(() => row.evaluate((el) => el.scrollLeft), { timeout: 2_000 })
+				.toBeGreaterThan(before)
+				.catch(() => {});
 			const moved = (await row.evaluate((el) => el.scrollLeft)) > before;
 			record(info, {
 				page: PAGE,
