@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-23',
+		title: 'The map shows what’s current',
+		description:
+			'The map now shows stories from the last 7 days, and they leave on their own as they age. A fire listing that’s more than two weeks old with no size or containment reported isn’t drawn as a fire: the Fire layer and Outdoors name it as a hidden listing instead, and never call that “none near”. Contained and controlled fires show with their date. And the fire cameras’ view cones are back, a little stronger at rest so they can be seen at county zoom.'
+	},
+	{
+		date: '2026-10-23',
 		title: 'Golden Gate ferry and bus disruptions',
 		description:
 			'Getting Around now reads Golden Gate’s own alert page every 15 minutes, so ferry and bus disruptions show even when 511 doesn’t carry them. Each notice shows once, tagged with its routes and linked to the page, and dated by when we last checked: the page gives no posting times. Standing reminders are left out. If the page can’t be read whole, the section says so and keeps the last list it read, with that list’s time.'
