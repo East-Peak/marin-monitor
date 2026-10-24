@@ -13,7 +13,8 @@ export interface CamHeading {
 	/** Degrees clockwise from north, in [0, 360); null when the feed has none. */
 	az: number | null;
 	fov: number | null;
-	patrolling: boolean;
+	/** Null when the feed reports no patrol flag (the 2026-10 feed): never "holding still". */
+	patrolling: boolean | null;
 	/** The feed's last frame time (ms), or null. */
 	frameAt: number | null;
 }
@@ -49,10 +50,17 @@ export function parseHeadingFeed(json: unknown): CamHeading[] {
 	const out: CamHeading[] = [];
 	for (const f of features) {
 		const p = (f as { properties?: Record<string, unknown> } | null)?.properties;
-		const id = typeof p?.id === 'string' ? ALERT_AXIS_IDS.get(p.id) : undefined;
+		// The 2026-10 feed has its own ids, and our Axis id in `stream_ids` (MAPFRESH1).
+		const names = [p?.id, ...(Array.isArray(p?.stream_ids) ? p.stream_ids : [])];
+		const id = names
+			.map((n) => (typeof n === 'string' ? ALERT_AXIS_IDS.get(n) : undefined))
+			.find(Boolean);
 		if (!p || !id) continue;
-		for (const key of ['az_current', 'last_frame_ts', 'is_patrol_mode'])
+		for (const key of ['az_current', 'last_frame_ts'])
 			if (!(key in p)) throw new HeadingFeedError(`${p.id} has no ${key}`);
+		// Either flag 1 is sweeping; a 0 with no 1 is still; absent or null flags are unknown.
+		const flags = [p.is_patrol_mode, p.is_currently_patrolling];
+		const patrolling = flags.includes(1) ? true : flags.includes(0) ? false : null;
 		const az = num(p.az_current);
 		const fov = num(p.fov);
 		const frameS = num(p.last_frame_ts);
@@ -60,7 +68,7 @@ export function parseHeadingFeed(json: unknown): CamHeading[] {
 			id,
 			az: az === null ? null : norm(az),
 			fov: fov !== null && fov > 0 ? fov : null,
-			patrolling: p.is_patrol_mode === 1 || p.is_currently_patrolling === 1,
+			patrolling,
 			frameAt: frameS === null ? null : frameS * 1000
 		});
 	}
@@ -81,7 +89,9 @@ const degrees = (az: number) => `${Math.round(az) % 360}°`;
 export function headingFooter(h: CamHeading | undefined): string | null {
 	if (!h) return null;
 	if (h.patrolling) return 'Sweeping';
-	return h.az === null ? null : `Looking ${compass16(h.az)} · ${degrees(h.az)}`;
+	if (h.az === null) return null;
+	const where = `${compass16(h.az)} · ${degrees(h.az)}`;
+	return h.patrolling === null ? `Last reported ${where}` : `Looking ${where}`;
 }
 
 /** The drawer's line: the last reported heading and when we read it, never the picture's. */
@@ -97,11 +107,11 @@ export function headingLine(
 	return `Last reported heading: ${compass16(h.az)} (${degrees(h.az)}) · ${at}`;
 }
 
-/** Solid when still and fresh, dashed while patrolling, not drawn otherwise. */
+/** Solid when still and fresh, dashed while patrolling or patrol unreported, not drawn otherwise. */
 export function wedgeState(h: CamHeading, now: number): 'solid' | 'sweeping' | null {
 	if (h.az === null || h.fov === null || h.frameAt === null) return null;
 	if (now - h.frameAt > FRAME_FRESH_MS) return null;
-	return h.patrolling ? 'sweeping' : 'solid';
+	return h.patrolling === false ? 'solid' : 'sweeping';
 }
 
 /** Why a selected camera shows no wedge (CAMQUIET1); null while one is drawn. */

@@ -82,15 +82,47 @@ describe('parseHeadingFeed', () => {
 		).toThrow(/az_current/);
 	});
 
-	it('no patrol flag is a schema miss, never "holding still" (Codex MAPX4 #3)', () => {
-		expect(() =>
-			parseHeadingFeed(
-				feed({
-					type: 'Feature',
-					properties: { id: 'Axis-TamEast', az_current: 1, fov: 60, last_frame_ts: 1 }
-				})
+	it('no patrol flag is never "holding still" (Codex MAPX4 #3): patrol not reported', () => {
+		const [cam] = parseHeadingFeed(
+			feed({
+				type: 'Feature',
+				properties: { id: 'Axis-TamEast', az_current: 1, fov: 60, last_frame_ts: 1 }
+			})
+		);
+		expect(cam.patrolling).toBeNull();
+	});
+
+	it('null-valued patrol flags are unknown too, never "still" (Codex MAPFRESH1 #4)', () => {
+		const [cam] = parseHeadingFeed(
+			feed(feature({ id: 'Axis-TamEast', is_patrol_mode: null, is_currently_patrolling: null }))
+		);
+		expect(cam.patrolling).toBeNull();
+		const [still] = parseHeadingFeed(
+			feed(feature({ id: 'Axis-TamEast', is_patrol_mode: 0, is_currently_patrolling: null }))
+		);
+		expect(still.patrolling).toBe(false);
+	});
+
+	it('the 2026-10 feed: its own id, our Axis id in stream_ids, no patrol flags (MAPFRESH1)', () => {
+		const live = (props: Record<string, unknown>) => ({
+			type: 'Feature',
+			properties: {
+				fov: 65.1,
+				az_current: 326.78,
+				ptz_updated_ts: 1_792_808_201,
+				last_frame_ts: 1_792_808_213,
+				...props
+			}
+		});
+		const out = parseHeadingFeed(
+			feed(
+				live({ id: 'mttam-cam01', stream_ids: ['Axis-TamEast'] }),
+				live({ id: 'africalookout-cam01', stream_ids: ['axis-africalookout1'] })
 			)
-		).toThrow(/is_patrol_mode/);
+		);
+		expect(out).toEqual([
+			{ id: 'alert-tam-east', az: 326.78, fov: 65.1, patrolling: null, frameAt: 1_792_808_213_000 }
+		]);
 	});
 
 	it('none of our cams in the feed (ids renamed) is a schema miss, not an empty map', () => {
@@ -131,6 +163,9 @@ describe('headingFooter', () => {
 	it('says "Sweeping" while patrolling', () => {
 		expect(headingFooter(cam({ patrolling: true }))).toBe('Sweeping');
 	});
+	it('patrol not reported: the last reported direction, never "Looking" (MAPFRESH1)', () => {
+		expect(headingFooter(cam({ az: 326.78, patrolling: null }))).toBe('Last reported NNW · 327°');
+	});
 	it('no read or no heading: nothing, never a guess', () => {
 		expect(headingFooter(undefined)).toBeNull();
 		expect(headingFooter(cam({ az: null }))).toBeNull();
@@ -163,6 +198,9 @@ describe('wedgeState', () => {
 	});
 	it('dashed ("sweeping") while patrolling', () => {
 		expect(wedgeState(cam({ frameAt: now, patrolling: true }), now)).toBe('sweeping');
+	});
+	it('patrol not reported: dashed, as it may be moving (MAPFRESH1)', () => {
+		expect(wedgeState(cam({ frameAt: now, patrolling: null }), now)).toBe('sweeping');
 	});
 	it('not drawn when the frame is stale, unreported, or there is no heading or fov', () => {
 		expect(wedgeState(cam({ frameAt: now - FRAME_FRESH_MS - 1 }), now)).toBeNull();
