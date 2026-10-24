@@ -20,11 +20,14 @@ export interface FireIncident {
 	containment: number;
 	lat: number;
 	lon: number;
-	startDate: number;
-	updatedDate: number;
+	/** Discovery and last-modified times; null when the upstream doesn't report them. */
+	startDate: number | null;
+	updatedDate: number | null;
 	url: string;
 	source: 'CAL FIRE' | 'NIFC';
 	isActive: boolean;
+	/** Contained or controlled, and when: not out, so still drawn (MAPFRESH1). */
+	settled: { label: 'contained' | 'controlled'; at: number } | null;
 }
 
 /** v2's incident: acreage and containment stay null when the upstream doesn't report them. */
@@ -32,6 +35,49 @@ export type V2Fire = Omit<FireIncident, 'acres' | 'containment'> & {
 	acres: number | null;
 	containment: number | null;
 };
+
+/** A listing discovered longer ago than this, with no size and no containment, is stale (MAPFRESH1). */
+export const STALE_LISTING_MS = 14 * 86_400_000;
+
+/** A listing not drawn as a fire because it is stale: said as data, never as an all-clear. */
+export interface HiddenFire {
+	id: string;
+	name: string;
+	source: FireIncident['source'];
+	discoveredAt: number;
+}
+
+/** One upstream record and what its own source says about it, before eligibility. */
+interface Listing {
+	fire: V2Fire;
+	/** The source says it's over: CAL FIRE's IsActive false, NIFC's FireOutDateTime. */
+	out: boolean;
+	/** Any size, a reported 0 included. */
+	sized: boolean;
+	/** Any containment: a percentage, or a contained or controlled date. */
+	contained: boolean;
+}
+
+/** A finite time, else null: an unknown date stays unknown. */
+const known = (t: number | null | undefined) =>
+	typeof t === 'number' && Number.isFinite(t) ? t : null;
+
+/** Per source, before the dedupe: an excluded record never suppresses an eligible one. */
+function judge(
+	listings: readonly Listing[],
+	now: number
+): { fires: V2Fire[]; hidden: HiddenFire[] } {
+	const fires: V2Fire[] = [];
+	const hidden: HiddenFire[] = [];
+	for (const { fire, out, sized, contained } of listings) {
+		if (out) continue;
+		const found = fire.startDate;
+		if (!sized && !contained && found !== null && now - found > STALE_LISTING_MS)
+			hidden.push({ id: fire.id, name: fire.name, source: fire.source, discoveredAt: found });
+		else fires.push(fire);
+	}
+	return { fires, hidden };
+}
 
 /** A 200 whose body has no features array establishes nothing about fires. */
 function featuresOf<T>(data: { features?: unknown }, label: string): T[] {
@@ -63,7 +109,7 @@ const NIFC_URL =
 		spatialRel: 'esriSpatialRelIntersects',
 		outSR: '4326',
 		outFields:
-			'IrwinID,IncidentName,POOCounty,IncidentSize,DiscoveryAcres,PercentContained,FireDiscoveryDateTime,ModifiedOnDateTime_dt',
+			'IrwinID,IncidentName,POOCounty,IncidentSize,DiscoveryAcres,PercentContained,FireDiscoveryDateTime,ModifiedOnDateTime_dt,FireOutDateTime,ContainmentDateTime,ControlDateTime',
 		resultRecordCount: '200',
 		f: 'json'
 	});
@@ -98,13 +144,16 @@ interface NifcFeature {
 		PercentContained: number | null;
 		FireDiscoveryDateTime: number | null;
 		ModifiedOnDateTime_dt: number | null;
+		FireOutDateTime: number | null;
+		ContainmentDateTime: number | null;
+		ControlDateTime: number | null;
 	};
 	/** Point of origin in WGS84 (outSR=4326). */
 	geometry: { x: number; y: number } | null;
 }
 
-/** Active CAL FIRE incidents near Marin County; throws on any failure. */
-async function readCalFire(signal?: AbortSignal): Promise<V2Fire[]> {
+/** CAL FIRE's listings near Marin County; throws on any failure. */
+async function readCalFire(signal?: AbortSignal): Promise<Listing[]> {
 	const response = await fetchWithTimeout(CALFIRE_URL, {
 		headers: { Accept: 'application/json' },
 		signal
@@ -123,25 +172,34 @@ async function readCalFire(signal?: AbortSignal): Promise<V2Fire[]> {
 			const [lon, lat] = f.geometry.coordinates;
 			return isNearMarin(lat, lon);
 		})
-		.map((f) => ({
-			id: `calfire-${f.properties.UniqueId}`,
-			name: f.properties.Name,
-			location: f.properties.Location,
-			county: f.properties.County,
-			acres: f.properties.AcresBurned ?? null,
-			containment: f.properties.PercentContained ?? null,
-			lat: f.geometry!.coordinates[1],
-			lon: f.geometry!.coordinates[0],
-			startDate: new Date(f.properties.Started).getTime(),
-			updatedDate: new Date(f.properties.Updated).getTime(),
-			url: f.properties.Url || 'https://www.fire.ca.gov/incidents',
-			source: 'CAL FIRE' as const,
-			isActive: f.properties.IsActive === 'true'
-		}));
+		.map((f) => {
+			const p = f.properties;
+			return {
+				fire: {
+					id: `calfire-${p.UniqueId}`,
+					name: p.Name,
+					location: p.Location,
+					county: p.County,
+					acres: p.AcresBurned ?? null,
+					containment: p.PercentContained ?? null,
+					lat: f.geometry!.coordinates[1],
+					lon: f.geometry!.coordinates[0],
+					startDate: known(Date.parse(p.Started)),
+					updatedDate: known(Date.parse(p.Updated)),
+					url: p.Url || 'https://www.fire.ca.gov/incidents',
+					source: 'CAL FIRE' as const,
+					isActive: p.IsActive === 'true',
+					settled: null
+				},
+				out: p.IsActive !== 'true',
+				sized: p.AcresBurned != null,
+				contained: p.PercentContained != null
+			};
+		});
 }
 
-/** Active NIFC/WFIGS (federal) incidents near Marin; throws on any failure. */
-async function readNifc(signal?: AbortSignal): Promise<V2Fire[]> {
+/** NIFC/WFIGS (federal) listings near Marin; throws on any failure. */
+async function readNifc(signal?: AbortSignal): Promise<Listing[]> {
 	const response = await fetchWithTimeout(NIFC_URL, {
 		headers: { Accept: 'application/json' },
 		signal
@@ -158,35 +216,54 @@ async function readNifc(signal?: AbortSignal): Promise<V2Fire[]> {
 
 	return features
 		.filter((f) => f.geometry != null && isNearMarin(f.geometry.y, f.geometry.x))
-		.map((f) => ({
-			id: `nifc-${f.attributes.IrwinID}`,
-			name: f.attributes.IncidentName,
-			location: f.attributes.POOCounty ?? '',
-			county: f.attributes.POOCounty ?? '',
-			acres: f.attributes.IncidentSize ?? f.attributes.DiscoveryAcres ?? null,
-			containment: f.attributes.PercentContained ?? null,
-			lat: f.geometry!.y,
-			lon: f.geometry!.x,
-			startDate: f.attributes.FireDiscoveryDateTime ?? Date.now(),
-			updatedDate: f.attributes.ModifiedOnDateTime_dt ?? Date.now(),
-			url: 'https://inciweb.wildfire.gov/',
-			source: 'NIFC' as const,
-			isActive: true
-		}));
+		.map((f) => {
+			const a = f.attributes;
+			const controlled = known(a.ControlDateTime);
+			const containedAt = known(a.ContainmentDateTime);
+			return {
+				fire: {
+					id: `nifc-${a.IrwinID}`,
+					name: a.IncidentName,
+					location: a.POOCounty ?? '',
+					county: a.POOCounty ?? '',
+					acres: a.IncidentSize ?? a.DiscoveryAcres ?? null,
+					containment: a.PercentContained ?? null,
+					lat: f.geometry!.y,
+					lon: f.geometry!.x,
+					startDate: known(a.FireDiscoveryDateTime),
+					updatedDate: known(a.ModifiedOnDateTime_dt),
+					url: 'https://inciweb.wildfire.gov/',
+					source: 'NIFC' as const,
+					isActive: a.FireOutDateTime == null,
+					settled:
+						controlled !== null
+							? { label: 'controlled' as const, at: controlled }
+							: containedAt !== null
+								? { label: 'contained' as const, at: containedAt }
+								: null
+				},
+				out: a.FireOutDateTime != null,
+				sized: a.IncidentSize != null || a.DiscoveryAcres != null,
+				contained: a.PercentContained != null || containedAt !== null || controlled !== null
+			};
+		});
 }
 
-/** The legacy, swallowing form: a failure reads as no incidents, an unreported metric as 0. */
-async function swallowing(label: string, read: () => Promise<V2Fire[]>): Promise<FireIncident[]> {
+/** The legacy, swallowing form: a failure reads as no incidents. */
+async function swallowing(label: string, read: () => Promise<Listing[]>): Promise<Listing[]> {
 	try {
-		return (await read()).map((f) => ({
-			...f,
-			acres: f.acres ?? 0,
-			containment: f.containment ?? 0
-		}));
+		return await read();
 	} catch (error) {
 		logger.warn(label, `Fetch failed: ${(error as Error).message}`);
 		return [];
 	}
+}
+
+/** Each source judged on its own, then merged: the fires to draw and the listings hidden. */
+function eligible(calfire: readonly Listing[], nifc: readonly Listing[], now: number) {
+	const c = judge(calfire, now);
+	const n = judge(nifc, now);
+	return { fires: mergeIncidents(c.fires, n.fires), hidden: [...c.hidden, ...n.hidden] };
 }
 
 /** In-flight dedup: concurrent callers share the same request */
@@ -209,7 +286,12 @@ async function fetchFireIncidentsInner(): Promise<FireIncident[]> {
 		swallowing('CAL FIRE', () => readCalFire()),
 		swallowing('NIFC', () => readNifc())
 	]);
-	const combined = mergeIncidents(calfire, nifc);
+	// Legacy (and the TV) draw only eligible fires; an unreported metric reads as 0.
+	const combined = eligible(calfire, nifc, Date.now()).fires.map((f) => ({
+		...f,
+		acres: f.acres ?? 0,
+		containment: f.containment ?? 0
+	}));
 	logger.log('Fire', `${combined.length} active incidents near Marin`);
 	return combined;
 }
@@ -217,6 +299,8 @@ async function fetchFireIncidentsInner(): Promise<FireIncident[]> {
 /** A fire read the v2 dashboard can vouch for, stamped with the time it was checked. */
 export interface FireRead {
 	fires: V2Fire[];
+	/** Stale listings, not drawn (MAPFRESH1): said wherever fires are counted. */
+	hidden: HiddenFire[];
 	checkedAt: number;
 }
 
@@ -229,7 +313,8 @@ export async function readFireIncidentsOrThrow({
 	now = Date.now
 }: OwnerOptions & { now?: () => number } = {}): Promise<FireRead> {
 	const [calfire, nifc] = await Promise.all([readCalFire(signal), readNifc(signal)]);
-	return { fires: mergeIncidents(calfire, nifc), checkedAt: now() };
+	const checkedAt = now();
+	return { ...eligible(calfire, nifc, checkedAt), checkedAt };
 }
 
 function mergeIncidents<F extends { lat: number; lon: number }>(calfire: F[], nifc: F[]): F[] {

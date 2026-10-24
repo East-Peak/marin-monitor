@@ -6,12 +6,12 @@
  */
 import type { AirQualityData, EarthquakeData } from '$lib/types';
 import type { AirQualityRead } from '$lib/api/marin/airnow';
-import type { FireRead, V2Fire } from '$lib/api/marin/calfire';
+import type { FireRead, HiddenFire, V2Fire } from '$lib/api/marin/calfire';
 import type { MarineForecastRead } from '$lib/api/marin/marine';
 import type { EarthquakeRead } from '$lib/api/marin/usgs';
 import type { HourlyForecast, HourlyPop, TideEvent } from '$lib/weather/brief';
 import type { BriefCard, BriefState } from './brief-store';
-import { PACIFIC, pacificDate, pacificMidnightAfter } from './pacific-time';
+import { PACIFIC, pacificDate, pacificDay, pacificMidnightAfter } from './pacific-time';
 import { emptyWording, mapMeasured, measuredFromEntry, type Measured } from './measured';
 import { datasetEntry, type DatasetFetch } from './source-adapters';
 import { presentSection, type SectionPresentation, type SourceStatusEntry } from './source-status';
@@ -194,8 +194,29 @@ export function quakesRow(m: Measured<readonly EarthquakeData[]>, opts: Freshnes
 	};
 }
 
-export function wildfireRow(m: Measured<readonly V2Fire[]>, opts: Freshness): GroundRow {
-	const other = notAList(m, 'None near', opts, 'Unavailable');
+/**
+ * The stale listings a fire read hid (MAPFRESH1), as data: "2 older NIFC listings hidden (no
+ * size or containment reported; discovered May 19, Jun 14)". Null when none were hidden.
+ */
+export function hiddenFiresLine(hidden: readonly HiddenFire[]): string | null {
+	if (!hidden.length) return null;
+	const sources = [...new Set(hidden.map((h) => h.source))].join(' + ');
+	const days = [...hidden]
+		.sort((a, b) => a.discoveredAt - b.discoveredAt)
+		.map((h) => pacificDay(h.discoveredAt));
+	const listings = hidden.length === 1 ? 'listing' : 'listings';
+	return `${hidden.length} older ${sources} ${listings} hidden (no size or containment reported; discovered ${days.join(', ')})`;
+}
+
+/** Hidden listings are never an all-clear: "None near" only when nothing was hidden (MAPFRESH1). */
+export function wildfireRow(
+	m: Measured<readonly V2Fire[]>,
+	opts: Freshness,
+	hidden: readonly HiddenFire[] = []
+): GroundRow {
+	const line = hiddenFiresLine(hidden);
+	const other = notAList(m, line ? 'No active fires listed' : 'None near', opts, 'Unavailable');
+	if (other?.value === 'No active fires listed') return { ...other, detail: line };
 	if (other || m.kind !== 'value') return other ?? { value: 'Unavailable', detail: null };
 	// "Largest" only among fires that report acreage; with none reported, the first is named as is.
 	const sized = m.value.filter((x) => x.acres !== null);
@@ -210,11 +231,14 @@ export function wildfireRow(m: Measured<readonly V2Fire[]>, opts: Freshness): Gr
 	const where = f.county ? `, ${f.county} Co.` : '';
 	const acres =
 		f.acres === null ? 'acreage not reported' : `${f.acres.toLocaleString('en-US')} acres`;
-	const contained =
-		f.containment === null ? 'containment not reported' : `${f.containment}% contained`;
+	const contained = f.settled
+		? `${f.settled.label} ${pacificDay(f.settled.at)}`
+		: f.containment === null
+			? 'containment not reported'
+			: `${f.containment}% contained`;
 	return {
 		value: `${m.value.length} active near`,
-		detail: `${lead}${f.name}${where}, ${acres}, ${contained}`
+		detail: [`${lead}${f.name}${where}, ${acres}, ${contained}`, line].filter(Boolean).join(' · ')
 	};
 }
 
@@ -378,7 +402,7 @@ export function outdoorsView(input: OutdoorsInput): OutdoorsView {
 			fires,
 			quakes,
 			air,
-			wildfire: wildfireRow(fires, fresh),
+			wildfire: wildfireRow(fires, fresh, input.fires?.hidden ?? []),
 			quake: quakesRow(quakes, fresh),
 			airRow: airRow(air)
 		},

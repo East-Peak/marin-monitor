@@ -14,6 +14,7 @@ import {
 	rainSeries,
 	surfView,
 	tempSeries,
+	hiddenFiresLine,
 	tideCurve,
 	wildfireRow
 } from './outdoors';
@@ -182,7 +183,8 @@ const fire = (name: string, acres: number | null, containment: number | null): V
 	updatedDate: NOW,
 	url: `https://fire/${name}`,
 	source: 'CAL FIRE',
-	isActive: true
+	isActive: true,
+	settled: null
 });
 
 describe('wildfireRow', () => {
@@ -323,5 +325,60 @@ describe('tideCurve', () => {
 		const at = (ms: number) => curve.find((p) => p.atMs === ms)!.ft;
 		expect(at(HOUR0 + 12 * H + 20 * 60_000)).toBeCloseTo(1);
 		expect(at(HOUR0 + 6 * H)).toBeGreaterThan(4.9); // next to the high, off-grid by 10 min
+	});
+});
+
+describe('hidden fire listings are said as data, never an all-clear (MAPFRESH1)', () => {
+	const opts = { now: NOW, maxAgeMs: 30 * 60_000 };
+	const hidden = [
+		{
+			id: 'nifc-bunker',
+			name: 'BUNKER',
+			source: 'NIFC' as const,
+			discoveredAt: Date.parse('2026-06-14T19:00:00Z')
+		},
+		{
+			id: 'nifc-kirby',
+			name: 'Kirby',
+			source: 'NIFC' as const,
+			discoveredAt: Date.parse('2026-05-19T19:00:00Z')
+		}
+	];
+	const LINE =
+		'2 older NIFC listings hidden (no size or containment reported; discovered May 19, Jun 14)';
+
+	it('names the count, the source and the discovery dates, oldest first', () => {
+		expect(hiddenFiresLine(hidden)).toBe(LINE);
+		expect(hiddenFiresLine(hidden.slice(0, 1))).toBe(
+			'1 older NIFC listing hidden (no size or containment reported; discovered Jun 14)'
+		);
+		expect(hiddenFiresLine([])).toBeNull();
+	});
+
+	it('Outdoors with only hidden listings says so, never "None near"', () => {
+		const row = wildfireRow(measuredValue([], 'CAL FIRE', NOW - 60_000), opts, hidden);
+		expect(row.value).toBe('No active fires listed');
+		expect(row.detail).toBe(LINE);
+	});
+
+	it('drawn fires keep their detail, with the hidden ones after it', () => {
+		const row = wildfireRow(measuredValue([fire('Big', 1200, 40)], 'CAL FIRE', NOW), opts, hidden);
+		expect(row.value).toBe('1 active near');
+		expect(row.detail).toBe(`Largest: Big, Sonoma Co., 1,200 acres, 40% contained · ${LINE}`);
+	});
+
+	it('contained or controlled is said with its date, as the map says it (Codex MAPFRESH1 #3)', () => {
+		const settled = {
+			...fire('Ridge', 30, null),
+			settled: { label: 'controlled' as const, at: Date.parse('2026-10-13T18:00:00Z') }
+		};
+		const row = wildfireRow(measuredValue([settled], 'CAL FIRE', NOW), opts);
+		expect(row.detail).toBe('Largest: Ridge, Sonoma Co., 30 acres, controlled Oct 13');
+	});
+
+	it("a read that can't vouch keeps its stale wording", () => {
+		const kept = wildfireRow(measuredValue<V2Fire[]>([], 'CAL FIRE', null), opts, hidden);
+		expect(kept.value).toBe('Unknown');
+		expect(kept.detail).toBe('no confirmed recent read');
 	});
 });

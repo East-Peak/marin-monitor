@@ -176,6 +176,7 @@ describe('v2DataLayers', () => {
 				...base.values,
 				fire: {
 					checkedAt: NOW,
+					hidden: [],
 					fires: [
 						{
 							id: 'f1',
@@ -190,7 +191,8 @@ describe('v2DataLayers', () => {
 							updatedDate: NOW,
 							url: 'https://fire.ca.gov/f1',
 							source: 'CAL FIRE',
-							isActive: true
+							isActive: true,
+							settled: null
 						}
 					]
 				},
@@ -537,5 +539,59 @@ describe('cams layer (MAPX4)', () => {
 		}).cams;
 		expect(off.points).toEqual([]);
 		expect(camWedgeFeatures(off, NOW)).toEqual([]);
+	});
+});
+
+describe('the fire layer says what it hid (MAPFRESH1)', () => {
+	const bunker = {
+		id: 'nifc-bunker',
+		name: 'BUNKER',
+		source: 'NIFC' as const,
+		discoveredAt: Date.parse('2026-06-14T19:00:00Z')
+	};
+	const ridge = {
+		id: 'f1',
+		name: 'Ridge',
+		location: 'Nicasio',
+		county: 'Marin',
+		acres: 30,
+		containment: null,
+		lat: 38.06,
+		lon: -122.7,
+		startDate: NOW,
+		updatedDate: NOW,
+		url: 'https://fire.ca.gov/f1',
+		source: 'NIFC' as const,
+		isActive: true,
+		settled: { label: 'contained' as const, at: Date.parse('2026-10-16T18:00:00Z') }
+	};
+	const layer = (fires: (typeof ridge)[], hidden: (typeof bunker)[]) =>
+		v2DataLayers({
+			...base,
+			outcomes: { ...ok('fires') },
+			values: { ...base.values, fire: { checkedAt: NOW, fires, hidden } }
+		}).fire;
+
+	it('only hidden listings: no fire drawn, and the note names them', () => {
+		const fire = layer([], [bunker]);
+		expect(fire.points).toEqual([]);
+		expect(fire.count).toBe(0);
+		expect(fire.note).toBe(
+			'No active fires listed near Marin · 1 older NIFC listing hidden (no size or containment reported; discovered Jun 14)'
+		);
+	});
+
+	it('nothing hidden, no note', () => {
+		expect(layer([ridge], []).note).toBeNull();
+	});
+
+	it('contained is drawn, said with its date; an unknown discovery date is said too', () => {
+		const fire = layer([{ ...ridge, startDate: null as never }], []);
+		expect(fire.points[0].detail.meta).toEqual([
+			'NIFC',
+			'30 acres',
+			'Contained Oct 16',
+			'Discovery date not reported'
+		]);
 	});
 });

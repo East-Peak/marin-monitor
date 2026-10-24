@@ -57,7 +57,7 @@ function input(over: Partial<OutdoorsInput> = {}): OutdoorsInput {
 			points: [{ atMs: HOUR0, waveFt: 4.3, periodS: 12, directionDeg: 250 }],
 			checkedAt: NOW - 60_000
 		},
-		fires: { fires: [], checkedAt: NOW - 60_000 },
+		fires: { fires: [], hidden: [], checkedAt: NOW - 60_000 },
 		quakes: { quakes: [], observedAt: NOW - 120_000 },
 		air: {
 			reading: {

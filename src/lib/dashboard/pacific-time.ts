@@ -60,6 +60,11 @@ export function pacificMidnightAfter(ms: number): number {
 	return parsePacificWallTime(`${nextDate(pacificDate(ms))}T00:00`) as number;
 }
 
+/** A Pacific calendar day, e.g. "Jun 14". */
+export function pacificDay(ms: number): string {
+	return plain(DAY.format(ms));
+}
+
 export function formatAsOf(ms: number, now: number): string {
 	const time = plain(TIME.format(ms));
 	return pacificDate(ms) === pacificDate(now) ? time : `${plain(DAY.format(ms))}, ${time}`;

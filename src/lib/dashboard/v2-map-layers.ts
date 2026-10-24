@@ -28,7 +28,7 @@ import {
 } from '$lib/components/map/map-data';
 import { formatCoffeePrice, getCoffeeHeadlinePrice } from '$lib/utils/coffee-index';
 import { measuredFromEntry } from './measured';
-import { formatAsOf } from './pacific-time';
+import { formatAsOf, pacificDay } from './pacific-time';
 import { datasetEntry, type DatasetFetch } from './source-adapters';
 import { DATASET_POLICY } from './dataset-policy';
 import {
@@ -38,7 +38,7 @@ import {
 	airportWords,
 	airportsPart
 } from './getting-around';
-import { OUTDOORS_MAX_AGE_MS } from './outdoors';
+import { OUTDOORS_MAX_AGE_MS, hiddenFiresLine } from './outdoors';
 import { CAMERAS } from '$lib/config/cameras';
 import { CALTRANS_CAMS, CALTRANS_WEDGE_FOV, directionAz } from '$lib/config/caltrans-cams';
 import {
@@ -305,15 +305,18 @@ function pointsOf(
 			// Records 511 sent that we can't read leave the count incomplete: no number then.
 			return { points, note: notes.length ? notes.join(' · ') : null, complete: unread === 0 };
 		}
-		case 'fire':
+		case 'fire': {
+			const fires = values.fire?.fires ?? [];
+			// Hidden is never an all-clear (MAPFRESH1): the listings left off are named.
+			const hidden = hiddenFiresLine(values.fire?.hidden ?? []);
 			return {
-				note: null,
-				points: (values.fire?.fires ?? []).map((f) => ({
+				note: hidden && !fires.length ? `No active fires listed near Marin · ${hidden}` : hidden,
+				points: fires.map((f) => ({
 					id: f.id,
 					lon: f.lon,
 					lat: f.lat,
 					title: `${f.name} Fire`,
-					at: Number.isFinite(f.updatedDate) ? f.updatedDate : null,
+					at: f.updatedDate,
 					props: {
 						id: f.id,
 						itemId: f.id,
@@ -328,13 +331,19 @@ function pointsOf(
 						meta: [
 							f.source,
 							f.acres === null ? 'Acreage not reported' : `${f.acres.toLocaleString()} acres`,
-							f.containment === null ? 'Containment not reported' : `${f.containment}% contained`
+							f.settled
+								? `${f.settled.label === 'contained' ? 'Contained' : 'Controlled'} ${pacificDay(f.settled.at)}`
+								: f.containment === null
+									? 'Containment not reported'
+									: `${f.containment}% contained`,
+							...(f.startDate === null ? ['Discovery date not reported'] : [])
 						],
 						paragraphs: f.location ? [f.location] : [],
 						source: f.url ? { label: `Open on ${f.source}`, href: f.url } : null
 					}
 				}))
 			};
+		}
 		case 'gas':
 			return {
 				note: null,

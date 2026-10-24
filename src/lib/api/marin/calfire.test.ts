@@ -257,10 +257,15 @@ describe('fetchFireIncidents', () => {
 			.mockResolvedValueOnce(makeResponse({ features: [feature] }))
 			.mockResolvedValueOnce(makeResponse({ features: [] }));
 
-		const result = await fetchFireIncidents();
-
-		expect(result[0].acres).toBe(0);
-		expect(result[0].containment).toBe(0);
+		// A day after the fixture's start: a sizeless listing that young is still drawn (MAPFRESH1).
+		vi.useFakeTimers({ now: Date.parse('2024-03-02T00:00:00Z') });
+		try {
+			const result = await fetchFireIncidents();
+			expect(result[0].acres).toBe(0);
+			expect(result[0].containment).toBe(0);
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 
 	it('returns empty array when both APIs fail', async () => {
@@ -341,5 +346,124 @@ describe('readFireIncidentsOrThrow (v2 Outdoors: a failure is never "none near")
 		expect(read.fires.map((f) => f.name)).toEqual(['Dunn']);
 		expect(read.checkedAt).toBe(1_000);
 		expect(mockFetch.mock.calls.every(([, init]) => init?.signal === owner.signal)).toBe(true);
+	});
+});
+
+describe('fire eligibility, per source, before the dedupe (MAPFRESH1)', () => {
+	const DAY = 86_400_000;
+	const NOW = Date.parse('2026-10-23T20:00:00Z');
+	/** WFIGS's live BUNKER listing (2026-10-23): Marin, discovered Jun 14, no size, no containment. */
+	const nifc = (attrs: Record<string, unknown> = {}, at = { x: -122.6, y: 38.05 }) => ({
+		attributes: {
+			IrwinID: 'bunker',
+			IncidentName: 'BUNKER',
+			POOCounty: 'Marin',
+			POOState: 'US-CA',
+			IncidentSize: null,
+			DiscoveryAcres: null,
+			PercentContained: null,
+			FireDiscoveryDateTime: Date.parse('2026-06-14T19:00:00Z'),
+			ModifiedOnDateTime_dt: Date.parse('2026-10-21T12:00:00Z'),
+			FireOutDateTime: null,
+			ContainmentDateTime: null,
+			ControlDateTime: null,
+			...attrs
+		},
+		geometry: at
+	});
+	const read = async (calfire: object[], wfigs: object[]) => {
+		mockFetch
+			.mockResolvedValueOnce(makeResponse({ features: calfire }))
+			.mockResolvedValueOnce(makeResponse({ features: wfigs }));
+		return readFireIncidentsOrThrow({ now: () => NOW });
+	};
+
+	it('asks WFIGS for its terminal dates and discovery acres', async () => {
+		await read([], []);
+		const url = new URL(String(mockFetch.mock.calls[1][0]));
+		const fields = url.searchParams.get('outFields')!.split(',');
+		for (const f of ['FireOutDateTime', 'ContainmentDateTime', 'ControlDateTime', 'DiscoveryAcres'])
+			expect(fields).toContain(f);
+	});
+
+	it('the BUNKER-shaped listing is not drawn: hidden, and said as such', async () => {
+		const r = await read([], [nifc()]);
+		expect(r.fires).toEqual([]);
+		expect(r.hidden).toEqual([
+			{
+				id: 'nifc-bunker',
+				name: 'BUNKER',
+				source: 'NIFC',
+				discoveredAt: Date.parse('2026-06-14T19:00:00Z')
+			}
+		]);
+	});
+
+	it('the 14-day edge: a sizeless listing 14 days old is drawn, a millisecond older is hidden', async () => {
+		const edge = await read([], [nifc({ FireDiscoveryDateTime: NOW - 14 * DAY })]);
+		expect(edge.fires.map((f) => f.name)).toEqual(['BUNKER']);
+		const past = await read([], [nifc({ FireDiscoveryDateTime: NOW - 14 * DAY - 1 })]);
+		expect(past.fires).toEqual([]);
+		expect(past.hidden).toHaveLength(1);
+	});
+
+	it('a reported 0 is a size: IncidentSize 0 or DiscoveryAcres 0 keeps an old listing drawn', async () => {
+		expect((await read([], [nifc({ IncidentSize: 0 })])).fires).toHaveLength(1);
+		expect((await read([], [nifc({ DiscoveryAcres: 0 })])).fires).toHaveLength(1);
+		expect((await read([], [nifc({ PercentContained: 0 })])).fires).toHaveLength(1);
+	});
+
+	it('FireOutDateTime set: the fire is out, not drawn and not hidden', async () => {
+		const r = await read([], [nifc({ FireOutDateTime: NOW - DAY, IncidentSize: 40 })]);
+		expect(r.fires).toEqual([]);
+		expect(r.hidden).toEqual([]);
+	});
+
+	it('contained or controlled is not out: drawn, with the word and its date', async () => {
+		const contained = await read(
+			[],
+			[nifc({ ContainmentDateTime: NOW - 2 * DAY, IncidentSize: 40 })]
+		);
+		expect(contained.fires[0].settled).toEqual({ label: 'contained', at: NOW - 2 * DAY });
+		const controlled = await read(
+			[],
+			[nifc({ ContainmentDateTime: NOW - 3 * DAY, ControlDateTime: NOW - DAY })]
+		);
+		expect(controlled.fires[0].settled).toEqual({ label: 'controlled', at: NOW - DAY });
+		expect(controlled.hidden).toEqual([]);
+	});
+
+	it('a missing discovery date stays unknown: never "now", and the listing is drawn', async () => {
+		const r = await read([], [nifc({ FireDiscoveryDateTime: null, ModifiedOnDateTime_dt: null })]);
+		expect(r.fires).toHaveLength(1);
+		expect(r.fires[0].startDate).toBeNull();
+		expect(r.fires[0].updatedDate).toBeNull();
+	});
+
+	it('CAL FIRE isActive false is not drawn', async () => {
+		const r = await read([makeCalFireFeature({ isActive: 'false' })], []);
+		expect(r.fires).toEqual([]);
+	});
+
+	it('an excluded CAL FIRE record never suppresses the NIFC fire beside it', async () => {
+		const r = await read(
+			[makeCalFireFeature({ isActive: 'false', lat: 38.05, lon: -122.6 })],
+			[nifc({ IncidentSize: 120, FireDiscoveryDateTime: NOW - DAY })]
+		);
+		expect(r.fires.map((f) => f.id)).toEqual(['nifc-bunker']);
+	});
+
+	it('the legacy reader (the TV) draws only eligible fires too', async () => {
+		vi.useFakeTimers({ now: NOW });
+		try {
+			mockFetch
+				.mockResolvedValueOnce(
+					makeResponse({ features: [makeCalFireFeature({ isActive: 'false' })] })
+				)
+				.mockResolvedValueOnce(makeResponse({ features: [nifc()] }));
+			expect(await fetchFireIncidents()).toEqual([]);
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });
