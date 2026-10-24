@@ -1,7 +1,7 @@
 // tests/e2e/fixtures/phone-news.mjs
 /**
  * Writes the phone preview's news snapshot (MOBILE1): producer format, dated against the
- * real clock so nothing reads stale, and shaped like production's (19 sources, ~200 stories,
+ * real clock so nothing reads stale, and shaped like production's (18 sources, one failing, ~200 stories,
  * about one in six tagged with a town), so the phone is measured on a realistic page.
  *
  *   node tests/e2e/fixtures/phone-news.mjs <out.json>
@@ -100,6 +100,20 @@ for (const [id, name, category, verification, count] of SOURCES) {
 		items.push({ ...item, categories: [category], alsoReportedBy: [] });
 	}
 }
+// Production's failing feed, so partial coverage and "Which sources" show as they do live.
+sources.push({
+	id: 'city-of-san-rafael',
+	name: 'City of San Rafael',
+	category: 'civic',
+	verification: 'official',
+	lastAttemptAt: generatedAt,
+	status: 'failed',
+	lastSuccessAt: iso(now - 2 * 86_400_000),
+	lastError: 'redirect-not-allowed: https://sanrafael.gov is not allowlisted',
+	consecutiveFailures: 196,
+	itemCount: 0,
+	items: []
+});
 items.sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 
 mkdirSync(dirname(out), { recursive: true });

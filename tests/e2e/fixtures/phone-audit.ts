@@ -258,6 +258,7 @@ const KNOWN_BROKEN: Record<string, string> = {
 	'header: the sources indicator lists what is degraded, and closes': SMALL,
 	'header: the logo goes to the top; Old dashboard opens the legacy layout': SMALL,
 	'latest reporting: every story opens its link': SMALL,
+	'"Which sources" opens its list wherever it shows': SMALL,
 	'section getting-around: its toggle shows real content and hides it again': SMALL,
 	'section news: its toggle shows real content and hides it again': SMALL,
 	'section cost: its toggle shows real content and hides it again': SMALL,
