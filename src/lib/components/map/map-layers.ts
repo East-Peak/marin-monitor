@@ -271,8 +271,8 @@ const emphasisCase = (
 
 /** A wedge's outline, whatever its dashes: a faint hairline at rest (CAMQUIET1). */
 const CAMERA_WEDGE_LINE = {
-	'line-width': emphasisCase(1.5, 0.75),
-	'line-opacity': emphasisCase(0.9, 0.25)
+	'line-width': emphasisCase(1.5, 1),
+	'line-opacity': emphasisCase(0.9, 0.5)
 };
 
 function addLayers(map: MapLibreMap): void {
@@ -360,14 +360,15 @@ function addLayers(map: MapLibreMap): void {
 	});
 
 	// --- Fire camera wedges (MAPX4): a wedge per last reported heading, dashed while sweeping.
-	// Quiet at rest, under every layer's dots; full strength while emphasised (CAMQUIET1). ---
+	// Quiet at rest but seen at county zoom (MAPFRESH1), under every layer's dots; full strength
+	// while emphasised (CAMQUIET1). ---
 	map.addLayer({
 		id: 'camera-wedges-fill',
 		type: 'fill',
 		source: 'camera-wedges',
 		paint: {
 			'fill-color': CAMERA_COLOR,
-			'fill-opacity': emphasisCase(0.3, ['case', ['==', ['get', 'style'], 'solid'], 0.05, 0.03])
+			'fill-opacity': emphasisCase(0.3, ['case', ['==', ['get', 'style'], 'solid'], 0.12, 0.08])
 		}
 	});
 	const wedgeLine = { 'line-color': CAMERA_COLOR, ...CAMERA_WEDGE_LINE };

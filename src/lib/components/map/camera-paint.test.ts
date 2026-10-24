@@ -36,25 +36,25 @@ function paint(layer: Layer, prop: string, style: string, emphasis: boolean) {
 const { layers, sources } = registered();
 const layer = (id: string) => layers.find((l) => l.id === id)!;
 
-describe('camera wedges paint (CAMQUIET1)', () => {
-	it('fill: quiet at rest (solid 0.05, sweeping and approximate 0.03), 0.30 when emphasised', () => {
+describe('camera wedges paint (CAMQUIET1; visible at rest, MAPFRESH1)', () => {
+	it('fill: seen at rest (solid 0.12, sweeping and approximate 0.08), 0.30 when emphasised', () => {
 		const fill = layer('camera-wedges-fill');
-		expect(paint(fill, 'fill-opacity', 'solid', false)).toBe(0.05);
-		expect(paint(fill, 'fill-opacity', 'sweeping', false)).toBe(0.03);
-		expect(paint(fill, 'fill-opacity', 'approximate', false)).toBe(0.03);
+		expect(paint(fill, 'fill-opacity', 'solid', false)).toBe(0.12);
+		expect(paint(fill, 'fill-opacity', 'sweeping', false)).toBe(0.08);
+		expect(paint(fill, 'fill-opacity', 'approximate', false)).toBe(0.08);
 		for (const style of ['solid', 'sweeping', 'approximate'])
 			expect(paint(fill, 'fill-opacity', style, true), style).toBe(0.3);
 	});
 
-	it('outlines: 0.25 × 0.75 px at rest, 0.9 × 1.5 px when emphasised, dashes kept', () => {
+	it('outlines: 0.5 × 1 px at rest, 0.9 × 1.5 px when emphasised, dashes kept', () => {
 		for (const [id, style] of [
 			['camera-wedges-line', 'solid'],
 			['camera-wedges-sweeping', 'sweeping'],
 			['camera-wedges-approximate', 'approximate']
 		]) {
 			const l = layer(id);
-			expect(paint(l, 'line-opacity', style, false), id).toBe(0.25);
-			expect(paint(l, 'line-width', style, false), id).toBe(0.75);
+			expect(paint(l, 'line-opacity', style, false), id).toBe(0.5);
+			expect(paint(l, 'line-width', style, false), id).toBe(1);
 			expect(paint(l, 'line-opacity', style, true), id).toBe(0.9);
 			expect(paint(l, 'line-width', style, true), id).toBe(1.5);
 		}
