@@ -16,6 +16,7 @@ const LIFESTYLE_PORT = 4175;
 const LIFESTYLE_ENV = {
 	NEWS_SNAPSHOT_FIXTURE: '/dev/null',
 	LIFESTYLE_INDEX: 'on',
+	LIFESTYLE_HIGHLIGHTS: 'on',
 	LIFESTYLE_FIXTURE: 'tests/e2e/fixtures/lifestyle-index.json'
 };
 

@@ -263,6 +263,7 @@ describe('the card’s data', () => {
 					key: 'moversNotComparable',
 					rule: 'mover',
 					template: 'moversNotComparable',
+					figure: null,
 					text: 't',
 					modelled: false,
 					sources: []

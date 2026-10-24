@@ -9,6 +9,7 @@ All notable changes to Marin Monitor are documented here.
 ### Added — The Lifestyle Index's highlights, behind their own flag (LIFE3)
 
 - **The rules and their words** (`LIFESTYLE_HIGHLIGHTS=on`, off in production): each fictional household's biggest line outside housing against a full-time CA minimum-wage take-home, its widest lead over the other households in a section, the lines that moved since the last like-for-like run, and its break-even against Marin's median household income, the main earner against a Mill Valley teacher, and a year's spending in years of a minimum-wage take-home. Each comparison has one pre-assigned anchor in matching units; one resting on a persona input is marked modelled; an incomplete household has none. History now records each line's availability, and a line moves only between two ok observations. Every template's wording is in `src/lib/lifestyle/highlight-copy.ts`.
+- **Where they show** (same flag): a "For scale" section on `/cost/<town>` (each highlight's figure, its sentence, _modelled_ where it rests on a persona input, and its sources), the first one beside the biggest lines on the desktop card (not on the phone, whose height budget is unchanged), and up to four in the TV Cost hero's right half under the three biggest lines. A quiet week says how many lines it compared; a mover names the price that moved.
 
 ## 2026-10-23
 

@@ -24,6 +24,8 @@
 		);
 		return all.find((x) => x.slug === slug) ?? null;
 	});
+	/** The right half's highlights, below the three biggest lines: the ones with a figure, four at most. */
+	const highlights = $derived((h?.highlights ?? []).filter((x) => x.figure !== null).slice(0, 4));
 </script>
 
 {#if !h}
@@ -93,7 +95,10 @@
 					The three biggest lines
 				</div>
 				{#each h.top as l (l.id)}
-					<div class="flex items-baseline justify-between gap-3 py-2 border-b border-gray-700/50">
+					<div
+						class="flex items-baseline justify-between gap-3 py-2 border-b border-gray-700/50"
+						data-tv-top
+					>
 						<span class="text-xl text-zinc-200 min-w-0"
 							>{l.label}<ClassChips classes={l.classes} />{#if l.availability === 'stale'}<span
 									class="ml-2 text-base text-amber-400">stale</span
@@ -104,7 +109,26 @@
 						>
 					</div>
 				{/each}
-				<p class="mt-4 text-base text-zinc-500">
+				{#if highlights.length}
+					<div class="mt-5 flex flex-col gap-3" data-tv-highlights>
+						<div class="text-sm font-semibold uppercase tracking-wider text-zinc-500">
+							For scale
+						</div>
+						{#each highlights as x (x.key)}
+							<div class="flex items-baseline gap-4" data-highlight={x.key}>
+								<span class="w-32 shrink-0 text-3xl font-bold tabular-nums text-white"
+									>{x.figure}</span
+								>
+								<span class="min-w-0 text-lg leading-snug text-zinc-300"
+									>{x.text}{#if x.modelled}<span class="ml-2 text-base text-amber-400" data-modelled
+											>modelled</span
+										>{/if}</span
+								>
+							</div>
+						{/each}
+					</div>
+				{/if}
+				<p class="mt-auto pt-4 text-base text-zinc-500" data-tv-footer>
 					{h.inputs.live} live, {h.inputs.cited} cited, {h.inputs.persona} persona inputs · {Math.round(
 						h.personaOnly * 100
 					)}% of spending is persona-only · marinmonitor.com/cost/{h.slug}

@@ -115,6 +115,30 @@
 				</section>
 			</div>
 
+			{#if data.highlights?.length}
+				<section class="scale" aria-label="For scale" data-highlights>
+					<h2 data-text-role="label">For scale</h2>
+					<ul>
+						{#each data.highlights as x (x.key)}
+							<li data-highlight={x.key} class:plain={x.figure === null}>
+								{#if x.figure !== null}
+									<span class="x num" data-figure data-text-role="value">{x.figure}</span>
+								{/if}
+								<span class="y" data-text-role="label">{x.text}</span>
+								{#if x.modelled || x.sources.length}
+									<span class="meta" data-text-role="meta"
+										>{#if x.modelled}<span class="modelled" data-modelled>modelled</span
+											>{/if}{#if x.sources.length}<span data-sources
+												>{x.modelled ? ' · ' : ''}{x.sources.join(', ')}</span
+											>{/if}</span
+									>
+								{/if}
+							</li>
+						{/each}
+					</ul>
+				</section>
+			{/if}
+
 			<section class="budget" aria-label="The budget">
 				{#each p.sections as s (s.section)}
 					<div class="sec" data-section={s.section}>
@@ -346,6 +370,45 @@
 		padding-top: 6px;
 		color: var(--text-primary);
 		font-weight: 500;
+	}
+	/* The approved mockup's "For scale" boxes: the figure big, the sentence under it. */
+	.scale {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+	.scale h2 {
+		color: var(--text-muted);
+		font-weight: 400;
+	}
+	.scale ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		gap: 10px;
+		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	}
+	.scale li {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		min-width: 0;
+		padding: 10px 12px;
+		border: 1px solid var(--border-light);
+		border-radius: 8px;
+	}
+	.scale li.plain {
+		justify-content: center;
+	}
+	.scale .x {
+		font-weight: 600;
+	}
+	.scale .y {
+		color: var(--text-secondary);
+	}
+	.modelled {
+		color: var(--amber, #f59e0b);
 	}
 	.budget {
 		display: flex;

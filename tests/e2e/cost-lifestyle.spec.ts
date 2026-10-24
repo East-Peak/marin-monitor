@@ -130,6 +130,55 @@ for (const [label, viewport] of [
 			expect(overflow).toBeLessThanOrEqual(0);
 		});
 
+		test('the highlights: for scale on the household page, modelled marked, none when incomplete', async ({
+			page
+		}) => {
+			await page.goto('/cost/larkspur');
+			const hl = page.locator('[data-highlights]');
+			const line = hl.locator('[data-highlight="lineVsMinimumWage:larkspur.biz"]');
+			await expect(line).toContainText('tinned-fish shop');
+			await expect(line).toContainText('minimum-wage take-homes');
+			await expect(line.locator('[data-figure]')).toHaveText('3.2×');
+			await expect(line.locator('[data-modelled]')).toHaveText('modelled');
+			await expect(line.locator('[data-sources]')).toContainText('dir.ca.gov');
+			// The seed's week before had gas at $5.90: a like-for-like mover.
+			const gas = hl.locator('[data-highlight="mover:larkspur.car.suv.fuel"]');
+			await expect(gas).toContainText('since Oct 13');
+			await expect(gas.locator('[data-figure]')).toHaveText('+$10/mo');
+			await expect(hl.locator('[data-highlight="breakEvenVsMedian"]')).toContainText(
+				'Marin’s median household income'
+			);
+			// Ross is incomplete in the seed: two households ranked, and said so.
+			await expect(hl.locator('[data-highlight="rank:business"]')).toContainText(
+				'Of the two households priced in full this week'
+			);
+			const overflow = await page.evaluate(
+				() => document.documentElement.scrollWidth - window.innerWidth
+			);
+			expect(overflow).toBeLessThanOrEqual(0);
+
+			await page.goto('/cost/ross');
+			await expect(page.locator('[data-incomplete]')).toHaveText('incomplete');
+			await expect(page.locator('[data-highlights]')).toHaveCount(0);
+		});
+
+		test('the card: a highlight beside the biggest lines on desktop, none on the phone', async ({
+			page
+		}) => {
+			const c = await card(page, phone);
+			await c.locator('[data-town="larkspur"]').click();
+			const one = c.locator('[data-card-highlight]');
+			if (phone) {
+				await expect(one).toBeHidden();
+			} else {
+				await expect(one).toBeVisible();
+				await expect(one).toContainText('tinned-fish shop');
+				await expect(one.locator('[data-modelled]')).toHaveText('modelled');
+			}
+			await c.locator('[data-town="ross"]').click();
+			await expect(c.locator('[data-card-highlight]')).toHaveCount(0);
+		});
+
 		test('stale reads stale, and an incomplete budget hides its break-even', async ({ page }) => {
 			await page.goto('/cost/mill-valley');
 			const garbage = page.locator('details[data-line="millvalley.util.garbage"]');
@@ -172,6 +221,8 @@ test.describe('the TV', () => {
 		const composite = page
 			.waitForRequest('**/api/data/composite', { timeout: 5_000 })
 			.catch(() => null);
+		// Oct 22 (Pacific) is Larkspur's day in the rotation: a complete household, with highlights.
+		await page.clock.install({ time: new Date('2026-10-22T19:00:00.000Z') });
 		await page.goto('/tv?probe');
 		await expect(page.locator('[data-screen-id]').first()).toBeVisible();
 		await page.keyboard.press(' ');
@@ -184,6 +235,23 @@ test.describe('the TV', () => {
 		await expect(hero.locator('[data-break-even], [data-burn]')).toBeVisible();
 		// The seed has no successful run: the TV says its numbers may be out of date.
 		await expect(hero.locator('[data-tv-stale]')).toContainText('may be out of date');
+		// Its highlights fill the right half, below the three biggest lines.
+		const items = hero.locator('[data-tv-highlights] [data-highlight]');
+		await expect(hero).toHaveAttribute('data-tv-lifestyle', 'larkspur');
+		await expect(items.first()).toBeVisible();
+		expect(await items.count()).toBeLessThanOrEqual(4);
+		await expect(hero.locator('[data-highlight="moversNotComparable"]')).toHaveCount(0);
+		await expect(items.first().locator('[data-modelled]')).toHaveText('modelled');
+		const lastTop = (await hero.locator('[data-tv-top]').last().boundingBox())!;
+		const first = (await items.first().boundingBox())!;
+		const last = (await items.last().boundingBox())!;
+		expect(first.y).toBeGreaterThan(lastTop.y + lastTop.height - 1);
+		expect(first.x).toBeGreaterThan(1920 / 2 - 40);
+		// Inside the hero's own (clipped) box, above its footer line.
+		const box = (await hero.boundingBox())!;
+		const foot = (await hero.locator('[data-tv-footer]').boundingBox())!;
+		expect(last.y + last.height).toBeLessThanOrEqual(foot.y);
+		expect(foot.y + foot.height).toBeLessThanOrEqual(box.y + box.height);
 		expect(await composite).toBeNull();
 	});
 });

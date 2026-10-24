@@ -114,7 +114,13 @@ export type Fact =
 				after: number | null;
 			}[];
 	  })
-	| (Base & { readonly template: 'moversQuiet'; readonly since: string })
+	| (Base & {
+			readonly template: 'moversQuiet';
+			readonly since: string;
+			/** Lines compared, of the lines priced now: a line not ok in either run is not compared. */
+			readonly compared: number;
+			readonly of: number;
+	  })
 	| (Base & { readonly template: 'moversNotComparable' });
 
 export interface HighlightContext {
@@ -304,10 +310,11 @@ function movers(
 		.sort((a, z) => Math.abs(z.change) - Math.abs(a.change) || byId(a, z))
 		.slice(0, MOVERS_SHOWN);
 	if (moves.length === 0) {
-		// "No line moved" is a claim about every line: only when every line was compared.
-		return cmp.unpaired === 0
-			? [{ template: 'moversQuiet', ...base, since: before.pricedAt }]
-			: [{ template: 'moversNotComparable', ...base }];
+		// "No line moved" is a claim about the lines compared, and says how many those were.
+		const of = after.lines.length;
+		return [
+			{ template: 'moversQuiet', ...base, since: before.pricedAt, compared: of - cmp.unpaired, of }
+		];
 	}
 
 	return moves.map((m): Fact => {

@@ -330,10 +330,14 @@ describe('movers', () => {
 		const near = budgets(readEarlier(6.17), earlier);
 		const f = highlightFacts(context({ budgets: now, history: history(now, near) }));
 		expect(of(f, 'ross', 'mover')).toEqual([]);
-		expect(one(f, 'ross', 'moversQuiet').since).toBe(earlier.toISOString());
+		expect(one(f, 'ross', 'moversQuiet')).toMatchObject({
+			since: earlier.toISOString(),
+			compared: now.find((b) => b.town === 'ross')!.lines.length,
+			of: now.find((b) => b.town === 'ross')!.lines.length
+		});
 	});
 
-	it('a quiet week is said only when every line could be compared', () => {
+	it('a quiet week names how many lines it could compare', () => {
 		const now = budgets();
 		const near = budgets(readEarlier(6.17), earlier);
 		const hist = history(now, near).map((e) =>
@@ -342,8 +346,10 @@ describe('movers', () => {
 				: e
 		);
 		const f = highlightFacts(context({ budgets: now, history: hist }));
-		expect(of(f, 'ross', 'moversQuiet')).toEqual([]);
-		expect(of(f, 'ross', 'moversNotComparable')).toHaveLength(1);
+		// One line could not be compared: the quiet week says how many were.
+		const q = one(f, 'ross', 'moversQuiet');
+		expect(q.of - q.compared).toBe(1);
+		expect(q.compared).toBeGreaterThan(0);
 	});
 
 	it('ties between moves go to the stable line id, and at most two show', () => {

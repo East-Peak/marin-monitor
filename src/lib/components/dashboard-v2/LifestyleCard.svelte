@@ -31,6 +31,8 @@
 				: null
 	);
 	const h = $derived(households.find((x) => x.slug === slug) ?? null);
+	/** The household's first highlight with a figure (LIFE3): desktop only, beside the biggest lines. */
+	const highlight = $derived(h?.highlights?.find((x) => x.figure !== null) ?? null);
 	const notes = $derived(
 		h
 			? [
@@ -107,6 +109,13 @@
 						</li>
 					{/each}
 				</ul>
+				{#if highlight}
+					<p class="hl" data-card-highlight data-highlight={highlight.key} data-text-role="label">
+						<span class="num">{highlight.figure}</span>
+						{highlight.text}{#if highlight.modelled}
+							<span class="modelled" data-modelled data-text-role="meta">modelled</span>{/if}
+					</p>
+				{/if}
 			</div>
 		</div>
 	{:else}
@@ -258,6 +267,25 @@
 	}
 	.lab :global(.chips) {
 		flex: none;
+	}
+	.hl {
+		margin: 0;
+		color: var(--text-secondary);
+	}
+	.hl .num {
+		font-weight: 600;
+		color: var(--text-primary);
+		margin-right: 4px;
+	}
+	.modelled {
+		margin-left: 4px;
+		color: var(--amber, #f59e0b);
+	}
+	/* Below the two-column card there is no room for it: the phone's height budget (§13.3) holds. */
+	@media (max-width: 1023px) {
+		.hl {
+			display: none;
+		}
 	}
 	/* The phone's height budget (§13.3) pays for the headline break-even. */
 	@media (max-width: 767px) {
