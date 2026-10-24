@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-	import '@fontsource-variable/outfit';
+	import '$lib/fonts/outfit.css';
 	import { inject } from '@vercel/analytics';
 
 	inject({ mode: 'auto' });

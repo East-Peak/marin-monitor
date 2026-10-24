@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { get } from 'svelte/store';
 import { getLocationById } from '$lib/config/locations';
 import type { HourlyForecast, ObservedNow, TideEvent } from '$lib/weather/brief';
-import { createBriefStore, type BriefFetchers } from './brief-store';
+import { createBriefStore, initialBriefState, type BriefFetchers } from './brief-store';
 
 const CENTRAL = getLocationById('central-marin');
 const MILL_VALLEY = getLocationById('mill-valley');
@@ -34,6 +34,15 @@ function fetchers(over: Partial<BriefFetchers> = {}): BriefFetchers {
 }
 
 describe('createBriefStore', () => {
+	it('starts from initialBriefState: every card loading, which the first paint renders too (MOBILE1)', () => {
+		const s = createBriefStore(fetchers(), new AbortController().signal);
+		expect(get(s)).toEqual(initialBriefState());
+		for (const card of Object.values(initialBriefState())) {
+			expect(card.state).toBe('loading');
+			expect(card.value).toBeNull();
+		}
+	});
+
 	it('labels each value with the scope it was fetched for', async () => {
 		const s = createBriefStore(fetchers(), new AbortController().signal);
 		await s.load(CENTRAL);

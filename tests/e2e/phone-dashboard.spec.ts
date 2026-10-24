@@ -436,10 +436,18 @@ test.describe('@phone dashboard hydration', () => {
 	});
 
 	test('a section toggle tapped as soon as it shows is not lost', async ({ page }, info) => {
+		// The app's scripts held back 1.5 s: the tap lands on the server's HTML, before hydration,
+		// in both browsers (WebKit can't be CPU-throttled).
+		await page.route('**/_app/immutable/**/*.js', async (r) => {
+			await new Promise((done) => setTimeout(done, 1_500));
+			await r.fallback();
+		});
 		await page.goto(PAGE, { waitUntil: 'commit' });
 		const t = toggle(page, 'outdoors');
 		await t.waitFor({ state: 'visible' });
+		await t.scrollIntoViewIfNeeded();
 		const hydratedAtTap = await page.locator('[data-hydrated="true"]').count();
+		expect(hydratedAtTap, 'the tap comes before hydration').toBe(0);
 		const box = (await t.boundingBox())!;
 		await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
 		await expect(page.locator('[data-hydrated="true"]')).toBeVisible({ timeout: 15_000 });
@@ -465,21 +473,30 @@ test.describe('@phone dashboard hydration', () => {
 		await page.goto(PAGE, { waitUntil: 'commit' });
 		const first = page.locator('#map a.v2-news-title').first();
 		await first.waitFor({ state: 'visible' });
+		// Where a thumb would find it: scrolled to, then tapped at once.
+		await first.scrollIntoViewIfNeeded();
 		const href = (await first.getAttribute('href'))!;
 		const box = (await first.boundingBox())!;
+		const pageY = () => first.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+		const y0 = await pageY();
 		await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
-		let ok = true;
+		const why: string[] = [];
 		try {
 			await expect.poll(() => popup?.url(), { timeout: 5_000 }).toBe(new URL(href).href);
 		} catch {
-			ok = false;
+			why.push('the early tap opened nothing');
 		}
+		// Hydrated, the story is where the first paint put it: an early tap meets what it saw.
+		await expect(page.locator('[data-hydrated="true"]')).toBeVisible({ timeout: 15_000 });
+		const moved = Math.abs((await pageY()) - y0);
+		if (moved >= 1) why.push(`the story moved ${Math.round(moved)} px under it`);
+		const ok = why.length === 0;
 		record(info, {
 			page: PAGE,
 			state: 'first second',
 			control: 'early tap: story link',
 			result: ok ? 'pass' : 'fail',
-			why: ok ? [] : ['the early tap opened nothing']
+			why
 		});
 		expect(ok).toBe(true);
 	});

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, untrack } from 'svelte';
+	import { onMount, tick, untrack } from 'svelte';
 	import { browser } from '$app/environment';
 	import TownPicker from '$lib/components/layout/TownPicker.svelte';
 	import SettingsMenu from './SettingsMenu.svelte';
@@ -30,7 +30,10 @@
 	import { latestReportingView } from '$lib/dashboard/latest-reporting';
 	import { createMapFeed, type MapFeed } from '$lib/dashboard/map-feed';
 	import { briefPending } from '$lib/dashboard/v2-probe';
-	import type { BriefState } from '$lib/dashboard/brief-store';
+	import { initialBriefState } from '$lib/dashboard/brief-store';
+	import { EMPTY_ADVISORY_FEED } from '$lib/dashboard/advisory-feed';
+	import type { AdvisoryFeedState } from '$lib/weather/advisories';
+	import SectionStatus from './SectionStatus.svelte';
 	import {
 		gettingAroundCard,
 		gettingAroundView,
@@ -59,6 +62,7 @@
 	import { sectionPrefs } from '$lib/stores/section-prefs';
 	import { createSectionOpenState } from '$lib/dashboard/section-open';
 	import { openAndFocus } from '$lib/dashboard/fragment-nav';
+	import { replayEarlyTaps } from '$lib/dashboard/early-taps';
 	import { createDashboardV2Controller, V2_REFRESH_MS } from '$lib/dashboard/v2-controller';
 	import { seededSnapshotEntries } from '$lib/dashboard/source-adapters';
 	import {
@@ -73,6 +77,7 @@
 	let {
 		snapshot: serverSnapshot = null,
 		renderedAt,
+		advisories: serverAdvisories = null,
 		lifestyle: lifestyleOn = false
 	}: {
 		/** The server's snapshot read (DASH-FLIP1); null when it failed or ran out of time. */
@@ -81,6 +86,8 @@
 		renderedAt?: number;
 		/** The Lifestyle Index's server-side flag (LIFE2): its card replaces the composite's. */
 		lifestyle?: boolean;
+		/** The server's advisory read (MOBILE1); null when it failed or ran out of time. */
+		advisories?: AdvisoryFeedState | null;
 	} = $props();
 	// Read once: the page's first paint, not a prop that later drives anything.
 	const seed = untrack(() => serverSnapshot);
@@ -103,7 +110,11 @@
 	// The one owner of this page's data (spec §13.7); aborted when the page goes away.
 	const lifetime = new AbortController();
 	const controller = browser
-		? createDashboardV2Controller({ signal: lifetime.signal, initialSnapshot: seed })
+		? createDashboardV2Controller({
+				signal: lifetime.signal,
+				initialSnapshot: seed,
+				initialAdvisories: untrack(() => serverAdvisories)
+			})
 		: null;
 	const clock = createClock(
 		undefined,
@@ -117,7 +128,15 @@
 	const sources =
 		controller?.sources ?? readable<SourceStatusEntry[]>(seed ? seededSnapshotEntries(seed) : []);
 	const fixIt = controller?.fixIt ?? readable<NewsItem[] | null>(null);
-	const briefState = controller?.brief ?? readable<BriefState | null>(null);
+	/**
+	 * What the first paint shows before the controller has read anything (MOBILE1): the same
+	 * loading brief and the server's advisories, so hydration changes no markup and the page
+	 * holds still while its data arrives.
+	 */
+	const briefState = controller?.brief ?? readable(initialBriefState());
+	const advisoryFeed =
+		controller?.advisories ??
+		readable<AdvisoryFeedState>(untrack(() => serverAdvisories) ?? EMPTY_ADVISORY_FEED);
 	const transitState = controller?.transit ?? readable<TransitState>({ reads: null, error: null });
 	const ggAlerts = controller?.ggAlerts ?? readable<GgAlertsBlob | null>(null);
 	const airport = controller?.airport ?? readable<AirportStatusData | null>(null);
@@ -271,6 +290,26 @@
 			})
 		: null;
 	const mapFeed = mapSource?.feed ?? readable<MapFeed | null>(null);
+	/**
+	 * The phone's preview is a still picture of the map: MapLibre (220 KB, the page's largest
+	 * script) loads once the page has loaded and the preview nears the screen, so it never
+	 * competes with the first screen (MOBILE1). Desktop's map is the page's centre and mounts
+	 * at once.
+	 */
+	let mapHold = $state<HTMLElement | null>(null);
+	let mapSeen = $state(false);
+	let pageLoaded = $state(false);
+	const mapNear = $derived(desktop || (mapSeen && pageLoaded));
+	$effect(() => {
+		const el = mapHold;
+		if (!el || mapSeen) return;
+		if (typeof IntersectionObserver === 'undefined') return void (mapSeen = true);
+		const io = new IntersectionObserver(([e]) => e.isIntersecting && (mapSeen = true), {
+			rootMargin: '400px 0px'
+		});
+		io.observe(el);
+		return () => io.disconnect();
+	});
 	/** The probe's settlement list also waits for the brief cards above the map (Codex r4 #3). */
 	const settledData = $derived(
 		$mapFeed && {
@@ -297,6 +336,10 @@
 	onMount(() => {
 		sections.resolve(window.location.hash, window.innerWidth);
 		hydrated = true;
+		if (document.readyState === 'complete') pageLoaded = true;
+		else addEventListener('load', () => (pageLoaded = true), { once: true });
+		// Taps on its buttons before now (app.html kept them), once the page says it's hydrated.
+		void tick().then(() => replayEarlyTaps(window as { __earlyTaps?: Element[] }));
 		if (window.location.hash) jump(window.location.hash);
 		const onHashChange = () => jump(window.location.hash);
 		window.addEventListener('hashchange', onHashChange);
@@ -338,13 +381,8 @@
 		<span data-text-role="control"
 			><SettingsMenu onreset={() => sections.clearTransient(window.innerWidth)} /></span
 		>
-		{#if controller && hydrated}
-			<HealthIndicator
-				report={controller.healthReport}
-				outcomes={controller.datasetOutcomes}
-				now={clock}
-			/>
-		{/if}
+		<!-- In the first paint too, "Checking sources…" until the report reads (MOBILE1). -->
+		<HealthIndicator report={healthReport} {outcomes} now={clock} />
 		<!-- The rollback layout stays reachable until legacy is retired (DASH-FLIP2). -->
 		<a class="v2-old" href="/?layout=legacy" data-text-role="label">Old dashboard</a>
 	</header>
@@ -354,22 +392,20 @@
 	{/if}
 
 	<main class="v2-main">
-		{#if controller && hydrated}
-			<AdvisoryRow feed={controller.advisories} now={clock} {desktop} />
-			{#if desktop && $briefState}
-				<BriefDesktop
-					brief={$briefState}
-					now={$clock}
-					ocean={outdoors.surf}
-					around={aroundCard}
-					onjump={navJump}
-				/>
-			{:else}
-				<BriefRow brief={controller.brief} now={clock} around={aroundCard} onjump={navJump} />
-			{/if}
-			{#if !desktop}
-				<CamStrip now={$clock} headings={controller.camHeadings} />
-			{/if}
+		<!-- The phone's top is in the first paint (MOBILE1): the server's advisories, the brief's
+		     loading cards and the camera strip. Desktop swaps in its own after mount. -->
+		<AdvisoryRow feed={advisoryFeed} now={clock} {desktop} />
+		{#if desktop}
+			<BriefDesktop
+				brief={$briefState}
+				now={$clock}
+				ocean={outdoors.surf}
+				around={aroundCard}
+				onjump={navJump}
+			/>
+		{:else}
+			<BriefRow brief={briefState} now={clock} around={aroundCard} onjump={navJump} />
+			<CamStrip now={$clock} headings={controller?.camHeadings} />
 		{/if}
 
 		<section id="map" class="v2-region" tabindex="-1" aria-labelledby="v2-map-title">
@@ -379,15 +415,21 @@
 			{#if ready || seed}
 				<!-- With the server's snapshot, Latest reporting is in the HTML; the map is client-only. -->
 				<div class="v2-map-row">
-					{#if ready}
-						{#if settledData && $mapFeed}
-							<V2Map
-								data={settledData}
-								dataLayers={$mapFeed.dataLayers}
-								now={$clock}
-								bind:full={mapFull}
-							/>
-						{/if}
+					{#if ready && mapNear && settledData && $mapFeed}
+						<V2Map
+							data={settledData}
+							dataLayers={$mapFeed.dataLayers}
+							now={$clock}
+							bind:full={mapFull}
+						/>
+					{:else}
+						<!-- The map's own box, held until it mounts (MOBILE1). -->
+						<div class="v2-map-hold" data-slot="map-preview" bind:this={mapHold}>
+							<div class="v2-map-hold-canvas" aria-hidden="true"></div>
+							<div class="v2-map-hold-status">
+								{#if settledData}<SectionStatus status={settledData.coverage} now={$clock} />{/if}
+							</div>
+						</div>
 					{/if}
 					<LatestReporting view={latest} now={$clock} />
 				</div>
@@ -569,6 +611,23 @@
 		display: grid;
 		gap: 1rem;
 		margin-top: 0.5rem;
+	}
+	/* V2Map's canvas, to the pixel (the shared --v2-map-h and its 1 px frame). */
+	.v2-map-hold-canvas {
+		height: var(--v2-map-h);
+		border: 1px solid var(--border-light);
+		border-radius: 6px;
+		background: var(--bg);
+	}
+	.v2-map-hold-status {
+		min-height: var(--v2-map-status-h);
+	}
+	@media (min-width: 1024px) {
+		/* Before mount the server can't know the width: desktop never shows the phone's top. */
+		.dash-v2[data-hydrated='false'] :global([data-slot='brief']),
+		.dash-v2[data-hydrated='false'] :global([data-slot='cams']) {
+			display: none;
+		}
 	}
 	@media (min-width: 1024px) {
 		/* Desktop runs full width to 2,240 px; sections sit on a 12-column grid, always open. */

@@ -75,6 +75,8 @@ test.describe('TV forces dark without saving it', () => {
 		await saveLightTheme(page);
 		await page.reload();
 		await expect.poll(() => shownTheme(page)).toBe('light');
+		// Its keyboard shortcuts attach on mount (the legacy layout loads on demand, MOBILE1).
+		await expect(page.locator('[data-layout="legacy"][data-hydrated="true"]')).toBeVisible();
 		await page.keyboard.press('m');
 		await expect(page).toHaveURL(/\/tv$/);
 		await tvReady(page);

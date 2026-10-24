@@ -4,6 +4,7 @@ import { loadLegacyBootstrap } from '$lib/dashboard/bootstrap';
 import { dashboardCacheControl, resolveDashboardLayout } from '$lib/dashboard/layout-flag';
 import { lifestyleOn } from '$lib/server/lifestyle/read';
 import { readSnapshotForFirstPaint } from '$lib/server/news/first-paint';
+import { readAdvisoriesForFirstPaint } from '$lib/server/advisories/first-paint';
 
 export async function load({ url, setHeaders }: ServerLoadEvent) {
 	// Reading url.searchParams makes SvelteKit re-run this load when ?layout changes
@@ -11,10 +12,13 @@ export async function load({ url, setHeaders }: ServerLoadEvent) {
 	const choice = resolveDashboardLayout(url);
 	const { layout, explicit } = choice;
 
-	// v2 never starts the legacy prefetch (spec §13.6). Its news arrives in the
-	// HTML when the snapshot reads in time; otherwise the client loads it, as before.
+	// v2 never starts the legacy prefetch (spec §13.6). Its news and advisories arrive in the
+	// HTML when they read in time (MOBILE1 for advisories); otherwise the client loads them.
 	if (layout === 'v2') {
-		const snapshot = await readSnapshotForFirstPaint();
+		const [snapshot, advisories] = await Promise.all([
+			readSnapshotForFirstPaint(),
+			readAdvisoriesForFirstPaint(env)
+		]);
 		// Headers follow the read: a failed read is never edge-cached as an empty first paint.
 		setHeaders({ 'Cache-Control': dashboardCacheControl(choice, snapshot !== null) });
 		return {
@@ -22,6 +26,7 @@ export async function load({ url, setHeaders }: ServerLoadEvent) {
 			explicit,
 			bootstrap: null,
 			snapshot,
+			advisories,
 			renderedAt: Date.now(),
 			lifestyle: lifestyleOn(env)
 		};

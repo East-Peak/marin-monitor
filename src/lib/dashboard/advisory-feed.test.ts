@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { get } from 'svelte/store';
 import type { Advisory, ParsedAlerts } from '$lib/weather/advisories';
-import { createAdvisoryFeed } from './advisory-feed';
+import { EMPTY_ADVISORY_FEED, createAdvisoryFeed } from './advisory-feed';
 
 const NOW = Date.parse('2026-09-29T15:00:00Z');
 const A = { id: 'a1', event: 'Wind Advisory' } as Advisory;
@@ -20,6 +20,32 @@ function feed(
 }
 
 describe('createAdvisoryFeed', () => {
+	it('starts from the first paint’s read when there is one, then refreshes as usual (MOBILE1)', async () => {
+		const seeded = {
+			advisories: [A],
+			unreadable: 0,
+			lastAttemptAt: NOW - 5_000,
+			lastSuccessAt: NOW - 5_000,
+			lastError: null
+		};
+		const f = createAdvisoryFeed({
+			fetch: async () => parsed([]),
+			signal: new AbortController().signal,
+			now: () => NOW,
+			initial: seeded
+		});
+		expect(get(f)).toEqual(seeded);
+		await f.refresh();
+		expect(get(f).advisories).toEqual([]);
+		expect(get(f).lastSuccessAt).toBe(NOW);
+	});
+
+	it('without a seed it starts empty and unattempted (the row stays hidden)', () => {
+		const { f } = feed(async () => parsed([]));
+		expect(get(f)).toEqual(EMPTY_ADVISORY_FEED);
+		expect(EMPTY_ADVISORY_FEED.lastAttemptAt).toBeNull();
+	});
+
 	it('records a successful attempt, including unreadable alerts', async () => {
 		const { f } = feed(async () => parsed([A], 1));
 		await f.refresh();

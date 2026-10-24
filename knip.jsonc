@@ -25,6 +25,8 @@
 		// (which IS used, so it's never imported directly).
 		"@typescript-eslint/eslint-plugin",
 		"@typescript-eslint/parser",
-		"@types/d3"
+		"@types/d3",
+		// Its font files are used from CSS url()s (src/lib/fonts/outfit.css), which knip can't read.
+		"@fontsource-variable/outfit"
 	]
 }

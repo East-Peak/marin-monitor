@@ -63,6 +63,17 @@ function emptyCard<T>(maxAgeMs: number | null): BriefCard<T> {
 	};
 }
 
+/** Nothing read yet. The first paint renders this too, so the cards hold their place (MOBILE1). */
+export function initialBriefState(): BriefState {
+	return {
+		forecast: emptyCard(FORECAST_MAX_AGE_MS),
+		observed: emptyCard(OBSERVATION_MAX_AGE_MS),
+		tides: emptyCard(null),
+		history: emptyCard(OBSERVATION_MAX_AGE_MS),
+		tideHourly: emptyCard(null)
+	};
+}
+
 export function createBriefStore(
 	fetchers: BriefFetchers,
 	signal: AbortSignal,
@@ -78,13 +89,7 @@ export function createBriefStore(
 	/** Every brief request: owner-linked, bounded end to end (Task 6's rule). */
 	const bounded = <T>(label: string, run: (s: AbortSignal) => Promise<T>) =>
 		boundedOp(label, run, { owner: signal, timeoutMs: deadlineMs });
-	const state = writable<BriefState>({
-		forecast: emptyCard(FORECAST_MAX_AGE_MS),
-		observed: emptyCard(OBSERVATION_MAX_AGE_MS),
-		tides: emptyCard(null),
-		history: emptyCard(OBSERVATION_MAX_AGE_MS),
-		tideHourly: emptyCard(null)
-	});
+	const state = writable<BriefState>(initialBriefState());
 	let latest = 0;
 	let detail = false;
 	let current: LocationPreset | null = null;

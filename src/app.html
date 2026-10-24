@@ -4,12 +4,19 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="icon" type="image/svg+xml" href="%sveltekit.assets%/favicon.svg" />
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
-			rel="stylesheet"
-		/>
+		<script nonce="%sveltekit.nonce%">
+			// A tap before the dashboard is interactive is kept and replayed once it is
+			// (src/lib/dashboard/early-taps.ts).
+			addEventListener(
+				'click',
+				function (e) {
+					var b = e.target instanceof Element ? e.target.closest('button') : null;
+					if (b && b.closest('[data-hydrated="false"]'))
+						(window.__earlyTaps = window.__earlyTaps || []).push(b);
+				},
+				true
+			);
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

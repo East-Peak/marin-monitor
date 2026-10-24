@@ -7,18 +7,23 @@
 import { writable, type Readable } from 'svelte/store';
 import type { AdvisoryFeedState, ParsedAlerts } from '$lib/weather/advisories';
 
+/** Nothing attempted yet: the row stays hidden. */
+export const EMPTY_ADVISORY_FEED: AdvisoryFeedState = {
+	advisories: [],
+	unreadable: 0,
+	lastAttemptAt: null,
+	lastSuccessAt: null,
+	lastError: null
+};
+
 export function createAdvisoryFeed(deps: {
 	fetch: (signal: AbortSignal) => Promise<ParsedAlerts>;
 	signal: AbortSignal;
 	now: () => number;
+	/** The first paint's server read (MOBILE1), so the row is there before the first refresh. */
+	initial?: AdvisoryFeedState | null;
 }): Readable<AdvisoryFeedState> & { refresh(): Promise<void> } {
-	const state = writable<AdvisoryFeedState>({
-		advisories: [],
-		unreadable: 0,
-		lastAttemptAt: null,
-		lastSuccessAt: null,
-		lastError: null
-	});
+	const state = writable<AdvisoryFeedState>(deps.initial ?? EMPTY_ADVISORY_FEED);
 	let running: Promise<void> | null = null;
 
 	function refresh(): Promise<void> {

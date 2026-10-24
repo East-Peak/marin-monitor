@@ -1,13 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NewsSnapshotResponse, NewsSnapshotView } from '$lib/news/snapshot';
 
-const { loadLegacyBootstrap, readNewsSnapshot, env } = vi.hoisted(() => ({
-	loadLegacyBootstrap: vi.fn(),
-	readNewsSnapshot: vi.fn(),
-	env: {} as Record<string, string | undefined>
-}));
+const { loadLegacyBootstrap, readNewsSnapshot, readAdvisoriesForFirstPaint, env } = vi.hoisted(
+	() => ({
+		loadLegacyBootstrap: vi.fn(),
+		readNewsSnapshot: vi.fn(),
+		readAdvisoriesForFirstPaint: vi.fn(),
+		env: {} as Record<string, string | undefined>
+	})
+);
 vi.mock('$lib/dashboard/bootstrap', () => ({ loadLegacyBootstrap }));
 vi.mock('$lib/server/news/read-snapshot', () => ({ readNewsSnapshot }));
+vi.mock('$lib/server/advisories/first-paint', () => ({ readAdvisoriesForFirstPaint }));
 vi.mock('$env/dynamic/private', () => ({ env }));
 
 import { load } from './+page.server';
@@ -37,6 +41,8 @@ beforeEach(() => {
 	loadLegacyBootstrap.mockResolvedValue(BOOT);
 	readNewsSnapshot.mockReset();
 	readNewsSnapshot.mockResolvedValue(OK);
+	readAdvisoriesForFirstPaint.mockReset();
+	readAdvisoriesForFirstPaint.mockResolvedValue(null);
 });
 afterEach(() => vi.useRealTimers());
 
@@ -46,6 +52,21 @@ describe('dashboard page load', () => {
 		expect(await load(ev)).toMatchObject({ layout: 'v2', explicit: false, snapshot: VIEW });
 		expect(headers['Cache-Control']).toBe('s-maxage=60, stale-while-revalidate=300');
 		expect(loadLegacyBootstrap).not.toHaveBeenCalled();
+	});
+	it('v2 carries the server’s advisory read to the first paint; legacy never reads it (MOBILE1)', async () => {
+		const ADV = {
+			advisories: [],
+			unreadable: 0,
+			lastAttemptAt: 1,
+			lastSuccessAt: 1,
+			lastError: null
+		};
+		readAdvisoriesForFirstPaint.mockResolvedValue(ADV);
+		expect(await load(event('/').ev)).toMatchObject({ advisories: ADV });
+		expect(readAdvisoriesForFirstPaint).toHaveBeenCalledWith(env);
+		readAdvisoriesForFirstPaint.mockClear();
+		await load(event('/?layout=legacy').ev);
+		expect(readAdvisoriesForFirstPaint).not.toHaveBeenCalled();
 	});
 	it('carries the Lifestyle Index flag to v2: off unless LIFESTYLE_INDEX is on', async () => {
 		expect(await load(event('/').ev)).toMatchObject({ lifestyle: false });
@@ -98,6 +119,7 @@ describe('v2 server-rendered first paint (DASH-FLIP1)', () => {
 			explicit: true,
 			bootstrap: null,
 			snapshot: VIEW,
+			advisories: null,
 			renderedAt: Date.parse('2026-10-17T12:03:00.000Z'),
 			lifestyle: false
 		});

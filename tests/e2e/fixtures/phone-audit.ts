@@ -263,10 +263,6 @@ const KNOWN_BROKEN: Record<string, string> = {
 	'section news: its toggle shows real content and hides it again': SMALL,
 	'section cost: its toggle shows real content and hides it again': SMALL,
 	'section events: its toggle shows real content and hides it again': SMALL,
-	'a section toggle tapped as soon as it shows is not lost':
-		'MOBILE1 audit: a toggle tapped before hydration does nothing',
-	'a story tapped as soon as it shows still opens':
-		'MOBILE1 audit: hydration moves the page under an early tap',
 	'header: ← Dashboard goes home; the town picker opens and picks': SMALL,
 	'Layers: opens its list, and each switch changes what the map lists': SMALL,
 	'zoom buttons and the attribution': SMALL,

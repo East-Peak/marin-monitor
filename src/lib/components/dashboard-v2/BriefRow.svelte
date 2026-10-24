@@ -68,6 +68,8 @@
 				)}{observedState === 'stale' ? ' · out of date' : ''}
 			</p>
 		{:else if observedState === 'loading'}
+			<!-- The loaded card's lines, held (MOBILE1): the value's line, then its words. -->
+			<p class="v2-card-value v2-skeleton" data-text-role="value" aria-hidden="true">&nbsp;</p>
 			<p class="v2-skeleton" data-text-role="meta">Loading observation…</p>
 		{:else}
 			<p data-text-role="meta">Observation unavailable</p>
@@ -84,7 +86,8 @@
 						: ' · issue time unknown'}{forecastState === 'stale' ? ' · out of date' : ''}
 				</p>
 			{:else if forecastState === 'loading'}
-				<p class="v2-skeleton" data-text-role="meta">Loading forecast…</p>
+				<p class="v2-skeleton" data-text-role="body">Loading forecast…</p>
+				<p class="v2-skeleton" data-text-role="meta" aria-hidden="true">&nbsp;</p>
 			{:else}
 				<p data-text-role="meta">Forecast unavailable</p>
 			{/if}
@@ -105,6 +108,7 @@
 			</p>
 			<p data-text-role="meta">{tides.scope} · NOAA prediction</p>
 		{:else if tideState === 'loading'}
+			<p class="v2-card-value v2-skeleton" data-text-role="value" aria-hidden="true">&nbsp;</p>
 			<p class="v2-skeleton" data-text-role="meta">Loading tides…</p>
 		{:else}
 			<p data-text-role="meta">Tide predictions unavailable</p>

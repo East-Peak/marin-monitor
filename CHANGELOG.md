@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-24
 
+### Fixed — The phone dashboard holds still while it loads (MOBILE1)
+
+- **Nothing moves under a reader or a thumb**: the first paint now holds the brief (as loading cards the same height as loaded ones), the camera strip, the sources button and the map's own box, and Marin's NWS advisories are in the HTML (a 1.2 s server read, like the news; the client reads them if it misses). Outfit is preloaded and never swaps in late (`font-display: optional`), since its arrival rewrapped lines. Layout shift on the phone went from 0.91 to 0.
+- **A tap before the page is interactive is kept** and done once it is, instead of lost.
+- **Less to load first**: the legacy dashboard's code loads only for the legacy layout (a v2 visit's first JS −28%); the Google Fonts stylesheet (Inter, Geist Mono) is only on the legacy dashboard and the TV, where those fonts are used, so it no longer blocks every first paint; the phone's map preview starts MapLibre after the page has loaded.
+
 ### Added — A phone test bench (MOBILE1)
 
 - **Phone e2e on an iPhone 13 (WebKit) and a Pixel 7 (Chromium)**: `@phone` tests run only on the two phone projects, against their own preview (port 4176) with production's flags and a populated news snapshot dated to the clock. An interaction timer measures tap to paint at 4× CPU (on request only), and CI's new phone job runs the phone tests with a per-route budget for the compressed initial JS.

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import GoogleFonts from '$lib/components/common/GoogleFonts.svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { Header, Footer } from '$lib/components/layout';
@@ -188,6 +189,9 @@
 		}
 	});
 
+	/** Mounted: handlers (the keyboard's among them) are attached. */
+	let hydrated = $state(false);
+
 	onMount(() => {
 		editMode = new URLSearchParams(window.location.search).get('layout') === 'edit';
 
@@ -245,6 +249,7 @@
 			}
 		}
 		window.addEventListener('keydown', handleMainKeydown);
+		hydrated = true;
 
 		return () => {
 			lifetime.abort();
@@ -256,7 +261,9 @@
 	});
 </script>
 
-<div class="app" data-layout="legacy">
+<GoogleFonts />
+
+<div class="app" data-layout="legacy" data-hydrated={hydrated ? 'true' : 'false'}>
 	<Header onSettingsClick={() => (settingsOpen = true)} />
 
 	<main class="main-content">

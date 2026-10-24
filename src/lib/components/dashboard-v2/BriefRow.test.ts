@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { writable } from 'svelte/store';
 import { describe, expect, it, vi } from 'vitest';
-import type { BriefCard, BriefState } from '$lib/dashboard/brief-store';
+import { initialBriefState, type BriefCard, type BriefState } from '$lib/dashboard/brief-store';
 import type { CardItem } from '$lib/dashboard/getting-around';
 import BriefRow from './BriefRow.svelte';
 
@@ -79,6 +79,21 @@ function renderRow(
 }
 
 describe('BriefRow', () => {
+	it('a loading card holds the lines its loaded card will fill, so nothing moves (MOBILE1)', () => {
+		const lines = (root: HTMLElement, cardId: string) =>
+			[...root.querySelectorAll(`[data-card="${cardId}"] p`)].map(
+				(p) => (p as HTMLElement).dataset.textRole
+			);
+		const loaded = render(BriefRow, { brief: writable(state()), now: writable(NOW) }).container;
+		const loading = render(BriefRow, {
+			brief: writable(initialBriefState()),
+			now: writable(NOW)
+		}).container;
+		for (const id of ['weather', 'tide']) expect(lines(loading, id)).toEqual(lines(loaded, id));
+		expect(loading.textContent).toContain('Loading observation…');
+		expect(loading.textContent).not.toMatch(/unavailable/);
+	});
+
 	it('weather: observed value with station and time; rain with scope and issue time', () => {
 		renderRow(state());
 		const weather = document.querySelector('[data-card="weather"]')!;

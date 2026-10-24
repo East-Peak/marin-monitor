@@ -465,6 +465,8 @@ export interface ControllerDeps {
 	fetchAdvisories?: (signal: AbortSignal) => Promise<ParsedAlerts>;
 	/** The server-rendered snapshot (DASH-FLIP1): the starting view, held to the loader's order. */
 	initialSnapshot?: NewsSnapshotView | null;
+	/** The server's advisory read (MOBILE1): the row as the first paint showed it. */
+	initialAdvisories?: AdvisoryFeedState | null;
 	/** The cameras' heading read (MAPX4; default `/api/cams/heading`). */
 	loadCamHeadings?: (signal: AbortSignal) => Promise<HeadingRead>;
 }
@@ -590,7 +592,8 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 	const advisories = createAdvisoryFeed({
 		fetch: deps.fetchAdvisories ?? ((signal) => fetchMarinAdvisories({ signal })),
 		signal: deps.signal,
-		now
+		now,
+		initial: deps.initialAdvisories
 	});
 	let location: LocationPreset | null = null;
 

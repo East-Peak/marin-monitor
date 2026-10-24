@@ -1,4 +1,5 @@
 <script lang="ts">
+	import GoogleFonts from '$lib/components/common/GoogleFonts.svelte';
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
 	import { TvWallboard } from '$lib/components/tv';
@@ -31,6 +32,8 @@
 		}
 	});
 </script>
+
+<GoogleFonts />
 
 <svelte:head>
 	<title>Marin Monitor — TV</title>

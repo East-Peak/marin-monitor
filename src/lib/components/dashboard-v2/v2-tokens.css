@@ -21,6 +21,25 @@
 	}
 }
 
+/* The dashboard map's height: V2Map's canvas and the box held for it until it mounts (MOBILE1).
+   On a phone its coverage line's two lines are held too: it reads only after hydration, and
+   arriving it pushed Latest reporting down under a reader's thumb. */
+.dash-v2 {
+	--v2-map-h: 420px;
+	--v2-map-status-h: 0px;
+}
+@media (max-width: 767px) {
+	.dash-v2 {
+		--v2-map-h: 160px;
+		--v2-map-status-h: calc(2 * var(--v2-line-height) * var(--v2-fs-meta));
+	}
+}
+@media (min-width: 1024px) {
+	.dash-v2 {
+		--v2-map-h: clamp(520px, 62vh, 820px);
+	}
+}
+
 .dash-v2 [data-text-role] {
 	line-height: var(--v2-line-height);
 }

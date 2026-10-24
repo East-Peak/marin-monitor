@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { get } from 'svelte/store';
 import type { NewsSnapshotResponse } from '$lib/news/snapshot';
+import type { Advisory } from '$lib/weather/advisories';
 import type { NewsItem } from '$lib/types';
 import { SOURCE_INVENTORY } from '$lib/server/health/inventory';
 import { getLocationById } from '$lib/config/locations';
@@ -527,6 +528,22 @@ describe('createDashboardV2Controller', () => {
 		expect(briefFetchers.hourly).toHaveBeenCalledWith(37.9735, -122.5311, expect.any(AbortSignal));
 		expect(get(c.advisories)).toMatchObject({ lastSuccessAt: NOW, lastError: null });
 		expect(get(c.brief).forecast.scope).toBe('Central Marin forecast');
+	});
+
+	it('the server’s advisory read is the starting row; the first cycle refreshes it (MOBILE1)', async () => {
+		const seeded = {
+			advisories: [{ id: 'a1', event: 'Coastal Flood Advisory' } as Advisory],
+			unreadable: 0,
+			lastAttemptAt: NOW - 60_000,
+			lastSuccessAt: NOW - 60_000,
+			lastError: null
+		};
+		const fetchAdvisories = vi.fn(async () => ({ advisories: [], unreadable: 0 }));
+		const c = controller({ fetchAdvisories, initialAdvisories: seeded });
+		expect(get(c.advisories)).toEqual(seeded);
+		await c.start();
+		expect(fetchAdvisories).toHaveBeenCalledTimes(1);
+		expect(get(c.advisories)).toMatchObject({ advisories: [], lastSuccessAt: NOW });
 	});
 
 	it('enableBriefDetail (desktop) adds the 12-hour trace and the hourly tide to the brief (MAPX1)', async () => {

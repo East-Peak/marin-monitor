@@ -15,6 +15,7 @@ const LIFESTYLE_SPEC = /lifestyle.*\.spec\.ts/;
 const LIFESTYLE_PORT = 4175;
 const LIFESTYLE_ENV = {
 	NEWS_SNAPSHOT_FIXTURE: '/dev/null',
+	NWS_ALERTS_FIXTURE: '/dev/null',
 	LIFESTYLE_INDEX: 'on',
 	LIFESTYLE_HIGHLIGHTS: 'on',
 	LIFESTYLE_FIXTURE: 'tests/e2e/fixtures/lifestyle-index.json'
@@ -75,7 +76,8 @@ export default defineConfig({
 			url: 'http://localhost:4173',
 			// No SSR seed, even with a local Blob token: an empty "snapshot" fails the read, so
 			// the first paint is client-loaded exactly as before DASH-FLIP1.
-			env: { NEWS_SNAPSHOT_FIXTURE: '/dev/null' },
+			// No server advisories either (MOBILE1): specs stub NWS in the browser.
+			env: { NEWS_SNAPSHOT_FIXTURE: '/dev/null', NWS_ALERTS_FIXTURE: '/dev/null' },
 			// Never reuse: a server started without this env (or another app on the port) would
 			// serve live SSR news or the wrong page. A busy port fails loudly instead.
 			reuseExistingServer: false
@@ -89,14 +91,18 @@ export default defineConfig({
 		{
 			command: `npx vite dev --port ${SSR_PORT} --strictPort`,
 			url: `http://localhost:${SSR_PORT}`,
-			env: { NEWS_SNAPSHOT_FIXTURE: 'tests/e2e/fixtures/news-snapshot-producer.json' },
+			env: {
+				NEWS_SNAPSHOT_FIXTURE: 'tests/e2e/fixtures/news-snapshot-producer.json',
+				NWS_ALERTS_FIXTURE: '/dev/null'
+			},
 			reuseExistingServer: false,
 			timeout: 120_000
 		},
 		{
 			command: `node tests/e2e/fixtures/phone-news.mjs ${PHONE_NEWS} && npx vite preview --port ${PHONE_PORT} --strictPort`,
 			url: `http://localhost:${PHONE_PORT}`,
-			env: { ...LIFESTYLE_ENV, NEWS_SNAPSHOT_FIXTURE: PHONE_NEWS },
+			// NWS live, as in production: the advisories are whatever Marin has now.
+			env: { ...LIFESTYLE_ENV, NEWS_SNAPSHOT_FIXTURE: PHONE_NEWS, NWS_ALERTS_FIXTURE: '' },
 			reuseExistingServer: false
 		}
 	]

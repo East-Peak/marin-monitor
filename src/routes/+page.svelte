@@ -1,7 +1,6 @@
 <!-- src/routes/+page.svelte -->
 <script lang="ts">
 	import DashboardHead from '$lib/components/dashboard/DashboardHead.svelte';
-	import LegacyDashboard from '$lib/components/dashboard/LegacyDashboard.svelte';
 	import DashboardV2 from '$lib/components/dashboard-v2/DashboardV2.svelte';
 	import type { PageData } from './$types';
 
@@ -13,7 +12,12 @@
 <DashboardHead choice={{ layout: data.layout, explicit: data.explicit }} />
 
 {#if data.layout === 'v2'}
-	<DashboardV2 snapshot={data.snapshot} renderedAt={data.renderedAt} lifestyle={data.lifestyle} />
-{:else}
-	<LegacyDashboard bootstrap={data.bootstrap} />
+	<DashboardV2
+		snapshot={data.snapshot}
+		advisories={data.advisories}
+		renderedAt={data.renderedAt}
+		lifestyle={data.lifestyle}
+	/>
+{:else if data.LegacyDashboard}
+	<data.LegacyDashboard bootstrap={data.bootstrap} />
 {/if}

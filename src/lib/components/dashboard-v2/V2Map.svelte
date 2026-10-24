@@ -658,7 +658,8 @@
 <style>
 	.v2-map-canvas {
 		position: relative;
-		height: 420px;
+		/* 160 / 420 / up to 820 px by width (v2-tokens.css), shared with the box held for it. */
+		height: var(--v2-map-h, 420px);
 		border: 1px solid var(--border-light);
 		border-radius: 6px;
 		overflow: hidden;
@@ -681,12 +682,6 @@
 		outline: 2px solid var(--accent);
 		outline-offset: 2px;
 	}
-	@media (min-width: 1024px) {
-		/* Full width (MAPX2): the map is the page's centre. */
-		.v2-map-canvas {
-			height: clamp(520px, 62vh, 820px);
-		}
-	}
 	/* /map (MAPX3): the map fills the screen under the bar; on desktop the rail sits beside it. */
 	.v2-map[data-mode='explore'] {
 		display: grid;
@@ -706,15 +701,16 @@
 		border-width: 0;
 		border-radius: 0;
 	}
+	.v2-map-status {
+		min-height: var(--v2-map-status-h, 0px);
+	}
 	.v2-map[data-mode='explore'] .v2-map-status {
+		min-height: 0;
 		padding: 0 0.75rem;
 	}
 
 	@media (max-width: 767px) {
 		/* The preview: compact, controls hidden; the whole map is /map (§2.4, MAPX3). */
-		.v2-map-canvas {
-			height: 160px;
-		}
 		.v2-map[data-mode='dashboard'] .v2-map-canvas :global([data-layer-panel]),
 		.v2-map[data-mode='dashboard'] .v2-map-canvas :global(.inspector),
 		.v2-map[data-mode='dashboard'] .v2-map-canvas :global(.feature-inspector) {
