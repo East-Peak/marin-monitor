@@ -790,7 +790,7 @@
 	<div class="relative min-h-0 shrink-0" style="height: calc(100dvh - 48px - 45px);">
 		<!-- Persistent map — single MapContainer, never destroyed. Hidden when non-map screen active. -->
 		<div
-			class="absolute inset-0"
+			class="tv-map absolute inset-0"
 			style="z-index: {isMapScreenActive ? 1 : 0}; visibility: {isMapScreenActive
 				? 'visible'
 				: 'hidden'};"
@@ -889,5 +889,11 @@
 <style>
 	.cursor-none {
 		cursor: none;
+	}
+
+	/* MapLibre sets the opened attribution visible itself, which would show it on the
+	   screens without a map (over their footer line): it follows the map's visibility. */
+	.tv-map :global(.maplibregl-ctrl-attrib) {
+		visibility: inherit !important;
 	}
 </style>

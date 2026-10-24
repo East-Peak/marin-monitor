@@ -62,7 +62,8 @@ export interface AnchorRef {
 }
 
 interface Base {
-	readonly name: string;
+	/** The household's sheet id: the copy names it. */
+	readonly town: string;
 	readonly modelled: boolean;
 	/** Where the numbers come from: hosts of cited sources, our own reads by name. */
 	readonly sources: readonly string[];
@@ -93,7 +94,6 @@ export type Fact =
 			/** Null when no other household spends on the section. */
 			readonly runnerUp: {
 				readonly town: string;
-				readonly name: string;
 				readonly monthly: number;
 			} | null;
 	  })
@@ -173,7 +173,7 @@ function comparisons(b: PricedBudget, sheet: HouseholdSheet, anchors: readonly A
 	 * only the anchor's (the budget's are every line's, on the household page).
 	 */
 	const base = (a: Anchor, lines: readonly PricedLine[], whole = false) => ({
-		name: sheet.name,
+		town: sheet.id,
 		anchor: ref(a),
 		modelled: hasPersona(lines),
 		sources: [
@@ -251,7 +251,6 @@ function comparisons(b: PricedBudget, sheet: HouseholdSheet, anchors: readonly A
 function ranks(complete: readonly PricedBudget[], sheets: readonly HouseholdSheet[]) {
 	const out = new Map<string, Fact>();
 	if (complete.length < 2) return out;
-	const sheetOf = (b: PricedBudget) => sheets.find((s) => s.id === b.town)!;
 	const best = new Map<string, { lead: number; fact: Fact }>();
 	for (const section of SECTIONS) {
 		const inSection = (b: PricedBudget) => b.lines.filter((l) => l.section === section);
@@ -270,17 +269,14 @@ function ranks(complete: readonly PricedBudget[], sheets: readonly HouseholdShee
 			lead,
 			fact: {
 				template: 'rank',
-				name: sheetOf(first.b).name,
+				town: first.b.town,
 				modelled: hasPersona(lines),
 				sources: sourcesOf(lines.flatMap((l) => l.inputs)),
 				section,
 				monthly: first.monthly,
 				compared: complete.length,
 				of: sheets.length,
-				runnerUp:
-					second.monthly > 0
-						? { town: second.b.town, name: sheetOf(second.b).name, monthly: second.monthly }
-						: null
+				runnerUp: second.monthly > 0 ? { town: second.b.town, monthly: second.monthly } : null
 			}
 		});
 	}
@@ -294,7 +290,7 @@ function movers(
 	runId: string,
 	history: readonly HistoryEntry[]
 ): Fact[] {
-	const base = { name: sheet.name, modelled: false, sources: [] };
+	const base = { town: sheet.id, modelled: false, sources: [] };
 	const mine = history.filter((e) => e.town === b.town);
 	const at = mine.findIndex((e) => e.runId === runId);
 	const after = at === -1 ? null : mine[at];
@@ -325,7 +321,7 @@ function movers(
 		);
 		return {
 			template: 'mover',
-			name: sheet.name,
+			town: sheet.id,
 			modelled: hasPersona([line]),
 			sources: sourcesOf(moved),
 			lineId: m.id,

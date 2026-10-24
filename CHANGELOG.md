@@ -6,6 +6,15 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-24
 
+### Changed — The highlights are on in production (LIFE3 step 5)
+
+- **`LIFESTYLE_HIGHLIGHTS=on` in production**, after Stuart's review, with an in-app What's New entry.
+- **The households are named as sentences name them**: "the Larkspur strivers" (plural), "the Mill Valley wellness family" and "the Ross old-money family" (singular verbs: "needs", "spends", "gives"). Facts carry the household's id; its sentence name lives with the other words in `highlight-copy.ts`, and a household without one fails its test.
+
+### Fixed — The TV map's credit no longer shows off the map
+
+- MapLibre makes its opened attribution visible itself, so "© OpenStreetMap contributors © CARTO" showed through the hidden persistent map on screens without a map, over the Lifestyle screen's footer line. It now follows the map layer's visibility; map screens still show it.
+
 ### Added — The Lifestyle Index's highlights, behind their own flag (LIFE3)
 
 - **The rules and their words** (`LIFESTYLE_HIGHLIGHTS=on`, off in production): each fictional household's biggest line outside housing against a full-time CA minimum-wage take-home, its widest lead over the other households in a section, the lines that moved since the last like-for-like run, and its break-even against Marin's median household income, the main earner against a Mill Valley teacher, and a year's spending in years of a minimum-wage take-home. Each comparison has one pre-assigned anchor in matching units; one resting on a persona input is marked modelled; an incomplete household has none. History now records each line's availability, and a line moves only between two ok observations. Every template's wording is in `src/lib/lifestyle/highlight-copy.ts`.

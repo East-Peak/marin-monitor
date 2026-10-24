@@ -252,6 +252,18 @@ test.describe('the TV', () => {
 		const foot = (await hero.locator('[data-tv-footer]').boundingBox())!;
 		expect(last.y + last.height).toBeLessThanOrEqual(foot.y);
 		expect(foot.y + foot.height).toBeLessThanOrEqual(box.y + box.height);
+		// The hidden map's attribution stays hidden off the map, even opened wide: MapLibre
+		// makes it visible itself once the style's sources load, which would sit on the footer.
+		const attrib = page.locator('.maplibregl-ctrl-attrib');
+		await expect(attrib).toBeAttached();
+		await attrib.evaluate((el) => {
+			el.classList.remove('maplibregl-attrib-empty');
+			el.classList.add('maplibregl-compact', 'maplibregl-compact-show');
+		});
+		await expect(attrib).toBeHidden();
+		// On a map screen it shows, as the map's credit must.
+		await page.locator('[data-screen-id="map-county"]').click();
+		await expect(attrib).toBeVisible();
 		expect(await composite).toBeNull();
 	});
 });

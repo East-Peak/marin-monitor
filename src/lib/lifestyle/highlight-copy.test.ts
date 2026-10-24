@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { renderHighlight } from './highlight-copy';
+import { SHEETS } from './sheets';
 import type { AnchorRef, Fact } from './highlights';
 
-const base = { name: 'Ross old money', modelled: false, sources: ['example.org'] };
+const base = { town: 'ross', modelled: false, sources: ['example.org'] };
 const takeHome: AnchorRef = {
 	id: 'minimumWageTakeHome',
 	label: 'a full-time CA minimum-wage take-home',
@@ -36,16 +37,16 @@ describe('the highlight templates', () => {
 			monthly: 3209.4,
 			compared: 3,
 			of: 3,
-			runnerUp: { town: 'millvalley', name: 'Mill Valley wellness', monthly: 376 }
+			runnerUp: { town: 'millvalley', monthly: 376 }
 		};
 		expect(text(rank)).toBe(
-			'Of our three households, the Ross old money give the most: $3,209 a month, 8.5× the Mill Valley wellness.'
+			'Of our three households, the Ross old-money family gives the most: $3,209 a month, 8.5× the Mill Valley wellness family.'
 		);
 		expect(text({ ...rank, section: 'help', runnerUp: null })).toBe(
-			'Of our three households, only the Ross old money spend anything on help: $3,209 a month.'
+			'Of our three households, only the Ross old-money family spends anything on help: $3,209 a month.'
 		);
 		expect(text({ ...rank, section: 'help', compared: 2 })).toBe(
-			'Of the two households priced in full this week, the Ross old money spend the most on help: $3,209 a month, 8.5× the Mill Valley wellness.'
+			'Of the two households priced in full this week, the Ross old-money family spends the most on help: $3,209 a month, 8.5× the Mill Valley wellness family.'
 		);
 	});
 
@@ -168,7 +169,7 @@ describe('the highlight templates', () => {
 				ratio: 1393833 / 147017
 			})
 		).toBe(
-			'To break even, the Ross old money need 9.5× Marin’s median household income ($147,017 a year, before tax).'
+			'To break even, the Ross old-money family needs 9.5× Marin’s median household income ($147,017 a year, before tax).'
 		);
 		expect(
 			text({
@@ -196,8 +197,53 @@ describe('the highlight templates', () => {
 				ratio: 765120 / takeHome.value
 			})
 		).toBe(
-			'It takes 25.8 years of a full-time CA minimum-wage take-home ($29,613 a year, after tax) to fund one year of the Ross old money.'
+			'It takes 25.8 years of a full-time CA minimum-wage take-home ($29,613 a year, after tax) to fund one year of the Ross old-money family.'
 		);
+	});
+
+	it('names each household as a sentence names it, the verb agreeing', () => {
+		const median: AnchorRef = {
+			id: 'medianHouseholdIncome',
+			label: 'Marin’s median household income',
+			units: 'gross household',
+			value: 147017
+		};
+		const breakEven = (town: string) =>
+			text({ template: 'breakEvenVsMedian', ...base, town, anchor: median, value: 1, ratio: 6.1 });
+		expect(breakEven('larkspur')).toBe(
+			'To break even, the Larkspur strivers need 6.1× Marin’s median household income ($147,017 a year, before tax).'
+		);
+		expect(breakEven('millvalley')).toBe(
+			'To break even, the Mill Valley wellness family needs 6.1× Marin’s median household income ($147,017 a year, before tax).'
+		);
+		expect(
+			text({
+				template: 'rank',
+				...base,
+				town: 'larkspur',
+				section: 'business',
+				monthly: 7788,
+				compared: 3,
+				of: 3,
+				runnerUp: { town: 'millvalley', monthly: 294 }
+			})
+		).toBe(
+			'Of our three households, the Larkspur strivers spend the most on the business: $7,788 a month, 26.5× the Mill Valley wellness family.'
+		);
+	});
+
+	it('has a sentence name for every household we ship', () => {
+		for (const s of SHEETS)
+			expect(
+				text({
+					template: 'spendingVsMinimumWage',
+					...base,
+					town: s.id,
+					anchor: takeHome,
+					value: 1,
+					ratio: 1
+				})
+			).not.toContain('undefined');
 	});
 
 	it('gives each its figure, as the "For scale" boxes show it', () => {
@@ -212,7 +258,7 @@ describe('the highlight templates', () => {
 			monthly: 3209,
 			compared: 3,
 			of: 3,
-			runnerUp: { town: 'millvalley', name: 'Mill Valley wellness', monthly: 376 }
+			runnerUp: { town: 'millvalley', monthly: 376 }
 		};
 		expect(figure(rank)).toBe('8.5×');
 		expect(figure({ ...rank, runnerUp: null })).toBe('only');

@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-10-24',
+		title: 'Each household, for scale',
+		description:
+			'Each fictional household’s whole budget now has a “For scale” section: its biggest line outside housing in minimum-wage take-homes, where it outspends the other two, its break-even against Marin’s median household income, the main earner against a Mill Valley teacher, and what moved since last week. A figure resting on a stated assumption is marked modelled, and each one names its sources. The desktop card shows the first beside the biggest lines, and the TV’s Cost screen shows up to four.'
+	},
+	{
 		date: '2026-10-23',
 		title: 'The map shows what’s current',
 		description:

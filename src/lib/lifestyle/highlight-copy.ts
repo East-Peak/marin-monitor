@@ -38,6 +38,21 @@ const short = (label: string) => {
 const COUNT = ['no', 'one', 'two', 'three', 'four', 'five', 'six'];
 const count = (n: number) => COUNT[n] ?? String(n);
 
+/** Each household as a sentence names it, and whether its verb is plural. */
+const WHO: Readonly<Record<string, { readonly the: string; readonly plural: boolean }>> = {
+	larkspur: { the: 'the Larkspur strivers', plural: true },
+	millvalley: { the: 'the Mill Valley wellness family', plural: false },
+	ross: { the: 'the Ross old-money family', plural: false }
+};
+const who = (town: string) => {
+	const w = WHO[town];
+	if (!w) throw new Error(`No sentence name for household ${town}`);
+	return w;
+};
+/** The household, then its verb: "the Larkspur strivers need", "the Ross old-money family needs". */
+const does = (town: string, verb: string) =>
+	`${who(town).the} ${who(town).plural ? verb : `${verb}s`}`;
+
 /** What a household does in a section: "spend the most on the kids", "give the most". */
 const ON: Readonly<Record<Section, string>> = {
 	housing: 'on housing',
@@ -53,8 +68,10 @@ const ON: Readonly<Record<Section, string>> = {
 	giving: '',
 	business: 'on the business'
 };
-const most = (s: Section) => (s === 'giving' ? 'give the most' : `spend the most ${ON[s]}`);
-const anything = (s: Section) => (s === 'giving' ? 'give anything' : `spend anything ${ON[s]}`);
+const most = (town: string, s: Section) =>
+	s === 'giving' ? `${does(town, 'give')} the most` : `${does(town, 'spend')} the most ${ON[s]}`;
+const anything = (town: string, s: Section) =>
+	s === 'giving' ? `${does(town, 'give')} anything` : `${does(town, 'spend')} anything ${ON[s]}`;
 
 function words(f: Fact): string {
 	switch (f.template) {
@@ -66,8 +83,8 @@ function words(f: Fact): string {
 					? `Of our ${count(f.of)} households`
 					: `Of the ${count(f.compared)} households priced in full this week`;
 			return f.runnerUp
-				? `${among}, the ${f.name} ${most(f.section)}: ${usd(f.monthly)} a month, ${times(f.monthly / f.runnerUp.monthly)}× the ${f.runnerUp.name}.`
-				: `${among}, only the ${f.name} ${anything(f.section)}: ${usd(f.monthly)} a month.`;
+				? `${among}, ${most(f.town, f.section)}: ${usd(f.monthly)} a month, ${times(f.monthly / f.runnerUp.monthly)}× ${who(f.runnerUp.town).the}.`
+				: `${among}, only ${anything(f.town, f.section)}: ${usd(f.monthly)} a month.`;
 		}
 		case 'mover': {
 			const way = f.change > 0 ? 'up' : 'down';
@@ -92,11 +109,11 @@ function words(f: Fact): string {
 		case 'moversNotComparable':
 			return 'Movers: not enough comparable history yet.';
 		case 'breakEvenVsMedian':
-			return `To break even, the ${f.name} need ${times(f.ratio)}× ${f.anchor.label} (${usd(f.anchor.value)} a year, before tax).`;
+			return `To break even, ${does(f.town, 'need')} ${times(f.ratio)}× ${f.anchor.label} (${usd(f.anchor.value)} a year, before tax).`;
 		case 'earnerVsTeacher':
 			return `The main earner would need ${usd(f.value)} a year before tax (${Math.round(f.share * 100)}% of the wages): ${times(f.ratio)}× ${f.anchor.label} (${usd(f.anchor.value)} a year, before tax).`;
 		case 'spendingVsMinimumWage':
-			return `It takes ${times(f.ratio)} years of ${f.anchor.label} (${usd(f.anchor.value)} a year, after tax) to fund one year of the ${f.name}.`;
+			return `It takes ${times(f.ratio)} years of ${f.anchor.label} (${usd(f.anchor.value)} a year, after tax) to fund one year of ${who(f.town).the}.`;
 	}
 }
 
