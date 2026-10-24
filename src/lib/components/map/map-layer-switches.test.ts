@@ -9,6 +9,7 @@ import {
 	markRetained,
 	optionalReads,
 	placeLayersOn,
+	storeNews,
 	syncCounts,
 	townCounted,
 	trafficVisibility,
@@ -231,5 +232,21 @@ describe('stories placed by their headline leave the town counts (NEWSPIN2)', ()
 			'bay',
 			'town'
 		]);
+	});
+});
+
+describe("the TV's store stories, within the map's window (MAPFRESH1)", () => {
+	const NOW = Date.parse('2026-10-23T20:00:00Z');
+	const DAY = 86_400_000;
+	const stories = [
+		item('fresh', { timestamp: NOW - DAY }),
+		item('burn', { timestamp: NOW - 30 * DAY }),
+		item('undated', { timestamp: Number.NaN })
+	];
+	it('a window keeps only stories whose own time is inside it', () => {
+		expect(storeNews(stories, 7 * DAY, NOW).map((i) => i.id)).toEqual(['fresh']);
+	});
+	it('no window: every story, as legacy has it', () => {
+		expect(storeNews(stories, undefined, NOW)).toBe(stories);
 	});
 });

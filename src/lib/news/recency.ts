@@ -22,3 +22,10 @@ export function isWithinWindow(
 		withinFutureSkew(item.timestamp, now)
 	);
 }
+
+/** The map's story window (MAPFRESH1): a story's own publication time within the last 7 days. */
+export const MAP_NEWS_WINDOW_MS = 7 * 86_400_000;
+export const MAP_NEWS_WINDOW_LINE = 'Stories from the last 7 days';
+
+export const onMapWindow = (item: Parameters<typeof isWithinWindow>[0], now: number) =>
+	isWithinWindow(item, MAP_NEWS_WINDOW_MS, now);

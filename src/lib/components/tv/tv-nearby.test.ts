@@ -60,3 +60,13 @@ describe('selectNearby', () => {
 		expect(selectNearby(items, Q).map((i) => i.id)).toEqual(['pin']);
 	});
 });
+
+describe('the sidebar uses the map window: a far-future time is not "recent" (MAPFRESH1)', () => {
+	it('drops a story dated a day ahead; keeps one inside the feed clock skew', () => {
+		const out = selectNearby(
+			[item('ahead', 'local', NOW + DAY), item('skew', 'local', NOW + 60_000)],
+			Q
+		);
+		expect(out.map((i) => i.id)).toEqual(['skew']);
+	});
+});

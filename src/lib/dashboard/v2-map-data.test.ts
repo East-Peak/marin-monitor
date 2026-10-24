@@ -579,3 +579,49 @@ describe('stories placed by their headline (NEWSPIN2)', () => {
 		expect(storiesNote([], d)).toBeNull();
 	});
 });
+
+describe('the map shows stories from the last 7 days (MAPFRESH1)', () => {
+	const D = 24 * H;
+	const aged = (id: string, ageMs: number, over: Partial<NewsSnapshotItem> = {}) =>
+		pinStory(id, { publishedAt: new Date(NOW - ageMs).toISOString(), ...over });
+	const at = (v: NewsSnapshotView, now: number) =>
+		run({ view: v, sources: sources(v, ok, ok, true, ok, true), now });
+
+	it('a 30-day-old story is in no map output: news, placed, inspectable, pins or town counts', () => {
+		const v = view([
+			aged('fresh', H),
+			aged('placed', H, { title: 'Crews on Angel Island', point: null }),
+			aged('burn', 30 * D, { title: 'Prescribed burn on Angel Island', point: null }),
+			aged('old-pin', 30 * D),
+			aged('old-town', 30 * D, { point: null })
+		]);
+		const d = at(v, NOW);
+		expect(d.layerData.news.map((i) => i.id)).toEqual(['fresh', 'placed']);
+		expect([...(d.layerData.placed ?? [])]).toEqual(['placed']);
+		expect([...d.placed.keys()]).toEqual(['placed']);
+		expect(d.inspectable.map((i) => i.id)).toEqual(['fresh', 'placed']);
+		expect(d.storyPlaces.map((f) => f.id)).toEqual(['placed']);
+		expect(townLevel(d).map((i) => i.id)).toEqual(['fresh']);
+	});
+
+	it('the window is exactly 7 days: in at the edge, out a millisecond past it', () => {
+		const v = view([aged('edge', 7 * D), aged('past', 7 * D + 1)]);
+		expect(at(v, NOW).layerData.news.map((i) => i.id)).toEqual(['edge']);
+	});
+
+	it('a story ages out on the clock alone: the same snapshot, a later now', () => {
+		const v = view([aged('a', 7 * D - 60_000)]);
+		expect(at(v, NOW).inspectable.map((i) => i.id)).toEqual(['a']);
+		const later = at(v, NOW + 2 * 60_000);
+		expect(later.inspectable).toEqual([]);
+		expect([...later.aged]).toEqual(['a']);
+	});
+
+	it('an undated or far-future story is not eligible: an age is never guessed', () => {
+		const v = view([
+			aged('undated', 0, { publishedAt: null, publishedAtStatus: 'missing' }),
+			aged('future', -2 * D)
+		]);
+		expect(at(v, NOW).layerData.news).toEqual([]);
+	});
+});

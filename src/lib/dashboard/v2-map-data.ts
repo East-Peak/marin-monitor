@@ -8,9 +8,10 @@
 import type { Detail } from '$lib/components/dashboard-v2/DetailContent.svelte';
 import { clickSelection } from './map-selection';
 import { snapshotItemToNewsItem } from '$lib/api/marin/news-snapshot';
+import { onMapWindow } from '$lib/news/recency';
 import { CATEGORY_TO_LAYER } from '$lib/stores/map';
 import { LAYER_COLORS } from '$lib/config/map';
-import type { NewsSnapshotView } from '$lib/news/snapshot';
+import type { NewsSnapshotItem, NewsSnapshotView } from '$lib/news/snapshot';
 import type { MapFeatureInspectorData, MapLayer, NewsItem } from '$lib/types';
 import {
 	inspectorModel,
@@ -58,6 +59,8 @@ export interface V2MapData {
 	placed: ReadonlyMap<string, MapPlace>;
 	/** The placed stories as drawn: the enabled layers, in the town; kept ones marked. */
 	storyPlaces: GeoJSON.Feature[];
+	/** Stories the feed holds that are outside the map's window (MAPFRESH1), by id. */
+	aged: ReadonlySet<string>;
 }
 
 const pinned = (i: NewsItem) => typeof i.lat === 'number' && typeof i.lon === 'number';
@@ -98,8 +101,18 @@ export function v2MapData(input: {
 		now
 	);
 
-	const stories = newsM.kind === 'value' ? newsM.value.items : [];
-	const news = stories.map(snapshotItemToNewsItem);
+	// One eligibility point before every map output (MAPFRESH1): the clock ages stories out.
+	const stories: NewsSnapshotItem[] = [];
+	const news: NewsItem[] = [];
+	const aged = new Set<string>();
+	for (const story of newsM.kind === 'value' ? newsM.value.items : []) {
+		const item = snapshotItemToNewsItem(story);
+		if (!onMapWindow(item, now)) aged.add(item.id);
+		else {
+			stories.push(story);
+			news.push(item);
+		}
+	}
 	const placed = new Map<string, MapPlace>();
 	for (const i of news) {
 		const p = placeOf(i);
@@ -266,6 +279,7 @@ export function v2MapData(input: {
 		established,
 		placed,
 		storyPlaces,
+		aged,
 		provenance: {
 			'311': provenanceOf(entry('part:seeclickfix'), now),
 			earthquakes: provenanceOf(entry('part:earthquakes'), now)

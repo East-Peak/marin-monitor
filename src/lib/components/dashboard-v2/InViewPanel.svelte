@@ -16,6 +16,7 @@
 		emptyText,
 		gaps = [],
 		notice = null,
+		windows = {},
 		sheet = null,
 		onsheet,
 		ontoggle,
@@ -33,6 +34,8 @@
 		gaps?: readonly string[];
 		/** Why a linked selection can't be shown (/map's `sel`, MAPX3). */
 		notice?: string | null;
+		/** A layer's window, said once atop the list (MAPFRESH1: the stories' 7 days). */
+		windows?: Partial<Record<InViewLayer, string>>;
 		/** /map below desktop (MAPX3): a bottom sheet, its detail a modal dialog over it. */
 		sheet?: 'peek' | 'half' | null;
 		onsheet?: (next: 'peek' | 'half') => void;
@@ -121,6 +124,10 @@
 			Not shown, or not current: {gaps.join(', ')}
 		</p>
 	{/if}
+	<!-- Said once, whether or not a row of that layer is in view (Codex MAPFRESH1 #5). -->
+	{#each Object.entries(windows) as [layer, text] (layer)}
+		<p class="muted" data-in-view-window={layer} data-text-role="meta">{text}</p>
+	{/each}
 	{#if items.length === 0}
 		<p class="muted" data-text-role="body">{emptyText ?? 'Nothing listed in this view.'}</p>
 	{/if}

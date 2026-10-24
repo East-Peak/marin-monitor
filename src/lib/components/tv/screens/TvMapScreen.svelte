@@ -10,6 +10,7 @@
 	import { TV_MAP_VIEWS } from '$lib/config/tv';
 	import type { FireIncident } from '$lib/api/marin/calfire';
 	import type { NewsItem } from '$lib/types';
+	import { MAP_NEWS_WINDOW_MS } from '$lib/news/recency';
 	import { selectNearby } from '$lib/components/tv/tv-nearby';
 	import type { GasStation } from '$lib/types/gas';
 	import type { CoffeeShop } from '$lib/types/coffee';
@@ -66,7 +67,7 @@
 			radius,
 			nearbyTownSlugs,
 			nowMs: Date.now(),
-			maxAgeMs: 7 * 24 * 60 * 60 * 1000
+			maxAgeMs: MAP_NEWS_WINDOW_MS
 		})
 	);
 
@@ -77,7 +78,11 @@
 <div class="flex h-full gap-0" style="min-height: 0;">
 	<div class="flex-1 min-w-0 min-h-0 relative" style="height: 100%;">
 		<MapContainer>
-			<MapDataLayer earthquakes={earthquakeItems} {fireIncidents} />
+			<MapDataLayer
+				earthquakes={earthquakeItems}
+				{fireIncidents}
+				newsWindowMs={MAP_NEWS_WINDOW_MS}
+			/>
 			{#if STRAVA_ENABLED}
 				<SegmentLayer />
 			{/if}

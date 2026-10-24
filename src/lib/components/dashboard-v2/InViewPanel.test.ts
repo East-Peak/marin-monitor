@@ -36,6 +36,25 @@ describe('InViewPanel', () => {
 		expect(p.onselect).toHaveBeenCalledWith('311:b');
 	});
 
+	it("a layer's window is said once (MAPFRESH1)", () => {
+		render(
+			InViewPanel,
+			props({
+				items: [item('news:a'), item('news:c'), item('311:b', '311')],
+				windows: { news: 'Stories from the last 7 days' }
+			})
+		);
+		expect(screen.getAllByText('Stories from the last 7 days')).toHaveLength(1);
+	});
+
+	it('the window is said even when no story is listed (Codex MAPFRESH1 #5)', () => {
+		render(
+			InViewPanel,
+			props({ items: [item('311:b', '311')], windows: { news: 'Stories from the last 7 days' } })
+		);
+		expect(screen.getAllByText('Stories from the last 7 days')).toHaveLength(1);
+	});
+
 	it("a row click ends the row's hover: the row leaves without a mouseleave (Codex CAMQUIET1 #1)", async () => {
 		const p = props({ items: [item('cams:alert-vision', 'cams')] });
 		render(InViewPanel, p);

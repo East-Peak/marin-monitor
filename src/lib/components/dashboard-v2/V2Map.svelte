@@ -73,6 +73,7 @@
 	import LayerPanel, { type LayerRow } from './LayerPanel.svelte';
 	import { formatAsOf } from '$lib/dashboard/pacific-time';
 	import { exploreHref, layersOn, selOutcome, type ExploreView } from '$lib/dashboard/explore-url';
+	import { MAP_NEWS_WINDOW_LINE } from '$lib/news/recency';
 
 	let {
 		data,
@@ -311,13 +312,18 @@
 	});
 	// A selection whose item leaves the list (its layer switched off, a new town, the feed moved
 	// on) is cleared with its URL, so nothing invisible blocks Esc or rides on a copied link.
-	// A show or report that leaves its window or its read while its layer is on says so (NEWSPIN1).
+	// A show or report that leaves its window or its read while its layer is on says so (NEWSPIN1),
+	// as does a story that ages out of the map's window (MAPFRESH1).
 	$effect(() => {
 		if (!selectedId || pendingSel || resolveSelection(allItems, selectedId)) return;
 		const layer = selectedId.slice(0, selectedId.indexOf(':'));
+		const raw = selectedId.slice(selectedId.indexOf(':') + 1);
 		untrack(() => {
 			deselect();
-			if ((layer === 'shows' || layer === 'blotter') && dataLayers?.[layer].on)
+			if (
+				((layer === 'shows' || layer === 'blotter') && dataLayers?.[layer].on) ||
+				(layer === 'news' && data.aged.has(raw))
+			)
 				notice = 'No longer listed';
 		});
 	});
@@ -629,6 +635,7 @@
 				emptyText={vouched ? 'Nothing on the map in this view.' : null}
 				{gaps}
 				{notice}
+				windows={{ news: MAP_NEWS_WINDOW_LINE }}
 				sheet={explore && !desktop ? sheet : null}
 				onsheet={(next) => (sheet = next)}
 				ontoggle={() => (collapsed = !collapsed)}

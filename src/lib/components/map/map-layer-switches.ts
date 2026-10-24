@@ -6,6 +6,7 @@
  */
 import type { MapLayer, NewsItem } from '$lib/types';
 import { buildAlertPulseFeatures } from './map-data';
+import { isWithinWindow } from '$lib/news/recency';
 
 export interface MapLayerSwitches {
 	alertPulses: boolean;
@@ -130,6 +131,15 @@ export function layerItems(
 	store: () => readonly NewsItem[]
 ): readonly NewsItem[] {
 	return owned ? pick(owned) : store();
+}
+
+/** The shared store's stories within a window (the TV, MAPFRESH1); without one, all of them. */
+export function storeNews(
+	items: readonly NewsItem[],
+	windowMs: number | undefined,
+	now: number
+): readonly NewsItem[] {
+	return windowMs === undefined ? items : items.filter((i) => isWithinWindow(i, windowMs, now));
 }
 
 /** The stories counted on their town's dot: all of them, less those v2 draws at a place. */

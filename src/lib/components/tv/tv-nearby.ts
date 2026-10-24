@@ -4,7 +4,8 @@
  * check every undated item would pass a seven-day gate. Results are ordered
  * globally (not by category concatenation), dated newest first.
  */
-import { compareByTimestamp, hasKnownPublicationTime } from '$lib/news/order';
+import { compareByTimestamp } from '$lib/news/order';
+import { isWithinWindow } from '$lib/news/recency';
 import type { NewsItem } from '$lib/types';
 
 export interface NearbyQuery {
@@ -19,7 +20,7 @@ export interface NearbyQuery {
 export function selectNearby(items: readonly NewsItem[], q: NearbyQuery): NewsItem[] {
 	return items
 		.filter((item) => {
-			if (!hasKnownPublicationTime(item) || q.nowMs - item.timestamp > q.maxAgeMs) return false;
+			if (!isWithinWindow(item, q.maxAgeMs, q.nowMs)) return false;
 			if (typeof item.lat === 'number' && typeof item.lon === 'number') {
 				if (Math.abs(item.lat - q.lat) < q.radius && Math.abs(item.lon - q.lon) < q.radius)
 					return true;

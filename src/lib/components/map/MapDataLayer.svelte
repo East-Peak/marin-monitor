@@ -53,6 +53,7 @@
 		markRetained,
 		optionalReads,
 		placeLayersOn,
+		storeNews,
 		townCounted,
 		syncCounts,
 		trafficVisibility,
@@ -101,6 +102,8 @@
 		trafficEvents?: boolean;
 		/** Owner-supplied data: when set, the shared news/311/place stores are not read. */
 		layerData?: OwnedLayerData;
+		/** The store's stories within this age only (the TV, MAPFRESH1); unset, every story. */
+		newsWindowMs?: number;
 		/** v2 desktop's own town and 311 paint (MAPX2b); off, the shared style. */
 		v2Paint?: boolean;
 		/** Called after each sync of owner data (the v2 e2e hook). */
@@ -117,6 +120,7 @@
 		airports = true,
 		trafficEvents = true,
 		layerData,
+		newsWindowMs,
 		v2Paint = false,
 		onSynced,
 		roadSpeeds = false,
@@ -601,7 +605,7 @@
 		const items = layerItems(
 			owned(),
 			(d) => d.news,
-			() => get(allNewsItems)
+			() => storeNews(get(allNewsItems), newsWindowMs, Date.now())
 		);
 		const mapState = get(mapStore);
 		const currentTownFilter = get(townFilter);
