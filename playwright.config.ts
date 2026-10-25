@@ -94,7 +94,8 @@ export default defineConfig({
 			url: `http://localhost:${SSR_PORT}`,
 			env: {
 				NEWS_SNAPSHOT_FIXTURE: 'tests/e2e/fixtures/news-snapshot-producer.json',
-				NWS_ALERTS_FIXTURE: '/dev/null'
+				// A read that succeeded with no advisories: the seeded page is publicly cacheable.
+				NWS_ALERTS_FIXTURE: 'tests/e2e/fixtures/nws-alerts-none.json'
 			},
 			reuseExistingServer: false,
 			timeout: 120_000
