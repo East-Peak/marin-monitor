@@ -16,6 +16,7 @@
 	import {
 		ANCHORS,
 		MARIN_BOUNDS,
+		anchorLabel,
 		createProjection,
 		outlinePaths,
 		pathOf,
@@ -319,8 +320,11 @@
 				{/if}
 				{#each ANCHORS as a (a.name)}
 					{@const [x, y] = proj.project(a.at)}
+					{@const label = anchorLabel(a, proj)}
 					<circle class="anchor" cx={x} cy={y} r="1.5" />
-					<text class="anchor-name" x={x + 3} y={y - 3}>{a.name}</text>
+					<text class="anchor-name" x={label.x} y={label.y} text-anchor={label.anchor}
+						>{a.name}</text
+					>
 				{/each}
 				{#each dots as d (d.id)}
 					{#if d.id !== cam.id}<circle class="dot" cx={d.at[0]} cy={d.at[1]} r="2.5" />{/if}

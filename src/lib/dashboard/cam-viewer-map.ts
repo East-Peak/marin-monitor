@@ -28,13 +28,23 @@ export const MARIN_BOUNDS: Bounds = (() => {
 })();
 
 /** A few places to read the map by (positions from `config/map.ts`'s landmarks and towns). */
-export const ANCHORS: readonly { name: string; at: LonLat }[] = [
+/** `end`: labelled to the left, where a label to the right would leave the map. */
+export const ANCHORS: readonly { name: string; at: LonLat; end?: boolean }[] = [
 	{ name: 'Mt. Tam', at: [-122.5965, 37.9235] },
-	{ name: 'San Rafael', at: [-122.5311, 37.9735] },
+	{ name: 'San Rafael', at: [-122.5311, 37.9735], end: true },
 	{ name: 'Novato', at: [-122.5697, 38.1074] },
 	{ name: 'Point Reyes', at: [-123.0, 38.0] },
-	{ name: 'Golden Gate', at: [-122.4783, 37.8199] }
+	{ name: 'Golden Gate', at: [-122.4783, 37.8199], end: true }
 ];
+
+/** Where an anchor's label sits: beside its dot, on the side that keeps it on the map. */
+export function anchorLabel(
+	a: (typeof ANCHORS)[number],
+	p: Projection
+): { x: number; y: number; anchor: 'start' | 'end' } {
+	const [x, y] = p.project(a.at);
+	return a.end ? { x: x - 3, y: y - 3, anchor: 'end' } : { x: x + 3, y: y - 3, anchor: 'start' };
+}
 
 export interface Projection {
 	width: number;

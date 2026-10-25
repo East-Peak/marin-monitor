@@ -6,6 +6,7 @@ import { FRAME_FRESH_MS } from './cam-heading';
 import {
 	MARIN_BOUNDS,
 	ANCHORS,
+	anchorLabel,
 	createProjection,
 	outlinePaths,
 	viewerCone
@@ -130,5 +131,18 @@ describe('viewerCone', () => {
 		if (!c.style) throw new Error();
 		// Facing N.
 		expect(c.points.slice(1, -1).every(([, y]) => y < c.origin[1])).toBe(true);
+	});
+});
+
+describe('anchor labels', () => {
+	it('every label fits inside the corner map (≈5 px a character at 9 px)', () => {
+		const p = createProjection(MARIN_BOUNDS, 240, 8);
+		for (const a of ANCHORS) {
+			const { x } = anchorLabel(a, p);
+			const w = a.name.length * 5;
+			const [left, right] = a.end ? [x - w, x] : [x, x + w];
+			expect(left, a.name).toBeGreaterThanOrEqual(0);
+			expect(right, a.name).toBeLessThanOrEqual(240);
+		}
 	});
 });
