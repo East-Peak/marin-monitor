@@ -30,6 +30,60 @@ export async function preparePhone(page: Page) {
 	await page.route('https://api.weather.gov/alerts/active**', (r) =>
 		r.fulfill({ contentType: 'application/geo+json', body: alerts })
 	);
+	// The brief's weather and tide, dated to the clock: a live observation can age past its
+	// limit mid-run and grow an "out of date" line, which is NWS's timing, not the page's.
+	const json = (body: unknown) => ({ contentType: 'application/json', body: JSON.stringify(body) });
+	const H = 3_600_000;
+	const at = Date.now();
+	const iso = (ms: number) => new Date(ms).toISOString();
+	await page.route(/api\.weather\.gov\/points\//, (r) =>
+		r.fulfill(json({ properties: { gridId: 'MTR', gridX: 83, gridY: 115 } }))
+	);
+	await page.route(/api\.weather\.gov\/gridpoints\/.*\/forecast\/hourly/, (r) =>
+		r.fulfill(
+			json({
+				properties: {
+					updateTime: iso(at - H),
+					periods: Array.from({ length: 24 }, (_, i) => ({
+						number: i + 1,
+						startTime: iso(at - (at % H) + i * H),
+						endTime: iso(at - (at % H) + (i + 1) * H),
+						temperature: 64,
+						temperatureUnit: 'F',
+						windSpeed: '5 mph',
+						windDirection: 'W',
+						shortForecast: 'Sunny',
+						isDaytime: true,
+						probabilityOfPrecipitation: { unitCode: 'wmoUnit:percent', value: 10 }
+					}))
+				}
+			})
+		)
+	);
+	const observation = {
+		properties: {
+			timestamp: iso(at - 10 * 60_000),
+			textDescription: 'Clear',
+			temperature: { unitCode: 'wmoUnit:degC', value: 18, qualityControl: 'V' }
+		}
+	};
+	await page.route(/api\.weather\.gov\/stations\/[^/]+\/observations\/latest/, (r) =>
+		r.fulfill(json(observation))
+	);
+	await page.route(/api\.weather\.gov\/stations\/[^/]+\/observations\?/, (r) =>
+		r.fulfill(json({ features: [observation] }))
+	);
+	const gmt = (ms: number) => iso(ms).slice(0, 16).replace('T', ' ');
+	await page.route(/api\.tidesandcurrents\.noaa\.gov/, (r) =>
+		r.fulfill(
+			json({
+				predictions: [
+					{ t: gmt(at + 2 * H), v: '5.120', type: 'H' },
+					{ t: gmt(at + 8 * H), v: '0.410', type: 'L' }
+				]
+			})
+		)
+	);
 	await page.context().route(
 		(url) => url.hostname !== 'localhost',
 		(r) =>

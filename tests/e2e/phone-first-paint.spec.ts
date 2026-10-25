@@ -51,7 +51,8 @@ test('@phone hydration and the first data move nothing (layout shift ≤ 0.1)', 
 	await expect(page.locator('[data-hydrated="true"][data-cycling="false"]')).toBeVisible({
 		timeout: 45_000
 	});
-	await expect(page.locator('[data-card="weather"] .v2-card-value')).toBeVisible({
+	// The phone bench's weather (fixtures/phone-audit.ts), not whatever NWS says right now.
+	await expect(page.locator('[data-card="weather"] .v2-card-value')).toHaveText('64°F', {
 		timeout: 15_000
 	});
 	// The first camera settled, whichever way: a picture, or a camera that is offline.
