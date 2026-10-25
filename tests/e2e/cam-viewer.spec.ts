@@ -295,11 +295,18 @@ test('a resize to a phone’s width unmounts the wall: the strip keeps its thumb
 }) => {
 	const cams = await stub(page);
 	await open(page);
+	await tile(page, 'caltrans-spencer').scrollIntoViewIfNeeded();
+	await expect(tile(page, 'caltrans-spencer').locator('img')).toBeVisible();
 	await openFromTile(page);
 	const strip = viewer(page).locator('[data-cam-viewer-strip]');
 	const shown = await strip.locator('img').count();
 	expect(shown).toBeGreaterThan(5);
 	const before = cams.thumbs().length;
+	// A Caltrans tile's thumbnail is a blob it fetched: the strip holds the same one.
+	const spencer = strip.locator('[data-cam-thumb="caltrans-spencer"] img');
+	await expect(spencer).toHaveAttribute('src', /^blob:/);
+	const blob = await spencer.getAttribute('src');
+	const caltransBefore = cams.full().filter((u) => u.includes('cwwp2')).length;
 	await page.setViewportSize({ width: 600, height: 800 });
 	await expect(page.locator('section.v2-cam-wall')).toHaveCount(0);
 	await page.waitForTimeout(300);
@@ -311,6 +318,25 @@ test('a resize to a phone’s width unmounts the wall: the strip keeps its thumb
 	).toBe(true);
 	// The phone strip's tiles were never asked to load under the viewer.
 	expect(cams.thumbs().length).toBe(before);
+	expect(cams.full().filter((u) => u.includes('cwwp2')).length).toBe(caltransBefore);
+	// The wall's tile is gone; the blob it fetched still draws, until the viewer lets it go.
+	await expect(spencer).toHaveAttribute('src', blob!);
+	// A fresh <img> from the blob decodes only while it is unrevoked (CSP keeps fetch off blob:).
+	const usable = (src: string) =>
+		page.evaluate(
+			(u) =>
+				new Promise<boolean>((done) => {
+					const img = new Image();
+					img.onload = () => done(true);
+					img.onerror = () => done(false);
+					img.src = u;
+				}),
+			src
+		);
+	expect(await usable(blob!)).toBe(true);
+	await page.keyboard.press('Escape');
+	await expect(viewer(page)).toBeHidden();
+	await expect.poll(() => usable(blob!)).toBe(false);
 });
 
 test('rapid stepping asks for no more than each camera visited, its neighbours, once; tiles pause', async ({
@@ -383,11 +409,17 @@ test('the open frame refreshes each minute while visible; a failed refresh keeps
 	await expect(viewer(page).locator('.viewer-img')).toBeVisible();
 	const tamEast = () => cams.full().filter((u) => u.includes('Axis-TamEast')).length;
 	expect(tamEast()).toBe(1);
-	await page.clock.runFor(61_000);
-	await expect.poll(tamEast).toBe(2);
+	// In 10 s steps: a request still in flight holds the next (one load per camera at a time).
+	const advanceUntil = async (n: number) => {
+		for (let i = 0; i < 18 && tamEast() < n; i++) {
+			await page.clock.runFor(10_000);
+			await page.waitForTimeout(50);
+		}
+		expect(tamEast()).toBe(n);
+	};
+	await advanceUntil(2);
 	failing = true;
-	await page.clock.runFor(61_000);
-	await expect.poll(tamEast).toBe(3);
+	await advanceUntil(3);
 	await expect(viewer(page).locator('.viewer-img')).toBeVisible();
 	await expect(viewer(page).locator('[data-cam-viewer-time]')).toHaveText(
 		/Last received [12] min ago, not updating/
@@ -400,4 +432,46 @@ test('the open frame refreshes each minute while visible; a failed refresh keeps
 	await page.clock.runFor(5 * 60_000);
 	await page.waitForTimeout(300);
 	expect(tamEast()).toBe(3);
+});
+
+test('stepping to an end with the buttons keeps focus in the viewer: keys still work (Codex #1)', async ({
+	page
+}) => {
+	await stub(page);
+	await open(page);
+	await openFromTile(page);
+	const prev = viewer(page).getByRole('button', { name: 'Previous camera' });
+	await expect(prev).toHaveAttribute('aria-disabled', 'true');
+	await viewer(page).getByRole('button', { name: 'Next camera' }).click();
+	await expect(viewer(page)).toHaveAttribute('data-camera-id', 'alert-tam-west');
+	await prev.click();
+	await expect(viewer(page)).toHaveAttribute('data-camera-id', 'alert-tam-east');
+	await expect(prev).toBeFocused();
+	await page.keyboard.press('Enter'); // at the start: nothing happens, focus stays
+	await expect(viewer(page)).toHaveAttribute('data-camera-id', 'alert-tam-east');
+	await expect(prev).toBeFocused();
+	await page.keyboard.press('ArrowRight');
+	await expect(viewer(page)).toHaveAttribute('data-camera-id', 'alert-tam-west');
+	await page.keyboard.press('Escape');
+	await expect(viewer(page)).toBeHidden();
+});
+
+test('a viewer that fails to load drops ?cam and un-pauses the tiles (Codex #4)', async ({
+	page
+}) => {
+	await stub(page);
+	await open(page);
+	await tile(page, 'alert-tam-east').scrollIntoViewIfNeeded();
+	await expect(tile(page, 'alert-tam-east').locator('img')).toBeVisible();
+	// The viewer's chunk, and only it, can't be fetched (offline, a stale deploy).
+	const chunks: string[] = [];
+	await page.route(/\/_app\/immutable\/.*\.js$/, (r) => {
+		chunks.push(r.request().url());
+		return r.abort();
+	});
+	await tile(page, 'alert-tam-east').click();
+	await expect.poll(() => chunks.length).toBeGreaterThan(0);
+	await expect.poll(() => camOf(page)).toBeNull();
+	await expect(viewer(page)).toBeHidden();
+	await expect(tile(page, 'alert-tam-east')).toHaveAttribute('data-status', /live|connecting/);
 });

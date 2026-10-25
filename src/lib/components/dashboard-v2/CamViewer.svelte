@@ -270,7 +270,7 @@
 				type="button"
 				aria-label="Previous camera"
 				data-text-role="control"
-				disabled={index === 0}
+				aria-disabled={index === 0}
 				onclick={() => go(-1)}>‹</button
 			>
 		{/if}
@@ -289,7 +289,7 @@
 				type="button"
 				aria-label="Next camera"
 				data-text-role="control"
-				disabled={index === seq.length - 1}
+				aria-disabled={index === seq.length - 1}
 				onclick={() => go(1)}>›</button
 			>
 		{/if}
@@ -450,7 +450,9 @@
 		color: var(--text-primary);
 		cursor: pointer;
 	}
-	.btn:disabled {
+	/* aria-disabled, not disabled: a disabled button would drop the focus it holds, and the
+	   viewer's keys with it (Codex CAMVIEW1 #1). The ends are no-ops in go(). */
+	.btn[aria-disabled='true'] {
 		opacity: 0.35;
 		cursor: default;
 	}

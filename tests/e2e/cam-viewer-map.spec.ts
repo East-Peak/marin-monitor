@@ -179,3 +179,11 @@ test('a camera alone in view is a sequence of one: no arrows', async ({ page }) 
 	await expect(viewer(page).getByRole('button', { name: 'Next camera' })).toHaveCount(0);
 	await expect(viewer(page).getByRole('button', { name: 'Previous camera' })).toHaveCount(0);
 });
+
+test('with the Cameras layer off, a loaded link is the asked-for camera alone (Codex #2)', async ({
+	page
+}) => {
+	await open(page, `/map?probe&layers=fire&cam=alert-tam-east${VIEW}`);
+	await expect(viewer(page)).toHaveAttribute('data-camera-id', 'alert-tam-east');
+	await expect(viewer(page).locator('.count')).toHaveText('1 / 1');
+});

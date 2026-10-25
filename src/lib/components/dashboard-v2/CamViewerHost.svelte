@@ -15,7 +15,7 @@
 	import { camViewerOpen } from '$lib/dashboard/cam-viewer-open';
 	import type { Bounds } from '$lib/dashboard/map-in-view';
 	import type { CamHeadings } from '$lib/dashboard/cam-headings-store';
-	import { replaceState } from '$app/navigation';
+	import { afterNavigate, replaceState } from '$app/navigation';
 
 	interface Props {
 		now: number;
@@ -25,25 +25,31 @@
 		 * cameras in view at load). Absent on the dashboard, whose links step the whole wall.
 		 */
 		visible?: Bounds | null;
+		/** /map's Cameras layer is on: with it off, no camera is in view but the one asked for. */
+		camsShown?: boolean;
 		mapPage?: boolean;
 	}
-	let { now, headings, visible = null, mapPage = false }: Props = $props();
+	let { now, headings, visible = null, camsShown = true, mapPage = false }: Props = $props();
 
 	const supported = new Set(viewerCameras().map((c) => c.id));
 	const url = $derived(currentUrl());
 	const at = $derived(viewerAt(url, pageState(), (id) => supported.has(id)));
 	const mark = $derived(at.open);
 
+	/** History may be written only once the router has started (a loaded link's first effects). */
+	let routed = $state(false);
+	afterNavigate(() => (routed = true));
+
 	// An id the viewer can't show opens nothing, and leaves the URL.
 	$effect(() => {
-		if (at.drop) replaceState(camHref(currentUrl(), null), pageState());
+		if (routed && at.drop) replaceState(camHref(currentUrl(), null), pageState());
 	});
 
 	// /map's loaded link: its sequence is fixed once, from the cameras in view at load.
 	const waiting = $derived(mapPage && mark !== null && mark.seq === null && mark.from === 'link');
 	$effect(() => {
-		if (!waiting || !visible || !mark) return;
-		const ids = mapSequence(visible, mark.id).map((s) => s.cam.id);
+		if (!routed || !waiting || !visible || !mark) return;
+		const ids = mapSequence(camsShown ? visible : null, mark.id).map((s) => s.cam.id);
 		applyHistory(snapshotOp(currentUrl(), pageState(), mark.id, ids));
 	});
 
@@ -55,7 +61,13 @@
 
 	let Viewer = $state<typeof import('./CamViewer.svelte').default | null>(null);
 	$effect(() => {
-		if (open && !Viewer) void import('./CamViewer.svelte').then((m) => (Viewer = m.default));
+		if (!open || Viewer) return;
+		void import('./CamViewer.svelte').then(
+			(m) => (Viewer = m.default),
+			// A chunk that won't load (offline, a stale deploy): close, so the tiles resume and the
+			// URL holds no viewer that isn't there (Codex #4).
+			() => applyHistory(closeOp(currentUrl(), pageState()))
+		);
 	});
 
 	// Focus goes back where the viewer came from, however it closed (Close, Esc, Back).

@@ -190,7 +190,13 @@
 	</main>
 </div>
 
-<CamViewerHost now={$clock} headings={controller?.camHeadings} {visible} mapPage />
+<CamViewerHost
+	now={$clock}
+	headings={controller?.camHeadings}
+	{visible}
+	camsShown={layers.cams ?? false}
+	mapPage
+/>
 
 <style>
 	.explore {
