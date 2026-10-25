@@ -364,6 +364,20 @@ test.describe('@phone dashboard controls', () => {
 			await expect
 				.poll(async () => (await body(page, id).innerText()).trim().length, { timeout: 10_000 })
 				.toBeGreaterThan(40);
+			// Its reads in (Getting Around's 511 reads arrive one by one, slowly under load): no
+			// line still "Loading…", and the content holds for half a second.
+			await expect(body(page, id)).not.toContainText('Loading…', { timeout: 25_000 });
+			let text = '';
+			await expect
+				.poll(
+					async () => {
+						const last = text;
+						text = await body(page, id).innerText();
+						return text === last;
+					},
+					{ timeout: 15_000, intervals: [500] }
+				)
+				.toBe(true);
 			if (id === 'cost') {
 				for (const town of ['Mill Valley', 'Ross', 'Larkspur']) {
 					const button = body(page, id).getByRole('button', { name: town, exact: true });
