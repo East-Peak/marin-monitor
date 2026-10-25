@@ -14,6 +14,8 @@ import { join } from 'node:path';
 /** Written by phone-news.mjs when the phone server starts; SSR reads them too. */
 const PHONE_NEWS = 'tests/e2e/fixtures/.phone-news.json';
 const PHONE_ALERTS = 'tests/e2e/fixtures/.phone-alerts.json';
+/** The app's own hosts: the phone server, and production for PHONE_LIVE. */
+const APP_HOSTS = new Set(['localhost', 'marinmonitor.com']);
 export const MIN_TARGET = 44;
 
 /**
@@ -22,6 +24,8 @@ export const MIN_TARGET = 44;
  * be checked without loading the internet.
  */
 export async function preparePhone(page: Page) {
+	// Against production (PHONE_LIVE=1) its own data stands; only external navigations land blank.
+	if (process.env.PHONE_LIVE) return blankAway(page);
 	const snapshot = readFileSync(PHONE_NEWS, 'utf8');
 	await page.route('**/api/news/snapshot', (r) =>
 		r.fulfill({ contentType: 'application/json', body: `{"status":"ok","snapshot":${snapshot}}` })
@@ -84,8 +88,13 @@ export async function preparePhone(page: Page) {
 			})
 		)
 	);
+	await blankAway(page);
+}
+
+/** Navigations away from the app land on a blank page; everything else is untouched. */
+async function blankAway(page: Page) {
 	await page.context().route(
-		(url) => url.hostname !== 'localhost',
+		(url) => !APP_HOSTS.has(url.hostname),
 		(r) =>
 			r.request().isNavigationRequest()
 				? r.fulfill({ contentType: 'text/html', body: '<title>away</title>' })
