@@ -6,6 +6,8 @@
 		meta: string[];
 		/** A line under the meta saying what isn't shown and why (CAMQUIET1: a camera's wedge). */
 		status?: string;
+		/** A camera's id: its Enlarge opens the camera viewer where the page offers one (CAMVIEW1). */
+		camera?: string;
 		/** `refreshS`: a live frame, reloaded that often while shown (MAPX4's cameras). */
 		image?: { src: string; alt: string; refreshS?: number } | null;
 		/** The source's text as we hold it (an excerpt, or NWS's own text). */
@@ -17,14 +19,18 @@
 </script>
 
 <script lang="ts">
+	import { getContext } from 'svelte';
 	import DetailDialog from './DetailDialog.svelte';
+	import { camViewerOpen } from '$lib/dashboard/cam-viewer-open';
+	import { CAM_VIEWER_CONTEXT, type CamViewerContext } from '$lib/dashboard/cam-viewer';
 
 	let { detail, titleId }: { detail: Detail; titleId: string } = $props();
 
 	let loadedAt = $state(Date.now());
 	$effect(() => {
 		const every = detail.image?.refreshS;
-		if (!every) return;
+		// Under the camera viewer the preview pauses: the viewer refreshes its own frame.
+		if (!every || $camViewerOpen) return;
 		loadedAt = Date.now();
 		const timer = setInterval(() => (loadedAt = Date.now()), every * 1000);
 		return () => clearInterval(timer);
@@ -40,9 +46,12 @@
 	let frameButton = $state<HTMLButtonElement | null>(null);
 	/** The enlarged view's own failed src, as the preview's. */
 	let bigFailedSrc = $state<string | null>(null);
+	/** The map's camera viewer (CAMVIEW1), where this detail sits on one. */
+	const viewer = getContext<CamViewerContext | undefined>(CAM_VIEWER_CONTEXT);
 	function enlarge() {
 		// Esc and Close hand focus back to the frame (a click doesn't focus a button everywhere).
 		frameButton?.focus();
+		if (detail.camera && viewer) return viewer.open(detail.camera);
 		enlarged = true;
 	}
 	/** Over the page, not inside the docked panel's stacking context. */

@@ -544,6 +544,7 @@ function camLayer(
 				title: c.name,
 				meta: [c.source, headingLine(byId.get(c.id), read?.headingAt ?? null, now)],
 				status: noWedgeLine(byId.get(c.id), now) ?? undefined,
+				camera: c.id,
 				image: { src: c.url, alt: `Latest frame from ${c.name}`, refreshS: FRAME_REFRESH_S },
 				paragraphs: [],
 				empty: 'A live wildfire-detection camera. The wedge on the map is its direction of view.',
@@ -562,6 +563,7 @@ function camLayer(
 			detail: {
 				title: cam.name,
 				meta: [cam.source, `Facing ${at.direction} · approximate (road direction)`],
+				camera: cam.id,
 				image: { src: cam.url, alt: `Latest frame from ${cam.name}`, refreshS: FRAME_REFRESH_S },
 				paragraphs: [],
 				empty: 'A Caltrans traffic camera on 101.',

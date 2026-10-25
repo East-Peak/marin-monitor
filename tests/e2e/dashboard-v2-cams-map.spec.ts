@@ -162,7 +162,7 @@ test.describe('desktop 1440×900', () => {
 		await expect.poll(() => wedgeLit(page, 'alert-muir-beach')).toEqual(quiet);
 	});
 
-	test("the panel's frame enlarges: the whole frame in a dialog, credited; Esc returns to it (CAMQUIET1)", async ({
+	test("the panel's frame enlarges into the camera viewer: whole, credited; Esc returns to it (CAMQUIET1, CAMVIEW1)", async ({
 		page
 	}) => {
 		await open(page, (r) => json(r, HEADINGS));
@@ -179,7 +179,7 @@ test.describe('desktop 1440×900', () => {
 		await frame.click();
 		const dialog = page.getByRole('dialog', { name: 'Muir Beach' });
 		await expect(dialog).toBeVisible();
-		const img = dialog.locator('img');
+		const img = dialog.locator('.viewer-img');
 		expect(await frameProblems(img)).toEqual([]);
 		// Bigger than the panel's preview: up to 90vw × 80vh.
 		const box = (await img.boundingBox())!;

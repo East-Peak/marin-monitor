@@ -5,10 +5,13 @@
 	import { onMount, untrack } from 'svelte';
 	import { browser } from '$app/environment';
 	import { goto, replaceState } from '$app/navigation';
+	import { page } from '$app/state';
 	import { get, readable, toStore } from 'svelte/store';
 	import TownPicker from '$lib/components/layout/TownPicker.svelte';
 	import V2Map from './V2Map.svelte';
 	import LatestReporting from './LatestReporting.svelte';
+	import CamViewerHost from './CamViewerHost.svelte';
+	import type { Bounds } from '$lib/dashboard/map-in-view';
 	import { createDashboardV2Controller, V2_REFRESH_MS } from '$lib/dashboard/v2-controller';
 	import { createMapFeed, type MapFeed } from '$lib/dashboard/map-feed';
 	import { createClock } from '$lib/dashboard/clock';
@@ -63,6 +66,8 @@
 	let urlLayers = false;
 
 	let mapFull = $state(false);
+	/** The map's visible bounds once settled: a loaded `?cam` link's sequence (CAMVIEW1). */
+	let visible = $state<Bounds | null>(null);
 	/** The first full read cycle has landed (the seed has been refreshed). */
 	let readsSettled = $state(false);
 	const mapSource = controller
@@ -79,7 +84,11 @@
 
 	function writeUrl() {
 		const on = LAYER_PREF_IDS.filter((id) => layers[id]);
-		replaceState(exploreHref({ view, layers: on, sel }, new URL(location.href).searchParams), {});
+		// The viewer's `?cam` and history mark ride along (CAMVIEW1): `{}` would close it on Back.
+		replaceState(
+			exploreHref({ view, layers: on, sel }, new URL(location.href).searchParams),
+			page.state
+		);
 	}
 	function onlayer(id: LayerPrefId, on: boolean) {
 		layers = { ...layers, [id]: on };
@@ -156,6 +165,7 @@
 					writeUrl();
 				}}
 				onexit={() => goto('/')}
+				onvisible={(b) => (visible = b)}
 				{readsSettled}
 			/>
 		{:else}
@@ -179,6 +189,8 @@
 		{/if}
 	</main>
 </div>
+
+<CamViewerHost now={$clock} headings={controller?.camHeadings} {visible} mapPage />
 
 <style>
 	.explore {

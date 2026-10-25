@@ -6,7 +6,7 @@
      layer. A pin never
      changes the global town; only an explicit town choice does. -->
 <script lang="ts">
-	import { onMount, untrack } from 'svelte';
+	import { onMount, setContext, untrack } from 'svelte';
 	import {
 		MapContainer,
 		MapDataLayer,
@@ -74,6 +74,12 @@
 	import { formatAsOf } from '$lib/dashboard/pacific-time';
 	import { exploreHref, layersOn, selOutcome, type ExploreView } from '$lib/dashboard/explore-url';
 	import { MAP_NEWS_WINDOW_LINE } from '$lib/news/recency';
+	import {
+		CAM_VIEWER_CONTEXT,
+		mapSequence,
+		type CamViewerContext
+	} from '$lib/dashboard/cam-viewer';
+	import { openCamViewer } from '$lib/dashboard/cam-viewer-nav';
 
 	let {
 		data,
@@ -88,6 +94,7 @@
 		onselect,
 		oncamera,
 		onexit,
+		onvisible,
 		readsSettled = true
 	}: {
 		data: V2MapData;
@@ -109,6 +116,8 @@
 		oncamera?: (view: ExploreView) => void;
 		/** Esc with no detail open (/map: back to the dashboard). */
 		onexit?: () => void;
+		/** The map's visible bounds (clear of the docked panel), on every settled move. */
+		onvisible?: (b: Bounds) => void;
 		/** The controller's first full read has landed: a seeded value can now prove absence. */
 		readsSettled?: boolean;
 	} = $props();
@@ -231,9 +240,23 @@
 				? Math.max(0, canvasEl.getBoundingClientRect().right - panel.getBoundingClientRect().left)
 				: 0;
 	});
-	const listed = $derived(
-		view ? inView(allItems, visibleBounds(view.bounds, view.width, panelPx)) : []
-	);
+	const visibleNow = $derived(view ? visibleBounds(view.bounds, view.width, panelPx) : null);
+	const listed = $derived(visibleNow ? inView(allItems, visibleNow) : []);
+	$effect(() => {
+		if (visibleNow) untrack(() => onvisible?.(visibleNow));
+	});
+	// A camera's Enlarge opens the viewer on a snapshot of the cameras in view (CAMVIEW1): later
+	// moves, flights and refreshes never reshuffle it, and stepping never changes the selection.
+	setContext<CamViewerContext>(CAM_VIEWER_CONTEXT, {
+		open: (id) =>
+			openCamViewer(id, {
+				from: 'map',
+				seq: mapSequence(
+					untrack(() => visibleNow),
+					id
+				).map((s) => s.cam.id)
+			})
+	});
 	const selected = $derived(resolveSelection(allItems, selectedId));
 	const lit = $derived(
 		mapEmphasis(allItems, { hovered: hoveredId, selected: selectedId, feature })

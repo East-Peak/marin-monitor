@@ -4,6 +4,16 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-10-25
+
+### Added — A camera viewer you can arrow through (CAMVIEW1)
+
+- **Click a camera and it opens full screen, on the site**: the whole frame, uncropped and with nothing over it, as large as fits. ← → step through the cameras in the wall's order, ↑ ↓ jump to the next area's first camera; on a phone, swipe the frame sideways to step and down to close, or use the ‹ › buttons. A strip of the sequence's thumbnails (only ones the page already loaded) jumps to any camera. Cmd/Ctrl-click and middle-click still open the image in a new tab.
+- **A corner map of where it looks**: a static map of Marin (US Census outline, public domain) with every camera as a dot and the current one's view cone, drawn by the map's rules: solid when its heading is fresh and still, dashed while sweeping or unreported, none with the reason when there's no usable heading; traffic cameras face their road, marked approximate. On a phone the map is a toggle.
+- **Honest captions**: the source's capture time where it gives one ("capture time unavailable" for ALERTCalifornia), "last received N min ago, not updating" when a refresh fails, "frame unavailable" when none ever loads; the heading as the map says it; the full credit, ALERTCalifornia's CC BY-NC-ND 4.0 licence and an "Open image" link.
+- **It has its own URL** (`?cam=<id>`): Back closes it, Forward reopens it, a reload or a shared link opens at that camera, and closing a shared link stays on the site. On `/map` a camera's Enlarge opens the viewer on the cameras in view when it opened; stepping never moves the map or its selection, and Esc returns to the camera's detail.
+- **Light on the network**: at most three full frames held (the camera and its neighbours), loads left behind are cancelled, the open frame refreshes once a minute only while the page is visible, and the wall's tiles pause underneath. The viewer's code loads on first open.
+
 ## 2026-10-24
 
 ### Fixed — Review fixes to the phone work (MOBILE1)

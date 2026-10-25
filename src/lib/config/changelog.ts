@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-10-25',
+		title: 'Arrow through the cameras',
+		description:
+			'Click a camera and it opens full screen, here on the site: the whole frame, as large as fits. Arrow keys step through the cameras (up and down jump an area), or swipe on a phone. A corner map shows where the camera stands and which way it’s looking, a strip of thumbnails jumps to any camera, and the caption says how old the picture is when the source tells us. On the map, a camera’s Enlarge opens the viewer on the cameras in view. Cmd-click still opens the image in a new tab.'
+	},
+	{
 		date: '2026-10-24',
 		title: 'Each household, for scale',
 		description:
