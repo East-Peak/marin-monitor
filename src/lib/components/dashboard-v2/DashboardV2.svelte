@@ -9,6 +9,7 @@
 	import BriefDesktop from './BriefDesktop.svelte';
 	import CamStrip from './CamStrip.svelte';
 	import CamWall from './CamWall.svelte';
+	import CamViewerHost from './CamViewerHost.svelte';
 	import AdvisoryRow from './AdvisoryRow.svelte';
 	import GettingAround from './GettingAround.svelte';
 	import Outdoors from './Outdoors.svelte';
@@ -544,6 +545,8 @@
 			{/if}
 		</footer>
 	</main>
+
+	<CamViewerHost now={$clock} headings={controller?.camHeadings} />
 
 	{#if !wide}
 		<JumpNav onjump={navJump} />

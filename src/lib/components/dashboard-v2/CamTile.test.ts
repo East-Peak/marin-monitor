@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CamTile from './CamTile.svelte';
 import { CAMERAS, type CameraConfig } from '$lib/config/cameras';
 import type { LoadedFrame, loadFrame } from '$lib/dashboard/cam-frame-loader';
+import { createThumbRegistry } from '$lib/dashboard/cam-thumbs';
+import { camViewerOpen } from '$lib/dashboard/cam-viewer-open';
 
 type Load = typeof loadFrame;
 const T0 = Date.UTC(2026, 9, 13, 23, 0, 30);
@@ -253,12 +255,58 @@ describe('CamTile', () => {
 		expect(load).toHaveBeenCalledTimes(1);
 	});
 
-	it('a tap opens the full-size source frame in a new tab', () => {
+	it('stays a link to the full-size frame; with no viewer on the page a tap opens it in a new tab', () => {
 		const { container } = render(CamTile, { cam: fire, active: false, now: T0 });
 		const a = root(container) as HTMLAnchorElement;
 		expect(a.getAttribute('href')).toBe(fire.url);
 		expect(a.getAttribute('target')).toBe('_blank');
 		expect(a.getAttribute('rel')).toContain('noopener');
+		const click = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 });
+		a.dispatchEvent(click);
+		expect(click.defaultPrevented).toBe(false);
+	});
+
+	it('an ordinary click opens the viewer (CAMVIEW1); a modified or middle click keeps the link', () => {
+		const onopen = vi.fn();
+		const { container } = render(CamTile, { cam: fire, active: false, now: T0, onopen });
+		const a = root(container);
+		const click = (init: MouseEventInit) => {
+			const e = new MouseEvent('click', { bubbles: true, cancelable: true, ...init });
+			a.dispatchEvent(e);
+			return e.defaultPrevented;
+		};
+		expect(click({ button: 0 })).toBe(true);
+		expect(onopen).toHaveBeenCalledWith(fire.id);
+		for (const mod of [{ metaKey: true }, { ctrlKey: true }, { shiftKey: true }, { altKey: true }])
+			expect(click({ button: 0, ...mod })).toBe(false);
+		expect(click({ button: 1 })).toBe(false);
+		expect(onopen).toHaveBeenCalledTimes(1);
+	});
+
+	it('shares its shown thumbnail with the viewer: a holder keeps a blob alive past unmount', async () => {
+		const thumbs = createThumbRegistry((u) => revoke(u));
+		const load = vi.fn<Load>(async () => frame(T0, 'blob:t1'));
+		const r = render(CamTile, { cam: caltrans, active: true, now: T0, load, thumbs });
+		await flush();
+		expect(thumbs.current(caltrans.id)).toBe('blob:t1');
+		const held = thumbs.retain(caltrans.id)!;
+		r.unmount();
+		expect(revoke).not.toHaveBeenCalled();
+		held.release();
+		expect(revoke).toHaveBeenCalledWith('blob:t1');
+	});
+
+	it('pauses its refreshes while the viewer is open', async () => {
+		const load = vi.fn<Load>(async () => frame());
+		render(CamTile, { cam: fire, active: true, now: T0, load });
+		await flush();
+		camViewerOpen.set(true);
+		await vi.advanceTimersByTimeAsync(5 * 60_000);
+		await flush();
+		expect(load).toHaveBeenCalledTimes(1);
+		camViewerOpen.set(false);
+		await flush();
+		expect(load).toHaveBeenCalledTimes(2);
 	});
 
 	it('releases a replaced Caltrans object URL, and its own on unmount', async () => {

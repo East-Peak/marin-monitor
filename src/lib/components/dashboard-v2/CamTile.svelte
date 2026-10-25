@@ -13,6 +13,8 @@
 		type TileStatus
 	} from '$lib/components/tv/camera-frame';
 	import { loadFrame, releaseFrame } from '$lib/dashboard/cam-frame-loader';
+	import { camThumbs, type ThumbRegistry } from '$lib/dashboard/cam-thumbs';
+	import { camViewerOpen } from '$lib/dashboard/cam-viewer-open';
 	import {
 		STRIP_REFRESH_S,
 		STRIP_RETRY_S,
@@ -31,6 +33,10 @@
 		clock?: () => number;
 		/** "Looking SSE · 163°" or "Sweeping" (MAPX4); absent without a reported heading. */
 		heading?: string | null;
+		/** An ordinary click opens the camera viewer (CAMVIEW1); modified clicks keep the link. */
+		onopen?: (id: string) => void;
+		/** Where the shown thumbnail is shared with the viewer's strip. */
+		thumbs?: ThumbRegistry;
 	}
 	let {
 		cam,
@@ -39,8 +45,20 @@
 		load = loadFrame,
 		onstatus,
 		clock = Date.now,
-		heading = null
+		heading = null,
+		onopen,
+		thumbs = camThumbs
 	}: Props = $props();
+	/** The viewer is up: its own frames refresh, the tiles under it pause (CAMVIEW1). */
+	const live = $derived(active && !$camViewerOpen);
+	/** Our hold on the shown thumbnail in the registry, which revokes it once nobody holds it. */
+	let unpublish: (() => void) | null = null;
+	function show(img: HTMLImageElement | null) {
+		const previous = unpublish;
+		unpublish = img ? thumbs.publish(cam.id, img.src) : null;
+		shownImg = img;
+		previous?.();
+	}
 
 	// TV's decode gate (camera-frame.ts): a frame is shown only after it decoded.
 	let tile = $state<TileState>(initialTileState());
@@ -100,18 +118,15 @@
 		if (frame?.placeholder) {
 			// A definite answer, not a failed load: no picture and no age until a real one returns.
 			releaseFrame(frame.img);
-			releaseFrame(shownImg);
-			shownImg = null;
+			show(null);
 			capturedAt = null;
 			tile = initialTileState();
 			unavailable = true;
 		} else if (frame) {
 			unavailable = false;
-			const previous = shownImg;
 			tile = onFrameLoaded(tile, url, clock());
-			shownImg = frame.img;
+			show(frame.img);
 			capturedAt = frame.capturedAt;
-			if (previous !== frame.img) releaseFrame(previous);
 		} else {
 			tile = onFrameFailed(tile);
 		}
@@ -119,7 +134,7 @@
 
 	// Refresh while active: every minute once a frame is up, every 10 s until then.
 	$effect(() => {
-		if (!active) return;
+		if (!live) return;
 		const period = (hasFrame ? STRIP_REFRESH_S : STRIP_RETRY_S) * 1000;
 		untrack(() => void refresh());
 		const timer = setInterval(() => void refresh(), period);
@@ -129,7 +144,7 @@
 	// Deactivated: drop the request in flight. Its own effect, because a cleanup sees the old
 	// prop value (Codex r3 #1, reproduced with the compiler).
 	$effect(() => {
-		if (!active) untrack(cancel);
+		if (!live) untrack(cancel);
 	});
 
 	// Report outside tracking: the parent's write must not re-trigger this effect (a loop).
@@ -150,8 +165,14 @@
 
 	onDestroy(() => {
 		cancel();
-		releaseFrame(shownImg);
+		unpublish?.();
 	});
+
+	function onclick(e: MouseEvent) {
+		if (!onopen || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+		e.preventDefault();
+		onopen(cam.id);
+	}
 </script>
 
 <a
@@ -160,6 +181,7 @@
 	target="_blank"
 	rel="noopener noreferrer"
 	data-camera-id={cam.id}
+	{onclick}
 	data-status={attempted ? status : active ? 'connecting' : 'idle'}
 >
 	<!-- CAMBAR1: the frame shows whole and nothing of ours sits on it. ALERTCalifornia asks that

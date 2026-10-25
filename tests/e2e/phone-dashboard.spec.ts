@@ -260,8 +260,24 @@ test.describe('@phone dashboard controls', () => {
 		expect(failures).toEqual([]);
 	});
 
-	test('cameras: a tile opens its camera; the strip scrolls sideways', async ({ page }, info) => {
-		const failures = await auditLinks(page, info, 'default', page.locator('a.cam-tile').first());
+	test('cameras: a tile opens the camera viewer; the strip scrolls sideways', async ({
+		page
+	}, info) => {
+		const viewer = page.locator('[data-cam-viewer]');
+		const failures = await auditTap(page, info, {
+			page: PAGE,
+			state: 'default',
+			control: 'camera tile',
+			target: page.locator('a.cam-tile').first(),
+			outcome: async () => {
+				await expect(viewer).toBeVisible({ timeout: 3_000 });
+				await expect(page).toHaveURL(/[?&]cam=alert-tam-east/);
+			},
+			undo: async () => {
+				await fingerTap(page, viewer.getByRole('button', { name: 'Close' }));
+				await expect(viewer).toBeHidden();
+			}
+		});
 		const row = page.locator('.cams-row');
 		await row.scrollIntoViewIfNeeded();
 		const box = (await row.boundingBox())!;

@@ -110,7 +110,7 @@ test.describe('@phone speed', () => {
 				await page.waitForTimeout(300);
 			}
 
-			// Open a camera: the tap hands the tile's URL to a new tab.
+			// Open a camera: the tap opens the viewer (CAMVIEW1), its first frame decoded.
 			await page.evaluate(() => window.scrollTo(0, 0));
 			const tile = page.locator('a.cam-tile').first();
 			await tile.scrollIntoViewIfNeeded();
@@ -119,12 +119,11 @@ test.describe('@phone speed', () => {
 				() => ((window as unknown as { __tapFallback: number }).__tapFallback = performance.now())
 			);
 			const t0 = Date.now();
-			const [popup] = await Promise.all([
-				page.waitForEvent('popup'),
-				page.touchscreen.tap(tb.x + tb.width / 2, tb.y + tb.height / 2)
-			]);
-			note('open a camera (tap → new tab)', Date.now() - t0);
-			await popup.close();
+			await page.touchscreen.tap(tb.x + tb.width / 2, tb.y + tb.height / 2);
+			await expect(page.locator('[data-cam-viewer] .viewer-img')).toBeVisible();
+			note('open a camera (tap → viewer frame)', Date.now() - t0);
+			await page.locator('[data-cam-viewer]').getByRole('button', { name: 'Close' }).tap();
+			await expect(page.locator('[data-cam-viewer]')).toBeHidden();
 
 			// Scroll the whole dashboard with a finger: long frames over 50 ms.
 			await page.evaluate(() => window.scrollTo(0, 0));

@@ -6,6 +6,7 @@
 	import { camWallGroups } from '$lib/dashboard/cam-wall';
 	import { loadFrame } from '$lib/dashboard/cam-frame-loader';
 	import CamTile from './CamTile.svelte';
+	import { openCamViewer } from '$lib/dashboard/cam-viewer-nav';
 	import type { CamHeadings, HeadingsState } from '$lib/dashboard/cam-headings-store';
 	import { headingFooter } from '$lib/dashboard/cam-heading';
 
@@ -98,6 +99,7 @@
 									{load}
 									heading={footer(cam.id)}
 									onstatus={(id, s) => (attempted[id] = s)}
+									onopen={(id) => openCamViewer(id, { from: 'tile' })}
 								/>
 							</li>
 						{/each}
