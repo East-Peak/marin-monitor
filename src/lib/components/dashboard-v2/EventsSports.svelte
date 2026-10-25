@@ -48,10 +48,16 @@
 			</div>
 			<ul class="list">
 				{#each shows.next as s (s.id)}
-					<li class="show">
+					<li class="show hit-row">
 						<span class="when" data-text-role="meta">{s.weekday}<br />{s.day}</span>
 						<span>
-							<a href={s.link} target="_blank" rel="noopener" data-text-role="label">{s.title}</a>
+							<a
+								class="hit-stretch"
+								href={s.link}
+								target="_blank"
+								rel="noopener"
+								data-text-role="label">{s.title}</a
+							>
 							<span class="meta" data-text-role="meta">{s.meta}</span>
 						</span>
 					</li>
@@ -67,9 +73,15 @@
 			</div>
 			<ul class="list">
 				{#each races as r (r.id)}
-					<li class="race">
+					<li class="race hit-row">
 						<span>
-							<a href={r.link} target="_blank" rel="noopener" data-text-role="label">{r.title}</a>
+							<a
+								class="hit-stretch"
+								href={r.link}
+								target="_blank"
+								rel="noopener"
+								data-text-role="label">{r.title}</a
+							>
 							<span class="meta" data-text-role="meta"
 								>{r.when}{r.registrationOpen ? ' · registration open' : ''}</span
 							>

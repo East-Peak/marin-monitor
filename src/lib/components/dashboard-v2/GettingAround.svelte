@@ -22,12 +22,13 @@
 				{#each p.lines as line (line.id)}
 					<li class="ga-line" data-line={line.id} data-state={line.state} data-text-role="body">
 						<span class="ga-label">{line.label}</span>{' · '}{#if line.url}<a
-								class="ga-text"
+								class="ga-text hit-44"
 								href={line.url}
 								target="_blank"
 								rel="noopener noreferrer">{line.text} ↗</a
 							>{:else}<span class="ga-text">{line.text}</span
 							>{/if}{#each line.links as link, i (link.url)}{i ? ', ' : ': '}<a
+								class="hit-44"
 								href={link.url}
 								target="_blank"
 								rel="noopener noreferrer">{link.label} ↗</a
@@ -42,7 +43,7 @@
 		{#if p.rows.length}
 			<ul class="ga-list">
 				{#each p.rows as row (row.id)}
-					<li class="ga-row" data-row={row.id} data-tone={row.tone}>
+					<li class="ga-row hit-row" data-row={row.id} data-tone={row.tone}>
 						<span class="ga-head" data-text-role="body"
 							>{#if row.tone}<span class="ga-dot" data-ga-dot aria-hidden="true"
 								></span>{/if}{#each row.tags as tag (tag)}<span
@@ -50,6 +51,7 @@
 									data-ga-tag
 									data-text-role="meta">{tag}</span
 								>{' '}{/each}{#if row.url}<a
+									class="hit-stretch"
 									href={row.url}
 									target="_blank"
 									rel="noopener noreferrer">{row.title}</a
@@ -66,6 +68,7 @@
 		{/if}
 		<p class="ga-foot" data-ga-foot data-text-role="meta">
 			{#if p.meta}{p.meta}{' · '}{/if}<a
+				class="hit-44"
 				href={p.link?.url ?? href}
 				target="_blank"
 				rel="noopener noreferrer">{moreLabel(p, p.link?.label ?? label)}</a

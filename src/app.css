@@ -252,3 +252,51 @@ a:hover {
 	z-index: 100;
 	max-width: 300px;
 }
+
+/*
+ * Tap targets (MOBILE1): every control's hit area is at least 44×44 CSS px, without changing its
+ * look. `hit-44` centres an invisible box (48 px: a finger's margin) on a smaller control; a
+ * padded link is an inline-block, since WebKit misplaces the box of a link that wraps.
+ * `hit-row` with a `hit-stretch` link makes the whole list row (at least 48 px tall, centred)
+ * the link's hit area. Neither moves anything: the phone's height budgets (§13.3) still hold.
+ */
+.hit-44,
+.hit-row {
+	position: relative;
+}
+.hit-44::after {
+	content: '';
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: max(100%, 48px);
+	height: max(100%, 48px);
+	transform: translate(-50%, -50%);
+}
+a.hit-44 {
+	display: inline-block;
+}
+.hit-stretch::after {
+	content: '';
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 50%;
+	height: max(100%, 48px);
+	transform: translateY(-50%);
+}
+/* MapLibre's attribution button, padded on a touch screen (its zoom buttons: MapContainer). */
+@media (pointer: coarse) {
+	.maplibregl-ctrl-attrib-button {
+		position: relative;
+	}
+	.maplibregl-ctrl-attrib-button::after {
+		content: '';
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		width: 44px;
+		height: 44px;
+		transform: translate(-50%, -50%);
+	}
+}

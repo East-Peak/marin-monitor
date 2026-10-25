@@ -131,7 +131,7 @@
 
 <div class="explore" data-layout="explore" data-hydrated={hydrated ? 'true' : 'false'}>
 	<header class="bar">
-		<a class="home" href="/" data-text-role="label">← Dashboard</a>
+		<a class="home hit-44" href="/" data-text-role="label">← Dashboard</a>
 		<h1 class="title" data-text-role="section-title">Explore the map</h1>
 		<span class="scope" data-text-role="control"><TownPicker /></span>
 	</header>

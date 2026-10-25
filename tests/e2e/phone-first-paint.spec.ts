@@ -1,13 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { knownBroken, preparePhone } from './fixtures/phone-audit';
+import { preparePhone } from './fixtures/phone-audit';
 
 /**
  * MOBILE1: the phone dashboard's first paint is the page it becomes. What loads after it
  * (hydration, the brief, the cameras, the map, the advisories) fills space that was already
  * held, so nothing moves under a reader or a thumb.
  */
-test.beforeEach(async ({ page }, info) => {
-	knownBroken(info);
+test.beforeEach(async ({ page }) => {
 	await preparePhone(page);
 });
 

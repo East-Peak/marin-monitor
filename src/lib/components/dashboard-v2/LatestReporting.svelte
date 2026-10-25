@@ -18,7 +18,7 @@
 	{#if rows.length}
 		<ol class="v2-latest-list">
 			{#each rows as row (row.id)}
-				<li data-reporting-row={row.id}><NewsRow {row} /></li>
+				<li class="hit-row" data-reporting-row={row.id}><NewsRow {row} /></li>
 			{/each}
 		</ol>
 	{/if}
@@ -56,6 +56,13 @@
 		}
 		.v2-latest-list li {
 			border-bottom: 0;
+		}
+	}
+	/* Touch: its "Which sources" sits 12 px clear of the first story, so both keep a 44 px hit
+	   area (MOBILE1). */
+	@media (pointer: coarse) {
+		.v2-latest :global(.v2-coverage) {
+			margin-bottom: 12px;
 		}
 	}
 </style>

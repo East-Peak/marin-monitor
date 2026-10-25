@@ -110,6 +110,13 @@
 		width: 26px !important;
 		height: 26px !important;
 	}
+	/* Touch: the zoom buttons sit edge to edge, so each is a full 44 px target (MOBILE1). */
+	@media (pointer: coarse) {
+		.map-wrapper :global(.maplibregl-ctrl-group button) {
+			width: 44px !important;
+			height: 44px !important;
+		}
+	}
 
 	.map-wrapper :global(.maplibregl-ctrl-group button + button) {
 		border-top: 1px solid var(--border) !important;

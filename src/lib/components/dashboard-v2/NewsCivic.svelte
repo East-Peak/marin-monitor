@@ -30,8 +30,14 @@
 		{#if wire && wire.length}
 			<ul class="wire">
 				{#each wire as row (row.id)}
-					<li data-wire-row>
-						<a href={row.link} target="_blank" rel="noopener" data-text-role="body">{row.title}</a>
+					<li class="hit-row" data-wire-row>
+						<a
+							class="hit-stretch"
+							href={row.link}
+							target="_blank"
+							rel="noopener"
+							data-text-role="body">{row.title}</a
+						>
 						<p class="meta" data-text-role="meta">{row.source} · {row.age} · {row.scope}</p>
 					</li>
 				{/each}
@@ -81,8 +87,14 @@
 				</div>
 				<ul class="rows">
 					{#each fixIt.recent as r (r.id)}
-						<li>
-							<a href={r.link} target="_blank" rel="noopener" data-text-role="label">{r.type}</a>
+						<li class="hit-row">
+							<a
+								class="hit-stretch"
+								href={r.link}
+								target="_blank"
+								rel="noopener"
+								data-text-role="label">{r.type}</a
+							>
 							<span class="meta" data-text-role="meta">{r.place} · {r.age}</span>
 						</li>
 					{/each}
@@ -101,8 +113,14 @@
 			</div>
 			<ul class="rows">
 				{#each [...(police ?? []), ...(parks ?? [])] as r (r.id)}
-					<li>
-						<a href={r.link} target="_blank" rel="noopener" data-text-role="label">{r.title}</a>
+					<li class="hit-row">
+						<a
+							class="hit-stretch"
+							href={r.link}
+							target="_blank"
+							rel="noopener"
+							data-text-role="label">{r.title}</a
+						>
 						<span class="meta" data-text-role="meta">{r.meta}</span>
 					</li>
 				{/each}

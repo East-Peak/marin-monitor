@@ -14,7 +14,7 @@
 	<p class="v2-section-status" data-section-status={status.state} data-text-role="meta">{text}</p>
 	{#if details.length}
 		<details class="v2-coverage" data-text-role="meta">
-			<summary>Which sources</summary>
+			<summary class="hit-44">Which sources</summary>
 			<ul>
 				{#each details as line (line)}<li>{line}</li>{/each}
 			</ul>

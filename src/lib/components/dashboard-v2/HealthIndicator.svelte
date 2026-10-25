@@ -28,7 +28,7 @@
 <div class="v2-health" data-health={summary.state}>
 	<button
 		type="button"
-		class="v2-health-button"
+		class="v2-health-button hit-44"
 		data-text-role="label"
 		aria-expanded={open}
 		aria-controls="v2-health-list"

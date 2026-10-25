@@ -57,6 +57,7 @@
 				{#each households as x (x.slug)}
 					<button
 						type="button"
+						class="hit-44"
 						data-town={x.slug}
 						data-text-role="label"
 						aria-pressed={x.slug === slug}
@@ -79,7 +80,7 @@
 					</div>
 					<p class="sub" data-text-role="label">
 						{h.name}: {usd(h.burnMonthly)} a month going out, before saving anything.
-						<a class="more" href="/cost/{h.slug}">The whole budget →</a>
+						<a class="more hit-44" href="/cost/{h.slug}">The whole budget →</a>
 					</p>
 				{:else}
 					<div class="hero-row">
@@ -90,7 +91,7 @@
 					</div>
 					<p class="sub" data-text-role="label">
 						{h.name}: no break-even while {list(h.missing)} can’t be read.
-						<a class="more" href="/cost/{h.slug}">The whole budget →</a>
+						<a class="more hit-44" href="/cost/{h.slug}">The whole budget →</a>
 					</p>
 				{/if}
 				<SectionStack sections={h.sections} key={4} />

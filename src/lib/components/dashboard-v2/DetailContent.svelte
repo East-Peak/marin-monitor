@@ -119,8 +119,12 @@
 		<p class="muted" data-text-role="body">{detail.empty ?? 'No text from the source.'}</p>
 	{/each}
 	{#if detail.source}
-		<a href={detail.source.href} target="_blank" rel="noopener" data-text-role="label"
-			>{detail.source.label} ↗</a
+		<a
+			class="hit-44"
+			href={detail.source.href}
+			target="_blank"
+			rel="noopener"
+			data-text-role="label">{detail.source.label} ↗</a
 		>
 	{/if}
 </article>

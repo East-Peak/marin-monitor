@@ -15,14 +15,16 @@
 		</p>
 		<p class="meta" data-lately-latest data-text-role="meta">
 			{view.latest}
-			<a href={LATELY_LINK} target="_blank" rel="noopener">marinlately.com</a>
+			<a class="hit-44" href={LATELY_LINK} target="_blank" rel="noopener">marinlately.com</a>
 		</p>
 		<CardSource lines={[{ measured: view.source }]} {now} />
 	</div>
 	<ol>
 		{#each view.pieces as p (p.id)}
-			<li>
-				<a href={p.link} target="_blank" rel="noopener" data-text-role="body">{p.title}</a>
+			<li class="hit-row">
+				<a class="hit-stretch" href={p.link} target="_blank" rel="noopener" data-text-role="body"
+					>{p.title}</a
+				>
 				{#if p.summary}
 					<p data-text-role="label">{p.summary}</p>
 				{/if}

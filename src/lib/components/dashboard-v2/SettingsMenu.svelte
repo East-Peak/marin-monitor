@@ -59,7 +59,7 @@
 	<button
 		bind:this={triggerEl}
 		type="button"
-		class="v2-settings-trigger"
+		class="v2-settings-trigger hit-44"
 		aria-label="Dashboard settings"
 		aria-haspopup="true"
 		aria-expanded={open}
@@ -104,7 +104,7 @@
 			<fieldset class="row">
 				<legend>Theme</legend>
 				{#each THEMES as theme (theme.mode)}
-					<label class="choice">
+					<label class="choice hit-44">
 						<input
 							type="radio"
 							name="v2-theme"
@@ -117,7 +117,7 @@
 				{/each}
 			</fieldset>
 
-			<label class="row choice">
+			<label class="row choice hit-44">
 				<input
 					type="checkbox"
 					checked={!$settings.camerasHidden}
@@ -126,7 +126,7 @@
 				Show cameras
 			</label>
 
-			<button type="button" class="reset" onclick={resetSections}>Reset sections</button>
+			<button type="button" class="reset hit-44" onclick={resetSections}>Reset sections</button>
 			{#if resetNotice}
 				<p class="notice" role="status">Sections reset to defaults.</p>
 			{/if}
@@ -199,5 +199,20 @@
 		margin: 0;
 		font-size: 12px;
 		color: var(--text-muted);
+	}
+	/* Touch: a select can't carry a padded hit area, so it is 44 px tall (MOBILE1). */
+	@media (pointer: coarse) {
+		select {
+			/* WebKit sizes a native select only as a menulist button, and by height. */
+			height: 44px;
+			-webkit-appearance: menulist-button;
+			appearance: menulist-button;
+		}
+	}
+	/* Touch: the theme choices stack edge to edge, so each is a full 44 px row (MOBILE1). */
+	@media (pointer: coarse) {
+		.choice {
+			min-height: 44px;
+		}
 	}
 </style>

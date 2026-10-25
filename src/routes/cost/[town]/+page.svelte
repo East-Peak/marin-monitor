@@ -36,11 +36,13 @@
 <div class="dash-v2 cost-page" data-layout="cost">
 	<main class="wrap">
 		<nav class="crumb" aria-label="Breadcrumb" data-text-role="meta">
-			<a href="/">Marin Monitor</a> › Cost › {data.town}
+			<a class="hit-44" href="/">Marin Monitor</a> › Cost › {data.town}
 			<span class="towns">
 				{#each data.towns as t (t.slug)}
-					<a href="/cost/{t.slug}" aria-current={t.town === data.town ? 'page' : undefined}
-						>{t.town}</a
+					<a
+						class="hit-44"
+						href="/cost/{t.slug}"
+						aria-current={t.town === data.town ? 'page' : undefined}>{t.town}</a
 					>
 				{/each}
 			</span>
@@ -64,6 +66,7 @@
 							<ClassChips classes={[t.class]} />
 							<span>
 								The {h.town} median, {money(t.value)} ({t.label}){#if trackerLink}, <a
+										class="hit-44"
 										href={trackerLink.href}
 										rel="noopener noreferrer"
 										target="_blank">{trackerLink.host}</a
@@ -167,13 +170,21 @@
 								<ul class="inputs">
 									{#each l.inputs as i (i.name)}
 										{@const link = i.source ? sourceLink(i.source) : null}
-										<li data-input={i.name} data-class={i.class} data-text-role="meta">
+										<li
+											class:hit-row={!!link}
+											data-input={i.name}
+											data-class={i.class}
+											data-text-role="meta"
+										>
 											<ClassChips classes={[i.class]} />
 											<span>
 												{formatInput(i)}
 												{#if link}
-													· <a href={link.href} rel="noopener noreferrer" target="_blank"
-														>{link.host}</a
+													· <a
+														class="hit-stretch"
+														href={link.href}
+														rel="noopener noreferrer"
+														target="_blank">{link.host}</a
 													>{#if link.detail}&nbsp;({link.detail}){/if}
 												{:else if i.source && i.class === 'live'}
 													· {i.source}
@@ -500,6 +511,11 @@
 		align-items: baseline;
 		overflow-wrap: anywhere;
 	}
+	/* A source's row is its link's hit area (MOBILE1): its line centred, so a finger aimed at
+	   the link has the row's height around it. */
+	.inputs li.hit-row {
+		align-items: center;
+	}
 	.inputs li > :global(.chips) {
 		margin-left: 0;
 	}
@@ -539,6 +555,19 @@
 	@media (prefers-reduced-motion: reduce) {
 		.lab::before {
 			transition: none;
+		}
+	}
+	/* Touch: the budget's lines stack edge to edge, so each is a full 44 px row (MOBILE1). */
+	@media (pointer: coarse) {
+		summary {
+			min-height: 44px;
+			align-items: center;
+		}
+	}
+	/* Touch: a source's row stacks on the next, so it is a full 44 px row (MOBILE1). */
+	@media (pointer: coarse) {
+		.inputs li.hit-row {
+			min-height: 44px;
 		}
 	}
 </style>

@@ -6,6 +6,10 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-24
 
+### Fixed — Every control on the phone is a full-size target (MOBILE1)
+
+- **At least 44×44 px to a thumb** on `/`, `/map` and `/cost/<town>`, with the look unchanged: small controls get an invisible padded hit area, and list rows (stories, the wire, events, Getting Around's alerts, a budget line's sources) are tappable across the whole row. Where controls stack edge to edge on a touch screen (the town list, settings, map layers, MapLibre's zoom buttons, the budget's lines) each row is 44 px. The phone's height budgets hold; Getting Around's status-line links stay at 41 px pending a ruling, since 44 would cost the section 13 px.
+
 ### Fixed — The phone dashboard holds still while it loads (MOBILE1)
 
 - **Nothing moves under a reader or a thumb**: the first paint now holds the brief (as loading cards the same height as loaded ones), the camera strip, the sources button and the map's own box, and Marin's NWS advisories are in the HTML (a 1.2 s server read, like the news; the client reads them if it misses). Outfit is preloaded and never swaps in late (`font-display: optional`), since its arrival rewrapped lines. Layout shift on the phone went from 0.91 to 0.

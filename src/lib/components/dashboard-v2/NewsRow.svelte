@@ -8,7 +8,7 @@
 
 {#if row.link}
 	<a
-		class="v2-news-title"
+		class="v2-news-title hit-stretch"
 		href={row.link}
 		target="_blank"
 		rel="noopener noreferrer"

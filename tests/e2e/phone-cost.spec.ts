@@ -1,12 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { auditTap, knownBroken, openPhone, preparePhone } from './fixtures/phone-audit';
+import { auditTap, openPhone, preparePhone } from './fixtures/phone-audit';
 
 /** MOBILE1: every control on /cost/larkspur, on an iPhone and a Pixel. */
 const PAGE = '/cost/larkspur';
 const sheet = (page: Page) => page.locator('section.budget');
 
-test.beforeEach(async ({ page }, info) => {
-	knownBroken(info);
+test.beforeEach(async ({ page }) => {
 	await preparePhone(page);
 	await openPhone(page, PAGE, sheet(page).locator('details'));
 });

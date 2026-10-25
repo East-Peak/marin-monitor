@@ -55,7 +55,27 @@ export interface Hit {
 }
 
 export async function measure(target: Locator): Promise<Hit> {
-	await target.scrollIntoViewIfNeeded();
+	// Centred, as a thumb scrolls a thing into comfortable view: at a scroller's edge part of
+	// its hit area would be clipped and unmeasurable, though no finger taps it there.
+	await target.evaluate((el) => el.scrollIntoView({ block: 'center', inline: 'nearest' }));
+	// A finger meets the settled page: wait until the control's box holds across two frames
+	// (a neighbour's reflow, e.g. a layer's legend closing, can still be under way).
+	await target.evaluate(
+		(el) =>
+			new Promise<void>((done) => {
+				let last = '';
+				let tries = 0;
+				const check = () => {
+					const r = el.getBoundingClientRect();
+					const now = `${r.x},${r.y},${r.width},${r.height}`;
+					if ((now === last && tries > 1) || tries > 20) return done();
+					last = now;
+					tries++;
+					requestAnimationFrame(check);
+				};
+				requestAnimationFrame(check);
+			})
+	);
 	return target.evaluate((el) => {
 		// A link that wraps is tapped on one of its line boxes, not between them.
 		const box = (el.matches('input') && el.closest('label')) || el;
@@ -134,7 +154,8 @@ export async function auditTap(page: Page, info: TestInfo, c: TapCheck): Promise
 	const why: string[] = [];
 	const hit = await measure(c.target);
 	if (hit.covered) why.push(`intercepted by ${hit.covered}`);
-	if (!c.smallOk && (hit.hitW < MIN_TARGET || hit.hitH < MIN_TARGET))
+	// Sampled in whole pixels from a fractional centre, an exact 44 px box reads 43: 1 px slack.
+	if (!c.smallOk && (hit.hitW < MIN_TARGET - 1 || hit.hitH < MIN_TARGET - 1))
 		why.push(`hit area ${hit.hitW}×${hit.hitH}`);
 	// A real tap at the centre: it goes to whatever is on top, exactly as a thumb's would.
 	await page.touchscreen.tap(hit.x, hit.y);
@@ -147,12 +168,14 @@ export async function auditTap(page: Page, info: TestInfo, c: TapCheck): Promise
 	if (ok && c.undo) {
 		if (!(await passes(c.undo))) why.push('did not close or round-trip');
 	}
+	// A target let off the size check still says so in its row.
+	const note = c.smallOk && (hit.hitW < MIN_TARGET - 1 || hit.hitH < MIN_TARGET - 1);
 	record(info, {
 		page: c.page,
 		state: c.state,
 		control: c.control,
 		result: why.length ? 'fail' : 'pass',
-		why,
+		why: note ? [...why, `small by design: ${c.smallOk}`] : why,
 		hit
 	});
 	return why;
@@ -165,6 +188,12 @@ async function passes(check: () => Promise<void>) {
 	} catch {
 		return false;
 	}
+}
+
+/** A finger's tap at a control's centre: whatever is on top there (its label's padding too). */
+export async function fingerTap(page: Page, target: Locator) {
+	const hit = await measure(target);
+	await page.touchscreen.tap(hit.x, hit.y);
 }
 
 /** A swipe or drag, by touch events with intermediate moves (MapLibre and sheets need them). */
@@ -244,35 +273,4 @@ export async function swipe(
 		});
 	await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
 	await session.detach();
-}
-
-/**
- * What the step-1 audit found broken, by test title (and project, when only one fails). Each
- * is skipped as a known failure until its fix lands; the fix deletes its line, and the test
- * then has to pass. PHONE_AUDIT=1 runs them anyway, to record the audit's table.
- */
-const SMALL = 'MOBILE1 audit: targets under 44×44 CSS px';
-const KNOWN_BROKEN: Record<string, string> = {
-	'header: town picker opens its list, picks a town, and goes back to all of Marin': SMALL,
-	'header: settings opens, each setting takes effect, and it closes': SMALL,
-	'header: the sources indicator lists what is degraded, and closes': SMALL,
-	'header: the logo goes to the top; Old dashboard opens the legacy layout': SMALL,
-	'latest reporting: every story opens its link': SMALL,
-	'"Which sources" opens its list wherever it shows': SMALL,
-	'section getting-around: its toggle shows real content and hides it again': SMALL,
-	'section news: its toggle shows real content and hides it again': SMALL,
-	'section cost: its toggle shows real content and hides it again': SMALL,
-	'section events: its toggle shows real content and hides it again': SMALL,
-	'header: ← Dashboard goes home; the town picker opens and picks': SMALL,
-	'Layers: opens its list, and each switch changes what the map lists': SMALL,
-	'zoom buttons and the attribution': SMALL,
-	'the household links change the household; the breadcrumb goes home': SMALL,
-	'every line opens to its inputs, and closes': SMALL,
-	'every source link opens its source': SMALL
-};
-
-/** Call from a beforeEach: skips this test while its failure is known and unfixed. */
-export function knownBroken(info: TestInfo) {
-	const why = KNOWN_BROKEN[`${info.title} @${info.project.name}`] ?? KNOWN_BROKEN[info.title];
-	info.fixme(!!why && !process.env.PHONE_AUDIT, why);
 }

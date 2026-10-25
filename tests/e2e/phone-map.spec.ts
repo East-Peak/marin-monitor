@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import {
 	auditTap,
-	knownBroken,
+	fingerTap,
 	openPhone,
 	preparePhone,
 	record,
@@ -30,8 +30,7 @@ const atRest = (page: Page) =>
 		)
 		.toBe(true);
 
-test.beforeEach(async ({ page }, info) => {
-	knownBroken(info);
+test.beforeEach(async ({ page }) => {
 	await preparePhone(page);
 	await openPhone(
 		page,
@@ -108,7 +107,7 @@ test.describe('@phone map controls', () => {
 							.not.toBe(layersBefore);
 					},
 					undo: async () => {
-						await box.tap();
+						await fingerTap(page, box);
 						await expect(box).toBeChecked({ checked: was });
 					}
 				}))

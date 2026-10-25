@@ -88,7 +88,7 @@
 		<div class="bar">
 			<button
 				type="button"
-				class="trigger"
+				class="trigger hit-44"
 				aria-expanded={open}
 				aria-controls="v2-layer-list"
 				data-text-role="label"
@@ -228,6 +228,12 @@
 		/* The expanded phone map (70vh): the list ends above the Collapse button (MAPX2c). */
 		.list {
 			max-height: calc(70vh - 7.5rem);
+		}
+	}
+	/* Touch: the switches stack edge to edge, so each is a full 44 px row (MOBILE1). */
+	@media (pointer: coarse) {
+		label {
+			min-height: 44px;
 		}
 	}
 </style>

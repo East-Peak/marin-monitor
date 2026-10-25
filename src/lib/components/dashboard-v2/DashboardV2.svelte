@@ -373,7 +373,7 @@
 	data-cycling={$cycling ? 'true' : 'false'}
 >
 	<header class="v2-header">
-		<a class="v2-logo" href="/" data-text-role="brand">Marin Monitor</a>
+		<a class="v2-logo hit-44" href="/" data-text-role="brand">Marin Monitor</a>
 		<div class="v2-scope" role="group" aria-labelledby="v2-scope-label">
 			<span class="v2-scope-label" id="v2-scope-label" data-text-role="label">Showing:</span>
 			<span data-text-role="control"><TownPicker /></span>
@@ -384,7 +384,7 @@
 		<!-- In the first paint too, "Checking sources…" until the report reads (MOBILE1). -->
 		<HealthIndicator report={healthReport} {outcomes} now={clock} />
 		<!-- The rollback layout stays reachable until legacy is retired (DASH-FLIP2). -->
-		<a class="v2-old" href="/?layout=legacy" data-text-role="label">Old dashboard</a>
+		<a class="v2-old hit-44" href="/?layout=legacy" data-text-role="label">Old dashboard</a>
 	</header>
 
 	{#if wide}

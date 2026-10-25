@@ -89,7 +89,7 @@
 <div class="town-picker">
 	<button
 		type="button"
-		class="picker-trigger"
+		class="picker-trigger hit-44"
 		class:active={shownTown !== null}
 		bind:this={triggerEl}
 		aria-haspopup="listbox"
@@ -351,6 +351,12 @@
 			bottom: 0.5rem;
 			width: auto;
 			max-height: 60vh;
+		}
+	}
+	/* Touch: options stack edge to edge, so each is a full 44 px row (MOBILE1). */
+	@media (pointer: coarse) {
+		.picker-option {
+			min-height: 44px;
 		}
 	}
 </style>
