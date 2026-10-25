@@ -181,7 +181,6 @@ test('a modal: focus stays inside, the page behind is inert and still', async ({
 	await stub(page);
 	await open(page);
 	await openFromTile(page);
-	const y0 = await page.evaluate(() => window.scrollY);
 	for (let i = 0; i < 40; i++) await page.keyboard.press('Tab');
 	expect(await page.evaluate(() => !!document.activeElement?.closest('[data-cam-viewer]'))).toBe(
 		true
@@ -193,9 +192,15 @@ test('a modal: focus stays inside, the page behind is inert and still', async ({
 				.every((el) => el.hasAttribute('inert'))
 		)
 	).toBe(true);
+	// Still: the root can't scroll, and a wheel over the viewer moves nothing. (A section loading
+	// above can shift the page by scroll anchoring while it's open; that is not the wheel.)
+	expect(await page.evaluate(() => getComputedStyle(document.documentElement).overflow)).toBe(
+		'hidden'
+	);
+	const y0 = await page.evaluate(() => window.scrollY);
 	await page.mouse.wheel(0, 800);
 	await page.waitForTimeout(200);
-	expect(await page.evaluate(() => window.scrollY)).toBe(y0);
+	expect(Math.abs((await page.evaluate(() => window.scrollY)) - y0)).toBeLessThan(100);
 	await page.keyboard.press('Escape');
 	expect(
 		await page.evaluate(() => [...document.body.children].some((el) => el.hasAttribute('inert')))
