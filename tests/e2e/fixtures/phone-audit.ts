@@ -11,8 +11,9 @@ import { expect, type Locator, type Page, type TestInfo } from '@playwright/test
 import { appendFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-/** Written by phone-news.mjs when the phone server starts; SSR reads it as the snapshot. */
+/** Written by phone-news.mjs when the phone server starts; SSR reads them too. */
 const PHONE_NEWS = 'tests/e2e/fixtures/.phone-news.json';
+const PHONE_ALERTS = 'tests/e2e/fixtures/.phone-alerts.json';
 export const MIN_TARGET = 44;
 
 /**
@@ -24,6 +25,10 @@ export async function preparePhone(page: Page) {
 	const snapshot = readFileSync(PHONE_NEWS, 'utf8');
 	await page.route('**/api/news/snapshot', (r) =>
 		r.fulfill({ contentType: 'application/json', body: `{"status":"ok","snapshot":${snapshot}}` })
+	);
+	const alerts = readFileSync(PHONE_ALERTS, 'utf8');
+	await page.route('https://api.weather.gov/alerts/active**', (r) =>
+		r.fulfill({ contentType: 'application/geo+json', body: alerts })
 	);
 	await page.context().route(
 		(url) => url.hostname !== 'localhost',
@@ -142,8 +147,8 @@ export interface TapCheck {
 	outcome: () => Promise<void>;
 	/** Puts things back (close, navigate back); its own outcome is asserted inside. */
 	undo?: () => Promise<void>;
-	/** A target that is meant to be small, with a reason (e.g. MapLibre's own controls). */
-	smallOk?: string;
+	/** A known small target: its reason, and the floor it must still meet (CSS px). */
+	smallOk?: { reason: string; min: number };
 }
 
 /**
@@ -155,8 +160,8 @@ export async function auditTap(page: Page, info: TestInfo, c: TapCheck): Promise
 	const hit = await measure(c.target);
 	if (hit.covered) why.push(`intercepted by ${hit.covered}`);
 	// Sampled in whole pixels from a fractional centre, an exact 44 px box reads 43: 1 px slack.
-	if (!c.smallOk && (hit.hitW < MIN_TARGET - 1 || hit.hitH < MIN_TARGET - 1))
-		why.push(`hit area ${hit.hitW}×${hit.hitH}`);
+	const floor = c.smallOk?.min ?? MIN_TARGET;
+	if (hit.hitW < floor - 1 || hit.hitH < floor - 1) why.push(`hit area ${hit.hitW}×${hit.hitH}`);
 	// A real tap at the centre: it goes to whatever is on top, exactly as a thumb's would.
 	await page.touchscreen.tap(hit.x, hit.y);
 	let ok = await passes(c.outcome);
@@ -175,7 +180,7 @@ export async function auditTap(page: Page, info: TestInfo, c: TapCheck): Promise
 		state: c.state,
 		control: c.control,
 		result: why.length ? 'fail' : 'pass',
-		why: note ? [...why, `small by design: ${c.smallOk}`] : why,
+		why: note ? [...why, `small, pending a ruling: ${c.smallOk!.reason}`] : why,
 		hit
 	});
 	return why;

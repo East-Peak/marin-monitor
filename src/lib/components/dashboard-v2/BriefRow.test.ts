@@ -92,6 +92,14 @@ describe('BriefRow', () => {
 		for (const id of ['weather', 'tide']) expect(lines(loading, id)).toEqual(lines(loaded, id));
 		expect(loading.textContent).toContain('Loading observation…');
 		expect(loading.textContent).not.toMatch(/unavailable/);
+		// A failed read holds them too, so a weather outage doesn't move the page either.
+		const down = card<never>({ state: 'unavailable' });
+		const failed = render(BriefRow, {
+			brief: writable({ ...initialBriefState(), observed: down, forecast: down, tides: down }),
+			now: writable(NOW)
+		}).container;
+		for (const id of ['weather', 'tide']) expect(lines(failed, id)).toEqual(lines(loaded, id));
+		expect(failed.textContent).toContain('Observation unavailable');
 	});
 
 	it('weather: observed value with station and time; rain with scope and issue time', () => {

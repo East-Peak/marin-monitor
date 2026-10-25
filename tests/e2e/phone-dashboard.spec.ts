@@ -50,7 +50,7 @@ async function auditLinks(
 			state,
 			control: `link "${label}"`,
 			target: link,
-			smallOk: line ? 'Getting Around line link: 41 px, pending a ruling (MOBILE1)' : undefined,
+			smallOk: line ? { reason: 'Getting Around line link (41 px)', min: 41 } : undefined,
 			outcome: blank
 				? async () => expect.poll(() => popup?.url(), { timeout: 3_000 }).toBe(url)
 				: async () => expect(page).toHaveURL(url, { timeout: 3_000 }),
@@ -115,6 +115,7 @@ test.describe('@phone dashboard controls', () => {
 	test('header: settings opens, each setting takes effect, and it closes', async ({
 		page
 	}, info) => {
+		test.slow(); // many controls, each tapped, checked and undone
 		const trigger = page.getByRole('button', { name: 'Dashboard settings' });
 		const panel = page.getByRole('group', { name: 'Dashboard settings' });
 		const failures = await auditTap(page, info, {
@@ -301,6 +302,7 @@ test.describe('@phone dashboard controls', () => {
 	});
 
 	test('latest reporting: every story opens its link', async ({ page }, info) => {
+		test.slow(); // many controls, each tapped, checked and undone
 		const failures = await auditLinks(page, info, 'default', page.locator('#map a.v2-news-title'));
 		expect(failures).toEqual([]);
 	});
@@ -335,6 +337,7 @@ test.describe('@phone dashboard controls', () => {
 		test(`section ${id}: its toggle shows real content and hides it again`, async ({
 			page
 		}, info) => {
+			test.slow(); // many controls, each tapped, checked and undone
 			const failures = await auditTap(page, info, {
 				page: PAGE,
 				state: 'collapsed',
@@ -408,6 +411,7 @@ test.describe('@phone dashboard controls', () => {
 	});
 
 	test('bottom of the page: nothing tappable sits under the jump bar', async ({ page }, info) => {
+		test.slow(); // many controls, each tapped, checked and undone
 		for (const id of SECTIONS) {
 			await toggle(page, id).tap();
 			// Its content in, so the page has its final height before it's scrolled to the end.
@@ -501,11 +505,19 @@ test.describe('@phone dashboard hydration', () => {
 	test('a story tapped as soon as it shows still opens', async ({ page }, info) => {
 		let popup: Page | null = null;
 		page.on('popup', (p) => (popup = p));
-		await page.goto(PAGE, { waitUntil: 'commit' });
+		// The server's HTML alone first: the app's scripts held until the story was tapped there.
+		let release!: () => void;
+		const held = new Promise<void>((done) => (release = done));
+		await page.route('**/_app/immutable/**/*.js', async (r) => {
+			await held;
+			await r.fallback();
+		});
+		await page.goto(PAGE, { waitUntil: 'domcontentloaded' });
 		const first = page.locator('#map a.v2-news-title').first();
 		await first.waitFor({ state: 'visible' });
 		// Where a thumb would find it: scrolled to, then tapped at once.
 		await first.scrollIntoViewIfNeeded();
+		expect(await page.locator('[data-hydrated="true"]').count(), 'tapped before hydration').toBe(0);
 		const href = (await first.getAttribute('href'))!;
 		const box = (await first.boundingBox())!;
 		const pageY = () => first.evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
@@ -517,8 +529,11 @@ test.describe('@phone dashboard hydration', () => {
 		} catch {
 			why.push('the early tap opened nothing');
 		}
-		// Hydrated, the story is where the first paint put it: an early tap meets what it saw.
-		await expect(page.locator('[data-hydrated="true"]')).toBeVisible({ timeout: 15_000 });
+		// Then hydration and the first data: the story stays where the first paint put it.
+		release();
+		await expect(page.locator('[data-hydrated="true"][data-cycling="false"]')).toBeVisible({
+			timeout: 20_000
+		});
 		const moved = Math.abs((await pageY()) - y0);
 		if (moved >= 1) why.push(`the story moved ${Math.round(moved)} px under it`);
 		const ok = why.length === 0;

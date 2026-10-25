@@ -72,6 +72,8 @@
 			<p class="v2-card-value v2-skeleton" data-text-role="value" aria-hidden="true">&nbsp;</p>
 			<p class="v2-skeleton" data-text-role="meta">Loading observation…</p>
 		{:else}
+			<!-- The loaded card's lines, held here too: an outage doesn't move the page (MOBILE1). -->
+			<p class="v2-card-value" data-text-role="value" aria-hidden="true">&nbsp;</p>
 			<p data-text-role="meta">Observation unavailable</p>
 		{/if}
 
@@ -89,7 +91,8 @@
 				<p class="v2-skeleton" data-text-role="body">Loading forecast…</p>
 				<p class="v2-skeleton" data-text-role="meta" aria-hidden="true">&nbsp;</p>
 			{:else}
-				<p data-text-role="meta">Forecast unavailable</p>
+				<p data-text-role="body">Forecast unavailable</p>
+				<p data-text-role="meta" aria-hidden="true">&nbsp;</p>
 			{/if}
 			{#if forecast.updatingFor}
 				<p data-text-role="meta">Updating for {forecast.updatingFor}…</p>
@@ -111,6 +114,7 @@
 			<p class="v2-card-value v2-skeleton" data-text-role="value" aria-hidden="true">&nbsp;</p>
 			<p class="v2-skeleton" data-text-role="meta">Loading tides…</p>
 		{:else}
+			<p class="v2-card-value" data-text-role="value" aria-hidden="true">&nbsp;</p>
 			<p data-text-role="meta">Tide predictions unavailable</p>
 		{/if}
 		{#if tides.updatingFor}

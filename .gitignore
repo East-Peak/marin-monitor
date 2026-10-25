@@ -44,3 +44,4 @@ archive/
 .env*.local
 tests/e2e/screenshots/
 tests/e2e/fixtures/.phone-news.json
+tests/e2e/fixtures/.phone-alerts.json

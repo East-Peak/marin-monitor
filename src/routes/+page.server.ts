@@ -20,7 +20,11 @@ export async function load({ url, setHeaders }: ServerLoadEvent) {
 			readAdvisoriesForFirstPaint(env)
 		]);
 		// Headers follow the read: a failed read is never edge-cached as an empty first paint.
-		setHeaders({ 'Cache-Control': dashboardCacheControl(choice, snapshot !== null) });
+		// A missed read of either is never edge-cached: the next visitor's client would add it
+		// later, and the page would move (MOBILE1 for advisories).
+		setHeaders({
+			'Cache-Control': dashboardCacheControl(choice, snapshot !== null && advisories !== null)
+		});
 		return {
 			layout,
 			explicit,

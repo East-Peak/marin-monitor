@@ -22,6 +22,18 @@
 	$effect(() => (headings && pageVisible && stripNear ? headings.hold() : undefined));
 	const footer = (id: string) => headingFooter(headingState?.read?.cams.find((c) => c.id === id));
 
+	/**
+	 * Hidden or shown, the first paint can't know (the choice is in this browser's storage): until
+	 * mount the strip renders both, and app.html's first script marks <html data-cams-hidden> so
+	 * CSS shows the right one (MOBILE1). Hydration then matches the server's markup and nothing
+	 * moves; no tile is active before mount, so a hidden strip still requests no camera.
+	 */
+	let mounted = $state(false);
+	$effect(() => {
+		mounted = true;
+	});
+	const hidden = $derived(mounted && $settings.camerasHidden);
+
 	let row = $state<HTMLElement | null>(null);
 	let stripNear = $state(false);
 	let near = $state<Record<string, boolean>>({});
@@ -77,10 +89,16 @@
 	const page = (dir: 1 | -1) => row?.scrollBy({ left: dir * row.clientWidth, behavior: 'smooth' });
 </script>
 
-<section id="cams" class="v2-cams" aria-labelledby="v2-cams-title" data-slot="cams">
+<section
+	id="cams"
+	class="v2-cams"
+	aria-labelledby="v2-cams-title"
+	data-slot="cams"
+	data-mounted={mounted ? 'true' : undefined}
+>
 	<div class="cams-head">
 		<h2 id="v2-cams-title" class="cams-title" data-text-role="section-title">Cameras</h2>
-		{#if !$settings.camerasHidden}
+		{#if !hidden}
 			<!-- In the heading line: the all-failed notice never changes the strip's height. -->
 			{#if notice}
 				<span class="cams-notice" role="status" data-text-role="meta" data-cams-notice
@@ -107,14 +125,15 @@
 			</span>
 		{/if}
 	</div>
-	{#if $settings.camerasHidden}
+	{#if !mounted || hidden}
 		<p class="cams-hidden" data-text-role="body">
 			Cameras are hidden.
 			<button type="button" data-text-role="control" onclick={() => settings.toggleCamerasHidden()}
 				>Show cameras</button
 			>
 		</p>
-	{:else}
+	{/if}
+	{#if !mounted || !hidden}
 		<ul class="cams-row" bind:this={row} aria-label="Cameras, swipe for more">
 			{#each cams as cam (cam.id)}
 				<li data-cam-slot={cam.id}>
@@ -167,6 +186,15 @@
 		color: var(--text-primary);
 		font-size: var(--v2-fs-label);
 		cursor: pointer;
+	}
+	/* Before mount (both rendered): what this browser saved decides, via app.html's mark. */
+	.v2-cams:not([data-mounted]) .cams-hidden,
+	:global(html[data-cams-hidden]) .v2-cams:not([data-mounted]) .cams-row,
+	:global(html[data-cams-hidden]) .v2-cams:not([data-mounted]) :global([data-cams-pager]) {
+		display: none;
+	}
+	:global(html[data-cams-hidden]) .v2-cams:not([data-mounted]) .cams-hidden {
+		display: block;
 	}
 	.cams-hidden {
 		margin: 0.5rem 0 0;

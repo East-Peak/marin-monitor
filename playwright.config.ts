@@ -28,6 +28,7 @@ const LIFESTYLE_ENV = {
 const PHONE = /@phone/;
 const PHONE_PORT = 4176;
 export const PHONE_NEWS = 'tests/e2e/fixtures/.phone-news.json';
+const PHONE_ALERTS = 'tests/e2e/fixtures/.phone-alerts.json';
 
 export default defineConfig({
 	testDir: './tests/e2e',
@@ -99,10 +100,14 @@ export default defineConfig({
 			timeout: 120_000
 		},
 		{
-			command: `node tests/e2e/fixtures/phone-news.mjs ${PHONE_NEWS} && npx vite preview --port ${PHONE_PORT} --strictPort`,
+			command: `node tests/e2e/fixtures/phone-news.mjs ${PHONE_NEWS} ${PHONE_ALERTS} && npx vite preview --port ${PHONE_PORT} --strictPort`,
 			url: `http://localhost:${PHONE_PORT}`,
-			// NWS live, as in production: the advisories are whatever Marin has now.
-			env: { ...LIFESTYLE_ENV, NEWS_SNAPSHOT_FIXTURE: PHONE_NEWS, NWS_ALERTS_FIXTURE: '' },
+			// Advisories from a seed too (the browser's NWS read is routed to the same file).
+			env: {
+				...LIFESTYLE_ENV,
+				NEWS_SNAPSHOT_FIXTURE: PHONE_NEWS,
+				NWS_ALERTS_FIXTURE: PHONE_ALERTS
+			},
 			reuseExistingServer: false
 		}
 	]

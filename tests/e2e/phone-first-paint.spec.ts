@@ -20,6 +20,8 @@ test('@phone the first paint holds a place, sized, for everything that loads lat
 	expect(html).toContain('Loading observation…');
 	expect(html).toContain('Loading tides…');
 	expect(html).not.toMatch(/Observation unavailable|Tide predictions unavailable/);
+	// The advisories read on the server (the phone server's seed: two Coastal Flood Advisories).
+	expect(html.match(/Coastal Flood Advisory<\/span>/g)?.length).toBe(2);
 });
 
 test('@phone hydration and the first data move nothing (layout shift ≤ 0.1)', async ({
@@ -52,8 +54,42 @@ test('@phone hydration and the first data move nothing (layout shift ≤ 0.1)', 
 	await expect(page.locator('[data-card="weather"] .v2-card-value')).toBeVisible({
 		timeout: 15_000
 	});
-	await expect(page.locator('img.cam-img').first()).toBeVisible({ timeout: 30_000 });
+	// The first camera settled, whichever way: a picture, or a camera that is offline.
+	await expect(page.locator('a.cam-tile').first()).toHaveAttribute(
+		'data-status',
+		/live|stale|offline/,
+		{ timeout: 30_000 }
+	);
 	await page.waitForTimeout(1_500);
 	const shift = await page.evaluate(() => (window as unknown as { __shift: number }).__shift);
 	expect(shift).toBeLessThanOrEqual(0.1);
+});
+
+test('@phone with cameras hidden in ⚙, the page holds still and asks for no camera', async ({
+	page
+}) => {
+	await page.addInitScript(() => localStorage.setItem('mm_camerasHidden', 'true'));
+	const frames: string[] = [];
+	page.on('request', (r) => {
+		if (/alertcalifornia|cwwp2\.dot\.ca\.gov/.test(r.url())) frames.push(r.url());
+	});
+	// The server's HTML first, alone: the app's scripts held until it has been measured.
+	let release!: () => void;
+	const held = new Promise<void>((done) => (release = done));
+	await page.route('**/_app/immutable/**/*.js', async (r) => {
+		await held;
+		await r.fallback();
+	});
+	await page.goto('/', { waitUntil: 'domcontentloaded' });
+	const mapY = () =>
+		page.locator('#map').evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+	const before = await mapY();
+	await expect(page.getByText('Cameras are hidden.')).toBeVisible();
+	release();
+	await expect(page.locator('[data-hydrated="true"][data-cycling="false"]')).toBeVisible({
+		timeout: 20_000
+	});
+	await expect(page.getByText('Cameras are hidden.')).toBeVisible();
+	expect(Math.abs((await mapY()) - before)).toBeLessThan(1);
+	expect(frames).toEqual([]);
 });

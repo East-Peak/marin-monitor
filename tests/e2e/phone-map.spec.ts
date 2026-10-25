@@ -76,6 +76,7 @@ test.describe('@phone map controls', () => {
 	test('Layers: opens its list, and each switch changes what the map lists', async ({
 		page
 	}, info) => {
+		test.slow(); // many controls, each tapped, checked and undone
 		const trigger = page.getByRole('button', { name: 'Layers' });
 		const list = page.getByRole('group', { name: 'Map layers' });
 		const failures = await auditTap(page, info, {

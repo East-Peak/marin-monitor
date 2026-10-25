@@ -260,31 +260,35 @@ a:hover {
  * `hit-row` with a `hit-stretch` link makes the whole list row (at least 48 px tall, centred)
  * the link's hit area. Neither moves anything: the phone's height budgets (§13.3) still hold.
  */
-.hit-44,
-.hit-row {
-	position: relative;
+/* Touch only: a mouse needs no padding, and on desktop's tighter layout it could overlap. */
+@media (pointer: coarse) {
+	.hit-44,
+	.hit-row {
+		position: relative;
+	}
+	.hit-44::after {
+		content: '';
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		width: max(100%, 48px);
+		height: max(100%, 48px);
+		transform: translate(-50%, -50%);
+	}
+	a.hit-44 {
+		display: inline-block;
+	}
+	.hit-stretch::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 50%;
+		height: max(100%, 48px);
+		transform: translateY(-50%);
+	}
 }
-.hit-44::after {
-	content: '';
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	width: max(100%, 48px);
-	height: max(100%, 48px);
-	transform: translate(-50%, -50%);
-}
-a.hit-44 {
-	display: inline-block;
-}
-.hit-stretch::after {
-	content: '';
-	position: absolute;
-	left: 0;
-	right: 0;
-	top: 50%;
-	height: max(100%, 48px);
-	transform: translateY(-50%);
-}
+
 /* MapLibre's attribution button, padded on a touch screen (its zoom buttons: MapContainer). */
 @media (pointer: coarse) {
 	.maplibregl-ctrl-attrib-button {

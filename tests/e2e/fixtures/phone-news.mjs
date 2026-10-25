@@ -4,7 +4,10 @@
  * real clock so nothing reads stale, and shaped like production's (18 sources, one failing, ~200 stories,
  * about one in six tagged with a town), so the phone is measured on a realistic page.
  *
- *   node tests/e2e/fixtures/phone-news.mjs <out.json>
+ *   node tests/e2e/fixtures/phone-news.mjs <news.json> <alerts.json>
+ *
+ * Also writes an NWS alert collection with one current Coastal Flood Advisory, as Marin had
+ * on 2026-10-24, so the advisory row is the same on the server and in the browser.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -42,8 +45,8 @@ const TOWNS = [
 const SUBJECTS = ['council weighs', 'residents discuss', 'crews finish', 'district reviews'];
 const THINGS = ['road repairs', 'housing plan', 'park hours', 'budget update', 'trail work'];
 
-const out = process.argv[2];
-if (!out) throw new Error('usage: phone-news.mjs <out.json>');
+const [out, alertsOut] = process.argv.slice(2);
+if (!out || !alertsOut) throw new Error('usage: phone-news.mjs <news.json> <alerts.json>');
 // Whole seconds, so the RFC 822 raw value re-derives the recorded instant exactly.
 const now = Math.floor(Date.now() / 1000) * 1000;
 const iso = (ms) => new Date(ms).toISOString();
@@ -126,5 +129,33 @@ writeFileSync(
 		lastSuccessfulScrapeAt: generatedAt,
 		sources,
 		items
+	})
+);
+
+const alert = (id, zone, area) => ({
+	properties: {
+		id: `urn:oid:phone.${id}`,
+		event: 'Coastal Flood Advisory',
+		headline: `Coastal Flood Advisory for ${area}`,
+		severity: 'Minor',
+		status: 'Actual',
+		messageType: 'Alert',
+		sent: iso(now - 6 * 3_600_000),
+		effective: iso(now - 6 * 3_600_000),
+		expires: iso(now + 2 * 86_400_000),
+		ends: iso(now + 4 * 86_400_000),
+		references: [],
+		geocode: { UGC: [zone] },
+		description: 'Minor coastal flooding at high tide.',
+		instruction: null
+	}
+});
+writeFileSync(
+	alertsOut,
+	JSON.stringify({
+		features: [
+			alert(1, 'CAZ506', 'the North Bay interior valleys'),
+			alert(2, 'CAZ505', 'the North Bay coast')
+		]
 	})
 );

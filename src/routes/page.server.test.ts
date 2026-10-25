@@ -42,7 +42,13 @@ beforeEach(() => {
 	readNewsSnapshot.mockReset();
 	readNewsSnapshot.mockResolvedValue(OK);
 	readAdvisoriesForFirstPaint.mockReset();
-	readAdvisoriesForFirstPaint.mockResolvedValue(null);
+	readAdvisoriesForFirstPaint.mockResolvedValue({
+		advisories: [],
+		unreadable: 0,
+		lastAttemptAt: 1,
+		lastSuccessAt: 1,
+		lastError: null
+	});
 });
 afterEach(() => vi.useRealTimers());
 
@@ -67,6 +73,23 @@ describe('dashboard page load', () => {
 		readAdvisoriesForFirstPaint.mockClear();
 		await load(event('/?layout=legacy').ev);
 		expect(readAdvisoriesForFirstPaint).not.toHaveBeenCalled();
+	});
+	it('a missed advisory read is never edge-cached, like a missed snapshot (MOBILE1)', async () => {
+		const ADV = {
+			advisories: [],
+			unreadable: 0,
+			lastAttemptAt: 1,
+			lastSuccessAt: 1,
+			lastError: null
+		};
+		readAdvisoriesForFirstPaint.mockResolvedValue(ADV);
+		const seeded = event('/');
+		await load(seeded.ev);
+		expect(seeded.headers['Cache-Control']).toBe('s-maxage=60, stale-while-revalidate=300');
+		readAdvisoriesForFirstPaint.mockResolvedValue(null);
+		const missed = event('/');
+		await load(missed.ev);
+		expect(missed.headers['Cache-Control']).toBe('private, no-store');
 	});
 	it('carries the Lifestyle Index flag to v2: off unless LIFESTYLE_INDEX is on', async () => {
 		expect(await load(event('/').ev)).toMatchObject({ lifestyle: false });
@@ -119,7 +142,13 @@ describe('v2 server-rendered first paint (DASH-FLIP1)', () => {
 			explicit: true,
 			bootstrap: null,
 			snapshot: VIEW,
-			advisories: null,
+			advisories: {
+				advisories: [],
+				unreadable: 0,
+				lastAttemptAt: 1,
+				lastSuccessAt: 1,
+				lastError: null
+			},
 			renderedAt: Date.parse('2026-10-17T12:03:00.000Z'),
 			lifestyle: false
 		});

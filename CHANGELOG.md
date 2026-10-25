@@ -6,6 +6,13 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-24
 
+### Fixed — Review fixes to the phone work (MOBILE1)
+
+- **Cameras hidden in ⚙ stay hidden from the first paint**: the server can't see the choice, so the strip renders both states and a first script picks; hydration now matches and nothing moves.
+- **The padded hit areas are touch-only**, so desktop's settings choices no longer overlap.
+- **A page whose advisory read missed is never edge-cached**, like one whose news read missed.
+- **A failed weather or tide read keeps the brief's height**, as loading does.
+
 ### Fixed — Every control on the phone is a full-size target (MOBILE1)
 
 - **At least 44×44 px to a thumb** on `/`, `/map` and `/cost/<town>`, with the look unchanged: small controls get an invisible padded hit area, and list rows (stories, the wire, events, Getting Around's alerts, a budget line's sources) are tappable across the whole row. Where controls stack edge to edge on a touch screen (the town list, settings, map layers, MapLibre's zoom buttons, the budget's lines) each row is 44 px. The phone's height budgets hold; Getting Around's status-line links stay at 41 px pending a ruling, since 44 would cost the section 13 px.

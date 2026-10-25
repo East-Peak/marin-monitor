@@ -5,6 +5,11 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="icon" type="image/svg+xml" href="%sveltekit.assets%/favicon.svg" />
 		<script nonce="%sveltekit.nonce%">
+			// The camera strip's saved hide, for the first paint (CamStrip.svelte).
+			try {
+				if (localStorage.getItem('mm_camerasHidden') === 'true')
+					document.documentElement.setAttribute('data-cams-hidden', '');
+			} catch (e) {}
 			// A tap before the dashboard is interactive is kept and replayed once it is
 			// (src/lib/dashboard/early-taps.ts).
 			addEventListener(

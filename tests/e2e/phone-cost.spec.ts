@@ -47,6 +47,7 @@ test.describe('@phone cost controls', () => {
 	});
 
 	test('every line opens to its inputs, and closes', async ({ page }, info) => {
+		test.slow(); // many controls, each tapped, checked and undone
 		const failures: string[] = [];
 		for (const details of await sheet(page).locator('details').all()) {
 			const summary = details.locator('summary');
@@ -72,6 +73,7 @@ test.describe('@phone cost controls', () => {
 	});
 
 	test('every source link opens its source', async ({ page }, info) => {
+		test.slow(); // many controls, each tapped, checked and undone
 		const failures: string[] = [];
 		// Open every line, then tap each distinct source once, where it first appears.
 		for (const s of await sheet(page).locator('details > summary').all()) await s.tap();
