@@ -62,8 +62,8 @@ export const SHOW_SWATCH = '#e879f9';
 /** A town's sheriff-report count (NEWSPIN1). */
 export const BLOTTER_SWATCH = '#94a3b8';
 /** A wedge's radius: a display convention, not how far a camera sees. A road cam's is short. */
-const WEDGE_KM = 6;
-const ROAD_WEDGE_KM = 2;
+export const WEDGE_KM = 6;
+export const ROAD_WEDGE_KM = 2;
 /** An open camera's frame refreshes this often. */
 const FRAME_REFRESH_S = 15;
 /** Each layer's freshness rule: its section's for traffic and fire, G0a's for the places. */
