@@ -2,8 +2,8 @@
 	import type { Readable } from 'svelte/store';
 	import type { HealthReportJson } from '$lib/api/marin/health-report';
 	import { summarizeHealth } from '$lib/dashboard/health-summary';
-	import { formatAsOf } from '$lib/dashboard/pacific-time';
 	import type { DatasetFetch } from '$lib/dashboard/source-adapters';
+	import { sourceWords } from '$lib/dashboard/source-status';
 
 	let {
 		report,
@@ -17,12 +17,6 @@
 
 	let open = $state(false);
 	const summary = $derived(summarizeHealth($report, $outcomes.health, $now));
-	const WORD: Record<string, string> = {
-		stale: 'out of date',
-		unavailable: 'unavailable',
-		unknown: 'unverified',
-		loading: 'checking'
-	};
 </script>
 
 <div class="v2-health" data-health={summary.state}>
@@ -48,12 +42,11 @@
 			{:else}
 				<ul>
 					{#each summary.degraded as e (e.id)}
+						{@const words = sourceWords(e, $now)}
 						<li>
 							<span data-text-role="label">{e.name}</span>
 							<span data-text-role="meta">
-								{WORD[e.state] ?? e.state}{e.observedAt !== null
-									? ` · as of ${formatAsOf(e.observedAt, $now)}`
-									: ''}{e.detail ? ` · ${e.detail}` : ''}
+								{words.body}{words.meta ? ` · ${words.meta}` : ''}
 							</span>
 						</li>
 					{/each}

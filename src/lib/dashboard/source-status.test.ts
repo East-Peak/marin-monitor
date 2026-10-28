@@ -5,6 +5,7 @@ import {
 	effectiveState,
 	parseObservedAt,
 	presentSection,
+	sourceWords,
 	type SourceStatusEntry
 } from './source-status';
 
@@ -185,16 +186,102 @@ describe('describePresentation', () => {
 			expect(describePresentation(presentSection(entries, counts, NOW), NOW)).toBe(text);
 		}
 	});
-	it('coverageDetails gives each failing source with its reason', () => {
-		const down = entry('d', { name: 'Marin IJ', state: 'unavailable', detail: 'HTTP 503' });
+	it('coverageDetails gives each failing source in reader words, never its diagnostic (rule 7)', () => {
+		const down = entry('d', {
+			name: 'City of San Rafael',
+			state: 'unavailable',
+			failure: 'redirect-rejected',
+			detail: 'redirect-not-allowed: https://sanrafael.gov is not allowlisted'
+		});
 		const unk = entry('u', {
 			name: 'Transit alerts',
 			state: 'unknown',
 			observedAt: null,
-			detail: null
+			detail: 'failures not reported by this source'
 		});
+		const lines = coverageDetails(
+			presentSection(
+				[entry('a'), { ...down, observedAt: Date.parse('2026-09-28T14:30:00Z') }, unk],
+				{ total: 1, matching: 1 },
+				NOW
+			),
+			NOW
+		);
+		expect(lines).toEqual([
+			"City of San Rafael: Unavailable: we couldn't follow this feed's redirect · last successfully checked Sep 28, 7:30 AM",
+			'Transit alerts: Unverified'
+		]);
+		expect(lines.join(' ')).not.toMatch(/allowlist|https?:|redirect-not-allowed/);
+	});
+});
+
+describe('sourceWords (one source, in a reader’s words: body, meta, attention)', () => {
+	const at = (state: SourceStatusEntry['state'], over: Partial<SourceStatusEntry> = {}) =>
+		sourceWords(entry('x', { state, ...over }), NOW);
+
+	it('ok: reporting, with its own check time; never a bare time', () => {
+		expect(at('ok')).toEqual({ body: 'Reporting', meta: 'checked 10:59 AM', attention: false });
+		expect(at('ok', { observedAt: null, maxAgeMs: null })).toEqual({
+			body: 'Reporting',
+			meta: 'time not reported',
+			attention: false
+		});
+	});
+
+	it('unavailable: the kind’s words, and when it last answered (never when the failure began)', () => {
+		const lastGood = Date.parse('2026-09-28T14:30:00Z');
 		expect(
-			coverageDetails(presentSection([entry('a'), down, unk], { total: 1, matching: 1 }, NOW))
-		).toEqual(['Marin IJ: unavailable (HTTP 503)', 'Transit alerts: unverified']);
+			at('unavailable', {
+				failure: 'redirect-rejected',
+				observedAt: lastGood,
+				detail: 'redirect-not-allowed: https://sanrafael.gov is not allowlisted'
+			})
+		).toEqual({
+			body: "Unavailable: we couldn't follow this feed's redirect",
+			meta: 'last successfully checked Sep 28, 7:30 AM',
+			attention: true
+		});
+		expect(at('unavailable', { observedAt: null, detail: 'HTTP 503' })).toEqual({
+			body: "Unavailable: we couldn't check this source",
+			meta: 'time of the last successful check not reported',
+			attention: true
+		});
+	});
+
+	it('stale after a failed read keeps the last good data and says so; aged out is plainly out of date', () => {
+		expect(at('stale', { failure: 'timeout', observedAt: NOW - 50 * MIN })).toEqual({
+			body: "Not current: the source didn't answer in time",
+			meta: 'showing what it sent at 10:10 AM',
+			attention: true
+		});
+		expect(at('ok', { observedAt: NOW - 50 * MIN })).toEqual({
+			body: 'Out of date',
+			meta: 'last updated 10:10 AM',
+			attention: true
+		});
+	});
+
+	it('unknown, loading and reference read as words, with a reader-safe note when the adapter gave one', () => {
+		expect(at('unknown', { observedAt: null, detail: 'fetched; data age not reported' })).toEqual({
+			body: 'Unverified',
+			meta: null,
+			attention: true
+		});
+		expect(at('loading')).toEqual({ body: 'Checking…', meta: null, attention: false });
+		expect(at('reference', { maxAgeMs: null })).toEqual({
+			body: 'A maintained list',
+			meta: null,
+			attention: false
+		});
+		expect(at('unavailable', { observedAt: null, note: 'Part of News feeds' }).meta).toBe(
+			'time of the last successful check not reported · Part of News feeds'
+		);
+	});
+
+	it('no raw diagnostic reaches any field, whatever the detail says', () => {
+		for (const state of ['ok', 'stale', 'unavailable', 'unknown'] as const) {
+			const w = at(state, { detail: 'ECONNRESET https://x.test HTTP 502', failure: 'http-error' });
+			expect(`${w.body} ${w.meta}`).not.toMatch(/ECONN|https?:|HTTP \d/);
+		}
 	});
 });

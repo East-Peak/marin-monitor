@@ -21,6 +21,7 @@ import type {
 	AirportStatusData,
 	DelayInfo
 } from '$lib/types/airport';
+import { failureKindOf } from './failure-kind';
 import { formatItemAge } from './latest-reporting';
 import { formatAsOf } from './pacific-time';
 import { datasetEntry, type DatasetFetch } from './source-adapters';
@@ -222,7 +223,9 @@ function airports(
 				state: 'unavailable',
 				observedAt: null,
 				maxAgeMs: null,
-				detail: a ? 'FAA feed unreadable' : 'not in the response'
+				detail: a ? 'FAA feed unreadable' : 'not in the response',
+				// The server folds its own HTTP and timeout failures into "unknown": no kind is known (Codex 1a #3).
+				failure: 'unknown'
 			});
 			return {
 				id: code,
@@ -472,14 +475,32 @@ function agencyEntry(
 		// No read has completed: loading, or the failed read's error (never loading forever).
 		return t.error === null
 			? { ...base, state: 'loading', observedAt: null, detail: null }
-			: { ...base, state: 'unavailable', observedAt: null, detail: t.error };
+			: {
+					...base,
+					state: 'unavailable',
+					observedAt: null,
+					detail: t.error,
+					failure: failureKindOf(t.error)
+				};
 	}
 	if (!read) return { ...base, state: 'unknown', observedAt: null, detail: 'not checked' };
 	if (read.alerts === null)
-		return { ...base, state: 'unavailable', observedAt: null, detail: read.error };
+		return {
+			...base,
+			state: 'unavailable',
+			observedAt: null,
+			detail: read.error,
+			failure: failureKindOf(read.error)
+		};
 	// The latest read failed after this one: kept, as of its own feed time (Codex r1 #2).
 	if (t.error !== null)
-		return { ...base, state: 'stale', observedAt: read.observedAt, detail: t.error };
+		return {
+			...base,
+			state: 'stale',
+			observedAt: read.observedAt,
+			detail: t.error,
+			failure: failureKindOf(t.error)
+		};
 	// ok only with the feed's own time, judged by the clock (effectiveState); untimed reads are unknown.
 	return { ...base, state: 'ok', observedAt: read.observedAt, detail: null };
 }
@@ -515,7 +536,12 @@ function ggSite(fetch: DatasetFetch | undefined, blob: GgAlertsBlob | null, now:
 	const read = datasetEntry('gg-alerts', `${GG_SOURCE} alerts`, fetch, GG_ALERTS_MAX_AGE_MS);
 	const entry: SourceStatusEntry =
 		blob?.lastFailure && read.state !== 'loading'
-			? { ...read, state: 'unavailable', detail: blob.lastFailure.error }
+			? {
+					...read,
+					state: 'unavailable',
+					detail: blob.lastFailure.error,
+					failure: failureKindOf(blob.lastFailure.error)
+				}
 			: read;
 	const state = effectiveState(entry, now);
 	const at = parseObservedAt(blob?.lastSuccessfulScrapeAt);

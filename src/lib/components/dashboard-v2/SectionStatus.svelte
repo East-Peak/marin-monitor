@@ -7,7 +7,7 @@
 
 	let { status, now }: { status: SectionPresentation; now: number } = $props();
 	const text = $derived(describePresentation(status, now));
-	const details = $derived(coverageDetails(status));
+	const details = $derived(coverageDetails(status, now));
 </script>
 
 {#if text}

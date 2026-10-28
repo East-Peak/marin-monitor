@@ -4,6 +4,13 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-10-28
+
+### Changed — Plain words when a source is down (TEXT1 1a)
+
+- **No raw errors on screen**: a source that failed now says why in a sentence ("City of San Rafael: Unavailable: we couldn't follow this feed's redirect · last successfully checked Oct 22, 1:30 PM"), from a typed reason recorded where the failure was caught (redirect, error, timeout, unreadable, empty, or unknown). The "Which sources" lists and the header's source health list no longer show diagnostics like `redirect-not-allowed: https://…` or `HTTP 502`; those stay in `/api/health`. Wording never claims when a failure began or that a source published nothing.
+- **Groundwork for one text system** (plan-text-system.md): a cautious sentence-case helper for goldengate.org's ALL-CAPS headlines (names, routes and dates kept; anything it doesn't recognise left as written) and the 4/8/12/16/24 spacing tokens.
+
 ## 2026-10-25
 
 ### Added — A camera viewer you can arrow through (CAMVIEW1)

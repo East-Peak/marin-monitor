@@ -7,6 +7,7 @@
  * persists "ok". An ok source whose observation outlives `maxAgeMs` is stale.
  */
 import { parseFeedDate } from '$lib/news/feed-date';
+import { FAILURE_WORDS, type FailureKind } from './failure-kind';
 import { formatAsOf } from './pacific-time';
 
 export type SourceState = 'ok' | 'stale' | 'unavailable' | 'reference' | 'unknown';
@@ -22,8 +23,13 @@ export interface SourceStatusEntry {
 	observedAt: number | null;
 	/** Clock-driven freshness limit for `ok`; null = no age rule. */
 	maxAgeMs: number | null;
-	/** Short reason ("HTTP 503", "failures not reported by this source"); never a stack. */
+	/** Short reason ("HTTP 503", "failures not reported by this source"); never a stack. A
+	 * diagnostic: it stays in probes and /api/health, never on screen (rule 7). */
 	detail: string | null;
+	/** Why the latest read failed, typed where the failure entered the model; what readers see. */
+	failure?: FailureKind;
+	/** Our own reader-safe words about the source ("Part of News feeds"), shown beside its state. */
+	note?: string | null;
 }
 
 export type SectionState =
@@ -162,9 +168,53 @@ export function describePresentation(p: SectionPresentation, now: number): strin
 	}
 }
 
-/** Each failing source with its reason, for the header's disclosure. */
-export function coverageDetails(p: SectionPresentation): string[] {
-	return p.failing.map(
-		(e) => `${e.name}: ${VERB[e.state] ?? e.state}${e.detail ? ` (${e.detail})` : ''}`
-	);
+export interface SourceWords {
+	/** The state, in words: "Reporting", "Unavailable: <why>". */
+	body: string;
+	/** Its time with its verb, and any note; null when there is nothing honest to add. */
+	meta: string | null;
+	/** Shown in the status colour. */
+	attention: boolean;
+}
+
+/** One source in a reader's words (rule 7): from its state, failure kind and times, never its detail. */
+export function sourceWords(entry: SourceStatusEntry, now: number): SourceWords {
+	const state = effectiveState(entry, now);
+	const at = entry.observedAt;
+	const time = (verb: string) =>
+		at !== null && Number.isFinite(at) ? `${verb} ${formatAsOf(at, now)}` : null;
+	const why = FAILURE_WORDS[entry.failure ?? 'unknown'];
+	const said = (body: string, meta: string | null, attention: boolean): SourceWords => ({
+		body,
+		meta: [meta, entry.note].filter(Boolean).join(' · ') || null,
+		attention
+	});
+	switch (state) {
+		case 'ok':
+			return said('Reporting', time('checked') ?? 'time not reported', false);
+		case 'loading':
+			return said('Checking…', null, false);
+		case 'reference':
+			return said('A maintained list', null, false);
+		case 'stale':
+			return entry.failure
+				? said(`Not current: ${why}`, time('showing what it sent at'), true)
+				: said('Out of date', time('last updated'), true);
+		case 'unavailable':
+			return said(
+				`Unavailable: ${why}`,
+				time('last successfully checked') ?? 'time of the last successful check not reported',
+				true
+			);
+		case 'unknown':
+			return said('Unverified', entry.failure ? why : null, true);
+	}
+}
+
+/** Each failing source in reader words, for the header's disclosure. */
+export function coverageDetails(p: SectionPresentation, now: number): string[] {
+	return p.failing.map((e) => {
+		const w = sourceWords(e, now);
+		return `${e.name}: ${w.body}${w.meta ? ` · ${w.meta}` : ''}`;
+	});
 }

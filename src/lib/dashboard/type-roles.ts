@@ -25,6 +25,8 @@ export const EXCEPTION_ROLES = ['control'] as const;
 export const MIN_TEXT_PX = 12;
 export const MIN_LINE_HEIGHT = 1.4;
 export const MIN_CARD_PADDING_PX = 10;
+/** The spacing rhythm, `--v2-s1`…`--v2-s5` (plan-text-system.md rule 8): no ad hoc gaps in its components. */
+export const SPACE_PX = [4, 8, 12, 16, 24] as const;
 
 export function roleFontPx(role: TextRole, viewportWidth: number): number {
 	return viewportWidth <= PHONE_MAX_WIDTH ? TEXT_ROLES[role].phone : TEXT_ROLES[role].desktop;

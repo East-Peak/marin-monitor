@@ -338,3 +338,60 @@ describe('fromLoaderPart reads the payload’s own time (map coverage label)', (
 		);
 	});
 });
+
+describe('each adapter types the failure where it enters the model (rule 7)', () => {
+	it('a news source: from the producer’s code', () => {
+		const e = fromSnapshotSource(
+			src({
+				status: 'failed',
+				lastError: 'redirect-not-allowed: https://sanrafael.gov is not allowlisted'
+			})
+		);
+		expect(e.failure).toBe('redirect-rejected');
+		expect(
+			fromSnapshotSource(src({ status: 'retained', lastError: 'timeout: 10 s' })).failure
+		).toBe('timeout');
+		expect(fromSnapshotSource(src({})).failure).toBeUndefined();
+	});
+
+	it('the snapshot read and a loader part: from the read’s error', () => {
+		expect(fromSnapshotRead({ ok: false, at: NOW, error: 'HTTP 502' }, null).failure).toBe(
+			'http-error'
+		);
+		expect(
+			fromLoaderPart('nps', { ok: false, at: NOW, error: 'nps: timed out after 8000 ms' }, true)
+				.failure
+		).toBe('timeout');
+	});
+
+	it('a dataset: from the fetch’s error; a fallback or a live read has none', () => {
+		const failed = datasetEntry(
+			'traffic',
+			'511 traffic',
+			{ kind: 'failed', error: 'Unexpected token < in JSON', retained: false, observedAt: null },
+			null
+		);
+		expect(failed.failure).toBe('parse-failed');
+		expect(datasetEntry('t', 'T', { kind: 'live', observedAt: NOW }, null).failure).toBeUndefined();
+	});
+
+	it('the health report: the reason typed, the parent and a known issue as reader-safe notes', () => {
+		const h = fromHealthSource({
+			name: 'News feeds',
+			status: 'unavailable',
+			reason:
+				'since Oct 22 (last error: redirect-not-allowed: https://sanrafael.gov is not allowlisted)',
+			maxAgeDays: 1,
+			observedAt: null,
+			accepted: { reason: 'https://sanrafael.gov moved', expiresAt: '2026-11-01T00:00:00Z' }
+		});
+		expect(h.failure).toBe('redirect-rejected');
+		expect(h.note).toBe('Known issue until Nov 1');
+		const sub = fromHealthSubsource({
+			name: 'City of San Rafael',
+			parent: 'News feeds',
+			status: 'unavailable'
+		});
+		expect(sub.note).toBe('Part of News feeds');
+	});
+});

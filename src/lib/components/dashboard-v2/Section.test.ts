@@ -16,7 +16,8 @@ const partial: SectionPresentation = {
 			state: 'unavailable',
 			observedAt: null,
 			maxAgeMs: null,
-			detail: 'HTTP 503'
+			detail: 'HTTP 503',
+			failure: 'http-error'
 		}
 	]
 };
@@ -69,10 +70,11 @@ describe('Section', () => {
 		expect(section?.getAttribute('tabindex')).toBe('-1');
 		expect(screen.getByRole('heading', { level: 2, name: /News & Civic/ })).toBeTruthy();
 	});
-	it('keeps its status line in the header whether open or closed (§3), with each failing source and its reason', async () => {
+	it('keeps its status line in the header whether open or closed (§3), with each failing source in reader words', async () => {
 		const { rerender } = renderSection({ status: partial });
 		expect(screen.getByText('Partial coverage · Marin IJ unavailable')).toBeTruthy();
-		expect(screen.getByText('Marin IJ: unavailable (HTTP 503)')).toBeTruthy();
+		expect(screen.getByText(/^Marin IJ: Unavailable: the source returned an error/)).toBeTruthy();
+		expect(screen.queryByText(/HTTP 503/)).toBeNull(); // the diagnostic stays in /api/health (rule 7)
 		await rerender({ open: true, status: partial });
 		expect(screen.getByText('Partial coverage · Marin IJ unavailable')).toBeTruthy();
 	});

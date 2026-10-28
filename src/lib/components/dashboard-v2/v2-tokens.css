@@ -10,6 +10,12 @@
 	--v2-fs-brand: 17px;
 	--v2-line-height: 1.45;
 	--v2-card-padding: 10px;
+	/* Spacing rhythm (plan-text-system.md rule 8); type-roles.ts SPACE_PX keeps these equal. */
+	--v2-s1: 4px;
+	--v2-s2: 8px;
+	--v2-s3: 12px;
+	--v2-s4: 16px;
+	--v2-s5: 24px;
 	font-size: var(--v2-fs-body);
 	line-height: var(--v2-line-height);
 }

@@ -9,6 +9,7 @@
  */
 import type { NewsSnapshotView } from '$lib/news/snapshot';
 import type { PartOutcome, TvNewsPart } from '$lib/components/tv/tv-news';
+import { failureKindOf } from './failure-kind';
 import { parseObservedAt, type SourceState, type SourceStatusEntry } from './source-status';
 
 export const SNAPSHOT_OBSERVATION_MAX_AGE_MS = 45 * 60_000;
@@ -61,9 +62,19 @@ export function fromSnapshotSource(source: NewsSnapshotView['sources'][number]):
 		case 'empty':
 			return { ...base, state: 'ok', detail: null };
 		case 'retained':
-			return { ...base, state: 'stale', detail: source.lastError };
+			return {
+				...base,
+				state: 'stale',
+				detail: source.lastError,
+				failure: failureKindOf(source.lastError)
+			};
 		case 'failed':
-			return { ...base, state: 'unavailable', detail: source.lastError };
+			return {
+				...base,
+				state: 'unavailable',
+				detail: source.lastError,
+				failure: failureKindOf(source.lastError)
+			};
 		default:
 			return { ...base, state: 'unknown', detail: 'unrecognized status' };
 	}
@@ -83,7 +94,12 @@ export function fromSnapshotRead(
 	};
 	if (!outcome) return { ...base, state: 'loading', detail: null };
 	if (outcome.ok) return { ...base, state: 'ok', detail: null };
-	return { ...base, state: view ? 'stale' : 'unavailable', detail: outcome.error };
+	return {
+		...base,
+		state: view ? 'stale' : 'unavailable',
+		detail: outcome.error,
+		failure: failureKindOf(outcome.error)
+	};
 }
 
 /**
@@ -123,8 +139,15 @@ export function fromLoaderPart(
 		}
 		return { ...base, state: 'unknown', detail: STATUS_AWARE_PARTS.has(part) ? NO_AGE : SWALLOWS };
 	}
-	if (!hadSuccess) return { ...base, state: 'unavailable', detail: outcome.error };
-	return { ...base, state: 'stale', observedAt: lastGoodObservedAt, detail: outcome.error };
+	const failure = failureKindOf(outcome.error);
+	if (!hadSuccess) return { ...base, state: 'unavailable', detail: outcome.error, failure };
+	return {
+		...base,
+		state: 'stale',
+		observedAt: lastGoodObservedAt,
+		detail: outcome.error,
+		failure
+	};
 }
 
 // ── Datasets (/api/data/*): provenance is the payload's own scrape time ──────
@@ -148,7 +171,12 @@ export function datasetEntry(
 		case 'fallback':
 			return { ...base, state: 'stale', detail: `served from ${fetch.dataSource}` };
 		case 'failed':
-			return { ...base, state: fetch.retained ? 'stale' : 'unavailable', detail: fetch.error };
+			return {
+				...base,
+				state: fetch.retained ? 'stale' : 'unavailable',
+				detail: fetch.error,
+				failure: failureKindOf(fetch.error)
+			};
 	}
 }
 
@@ -189,7 +217,11 @@ export function fromHealthSource(s: HealthSourceJson): SourceStatusEntry {
 		maxAgeMs: s.status === 'reference' ? null : s.maxAgeDays * DAY_MS,
 		detail: s.accepted
 			? `Known issue until ${monthDay(s.accepted.expiresAt)}: ${s.accepted.reason}`
-			: s.reason
+			: s.reason,
+		// Its stale is an age, not a failed read: only an unavailable source has a failure kind.
+		...(s.status === 'unavailable' ? { failure: failureKindOf(s.reason) } : {}),
+		// The accepted reason is a maintainer's diagnostic; readers get the date alone.
+		...(s.accepted ? { note: `Known issue until ${monthDay(s.accepted.expiresAt)}` } : {})
 	};
 }
 
@@ -201,6 +233,10 @@ export function fromHealthSubsource(s: HealthSubsourceJson): SourceStatusEntry {
 		observedAt: null,
 		maxAgeMs: null,
 		detail: s.acceptedUntil
+			? `Part of ${s.parent}; known issue until ${monthDay(s.acceptedUntil)}`
+			: `Part of ${s.parent}`,
+		// Our own words, so the same line is the reader's note.
+		note: s.acceptedUntil
 			? `Part of ${s.parent}; known issue until ${monthDay(s.acceptedUntil)}`
 			: `Part of ${s.parent}`
 	};

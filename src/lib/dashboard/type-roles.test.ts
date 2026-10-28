@@ -4,6 +4,7 @@ import {
 	MIN_CARD_PADDING_PX,
 	MIN_LINE_HEIGHT,
 	MIN_TEXT_PX,
+	SPACE_PX,
 	TEXT_ROLES,
 	roleFontPx,
 	type TextRole
@@ -56,5 +57,14 @@ describe('type tokens (spec §6)', () => {
 		expect(roleFontPx('body', 1440)).toBe(15);
 		expect(roleFontPx('body', 767)).toBe(16);
 		expect(roleFontPx('body', 768)).toBe(15);
+	});
+});
+
+describe('spacing tokens (plan-text-system.md rule 8)', () => {
+	it('are the 4/8/12/16/24 rhythm, and the CSS says the same', () => {
+		expect(SPACE_PX).toEqual([4, 8, 12, 16, 24]);
+		SPACE_PX.forEach((px, i) =>
+			expect(Number(new RegExp(`--v2-s${i + 1}:\\s*(\\d+)px`).exec(desktopBlock)?.[1])).toBe(px)
+		);
 	});
 });

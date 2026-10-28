@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-10-28',
+		title: 'Plain words when a source is down',
+		description:
+			'When a news feed or data source can’t be read, the dashboard now says why in plain words (for example, that we couldn’t follow a feed’s redirect) and when it last answered, instead of showing the raw error.'
+	},
+	{
 		date: '2026-10-25',
 		title: 'Arrow through the cameras',
 		description:

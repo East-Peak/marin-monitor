@@ -1315,3 +1315,54 @@ describe("Getting Around: Golden Gate's own list (GGALERT1)", () => {
 		expect([mixed.more, mixed.link]).toEqual([1, null]);
 	});
 });
+
+describe('Getting Around types each failure where it enters the model (rule 7)', () => {
+	const failing = (i: GettingAroundInput) =>
+		Object.fromEntries(gettingAroundView(i).status.failing.map((e) => [e.id, e.failure]));
+
+	it('a 511 agency read, the whole transit read, and goldengate.org’s sync', () => {
+		expect(
+			failing(
+				input({
+					transit: {
+						reads: reads({ MA: { alerts: null, error: 'Marin Transit: HTTP 503' } }),
+						error: null
+					}
+				})
+			)
+		).toMatchObject({ 'transit:MA': 'http-error' });
+		expect(
+			failing(input({ transit: { reads: reads(), error: 'transit: timed out after 15000 ms' } }))
+		).toMatchObject({ 'transit:GG': 'timeout' });
+		const at = new Date(NOW - 5 * MIN).toISOString();
+		expect(
+			failing(
+				input({
+					ggAlerts: {
+						checkedAt: at,
+						lastSuccessfulScrapeAt: at,
+						alerts: [],
+						lastFailure: { at, error: 'timeout: no answer in 10000 ms' }
+					},
+					outcomes: { airport: live(NOW), traffic: live(NOW), 'gg-alerts': live(NOW - 5 * MIN) }
+				})
+			)
+		).toMatchObject({ 'dataset:gg-alerts': 'timeout' });
+	});
+
+	it('an FAA airport missing from the response, or unreadable in it: no kind is known (Codex 1a #3)', () => {
+		expect(failing(input({ airport: { ...AIRPORTS, airports: [airport('SFO')] } }))).toMatchObject({
+			'faa:OAK': 'unknown'
+		});
+		expect(
+			failing(
+				input({
+					airport: {
+						...AIRPORTS,
+						airports: [airport('SFO'), airport('OAK', { status: 'unknown' })]
+					}
+				})
+			)
+		).toMatchObject({ 'faa:OAK': 'unknown' });
+	});
+});

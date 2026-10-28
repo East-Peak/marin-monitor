@@ -45,7 +45,11 @@ describe('HealthIndicator', () => {
 		expect(button.getAttribute('aria-expanded')).toBe('true');
 		const list = document.querySelector('[data-health-list]')!;
 		expect(list.textContent).toContain('Wine Index');
-		expect(list.textContent).toContain('out of date · as of Sep 9, 8:00 AM · older than 10d');
-		expect(list.textContent).toContain('Known issue until Dec 31: GS: waiting on Strava');
+		expect(list.textContent).toContain('Out of date');
+		expect(list.textContent).toContain('last updated Sep 9, 8:00 AM');
+		expect(list.textContent).toContain('Known issue until Dec 31');
+		// The evaluator's reason and a maintainer's note are diagnostics: /api/health only (rule 7).
+		expect(list.textContent).not.toContain('older than 10d');
+		expect(list.textContent).not.toContain('GS: waiting on Strava');
 	});
 });
