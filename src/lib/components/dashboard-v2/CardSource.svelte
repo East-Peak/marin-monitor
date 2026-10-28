@@ -1,19 +1,5 @@
-<script lang="ts" module>
-	import type { Measured } from '$lib/dashboard/measured';
-
-	export interface SourceLine {
-		measured: Measured<unknown>;
-		/** How the time reads: "issued" (a forecast), "checked" (our read), "as of" (the payload's own). */
-		verb?: string;
-		/** Shown in place of a time when the source has none to give (e.g. a tide prediction). */
-		untimed?: string;
-		/** No freshness claim (a fixed estimate, a maintained list): a neutral dot, never green. */
-		muted?: boolean;
-	}
-</script>
-
 <script lang="ts">
-	import { formatAsOf } from '$lib/dashboard/pacific-time';
+	import { provenance, type SourceLine } from '$lib/dashboard/provenance';
 
 	let {
 		lines,
@@ -25,37 +11,14 @@
 		/** Plain asides on the same line (e.g. the other fuels' prices), after the sources. */
 		notes?: string[];
 	} = $props();
-
-	/** One card's provenance: source, then its time or why there is none. Never a bare value. */
-	function describe({ measured: m, verb = 'as of', untimed }: SourceLine): string {
-		switch (m.kind) {
-			case 'loading':
-				return `${m.source} · loading…`;
-			case 'unknown':
-				return `${m.source} · unverified (${m.reason})`;
-			case 'unavailable':
-				return `${m.source} · unavailable (${m.reason})`;
-			case 'value': {
-				const when =
-					m.observedAt !== null
-						? `${verb} ${formatAsOf(m.observedAt, now)}`
-						: (untimed ?? 'time not reported');
-				return `${m.source} · ${when}${m.retainedAfter ? ` · out of date (${m.retainedAfter})` : ''}`;
-			}
-		}
-	}
-
-	const tone = ({ measured: m, muted }: SourceLine) =>
-		m.kind === 'loading' || (muted && m.kind === 'value' && m.retainedAfter === null)
-			? 'static'
-			: m.kind !== 'value' || m.retainedAfter !== null
-				? 'stale'
-				: 'ok';
 </script>
 
 <p class="src" data-card-source data-text-role="meta">
 	{#each lines as line, i (i)}
-		<span class="st {tone(line)}" data-source-state={line.measured.kind}>{describe(line)}</span>
+		{@const p = provenance(line, now)}
+		<span class="st" class:attention={p.attention} data-source-state={line.measured.kind}
+			>{p.text}</span
+		>
 	{/each}
 	{#each notes as note, i (i)}
 		<span class="note">{note}</span>
@@ -63,32 +26,27 @@
 </p>
 
 <style>
-	/* The mockup's `.src` line: a status dot per source, pushed to the card's foot. */
+	/* One card's provenance line: each source pushed to the card's foot. Colour only where a
+	   source needs attention (Stuart, 2026-10-28: no always-green dot). */
 	.src {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0 0.9rem;
+		gap: 0 var(--v2-s3);
 		margin: auto 0 0;
-		padding-top: 6px;
+		padding-top: var(--v2-s1);
 		color: var(--text-muted);
 	}
 	.st {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.35rem;
+		gap: var(--v2-s1);
 	}
-	.st::before {
+	.st.attention::before {
 		content: '';
 		flex: none;
 		width: 6px;
 		height: 6px;
 		border-radius: 50%;
-		background: var(--green, #10b981);
-	}
-	.st.static::before {
-		background: var(--text-muted);
-	}
-	.st.stale::before {
-		background: var(--yellow, #f59e0b);
+		background: var(--warning, #f59e0b);
 	}
 </style>

@@ -44,11 +44,16 @@ describe('nothing unvouched becomes a fact', () => {
 		expect(measuredFromEntry(undefined, inherited, 'X', NOW).kind).toBe('loading');
 		expect(measuredFromEntry(entry('loading'), inherited, 'X', NOW).kind).toBe('loading');
 		expect(
-			measuredFromEntry(entry('unavailable', { detail: 'HTTP 503' }), inherited, 'X', NOW)
+			measuredFromEntry(
+				entry('unavailable', { detail: 'HTTP 503', failure: 'http-error' }),
+				inherited,
+				'X',
+				NOW
+			)
 		).toEqual({
 			kind: 'unavailable',
 			source: 'X',
-			reason: 'HTTP 503'
+			reason: 'the source returned an error' // reader words; the diagnostic stays in /api/health
 		});
 	});
 
@@ -70,11 +75,30 @@ describe('values carry their own time and retention', () => {
 			retainedAfter: null
 		});
 	});
-	it('a stale entry: the value is retained, with the failure reason', () => {
-		expect(measuredFromEntry(entry('stale', { detail: 'HTTP 502' }), [1], 'X', NOW)).toMatchObject({
-			kind: 'value',
-			retainedAfter: 'HTTP 502'
-		});
+	it('a stale entry: the value is retained, with the failure in reader words (rule 7)', () => {
+		expect(
+			measuredFromEntry(
+				entry('stale', { detail: 'HTTP 502', failure: 'http-error' }),
+				[1],
+				'X',
+				NOW
+			)
+		).toMatchObject({ kind: 'value', retainedAfter: 'the source returned an error' });
+		// A kept value whose failure wasn't typed says only what we know.
+		expect(
+			measuredFromEntry(entry('stale', { detail: 'served from cache' }), [1], 'X', NOW)
+		).toMatchObject({ kind: 'value', retainedAfter: 'refresh failed' });
+	});
+
+	it('no diagnostic becomes a reason, whatever the entry carries (rule 7)', () => {
+		const raw = { detail: 'redirect-not-allowed: https://x.test is not allowlisted' };
+		for (const m of [
+			measuredFromEntry(entry('unavailable', raw), null, 'X', NOW),
+			measuredFromEntry(entry('stale', raw), null, 'X', NOW),
+			measuredFromEntry(entry('ok', raw), null, 'X', NOW),
+			measuredFromEntry(entry('stale', raw), [1], 'X', NOW)
+		])
+			expect(JSON.stringify(m)).not.toMatch(/https?:|allowlist|redirect-not-allowed/);
 	});
 	it('an ok entry past its max age reads as retained "out of date" (the clock, not the stored state)', () => {
 		expect(

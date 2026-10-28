@@ -138,7 +138,10 @@
 					<div class="hero-row">
 						<span class="hero num" data-text-role="value">{comp.score.toFixed(1)}</span>
 						{#if comp.change !== null && comp.previousAtMs !== null}
-							<span class={direction(comp.change)} data-text-role="value"
+							<span
+								class={direction(comp.change)}
+								data-colour-exception="signed"
+								data-text-role="value"
 								>{comp.change === 0 ? 'no change' : signed(comp.change, 1, '')}</span
 							>
 							<span class="meta" data-text-role="meta">vs {day(comp.previousAtMs)}</span>
@@ -288,6 +291,7 @@
 						<div class="k" data-text-role="meta">7-day change</div>
 						<div
 							class="v num {gas.change7 === null ? '' : direction(gas.change7)}"
+							data-colour-exception="signed"
 							data-text-role="value"
 						>
 							{gas.change7 === null ? '—' : signed(gas.change7, 3)}
@@ -321,7 +325,11 @@
 							<span data-text-role="label"
 								>{s.name} <span class="meta" data-text-role="meta">{s.address}</span></span
 							>
-							<span class="num down" data-text-role="value">{usd(s.price)}</span>
+							<!-- TODO: a ranking colour, not one of rule 1's named exceptions; the Cost card's
+							     redesign (the next plan, on the text system) decides it. -->
+							<span class="num down" data-colour-exception="rank" data-text-role="value"
+								>{usd(s.price)}</span
+							>
 						</li>
 					{/each}
 					{#if gas.priciest}
@@ -330,7 +338,9 @@
 								>Priciest: {gas.priciest.name}
 								<span class="meta" data-text-role="meta">{gas.priciest.address}</span></span
 							>
-							<span class="num up" data-text-role="value">{usd(gas.priciest.price)}</span>
+							<span class="num up" data-colour-exception="rank" data-text-role="value"
+								>{usd(gas.priciest.price)}</span
+							>
 						</li>
 					{/if}
 				</ul>
@@ -348,8 +358,11 @@
 				{@const sp = spark(t)}
 				<div class="ix" data-tile={t.id} style="--c:{t.color}">
 					<span class="t" data-text-role="label">{t.title}</span>
-					<span class="v num" class:muted={t.kind !== 'value'} data-text-role="value"
-						>{t.value}</span
+					<span
+						class="v num"
+						class:muted={t.kind !== 'value'}
+						data-colour-exception="series"
+						data-text-role="value">{t.value}</span
 					>
 					{#if t.detail}<span class="d" data-text-role="meta">{t.detail}</span>{/if}
 					{#if sp}

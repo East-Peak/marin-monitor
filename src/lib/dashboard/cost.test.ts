@@ -187,7 +187,7 @@ describe('cost model', () => {
 			const tile = view.tiles.find((t) => t.id === id)!;
 			expect(tile.kind, id).toBe('unavailable');
 			expect(tile.value, id).toBe('Unavailable');
-			expect(tile.detail, id).toContain('HTTP 503');
+			expect(tile.detail, id).toContain('the source returned an error');
 			expect(tile.spark, id).toBeNull();
 		}
 		for (const tile of view.tiles) expect(tile.value).not.toMatch(/^\$?0(\.0+)?$/);

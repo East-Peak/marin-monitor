@@ -137,7 +137,7 @@ describe('the sheriff blotter, through the real reader and the controller (NEWSP
 		request.mockRejectedValueOnce(new Error('HTTP 503'));
 		const kept = await cycle(c, false);
 		expect(kept.entry?.state).toBe('stale');
-		expect(kept.view.kept).toBe('Kept from 3:20 PM · HTTP 503');
+		expect(kept.view.kept).toBe('Kept from 3:20 PM · the source returned an error');
 		expect(kept.view.reports.map((r) => r.id)).toEqual(['blotter-SO1']);
 
 		// 9 AM Oct 18 + 36 h = 9 PM Oct 19.

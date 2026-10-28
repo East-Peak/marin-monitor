@@ -182,9 +182,9 @@ describe('success → failure: kept features are marked with their own time (Cod
 		expect([...d.layerData.retained.news]).toEqual(['a', 'b']);
 		expect(d.layerData.retained.threeOneOne).toBe(true);
 		expect(d.layerData.retained.earthquakes).toBe(false);
-		expect(d.notes.get('a')).toBe('Kept from 7:40 AM · news-snapshot: unknown (read-failed)');
+		expect(d.notes.get('a')).toBe("Kept from 7:40 AM · we couldn't check this source");
 		expect(d.notes.get('seeclickfix-1')).toBe(
-			'Kept from an earlier read (time not reported) · HTTP 503'
+			'Kept from an earlier read (time not reported) · the source returned an error'
 		);
 		expect(d.notes.has('nc1')).toBe(false);
 		expect(d.coverage.state).toBe('partial');
@@ -460,7 +460,7 @@ describe('311 and quakes carry their payload time (map coverage label)', () => {
 				fix: NOW - 3 * H
 			})
 		});
-		expect(d.notes.get('seeclickfix-1')).toBe('Kept from 5:00 AM · HTTP 503');
+		expect(d.notes.get('seeclickfix-1')).toBe('Kept from 5:00 AM · the source returned an error');
 	});
 	it('every layer fresh within its own max age and empty: "Nothing on the map", never "Status unknown"', () => {
 		const v = view([], NOW, 'empty');

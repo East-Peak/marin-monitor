@@ -287,7 +287,7 @@ describe('coverage: the snapshot read gates, the reporting feeds decide (Codex r
 		expect(out.coverage).toEqual({
 			kind: 'unavailable',
 			source: 'News snapshot',
-			reason: 'news-snapshot: unknown (read-failed)'
+			reason: "we couldn't check this source"
 		});
 		expect(out.presentation.state).toBe('unavailable');
 		expect(out.shownIds.size).toBe(0);
@@ -322,7 +322,11 @@ describe('coverage: the snapshot read gates, the reporting feeds decide (Codex r
 			fromSnapshotRead({ ok: false, error: 'timed out', at: NOW }, v),
 			...v.sources.map(fromSnapshotSource)
 		]);
-		expect(out.coverage).toMatchObject({ kind: 'value', value: [], retainedAfter: 'timed out' });
+		expect(out.coverage).toMatchObject({
+			kind: 'value',
+			value: [],
+			retainedAfter: "we couldn't check this source"
+		});
 		expect(out.empty).toBeNull();
 		expect(out.presentation.state).toBe('stale');
 		expect(describePresentation(out.presentation, NOW)).not.toMatch(/Nothing new/);

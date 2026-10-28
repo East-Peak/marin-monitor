@@ -4,7 +4,12 @@
  * kept after a failure. Anything this owner can't vouch for is loading, unknown or
  * unavailable: never a 0, an empty list or "nothing new". Legacy code never imports this.
  */
+import { FAILURE_WORDS } from './failure-kind';
 import { effectiveState, type SourceStatusEntry } from './source-status';
+
+/** Why an entry failed, in reader words (rule 7); its detail is a diagnostic and never shown. */
+const why = (entry: SourceStatusEntry, otherwise: string) =>
+	entry.failure ? FAILURE_WORDS[entry.failure] : otherwise;
 
 export type Measured<T> =
 	| { kind: 'loading'; source: string }
@@ -63,15 +68,15 @@ export function measuredFromEntry<T>(
 ): Measured<T> {
 	if (!entry || entry.state === 'loading') return measuredLoading(source);
 	if (entry.state === 'unavailable')
-		return measuredUnavailable(source, entry.detail ?? 'unavailable');
+		return measuredUnavailable(source, why(entry, FAILURE_WORDS.unknown));
 	if (value === null) {
 		return entry.state === 'stale'
-			? measuredUnavailable(source, entry.detail ?? 'refresh failed')
-			: measuredUnknown(source, entry.detail ?? 'no value');
+			? measuredUnavailable(source, why(entry, 'refresh failed'))
+			: measuredUnknown(source, 'no value');
 	}
 	const state = effectiveState(entry, now);
 	if (state === 'stale') {
-		const reason = entry.state === 'stale' ? (entry.detail ?? 'refresh failed') : 'out of date';
+		const reason = entry.state === 'stale' ? why(entry, 'refresh failed') : 'out of date';
 		return measuredValue(value, source, entry.observedAt, reason);
 	}
 	return measuredValue(value, source, state === 'unknown' ? null : entry.observedAt);

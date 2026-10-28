@@ -175,7 +175,7 @@ describe('Shows · next 10 days (NEWSPIN1)', () => {
 			}
 		}).shows;
 		expect(v.state).toBe('value');
-		expect(v.kept).toBe('Kept from 12:00 PM · HTTP 503');
+		expect(v.kept).toBe('Kept from 12:00 PM · the source returned an error');
 		expect(v.points.length).toBe(5);
 	});
 

@@ -196,7 +196,7 @@
 	.rows li {
 		display: flex;
 		flex-direction: column;
-		padding: 7px 0;
+		padding: var(--v2-s2) 0;
 		border-bottom: 1px solid var(--border);
 		break-inside: avoid;
 	}
@@ -207,7 +207,7 @@
 	@media (min-width: 1024px) {
 		.wire {
 			columns: 2;
-			column-gap: 28px;
+			column-gap: var(--v2-s5);
 		}
 	}
 	.days {

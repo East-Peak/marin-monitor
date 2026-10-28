@@ -32,9 +32,10 @@
 	a.v2-news-title:focus-visible {
 		text-decoration: underline;
 	}
+	/* The meta line sits straight under its title: one rhythm per list (rule 8). */
 	.v2-news-meta,
 	.v2-news-retained {
-		margin: 0.125rem 0 0;
+		margin: 0;
 		color: var(--text-muted);
 	}
 </style>

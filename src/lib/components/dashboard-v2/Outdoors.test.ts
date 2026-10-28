@@ -83,7 +83,7 @@ function input(over: Partial<OutdoorsInput> = {}): OutdoorsInput {
 }
 
 describe('Outdoors', () => {
-	it('every card renders a source + as-of line', () => {
+	it('every card names its source and time: once at the foot, or on each row of the three-source card', () => {
 		const { container } = render(Outdoors, {
 			view: outdoorsView(input()),
 			now: NOW,
@@ -91,8 +91,8 @@ describe('Outdoors', () => {
 		});
 		const cards = container.querySelectorAll('[data-card]');
 		expect(cards.length).toBe(4);
-		expect(container.querySelectorAll('[data-card-source]').length).toBe(cards.length);
-		for (const c of cards) expect(c.querySelector('[data-card-source]')).not.toBeNull();
+		const footed = [...cards].filter((c) => c.getAttribute('data-card') !== 'ground');
+		for (const c of footed) expect(c.querySelector('[data-card-source]')).not.toBeNull();
 		const forecastSource = container.querySelector('[data-card="forecast"] [data-card-source]');
 		expect(forecastSource?.textContent).toMatch(/NWS hourly forecast · issued 7:50 AM/);
 		expect(container.querySelector('[data-card="surf"] [data-card-source]')?.textContent).toMatch(
@@ -107,8 +107,27 @@ describe('Outdoors', () => {
 		const air = container.querySelector('[data-card="ground"] [data-row="air"]');
 		expect(air?.textContent).toContain('14 · Good');
 		expect(air?.textContent).toContain('OZONE · San Rafael');
-		expect(container.querySelector('[data-card="ground"] [data-card-source]')?.textContent).toMatch(
-			/AirNow · as of 7:00 AM/
+		expect(air?.querySelector('.sr-meta')?.textContent).toBe(
+			'OZONE · San Rafael · AirNow · as of 7:00 AM'
+		);
+		expect(container.querySelector('[data-row="wildfire"] .sr-meta')?.textContent).toMatch(
+			/^CAL FIRE \+ NIFC · checked /
+		);
+		// No colour on a current reading's provenance (Stuart 2026-10-28), nor on an all-clear.
+		expect(container.querySelector('[data-card="ground"] .sr-attention')).toBeNull();
+	});
+
+	it('the tide card keeps today’s single extremes line (rule 1’s named exception, Stuart 2026-10-28)', () => {
+		const { container } = render(Outdoors, {
+			view: outdoorsView(input()),
+			now: NOW,
+			onopen: vi.fn()
+		});
+		const line = container.querySelector('[data-card="tides"] [data-tide-line]')!;
+		expect(line.getAttribute('data-text-role')).toBe('meta');
+		expect(line.children).toHaveLength(0); // one line of text, no figure/time spans
+		expect(line.textContent!.trim()).toMatch(
+			/^(Hi|Lo) -?\d+\.\d′ \d{1,2}(:\d{2})? [AP]M( · (Hi|Lo) -?\d+\.\d′ \d{1,2}(:\d{2})? [AP]M)*$/
 		);
 	});
 
@@ -132,12 +151,14 @@ describe('Outdoors', () => {
 			onopen: vi.fn()
 		});
 		const air = container.querySelector('[data-card="ground"] [data-row="air"]')!;
-		expect(air.textContent).toContain('Unavailable');
-		expect(air.textContent).toContain('AirNow failed: 502');
-		expect(air.textContent).not.toMatch(/\d+ · Good/);
-		expect(container.querySelector('[data-card="ground"] [data-card-source]')?.textContent).toMatch(
-			/AirNow · unavailable \(AirNow failed: 502\)/
+		expect(air.querySelector('[data-text-role="body"]')!.textContent).toBe('Unavailable');
+		expect(air.querySelector('[data-attention]')).not.toBeNull(); // the status colour, for status
+		// Why, in reader words (rule 7), and the row's own source (rule 3): never the diagnostic.
+		expect(air.querySelector('.sr-meta')!.textContent).toBe(
+			"we couldn't check this source · AirNow"
 		);
+		expect(air.textContent).not.toMatch(/\d+ · Good|AirNow failed/);
+		expect(container.querySelector('[data-card="ground"] [data-card-source]')).toBeNull();
 	});
 
 	it('a failed read shows its reason in the source line and never a 0', () => {
@@ -164,7 +185,11 @@ describe('Outdoors', () => {
 		expect(ground.querySelector('[data-row="quakes"]')?.textContent).toContain('Unknown');
 		expect(ground.querySelector('[data-row="quakes"]')?.textContent).not.toMatch(/\b0\b/);
 		expect(ground.querySelector('[data-row="wildfire"]')?.textContent).toContain('Unavailable');
-		expect(ground.querySelector('[data-card-source]')?.textContent).toContain('HTTP 500');
+		// Each row names its own source; no footer gathers three (rule 3).
+		expect(ground.querySelector('[data-row="quakes"] .sr-meta')?.textContent).toContain(
+			'USGS, within 100 km'
+		);
+		expect(ground.querySelector('[data-card-source]')).toBeNull();
 	});
 
 	it('a rain window with a missing hour never says "dry all day" (Codex desk2 #3)', () => {

@@ -3,7 +3,10 @@
 	import { barGeometry, buildChart } from '$lib/utils/chart';
 	import type { OutdoorsView } from '$lib/dashboard/outdoors';
 	import { formatAsOf } from '$lib/dashboard/pacific-time';
+	import { provenance, type SourceLine } from '$lib/dashboard/provenance';
+	import { staticRow } from '$lib/dashboard/status-row';
 	import CardSource from './CardSource.svelte';
+	import StatusRow from './StatusRow.svelte';
 
 	let { view, now, onopen }: { view: OutdoorsView; now: number; onopen: () => void } = $props();
 
@@ -130,6 +133,39 @@
 	});
 
 	const airReading = $derived(view.ground.air.kind === 'value' ? view.ground.air.value : null);
+	/** A row's own source: its time, or just its name when the row's detail already says why not. */
+	const sourceOf = (line: SourceLine) =>
+		line.measured.kind === 'unknown' || line.measured.kind === 'unavailable'
+			? { text: line.measured.source, attention: false }
+			: provenance(line, now);
+	const NOT_A_READING = new Set(['Unavailable', 'Unknown']);
+	const groundRows = $derived([
+		staticRow({
+			id: 'air',
+			label: 'Air quality',
+			body: view.ground.airRow.value,
+			bodyAttention: NOT_A_READING.has(view.ground.airRow.value),
+			swatch: airReading?.color ?? null,
+			meta: [view.ground.airRow.detail, sourceOf({ measured: view.ground.air })]
+		}),
+		staticRow({
+			id: 'wildfire',
+			label: 'Wildfire',
+			body: view.ground.wildfire.value,
+			bodyAttention: NOT_A_READING.has(view.ground.wildfire.value),
+			meta: [
+				view.ground.wildfire.detail,
+				sourceOf({ measured: view.ground.fires, verb: 'checked' })
+			]
+		}),
+		staticRow({
+			id: 'quakes',
+			label: 'Earthquakes, 7 d',
+			body: view.ground.quake.value,
+			bodyAttention: NOT_A_READING.has(view.ground.quake.value),
+			meta: [view.ground.quake.detail, sourceOf({ measured: view.ground.quakes })]
+		})
+	]);
 
 	const surf = $derived(view.surf.view);
 	const surfKnown = $derived(surf.heights.filter((h): h is number => h !== null));
@@ -321,7 +357,9 @@
 				</svg>
 			{/if}
 			{#if view.tides.next.length}
-				<p class="meta" data-text-role="meta">
+				<!-- Rule 1's named exception (Stuart, 2026-10-28): the tide extremes stay today's one
+				     line, figures and times together in meta, not split into figure + meta spans. -->
+				<p class="meta" data-tide-line data-text-role="meta">
 					{view.tides.next
 						.map(
 							(e) => `${e.type === 'H' ? 'Hi' : 'Lo'} ${e.heightFt.toFixed(1)}′ ${clock(e.atMs)}`
@@ -372,39 +410,10 @@
 
 		<article class="card" data-card="ground">
 			<h3 class="card-title" data-text-role="label">Air, fire & ground</h3>
-			<ul class="rows" data-text-role="label">
-				<li data-row="air">
-					<span>Air quality</span><span class:muted={!airReading}
-						>{#if airReading}<i class="aqi-dot" style:background={airReading.color}></i>{/if}{view
-							.ground.airRow.value}</span
-					>
-					{#if view.ground.airRow.detail}
-						<span class="meta wide" data-text-role="meta">{view.ground.airRow.detail}</span>
-					{/if}
-				</li>
-				<li data-row="wildfire">
-					<span>Wildfire</span><span class:ok={view.ground.wildfire.value === 'None near'}
-						>{view.ground.wildfire.value}</span
-					>
-					{#if view.ground.wildfire.detail}
-						<span class="meta wide" data-text-role="meta">{view.ground.wildfire.detail}</span>
-					{/if}
-				</li>
-				<li data-row="quakes">
-					<span>Earthquakes, 7 d</span><span>{view.ground.quake.value}</span>
-					{#if view.ground.quake.detail}
-						<span class="meta wide" data-text-role="meta">{view.ground.quake.detail}</span>
-					{/if}
-				</li>
+			<!-- Three sources, so each row carries its own (rule 3); the shared footer is gone. -->
+			<ul class="rows">
+				{#each groundRows as row (row.id)}<li data-row={row.id}><StatusRow {row} /></li>{/each}
 			</ul>
-			<CardSource
-				lines={[
-					{ measured: view.ground.air },
-					{ measured: view.ground.fires, verb: 'checked' },
-					{ measured: view.ground.quakes }
-				]}
-				{now}
-			/>
 		</article>
 	</div>
 </div>
@@ -528,29 +537,10 @@
 		list-style: none;
 	}
 	.rows li {
-		display: grid;
-		grid-template-columns: 1fr auto;
-		gap: 2px 10px;
-		padding: 7px 0;
+		padding: var(--v2-s1) 0;
 		border-bottom: 1px solid var(--border);
 	}
 	.rows li:last-child {
 		border-bottom: 0;
-	}
-	.rows li > span:first-child {
-		white-space: nowrap;
-	}
-	.rows .wide {
-		grid-column: 1 / -1;
-	}
-	.ok {
-		color: var(--green, #10b981);
-	}
-	.aqi-dot {
-		display: inline-block;
-		width: 0.6em;
-		height: 0.6em;
-		margin-right: 0.4em;
-		border-radius: 50%;
 	}
 </style>
