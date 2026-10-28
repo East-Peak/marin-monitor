@@ -287,8 +287,9 @@ test('the health indicator names degraded sources from /api/health', async ({ pa
 	const button = page.getByRole('button', { name: 'Sources: 2 degraded' });
 	await expect(button).toBeVisible();
 	await button.click();
-	const list = page.locator('[data-health-list]');
-	await expect(list).toContainText('Wine Index');
-	await expect(list).toContainText('Pacific Sun');
-	await expect(list).not.toContainText('Gas Prices');
+	const list = page.getByRole('dialog', { name: 'Source health' });
+	await expect(list.locator('[data-source-group="Needs a look"]')).toContainText('Wine Index');
+	await expect(list.locator('[data-source-group="Needs a look"]')).toContainText('Pacific Sun');
+	// Every source is listed now (rule 6); a healthy one sits under "Reporting", not "Needs a look".
+	await expect(list.locator('[data-source-group="Needs a look"]')).not.toContainText('Gas Prices');
 });

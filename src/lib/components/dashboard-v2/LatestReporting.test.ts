@@ -20,7 +20,7 @@ const row = (over: Partial<ReportingRow> = {}): ReportingRow => ({
 const okView = (rows: ReportingRow[]): LatestReportingView => ({
 	coverage: measuredValue(rows, 'Reporting feeds', NOW - 60_000),
 	empty: null,
-	presentation: { state: 'ok', failing: [], asOf: null },
+	presentation: { state: 'ok', failing: [], asOf: null, entries: [] },
 	shownIds: new Set(rows.map((r) => r.id))
 });
 
@@ -61,7 +61,8 @@ describe('LatestReporting', () => {
 						presentation: {
 							state: coverage.kind === 'loading' ? 'loading' : 'unavailable',
 							failing: [],
-							asOf: null
+							asOf: null,
+							entries: []
 						},
 						shownIds: new Set(['city-of-san-rafael:p'])
 					},
@@ -80,7 +81,7 @@ describe('LatestReporting', () => {
 				view: {
 					...okView([]),
 					empty: 'No dated reporting right now',
-					presentation: { state: 'empty', failing: [], asOf: null }
+					presentation: { state: 'empty', failing: [], asOf: null, entries: [] }
 				},
 				now: NOW
 			}

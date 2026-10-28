@@ -16,13 +16,17 @@ interface TextNode {
 }
 
 /**
- * Every visible piece of text under the v2 root, with the role it is classified under (§13.4):
- * DOM text (including text inside `display: contents` wrappers), ::before/::after content, and
- * form-field placeholders and values (Codex PR 7 #2).
+ * Every visible piece of text under the v2 root and any open dialog (portalled to the body, rule
+ * 6), whole (TEXT1: no 40-character cut), with the role it is classified under (§13.4): DOM text
+ * (including text inside `display: contents` wrappers), ::before/::after content, and form-field
+ * placeholders and values (Codex PR 7 #2).
  */
 async function audit(page: Page): Promise<TextNode[]> {
 	return page.evaluate(() => {
-		const root = document.querySelector('[data-layout="v2"]')!;
+		const roots = [
+			document.querySelector('[data-layout="v2"]')!,
+			...document.querySelectorAll('[data-dialog-layer]')
+		];
 		const out: TextNode[] = [];
 		/** `display: contents` boxes report invisible; judge the nearest box that renders. */
 		const rendered = (el: Element | null): Element | null => {
@@ -35,29 +39,31 @@ async function audit(page: Page): Promise<TextNode[]> {
 		};
 		const push = (text: string, el: Element, cs: CSSStyleDeclaration) =>
 			out.push({
-				text: text.slice(0, 40),
+				text,
 				role: el.closest('[data-text-role]')?.getAttribute('data-text-role') ?? null,
 				fontPx: parseFloat(cs.fontSize),
 				lineHeightPx: cs.lineHeight === 'normal' ? NaN : parseFloat(cs.lineHeight)
 			});
 
-		const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-		for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-			const text = n.textContent?.trim();
-			const el = n.parentElement;
-			if (!text || !el || !visible(el)) continue;
-			push(text, el, getComputedStyle(rendered(el) ?? el));
-		}
-		for (const el of root.querySelectorAll('*')) {
-			if (!visible(el)) continue;
-			for (const pseudo of ['::before', '::after']) {
-				const cs = getComputedStyle(el, pseudo);
-				const m = /^"(.*)"$/s.exec(cs.content);
-				if (m && m[1].trim() && cs.display !== 'none') push(m[1].trim(), el, cs);
+		for (const root of roots) {
+			const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+			for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+				const text = n.textContent?.trim();
+				const el = n.parentElement;
+				if (!text || !el || !visible(el)) continue;
+				push(text, el, getComputedStyle(rendered(el) ?? el));
 			}
-			if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
-				const text = (el.value || el.placeholder).trim();
-				if (text) push(text, el, getComputedStyle(el));
+			for (const el of root.querySelectorAll('*')) {
+				if (!visible(el)) continue;
+				for (const pseudo of ['::before', '::after']) {
+					const cs = getComputedStyle(el, pseudo);
+					const m = /^"(.*)"$/s.exec(cs.content);
+					if (m && m[1].trim() && cs.display !== 'none') push(m[1].trim(), el, cs);
+				}
+				if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+					const text = (el.value || el.placeholder).trim();
+					if (text) push(text, el, getComputedStyle(el));
+				}
 			}
 		}
 		return out;
@@ -97,10 +103,20 @@ async function openAll(page: Page) {
 	}); // its details load on open (Codex r1 #9)
 }
 
-/** The reused disclosures carry text too (Codex r1 #12): audit each one open. PR 8 adds the health list here. */
+/**
+ * The reused disclosures carry text too (Codex r1 #12): audit each one open, and every dialog in
+ * TEXT0's inventory (TEXT1): source health, Coverage details and Getting Around's panels. A
+ * dialog's control only exists when its content does (a failing source, a 511 alert), so those
+ * open where they show.
+ */
+const dialog = (page: Page) => page.getByRole('dialog');
+const closeDialog = async (page: Page) => {
+	await page.keyboard.press('Escape');
+	await expect(dialog(page)).toHaveCount(0);
+};
 const DISCLOSURES: {
 	name: string;
-	open: (page: Page) => Promise<void>;
+	open: (page: Page) => Promise<boolean | void>;
 	close: (page: Page) => Promise<void>;
 }[] = [
 	{
@@ -125,9 +141,29 @@ const DISCLOSURES: {
 			const button = page.locator('.v2-health-button');
 			await expect(button).not.toHaveText('Checking sources…', { timeout: 15_000 });
 			await button.click();
-			await expect(page.locator('[data-health-list]')).toBeVisible();
+			await expect(dialog(page)).toBeVisible();
 		},
-		close: (page) => page.locator('.v2-health-button').click()
+		close: closeDialog
+	},
+	{
+		name: 'coverage details',
+		open: async (page) => {
+			const button = page.locator('[data-coverage-details]:visible').first();
+			if (!(await button.count())) return false;
+			await button.click();
+			await expect(dialog(page).locator('[data-source-list]')).toBeVisible();
+		},
+		close: closeDialog
+	},
+	{
+		name: 'Getting Around panel',
+		open: async (page) => {
+			const button = page.locator('#getting-around button[data-kind="detail"]:visible').first();
+			if (!(await button.count())) return false;
+			await button.click();
+			await expect(dialog(page).locator('[data-status-detail]')).toBeVisible();
+		},
+		close: closeDialog
 	}
 ];
 
@@ -164,11 +200,18 @@ for (const viewport of [
 			page
 		}) => {
 			await openAll(page);
-			const nodes = await audit(page);
-			for (const d of DISCLOSURES) {
-				await d.open(page);
-				nodes.push(...(await audit(page)).map((n) => ({ ...n, text: `[${d.name}] ${n.text}` })));
-				await d.close(page);
+			const nodes: TextNode[] = [];
+			// Both themes (TEXT1): the roles and sizes hold in each.
+			for (const theme of ['dark', 'light']) {
+				await page.evaluate((t) => (document.documentElement.dataset.theme = t), theme);
+				nodes.push(...(await audit(page)).map((n) => ({ ...n, text: `${theme}: ${n.text}` })));
+				for (const d of DISCLOSURES) {
+					if ((await d.open(page)) === false) continue;
+					nodes.push(
+						...(await audit(page)).map((n) => ({ ...n, text: `${theme} [${d.name}] ${n.text}` }))
+					);
+					await d.close(page);
+				}
 			}
 			expect(nodes.length).toBeGreaterThan(10);
 			expect(
@@ -182,6 +225,11 @@ for (const viewport of [
 			for (const n of nodes) {
 				if (n.role === 'control') {
 					expect(n.fontPx, `control "${n.text}"`).toBeGreaterThanOrEqual(MIN_TEXT_PX);
+					// TEXT1: a control's lines aren't crammed either.
+					expect(
+						n.lineHeightPx / n.fontPx,
+						`control line-height "${n.text}"`
+					).toBeGreaterThanOrEqual(MIN_LINE_HEIGHT);
 					continue;
 				}
 				expect(n.fontPx, `${n.role} "${n.text}"`).toBe(
@@ -206,7 +254,7 @@ for (const viewport of [
 				}
 				// The disclosures open at this scale too, and stay inside the page (Codex PR 7 #3).
 				for (const d of DISCLOSURES) {
-					await d.open(page);
+					if ((await d.open(page)) === false) continue;
 					const open = await page.evaluate(
 						() => document.documentElement.scrollWidth - window.innerWidth
 					);

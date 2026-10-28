@@ -13,7 +13,7 @@
 	{#if view.empty}
 		<p class="v2-latest-empty" data-text-role="body" data-reporting-empty>{view.empty}</p>
 	{:else}
-		<SectionStatus status={view.presentation} {now} />
+		<SectionStatus status={view.presentation} {now} title="Latest reporting" />
 	{/if}
 	{#if rows.length}
 		<ol class="v2-latest-list">
@@ -25,23 +25,23 @@
 </div>
 
 <style>
+	/* A label names the list (rule 1): one style, no caps (TEXT0 rev B). */
 	.v2-latest-title {
 		margin: 0;
-		color: var(--text-muted);
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
+		font-weight: 600;
+		color: var(--text-dim, var(--text-muted));
 	}
 	.v2-latest-empty {
-		margin: 0.25rem 0 0;
+		margin: var(--v2-s1) 0 0;
 		color: var(--text-muted);
 	}
 	.v2-latest-list {
-		margin: 0.25rem 0 0;
+		margin: var(--v2-s1) 0 0;
 		padding: 0;
 		list-style: none;
 	}
 	.v2-latest-list li {
-		padding: var(--v2-card-padding) 0;
+		padding: var(--v2-s2) 0;
 		border-bottom: 1px solid var(--border-light);
 	}
 	.v2-latest-list li:last-child {
@@ -56,13 +56,6 @@
 		}
 		.v2-latest-list li {
 			border-bottom: 0;
-		}
-	}
-	/* Touch: its "Which sources" sits 12 px clear of the first story, so both keep a 44 px hit
-	   area (MOBILE1). */
-	@media (pointer: coarse) {
-		.v2-latest :global(.v2-coverage) {
-			margin-bottom: 12px;
 		}
 	}
 </style>

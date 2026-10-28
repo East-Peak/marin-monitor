@@ -55,7 +55,7 @@ describe('summarizeHealth (fails closed)', () => {
 		);
 	});
 	it('all OK only when G0a says healthy AND nothing is degraded', () => {
-		expect(summarizeHealth(HEALTHY, { kind: 'live', observedAt: null }, NOW)).toEqual({
+		expect(summarizeHealth(HEALTHY, { kind: 'live', observedAt: null }, NOW)).toMatchObject({
 			state: 'ok',
 			label: 'Sources: all OK',
 			degraded: []
@@ -63,7 +63,7 @@ describe('summarizeHealth (fails closed)', () => {
 	});
 	it('a degraded report with nothing listed is never "all OK"', () => {
 		const contradictory: HealthReportJson = { ...HEALTHY, status: 'degraded' };
-		expect(summarizeHealth(contradictory, { kind: 'live', observedAt: null }, NOW)).toEqual({
+		expect(summarizeHealth(contradictory, { kind: 'live', observedAt: null }, NOW)).toMatchObject({
 			state: 'degraded',
 			label: 'Sources: degraded',
 			degraded: []
@@ -88,5 +88,14 @@ describe('summarizeHealth (fails closed)', () => {
 		expect(settled).toContain('Sources: degraded');
 		for (const label of settled) expect(label).toMatch(SETTLED_HEALTH_LABEL);
 		expect(summarizeHealth(null, undefined, NOW).label).not.toMatch(SETTLED_HEALTH_LABEL);
+	});
+});
+
+describe('summarizeHealth lists every monitored source for the health dialog (rule 6)', () => {
+	it('all: every source and subsource, evaluated, degraded or not', () => {
+		const s = summarizeHealth(REPORT, { kind: 'live', observedAt: null }, NOW);
+		expect(s.all.length).toBeGreaterThan(s.degraded.length);
+		expect(s.all.map((e) => e.name)).toEqual(expect.arrayContaining(s.degraded.map((e) => e.name)));
+		expect(summarizeHealth(null, undefined, NOW).all).toEqual([]);
 	});
 });

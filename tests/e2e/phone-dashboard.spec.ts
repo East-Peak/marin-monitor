@@ -42,18 +42,12 @@ async function auditLinks(
 		let popup: Page | null = null;
 		const onPopup = (p: Page) => (popup = p);
 		page.on('popup', onPopup);
-		// Getting Around's status lines sit 23 px apart: their links have 41 px with data, 29 px
-		// when 511 is unavailable (CI), not 44, until Stuart rules on taller lines (over the
-		// section's height budget). The floor keeps that from getting worse unnoticed.
-		const line = await link.evaluate((el) => !!el.closest('.ga-line'));
+		// Getting Around's lines are whole-row links now (TEXT1): no exception, 44 px like the rest.
 		const why = await auditTap(page, info, {
 			page: PAGE,
 			state,
 			control: `link "${label}"`,
 			target: link,
-			smallOk: line
-				? { reason: 'Getting Around line link (41 px, 29 if 511 is down)', min: 28 }
-				: undefined,
 			outcome: blank
 				? async () => expect.poll(() => popup?.url(), { timeout: 3_000 }).toBe(url)
 				: async () => expect(page).toHaveURL(url, { timeout: 3_000 }),
@@ -208,21 +202,22 @@ test.describe('@phone dashboard controls', () => {
 		expect(failures).toEqual([]);
 	});
 
-	test('header: the sources indicator lists what is degraded, and closes', async ({
+	test('header: the sources indicator opens its dialog of every source, and closes back', async ({
 		page
 	}, info) => {
 		const button = page.locator('.v2-health-button');
 		await expect(button).toBeVisible({ timeout: 15_000 });
+		const dialog = page.getByRole('dialog', { name: 'Source health' });
 		const failures = await auditTap(page, info, {
 			page: PAGE,
 			state: 'default',
 			control: 'sources indicator',
 			target: button,
-			outcome: async () =>
-				expect(page.locator('[data-health-list]')).toContainText(/\w{4,}/, { timeout: 2_000 }),
+			outcome: async () => expect(dialog).toContainText(/\w{4,}/, { timeout: 2_000 }),
 			undo: async () => {
-				await button.tap();
-				await expect(page.locator('[data-health-list]')).toHaveCount(0);
+				await dialog.getByRole('button', { name: 'Close' }).tap();
+				await expect(dialog).toHaveCount(0);
+				await expect(button).toBeFocused();
 			}
 		});
 		expect(failures).toEqual([]);
@@ -326,25 +321,30 @@ test.describe('@phone dashboard controls', () => {
 		expect(failures).toEqual([]);
 	});
 
-	test('"Which sources" opens its list wherever it shows', async ({ page }, info) => {
+	test('"Coverage details" opens every source of its section, wherever it shows, and closes back', async ({
+		page
+	}, info) => {
 		const failures: string[] = [];
-		const all = page.locator('details.v2-coverage > summary');
-		for (const [i, summary] of (await all.all()).entries()) {
-			if (!(await summary.isVisible())) continue;
-			const details = all.nth(i).locator('..');
+		const all = page.locator('[data-coverage-details]');
+		// The phone fixture has a failing feed: the control is expected, not merely allowed.
+		await expect(all.first()).toBeVisible({ timeout: 15_000 });
+		const dialog = page.getByRole('dialog');
+		for (const [i, button] of (await all.all()).entries()) {
+			if (!(await button.isVisible())) continue;
 			failures.push(
 				...(await auditTap(page, info, {
 					page: PAGE,
 					state: 'default',
-					control: `Which sources #${i + 1}`,
-					target: summary,
-					outcome: async () => {
-						await expect(details).toHaveAttribute('open', '', { timeout: 2_000 });
-						await expect(details.locator(':scope > :not(summary)').first()).toBeVisible();
-					},
+					control: `Coverage details #${i + 1}`,
+					target: button,
+					outcome: async () =>
+						expect(dialog.locator('[data-source-list] [data-source]').first()).toBeVisible({
+							timeout: 2_000
+						}),
 					undo: async () => {
-						await summary.tap();
-						await expect(details).not.toHaveAttribute('open');
+						await dialog.getByRole('button', { name: 'Close' }).tap();
+						await expect(dialog).toHaveCount(0);
+						await expect(button).toBeFocused();
 					}
 				}))
 			);
@@ -416,6 +416,26 @@ test.describe('@phone dashboard controls', () => {
 			failures.push(
 				...(await auditLinks(page, info, 'expanded', body(page, id).locator('a[href]')))
 			);
+			// Detail rows open their panel and close back to the row (TEXT1 rule 2).
+			const details = body(page, id).locator('button[data-kind="detail"]');
+			if (id === 'getting-around') expect(await details.count()).toBeGreaterThan(0);
+			const dialog = page.getByRole('dialog');
+			for (const [i, button] of (await details.all()).entries()) {
+				failures.push(
+					...(await auditTap(page, info, {
+						page: PAGE,
+						state: 'expanded',
+						control: `detail row #${i + 1} (${id})`,
+						target: button,
+						outcome: async () => expect(dialog).toBeVisible({ timeout: 2_000 }),
+						undo: async () => {
+							await dialog.getByRole('button', { name: 'Close' }).tap();
+							await expect(dialog).toHaveCount(0);
+							await expect(button).toBeFocused();
+						}
+					}))
+				);
+			}
 			expect(failures).toEqual([]);
 		});
 	}

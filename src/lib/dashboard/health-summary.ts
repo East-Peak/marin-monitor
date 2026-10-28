@@ -12,6 +12,8 @@ export interface HealthSummary {
 	state: 'checking' | 'unknown' | 'ok' | 'degraded';
 	label: string;
 	degraded: SourceStatusEntry[];
+	/** Every monitored source, evaluated against the clock: the health dialog's list (rule 6). */
+	all: SourceStatusEntry[];
 }
 
 export function summarizeHealth(
@@ -19,19 +21,20 @@ export function summarizeHealth(
 	fetch: DatasetFetch | undefined,
 	now: number
 ): HealthSummary {
-	if (!fetch && !report) return { state: 'checking', label: HEALTH_LABELS.checking, degraded: [] };
-	if (!report) return { state: 'unknown', label: HEALTH_LABELS.unknown, degraded: [] };
-	const degraded = [
+	if (!fetch && !report)
+		return { state: 'checking', label: HEALTH_LABELS.checking, degraded: [], all: [] };
+	if (!report) return { state: 'unknown', label: HEALTH_LABELS.unknown, degraded: [], all: [] };
+	const all = [
 		...report.sources.map(fromHealthSource),
 		...report.subsources.map(fromHealthSubsource)
-	]
-		.map((e) => ({ ...e, state: effectiveState(e, now) }))
-		.filter((e) => e.state !== 'ok' && e.state !== 'reference');
+	].map((e) => ({ ...e, state: effectiveState(e, now) }));
+	const degraded = all.filter((e) => e.state !== 'ok' && e.state !== 'reference');
+	const said = { degraded, all };
 	if (fetch?.kind === 'failed')
-		return { state: 'unknown', label: HEALTH_LABELS.staleReport, degraded };
+		return { state: 'unknown', label: HEALTH_LABELS.staleReport, ...said };
 	if (degraded.length)
-		return { state: 'degraded', label: HEALTH_LABELS.degraded(degraded.length), degraded };
+		return { state: 'degraded', label: HEALTH_LABELS.degraded(degraded.length), ...said };
 	if (report.status !== 'healthy')
-		return { state: 'degraded', label: HEALTH_LABELS.degradedUnlisted, degraded };
-	return { state: 'ok', label: HEALTH_LABELS.allOk, degraded };
+		return { state: 'degraded', label: HEALTH_LABELS.degradedUnlisted, ...said };
+	return { state: 'ok', label: HEALTH_LABELS.allOk, ...said };
 }

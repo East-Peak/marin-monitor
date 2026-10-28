@@ -29,7 +29,7 @@ const REPORT: HealthReportJson = {
 };
 
 describe('HealthIndicator', () => {
-	it('a disclosure button labelled by the summary opens a readable list of degraded sources', async () => {
+	it('a button labelled by the summary opens a dialog listing every monitored source, in reader words (rule 6)', async () => {
 		render(HealthIndicator, {
 			props: {
 				report: writable(REPORT),
@@ -40,16 +40,35 @@ describe('HealthIndicator', () => {
 			}
 		});
 		const button = screen.getByRole('button', { name: 'Sources: 2 degraded' });
-		expect(button.getAttribute('aria-expanded')).toBe('false');
+		expect(button.getAttribute('aria-haspopup')).toBe('dialog');
 		await fireEvent.click(button);
-		expect(button.getAttribute('aria-expanded')).toBe('true');
-		const list = document.querySelector('[data-health-list]')!;
-		expect(list.textContent).toContain('Wine Index');
-		expect(list.textContent).toContain('Out of date');
-		expect(list.textContent).toContain('last updated Sep 9, 8:00 AM');
-		expect(list.textContent).toContain('Known issue until Dec 31');
+		const dialog = screen.getByRole('dialog', { name: 'Source health' });
+		expect(dialog.textContent).toContain('Wine Index');
+		expect(dialog.textContent).toContain('Out of date');
+		expect(dialog.textContent).toContain('last updated Sep 9, 8:00 AM');
+		expect(dialog.textContent).toContain('Known issue until Dec 31');
 		// The evaluator's reason and a maintainer's note are diagnostics: /api/health only (rule 7).
-		expect(list.textContent).not.toContain('older than 10d');
-		expect(list.textContent).not.toContain('GS: waiting on Strava');
+		expect(dialog.textContent).not.toContain('older than 10d');
+		expect(dialog.textContent).not.toContain('GS: waiting on Strava');
+		await fireEvent.keyDown(dialog, { key: 'Escape' });
+		expect(screen.queryByRole('dialog')).toBeNull();
+	});
+
+	it('a refresh that failed over a kept report says so inside the dialog, not only on the button (Codex 1c #5)', async () => {
+		render(HealthIndicator, {
+			props: {
+				report: writable(REPORT),
+				outcomes: writable<Record<string, DatasetFetch>>({
+					health: { kind: 'failed', error: 'HTTP 502', retained: true, observedAt: null }
+				}),
+				now: writable(NOW)
+			}
+		});
+		const button = screen.getByRole('button');
+		await fireEvent.click(button);
+		const dialog = screen.getByRole('dialog', { name: 'Source health' });
+		const note = dialog.querySelector('[data-source-note]')!;
+		expect(note.textContent).toBe(button.textContent!.trim());
+		expect(note.hasAttribute('data-attention')).toBe(true);
 	});
 });

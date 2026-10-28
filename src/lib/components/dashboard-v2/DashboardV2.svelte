@@ -428,7 +428,11 @@
 						<div class="v2-map-hold" data-slot="map-preview" bind:this={mapHold}>
 							<div class="v2-map-hold-canvas" aria-hidden="true"></div>
 							<div class="v2-map-hold-status">
-								{#if settledData}<SectionStatus status={settledData.coverage} now={$clock} />{/if}
+								{#if settledData}<SectionStatus
+										status={settledData.coverage}
+										now={$clock}
+										title="Map"
+									/>{/if}
 							</div>
 						</div>
 					{/if}

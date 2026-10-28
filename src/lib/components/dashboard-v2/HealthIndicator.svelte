@@ -3,7 +3,8 @@
 	import type { HealthReportJson } from '$lib/api/marin/health-report';
 	import { summarizeHealth } from '$lib/dashboard/health-summary';
 	import type { DatasetFetch } from '$lib/dashboard/source-adapters';
-	import { sourceWords } from '$lib/dashboard/source-status';
+	import DetailDialog from './DetailDialog.svelte';
+	import SourceList from './SourceList.svelte';
 
 	let {
 		report,
@@ -16,50 +17,54 @@
 	} = $props();
 
 	let open = $state(false);
+	let button = $state<HTMLButtonElement | null>(null);
 	const summary = $derived(summarizeHealth($report, $outcomes.health, $now));
+	/** What the list alone can't say: a kept report, or one degraded with nothing listed. */
+	const note = $derived(
+		summary.state === 'unknown' || (summary.state === 'degraded' && !summary.degraded.length)
+			? summary.label
+			: null
+	);
 </script>
 
+<!-- The same dialog as Coverage details, for every monitored source (TEXT0 inventory). -->
 <div class="v2-health" data-health={summary.state}>
 	<button
+		bind:this={button}
 		type="button"
 		class="v2-health-button hit-44"
 		data-text-role="label"
-		aria-expanded={open}
-		aria-controls="v2-health-list"
-		onclick={() => (open = !open)}
-		onkeydown={(e) => e.key === 'Escape' && (open = false)}
+		aria-haspopup="dialog"
+		onclick={() => (open = true)}
 	>
 		{summary.label}
 	</button>
-	{#if open}
-		<div class="v2-health-list" id="v2-health-list" data-health-list>
-			{#if summary.degraded.length === 0}
-				<p data-text-role="meta">
-					{summary.state === 'ok'
-						? 'Every monitored source is within its freshness limit.'
-						: summary.label}
-				</p>
-			{:else}
-				<ul>
-					{#each summary.degraded as e (e.id)}
-						{@const words = sourceWords(e, $now)}
-						<li>
-							<span data-text-role="label">{e.name}</span>
-							<span data-text-role="meta">
-								{words.body}{words.meta ? ` · ${words.meta}` : ''}
-							</span>
-						</li>
-					{/each}
-				</ul>
-			{/if}
-		</div>
-	{/if}
 </div>
+{#if open}
+	<DetailDialog
+		labelledby="v2-health-title"
+		variant="auto"
+		opener={button}
+		onclose={() => (open = false)}
+	>
+		{#if summary.all.length}
+			<SourceList
+				entries={summary.all}
+				now={$now}
+				title="Source health"
+				titleId="v2-health-title"
+				{note}
+			/>
+		{:else}
+			<h2 id="v2-health-title" class="v2-health-title" data-text-role="section-title">
+				Source health
+			</h2>
+			<p class="v2-health-note" data-text-role="meta">{summary.label}</p>
+		{/if}
+	</DetailDialog>
+{/if}
 
 <style>
-	.v2-health {
-		position: relative;
-	}
 	.v2-health-button {
 		min-height: 2.25rem;
 		padding: 0 0.625rem;
@@ -73,29 +78,12 @@
 	.v2-health[data-health='unknown'] .v2-health-button {
 		border-color: var(--warning, var(--accent));
 	}
-	.v2-health-list {
-		position: absolute;
-		right: 0;
-		z-index: 50;
-		width: min(22rem, calc(100vw - 2rem));
-		margin-top: 0.5rem;
-		padding: var(--v2-card-padding);
-		border: 1px solid var(--border-light);
-		border-radius: 8px;
-		background: var(--bg);
-	}
-	ul {
+	.v2-health-title,
+	.v2-health-note {
 		margin: 0;
-		padding: 0;
-		list-style: none;
-		display: grid;
-		gap: 0.375rem;
+		padding-top: var(--v2-s2);
 	}
-	li {
-		display: flex;
-		flex-direction: column;
-	}
-	p {
-		margin: 0;
+	.v2-health-note {
+		color: var(--text-muted);
 	}
 </style>

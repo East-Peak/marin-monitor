@@ -674,7 +674,7 @@
 		{/if}
 	</div>
 	<div class="v2-map-status" data-slot="map-status">
-		<SectionStatus status={data.coverage} {now} />
+		<SectionStatus status={data.coverage} {now} title="Map" />
 	</div>
 </div>
 
