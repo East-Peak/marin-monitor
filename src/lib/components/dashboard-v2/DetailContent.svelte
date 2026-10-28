@@ -54,11 +54,6 @@
 		if (detail.camera && viewer) return viewer.open(detail.camera);
 		enlarged = true;
 	}
-	/** Over the page, not inside the docked panel's stacking context. */
-	function toBody(node: HTMLElement) {
-		document.body.appendChild(node);
-		return { destroy: () => node.remove() };
-	}
 </script>
 
 <article class="detail" data-detail>
@@ -91,35 +86,35 @@
 			<p class="muted" data-text-role="meta">Latest frame unavailable</p>
 		{/if}
 		{#if enlarged}
-			<div use:toBody>
-				<DetailDialog
-					labelledby={`${titleId}-enlarged`}
-					onclose={() => (enlarged = false)}
-					variant="frame"
-				>
-					<figure class="enlarged" data-frame-enlarged>
-						<!-- Not rendered while failed: `display: block` would beat `hidden` (Codex
+			<!-- DetailDialog portals itself over the page, out of the docked panel's stacking context. -->
+			<DetailDialog
+				labelledby={`${titleId}-enlarged`}
+				onclose={() => (enlarged = false)}
+				variant="frame"
+				opener={frameButton}
+			>
+				<figure class="enlarged" data-frame-enlarged>
+					<!-- Not rendered while failed: `display: block` would beat `hidden` (Codex
 						     CAMQUIET1 #2). The next refresh's src tries again. -->
-						{#if bigFailedSrc === imageSrc}
-							<p class="unavailable" data-text-role="body">Frame unavailable</p>
-						{:else}
-							<img
-								src={imageSrc}
-								alt={detail.image.alt}
-								onerror={() => (bigFailedSrc = imageSrc ?? null)}
-							/>
+					{#if bigFailedSrc === imageSrc}
+						<p class="unavailable" data-text-role="body">Frame unavailable</p>
+					{:else}
+						<img
+							src={imageSrc}
+							alt={detail.image.alt}
+							onerror={() => (bigFailedSrc = imageSrc ?? null)}
+						/>
+					{/if}
+					<figcaption>
+						<h2 id={`${titleId}-enlarged`} class="title" data-text-role="section-title">
+							{detail.title}
+						</h2>
+						{#if detail.meta.length}
+							<p class="muted" data-text-role="meta">{detail.meta.join(' · ')}</p>
 						{/if}
-						<figcaption>
-							<h2 id={`${titleId}-enlarged`} class="title" data-text-role="section-title">
-								{detail.title}
-							</h2>
-							{#if detail.meta.length}
-								<p class="muted" data-text-role="meta">{detail.meta.join(' · ')}</p>
-							{/if}
-						</figcaption>
-					</figure>
-				</DetailDialog>
-			</div>
+					</figcaption>
+				</figure>
+			</DetailDialog>
 		{/if}
 	{/if}
 	{#each detail.paragraphs as p, i (i)}

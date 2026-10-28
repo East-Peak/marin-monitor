@@ -19,6 +19,8 @@
 	const row = $derived(advisoryRow($feed, $now));
 	/** Desktop (MAPX1): the advisory whose NWS text is open, by id; it closes if the advisory ends. */
 	let openId = $state<string | null>(null);
+	/** The chip that opened it, which gets focus back (WebKit doesn't focus a tapped button). */
+	let chip = $state<HTMLElement | null>(null);
 	const opened = $derived(
 		row.kind === 'alerts' ? (row.advisories.find((a) => a.id === openId) ?? null) : null
 	);
@@ -52,7 +54,10 @@
 						data-severity={a.severity}
 						data-text-role="label"
 						aria-haspopup="dialog"
-						onclick={() => (openId = a.id)}
+						onclick={(e) => {
+							openId = a.id;
+							chip = e.currentTarget;
+						}}
 						>⚠ {a.event} · {advisoryScope(a.zones)} · until {formatAsOf(
 							a.endsAt ?? a.expiresAt,
 							$now
@@ -71,7 +76,7 @@
 		{/if}
 	</section>
 	{#if opened}
-		<DetailDialog labelledby="v2-advisory-title" onclose={() => (openId = null)}>
+		<DetailDialog labelledby="v2-advisory-title" opener={chip} onclose={() => (openId = null)}>
 			<DetailContent detail={detailOf(opened)} titleId="v2-advisory-title" />
 		</DetailDialog>
 	{/if}

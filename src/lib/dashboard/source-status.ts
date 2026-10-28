@@ -55,6 +55,8 @@ export interface SectionPresentation {
 	failing: SourceStatusEntry[];
 	/** For `stale`: the oldest failing observation; null if any is unknown. */
 	asOf: number | null;
+	/** Every source of the section, evaluated, in input order: the Coverage details list (rule 6). */
+	entries: SourceStatusEntry[];
 }
 
 const FUTURE_SKEW_MS = 5 * 60_000;
@@ -104,7 +106,8 @@ export function presentSection(
 	const as = (state: SectionState): SectionPresentation => ({
 		state,
 		failing,
-		asOf: state === 'stale' ? oldestObservation(failing) : null
+		asOf: state === 'stale' ? oldestObservation(failing) : null,
+		entries: evaluated
 	});
 
 	if (evaluated.length === 0) return as('unknown'); // 1

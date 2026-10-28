@@ -285,3 +285,14 @@ describe('sourceWords (one source, in a reader’s words: body, meta, attention)
 		}
 	});
 });
+
+describe('presentSection keeps every source for the Coverage details dialog (rule 6)', () => {
+	it('entries: all of them, evaluated against the clock, in input order', () => {
+		const old = entry('o', { observedAt: NOW - 50 * MIN });
+		const p = presentSection([entry('a'), old], { total: 1, matching: 1 }, NOW);
+		expect(p.entries.map((e) => [e.id, e.state])).toEqual([
+			['a', 'ok'],
+			['o', 'stale']
+		]);
+	});
+});

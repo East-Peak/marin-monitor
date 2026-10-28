@@ -24,6 +24,7 @@
 	} from '$lib/dashboard/cam-viewer-map';
 	import { createFrameWindow } from '$lib/dashboard/cam-frame-window';
 	import { loadFrame } from '$lib/dashboard/cam-frame-loader';
+	import { overPage } from '$lib/dashboard/page-lock';
 	import { STRIP_REFRESH_S, STRIP_RETRY_S } from '$lib/dashboard/cam-strip';
 	import { camThumbs, type ThumbRegistry } from '$lib/dashboard/cam-thumbs';
 	import type { CamHeadings, HeadingsState } from '$lib/dashboard/cam-headings-store';
@@ -185,24 +186,11 @@
 		else if (dy > 80 && dy > 1.5 * Math.abs(dx)) onclose();
 	}
 
-	/** Over the page, the rest of it inert and still. */
+	/** Over the page, the rest of it inert and still: the page lock DetailDialog shares (Codex 1c #1). */
 	const modal: Action<HTMLElement> = (node) => {
-		document.body.appendChild(node);
-		const others = [...document.body.children].filter(
-			(el) => el !== node && !el.hasAttribute('inert')
-		);
-		for (const el of others) el.setAttribute('inert', '');
-		const html = document.documentElement;
-		const overflow = html.style.overflow;
-		html.style.overflow = 'hidden';
+		const lock = overPage(node);
 		node.focus();
-		return {
-			destroy() {
-				for (const el of others) el.removeAttribute('inert');
-				html.style.overflow = overflow;
-				node.remove();
-			}
-		};
+		return lock;
 	};
 
 	const showFrame: Action<HTMLElement, HTMLImageElement> = (host, img) => {
