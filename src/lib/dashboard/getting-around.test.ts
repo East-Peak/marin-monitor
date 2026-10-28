@@ -5,6 +5,7 @@ import type { AirportStatus, AirportStatusData } from '$lib/types/airport';
 import type { GgAlert, GgAlertsBlob } from '$lib/gg-alerts';
 import type { DatasetFetch } from './source-adapters';
 import { describePresentation } from './source-status';
+import { gettingAroundParts } from './getting-around-rows';
 import {
 	faaText,
 	airportWords,
@@ -13,7 +14,8 @@ import {
 	PROMO_HEADLINES,
 	transitRows,
 	type GettingAroundInput,
-	type Line
+	type Line,
+	type Row
 } from './getting-around';
 
 const NOW = Date.parse('2026-10-14T23:00:00Z');
@@ -325,7 +327,7 @@ const MA_LIVE: TransitAlertRow[] = [
 	}
 ];
 
-const NO_511 = 'No alerts on 511; check the agencies';
+const NO_511 = 'No alerts on 511';
 const airport = (code: string, over: Partial<AirportStatus> = {}): AirportStatus => ({
 	code,
 	icao: `K${code}`,
@@ -376,6 +378,8 @@ const liveInput = (over: Partial<Record<string, Partial<TransitAgencyRead>>>) =>
 		outcomes: { airport: live(LIVE - 3 * MIN), traffic: live(LIVE - MIN) }
 	});
 const said = (lines: Line[]) => lines.map((l) => `${l.label} · ${l.text}`);
+/** A row's words in reading order: label, body, then each qualification. */
+const words = (r: Row) => [r.label, r.body, ...r.meta.map((m) => m.text)].join(' · ');
 const header = (i: GettingAroundInput) => describePresentation(gettingAroundView(i).status, NOW);
 const ALL_CLEAR =
 	/511 lists no alerts|No alerts on 511|No incidents listed|reports no incidents|No delays reported|No airport-wide delays|on time/i;
@@ -385,9 +389,10 @@ const everything = (i: GettingAroundInput) => {
 		.flatMap((p) => [
 			...said(p.lines),
 			p.note ?? '',
-			...p.rows.flatMap((r) => [...r.tags, r.title, r.meta]),
+			...p.rows.flatMap((r) => [...r.tags, words(r)]),
 			p.scope ?? '',
-			p.meta ?? ''
+			p.meta ?? '',
+			...Object.values(p.sources)
 		])
 		.join('\n');
 };
@@ -404,9 +409,10 @@ describe('gettingAroundView', () => {
 			'https://www.sonomamarintrain.org/',
 			'https://angelislandferry.com/'
 		]);
-		expect(v.roads.note).toBe(
-			"511 reports no incidents on these roads · congestion isn't measured"
-		);
+		expect([v.roads.note, v.roads.noteMeta]).toEqual([
+			'511 reports no incidents on these roads',
+			["congestion isn't measured"]
+		]);
 		expect(v.roads.scope).toBe(
 			'Marin roads; 101, 19th Ave, 280 and 380 to SFO; 580, 80 and 880 to OAK. Long-term construction shown only when it closes a road.'
 		);
@@ -414,8 +420,8 @@ describe('gettingAroundView', () => {
 			[],
 			'No airport-wide delays at SFO or OAK'
 		]);
-		expect([v.transit.meta, v.airports.meta, v.roads.meta]).toEqual([
-			'511 · updated 2 min ago',
+		expect([v.transit.sources, v.airports.meta, v.roads.meta]).toEqual([
+			{ '511': '511 · updated 2 min ago' },
 			'FAA · checked 3 min ago',
 			'511 · checked 1 min ago'
 		]);
@@ -473,10 +479,10 @@ describe('gettingAroundView', () => {
 		expect(said(v.transit.lines)).toEqual([
 			`Golden Gate Ferry, SMART, Angel Island Ferry · ${NO_511}`
 		]);
-		expect(v.transit.rows.map((r) => [r.id, r.url, r.meta])).toEqual([
-			['511-GG-1', 'https://marintransit.gov/a', '511 · Golden Gate Transit'],
-			['511-MA-1', 'https://marintransit.gov/a', '511 · Marin Transit'],
-			['511-MA-2', null, '511 · Marin Transit']
+		expect(v.transit.rows.map((r) => [r.id, r.url, r.source, r.label])).toEqual([
+			['511-GG-1', 'https://marintransit.gov/a', '511', 'Golden Gate Transit'],
+			['511-MA-1', 'https://marintransit.gov/a', '511', 'Marin Transit'],
+			['511-MA-2', null, '511', 'Marin Transit']
 		]);
 		expect(v.transit.more).toBe(2);
 	});
@@ -622,10 +628,10 @@ describe('gettingAroundView', () => {
 		);
 	});
 
-	it('a future or missing transit feed time is "time unknown" in the footer, checked per feed before taking the oldest (Codex r2 #6, r3 #2)', () => {
+	it('a future or missing transit feed time is "time unknown" on its rows, checked per feed before taking the oldest (Codex r2 #6, r3 #2)', () => {
 		const meta = (over: Partial<TransitAgencyRead>) =>
 			gettingAroundView(input({ transit: { reads: reads({ MA: over }), error: null } })).transit
-				.meta;
+				.sources['511'];
 		expect(meta({ observedAt: NOW + 60 * MIN })).toBe('511 · time unknown');
 		expect(meta({ observedAt: null })).toBe('511 · time unknown');
 		expect(meta({ observedAt: NOW - 4 * MIN })).toBe('511 · updated 4 min ago');
@@ -638,7 +644,7 @@ describe('gettingAroundView', () => {
 			MA: { observedAt: NOW + 60 * MIN }
 		});
 		expect(
-			gettingAroundView(input({ transit: { reads: twoFeeds, error: null } })).transit.meta
+			gettingAroundView(input({ transit: { reads: twoFeeds, error: null } })).transit.sources['511']
 		).toBe('511 · time unknown');
 	});
 
@@ -727,37 +733,43 @@ describe('gettingAroundView', () => {
 			ev('c', { closed: true, trip: null, certain: false, kind: 'Roadwork', where: '' }),
 			ev('d', { reportedAt: new Date(NOW + 24 * 60 * MIN).toISOString() })
 		]);
-		expect(v.rows.map((r) => [r.tags, r.title, r.meta, r.tone])).toEqual([
+		expect(v.rows.map((r) => [r.tags, r.label, words(r), r.tone])).toEqual([
 			[
 				['Marin', 'to SFO'], // independent tags (design §1): both
 				'US-101 SB between I-580 W and Tamalpais Dr', // 511's direction, as the design's "I-280 NB"
-				'Traffic Collision · some lanes closed · Major · reported 25 min ago',
+				'US-101 SB between I-580 W and Tamalpais Dr · Traffic Collision · some lanes closed · Major · reported 25 min ago',
 				'major'
 			],
-			[['Marin'], 'Sir Francis Drake Blvd', 'Traffic Hazard · severity unknown', 'unknown'],
+			[
+				['Marin'],
+				'Sir Francis Drake Blvd',
+				'Sir Francis Drake Blvd · Traffic Hazard · severity unknown',
+				'unknown'
+			],
 			[
 				[], // unplaced: no corridor claim beyond "location unconfirmed"
 				'I-580',
-				'Roadwork · road closed · Moderate · location unconfirmed · reported 25 min ago',
+				'I-580 · Roadwork · road closed · Moderate · location unconfirmed · reported 25 min ago',
 				'closed'
 			]
 		]);
 		expect([v.more, v.note]).toEqual([1, null]);
 		expect(view([ev('ret', { trip: null })]).rows[0].tags).toEqual(['toward Marin']);
 		expect(
-			view([ev('both', { where: 'Eastbound and Westbound east of Bohemian Hwy' })]).rows[0].title
+			view([ev('both', { where: 'Eastbound and Westbound east of Bohemian Hwy' })]).rows[0].label
 		).toBe('I-580 EB and WB east of Bohemian Hwy');
 		// No "reported 1 min ago" for a time tomorrow (Codex r4 #4).
 		expect(
-			view([ev('d', { reportedAt: new Date(NOW + 24 * 60 * MIN).toISOString() })]).rows[0].meta
-		).toBe('Traffic Hazard · Moderate');
+			words(view([ev('d', { reportedAt: new Date(NOW + 24 * 60 * MIN).toISOString() })]).rows[0])
+		).toBe('I-580 WB east of Central Ave · Traffic Hazard · Moderate');
 		expect(v.rows.every((r) => r.url === null)).toBe(true);
 	});
 
 	it('roads ok and empty → "congestion isn\'t measured"; never on a read that isn\'t ok', () => {
-		expect(gettingAroundView(input()).roads.note).toBe(
-			"511 reports no incidents on these roads · congestion isn't measured"
-		);
+		expect(gettingAroundView(input()).roads).toMatchObject({
+			note: '511 reports no incidents on these roads',
+			noteMeta: ["congestion isn't measured"]
+		});
 		const old = gettingAroundView(
 			input({ outcomes: { airport: live(NOW - 3 * MIN), traffic: live(NOW - 20 * MIN) } })
 		);
@@ -807,17 +819,26 @@ describe('gettingAroundView', () => {
 describe('transitRows (Marin Transit, live 2026-10-16)', () => {
 	it('groups six Night Closure alerts into one row, 7 stops, Terra Linda SB first, quoting its description', () => {
 		const rows = transitRows('Marin Transit', MA_LIVE, LIVE);
-		expect(rows.map((r) => r.title)).toEqual([
+		expect(rows.map((r) => r.body)).toEqual([
 			'Nighttime bus pad closures. Visit marintransit.gov for details.',
 			'Night Closure · 7 stops: Terra Linda SB, Lucky Dr, Terra Linda NB, …',
 			'West End Block Party'
 		]);
-		expect(rows[1].meta).toBe(
-			'511 · Marin Transit · timing unverified · e.g. Terra Linda SB: Due to construction, this stop will be closed from 8pm to 6am the next day from 10/12 to 10/16.'
+		expect([words(rows[1]), rows[1].source]).toEqual([
+			'Marin Transit · Night Closure · 7 stops: Terra Linda SB, Lucky Dr, Terra Linda NB, … · timing unverified',
+			'511'
+		]);
+		// The panel holds 511's words whole: every stop, the example in full (never clipped).
+		expect(rows[1].full).toEqual([
+			expect.stringMatching(
+				/^Night Closure · 7 stops: Terra Linda SB, Lucky Dr, Terra Linda NB, \w/
+			),
+			'e.g. Terra Linda SB: Due to construction, this stop will be closed from 8pm to 6am the next day from 10/12 to 10/16.'
+		]);
+		expect(rows[2].full![1]).toMatch(
+			/^Due to the West End Block Party, stops between 4th St & E St/
 		);
-		expect(rows[2].meta).toBe(
-			'511 · Marin Transit · Due to the West End Block Party, stops between 4th St & E St and 4th St & Ida St will not be served between 5pm and 11pm every Friday…'
-		);
+		expect(rows[2].full![1]).not.toMatch(/…$/);
 		expect(rows.every((r) => r.tags.length === 0 && r.tone === null)).toBe(true);
 	});
 
@@ -825,14 +846,14 @@ describe('transitRows (Marin Transit, live 2026-10-16)', () => {
 		expect(PROMO_HEADLINES).toEqual(['Save Money with Clipper!']);
 		expect(
 			transitRows('Marin Transit', [alert('p', '  Save Money with Clipper! ')], NOW).map(
-				(r) => r.title
+				(r) => r.body
 			)
 		).toEqual([]);
 	});
 
 	it('keeps an unlisted promo-like headline', () => {
 		expect(
-			transitRows('Marin Transit', [alert('e', 'Ride free on Earth Day')], NOW).map((r) => r.title)
+			transitRows('Marin Transit', [alert('e', 'Ride free on Earth Day')], NOW).map((r) => r.body)
 		).toEqual(['Ride free on Earth Day']);
 	});
 
@@ -848,15 +869,15 @@ describe('transitRows (Marin Transit, live 2026-10-16)', () => {
 					alert('c', 'Bike car closed')
 				],
 				NOW
-			).map((r) => r.title)
+			).map((r) => r.body)
 		).toEqual(['Delay - Petaluma', 'Bike car closed']);
 		expect(
 			transitRows(
 				'SMART',
 				[alert('a', 'Delay - Novato'), alert('b', 'Delay - NB Petaluma')],
 				NOW
-			).map((r) => [r.title, r.meta])
-		).toEqual([['Delay · 2 stops: Novato, Petaluma NB', '511 · SMART']]);
+			).map((r) => [r.body, r.label, r.source])
+		).toEqual([['Delay · 2 stops: Novato, Petaluma NB', 'SMART', '511']]);
 	});
 });
 
@@ -871,7 +892,7 @@ describe('Getting Around v2: transit summaries', () => {
 		).transit;
 		// 9 live MA (1 promo dropped → 8), 2 SMART (one group row), 2 Angel Island: 12 alerts, 6 rows.
 		expect(v.rows).toHaveLength(3);
-		expect(v.rows[1].title).toMatch(/^Night Closure · 7 stops/);
+		expect(v.rows[1].body).toMatch(/^Night Closure · 7 stops/);
 		expect(v.more).toBe(4);
 	});
 
@@ -885,10 +906,14 @@ describe('Getting Around v2: transit summaries', () => {
 				state: 'reference',
 				url: null,
 				links: [
-					{ label: 'goldengate.org', url: 'https://www.goldengate.org/service-alerts/' },
-					{ label: 'sonomamarintrain.org', url: 'https://www.sonomamarintrain.org/' },
-					{ label: 'angelislandferry.com', url: 'https://angelislandferry.com/' }
-				]
+					{
+						label: 'Golden Gate Transit, Golden Gate Ferry',
+						url: 'https://www.goldengate.org/service-alerts/'
+					},
+					{ label: 'SMART', url: 'https://www.sonomamarintrain.org/' },
+					{ label: 'Angel Island Ferry', url: 'https://angelislandferry.com/' }
+				],
+				source: '511'
 			}
 		]);
 	});
@@ -918,7 +943,7 @@ describe('Getting Around v2: transit summaries', () => {
 				}
 			})
 		).transit;
-		expect(v.rows.map((r) => r.title)).toEqual(['Bridge lane closed']);
+		expect(v.rows.map((r) => r.body)).toEqual(['Bridge lane closed']);
 		expect(said(v.lines).join('\n')).not.toContain('No disruptions listed');
 	});
 
@@ -1138,20 +1163,26 @@ describe("Getting Around: Golden Gate's own list (GGALERT1)", () => {
 			{
 				id: 'gg-549',
 				tags: ['General Ferry', 'Larkspur Ferry', 'Sausalito Ferry'],
-				title: '10/19-10/23 GGFERRY WEEKDAY SERVICE DISRUPTIONS ON ALL ROUTES',
+				label: 'Golden Gate',
+				body: '10/19-10/23 GGFERRY weekday service disruptions on all routes',
+				original: '10/19-10/23 GGFERRY WEEKDAY SERVICE DISRUPTIONS ON ALL ROUTES',
 				url: 'https://www.goldengate.org/alerts/#549',
-				meta: 'goldengate.org · checked 3:40 PM',
-				tone: null
+				source: 'goldengate.org',
+				meta: [],
+				tone: null,
+				full: null
 			},
-			expect.objectContaining({ id: 'gg-534', meta: 'goldengate.org · checked 3:40 PM' })
+			expect.objectContaining({ id: 'gg-534', source: 'goldengate.org' })
 		]);
-		expect(t.rows.map((r) => r.meta).join('\n')).not.toMatch(/posted|ago/);
+		expect(t.sources['goldengate.org']).toBe('goldengate.org · checked 3:40 PM');
+		expect(t.sources['goldengate.org']).not.toMatch(/posted|ago/);
 	});
 
-	it('a conditional notice is shown as written', () => {
-		expect(transitOf(site(blob([FLOOD]))).rows[0].title).toBe(
-			'ALERT MANZANITA PARK & RIDE MAY FLOOD'
-		);
+	it('a conditional notice keeps its words: ALERT dropped, sentence case, "may" still a verb (rule 4; Stuart 2026-10-28)', () => {
+		expect(transitOf(site(blob([FLOOD]))).rows[0]).toMatchObject({
+			body: 'Manzanita Park & Ride may flood',
+			original: 'ALERT MANZANITA PARK & RIDE MAY FLOOD'
+		});
 	});
 
 	it("when the site's read is ok it is the source for GG and GF: 511's quiet line no longer names them", () => {
@@ -1187,9 +1218,9 @@ describe("Getting Around: Golden Gate's own list (GGALERT1)", () => {
 				}
 			})
 		);
-		expect(t.rows.map((r) => [r.id, r.meta])).toEqual([
-			['gg-549', 'goldengate.org · checked 3:40 PM'],
-			['511-GF-2', '511 · Golden Gate Ferry']
+		expect(t.rows.map((r) => [r.id, r.source, r.label])).toEqual([
+			['gg-549', 'goldengate.org', 'Golden Gate'],
+			['511-GF-2', '511', 'Golden Gate Ferry']
 		]);
 	});
 
@@ -1207,12 +1238,17 @@ describe("Getting Around: Golden Gate's own list (GGALERT1)", () => {
 				}
 			)
 		);
-		expect(t.rows.map((r) => [r.title, r.meta])).toEqual([
-			['10/19-10/23 GGFERRY ANGEL ISLAND SERVICE DISRUPTIONS', 'goldengate.org · checked 3:40 PM'],
-			['Route 101 detour', '511 · Golden Gate Transit']
+		expect(t.rows.map((r) => [r.body, r.source, r.meta])).toEqual([
+			[
+				'10/19-10/23 GGFERRY Angel Island service disruptions',
+				'goldengate.org',
+				[{ text: "latest check: we couldn't check this source", attention: true }]
+			],
+			['Route 101 detour', '511', []]
 		]);
-		expect(said(t.lines)).toContain('goldengate.org · Latest read failed');
-		expect(t.lines.find((l) => l.label === 'goldengate.org')?.state).toBe('unavailable');
+		expect(t.sources['goldengate.org']).toBe('goldengate.org · checked 3:40 PM');
+		// Its rows say the latest read failed; no separate "Latest read failed" line (TEXT0 rev B).
+		expect(t.lines.find((l) => l.label === 'goldengate.org')).toBeUndefined();
 		// Not ok, so not the source: 511's quiet GF is said as 511's again.
 		expect(said(t.lines)).toContain(
 			`Golden Gate Ferry, Marin Transit, SMART, Angel Island Ferry · ${NO_511}`
@@ -1238,7 +1274,7 @@ describe("Getting Around: Golden Gate's own list (GGALERT1)", () => {
 				}
 			})
 		);
-		expect(t.rows.map((r) => r.title)).toEqual(['Closure - Larkspur', 'Closure - Sausalito']);
+		expect(t.rows.map((r) => r.body)).toEqual(['Closure - Larkspur', 'Closure - Sausalito']);
 	});
 
 	it("a failed site read doesn't hide 511's own rows, nor say 511 lists nothing (Codex GGALERT1 #1)", () => {
@@ -1270,8 +1306,9 @@ describe("Getting Around: Golden Gate's own list (GGALERT1)", () => {
 	it('a read past its hour is out of date, and not the source for GG and GF', () => {
 		const old = NOW - 2 * 60 * MIN;
 		const t = transitOf(site(blob([ANGEL], {}, old)));
-		expect(t.rows[0].meta).toBe('goldengate.org · checked 2:00 PM · out of date');
-		expect(said(t.lines)).toContain('goldengate.org · Out of date');
+		expect(t.sources['goldengate.org']).toBe('goldengate.org · checked 2:00 PM · out of date');
+		expect(t.rows[0].source).toBe('goldengate.org'); // each row carries that time, out of date
+		expect(t.lines.find((l) => l.label === 'goldengate.org')).toBeUndefined();
 		expect(t.lines.find((l) => l.id === 'no-511')?.label).toMatch(
 			/^Golden Gate Transit, Golden Gate Ferry/
 		);
@@ -1285,9 +1322,13 @@ describe("Getting Around: Golden Gate's own list (GGALERT1)", () => {
 		]);
 	});
 
-	it('each source keeps its own time in the footer; "511" is no longer the aggregate source', () => {
+	it('each source keeps its own time, for its own rows; nothing is gathered at a mixed list’s foot (rule 3)', () => {
 		const t = transitOf(site(blob([ANGEL])));
-		expect(t.meta).toBe('goldengate.org · checked 3:40 PM; 511 · updated 2 min ago');
+		expect(t.sources).toEqual({
+			'goldengate.org': 'goldengate.org · checked 3:40 PM',
+			'511': '511 · updated 2 min ago'
+		});
+		expect(t.meta).toBeNull();
 	});
 
 	it('4+ alerts: three rows, Golden Gate first; "more" goes to goldengate.org only when the hidden rows are its own', () => {
@@ -1364,5 +1405,184 @@ describe('Getting Around types each failure where it enters the model (rule 7)',
 				})
 			)
 		).toMatchObject({ 'faa:OAK': 'unknown' });
+	});
+});
+
+describe('gettingAroundParts (rule 2: every line is one StatusRow; rule 3: provenance per source)', () => {
+	const at = new Date(NOW - 20 * MIN).toISOString(); // 3:40 PM PDT
+	const flood = {
+		ggAlerts: {
+			checkedAt: at,
+			lastSuccessfulScrapeAt: at,
+			alerts: [
+				{ id: '155', headline: 'ALERT MANZANITA PARK & RIDE MAY FLOOD', routes: ['Route 114'] }
+			],
+			lastFailure: null
+		},
+		outcomes: {
+			airport: live(NOW - 3 * MIN),
+			traffic: live(NOW - MIN),
+			'gg-alerts': live(NOW - 20 * MIN)
+		}
+	} satisfies Partial<GettingAroundInput>;
+	const parts = (i: GettingAroundInput) =>
+		Object.fromEntries(
+			gettingAroundParts(gettingAroundView(i)).map((p) => [
+				p.key,
+				{ ...p, rows: p.items.map((x) => x.row) }
+			])
+		);
+
+	it('the agencies 511 lists nothing for share one detail row; its panel links each agency (Stuart 2026-10-28)', () => {
+		const t = parts(input()).transit;
+		const quiet = t.rows.find((r) => r.id === 'no-511')!;
+		expect(quiet).toMatchObject({ kind: 'detail', body: 'No alerts on 511' });
+		expect(quiet.label).toContain('SMART');
+		expect(quiet.meta.map((m) => m.text)).toEqual(['511 · updated 2 min ago']);
+		if (quiet.kind !== 'detail') throw new Error('not a detail row');
+		expect(quiet.detail.links.map((l) => [l.label, l.body])).toEqual(
+			expect.arrayContaining([
+				['SMART', 'sonomamarintrain.org'],
+				['Golden Gate Transit, Golden Gate Ferry', 'goldengate.org']
+			])
+		);
+		// No row holds two destinations: only detail rows have links, and only inside the panel.
+		for (const r of t.rows)
+			expect(r.kind === 'link' ? [r.href] : []).toHaveLength(r.kind === 'link' ? 1 : 0);
+	});
+
+	it('goldengate.org rows: a link row, ALERT dropped, sentence case, the original kept; its own source on the row', () => {
+		const row = parts(input(flood)).transit.rows.find((r) => r.id === 'gg-155')!;
+		expect(row).toMatchObject({
+			kind: 'link',
+			href: 'https://www.goldengate.org/alerts/#155',
+			label: 'Golden Gate',
+			chips: ['Route 114'],
+			body: 'Manzanita Park & Ride may flood',
+			original: 'ALERT MANZANITA PARK & RIDE MAY FLOOD'
+		});
+		expect(row.meta.map((m) => m.text)).toEqual(['goldengate.org · checked 3:40 PM']);
+	});
+
+	it('a failed latest goldengate.org read keeps its list, and each row says why, in the status colour', () => {
+		const failed = parts(
+			input({
+				...flood,
+				ggAlerts: { ...flood.ggAlerts, lastFailure: { at, error: 'timeout: 10 s' } }
+			})
+		).transit;
+		const row = failed.rows.find((r) => r.id === 'gg-155')!;
+		expect(row.meta).toContainEqual({
+			text: "latest check: the source didn't answer in time",
+			attention: true
+		});
+		expect(failed.rows.map((r) => r.body)).not.toContain('Latest read failed');
+	});
+
+	it('a 511 alert is a detail row: its headline may clamp, the panel holds its full words and the 511 links', () => {
+		const long = 'x '.repeat(200).trim();
+		const t = parts(
+			input({
+				transit: {
+					reads: reads({
+						GF: { alerts: [alert('511-GF-1', 'Modified Service', { description: long })] }
+					}),
+					error: null
+				}
+			})
+		).transit;
+		const row = t.rows.find((r) => r.id === '511-GF-1')!;
+		expect(row).toMatchObject({ kind: 'detail', clamp: true, label: 'Golden Gate Ferry' });
+		expect(row.meta.map((m) => m.text)).toEqual(['511 · updated 2 min ago']);
+		if (row.kind !== 'detail') throw new Error('not a detail row');
+		expect(row.detail.paragraphs).toEqual(['Modified Service', long]); // never cut
+		expect(row.detail.links.map((l) => l.href)).toContain('https://511.org/alerts/transit');
+	});
+
+	it('an agency whose read failed says so in the status colour, still links to the agency, and claims no 511 time', () => {
+		const ma = parts(
+			input({
+				transit: {
+					reads: reads({ MA: { alerts: null, error: 'Marin Transit: HTTP 503' } }),
+					error: null
+				}
+			})
+		).transit.rows.find((r) => r.id === 'MA')!;
+		expect(ma).toMatchObject({
+			kind: 'link',
+			href: 'https://marintransit.gov/service-alerts',
+			body: 'Alerts unavailable',
+			bodyAttention: true
+		});
+		expect(ma.meta.map((m) => m.text)).toEqual(['511']);
+	});
+
+	it('one-source parts gather their time once at the foot; road rows are static with qualifications in meta', () => {
+		const p = parts(input());
+		expect(p.roads.foot.provenance).toBe('511 · checked 1 min ago');
+		expect(p.airports.foot.provenance).toBe('FAA · checked 3 min ago');
+		expect(p.transit.foot.provenance).toBeNull();
+		expect(p.roads.rows).toEqual([
+			expect.objectContaining({
+				kind: 'static',
+				body: '511 reports no incidents on these roads',
+				meta: [{ text: "congestion isn't measured", attention: false }]
+			})
+		]);
+	});
+});
+
+describe('gettingAroundParts: what a feed hands us is checked before it is a link (Codex 1b #1)', () => {
+	it('an http or upper-case link works; a malformed one leaves the row without a link, and nothing throws', () => {
+		const odd = (url: string) =>
+			gettingAroundParts(
+				gettingAroundView(
+					input({
+						transit: {
+							reads: reads({ MA: { alerts: [alert('511-MA-x', 'Detour', { url })] } }),
+							error: null
+						}
+					})
+				)
+			)
+				.find((p) => p.key === 'transit')!
+				.items.find((i) => i.row.id === '511-MA-x')!.row;
+		const http = odd('HTTP://marintransit.gov/detour');
+		if (http.kind !== 'detail') throw new Error('not a detail row');
+		expect(http.detail.links[0]).toMatchObject({
+			body: 'marintransit.gov',
+			href: 'http://marintransit.gov/detour'
+		});
+		const broken = odd('https://');
+		if (broken.kind !== 'detail') throw new Error('not a detail row');
+		expect(broken.detail.links.map((l) => l.href)).toEqual(['https://511.org/alerts/transit']);
+	});
+
+	it('a recent goldengate.org list kept after a failed read says so on every row (Codex 1b #2)', () => {
+		const at = new Date(NOW - 10 * MIN).toISOString();
+		const row = gettingAroundView(
+			input({
+				ggAlerts: {
+					checkedAt: at,
+					lastSuccessfulScrapeAt: at,
+					alerts: [{ id: '1', headline: 'ROUTE 30 DETOUR', routes: [] }],
+					lastFailure: null
+				},
+				outcomes: {
+					airport: live(NOW),
+					traffic: live(NOW),
+					'gg-alerts': {
+						kind: 'failed',
+						error: 'HTTP 502',
+						retained: true,
+						observedAt: NOW - 10 * MIN
+					}
+				}
+			})
+		).transit.rows.find((r) => r.id === 'gg-1')!;
+		expect(row.meta).toContainEqual({
+			text: 'latest check: the source returned an error',
+			attention: true
+		});
 	});
 });

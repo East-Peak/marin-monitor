@@ -21,10 +21,12 @@ import type {
 	AirportStatusData,
 	DelayInfo
 } from '$lib/types/airport';
-import { failureKindOf } from './failure-kind';
+import { FAILURE_WORDS, failureKindOf } from './failure-kind';
 import { formatItemAge } from './latest-reporting';
 import { formatAsOf } from './pacific-time';
+import { dropAlertPrefix, sourceSentenceCase } from './source-case';
 import { datasetEntry, type DatasetFetch } from './source-adapters';
+import type { MetaField } from './status-row';
 import {
 	effectiveState,
 	parseObservedAt,
@@ -58,6 +60,9 @@ export const LINKS = {
 	faa: 'https://nasstatus.faa.gov/'
 } as const;
 
+/** Whose list a transit row speaks from: a mixed list keeps a source on every row (rule 3). */
+export type TransitSource = '511' | 'goldengate.org';
+
 export interface Line {
 	id: string;
 	label: string;
@@ -65,19 +70,30 @@ export interface Line {
 	state: SourceEntryState;
 	/** The agency's own page, when its line links there (Decision 6). */
 	url: string | null;
-	/** Pages listed inline after the text (the agencies 511 lists nothing for). */
+	/** Each agency's page (the agencies 511 lists nothing for): the row's panel links them. */
 	links: { label: string; url: string }[];
+	/** Transit's source for the line; null in a one-source part (airports). */
+	source: TransitSource | null;
 }
-interface Row {
+export interface Row {
 	id: string;
-	/** Chips before the title, independent (design §1): "Marin", "to SFO" / "toward Marin" (roads only). */
+	/** Chips inside the label slot, independent (design §1): "Marin", "to SFO" / "toward Marin" (roads only). */
 	tags: string[];
-	title: string;
+	/** What the row is about: a road and place, an agency. */
+	label: string;
+	/** What it says: the incident, the alert's headline (goldengate.org's recased, rule 4). */
+	body: string;
+	/** The source's own headline where `body` shows it changed (rule 4); kept for the detail. */
+	original: string | null;
 	/** The item's own page, or null (never a guessed one). */
 	url: string | null;
-	meta: string;
+	source: TransitSource | null;
+	/** Qualifications in order, each whole and never clamped (lanes, severity, "timing unverified"). */
+	meta: MetaField[];
 	/** Adds a colored dot to the severity the meta already says in words (roads only). */
 	tone: 'closed' | 'major' | 'unknown' | 'moderate' | 'minor' | null;
+	/** 511's own words in full, for the row's panel: the row may clamp because the panel shows all. */
+	full: string[] | null;
 }
 export interface Part {
 	lines: Line[];
@@ -86,8 +102,12 @@ export interface Part {
 	more: number;
 	/** One line instead of content: loading, unavailable, or an honest empty. */
 	note: string | null;
-	/** Each source and its own time, e.g. "511 · checked 1 min ago". */
+	/** The note's qualifications ("congestion isn't measured"). */
+	noteMeta: string[];
+	/** A one-source part's source and time, gathered once ("511 · checked 1 min ago"). */
 	meta: string | null;
+	/** A mixed part's source and time per source, for each of its rows (transit, rule 3). */
+	sources: Partial<Record<TransitSource, string>>;
 	/** "See more" when it isn't the part's default page (transit's hidden rows all Golden Gate's). */
 	link: { url: string; label: string } | null;
 	/** What the part covers, said on screen (roads only). */
@@ -124,7 +144,9 @@ const part = (over: Partial<Part> = {}): Part => ({
 	rows: [],
 	more: 0,
 	note: null,
+	noteMeta: [],
 	meta: null,
+	sources: {},
 	link: null,
 	scope: null,
 	state: null,
@@ -134,14 +156,6 @@ const preview = (rows: Row[]) => ({
 	rows: rows.slice(0, PREVIEW),
 	more: Math.max(0, rows.length - PREVIEW)
 });
-/** At most `max` characters, cut at a word, whitespace collapsed. */
-function clip(text: string, max: number): string {
-	const flat = text.replace(/\s+/g, ' ').trim();
-	if (flat.length <= max) return flat;
-	const cut = flat.slice(0, max - 1);
-	const space = cut.lastIndexOf(' ');
-	return `${space > max / 2 ? cut.slice(0, space) : cut}…`;
-}
 const FUTURE_SKEW_MS = 5 * 60_000;
 /** "511 · checked 1 min ago"; a missing, invalid or future time is "time unknown", never "1 min ago". */
 const timed = (source: string, verb: string, at: number | null, now: number, stale: boolean) =>
@@ -233,10 +247,19 @@ function airports(
 				text: 'FAA status unavailable',
 				state: 'unavailable',
 				url: null,
-				links: []
+				links: [],
+				source: null
 			};
 		}
-		return { id: code, label: code, text: caveated(a, words, state), state, url: null, links: [] };
+		return {
+			id: code,
+			label: code,
+			text: caveated(a, words, state),
+			state,
+			url: null,
+			links: [],
+			source: null
+		};
 	});
 	const answered = lines.filter((l) => l.state !== 'unavailable').length;
 	// Both plainly clear on an ok read: one line (design §3); anything else keeps both.
@@ -290,24 +313,25 @@ function roads(
 				e.marin ? 'Marin' : null,
 				e.trip ? TRIP_LABEL[e.trip] : e.corridor && e.certain ? 'toward Marin' : null
 			].filter((t): t is string => t !== null),
-			title: [e.road, short(e.where)].filter(Boolean).join(' '),
+			label: [e.road, short(e.where)].filter(Boolean).join(' '),
+			body: e.kind,
+			original: null,
 			url: null,
-			meta: [
-				e.kind,
+			source: null,
+			meta: fields([
 				e.lanes,
 				e.closed ? 'road closed' : null,
 				e.severity ?? 'severity unknown',
 				e.certain ? null : 'location unconfirmed',
 				age
-			]
-				.filter(Boolean)
-				.join(' · '),
-			tone: e.closed ? 'closed' : e.severity === null ? 'unknown' : TONE[e.severity]
+			]),
+			tone: e.closed ? 'closed' : e.severity === null ? 'unknown' : TONE[e.severity],
+			full: null
 		};
 	});
 	const empty =
 		state === 'ok'
-			? "511 reports no incidents on these roads · congestion isn't measured"
+			? '511 reports no incidents on these roads'
 			: state === 'stale'
 				? 'Traffic out of date'
 				: 'Traffic not verified';
@@ -315,6 +339,7 @@ function roads(
 		part: part({
 			...preview(rows),
 			note: rows.length ? null : empty,
+			noteMeta: rows.length || state !== 'ok' ? [] : ["congestion isn't measured"],
 			meta: timed('511', 'checked', entry.observedAt, now, state === 'stale'),
 			scope: ROAD_SCOPE,
 			state
@@ -335,14 +360,14 @@ const listed = (n: number) => `${n} alert${n === 1 ? '' : 's'} listed`;
  * one tap away. Marin Transit's too: a populated feed is not proof of complete coverage (Codex r4 #1).
  */
 const MARIN_TRANSIT_PAGE = 'https://marintransit.gov/service-alerts';
-const AGENCY_PAGES: Readonly<Record<string, { label: string; url: string }>> = {
-	GG: { label: 'goldengate.org', url: 'https://www.goldengate.org/service-alerts/' },
-	GF: { label: 'goldengate.org', url: 'https://www.goldengate.org/service-alerts/' },
-	MA: { label: 'marintransit.gov', url: MARIN_TRANSIT_PAGE },
-	SA: { label: 'sonomamarintrain.org', url: 'https://www.sonomamarintrain.org/' },
-	AF: { label: 'angelislandferry.com', url: 'https://angelislandferry.com/' }
+const AGENCY_PAGES: Readonly<Record<string, string>> = {
+	GG: 'https://www.goldengate.org/service-alerts/',
+	GF: 'https://www.goldengate.org/service-alerts/',
+	MA: MARIN_TRANSIT_PAGE,
+	SA: 'https://www.sonomamarintrain.org/',
+	AF: 'https://angelislandferry.com/'
 };
-const NO_511 = 'No alerts on 511; check the agencies';
+const NO_511 = 'No alerts on 511';
 /** 511 listed alerts, but only promotions or ones not in effect. */
 const NOTHING_NOW = 'No disruptions listed on 511 now';
 
@@ -351,11 +376,12 @@ export const PROMO_HEADLINES: readonly string[] = ['Save Money with Clipper!'];
 /** Names shown in a group row before "…". */
 const GROUP_NAMES = 3;
 
-/** A row, how many alerts it stands for ("N more" counts alerts, call 4), and whose list it is. */
+/** A row, how many alerts it stands for ("N more" counts alerts, call 4), and its 511 headline. */
 interface Summary {
 	row: Row;
 	alerts: number;
-	source: 'goldengate.org' | '511';
+	/** The headline as the source wrote it, folded: what goldengate.org's list is matched by. */
+	key: string;
 }
 
 const prefixOf = (a: TransitAlertRow) =>
@@ -368,13 +394,27 @@ function stopName(a: TransitAlertRow): string {
 }
 const unverified = (alerts: TransitAlertRow[], now: number) =>
 	alerts.some((a) => timingAt(a.periods, now) === 'unverified') ? 'timing unverified' : null;
-const row = (id: string, title: string, url: string | null, meta: (string | null)[]): Row => ({
+const fields = (meta: (string | MetaField | null | undefined)[]): MetaField[] =>
+	meta.flatMap((m) => (!m ? [] : typeof m === 'string' ? [{ text: m, attention: false }] : [m]));
+/** A 511 row: the agency names it, the headline says it, the panel holds 511's words in full. */
+const row511 = (
+	id: string,
+	agencyName: string,
+	body: string,
+	url: string | null,
+	unverifiedNote: string | null,
+	full: string[]
+): Row => ({
 	id,
 	tags: [],
-	title,
+	label: agencyName,
+	body,
+	original: null,
 	url,
-	meta: meta.filter(Boolean).join(' · '),
-	tone: null
+	source: '511',
+	meta: fields([unverifiedNote]),
+	tone: null,
+	full
 });
 
 /** One group row (calls 2–3): "Night Closure · 7 stops: Terra Linda SB, Lucky Dr, …", one member's words as the example. */
@@ -389,16 +429,16 @@ function groupRow(
 	const listed = names.length > GROUP_NAMES ? [...names.slice(0, GROUP_NAMES), '…'] : names;
 	const example = members.find((a) => a.description !== null);
 	const exampleName = example && stopName(example);
-	return row(
+	const title = `${prefix} · ${stops} stops${listed.length ? `: ${listed.join(', ')}` : ''}`;
+	return row511(
 		members[0].id,
-		`${prefix} · ${stops} stops${listed.length ? `: ${listed.join(', ')}` : ''}`,
+		agencyName,
+		title,
 		members.find((a) => a.url !== null)?.url ?? null,
-		// The qualification before the alert's words: the clamp may hide their end (Codex GA-v2 #5).
+		unverified(members, now),
 		[
-			'511',
-			agencyName,
-			unverified(members, now),
-			example ? `e.g. ${exampleName ? `${exampleName}: ` : ''}${example.description}` : null
+			`${prefix} · ${stops} stops${names.length ? `: ${names.join(', ')}` : ''}`,
+			...(example ? [`e.g. ${exampleName ? `${exampleName}: ` : ''}${example.description}`] : [])
 		]
 	);
 }
@@ -422,19 +462,18 @@ function summaries(agencyName: string, alerts: TransitAlertRow[], now: number): 
 				out.push({
 					row: groupRow(agencyName, prefix!, members, now),
 					alerts: members.length,
-					source: '511'
+					key: folded(a.headline)
 				});
 			continue;
 		}
+		const headline = a.headline.trim();
 		out.push({
-			row: row(a.id, a.headline.trim(), a.url, [
-				'511',
-				agencyName,
-				unverified([a], now),
-				a.description && clip(a.description, 140)
+			row: row511(a.id, agencyName, headline, a.url, unverified([a], now), [
+				headline,
+				...(a.description ? [a.description] : [])
 			]),
 			alerts: 1,
-			source: '511'
+			key: folded(a.headline)
 		});
 	}
 	return out;
@@ -549,16 +588,39 @@ function ggSite(fetch: DatasetFetch | undefined, blob: GgAlertsBlob | null, now:
 		at === null || at - now > FUTURE_SKEW_MS
 			? null
 			: `${GG_SOURCE} · checked ${formatAsOf(at, now)}${now - at > GG_ALERTS_MAX_AGE_MS ? OUT_OF_DATE : ''}`;
-	const rows = (meta && blob?.alerts ? blob.alerts : []).map(
-		(a): Summary => ({
+	// Its last good list stays when the latest read failed or can't be vouched for, and every
+	// row says so (rule 3; Codex 1b #2). A list merely past its hour says "out of date" in its
+	// provenance instead.
+	const latest =
+		state === 'ok' || state === 'loading' || entry.state === 'ok'
+			? null
+			: {
+					text: entry.failure
+						? `latest check: ${FAILURE_WORDS[entry.failure]}`
+						: state === 'stale'
+							? 'not current'
+							: 'not verified',
+					attention: true
+				};
+	const rows = (meta && blob?.alerts ? blob.alerts : []).map((a): Summary => {
+		const body = sourceSentenceCase(dropAlertPrefix(a.headline), GG_SOURCE);
+		return {
 			row: {
-				...row(`gg-${a.id}`, a.headline, `${GG_ALERTS_PAGE}#${a.id}`, [meta]),
-				tags: a.routes
+				id: `gg-${a.id}`,
+				tags: a.routes,
+				label: 'Golden Gate',
+				body,
+				original: body === a.headline ? null : a.headline,
+				url: `${GG_ALERTS_PAGE}#${a.id}`,
+				source: GG_SOURCE,
+				meta: fields([latest]),
+				tone: null,
+				full: null
 			},
 			alerts: 1,
-			source: GG_SOURCE
-		})
-	);
+			key: folded(a.headline)
+		};
+	});
 	const trusted = state === 'ok';
 	const line = (label: string, text: string): Line => ({
 		id: 'gg-site',
@@ -566,7 +628,8 @@ function ggSite(fetch: DatasetFetch | undefined, blob: GgAlertsBlob | null, now:
 		text,
 		state,
 		url: GG_ALERTS_PAGE,
-		links: []
+		links: [],
+		source: GG_SOURCE
 	});
 	return {
 		entry,
@@ -581,12 +644,9 @@ function ggSite(fetch: DatasetFetch | undefined, blob: GgAlertsBlob | null, now:
 							'Golden Gate Transit, Golden Gate Ferry',
 							'No Golden Gate alerts listed on goldengate.org'
 						)
-					: line(
-							GG_SOURCE,
-							state === 'unavailable' && rows.length
-								? 'Latest read failed'
-								: (GG_SITE_WORDS[state] ?? 'Not verified')
-						)
+					: rows.length
+						? null
+						: line(GG_SOURCE, GG_SITE_WORDS[state] ?? 'Not verified')
 	};
 }
 
@@ -596,7 +656,7 @@ function transit(t: TransitState, gg: Site, now: number): Built {
 	const shown: Summary[] = [];
 	const quiet: (typeof MARIN_AGENCIES)[number][] = [];
 	const claims: TransitAgencyRead[] = [];
-	const onSite = new Set(gg.rows.map((s) => folded(s.row.title)));
+	const onSite = new Set(gg.rows.map((s) => s.key));
 	for (const agency of MARIN_AGENCIES) {
 		const read = t.reads?.find((r) => r.id === agency.id);
 		const entry = agencyEntry(agency, t, read);
@@ -621,8 +681,9 @@ function transit(t: TransitState, gg: Site, now: number): Built {
 			label: agency.name,
 			text: state === 'ok' ? NOTHING_NOW : agencyText(state, read?.alerts?.length ?? null),
 			state,
-			url: AGENCY_PAGES[agency.id].url,
-			links: []
+			url: AGENCY_PAGES[agency.id],
+			links: [],
+			source: '511'
 		});
 	}
 	if (quiet.length)
@@ -632,9 +693,15 @@ function transit(t: TransitState, gg: Site, now: number): Built {
 			text: NO_511,
 			state: 'reference',
 			url: null,
-			links: quiet
-				.map((a) => AGENCY_PAGES[a.id])
-				.filter((p, i, all) => all.findIndex((q) => q.url === p.url) === i)
+			// Each page once, named by the agencies it speaks for (GG and GF share goldengate.org).
+			links: [...new Set(quiet.map((a) => AGENCY_PAGES[a.id]))].map((url) => ({
+				label: quiet
+					.filter((a) => AGENCY_PAGES[a.id] === url)
+					.map((a) => a.name)
+					.join(', '),
+				url
+			})),
+			source: '511'
 		});
 	if (gg.line) lines.push(gg.line);
 	// Every claiming feed's own time must be usable before taking the oldest (Codex r2 #6, r3 #2).
@@ -660,8 +727,11 @@ function transit(t: TransitState, gg: Site, now: number): Built {
 			lines,
 			rows: all.slice(0, PREVIEW).map((s) => s.row),
 			more: hidden.reduce((n, s) => n + s.alerts, 0),
-			meta: [gg.meta, meta511].filter(Boolean).join('; ') || null,
-			link: hidden.length && hidden.every((s) => s.source === GG_SOURCE) ? GG_ALL : null
+			sources: {
+				...(gg.meta ? { [GG_SOURCE]: gg.meta } : {}),
+				...(meta511 ? { '511': meta511 } : {})
+			},
+			link: hidden.length && hidden.every((s) => s.row.source === GG_SOURCE) ? GG_ALL : null
 		}),
 		entries: [...entries, gg.entry],
 		answered: claims.length + (gg.meta ? 1 : 0)

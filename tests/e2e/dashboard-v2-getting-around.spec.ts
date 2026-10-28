@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { expect, test, type Page, type Route } from '@playwright/test';
+import { expect, test, type Locator, type Page, type Route } from '@playwright/test';
 import { parseGgAlertsPage } from '../../src/lib/server/gg-alerts/parse';
 import { stubCams } from './fixtures/cams';
 
@@ -264,9 +264,9 @@ async function heavyCheck(page: Page) {
 	const roads = s.locator('[data-ga="roads"] [data-row]');
 	await expect(roads).toHaveCount(3);
 	await expect(roads.first()).toHaveAttribute('data-tone', 'closed');
-	await expect(roads.first().locator('[data-ga-tag]')).toHaveText(['Marin', 'to SFO']);
+	await expect(roads.first().locator('[data-sr-chip]')).toHaveText(['Marin', 'to SFO']);
 	await expect(roads.first()).toContainText('road closed');
-	await expect(roads.nth(2).locator('[data-ga-tag]')).toHaveText(['Marin', 'toward Marin']); // return direction
+	await expect(roads.nth(2).locator('[data-sr-chip]')).toHaveText(['Marin', 'toward Marin']); // return direction
 	await expect(s.locator('[data-ga="roads"] [data-ga-foot]')).toContainText('3 more');
 	await expect(s).not.toContainText(/tonight|on time|vs usual|don't publish/i);
 	await expect(s).not.toContainText('Clipper');
@@ -278,6 +278,10 @@ async function openV2(page: Page, hash = '') {
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 }
 const section = (page: Page) => page.locator('section#getting-around');
+/** A StatusRow's parts (TEXT0 rev B): label above body, then the meta line. */
+const label = (row: Locator) => row.locator('.sr-label');
+const body = (row: Locator) => row.locator('.sr-body');
+const meta = (row: Locator) => row.locator('.sr-meta');
 const status = (page: Page) => section(page).locator('[data-section-status]');
 const ALL_CLEAR =
 	/No alerts on 511|No disruptions listed|reports no incidents|No airport-wide delays|511 lists no alerts|No incidents listed|No delays reported|on time/i;
@@ -308,35 +312,62 @@ test.describe('desktop 1440×900', () => {
 		const trafficReqs = requests(page, '/api/traffic/corridors');
 		await openV2(page);
 		const s = section(page);
-		await expect(s.locator('[data-line="SFO"]')).toHaveText(
-			'SFO · Ground delay, avg 45 min, up to 90 min'
+		await expect(label(s.locator('[data-line="SFO"]'))).toHaveText('SFO');
+		await expect(body(s.locator('[data-line="SFO"]'))).toHaveText(
+			'Ground delay, avg 45 min, up to 90 min'
 		);
-		await expect(s.locator('[data-line="OAK"]')).toHaveText('OAK · FAA status unavailable');
+		await expect(body(s.locator('[data-line="OAK"]'))).toHaveText('FAA status unavailable');
+		await expect(body(s.locator('[data-line="OAK"]'))).toHaveAttribute('data-attention', '');
 		await expect(s.locator('[data-ga="airports"] [data-ga-foot]')).toContainText(
 			'FAA · checked 3 min ago'
 		);
 		const roads = s.locator('[data-ga="roads"] [data-row]');
 		await expect(roads).toHaveCount(2);
 		await expect(roads.first()).toContainText('to OAK');
-		await expect(roads.first()).toContainText('I-580 WB east of Central Ave');
-		await expect(roads.first()).toContainText('Traffic Hazard · Moderate · reported 25 min ago');
-		// 511's empty lists share one line, each agency's page linked once; a failed read says so.
-		await expect(s.locator('[data-line="no-511"]')).toHaveText(
-			'Golden Gate Transit, Golden Gate Ferry, Angel Island Ferry · No alerts on 511; check the agencies: goldengate.org ↗, angelislandferry.com ↗',
+		await expect(label(roads.first())).toContainText('I-580 WB east of Central Ave');
+		await expect(body(roads.first())).toHaveText('Traffic Hazard');
+		await expect(meta(roads.first())).toHaveText('Moderate · reported 25 min ago');
+		// 511's empty lists share one detail row; its panel links each agency's page once.
+		const quiet = s.locator('[data-line="no-511"]');
+		await expect(label(quiet)).toHaveText(
+			'Golden Gate Transit, Golden Gate Ferry, Angel Island Ferry',
 			{ timeout: 15_000 }
 		);
-		await expect(s.locator('[data-line="SA"]')).toHaveText('SMART · Alerts unavailable ↗');
+		await expect(body(quiet)).toHaveText('No alerts on 511');
+		await expect(quiet.locator('a')).toHaveCount(0);
+		await quiet.locator('button[data-kind="detail"]').click();
+		const panel = page.getByRole('dialog');
+		await expect(panel.locator('a')).toHaveCount(2);
+		await expect(panel.locator('a').first()).toHaveAttribute(
+			'href',
+			'https://www.goldengate.org/service-alerts/'
+		);
+		await page.keyboard.press('Escape');
+		await expect(panel).toHaveCount(0);
+		// A failed read says so, in the status colour, and still links to the agency.
+		const sa = s.locator('[data-line="SA"]');
+		await expect(body(sa)).toHaveText('Alerts unavailable');
+		await expect(sa.locator('a[data-kind="link"]')).toHaveAttribute(
+			'href',
+			'https://www.sonomamarintrain.org/'
+		);
 		await expect(s.locator('[data-line="MA"]')).toHaveCount(0); // its alerts are the rows
 		const rows = s.locator('[data-ga="transit"] [data-row]');
 		await expect(rows).toHaveCount(3);
-		await expect(rows.nth(0).locator('a')).toHaveAttribute(
+		// 511's alerts are detail rows: the headline clamps, the panel has the words and the links.
+		await expect(rows.nth(0).locator('button[data-kind="detail"]')).toHaveCount(1);
+		await rows.nth(0).locator('button').click();
+		await expect(page.getByRole('dialog').locator('a').first()).toHaveAttribute(
 			'href',
 			'https://marintransit.gov/closures'
 		);
+		await page.keyboard.press('Escape');
 		await expect(rows.nth(1)).toContainText('Night Closure · 2 stops: Terra Linda SB, Lucky Dr');
 		await expect(rows.nth(1).locator('a')).toHaveCount(0);
+		// A mixed list: the source and its time on every row, none gathered at the foot (rule 3).
+		await expect(meta(rows.nth(0))).toContainText(/^511 · updated /);
 		await expect(s.locator('[data-ga="transit"] [data-ga-foot]')).toHaveText(
-			/· All transit alerts \(511\) ↗$/
+			'All transit alerts (511) ↗'
 		);
 		await expect(s.locator('[data-ga="transit"] [data-ga-foot]')).not.toContainText('more');
 		await expect(s.locator('[data-ga="roads"] [data-ga-foot] a')).toHaveAttribute(
@@ -364,15 +395,21 @@ test.describe('desktop 1440×900', () => {
 		await openV2(page);
 		const s = section(page);
 		// goldengate.org's ok read speaks for Golden Gate; 511's empty lists for the rest.
-		await expect(s.locator('[data-ga="transit"] [data-line]')).toHaveText(
-			[
-				'Marin Transit, SMART, Angel Island Ferry · No alerts on 511; check the agencies: marintransit.gov ↗, sonomamarintrain.org ↗, angelislandferry.com ↗',
-				'Golden Gate Transit, Golden Gate Ferry · No Golden Gate alerts listed on goldengate.org ↗'
-			],
+		const lines = s.locator('[data-ga="transit"] [data-line]');
+		await expect(lines.locator('.sr-label')).toHaveText(
+			['Marin Transit, SMART, Angel Island Ferry', 'Golden Gate Transit, Golden Gate Ferry'],
 			{ timeout: 15_000 }
 		);
-		await expect(s.locator('[data-ga="roads"] [data-ga-note]')).toHaveText(
-			"511 reports no incidents on these roads · congestion isn't measured"
+		await expect(lines.locator('.sr-body')).toHaveText([
+			'No alerts on 511',
+			'No Golden Gate alerts listed on goldengate.org'
+		]);
+		await expect(lines.nth(1).locator('.sr-meta')).toHaveText(/^goldengate\.org · checked /);
+		await expect(body(s.locator('[data-ga="roads"] [data-ga-note]'))).toHaveText(
+			'511 reports no incidents on these roads'
+		);
+		await expect(meta(s.locator('[data-ga="roads"] [data-ga-note]'))).toHaveText(
+			"congestion isn't measured"
 		);
 		await expect(s.locator('[data-ga="airports"] [data-ga-note]')).toHaveText(
 			'No airport-wide delays at SFO or OAK'
@@ -486,8 +523,11 @@ test.describe('phone 390×844', () => {
 		await openV2(page, '#getting-around');
 		const row = section(page).locator('[data-ga="transit"] [data-row]').first();
 		await expect(row).toContainText('Night Closure · 6 stops', { timeout: 15_000 });
-		const visible = await row.locator('.ga-meta').evaluate((meta) => {
-			const node = meta.firstChild!;
+		// Qualifications sit in meta, which never clamps (rule 2): the words are whole and on screen.
+		const visible = await row.locator('.sr-meta').evaluate((meta) => {
+			const node = [...meta.querySelectorAll('span')].find((s) =>
+				s.textContent!.includes('timing unverified')
+			)!.firstChild!;
 			const at = node.textContent!.indexOf('timing unverified');
 			const range = document.createRange();
 			range.setStart(node, at);
@@ -600,11 +640,16 @@ for (const [name, viewport] of [
 			await stub(page, { gg: (r) => json(r, ggBlob(GG_PAGE)) });
 			await openV2(page, '#getting-around');
 			const rows = transit(page).locator('[data-row]');
-			await expect(rows.first()).toContainText(
-				'10/19-10/23 GGFERRY WEEKDAY SERVICE DISRUPTIONS ON ALL ROUTES',
+			await expect(body(rows.first())).toHaveText(
+				'10/19-10/23 GGFERRY weekday service disruptions on all routes',
 				{ timeout: 15_000 }
 			);
-			await expect(rows.first().locator('[data-ga-tag]')).toHaveText([
+			// The source's own words stay with the row (rule 4).
+			await expect(body(rows.first())).toHaveAttribute(
+				'title',
+				'10/19-10/23 GGFERRY WEEKDAY SERVICE DISRUPTIONS ON ALL ROUTES'
+			);
+			await expect(rows.first().locator('[data-sr-chip]')).toHaveText([
 				'General Ferry',
 				'Larkspur Ferry',
 				'Sausalito Ferry',
@@ -615,16 +660,18 @@ for (const [name, viewport] of [
 				'href',
 				'https://www.goldengate.org/alerts/#549'
 			);
-			await expect(rows.first().locator('.ga-meta')).toHaveText(
+			await expect(meta(rows.first())).toHaveText(
 				/^goldengate\.org · checked \d{1,2}:\d{2} [AP]M$/
 			);
-			await expect(rows.nth(2)).toContainText('ALERT MANZANITA PARK & RIDE MAY FLOOD');
-			await expect(transit(page)).not.toContainText(/GATE C|PARK SMART|TAP ON AND OFF/);
-			// 511's agencies are read one after another: its time arrives after the site's.
-			await expect(transit(page).locator('[data-ga-foot]')).toContainText(
-				/^goldengate\.org · checked \d{1,2}:\d{2} [AP]M; 511 · updated 2 min ago · /,
+			// "ALERT" dropped from the row; "may" still a verb (Stuart 2026-10-28; rule 4).
+			await expect(body(rows.nth(2))).toHaveText('Manzanita Park & Ride may flood');
+			await expect(transit(page)).not.toContainText(/GATE C|PARK SMART|TAP ON AND OFF/i);
+			// 511's agencies are read one after another: its time arrives on its own rows.
+			await expect(meta(transit(page).locator('[data-line="no-511"]'))).toHaveText(
+				'511 · updated 2 min ago',
 				{ timeout: 15_000 }
 			);
+			await expect(transit(page).locator('[data-ga-foot]')).not.toContainText('checked');
 			const overflow = await page.evaluate(
 				() => document.documentElement.scrollWidth - window.innerWidth
 			);
@@ -639,14 +686,12 @@ for (const [name, viewport] of [
 				transit: { GF: (r) => json(r, gtfs([{ id: 'gf1', title: 'Larkspur 10:40 AM cancelled' }])) }
 			});
 			await openV2(page, '#getting-around');
-			await expect(transit(page).locator('[data-line="gg-site"]')).toHaveText(
-				'goldengate.org · Alerts unavailable ↗',
-				{ timeout: 15_000 }
-			);
-			await expect(transit(page).locator('[data-row="511-GF-gf1"]')).toContainText(
-				'511 · Golden Gate Ferry',
-				{ timeout: 15_000 }
-			);
+			const site = transit(page).locator('[data-line="gg-site"]');
+			await expect(label(site)).toHaveText('goldengate.org', { timeout: 15_000 });
+			await expect(body(site)).toHaveText('Alerts unavailable');
+			const gf = transit(page).locator('[data-row="511-GF-gf1"]');
+			await expect(label(gf)).toHaveText('Golden Gate Ferry', { timeout: 15_000 });
+			await expect(meta(gf)).toContainText(/^511/);
 			await expect(transit(page)).not.toContainText('No Golden Gate alerts');
 		});
 
@@ -666,3 +711,100 @@ for (const [name, viewport] of [
 		});
 	});
 }
+
+/**
+ * TEXT1 1b: Getting Around's roles and colours (plan-text-system.md rule 1). Each slot of the row
+ * anatomy carries its one role, and the status colours appear only on what needs attention;
+ * the accent only on links.
+ */
+for (const [name, viewport] of [
+	['1440×900', { width: 1440, height: 900 }],
+	['390×844', { width: 390, height: 844 }]
+] as const) {
+	test(`roles by slot, status colour only for status, at ${name} (rule 1)`, async ({ page }) => {
+		await page.setViewportSize(viewport);
+		await stub(page, { ...heavy, transit: { ...heavy.transit, SA: down } });
+		await openV2(page, '#getting-around');
+		const s = section(page);
+		await expect(s.locator('[data-ga="transit"] [data-row]')).toHaveCount(3, { timeout: 15_000 });
+		await expect(s.locator('[data-line="SA"] [data-attention]')).toBeVisible();
+		// The section's body; its header row is slice 1c's (rule 5).
+		const nodes = await s.locator('[data-slot="getting-around"]').evaluate((root) => {
+			const swatch = (v: string) => {
+				const el = document.createElement('span');
+				el.style.color = `var(${v})`;
+				root.append(el);
+				const c = getComputedStyle(el).color;
+				el.remove();
+				return c;
+			};
+			const [warning, danger, accent] = ['--warning', '--danger', '--accent'].map(swatch);
+			const SLOTS: [string, string][] = [
+				['[data-sr-chip]', 'meta'],
+				['.sr-label', 'label'],
+				['.sr-body', 'body'],
+				['.sr-meta', 'meta'],
+				['.ga-title', 'label'],
+				['.ga-scope', 'meta'],
+				['.ga-foot', 'meta']
+			];
+			const out: {
+				text: string;
+				role: string | null;
+				slot: string | null;
+				problem: string | null;
+			}[] = [];
+			const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+			for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+				const el = n.parentElement!;
+				const text = n.textContent!.trim();
+				if (!text || el.getClientRects().length === 0) continue;
+				const role = el.closest('[data-text-role]')?.getAttribute('data-text-role') ?? null;
+				const slot = SLOTS.find(([sel]) => el.closest(sel));
+				const color = getComputedStyle(el).color;
+				const status = color === warning || color === danger;
+				const problem = !slot
+					? 'outside the row anatomy'
+					: role !== slot[1]
+						? `${slot[0]} is ${slot[1]}, not ${role}`
+						: status && !el.closest('.sr-attention')
+							? 'status colour without a status'
+							: color === accent && !el.closest('a')
+								? 'accent off a link'
+								: null;
+				out.push({ text: text.slice(0, 60), role, slot: slot?.[0] ?? null, problem });
+			}
+			return out;
+		});
+		expect(nodes.length).toBeGreaterThan(20);
+		expect(nodes.filter((n) => n.problem)).toEqual([]);
+		// The status colour is used where something needs attention (a failed read).
+		expect(nodes.some((n) => n.slot === '.sr-body' && /unavailable/i.test(n.text))).toBe(true);
+	});
+}
+
+test('a detail row’s panel by keyboard: focus moves in, Tab stays inside, Esc returns to the row (Codex 1b #6)', async ({
+	page
+}) => {
+	await page.setViewportSize({ width: 1440, height: 900 });
+	await stub(page);
+	await openV2(page);
+	const row = section(page).locator('[data-line="no-511"] button[data-kind="detail"]');
+	await expect(row).toBeVisible({ timeout: 15_000 });
+	await row.focus();
+	await page.keyboard.press('Enter');
+	const panel = page.getByRole('dialog');
+	await expect(panel).toBeVisible();
+	await expect(panel.getByRole('button', { name: 'Close' })).toBeFocused();
+	const inside = () => page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'));
+	const stops = (await panel.locator('a[href], button').count()) + 1;
+	for (let i = 0; i < stops; i++) {
+		await page.keyboard.press('Tab');
+		expect(await inside()).toBe(true);
+	}
+	await page.keyboard.press('Shift+Tab');
+	expect(await inside()).toBe(true);
+	await page.keyboard.press('Escape');
+	await expect(panel).toHaveCount(0);
+	await expect(row).toBeFocused();
+});
