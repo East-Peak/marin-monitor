@@ -418,7 +418,11 @@ test.describe('@phone dashboard controls', () => {
 			);
 			// Detail rows open their panel and close back to the row (TEXT1 rule 2).
 			const details = body(page, id).locator('button[data-kind="detail"]');
-			if (id === 'getting-around') expect(await details.count()).toBeGreaterThan(0);
+			// Expected wherever 511 answers; where it doesn't (CI has no key) transit says so instead.
+			if (id === 'getting-around' && (await details.count()) === 0)
+				await expect(
+					body(page, id).locator('[data-ga="transit"] [data-attention]').first()
+				).toBeVisible();
 			const dialog = page.getByRole('dialog');
 			for (const [i, button] of (await details.all()).entries()) {
 				failures.push(
