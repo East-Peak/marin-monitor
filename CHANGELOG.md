@@ -6,6 +6,14 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-10-28
 
+### Changed — One text and disclosure system (TEXT1 1b–1d)
+
+- **Getting Around reads row by row**: every line names its thing above what it says, with its source and time beneath. A 511 alert opens a panel with its full text and links; agencies 511 lists nothing for share one row whose panel links each agency; Golden Gate's notices drop their leading "ALERT" and read in sentence case. Roads and airports give their source once at the foot; transit, which mixes goldengate.org and 511, gives it on every row.
+- **Headers stay put**: a section's header is one full-width row (title, a quiet count, a chevron), and opening or closing it no longer moves it under your finger.
+- **Panels, not pushing**: "Which sources" is gone. The coverage line stays visible and "Coverage details" opens a panel of every source of the section with its state and time; the header's sources button opens the same panel. Panels cover a still page and hand you back where you were.
+- **Quieter provenance**: source lines lose the always-green dot (colour only where something needs attention), Air, fire & ground give each reading its own source, and status colours are used for status only.
+- **Height budget**: §13.3's all-open phone page is re-ruled from 5,064 to 5,110 px (Stuart, 2026-10-28) for the taller, approved rows.
+
 ### Changed — Plain words when a source is down (TEXT1 1a)
 
 - **No raw errors on screen**: a source that failed now says why in a sentence ("City of San Rafael: Unavailable: we couldn't follow this feed's redirect · last successfully checked Oct 22, 1:30 PM"), from a typed reason recorded where the failure was caught (redirect, error, timeout, unreadable, empty, or unknown). The "Which sources" lists and the header's source health list no longer show diagnostics like `redirect-not-allowed: https://…` or `HTTP 502`; those stay in `/api/health`. Wording never claims when a failure began or that a source published nothing.

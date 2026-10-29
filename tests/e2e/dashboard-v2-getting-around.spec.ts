@@ -207,10 +207,11 @@ const heavy = {
 	traffic: (r: Route) => json(r, HEAVY_TRAFFIC)
 };
 /**
- * The open section at 390×844 before v2, measured on HEAD 07d456f (Progress log, 2026-10-16): on
- * today's default stub, and on the disruption-heavy day above with the same data.
+ * The open section at 390×844 on today's default stub, and on the disruption-heavy day above with
+ * the same data. Re-baselined by Stuart, 2026-10-28 (TEXT1): the label-above-body rows measure
+ * 1,041 and 1,070 (were 803 and 873 on HEAD 07d456f); no taller than now, ~10 px margin.
  */
-const BEFORE_390 = { today: 803, heavy: 873 };
+const BEFORE_390 = { today: 1_050, heavy: 1_080 };
 
 type Handler = (r: Route) => unknown;
 async function stub(

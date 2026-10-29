@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-28',
+		title: 'Easier to read, and nothing jumps',
+		description:
+			'Getting Around now reads row by row: what it is, what it says, and where it came from. Tap an alert for its full text. Section headers stay where you tapped them, and “Coverage details” opens a panel listing every source instead of pushing the page down. Source lines lose their green dots; colour now means something needs a look.'
+	},
+	{
+		date: '2026-10-28',
 		title: 'Plain words when a source is down',
 		description:
 			'When a news feed or data source can’t be read, the dashboard now says why in plain words (for example, that we couldn’t follow a feed’s redirect) and when it last answered, instead of showing the raw error.'

@@ -186,7 +186,9 @@ export async function phoneHeight(
 	expect(strip).toBeLessThanOrEqual(220);
 	expect(bottom - strip).toBeLessThanOrEqual(1266);
 	if (mode === 'every section saved open') {
-		// §13.3: with every disclosure open the whole document is ≤ 5,064 (no strip exemption: Codex r1 #8).
+		// §13.3: with every disclosure open the whole document is ≤ 5,110 (no strip exemption: Codex r1
+		// #8). Re-ruled from 5,064 by Stuart, 2026-10-28 (TEXT1): the approved label-above-body rows
+		// measured 5,087 on this worst-case fixture with the Lifestyle card populated.
 		const ga = page.locator('section#getting-around');
 		await expect(ga.locator('[data-ga="roads"] [data-row]')).toHaveCount(3);
 		await expect(ga.locator('[data-ga="transit"] [data-row]')).toHaveCount(3, {
@@ -202,7 +204,7 @@ export async function phoneHeight(
 			);
 		await expect(page.locator('[data-section-toggle][aria-expanded="false"]')).toHaveCount(0);
 		const doc = await page.evaluate(() => document.documentElement.scrollHeight);
-		console.log(`[${mode}] document ${doc} px (≤ 5,064, Getting Around populated)`);
-		expect(doc).toBeLessThanOrEqual(5064);
+		console.log(`[${mode}] document ${doc} px (≤ 5,110, Getting Around populated)`);
+		expect(doc).toBeLessThanOrEqual(5110);
 	}
 }
