@@ -1,6 +1,6 @@
 <!-- A household's month by section, as one stacked bar, with an optional key of the biggest. -->
 <script lang="ts">
-	import { SECTION_COLOR, type SectionShare } from '$lib/lifestyle/view';
+	import { SECTION_COLOR, spendingSections, type SectionShare } from '$lib/lifestyle/view';
 
 	let {
 		sections,
@@ -8,8 +8,7 @@
 		height = 14
 	}: { sections: readonly SectionShare[]; key?: number; height?: number } = $props();
 
-	/** A net-income section (a profitable business) is not spending: it has no width. */
-	const spending = $derived(sections.filter((s) => s.monthly > 0));
+	const spending = $derived(spendingSections(sections));
 	const pct = (share: number) => (share < 0.005 ? '<1%' : `${Math.round(share * 100)}%`);
 </script>
 

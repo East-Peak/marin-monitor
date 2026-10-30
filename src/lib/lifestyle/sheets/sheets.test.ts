@@ -307,3 +307,60 @@ describe('the approved household sheets', () => {
 		]);
 	});
 });
+
+describe('the signature lines (COST1)', () => {
+	const signatures = (id: string) =>
+		SHEETS.find((s) => s.id === id)!
+			.lines.filter((l) => l.signature)
+			.map((l) => l.id);
+
+	it('are 5–6 real lines on every sheet', () => {
+		for (const s of SHEETS) {
+			const ids = s.lines.filter((l) => l.signature).map((l) => l.id);
+			expect(ids.length, s.id).toBeGreaterThanOrEqual(5);
+			expect(ids.length, s.id).toBeLessThanOrEqual(6);
+			expect(new Set(ids).size, s.id).toBe(ids.length);
+		}
+	});
+
+	it('are the 18 Stuart approved in COST0', () => {
+		expect(signatures('larkspur').sort()).toEqual(
+			[
+				'larkspur.biz',
+				'larkspur.help.nanny',
+				'larkspur.car.rivian.lease',
+				'larkspur.kids.math',
+				'larkspur.kids.foundation',
+				'larkspur.kids.bike'
+			].sort()
+		);
+		expect(signatures('millvalley').sort()).toEqual(
+			[
+				'millvalley.well.therapy',
+				'millvalley.travel.wellness',
+				'millvalley.belong.gala',
+				'millvalley.well.fm',
+				'millvalley.biz',
+				'millvalley.food.clean'
+			].sort()
+		);
+		expect(signatures('ross').sort()).toEqual(
+			[
+				'ross.kids.tuition',
+				'ross.help.manager',
+				'ross.travel.xmas',
+				'ross.belong.galas',
+				'ross.car.vintage',
+				'ross.home.pi'
+			].sort()
+		);
+	});
+
+	it('never carry an internal ruling into a note: a note can reach the site', () => {
+		for (const l of SHEETS.flatMap((s) => s.lines))
+			expect(l.note ?? '', l.id).not.toMatch(/ruling|Stuart/i);
+		expect(SHEETS.flatMap((s) => s.lines).find((l) => l.id === 'ross.help.manager')?.note).toBe(
+			'Part-time.'
+		);
+	});
+});

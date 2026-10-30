@@ -1,9 +1,15 @@
-<!-- The Cost section's Lifestyle Index card (LIFE2): one fictional household's break-even, picked by town. -->
+<!-- The Cost section's Lifestyle Index card (LIFE2, COST1): one fictional household's month and receipt, picked by town. -->
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { Measured } from '$lib/dashboard/measured';
-	import { dailySlug, FICTION_LABEL, type LifestyleCard } from '$lib/lifestyle/view';
-	import ClassChips from '../lifestyle/ClassChips.svelte';
+	import {
+		dailySlug,
+		FICTION_LABEL,
+		lineTally,
+		pricedSoFar,
+		type LifestyleCard
+	} from '$lib/lifestyle/view';
+	import ReceiptRow from '../lifestyle/ReceiptRow.svelte';
 	import SectionStack from '../lifestyle/SectionStack.svelte';
 	import CardSource from './CardSource.svelte';
 
@@ -31,7 +37,8 @@
 				: null
 	);
 	const h = $derived(households.find((x) => x.slug === slug) ?? null);
-	/** The household's first highlight with a figure (LIFE3): desktop only, beside the biggest lines. */
+	const soFar = $derived(!!h && pricedSoFar(h));
+	/** The household's first highlight with a figure (LIFE3). */
 	const highlight = $derived(h?.highlights?.find((x) => x.figure !== null) ?? null);
 	const notes = $derived(
 		h
@@ -71,70 +78,67 @@
 	{#if h}
 		<div class="body">
 			<div class="half">
-				{#if h.complete && h.breakEven !== null}
-					<div class="hero-row">
-						<span class="num" data-break-even data-text-role="headline"
-							>{usd(h.breakEven)}<span class="per" data-text-role="meta">/yr</span></span
-						>
-						<span class="meta" data-text-role="meta">pre-tax, to break even</span>
-					</div>
-					<p class="sub" data-text-role="label">
-						{h.name}: {usd(h.burnMonthly)} a month going out, before saving anything.
-						<a class="more hit-44" href="/cost/{h.slug}">The whole budget →</a>
-					</p>
+				<a class="hero hit-44" href="/cost/{h.slug}" data-burn data-text-role="headline"
+					><span class="num">{usd(h.burnMonthly)} a month{soFar ? ' so far' : ''}</span></a
+				>
+				{#if h.complete}
+					<p class="sub" data-text-role="label">{h.name}: going out, before saving anything</p>
 				{:else}
-					<div class="hero-row">
-						<span class="num" data-burn data-text-role="value"
-							>{usd(h.burnMonthly)}<span class="per">/mo so far</span></span
-						>
-						<span class="incomplete" data-incomplete data-text-role="meta">incomplete</span>
-					</div>
 					<p class="sub" data-text-role="label">
-						{h.name}: no break-even while {list(h.missing)} can’t be read.
-						<a class="more hit-44" href="/cost/{h.slug}">The whole budget →</a>
+						<span class="incomplete" data-incomplete>incomplete</span>
+						· {h.name}: no break-even while {list(h.missing)} can’t be read
 					</p>
 				{/if}
-				<SectionStack sections={h.sections} key={4} />
+				{#if h.breakEven !== null}
+					<p class="meta" data-break-even data-text-role="meta">
+						To break even: {usd(h.breakEven)} a year before tax
+					</p>
+				{/if}
+				<div class="bar"><SectionStack sections={h.sections} key={4} /></div>
 			</div>
-			<div class="half">
-				<ul class="top">
-					{#each h.top as l (l.id)}
-						<li data-line={l.id}>
-							<span class="lab" data-text-role="label" title={l.label}
-								><span class="t">{l.label}</span><ClassChips
-									classes={l.classes}
-								/>{#if l.availability === 'stale'}<span class="stale" data-stale>stale</span
-									>{/if}</span
-							>
-							<span class="num" data-text-role="label">{usd(l.monthly)}</span>
-						</li>
+			<div class="half receipt-side">
+				<ul class="receipt">
+					{#each h.receipt as l (l.id)}
+						<li><ReceiptRow line={l} slug={h.slug} /></li>
 					{/each}
 				</ul>
-				{#if highlight}
-					<p class="hl" data-card-highlight data-highlight={highlight.key} data-text-role="label">
-						<span class="num">{highlight.figure}</span>
-						{highlight.text}{#if highlight.modelled}
-							<span class="modelled" data-modelled data-text-role="meta">modelled</span>{/if}
-					</p>
-				{/if}
+				<div class="total" data-receipt-total data-text-role="label">
+					<span>{lineTally(h)}</span><span class="num"
+						>{usd(h.burnMonthly)} a month{soFar ? ' so far' : ''}</span
+					>
+				</div>
 			</div>
+			{#if highlight}
+				<p class="hl" data-card-highlight data-highlight={highlight.key} data-text-role="label">
+					<span class="num">{highlight.figure}</span>
+					{highlight.text}{#if highlight.modelled}
+						<span class="modelled" data-modelled data-text-role="meta">modelled</span>{/if}
+				</p>
+			{/if}
 		</div>
 	{:else}
 		<p class="empty" data-text-role="body">{why(view)}</p>
 	{/if}
-	<!-- Its time is the last run that priced every household on in-date reads: none yet is never green. -->
-	<CardSource
-		lines={[
-			{
-				measured: view,
-				verb: 'priced',
-				untimed: 'no complete run on in-date reads yet',
-				muted: view.kind === 'value' && view.observedAt === null
-			}
-		]}
-		{now}
-		{notes}
-	/>
+	<div class="foot">
+		<!-- Its time is the last run that priced every household on in-date reads: none yet is never green. -->
+		<CardSource
+			lines={[
+				{
+					measured: view,
+					verb: 'priced',
+					untimed: 'no complete run on in-date reads yet',
+					muted: view.kind === 'value' && view.observedAt === null
+				}
+			]}
+			{now}
+			{notes}
+		/>
+		{#if h}
+			<a class="see-all" href="/cost/{h.slug}" data-see-all data-text-role="label"
+				>See all {h.lineCount} lines →</a
+			>
+		{/if}
+	</div>
 </article>
 
 <style>
@@ -142,9 +146,9 @@
 	.card {
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
+		gap: var(--v2-s3);
 		min-width: 0;
-		padding: 12px 14px;
+		padding: var(--v2-s3) 14px;
 		border: 1px solid var(--border-light);
 		border-radius: 8px;
 	}
@@ -181,7 +185,8 @@
 		font-weight: 500;
 	}
 	.picker button:focus-visible,
-	.more:focus-visible {
+	.hero:focus-visible,
+	.see-all:focus-visible {
 		outline: 2px solid var(--accent);
 		outline-offset: 2px;
 	}
@@ -202,33 +207,43 @@
 	.incomplete {
 		font-weight: 600;
 	}
-	.body,
+	.body {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--v2-s3);
+		min-width: 0;
+	}
 	.half {
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
+		gap: var(--v2-s2);
 		min-width: 0;
 	}
-	/* Full section width on desktop: the numbers beside the biggest lines. */
+	/* Full section width on desktop: the month beside the receipt, the highlight under the month. */
 	@media (min-width: 1024px) {
 		.body {
-			flex-direction: row;
-			gap: 28px;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			grid-template-rows: auto 1fr;
+			column-gap: 28px;
 		}
-		.half {
-			flex: 1 1 0;
+		.receipt-side {
+			grid-column: 2;
+			grid-row: 1 / span 2;
 		}
 	}
-	.hero-row {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: baseline;
-		gap: 4px 10px;
+	.hero {
+		width: fit-content;
+		color: var(--text-primary);
+		text-decoration: none;
+	}
+	.hero:hover {
+		text-decoration: underline;
+		text-decoration-thickness: 1px;
+		text-underline-offset: 4px;
 	}
 	.num {
 		font-variant-numeric: tabular-nums;
 	}
-	.per,
 	.meta,
 	.empty {
 		margin: 0;
@@ -239,35 +254,25 @@
 		margin: 0;
 		color: var(--text-secondary);
 	}
-	.top {
+	.receipt {
 		list-style: none;
 		margin: 0;
 		padding: 0;
 	}
-	.top li {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-		gap: 8px;
-		padding: 4px 0;
+	.receipt li {
 		border-bottom: 1px solid var(--border);
 	}
-	.top li:last-child {
+	.receipt li:last-child {
 		border-bottom: 0;
 	}
-	/* One row a line: a long label truncates (its full text is the title), its chips stay. */
-	.lab {
+	.total {
 		display: flex;
-		align-items: baseline;
-		min-width: 0;
-	}
-	.lab .t {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-	.lab :global(.chips) {
-		flex: none;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		gap: 0 var(--v2-s3);
+		padding-top: var(--v2-s2);
+		border-top: 2px solid var(--border-light);
+		color: var(--text-secondary);
 	}
 	.hl {
 		margin: 0;
@@ -282,30 +287,44 @@
 		margin-left: 4px;
 		color: var(--amber, #f59e0b);
 	}
-	/* Below the two-column card there is no room for it: the phone's height budget (§13.3) holds. */
-	@media (max-width: 1023px) {
-		.hl {
-			display: none;
-		}
+	.foot {
+		display: flex;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: var(--v2-s4);
+		min-width: 0;
 	}
-	/* The phone's height budget (§13.3) pays for the headline break-even. */
+	.see-all {
+		flex: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 2.75rem;
+		padding: 0 var(--v2-s4);
+		border: 1px solid var(--accent);
+		border-radius: 8px;
+		color: var(--accent);
+		font-weight: 500;
+		text-align: center;
+		text-decoration: none;
+	}
+	.see-all:hover {
+		background: var(--surface-hover, transparent);
+	}
+	/* The phone: the receipt says what the money is for, so the bar goes (Stuart, COST0), and
+	   the way in takes the card's full width. */
 	@media (max-width: 767px) {
 		.card,
-		.body,
-		.half {
-			gap: 6px;
+		.body {
+			gap: var(--v2-s2);
 		}
-		.top li {
-			padding: 3px 0;
+		.bar {
+			display: none;
 		}
-	}
-	.stale {
-		margin-left: 6px;
-		color: var(--amber, #f59e0b);
-	}
-	.more {
-		white-space: nowrap;
-		color: var(--accent);
-		text-decoration: none;
+		.foot {
+			flex-direction: column;
+			align-items: stretch;
+			gap: var(--v2-s2);
+		}
 	}
 </style>

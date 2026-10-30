@@ -4,6 +4,16 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-10-30
+
+### Changed — The Cost card says what the money is for (COST1)
+
+- **The month leads**: the card, `/cost/<town>` and the TV open on what a household spends a month; break-even drops to a line beneath it on the card, and stays in full on the page.
+- **A receipt, not the top three**: each household shows the 5–6 lines that say who it is, chosen on its sheet and sorted by amount, each a link that lands on its line open, in view and focused. A `$0` line says why.
+- **An obvious way in**: "See all N lines →" is the last thing on the card, on desktop and the phone, and the card's highlight now shows on the phone too (the section bar goes there).
+- **Unknown is never $0**: while any line can't be read, every total says "so far", and a section with nothing priced says "can't be read".
+- **Height budget**: §13.3's all-open phone page is re-baselined from 5,110 to 5,498 px (Stuart, 2026-10-30), the worst measured with the approved receipt.
+
 ## 2026-10-28
 
 ### Changed — One text and disclosure system (TEXT1 1b–1d)

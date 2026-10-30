@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { roleFontPx } from '../../src/lib/dashboard/type-roles';
 import { phoneHeight, stub } from './fixtures/v2-height';
 
@@ -59,19 +59,16 @@ for (const [label, viewport] of [
 			await c.locator('[data-town="larkspur"]').click();
 			await expect(c.locator('[data-town="larkspur"]')).toHaveAttribute('aria-pressed', 'true');
 			await expect(c.locator('[data-break-even]')).toContainText(breakEven('larkspur'));
-			// The break-even is the card's headline, not body text; its "/yr" stays small.
-			const be = c.locator('[data-break-even]');
-			await expect(be).toHaveAttribute('data-text-role', 'headline');
-			await expect(be).toHaveCSS('font-size', `${roleFontPx('headline', viewport.width)}px`);
-			await expect(be.locator('.per')).toHaveCSS(
+			// The month is the card's headline; break-even is its meta line.
+			const hero = c.locator('[data-burn]');
+			await expect(hero).toHaveAttribute('data-text-role', 'headline');
+			await expect(hero).toHaveCSS('font-size', `${roleFontPx('headline', viewport.width)}px`);
+			await expect(c.locator('[data-break-even]')).toHaveCSS(
 				'font-size',
 				`${roleFontPx('meta', viewport.width)}px`
 			);
-			await expect(c.locator('[data-line]').first()).toContainText('Mortgage');
-			await expect(c.locator('[data-line]').first().locator('[data-classes]')).toHaveAttribute(
-				'data-classes',
-				'cited persona'
-			);
+			await expect(c.locator('a[data-line]').first()).toContainText('tinned-fish shop');
+			await expect(c.locator('[data-classes]')).toHaveCount(0);
 
 			// No run in the seed priced every household on in-date reads: never a green dot.
 			const st = c.locator('[data-card-source] [data-source-state]');
@@ -88,7 +85,7 @@ for (const [label, viewport] of [
 			await expect(c).toContainText('no break-even while Wine can’t be read');
 
 			await c.locator('[data-town="larkspur"]').click();
-			await c.getByRole('link', { name: 'The whole budget →' }).click();
+			await c.getByRole('link', { name: 'See all 40 lines →' }).click();
 			await expect(page).toHaveURL(/\/cost\/larkspur$/);
 		});
 
@@ -162,19 +159,15 @@ for (const [label, viewport] of [
 			await expect(page.locator('[data-highlights]')).toHaveCount(0);
 		});
 
-		test('the card: a highlight beside the biggest lines on desktop, none on the phone', async ({
+		test('the card: one highlight, on desktop and the phone, none when incomplete', async ({
 			page
 		}) => {
 			const c = await card(page, phone);
 			await c.locator('[data-town="larkspur"]').click();
 			const one = c.locator('[data-card-highlight]');
-			if (phone) {
-				await expect(one).toBeHidden();
-			} else {
-				await expect(one).toBeVisible();
-				await expect(one).toContainText('tinned-fish shop');
-				await expect(one.locator('[data-modelled]')).toHaveText('modelled');
-			}
+			await expect(one).toBeVisible();
+			await expect(one).toContainText('tinned-fish shop');
+			await expect(one.locator('[data-modelled]')).toHaveText('modelled');
 			await c.locator('[data-town="ross"]').click();
 			await expect(c.locator('[data-card-highlight]')).toHaveCount(0);
 		});
@@ -208,9 +201,106 @@ test('a town with no household is a 404', async ({ page }) => {
 	expect((await page.goto('/cost/tiburon'))?.status()).toBe(404);
 });
 
+/**
+ * Every row and the footer whole inside the hero; a highlight either whole beside them or wrapped
+ * out of the box entirely, never cut.
+ */
+async function expectNothingClipped(page: Page, hero: Locator) {
+	await page.evaluate(() => document.fonts.ready);
+	const g = await hero.evaluate((el) => {
+		const box = el.getBoundingClientRect();
+		const rect = (s: string) =>
+			[...el.querySelectorAll(s)].map((x) => {
+				const r = x.getBoundingClientRect();
+				return { top: r.top, bottom: r.bottom, left: r.left, right: r.right };
+			});
+		return {
+			box: { top: box.top, bottom: box.bottom, right: box.right },
+			rows: rect('[data-tv-receipt], [data-tv-total]'),
+			foot: rect('[data-tv-footer]')[0],
+			highlights: rect('[data-highlight]'),
+			well: rect('[data-tv-highlights]')[0] ?? null
+		};
+	});
+	for (const r of g.rows) expect(r.bottom).toBeLessThanOrEqual(g.foot.top);
+	expect(g.foot.bottom).toBeLessThanOrEqual(g.box.bottom);
+	const shown = g.highlights.filter((r) => g.well && r.left < g.well.right);
+	for (const r of shown) {
+		expect(r.bottom).toBeLessThanOrEqual(g.well!.bottom);
+		expect(r.bottom).toBeLessThanOrEqual(g.foot.top);
+	}
+	return shown.length;
+}
+
 test.describe('the TV', () => {
 	test.use({ viewport: { width: 1920, height: 1080 } });
 	test.setTimeout(60_000);
+
+	// Oct 22, 23 and 24 (Pacific) are Larkspur's, Mill Valley's and Ross's days in the rotation.
+	for (const [town, day, note] of [
+		['larkspur', '2026-10-22', null],
+		['mill-valley', '2026-10-23', null],
+		['ross', '2026-10-24', 'Bought 1998, paid off.']
+	] as const) {
+		test(`${town} at 1920×1080: nothing clips, the footer shows`, async ({ page }) => {
+			await page.route(/\/api\/data\/(?!lifestyle)/, (r) =>
+				r.fulfill({ status: 503, body: 'stubbed' })
+			);
+			await page.clock.install({ time: new Date(`${day}T19:00:00.000Z`) });
+			await page.goto('/tv?probe');
+			await expect(page.locator('[data-screen-id]').first()).toBeVisible();
+			await page.keyboard.press(' ');
+			await page.locator('[data-screen-id="composite"]').click();
+			const hero = page.locator('[data-tv-lifestyle]');
+			await expect(hero).toBeVisible({ timeout: 20_000 });
+			await expect(hero).toHaveAttribute('data-tv-lifestyle', town);
+			await expect(hero.locator('[data-tv-footer]')).toBeVisible();
+			if (note) await expect(hero).toContainText(note);
+			const shown = await expectNothingClipped(page, hero);
+			console.log(`[tv] ${town}: ${shown} highlights whole`);
+		});
+	}
+
+	test('a box too short for even one highlight shows none, never a cut one', async ({ page }) => {
+		await page.route(/\/api\/data\/(?!lifestyle)/, (r) =>
+			r.fulfill({ status: 503, body: 'stubbed' })
+		);
+		await page.clock.install({ time: new Date('2026-10-22T19:00:00.000Z') });
+		await page.goto('/tv?probe');
+		await expect(page.locator('[data-screen-id]').first()).toBeVisible();
+		await page.keyboard.press(' ');
+		await page.locator('[data-screen-id="composite"]').click();
+		const hero = page.locator('[data-tv-lifestyle]');
+		await expect(hero).toBeVisible({ timeout: 20_000 });
+		await page.addStyleTag({
+			content: '[data-tv-highlights] { flex: none !important; height: 40px !important; }'
+		});
+		expect(await expectNothingClipped(page, hero)).toBe(0);
+	});
+
+	test('a null price reads “can’t be read”, and nothing clips', async ({ page }) => {
+		await page.route(/\/api\/data\/(?!lifestyle)/, (r) =>
+			r.fulfill({ status: 503, body: 'stubbed' })
+		);
+		await page.route('**/api/data/lifestyle', async (r) => {
+			const res = await r.fetch();
+			const body = await res.json();
+			for (const h of body.households) {
+				h.receipt[0].monthly = null;
+				h.receipt[0].availability = 'unavailable';
+			}
+			await r.fulfill({ response: res, json: body });
+		});
+		await page.clock.install({ time: new Date('2026-10-22T19:00:00.000Z') });
+		await page.goto('/tv?probe');
+		await expect(page.locator('[data-screen-id]').first()).toBeVisible();
+		await page.keyboard.press(' ');
+		await page.locator('[data-screen-id="composite"]').click();
+		const hero = page.locator('[data-tv-lifestyle]');
+		await expect(hero).toBeVisible({ timeout: 20_000 });
+		await expect(hero.locator('[data-tv-receipt]').first()).toContainText('can’t be read');
+		await expectNothingClipped(page, hero);
+	});
 
 	test('the Cost hero is the household of the day, fiction-labelled, not the composite', async ({
 		page
@@ -232,26 +322,22 @@ test.describe('the TV', () => {
 		const hero = page.locator('[data-tv-lifestyle]');
 		await expect(hero).toBeVisible({ timeout: 20_000 });
 		await expect(hero.locator('[data-fiction]')).toContainText(FICTION);
-		await expect(hero.locator('[data-break-even], [data-burn]')).toBeVisible();
+		await expect(hero.locator('[data-burn]')).toBeVisible();
 		// The seed has no successful run: the TV says its numbers may be out of date.
 		await expect(hero.locator('[data-tv-stale]')).toContainText('may be out of date');
-		// Its highlights fill the right half, below the three biggest lines.
+		// The receipt fills the right half, the household's whole count under it.
+		const rows = hero.locator('[data-tv-receipt]');
+		await expect(rows).toHaveCount(6);
+		await expect(rows.first()).toContainText('tinned-fish shop');
+		await expect(hero.locator('[data-tv-total]')).toContainText('40 lines');
+		await expect(hero.locator('[data-burn]')).toHaveText(/\$[\d,]+ a month/);
 		const items = hero.locator('[data-tv-highlights] [data-highlight]');
 		await expect(hero).toHaveAttribute('data-tv-lifestyle', 'larkspur');
 		await expect(items.first()).toBeVisible();
 		expect(await items.count()).toBeLessThanOrEqual(4);
 		await expect(hero.locator('[data-highlight="moversNotComparable"]')).toHaveCount(0);
 		await expect(items.first().locator('[data-modelled]')).toHaveText('modelled');
-		const lastTop = (await hero.locator('[data-tv-top]').last().boundingBox())!;
-		const first = (await items.first().boundingBox())!;
-		const last = (await items.last().boundingBox())!;
-		expect(first.y).toBeGreaterThan(lastTop.y + lastTop.height - 1);
-		expect(first.x).toBeGreaterThan(1920 / 2 - 40);
-		// Inside the hero's own (clipped) box, above its footer line.
-		const box = (await hero.boundingBox())!;
-		const foot = (await hero.locator('[data-tv-footer]').boundingBox())!;
-		expect(last.y + last.height).toBeLessThanOrEqual(foot.y);
-		expect(foot.y + foot.height).toBeLessThanOrEqual(box.y + box.height);
+		await expectNothingClipped(page, hero);
 		// The hidden map's attribution stays hidden off the map, even opened wide: MapLibre
 		// makes it visible itself once the style's sources load, which would sit on the footer.
 		const attrib = page.locator('.maplibregl-ctrl-attrib');
@@ -280,8 +366,8 @@ test.describe('phone 390×844, Cost populated', () => {
 			},
 			populated: async (p) => {
 				const c = p.locator('#cost [data-card="lifestyle"]');
-				await expect(c.locator('[data-break-even], [data-burn]')).toBeVisible();
-				await expect(c.locator('[data-line]')).toHaveCount(3);
+				await expect(c.locator('[data-burn]')).toBeVisible();
+				await expect(c.locator('a[data-line]')).toHaveCount(6);
 				await expect(c.locator('[data-fiction]')).toBeVisible();
 				// Measured with the tallest household, not whichever the day's rotation shows.
 				let tallest = { town: '', height: 0 };

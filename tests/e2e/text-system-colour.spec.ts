@@ -5,12 +5,12 @@ import { stubBrief, stubCivic, stubCost, stubRest } from './fixtures/v2-populate
 /**
  * TEXT1 1d, rule 1 on the whole of `/`: the status colours mark status only, the accent marks
  * links, and the exceptions are named in code (`data-colour-exception`: signed changes, chart
- * series, and the Cost card's ranking cue its redesign will decide). Provenance is meta.
+ * series). The Cost card's redesign (COST1) removed the ranking cue. Provenance is meta.
  */
 test.skip(({ baseURL }) => baseURL?.startsWith('https://') ?? false, 'stubbed');
 
-/** The exceptions rule 1 names, and the one the Cost card's redesign will decide. */
-const EXCEPTIONS = ['signed', 'series', 'rank'];
+/** The exceptions rule 1 names. */
+const EXCEPTIONS = ['signed', 'series'];
 /** What may wear a status colour: a status, or a named exception. */
 const STATUS =
 	'[data-attention], .sr-attention, [data-section-status], [data-state="unavailable"], [data-state="stale"], [data-state="unknown"], [data-colour-exception], .attention';

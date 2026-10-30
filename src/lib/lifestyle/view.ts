@@ -47,9 +47,12 @@ export function dailySlug(slugs: readonly string[], nowMs: number): string {
 
 export interface SectionShare {
 	readonly section: Section;
-	readonly monthly: number;
+	/** Null when none of its lines could be priced: unknown, never $0. */
+	readonly monthly: number | null;
 	/** Of the monthly burn. */
-	readonly share: number;
+	readonly share: number | null;
+	/** Some of its lines can't be read, so `monthly` is only "so far". */
+	readonly partial: boolean;
 }
 
 export interface SummaryLine {
@@ -58,6 +61,17 @@ export interface SummaryLine {
 	readonly monthly: number;
 	readonly classes: readonly InputClass[];
 	readonly availability: Availability;
+}
+
+/** One row of the card's receipt: a signature line, priced or not, never dropped. */
+export interface ReceiptLine {
+	readonly id: string;
+	readonly label: string;
+	/** Null when it can't be read. */
+	readonly monthly: number | null;
+	readonly availability: Availability;
+	/** Only on a $0 line, which needs saying why (Stuart, COST0). */
+	readonly note?: string;
 }
 
 export interface HouseholdSummary {
@@ -74,13 +88,25 @@ export interface HouseholdSummary {
 	/** Lines priced from a stale input. */
 	readonly stale: number;
 	readonly sections: readonly SectionShare[];
+	/** Kept for open tabs on the old client: a long-running TV may not have reloaded. */
 	readonly top: readonly SummaryLine[];
+	readonly receipt: readonly ReceiptLine[];
+	readonly lineCount: number;
+	/** Fewer than `lineCount`: the burn is "so far". */
+	readonly pricedLines: number;
 	readonly inputs: Readonly<Record<InputClass, number>>;
 	/** Share of spending in lines whose inputs are all persona. */
 	readonly personaOnly: number;
 	/** Present only under the highlights flag; empty for an incomplete household. */
 	readonly highlights?: readonly Highlight[];
 }
+
+/** While any line can't be read, every total is only what's been priced so far. */
+export const pricedSoFar = (h: HouseholdSummary) => !h.complete || h.pricedLines < h.lineCount;
+
+/** The count under a receipt: the whole budget, or how much of it is priced. */
+export const lineTally = (h: HouseholdSummary) =>
+	pricedSoFar(h) ? `${h.pricedLines} of ${h.lineCount} lines priced` : `${h.lineCount} lines`;
 
 /** The card's data, as /api/data/lifestyle serves it. */
 export interface LifestyleCard {
@@ -90,20 +116,81 @@ export interface LifestyleCard {
 	readonly households: readonly HouseholdSummary[];
 }
 
-/** Every section with a line, even one none of whose lines could be priced (it spends 0). */
+/** Where a budget line lands on /cost/<town>. */
+export const lineAnchor = (id: string) => `line-${id.replaceAll('.', '-')}`;
+
+/**
+ * A stored budget as the current sheet reads it, so an old blob needs no migration: a signature
+ * line it doesn't have is an unread line everywhere, and a line's note is the sheet's.
+ */
+function againstSheet(b: PricedBudget, sheet: HouseholdSheet): PricedBudget {
+	const specs = new Map(sheet.lines.map((l) => [l.id, l]));
+	const stored = new Set(b.lines.map((l) => l.id));
+	const absent = sheet.lines.filter((l) => l.signature && !stored.has(l.id));
+	const complete = b.complete && !absent.some((l) => l.required);
+	return {
+		...b,
+		lines: [
+			...b.lines.map((l) => (specs.has(l.id) ? { ...l, note: specs.get(l.id)?.note } : l)),
+			...absent.map(
+				(l): PricedLine => ({
+					id: l.id,
+					section: l.section,
+					label: l.label,
+					required: l.required,
+					monthly: null,
+					availability: 'unavailable',
+					classes: [],
+					inputs: [],
+					reason: 'Not priced yet: the next weekly run reads it.'
+				})
+			)
+		],
+		complete,
+		breakEven: complete ? b.breakEven : null
+	};
+}
+
+/** The budgets the highlights compare: a line the card can't read counts as unread there too. */
+export const budgetsAgainstSheets = (
+	budgets: readonly PricedBudget[],
+	sheets: readonly HouseholdSheet[]
+) =>
+	budgets.map((b) => {
+		const sheet = sheets.find((s) => s.id === b.town);
+		return sheet ? againstSheet(b, sheet) : b;
+	});
+
+/** Every section with a line, even one none of whose lines could be priced (it spends unknown). */
 function sectionShares(b: PricedBudget): SectionShare[] {
 	return [...new Set(b.lines.map((l) => l.section))]
 		.map((section) => {
-			const monthly = b.sections[section] ?? 0;
-			return { section, monthly, share: b.burnMonthly > 0 ? monthly / b.burnMonthly : 0 };
+			const lines = b.lines.filter((l) => l.section === section);
+			const priced = lines.some((l) => l.monthly !== null);
+			const monthly = priced ? (b.sections[section] ?? 0) : null;
+			return {
+				section,
+				monthly,
+				share: monthly === null ? null : b.burnMonthly > 0 ? monthly / b.burnMonthly : 0,
+				partial: lines.some((l) => l.monthly === null)
+			};
 		})
-		.sort((a, z) => z.monthly - a.monthly);
+		.sort((a, z) => (z.monthly ?? -Infinity) - (a.monthly ?? -Infinity));
 }
+
+/** The sections a bar can draw: unknown has no width, and neither has a net-income section (a profitable business). */
+export const spendingSections = (sections: readonly SectionShare[]) =>
+	sections.filter(
+		(s): s is SectionShare & { monthly: number; share: number } =>
+			s.monthly !== null && s.share !== null && s.monthly > 0
+	);
 
 const byMonthly = (a: PricedLine, z: PricedLine) =>
 	(z.monthly ?? -Infinity) - (a.monthly ?? -Infinity);
 
-export function householdSummary(b: PricedBudget, sheet: HouseholdSheet): HouseholdSummary {
+export function householdSummary(stored: PricedBudget, sheet: HouseholdSheet): HouseholdSummary {
+	const b = againstSheet(stored, sheet);
+	const signature = new Set(sheet.lines.filter((l) => l.signature).map((l) => l.id));
 	const inputs = { live: 0, cited: 0, persona: 0 };
 	for (const i of b.lines.flatMap((l) => l.inputs)) inputs[i.class]++;
 	return {
@@ -128,6 +215,18 @@ export function householdSummary(b: PricedBudget, sheet: HouseholdSheet): Househ
 				classes: l.classes,
 				availability: l.availability
 			})),
+		receipt: b.lines
+			.filter((l) => signature.has(l.id))
+			.sort(byMonthly)
+			.map((l) => ({
+				id: l.id,
+				label: l.label,
+				monthly: l.monthly,
+				availability: l.availability,
+				...(l.monthly === 0 && l.note ? { note: l.note } : {})
+			})),
+		lineCount: b.lines.length,
+		pricedLines: b.lines.filter((l) => l.monthly !== null).length,
 		inputs,
 		personaOnly: b.personaShare.only
 	};
@@ -158,11 +257,14 @@ export interface HouseholdPage {
 	/** Null when the budget is incomplete. */
 	readonly equation: Equation | null;
 	readonly sections: readonly PageSection[];
+	/** The lines on the card, marked in the budget. */
+	readonly signatures: readonly string[];
 	readonly marketTracker: PricedInput;
 	readonly notModelled: readonly string[];
 }
 
-export function householdPage(b: PricedBudget, sheet: HouseholdSheet): HouseholdPage {
+export function householdPage(stored: PricedBudget, sheet: HouseholdSheet): HouseholdPage {
+	const b = againstSheet(stored, sheet);
 	const summary = householdSummary(b, sheet);
 	const be = b.complete ? b.breakEven : null;
 	let equation: Equation | null = null;
@@ -188,7 +290,7 @@ export function householdPage(b: PricedBudget, sheet: HouseholdSheet): Household
 		};
 	}
 	const shares = sectionShares(b);
-	const biggest = Math.max(...shares.map((s) => s.monthly), 0);
+	const biggest = Math.max(...shares.map((s) => s.monthly ?? 0), 0);
 	return {
 		summary,
 		who: sheet.who,
@@ -197,9 +299,10 @@ export function householdPage(b: PricedBudget, sheet: HouseholdSheet): Household
 		equation,
 		sections: shares.map((s) => ({
 			...s,
-			widthPct: biggest > 0 ? Math.max(0, (100 * s.monthly) / biggest) : 0,
+			widthPct: biggest > 0 ? Math.max(0, (100 * (s.monthly ?? 0)) / biggest) : 0,
 			lines: b.lines.filter((l) => l.section === s.section).sort(byMonthly)
 		})),
+		signatures: summary.receipt.map((l) => l.id),
 		marketTracker: b.marketTracker,
 		notModelled: sheet.notModelled
 	};

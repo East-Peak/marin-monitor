@@ -137,6 +137,7 @@ const lines: LineSpec[] = [
 	{
 		id: 'millvalley.food.clean',
 		section: 'food',
+		signature: true,
 		label: 'The clean extras',
 		required: true,
 		inputs: {
@@ -258,6 +259,7 @@ const lines: LineSpec[] = [
 	{
 		id: 'millvalley.well.therapy',
 		section: 'wellness',
+		signature: true,
 		label: 'Therapy: individual weekly + couples twice monthly',
 		required: true,
 		inputs: {
@@ -271,6 +273,7 @@ const lines: LineSpec[] = [
 	{
 		id: 'millvalley.well.fm',
 		section: 'wellness',
+		signature: true,
 		label: 'Functional-medicine membership ×2',
 		required: true,
 		inputs: { members: persona(2, 'members'), membership: cite('parsley.year') },
@@ -311,6 +314,7 @@ const lines: LineSpec[] = [
 	{
 		id: 'millvalley.travel.wellness',
 		section: 'travel',
+		signature: true,
 		label: '“Wellness travel”',
 		required: true,
 		inputs: { travel: persona(14000, '$14,000') },
@@ -327,6 +331,7 @@ const lines: LineSpec[] = [
 	{
 		id: 'millvalley.belong.gala',
 		section: 'belonging',
+		signature: true,
 		label: 'A gala table',
 		required: true,
 		inputs: { table: persona(10000, 'table of 10 (search only)') },
@@ -347,6 +352,7 @@ const lines: LineSpec[] = [
 	{
 		id: 'millvalley.biz',
 		section: 'business',
+		signature: true,
 		label: 'The Business: the consultancy’s coworking desk',
 		required: true,
 		inputs: { desk: cite('coworking.millValley') },

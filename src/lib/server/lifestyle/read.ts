@@ -12,7 +12,7 @@ import { renderHighlight, type Highlight } from '$lib/lifestyle/highlight-copy';
 import { highlightFacts } from '$lib/lifestyle/highlights';
 import type { HistoryEntry } from '$lib/lifestyle/history';
 import { SECTIONS, type HouseholdSheet } from '$lib/lifestyle/model';
-import { householdSummary, type LifestyleCard } from '$lib/lifestyle/view';
+import { budgetsAgainstSheets, householdSummary, type LifestyleCard } from '$lib/lifestyle/view';
 import { abortable } from '$lib/server/news/abortable';
 import type { BlobApi } from '$lib/server/news/snapshot-store';
 import { vercelBlobApi } from '$lib/server/news/vercel-blob-api';
@@ -210,7 +210,7 @@ export function lifestyleHighlights(
 ): Readonly<Record<string, readonly Highlight[]>> {
 	const facts = highlightFacts({
 		runId: read.current.runId,
-		budgets: read.current.budgets,
+		budgets: budgetsAgainstSheets(read.current.budgets, sheets),
 		anchors: read.current.anchors,
 		history: read.history,
 		sheets

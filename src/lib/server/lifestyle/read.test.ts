@@ -3,7 +3,8 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { BlobApi } from '$lib/server/news/snapshot-store';
-import type { PricedBudget } from '$lib/lifestyle/model';
+import type { LiveKey, LiveRead, LiveReads, PricedBudget } from '$lib/lifestyle/model';
+import { priceSheet } from '$lib/lifestyle/price';
 import { SHEETS } from '$lib/lifestyle/sheets';
 import { LIFESTYLE_KEY, type LifestyleSnapshot } from './producer';
 import {
@@ -17,12 +18,47 @@ import {
 } from './read';
 
 const signal = new AbortController().signal;
+const liveReads = Object.fromEntries(
+	(
+		[
+			'gas.regular',
+			'coffee.cappuccino',
+			'grocery.collagen',
+			'grocery.manuka',
+			'grocery.kombucha',
+			'grocery.oatMilk',
+			'grocery.silverOak',
+			'ikon.adult',
+			'rivian.lease'
+		] satisfies LiveKey[]
+	).map((k): [string, LiveRead] => [
+		k,
+		{
+			availability: 'ok',
+			value: 10,
+			observedAt: '2026-10-20T12:00:00.000Z',
+			maxAgeDays: 10,
+			source: 'test'
+		}
+	])
+) as LiveReads;
 const budget = (town: string) =>
 	({
 		town,
 		taxYear: 2026,
 		pricedAt: '2026-10-20T18:00:00.000Z',
-		lines: [],
+		lines: (SHEETS.find((s) => s.id === town)?.lines ?? [])
+			.filter((l) => l.signature)
+			.map(({ id, section, label, required }) => ({
+				id,
+				section,
+				label,
+				required,
+				monthly: 1,
+				availability: 'ok',
+				classes: [],
+				inputs: []
+			})),
 		sections: { housing: 100 },
 		burnMonthly: 100,
 		complete: true,
@@ -240,6 +276,14 @@ describe('the history and anchors highlights read', () => {
 		// One household is no ranking, there are no anchors, and the run is not in history.
 		expect(h.ross.map((x) => x.template)).toEqual(['moversNotComparable']);
 		expect(h.ross[0].text).toBe('Movers: not enough comparable history yet.');
+	});
+
+	it('gives a budget missing a required signature line an incomplete household’s highlights', async () => {
+		const b = priceSheet(SHEETS[2], liveReads, new Date('2026-10-20T18:00:00.000Z'));
+		const whole = lifestyleHighlights({ current: snapshot([b]), history: [] }, SHEETS);
+		expect(whole.ross.length).toBeGreaterThan(0);
+		const old = { ...b, lines: b.lines.filter((l) => l.id !== 'ross.home.pi') };
+		expect(lifestyleHighlights({ current: snapshot([old]), history: [] }, SHEETS)).toEqual({});
 	});
 });
 

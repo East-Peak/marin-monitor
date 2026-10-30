@@ -17,6 +17,7 @@ const lines: LineSpec[] = [
 	{
 		id: 'ross.home.pi',
 		section: 'housing',
+		signature: true,
 		label: 'Mortgage',
 		required: true,
 		inputs: {},
@@ -115,6 +116,7 @@ const lines: LineSpec[] = [
 	{
 		id: 'ross.car.vintage',
 		section: 'cars',
+		signature: true,
 		label: 'The vintage something: storage, insurance, fettling',
 		required: true,
 		inputs: { upkeep: persona(900, '$900/mo') },
@@ -160,6 +162,7 @@ const lines: LineSpec[] = [
 	{
 		id: 'ross.kids.tuition',
 		section: 'kids',
+		signature: true,
 		label: 'Private day school ×2',
 		required: true,
 		inputs: { upper: cite('branson.total'), middle: cite('mcds.tuition') },
@@ -225,6 +228,7 @@ const lines: LineSpec[] = [
 	{
 		id: 'ross.help.manager',
 		section: 'help',
+		signature: true,
 		label: 'House manager, 3 days/wk (employer cost)',
 		required: true,
 		inputs: {
@@ -234,7 +238,7 @@ const lines: LineSpec[] = [
 			...employerTaxInputs()
 		},
 		terms: [{ kind: 'employer', rate: 'salary', rateHours: 'fullTime', hoursPerWeek: 'hours' }],
-		note: 'Part-time on Stuart’s ruling (2026-10-20).'
+		note: 'Part-time.'
 	},
 	{
 		id: 'ross.well.tennis',
@@ -288,6 +292,7 @@ const lines: LineSpec[] = [
 	{
 		id: 'ross.travel.xmas',
 		section: 'travel',
+		signature: true,
 		label: 'Christmas abroad',
 		required: true,
 		inputs: { trip: persona(30000, '$30,000') },
@@ -304,6 +309,7 @@ const lines: LineSpec[] = [
 	{
 		id: 'ross.belong.galas',
 		section: 'belonging',
+		signature: true,
 		label: 'Galas',
 		required: true,
 		inputs: { table: persona(25000, 'sponsor table (search only)') },

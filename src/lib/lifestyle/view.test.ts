@@ -7,6 +7,7 @@ import {
 	formatInput,
 	householdPage,
 	householdSummary,
+	lineAnchor,
 	sheetForSlug,
 	sourceLink,
 	townSlug
@@ -82,10 +83,10 @@ describe('the card summary', () => {
 		});
 		expect(s.breakEven).toBe(b.breakEven!.gross);
 		expect(s.burnMonthly).toBe(b.burnMonthly);
-		const monthly = s.sections.map((x) => x.monthly);
+		const monthly = s.sections.map((x) => x.monthly as number);
 		expect(monthly).toEqual([...monthly].sort((a, z) => z - a));
 		expect(s.sections[0]).toMatchObject({ section: 'housing' });
-		expect(s.sections.reduce((t, x) => t + x.share, 0)).toBeCloseTo(1, 6);
+		expect(s.sections.reduce((t, x) => t + (x.share as number), 0)).toBeCloseTo(1, 6);
 		expect(s.top.map((l) => l.label)).toEqual([
 			'Mortgage (P&I)',
 			'The Business: a downtown tinned-fish shop',
@@ -178,8 +179,175 @@ describe('the household page', () => {
 		);
 		const sec = p.sections.find((s) => s.section === 'travel')!;
 		expect(sec.lines.map((l) => l.id).sort()).toEqual(travel.map((l) => l.id).sort());
-		expect(sec.monthly).toBe(0);
+		// Unknown is never $0 (COST1): the section says it can't be read.
+		expect(sec.monthly).toBeNull();
+		expect(sec.share).toBeNull();
+		expect(sec.partial).toBe(true);
 		expect(sec.widthPct).toBe(0);
+	});
+
+	it('says a section is partial while one of its lines cannot be read, and sorts it by what it has', () => {
+		const b = priced('ross', reads({ 'grocery.silverOak': { availability: 'unavailable' } }));
+		const p = householdPage(b, sheet('ross'));
+		const food = p.sections.find((s) => s.section === 'food')!;
+		expect(food.monthly).toBeGreaterThan(0);
+		expect(food.partial).toBe(true);
+		expect(p.sections.find((s) => s.section === 'help')!.partial).toBe(false);
+	});
+
+	it('names the lines the card shows', () => {
+		const p = householdPage(priced('ross'), sheet('ross'));
+		expect(p.signatures).toContain('ross.home.pi');
+		expect(p.signatures).toHaveLength(6);
+	});
+});
+
+describe('the receipt', () => {
+	const without = (b: PricedBudget, id: string): PricedBudget => ({
+		...b,
+		lines: b.lines.filter((l) => l.id !== id)
+	});
+	const unpriced = (b: PricedBudget, id: string): PricedBudget => ({
+		...b,
+		lines: b.lines.map((l) =>
+			l.id === id ? { ...l, monthly: null, availability: 'unavailable' as const } : l
+		)
+	});
+
+	it('is the signature lines by amount, whatever the biggest lines are, beside the whole count', () => {
+		const s = householdSummary(priced('millvalley'), sheet('millvalley'));
+		expect(s.receipt.map((l) => l.id)).toEqual([
+			'millvalley.well.therapy',
+			'millvalley.travel.wellness',
+			'millvalley.belong.gala',
+			'millvalley.well.fm',
+			'millvalley.biz',
+			'millvalley.food.clean'
+		]);
+		expect(s.receipt[0].monthly).toBeCloseTo(1430, 2);
+		expect(s.receipt[0].availability).toBe('ok');
+		expect(s.lineCount).toBe(42);
+		expect(s.pricedLines).toBe(42);
+	});
+
+	it('keeps `top` as it was for an open tab on the old client', () => {
+		const s = householdSummary(priced('larkspur'), sheet('larkspur'));
+		expect(s.top.map((l) => l.id)).toEqual([
+			'larkspur.home.pi',
+			'larkspur.biz',
+			'larkspur.help.nanny'
+		]);
+	});
+
+	it('shows a real $0 as $0 with its note, last', () => {
+		const r = householdSummary(priced('ross'), sheet('ross')).receipt;
+		expect(r.at(-1)).toMatchObject({
+			id: 'ross.home.pi',
+			monthly: 0,
+			note: 'Bought 1998, paid off.'
+		});
+	});
+
+	it('carries a note only on a $0 line (Stuart, COST0)', () => {
+		const lark = householdSummary(priced('larkspur'), sheet('larkspur')).receipt;
+		expect(lark.find((l) => l.id === 'larkspur.biz')!.note).toBeUndefined();
+		const ross = householdSummary(priced('ross'), sheet('ross')).receipt;
+		expect(ross.find((l) => l.id === 'ross.help.manager')!.note).toBeUndefined();
+	});
+
+	it('an unpriceable signature line comes back null and never leaves the receipt', () => {
+		const s = householdSummary(
+			unpriced(priced('millvalley'), 'millvalley.well.fm'),
+			sheet('millvalley')
+		);
+		expect(s.receipt).toHaveLength(6);
+		expect(s.receipt.at(-1)).toMatchObject({
+			id: 'millvalley.well.fm',
+			monthly: null,
+			availability: 'unavailable'
+		});
+		expect(s.pricedLines).toBe(41);
+		expect(s.lineCount).toBe(42);
+	});
+
+	it('a stale signature line stays priced and says stale', () => {
+		const b = priced('millvalley', reads({ 'grocery.kombucha': { availability: 'stale' } }));
+		const clean = householdSummary(b, sheet('millvalley')).receipt.find(
+			(l) => l.id === 'millvalley.food.clean'
+		)!;
+		expect(clean.availability).toBe('stale');
+		expect(clean.monthly).not.toBeNull();
+	});
+
+	it('an anchor is the line id with dots turned into dashes', () => {
+		expect(lineAnchor('larkspur.car.rivian.lease')).toBe('line-larkspur-car-rivian-lease');
+		for (const s of SHEETS) {
+			const anchors = s.lines.map((l) => lineAnchor(l.id));
+			expect(new Set(anchors).size).toBe(anchors.length);
+		}
+	});
+
+	describe('an old stored budget, from before a sheet edit', () => {
+		const id = 'millvalley.well.fm';
+		const old = () => without(priced('millvalley'), id);
+
+		it('shows a signature id it lacks as "can’t be read", never drops it', () => {
+			const s = householdSummary(old(), sheet('millvalley'));
+			expect(s.receipt).toHaveLength(6);
+			expect(s.receipt.find((l) => l.id === id)).toMatchObject({
+				monthly: null,
+				availability: 'unavailable',
+				label: 'Functional-medicine membership ×2'
+			});
+		});
+
+		it('counts it as an unread line: priced count, incomplete and no break-even if required', () => {
+			const required = sheet('millvalley').lines.find((l) => l.id === id)!.required;
+			expect(required).toBe(true);
+			const s = householdSummary(old(), sheet('millvalley'));
+			expect(s.lineCount).toBe(42);
+			expect(s.pricedLines).toBe(41);
+			expect(s.complete).toBe(false);
+			expect(s.breakEven).toBeNull();
+			expect(s.missing).toContain('Functional-medicine membership ×2');
+		});
+
+		it('keeps a break-even when the sheet doesn’t require the line, and still says it’s unread', () => {
+			const base = sheet('millvalley');
+			const optional = {
+				...base,
+				lines: base.lines.map((l) => (l.id === id ? { ...l, required: false } : l))
+			};
+			const s = householdSummary(old(), optional);
+			expect(s.complete).toBe(true);
+			expect(s.breakEven).not.toBeNull();
+			expect(s.pricedLines).toBe(41);
+		});
+
+		it('puts it on the page in its section, unpriced, so the receipt link lands on it', () => {
+			const p = householdPage(old(), sheet('millvalley'));
+			const sec = p.sections.find((s) => s.section === 'wellness')!;
+			expect(sec.partial).toBe(true);
+			expect(sec.lines.find((l) => l.id === id)).toMatchObject({
+				monthly: null,
+				availability: 'unavailable'
+			});
+			expect(p.equation).toBeNull();
+		});
+	});
+
+	it('reads a note from the sheet, so a reworded note is live before the next run', () => {
+		const b = priced('ross');
+		const old: PricedBudget = {
+			...b,
+			lines: b.lines.map((l) =>
+				l.id === 'ross.help.manager' ? { ...l, note: 'an old stored note' } : l
+			)
+		};
+		const line = householdPage(old, sheet('ross'))
+			.sections.flatMap((s) => s.lines)
+			.find((l) => l.id === 'ross.help.manager')!;
+		expect(line.note).toBe('Part-time.');
 	});
 });
 

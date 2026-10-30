@@ -111,7 +111,12 @@ const lines: LineSpec[] = [
 		terms: [yearly('oop')]
 	},
 	...car('larkspur', 'rivian', 'Rivian R1S', {
-		lease: { pay: live('rivian.lease'), due: cite('rivian.dueAtSigning'), months: 36 },
+		lease: {
+			pay: live('rivian.lease'),
+			due: cite('rivian.dueAtSigning'),
+			months: 36,
+			signature: true
+		},
 		power: { kind: 'ev', milesPerKwh: 2.5 },
 		value: 85885,
 		vlfRate: 0.0065,
@@ -177,6 +182,7 @@ const lines: LineSpec[] = [
 	{
 		id: 'larkspur.kids.foundation',
 		section: 'kids',
+		signature: true,
 		label: 'SPARK foundation ask ×2',
 		required: true,
 		inputs: { kids: persona(2, 'kids'), ask: cite('spark.ask') },
@@ -198,6 +204,7 @@ const lines: LineSpec[] = [
 	{
 		id: 'larkspur.kids.math',
 		section: 'kids',
+		signature: true,
 		label: 'Math enrichment (9-yr-old)',
 		required: true,
 		inputs: { fee: persona(499, '$499/mo, 12-mo contract (search only)') },
@@ -214,6 +221,7 @@ const lines: LineSpec[] = [
 	{
 		id: 'larkspur.kids.bike',
 		section: 'kids',
+		signature: true,
 		label: 'Bikes (woom, amortised 3 yr)',
 		required: true,
 		inputs: {
@@ -246,6 +254,7 @@ const lines: LineSpec[] = [
 	{
 		id: 'larkspur.help.nanny',
 		section: 'help',
+		signature: true,
 		label: 'Nanny, 25 h/wk (employer cost)',
 		required: true,
 		inputs: {
@@ -335,6 +344,7 @@ const lines: LineSpec[] = [
 	{
 		id: 'larkspur.biz',
 		section: 'business',
+		signature: true,
 		label: 'The Business: a downtown tinned-fish shop',
 		required: true,
 		inputs: {

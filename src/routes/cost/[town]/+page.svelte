@@ -1,10 +1,18 @@
-<!-- /cost/<town>: one fictional household's modelled budget (LIFE2; the approved LIFE0 mockup). -->
+<!-- /cost/<town>: one fictional household's modelled budget (LIFE2; the approved LIFE0 and COST0 mockups). -->
 <script lang="ts">
+	import { afterNavigate } from '$app/navigation';
 	import '$lib/components/dashboard-v2/v2-tokens.css';
 	import ClassChips from '$lib/components/lifestyle/ClassChips.svelte';
 	import { PACIFIC } from '$lib/dashboard/pacific-time';
 	import type { PricedInput } from '$lib/lifestyle/model';
-	import { FICTION_LABEL, formatInput, SECTION_COLOR, sourceLink } from '$lib/lifestyle/view';
+	import {
+		FICTION_LABEL,
+		formatInput,
+		lineAnchor,
+		pricedSoFar,
+		SECTION_COLOR,
+		sourceLink
+	} from '$lib/lifestyle/view';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -27,7 +35,33 @@
 	/** Live: when the source saw it. Cited: when we checked the publication. */
 	const when = (i: PricedInput) =>
 		i.asOf === null ? null : `${i.class === 'live' ? 'read' : 'checked'} ${day(i.asOf)}`;
+
+	const soFar = $derived(!!h && pricedSoFar(h));
+
+	/** The line a receipt row just landed on: outlined while its summary holds focus. */
+	let arrived = $state<string | null>(null);
+
+	function arrive(hash: string) {
+		if (!hash.startsWith('#line-')) return;
+		const line = document.getElementById(hash.slice(1));
+		if (!(line instanceof HTMLDetailsElement)) return;
+		line.open = true;
+		line.scrollIntoView({ block: 'start' });
+		line.querySelector('summary')?.focus({ preventScroll: true });
+		// After the focus moves: the summary it left blurs, and that clears the outline.
+		arrived = line.dataset.line ?? null;
+	}
+
+	// Covers a direct URL, client navigation, back/forward and a repeat; the window's hashchange a
+	// fragment edited on the page, which is no navigation to the router. The timer lands after the
+	// router's own, which resets focus to the fragment's start point and would take it back.
+	afterNavigate(({ to }) => {
+		const hash = to?.url.hash ?? '';
+		setTimeout(() => arrive(hash));
+	});
 </script>
+
+<svelte:window onhashchange={() => arrive(location.hash)} />
 
 <svelte:head>
 	<title>{data.town} · What it takes to live here · Marin Monitor</title>
@@ -61,6 +95,16 @@
 					<span class="fiction" data-fiction data-text-role="meta">{FICTION_LABEL}</span>
 					<h1 data-text-role="section-title">The {h.name}</h1>
 					<p data-text-role="body">{p.who}. Savings: {p.savingsNote}.</p>
+					<div class="month">
+						<span class="num" data-burn data-text-role="headline"
+							>{usd(h.burnMonthly)} a month{soFar ? ' so far' : ''}</span
+						>
+						{#if h.complete}
+							<span class="meta" data-text-role="meta">going out, before saving anything</span>
+						{:else}
+							<span class="incomplete" data-incomplete data-text-role="meta">incomplete</span>
+						{/if}
+					</div>
 					{#if t}
 						<p class="meta tracker" data-market-tracker data-text-role="meta">
 							<ClassChips classes={[t.class]} />
@@ -107,10 +151,6 @@
 							</div>
 						{/if}
 					{:else}
-						<p class="big num" data-burn data-text-role="value">
-							{usd(h.burnMonthly)}<span class="meta" data-text-role="meta">/mo so far</span>
-							<span class="incomplete" data-incomplete data-text-role="meta">incomplete</span>
-						</p>
 						<p data-text-role="body">
 							No break-even while these can’t be read: {h.missing.join(', ')}.
 						</p>
@@ -149,20 +189,34 @@
 							<h2 data-text-role="section-title">
 								<i class="sw" style:background={SECTION_COLOR[s.section]}></i>{s.section}
 							</h2>
-							<span class="num" data-text-role="label"
-								>{usd(s.monthly)} <span class="meta">/mo · {pct(s.share)}</span></span
+							<span class="num" data-section-total data-text-role="label"
+								>{#if s.monthly === null}<span class="flag">can’t be read</span>{:else}{usd(
+										s.monthly
+									)}
+									<span class="meta">/mo{s.partial ? ' so far' : ` · ${pct(s.share ?? 0)}`}</span
+									>{/if}</span
 							>
 							<div class="bar">
 								<i style:width="{s.widthPct}%" style:background={SECTION_COLOR[s.section]}></i>
 							</div>
 						</div>
 						{#each s.lines as l (l.id)}
-							<details data-line={l.id} data-availability={l.availability}>
-								<summary data-text-role="label">
+							<details
+								id={lineAnchor(l.id)}
+								class:arrived={arrived === l.id}
+								data-line={l.id}
+								data-availability={l.availability}
+							>
+								<summary data-text-role="label" onblur={() => (arrived = null)}>
 									<span class="lab"
-										>{l.label}<ClassChips classes={l.classes} />{#if l.availability !== 'ok'}<span
-												class="flag"
-												data-text-role="meta">{l.availability}</span
+										>{l.label}<ClassChips
+											classes={l.classes}
+										/>{#if p.signatures.includes(l.id)}<span
+												class="on-card"
+												data-on-card
+												data-text-role="meta">on the card</span
+											>{/if}{#if l.availability !== 'ok'}<span class="flag" data-text-role="meta"
+												>{l.availability === 'stale' ? 'stale' : 'can’t be read'}</span
 											>{/if}</span
 									>
 									<span class="num">{money(l.monthly)}</span>
@@ -208,9 +262,10 @@
 				<div class="sec total">
 					<div class="sec-head">
 						<h2 data-text-role="section-title">Total</h2>
-						<span class="num" data-text-role="label"
+						<span class="num" data-budget-total data-text-role="label"
 							>{usd(h.burnMonthly)}
-							<span class="meta">/mo · calculated, mixed provenance</span></span
+							<span class="meta">/mo{soFar ? ' so far' : ' · calculated, mixed provenance'}</span
+							></span
 						>
 					</div>
 				</div>
@@ -354,7 +409,11 @@
 	}
 	.incomplete {
 		font-weight: 600;
-		margin-left: 8px;
+	}
+	.month {
+		display: flex;
+		flex-direction: column;
+		margin-top: var(--v2-s2);
 	}
 	.equation {
 		display: flex;
@@ -386,7 +445,7 @@
 	.scale {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: var(--v2-s2);
 	}
 	.scale h2 {
 		color: var(--text-muted);
@@ -397,15 +456,15 @@
 		margin: 0;
 		padding: 0;
 		display: grid;
-		gap: 10px;
+		gap: var(--v2-s3);
 		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 	}
 	.scale li {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: var(--v2-s1);
 		min-width: 0;
-		padding: 10px 12px;
+		padding: var(--v2-s3);
 		border: 1px solid var(--border-light);
 		border-radius: 8px;
 	}
@@ -427,18 +486,18 @@
 	}
 	.sec {
 		border-top: 1px solid var(--border-light);
-		padding-block: 10px;
+		padding-block: var(--v2-s3);
 	}
 	.sec-head {
 		display: grid;
 		grid-template-columns: 1fr auto;
-		gap: 8px;
+		gap: var(--v2-s2);
 		align-items: baseline;
 	}
 	.sec-head h2 {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--v2-s2);
 		font-weight: 500;
 		text-transform: capitalize;
 	}
@@ -464,6 +523,16 @@
 	}
 	details {
 		border-bottom: 1px solid var(--border);
+		scroll-margin-top: var(--v2-s3);
+	}
+	/* Where a receipt row landed: no animation, so reduced motion needs no case of its own. */
+	details.arrived {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
+		border-radius: 2px;
+	}
+	details.arrived summary:focus {
+		outline: none;
 	}
 	details:last-child {
 		border-bottom: 0;
@@ -471,8 +540,8 @@
 	summary {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) auto;
-		gap: 8px;
-		padding: 6px 0;
+		gap: var(--v2-s2);
+		padding: var(--v2-s1) 0;
 		list-style: none;
 		cursor: pointer;
 	}
@@ -493,8 +562,15 @@
 	details[open] .lab::before {
 		transform: rotate(90deg);
 	}
-	.lab .flag {
+	.lab .flag,
+	.on-card {
 		margin-left: 6px;
+	}
+	.on-card {
+		padding: 0 5px;
+		border: 1px solid var(--border-light);
+		border-radius: 3px;
+		white-space: nowrap;
 	}
 	.inputs {
 		display: flex;

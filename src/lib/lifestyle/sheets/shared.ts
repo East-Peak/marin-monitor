@@ -100,7 +100,7 @@ export function car(
 	slug: string,
 	label: string,
 	opts: {
-		lease?: { pay: InputSpec; due: InputSpec; months: number };
+		lease?: { pay: InputSpec; due: InputSpec; months: number; signature?: true };
 		/** Miles per kWh (EV) or per gallon (gas). */
 		power: { kind: 'ev'; milesPerKwh: number } | { kind: 'gas'; mpg: number };
 		value: number;
@@ -117,6 +117,7 @@ export function car(
 	if (opts.lease) {
 		lines.push({
 			id: id('lease'),
+			...(opts.lease.signature ? { signature: true as const } : {}),
 			section: 'cars',
 			label: `${label} lease`,
 			required: true,

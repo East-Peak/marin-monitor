@@ -404,7 +404,7 @@ test.describe('@phone dashboard controls', () => {
 							control: `Cost: household ${town}`,
 							target: button,
 							outcome: async () =>
-								expect(body(page, id).locator('a.more')).toHaveAttribute(
+								expect(body(page, id).locator('[data-see-all]')).toHaveAttribute(
 									'href',
 									`/cost/${town.toLowerCase().replace(' ', '-')}`,
 									{ timeout: 2_000 }

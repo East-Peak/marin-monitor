@@ -69,6 +69,16 @@ describe('GET /api/data/lifestyle', () => {
 		expect(body.households[0]).not.toHaveProperty('highlights');
 	});
 
+	it('serves `receipt` and `lineCount` beside `top`, so an open tab on the old client still renders', async () => {
+		Object.assign(env, { LIFESTYLE_INDEX: 'on', LIFESTYLE_FIXTURE: fixture });
+		const [h] = (await (await GET({} as any)).json()).households;
+		expect(h.top).toEqual([]);
+		expect(h.receipt).toHaveLength(6);
+		expect(h.receipt[0]).toMatchObject({ monthly: null, availability: 'unavailable' });
+		expect(h.lineCount).toBe(6);
+		expect(h.pricedLines).toBe(0);
+	});
+
 	it('carries highlights under their own flag: none for an incomplete household', async () => {
 		Object.assign(env, {
 			LIFESTYLE_INDEX: 'on',

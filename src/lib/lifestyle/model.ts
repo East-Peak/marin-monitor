@@ -155,6 +155,8 @@ export interface LineSpec {
 	readonly terms: readonly Term[];
 	/** A required line that cannot be priced makes the budget incomplete. */
 	readonly required: boolean;
+	/** Editorial: this line says who the household is, so the card's receipt shows it. */
+	readonly signature?: true;
 	readonly note?: string;
 }
 
