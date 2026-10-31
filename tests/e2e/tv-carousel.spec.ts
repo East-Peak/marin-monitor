@@ -274,7 +274,8 @@ test.describe('TV 311 Photo Wall', () => {
 		// The county slide counts the read once it has landed; the dot only skips before that.
 		await expect(page.getByText('1 this week')).toBeVisible();
 		await showScreen(page, '311-photos');
-		await expect(page.locator('text=Fix It Marin').first()).toBeVisible();
+		// The wall's own heading: other mounted screens carry "Fix It Marin" as a hidden source label.
+		await expect(page.getByRole('heading', { name: 'Fix It Marin' })).toBeVisible();
 	};
 
 	test('with a photo, its dot opens the wall and the photo is decoded and visible', async ({
