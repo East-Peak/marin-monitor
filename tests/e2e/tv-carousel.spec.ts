@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { test, expect, type Page } from '@playwright/test';
 
 /**
@@ -236,7 +237,9 @@ test.describe('TV Screen Content', () => {
 // ─── 311 Photo Wall ─────────────────────────────────────────────────────
 
 /** One open Fix It issue in San Rafael from an hour ago, with or without a photo. */
-async function fixIt311(page: Page, withPhoto: boolean) {
+const A_REAL_JPEG = readFileSync('src/lib/dashboard/__fixtures__/caltrans-frame.jpg');
+
+async function fixIt311(page: Page, withPhoto: boolean, photo: 'loads' | 'broken' = 'loads') {
 	const at = new Date(Date.now() - 3_600_000).toISOString();
 	const issue = {
 		id: 901,
@@ -256,20 +259,42 @@ async function fixIt311(page: Page, withPhoto: boolean) {
 	await page.route('**/api/data/311', (route) =>
 		route.fulfill({ json: { lastUpdated: at, count: 1, issues: [issue] } })
 	);
-	await page.route('**/api/data/311-image?**', (route) => route.fulfill({ status: 404 }));
+	await page.route('**/api/data/311-image?**', (route) =>
+		photo === 'broken'
+			? route.fulfill({ status: 404 })
+			: route.fulfill({ contentType: 'image/jpeg', body: A_REAL_JPEG })
+	);
 }
 
 test.describe('TV 311 Photo Wall', () => {
 	test.use({ viewport: TV_VIEWPORT });
 
-	test('with a photo, its dot opens the wall', async ({ page }) => {
-		await fixIt311(page, true);
+	const openWall = async (page: Page) => {
 		await openTv(page);
 		// The county slide counts the read once it has landed; the dot only skips before that.
 		await expect(page.getByText('1 this week')).toBeVisible();
 		await showScreen(page, '311-photos');
 		await expect(page.locator('text=Fix It Marin').first()).toBeVisible();
+	};
+
+	test('with a photo, its dot opens the wall and the photo is decoded and visible', async ({
+		page
+	}) => {
+		await fixIt311(page, true);
+		await openWall(page);
+		const photo = page.locator('.tv-screen img[src*="311-image"]');
+		await expect(photo).toBeVisible();
+		await expect
+			.poll(() => photo.evaluate((i) => (i as HTMLImageElement).naturalWidth))
+			.toBeGreaterThan(0);
 		await page.screenshot({ path: 'tests/e2e/screenshots/tv-311-photos.png' });
+	});
+
+	test('a photo that fails to load falls back to its category card', async ({ page }) => {
+		await fixIt311(page, true, 'broken');
+		await openWall(page);
+		await expect(page.locator('.tv-screen img[src*="311-image"]')).toHaveCount(0);
+		await expect(page.locator('.tv-screen').getByText('Pothole').first()).toBeVisible();
 	});
 
 	test('with no photo, its dot skips to the next screen', async ({ page }) => {
