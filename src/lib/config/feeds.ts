@@ -80,7 +80,7 @@ export const FEEDS: Record<NewsCategory, FeedSource[]> = {
 	civic: [
 		{
 			name: 'City of San Rafael',
-			url: 'https://www.cityofsanrafael.org/feed/',
+			url: 'https://sanrafael.gov/feed/',
 			verification: 'official',
 			confirmed: true
 		},

@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-10-31',
+		title: 'San Rafael’s news is back',
+		description:
+			'The City of San Rafael moved its site to sanrafael.gov, so its feed had gone unread since October 22. The dashboard now reads it at the new address.'
+	},
+	{
 		date: '2026-10-28',
 		title: 'Easier to read, and nothing jumps',
 		description:

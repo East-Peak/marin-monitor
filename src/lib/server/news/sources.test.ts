@@ -36,4 +36,10 @@ describe('NEWS_SOURCES', () => {
 		expect(NEWS_ALLOWED_HOSTS.has('www.marinij.com')).toBe(true);
 		expect(NEWS_ALLOWED_HOSTS.has('cityofbelvedere.gov')).toBe(true);
 	});
+	it('reads San Rafael at its own host, so no off-host redirect is needed', () => {
+		const sanRafael = NEWS_SOURCES.find((s) => s.id === 'city-of-san-rafael');
+		expect(sanRafael?.url).toBe('https://sanrafael.gov/feed/');
+		expect(NEWS_ALLOWED_HOSTS.has('sanrafael.gov')).toBe(true);
+		expect(NEWS_ALLOWED_HOSTS.has('www.cityofsanrafael.org')).toBe(false);
+	});
 });
