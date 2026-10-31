@@ -1,7 +1,13 @@
 // src/lib/components/tv/camera-preload.test.ts
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { clusterForScreen, framesToPreload, preloadScreenFrames } from './camera-preload';
-import { lastGoodFrame, priorFailures, resetFrameCache, versionedFrameUrl } from './camera-frame';
+import {
+	lastGoodFrame,
+	priorFailures,
+	rememberFrame,
+	resetFrameCache,
+	versionedFrameUrl
+} from './camera-frame';
 import { CAMERAS } from '$lib/config/cameras';
 
 const NOW = Date.parse('2026-09-28T20:00:05.000Z');
@@ -44,5 +50,20 @@ describe('camera preload', () => {
 		expect(lastGoodFrame(frames[1].camId)?.url).toBe(frames[1].url);
 		// The warmed element itself is retained so the tile can mount it without a refetch.
 		expect(lastGoodFrame(frames[1].camId)?.img).toBe(decoded.get(frames[1].url));
+	});
+});
+
+describe('preloadScreenFrames: Caltrans stand-in cards', () => {
+	it("a card is not remembered as the camera's last good frame", async () => {
+		resetFrameCache();
+		const cam = CAMERAS.find((c) => c.id === 'caltrans-sr1')!;
+		rememberFrame(cam.id, 'old', 1, document.createElement('img'));
+		await preloadScreenFrames(
+			'cameras-central-highway',
+			Date.parse('2026-10-31T12:00:00Z'),
+			async () => document.createElement('img'),
+			() => true
+		);
+		expect(lastGoodFrame(cam.id)).toBeNull();
 	});
 });

@@ -8,6 +8,7 @@
 		type CameraConfig
 	} from '$lib/config/cameras';
 	import { settings } from '$lib/stores';
+	import { cameraCrossOrigin, flagStandIn } from './camera-stand-in';
 
 	type FilterTab = 'all' | CameraCategory;
 
@@ -187,13 +188,15 @@
 								<span class="camera-location">{camera.location}</span>
 							</button>
 
-							<div class="camera-frame">
+							<div class="camera-frame" data-camera={camera.id}>
 								{#if camera.type === 'image'}
 									<img
+										crossorigin={cameraCrossOrigin(camera.url)}
 										src={getCacheBustedUrl(camera)}
 										alt="{camera.name} - {camera.location}"
 										loading="lazy"
 										class="camera-img"
+										use:flagStandIn
 									/>
 								{:else if camera.type === 'youtube'}
 									{#if expandedCamera === camera.id}
@@ -431,6 +434,22 @@
 		aspect-ratio: 16 / 9;
 		background: #000;
 		overflow: hidden;
+	}
+
+	/* Caltrans' stand-in card (camera-stand-in.ts): no picture, and say why. */
+	.camera-frame :global(img[data-stand-in]) {
+		display: none;
+	}
+
+	.camera-frame:has(:global(img[data-stand-in]))::after {
+		content: 'Camera temporarily unavailable';
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: #9ca3af;
+		font-size: 0.75rem;
 	}
 
 	.camera-img {

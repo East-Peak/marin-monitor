@@ -3,7 +3,7 @@ import { render } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import TvCameraTile from './TvCameraTile.svelte';
-import { rememberFrame, resetFrameCache } from '../camera-frame';
+import { lastGoodFrame, rememberFrame, resetFrameCache } from '../camera-frame';
 import type { CameraConfig } from '$lib/config/cameras';
 
 const cam: CameraConfig = {
@@ -35,9 +35,55 @@ afterEach(() => vi.useRealTimers());
 
 /** A decoded frame, as preloadImage resolves it. */
 const decoded = (url: string) => Object.assign(document.createElement('img'), { src: url });
-type Preload = (url: string) => Promise<HTMLImageElement | null>;
+type Preload = (url: string, cors: boolean) => Promise<HTMLImageElement | null>;
 
 const root = (c: HTMLElement) => c.querySelector('[data-camera-id]') as HTMLElement;
+
+describe('TvCameraTile: Caltrans stand-in cards', () => {
+	const caltrans: CameraConfig = {
+		...cam,
+		id: 'caltrans-sr1',
+		url: 'https://cwwp2.dot.ca.gov/data/d4/cctv/image/sr1/sr1.jpg',
+		refreshInterval: 60
+	};
+	const card = (src: string) => src === 'card';
+
+	it('a card reads unavailable: no picture and no age', async () => {
+		const { container } = render(TvCameraTile, {
+			cam: caltrans,
+			preload: vi.fn<Preload>(async () => decoded('card')),
+			isPlaceholder: (i: HTMLImageElement) => card(i.getAttribute('src')!),
+			now
+		});
+		await flush();
+		expect(root(container).dataset.status).toBe('unavailable');
+		expect(container.textContent).toContain('Camera temporarily unavailable');
+		expect(container.querySelector('img')).toBeNull();
+		expect(container.textContent).not.toMatch(/min ago/);
+	});
+
+	it('a card replaces a remembered frame, and a real frame recovers', async () => {
+		rememberFrame(caltrans.id, 'old', clock, decoded('old'));
+		let next = 'card';
+		const { container } = render(TvCameraTile, {
+			cam: caltrans,
+			preload: vi.fn<Preload>(async () => decoded(next)),
+			isPlaceholder: (i: HTMLImageElement) => card(i.getAttribute('src')!),
+			now
+		});
+		await flush();
+		expect(root(container).dataset.status).toBe('unavailable');
+		expect(container.querySelector('img')).toBeNull();
+		expect(lastGoodFrame(caltrans.id)).toBeNull();
+
+		next = 'real';
+		clock += 60_000;
+		vi.advanceTimersByTime(60_000);
+		await flush();
+		expect(root(container).dataset.status).toBe('live');
+		expect(container.querySelector('img')?.getAttribute('src')).toBe('real');
+	});
+});
 
 describe('TvCameraTile', () => {
 	it('shows "Connecting" (not "offline") while the first frame loads', async () => {

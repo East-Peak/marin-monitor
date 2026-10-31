@@ -1,8 +1,8 @@
 // src/lib/components/tv/camera-preload.ts
 import { CAMERAS, type CameraConfig } from '$lib/config/cameras';
 import type { TvCameraCluster, TvScreenId } from '$lib/config/tv';
-import { rememberFailure, rememberFrame, versionedFrameUrl } from './camera-frame';
-import { preloadImage } from './image-preload';
+import { forgetFrame, rememberFailure, rememberFrame, versionedFrameUrl } from './camera-frame';
+import { readCameraFrame, type CameraPreload } from './camera-read';
 
 const SCREEN_CLUSTER: Partial<Record<TvScreenId, TvCameraCluster>> = {
 	'cameras-tam-coast': 'tam-coast',
@@ -32,15 +32,17 @@ export function framesToPreload(
 export async function preloadScreenFrames(
 	screenId: TvScreenId,
 	nowMs: number,
-	preload: (url: string) => Promise<HTMLImageElement | null> = preloadImage
+	preload?: CameraPreload,
+	isPlaceholder?: (img: HTMLImageElement) => boolean
 ): Promise<number> {
 	const frames = framesToPreload(screenId, nowMs);
 	const results = await Promise.all(
 		frames.map(async ({ camId, url }) => {
-			const img = await preload(url);
-			if (img) rememberFrame(camId, url, Date.now(), img);
+			const read = await readCameraFrame(url, preload, isPlaceholder);
+			if (read.kind === 'frame') rememberFrame(camId, url, Date.now(), read.img);
+			else if (read.kind === 'placeholder') forgetFrame(camId);
 			else rememberFailure(camId);
-			return img !== null;
+			return read.kind === 'frame';
 		})
 	);
 	return results.filter(Boolean).length;

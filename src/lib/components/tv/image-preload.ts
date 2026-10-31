@@ -7,11 +7,14 @@
 export function preloadImage(
 	url: string,
 	timeoutMs = 8_000,
-	signal?: AbortSignal
+	signal?: AbortSignal,
+	/** Load in CORS mode, so a canvas may read the pixels. */
+	cors = false
 ): Promise<HTMLImageElement | null> {
 	return new Promise((resolve) => {
 		if (signal?.aborted) return resolve(null);
 		const img = new Image();
+		if (cors) img.crossOrigin = 'anonymous';
 		let settled = false;
 		const finish = (ok: boolean) => {
 			if (settled) return;

@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-31',
+		title: 'A down camera says so, on the TV too',
+		description:
+			'When Caltrans swaps a camera’s picture for its “Temporarily Unavailable” card, the TV and the classic layout now say the camera is unavailable instead of showing the card as a live picture. The picture returns when the camera does.'
+	},
+	{
+		date: '2026-10-31',
 		title: 'Marin Lately is back',
 		description:
 			'Marin Lately has moved to its own site and is publishing again, so its satire band returns to the dashboard, linking out to each piece at marinlately.com.'

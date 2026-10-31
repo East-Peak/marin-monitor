@@ -4,6 +4,7 @@
 	import type { Action } from 'svelte/action';
 	import type { CameraConfig } from '$lib/config/cameras';
 	import {
+		forgetFrame,
 		initialTileState,
 		lastGoodFrame,
 		priorFailures,
@@ -16,15 +17,16 @@
 		versionedFrameUrl,
 		type TileState
 	} from '../camera-frame';
-	import { preloadImage } from '../image-preload';
+	import { readCameraFrame, type CameraPreload } from '../camera-read';
 
 	interface Props {
 		cam: CameraConfig;
-		preload?: (url: string) => Promise<HTMLImageElement | null>;
+		preload?: CameraPreload;
+		isPlaceholder?: (img: HTMLImageElement) => boolean;
 		now?: () => number;
 	}
 
-	let { cam, preload = preloadImage, now = Date.now }: Props = $props();
+	let { cam, preload, isPlaceholder, now = Date.now }: Props = $props();
 
 	// Seeded once: each tile is keyed by camera id, so `cam` never changes underneath it.
 	let tile = $state<TileState>(
@@ -38,7 +40,11 @@
 	let destroyed = false;
 	let timer: ReturnType<typeof setInterval> | null = null;
 
-	const status = $derived(tileStatus(tile, clock, staleAfterMs(cam.refreshInterval)));
+	// Caltrans' stand-in card: a definite answer, not a failed load, until a real frame returns.
+	let unavailable = $state(false);
+	const status = $derived(
+		unavailable ? 'unavailable' : tileStatus(tile, clock, staleAfterMs(cam.refreshInterval))
+	);
 	const ageMin = $derived(tile.shownAt === null ? 0 : Math.round((clock - tile.shownAt) / 60_000));
 
 	async function refresh() {
@@ -46,14 +52,20 @@
 		const url = versionedFrameUrl(cam.url, cam.refreshInterval, clock);
 		if (inFlight || url === tile.shownUrl) return;
 		inFlight = true;
-		const img = await preload(url);
+		const read = await readCameraFrame(url, preload, isPlaceholder);
 		inFlight = false;
 		if (destroyed) return;
 		const at = now();
-		if (img) {
+		if (read.kind === 'frame') {
+			unavailable = false;
 			tile = onFrameLoaded(tile, url, at);
-			shownImg = img;
-			rememberFrame(cam.id, url, at, img);
+			shownImg = read.img;
+			rememberFrame(cam.id, url, at, read.img);
+		} else if (read.kind === 'placeholder') {
+			unavailable = true;
+			tile = initialTileState();
+			shownImg = null;
+			forgetFrame(cam.id);
 		} else {
 			tile = onFrameFailed(tile);
 			rememberFailure(cam.id);
@@ -101,6 +113,10 @@
 		{:else if status === 'offline'}
 			<div class="absolute inset-0 flex items-center justify-center">
 				<span class="text-sm text-gray-400">Camera offline</span>
+			</div>
+		{:else if status === 'unavailable'}
+			<div class="absolute inset-0 flex items-center justify-center">
+				<span class="text-sm text-gray-400">Camera temporarily unavailable</span>
 			</div>
 		{/if}
 	</div>

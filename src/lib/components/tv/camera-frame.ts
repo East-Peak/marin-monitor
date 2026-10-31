@@ -77,6 +77,12 @@ export function rememberFrame(camId: string, url: string, at: number, img: HTMLI
 	failureCounts.delete(camId);
 }
 
+/** A definite "no picture" (a Caltrans card): nothing to fall back on, and not a failure. */
+export function forgetFrame(camId: string): void {
+	frameCache.delete(camId);
+	failureCounts.delete(camId);
+}
+
 export function priorFailures(camId: string): number {
 	return failureCounts.get(camId) ?? 0;
 }
