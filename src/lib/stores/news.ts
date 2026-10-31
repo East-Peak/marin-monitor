@@ -7,6 +7,7 @@ import type { NewsItem, NewsCategory } from '$lib/types';
 import { containsAlertKeyword, detectTown, detectTopics } from '$lib/config';
 import { isLocallyRelevant } from '$lib/config/relevance';
 import { enrichItemsForLocation } from '$lib/api/marin/article-enrichment';
+import { isActiveAlert } from '$lib/news/alert-status';
 import { compareByTimestamp } from '$lib/news/order';
 import { collapseStoryCopies } from '$lib/news/identity';
 import { claimSharedStores, mayWrite, type StoreClaim } from './ownership';
@@ -58,12 +59,14 @@ function createInitialState(): NewsState {
 	return { categories, initialized: false };
 }
 
+/** Re-read on every store change, so a kept alert ages out through failed refreshes too. */
+const activeNow = (item: NewsItem) => isActiveAlert(item, Date.now());
+
 // Enrich news item with town detection and alert keywords
 function enrichNewsItem(item: NewsItem): NewsItem {
 	const fullText = `${item.title} ${item.description || ''} ${item.content || ''}`;
-	// Only scan the TITLE for alert keywords — description/content matches produce
-	// too many false positives (e.g. "wildfire" in a landscaping article, "landslide"
-	// in a concert listing).
+	// A keyword says what a story is about, never that it's an alert (alert-status.ts). Only
+	// the TITLE: description/content matches are too noisy ("wildfire" in a landscaping article).
 	const alertResult = containsAlertKeyword(item.title, {
 		source: item.source,
 		verification: item.verification,
@@ -77,7 +80,7 @@ function enrichNewsItem(item: NewsItem): NewsItem {
 
 	return {
 		...item,
-		isAlert: item.isAlert !== undefined ? item.isAlert : alertResult.isAlert,
+		isAlert: isActiveAlert(item, Date.now()),
 		alertKeyword: alertResult.isAlert ? alertResult.keyword : undefined,
 		town: item.town ?? townResult?.name,
 		townSlug: item.townSlug ?? townResult?.slug,
@@ -303,7 +306,7 @@ function createNewsStore() {
 			const state = get({ subscribe });
 			const alerts: NewsItem[] = [];
 			for (const category of NEWS_CATEGORIES) {
-				alerts.push(...state.categories[category].items.filter((i) => i.isAlert));
+				alerts.push(...state.categories[category].items.filter(activeNow));
 			}
 			return alerts.sort(compareByTimestamp);
 		},
@@ -393,7 +396,7 @@ export const allNewsItems = derived(news, ($news) =>
 // Derived store for alerts (one entry per story)
 export const alerts = derived(news, ($news) =>
 	collapseStoryCopies(
-		NEWS_CATEGORIES.flatMap((category) => $news.categories[category].items.filter((i) => i.isAlert))
+		NEWS_CATEGORIES.flatMap((category) => $news.categories[category].items.filter(activeNow))
 	).sort(compareByTimestamp)
 );
 

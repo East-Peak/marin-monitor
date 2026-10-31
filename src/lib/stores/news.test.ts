@@ -53,7 +53,7 @@ describe('News Store', () => {
 		expect(local.lastUpdated).toBeNull();
 	});
 
-	it('should enrich items with alert detection', async () => {
+	it('a keyword tags a story but never makes it an alert', async () => {
 		const { news } = await import('./news');
 
 		const items = [
@@ -81,7 +81,7 @@ describe('News Store', () => {
 		news.setItems('outdoors', [items[1]]);
 
 		const state = get(news);
-		expect(state.categories.safety.items[0].isAlert).toBe(true);
+		expect(state.categories.safety.items[0].isAlert).toBe(false);
 		expect(state.categories.safety.items[0].alertKeyword).toBe('evacuation');
 		expect(state.categories.outdoors.items[0].isAlert).toBe(false);
 	});
@@ -181,54 +181,107 @@ describe('News Store', () => {
 		expect(all.length).toBe(2);
 	});
 
-	it('should derive alerts correctly', async () => {
-		const { news, alerts } = await import('./news');
+	describe('alerts: from a source that publishes them, and active', () => {
+		const base = {
+			link: 'a',
+			category: 'safety' as const,
+			verification: 'official' as const
+		};
+		const HOUR = 3_600_000;
+		const realAlert = {
+			...base,
+			id: 'nixle-novato-pd-a',
+			title: 'Road closed at Novato Blvd',
+			source: 'Novato PD',
+			timestamp: Date.now() - HOUR,
+			isAlert: true
+		};
 
-		news.setItems('safety', [
-			{
-				id: '1',
-				title: 'Wildfire breaks out near Stinson Beach',
-				source: 'Cal Fire',
-				link: 'a',
-				timestamp: Date.now(),
-				category: 'safety' as const,
-				verification: 'official' as const
-			},
-			{
-				id: '2',
-				title: 'Road construction update on Sir Francis Drake',
-				source: 'Marin County',
-				link: 'b',
-				timestamp: Date.now(),
-				category: 'safety' as const,
-				verification: 'official' as const
+		it('standing boilerplate is never an alert, keyword or not', async () => {
+			const { news, alerts } = await import('./news');
+			news.setItems('civic', [
+				{
+					...base,
+					category: 'civic',
+					id: 'city-of-san-rafael:p',
+					title:
+						'To report a parking violation (red zone, fire lane, blocked driveway), call the police',
+					source: 'City of San Rafael',
+					timestamp: Date.now() - HOUR
+				}
+			]);
+			expect(get(alerts)).toEqual([]);
+			expect(get(news).categories.civic.items[0].isAlert).toBe(false);
+		});
+
+		it('a real active alert is shown; suppressing everything cannot pass', async () => {
+			const { news, alerts } = await import('./news');
+			news.setItems('safety', [realAlert]);
+			expect(get(alerts).map((i) => i.id)).toEqual([realAlert.id]);
+		});
+
+		it('an expired alert is not an alert', async () => {
+			const { news, alerts } = await import('./news');
+			news.setItems('safety', [{ ...realAlert, timestamp: Date.now() - 72 * HOUR }]);
+			expect(get(alerts)).toEqual([]);
+			expect(get(news).categories.safety.items[0].isAlert).toBe(false);
+		});
+
+		it('a cancelled alert leaves with the next read of its list', async () => {
+			const { news, alerts } = await import('./news');
+			const live = {
+				...realAlert,
+				id: '511-GF-1',
+				alertLive: { seenAt: Date.now(), endsAt: null }
+			};
+			news.setItems('safety', [live]);
+			expect(get(alerts)).toHaveLength(1);
+			news.setItems('safety', []);
+			expect(get(alerts)).toEqual([]);
+		});
+
+		it('an unknown status is not claimed active', async () => {
+			const { news, alerts } = await import('./news');
+			news.setItems('safety', [{ ...realAlert, timestamp: NaN }]);
+			expect(get(alerts)).toEqual([]);
+		});
+
+		it('a pre-flagged item from a non-alert source is not an alert', async () => {
+			const { news, alerts } = await import('./news');
+			news.setItems('safety', [{ ...realAlert, id: 'wine-festival', isAlert: true }]);
+			expect(get(alerts)).toEqual([]);
+		});
+
+		it('an alert kept through failed refreshes leaves on the clock, with no new read', async () => {
+			vi.useFakeTimers({ now: Date.parse('2026-10-31T12:00:00Z') });
+			try {
+				const { news, alerts } = await import('./news');
+				news.setItems('safety', [{ ...realAlert, timestamp: Date.now() - HOUR }]);
+				expect(get(alerts)).toHaveLength(1);
+				news.setError('safety', 'refresh failed');
+				expect(get(alerts)).toHaveLength(1);
+				vi.setSystemTime(Date.now() + 24 * HOUR);
+				news.setError('safety', 'refresh failed again');
+				expect(get(alerts)).toEqual([]);
+			} finally {
+				vi.useRealTimers();
 			}
-		]);
+		});
 
-		const alertItems = get(alerts);
-		expect(alertItems.length).toBe(1);
-		expect(alertItems[0].title).toContain('Wildfire');
+		it('newest first', async () => {
+			const { news, alerts } = await import('./news');
+			const at = (id: string, age: number) => ({
+				...realAlert,
+				id: `nixle-${id}`,
+				timestamp: Date.now() - age
+			});
+			news.setItems('safety', [at('old', 2 * HOUR), at('new', HOUR)]);
+			expect(get(alerts).map((i) => i.id)).toEqual(['nixle-new', 'nixle-old']);
+		});
 	});
 
 	it('orders derived lists dated-newest-first with NaN (undated) items last', async () => {
-		const { news, alerts, humanPoweredNews } = await import('./news');
-		const wildfire = (id: string, timestamp: number) => ({
-			id,
-			title: `Wildfire ${id} near Stinson Beach`,
-			source: 'Cal Fire',
-			link: id,
-			timestamp,
-			category: 'safety' as const,
-			verification: 'official' as const
-		});
-		news.setItems('safety', [
-			wildfire('u1', NaN),
-			wildfire('old', 1_000),
-			wildfire('u2', NaN),
-			wildfire('new', 2_000)
-		]);
-		expect(get(alerts).map((i) => i.id)).toEqual(['new', 'old', 'u1', 'u2']);
-
+		const { news, humanPoweredNews } = await import('./news');
 		const ride = (id: string, timestamp: number, category: 'cycling' | 'endurance') => ({
 			id,
 			title: `Mt Tam ride ${id} in Marin`,

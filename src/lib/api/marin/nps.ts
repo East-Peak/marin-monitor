@@ -48,6 +48,7 @@ export async function fetchNpsAlerts({ signal }: OwnerOptions = {}): Promise<New
 			}
 		);
 
+		const readAt = Date.now();
 		return alerts.map((alert) => ({
 			id: `nps-${alert.id}`,
 			title: alert.title,
@@ -57,7 +58,8 @@ export async function fetchNpsAlerts({ signal }: OwnerOptions = {}): Promise<New
 			source: `NPS – ${PARK_NAMES[alert.parkCode] || alert.parkCode.toUpperCase()}`,
 			category: 'outdoors',
 			verification: 'official' as const,
-			isAlert: alert.category === 'Danger' || alert.category === 'Park Closure'
+			isAlert: alert.category === 'Danger' || alert.category === 'Park Closure',
+			alertLive: { seenAt: readAt, endsAt: null }
 		}));
 	} catch (error) {
 		logger.warn('NPS', `Alerts fetch failed: ${(error as Error).message}`);

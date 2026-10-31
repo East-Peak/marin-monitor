@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { MapContainer, MapDataLayer, SegmentLayer } from '$lib/components/map';
+	import { isActiveAlert } from '$lib/news/alert-status';
 	import { STRAVA_ENABLED } from '$lib/config/strava';
 	import TvMapPosition from '$lib/components/tv/TvMapPosition.svelte';
 	import TvMapSidebar from '$lib/components/tv/TvMapSidebar.svelte';
@@ -72,7 +73,7 @@
 	);
 
 	const stories = $derived(nearby.filter((i) => !i.isAlert).slice(0, 6));
-	const alerts = $derived(nearby.filter((i) => i.isAlert).slice(0, 4));
+	const alerts = $derived(nearby.filter((i) => isActiveAlert(i, Date.now())).slice(0, 4));
 </script>
 
 <div class="flex h-full gap-0" style="min-height: 0;">

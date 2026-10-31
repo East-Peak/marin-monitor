@@ -182,6 +182,13 @@ async function fetchAgencyAlerts(
 	}
 }
 
+/** The last active period's end (epoch ms); null when any period stays open. */
+function alertEnd(alert: GtfsAlertEntity['Alert']): number | null {
+	const ends = (alert.ActivePeriods ?? []).map((p) => p.End);
+	if (ends.length === 0 || ends.some((e) => typeof e !== 'number')) return null;
+	return Math.max(...(ends as number[])) * 1000;
+}
+
 /**
  * Convert a GTFS-RT alert entity to a NewsItem
  */
@@ -207,7 +214,8 @@ function entityToNewsItem(entity: GtfsAlertEntity, agencyId: string, agencyName:
 		source,
 		category: 'safety',
 		verification: 'official',
-		isAlert: true
+		isAlert: true,
+		alertLive: { seenAt: Date.now(), endsAt: alertEnd(alert) }
 	};
 }
 

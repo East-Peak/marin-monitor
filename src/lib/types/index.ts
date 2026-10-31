@@ -1,5 +1,6 @@
 // Core data types for Marin Monitor
 
+import type { AlertLive } from '$lib/news/alert-status';
 import type { PublishedAtStatus } from '$lib/news/feed-date';
 import type { PublishedAtSource } from '$lib/news/feed-xml';
 
@@ -88,6 +89,8 @@ export interface NewsItem {
 	locationConfidence?: 'exact' | 'approx' | 'town';
 	locationEvidence?: string;
 	isAlert?: boolean;
+	/** Set by adapters of live alert lists (alert-status.ts). */
+	alertLive?: AlertLive;
 	alertKeyword?: string;
 	topics?: string[];
 	imageUrl?: string;

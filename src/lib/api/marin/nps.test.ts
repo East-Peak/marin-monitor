@@ -92,6 +92,7 @@ describe('fetchNpsAlerts', () => {
 		expect(result[0].isAlert).toBe(true); // Park Closure
 		expect(result[1].isAlert).toBe(true); // Danger
 		expect(result[2].isAlert).toBe(false); // Information
+		expect(result[0].alertLive).toEqual({ seenAt: expect.any(Number), endsAt: null });
 	});
 
 	it('uses fallback URL when alert.url is empty', async () => {

@@ -52,7 +52,9 @@
 		{/if}
 		<span class="text-xs text-gray-500">{stories24h} stories</span>
 		{#if alertCount > 0}
-			<span class="text-xs text-red-400 font-medium">{alertCount} alerts</span>
+			<span class="text-xs text-red-400 font-medium"
+				>{alertCount} {alertCount === 1 ? 'alert' : 'alerts'}</span
+			>
 		{/if}
 	</div>
 	<div class="flex items-center gap-4">

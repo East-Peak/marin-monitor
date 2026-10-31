@@ -122,6 +122,32 @@ describe('fetchTransitAlerts', () => {
 		expect(item.category).toBe('safety');
 		expect(item.isAlert).toBe(true);
 		expect(item.timestamp).toBe(1711900000 * 1000);
+		expect(item.alertLive).toEqual({ seenAt: expect.any(Number), endsAt: null });
+	});
+
+	it("keeps 511's end: the last period's, or none while any stays open", async () => {
+		const ending = (id: string, periods: { Start?: number; End?: number }[]) => ({
+			Id: id,
+			Alert: {
+				HeaderText: { Translations: [{ Text: id }] },
+				ActivePeriods: periods
+			}
+		});
+		mockFetch
+			.mockResolvedValueOnce(
+				makeResponse(
+					makeGtfsResponse([
+						ending('closed', [{ End: 100 }, { End: 200 }]),
+						ending('open', [{ End: 100 }, { Start: 150 }])
+					] as never)
+				)
+			)
+			.mockResolvedValue(makeResponse(makeGtfsResponse([])));
+
+		const promise = fetchTransitAlerts();
+		await vi.advanceTimersByTimeAsync(3000);
+		const { items } = await promise;
+		expect(items.map((i) => i.alertLive?.endsAt)).toEqual([200_000, null]);
 	});
 
 	it('uses ferry source name for GF and AF agencies', async () => {
