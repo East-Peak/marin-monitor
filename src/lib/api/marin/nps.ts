@@ -59,7 +59,7 @@ export async function fetchNpsAlerts({ signal }: OwnerOptions = {}): Promise<New
 			category: 'outdoors',
 			verification: 'official' as const,
 			isAlert: alert.category === 'Danger' || alert.category === 'Park Closure',
-			alertLive: { seenAt: readAt, endsAt: null }
+			alertLive: { seenAt: readAt, periods: [] }
 		}));
 	} catch (error) {
 		logger.warn('NPS', `Alerts fetch failed: ${(error as Error).message}`);

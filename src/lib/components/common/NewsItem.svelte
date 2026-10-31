@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { NewsItem } from '$lib/types';
+	import { isActiveAlert } from '$lib/news/alert-status';
 	import { timeAgo } from '$lib/utils';
 
 	interface Props {
@@ -17,13 +18,15 @@
 		showDescription = false,
 		compact = false
 	}: Props = $props();
+
+	const alerting = $derived(showAlert && isActiveAlert(item, Date.now()));
 </script>
 
-<div class="news-item" class:alert={showAlert && item.isAlert} class:compact>
+<div class="news-item" class:alert={alerting} class:compact>
 	{#if showSource}
 		<div class="item-source">
 			{item.source}
-			{#if showAlert && item.isAlert}
+			{#if alerting}
 				<span class="alert-tag">ALERT</span>
 			{/if}
 		</div>

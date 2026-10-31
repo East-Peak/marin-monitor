@@ -1,14 +1,15 @@
 /**
- * Pure selections for SignalsPanel. Alerts and multi-source groups keep
- * undated items but order them after every dated one; "fresh" requires a
+ * Pure selections for SignalsPanel. Multi-source groups keep undated items
+ * but order them after every dated one; "fresh" requires a
  * known publication time (undated items are never "fresh").
  */
 import { compareByTimestamp, compareKnownNewest, hasKnownPublicationTime } from '$lib/news/order';
+import { isActiveAlert } from '$lib/news/alert-status';
 import type { NewsItem } from '$lib/types';
 
-export function topAlerts(items: readonly NewsItem[], limit = 5): NewsItem[] {
+export function topAlerts(items: readonly NewsItem[], limit = 5, now = Date.now()): NewsItem[] {
 	return items
-		.filter((item) => item.isAlert)
+		.filter((item) => isActiveAlert(item, now))
 		.sort(compareByTimestamp)
 		.slice(0, limit);
 }

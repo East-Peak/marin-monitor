@@ -13,7 +13,7 @@ const live = (over = {}) => ({
 	id: '511-GF-1',
 	isAlert: true,
 	timestamp: NOW - 5 * 24 * HOUR,
-	alertLive: { seenAt: NOW - 60_000, endsAt: null },
+	alertLive: { seenAt: NOW - 60_000, periods: [] },
 	...over
 });
 
@@ -48,18 +48,30 @@ describe('isActiveAlert', () => {
 		expect(isActiveAlert(live(), NOW)).toBe(true);
 	});
 
-	it('a published end is honoured', () => {
-		const ending = (endsAt: number) => live({ alertLive: { seenAt: NOW - 60_000, endsAt } });
+	it('a published period is honoured, either side of its end', () => {
+		const ending = (end: number) =>
+			live({ alertLive: { seenAt: NOW - 60_000, periods: [{ start: null, end }] } });
 		expect(isActiveAlert(ending(NOW + 1), NOW)).toBe(true);
 		expect(isActiveAlert(ending(NOW), NOW)).toBe(false);
 	});
 
 	it('not started yet is not active', () => {
-		expect(isActiveAlert(live({ timestamp: NOW + HOUR }), NOW)).toBe(false);
+		const later = { start: NOW + HOUR, end: null };
+		expect(isActiveAlert(live({ alertLive: { seenAt: NOW, periods: [later] } }), NOW)).toBe(false);
+	});
+
+	it('a recurring alert is active only inside a period, whatever their order', () => {
+		const am = { start: NOW - 4 * HOUR, end: NOW - 3 * HOUR };
+		const pm = { start: NOW + 3 * HOUR, end: NOW + 4 * HOUR };
+		const now = { start: NOW - HOUR, end: NOW + HOUR };
+		const at = (periods: (typeof am)[]) =>
+			isActiveAlert(live({ alertLive: { seenAt: NOW, periods } }), NOW);
+		expect(at([am, pm])).toBe(false);
+		expect(at([pm, now, am])).toBe(true);
 	});
 
 	it('kept after a failed refresh: active while the read is recent, then unknown', () => {
-		const read = (age: number) => live({ alertLive: { seenAt: NOW - age, endsAt: null } });
+		const read = (age: number) => live({ alertLive: { seenAt: NOW - age, periods: [] } });
 		expect(isActiveAlert(read(LIVE_ALERT_MAX_AGE_MS), NOW)).toBe(true);
 		expect(isActiveAlert(read(LIVE_ALERT_MAX_AGE_MS + 1), NOW)).toBe(false);
 	});

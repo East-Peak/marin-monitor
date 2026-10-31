@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isActiveAlert } from '$lib/news/alert-status';
 	import { Panel, Badge } from '$lib/components/common';
 	import { timeAgo } from '$lib/utils';
 	import { townFilter } from '$lib/stores/town-filter';
@@ -81,7 +82,7 @@
 				categories: new Set()
 			};
 			existing.count += 1;
-			if (item.isAlert) existing.alerts += 1;
+			if (isActiveAlert(item, Date.now())) existing.alerts += 1;
 			existing.categories.add(item.category);
 			townMap.set(item.townSlug, existing);
 		}

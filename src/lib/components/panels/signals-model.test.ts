@@ -15,14 +15,15 @@ const item = (id: string, timestamp: number, extra: Partial<NewsItem> = {}): New
 });
 
 describe('topAlerts', () => {
-	it('orders alerts dated newest first with undated alerts last', () => {
+	it('holds only active alerts, newest first: an undated or expired one is left out', () => {
 		const items = [
-			item('u', NaN, { isAlert: true }),
-			item('old', NOW - 10, { isAlert: true }),
-			item('not-alert', NOW),
-			item('new', NOW, { isAlert: true })
+			item('nixle-u', NaN, { isAlert: true }),
+			item('nixle-old', NOW - 10, { isAlert: true }),
+			item('nixle-expired', NOW - 25 * 3_600_000, { isAlert: true }),
+			item('nixle-not-alert', NOW),
+			item('nixle-new', NOW, { isAlert: true })
 		];
-		expect(topAlerts(items).map((i) => i.id)).toEqual(['new', 'old', 'u']);
+		expect(topAlerts(items, 5, NOW).map((i) => i.id)).toEqual(['nixle-new', 'nixle-old']);
 	});
 });
 

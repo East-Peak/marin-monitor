@@ -232,7 +232,7 @@ describe('News Store', () => {
 			const live = {
 				...realAlert,
 				id: '511-GF-1',
-				alertLive: { seenAt: Date.now(), endsAt: null }
+				alertLive: { seenAt: Date.now(), periods: [] }
 			};
 			news.setItems('safety', [live]);
 			expect(get(alerts)).toHaveLength(1);

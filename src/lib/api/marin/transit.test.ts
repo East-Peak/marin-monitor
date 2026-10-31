@@ -122,32 +122,28 @@ describe('fetchTransitAlerts', () => {
 		expect(item.category).toBe('safety');
 		expect(item.isAlert).toBe(true);
 		expect(item.timestamp).toBe(1711900000 * 1000);
-		expect(item.alertLive).toEqual({ seenAt: expect.any(Number), endsAt: null });
+		expect(item.alertLive?.seenAt).toEqual(expect.any(Number));
 	});
 
-	it("keeps 511's end: the last period's, or none while any stays open", async () => {
-		const ending = (id: string, periods: { Start?: number; End?: number }[]) => ({
-			Id: id,
+	it("keeps 511's active periods for the alert's status", async () => {
+		const entity = {
+			Id: 'closed',
 			Alert: {
-				HeaderText: { Translations: [{ Text: id }] },
-				ActivePeriods: periods
+				HeaderText: { Translations: [{ Text: 'closed' }] },
+				ActivePeriods: [{ Start: 100, End: 200 }, { Start: 300 }]
 			}
-		});
+		};
 		mockFetch
-			.mockResolvedValueOnce(
-				makeResponse(
-					makeGtfsResponse([
-						ending('closed', [{ End: 100 }, { End: 200 }]),
-						ending('open', [{ End: 100 }, { Start: 150 }])
-					] as never)
-				)
-			)
+			.mockResolvedValueOnce(makeResponse(makeGtfsResponse([entity] as never)))
 			.mockResolvedValue(makeResponse(makeGtfsResponse([])));
 
 		const promise = fetchTransitAlerts();
 		await vi.advanceTimersByTimeAsync(3000);
 		const { items } = await promise;
-		expect(items.map((i) => i.alertLive?.endsAt)).toEqual([200_000, null]);
+		expect(items[0].alertLive?.periods).toEqual([
+			{ start: 100_000, end: 200_000 },
+			{ start: 300_000, end: null }
+		]);
 	});
 
 	it('uses ferry source name for GF and AF agencies', async () => {

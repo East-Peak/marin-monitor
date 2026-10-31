@@ -89,6 +89,12 @@ const feedTime = (seconds: unknown): number | null =>
 const distinct = <T>(xs: T[]) => xs.filter((v, i, a) => a.indexOf(v) === i);
 
 /** The alert's header plus its routes, exactly as the legacy item title reads. */
+const alertPeriods = (alert: GtfsAlertEntity['Alert']) =>
+	(alert.ActivePeriods ?? []).map((p) => ({
+		start: typeof p.Start === 'number' ? p.Start * 1000 : null,
+		end: typeof p.End === 'number' ? p.End * 1000 : null
+	}));
+
 function alertTitle(alert: GtfsAlertEntity['Alert']): string {
 	const header = alert.HeaderText?.Translations?.[0]?.Text || 'Service Alert';
 	const routes = distinct(
@@ -136,10 +142,7 @@ function alertRow(entity: GtfsAlertEntity, agencyId: string): TransitAlertRow {
 		stopIds: distinct(
 			(alert.InformedEntities ?? []).flatMap((ie) => (ie.StopId ? [ie.StopId] : []))
 		),
-		periods: (alert.ActivePeriods ?? []).map((p) => ({
-			start: typeof p.Start === 'number' ? p.Start * 1000 : null,
-			end: typeof p.End === 'number' ? p.End * 1000 : null
-		})),
+		periods: alertPeriods(alert),
 		url: httpUrl(alert.Url?.Translations?.[0]?.Text)
 	};
 }
@@ -182,13 +185,6 @@ async function fetchAgencyAlerts(
 	}
 }
 
-/** The last active period's end (epoch ms); null when any period stays open. */
-function alertEnd(alert: GtfsAlertEntity['Alert']): number | null {
-	const ends = (alert.ActivePeriods ?? []).map((p) => p.End);
-	if (ends.length === 0 || ends.some((e) => typeof e !== 'number')) return null;
-	return Math.max(...(ends as number[])) * 1000;
-}
-
 /**
  * Convert a GTFS-RT alert entity to a NewsItem
  */
@@ -215,7 +211,7 @@ function entityToNewsItem(entity: GtfsAlertEntity, agencyId: string, agencyName:
 		category: 'safety',
 		verification: 'official',
 		isAlert: true,
-		alertLive: { seenAt: Date.now(), endsAt: alertEnd(alert) }
+		alertLive: { seenAt: Date.now(), periods: alertPeriods(alert) }
 	};
 }
 

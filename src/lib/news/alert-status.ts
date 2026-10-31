@@ -4,7 +4,6 @@
  * make one: city pages carry boilerplate like "fire lane". Status we can't establish is not
  * claimed active; the item stays in the news, unbadged.
  */
-import { hasKnownPublicationTime } from './order';
 import { isWithinWindow } from './recency';
 import type { PublishedAtStatus } from './feed-date';
 
@@ -18,8 +17,8 @@ export const LIVE_ALERT_MAX_AGE_MS = 3_600_000;
 /** 511 and NPS answer with what is current now, so being listed is the status. */
 export interface AlertLive {
 	seenAt: number;
-	/** The publisher's own end, or null when it gives none. */
-	endsAt: number | null;
+	/** The publisher's own active periods; none given means active while listed. */
+	periods: readonly { start: number | null; end: number | null }[];
 }
 
 interface AlertFields {
@@ -35,10 +34,11 @@ export const isPublisherAlert = (item: AlertFields): boolean =>
 
 export function isActiveAlert(item: AlertFields, now: number): boolean {
 	if (!isPublisherAlert(item)) return false;
-	const timed = { ...item, timestamp: item.timestamp ?? NaN };
 	const { alertLive: live } = item;
-	if (!live) return isWithinWindow(timed, ALERT_WINDOW_MS, now);
-	const started = !hasKnownPublicationTime(timed) || timed.timestamp <= now;
-	const ended = live.endsAt !== null && now >= live.endsAt;
-	return started && !ended && now - live.seenAt <= LIVE_ALERT_MAX_AGE_MS;
+	if (!live)
+		return isWithinWindow({ ...item, timestamp: item.timestamp ?? NaN }, ALERT_WINDOW_MS, now);
+	const inPeriod =
+		live.periods.length === 0 ||
+		live.periods.some((p) => (p.start ?? -Infinity) <= now && now < (p.end ?? Infinity));
+	return inPeriod && now - live.seenAt <= LIVE_ALERT_MAX_AGE_MS;
 }

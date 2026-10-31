@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isActiveAlert } from '$lib/news/alert-status';
 	import { onMount } from 'svelte';
 	import { componentLifetime } from '$lib/utils/lifetime';
 	import { Panel } from '$lib/components/common';
@@ -30,7 +31,8 @@
 	const stories24h = $derived(filteredRecentItems.length);
 
 	const alerts24h = $derived(
-		filteredRecentItems.filter((item) => item.isAlert).length + weatherAlerts.length
+		filteredRecentItems.filter((item) => isActiveAlert(item, Date.now())).length +
+			weatherAlerts.length
 	);
 
 	const temperature = $derived(forecast[0]?.temperature ?? null);
