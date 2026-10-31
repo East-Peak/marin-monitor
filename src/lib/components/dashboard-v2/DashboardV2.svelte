@@ -64,7 +64,7 @@
 	import { createSectionOpenState } from '$lib/dashboard/section-open';
 	import { openAndFocus } from '$lib/dashboard/fragment-nav';
 	import { replayEarlyTaps } from '$lib/dashboard/early-taps';
-	import { createDashboardV2Controller, V2_REFRESH_MS } from '$lib/dashboard/v2-controller';
+	import { createDashboardV2Controller, V2_WAKE_CHECK_MS } from '$lib/dashboard/v2-controller';
 	import { seededSnapshotEntries } from '$lib/dashboard/source-adapters';
 	import {
 		isDesktopViewport,
@@ -351,7 +351,7 @@
 		// The brief is for the grid point of the selected town's preset (Decision 7).
 		const stopTown = townLocation.subscribe((preset) => controller?.setLocation(preset));
 		void controller?.start();
-		const timer = setInterval(() => void controller?.refresh(), V2_REFRESH_MS);
+		const timer = setInterval(() => void controller?.refreshIfDue(), V2_WAKE_CHECK_MS);
 		return () => {
 			stopTown();
 			mapSource?.stop();

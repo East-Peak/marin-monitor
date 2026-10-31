@@ -7,6 +7,7 @@ import type { DatasetFetch } from './source-adapters';
 import { describePresentation } from './source-status';
 import { gettingAroundParts } from './getting-around-rows';
 import {
+	TRAFFIC_MAX_AGE_MS,
 	faaText,
 	airportWords,
 	gettingAroundCard,
@@ -672,6 +673,15 @@ describe('gettingAroundView', () => {
 		);
 		expect(retained.roads.note).toBe('Traffic out of date');
 		expect(retained.roads.meta).toBe('511 · checked 1 min ago · out of date');
+	});
+
+	it('traffic stays fresh to its max age, and is out of date just past it', () => {
+		const at = (age: number) =>
+			gettingAroundView(
+				input({ outcomes: { airport: live(NOW - 3 * MIN), traffic: live(NOW - age) } })
+			).roads.note;
+		expect(at(TRAFFIC_MAX_AGE_MS)).not.toBe('Traffic out of date');
+		expect(at(TRAFFIC_MAX_AGE_MS + 1)).toBe('Traffic out of date');
 	});
 
 	it('an old, untimed or partly unreadable traffic read never says "No incidents listed" (Codex r1 #3)', () => {

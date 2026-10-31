@@ -12,7 +12,7 @@
 	import LatestReporting from './LatestReporting.svelte';
 	import CamViewerHost from './CamViewerHost.svelte';
 	import type { Bounds } from '$lib/dashboard/map-in-view';
-	import { createDashboardV2Controller, V2_REFRESH_MS } from '$lib/dashboard/v2-controller';
+	import { createDashboardV2Controller, V2_WAKE_CHECK_MS } from '$lib/dashboard/v2-controller';
 	import { createMapFeed, type MapFeed } from '$lib/dashboard/map-feed';
 	import { createClock } from '$lib/dashboard/clock';
 	import { latestReportingView } from '$lib/dashboard/latest-reporting';
@@ -116,7 +116,7 @@
 		const before = get(mapStore).activeLayers;
 		hydrated = true;
 		void controller?.start().then(() => (readsSettled = true));
-		const timer = setInterval(() => void controller?.refresh(), V2_REFRESH_MS);
+		const timer = setInterval(() => void controller?.refreshIfDue(), V2_WAKE_CHECK_MS);
 		const onVisible = () => {
 			if (document.visibilityState === 'visible') void controller?.refresh();
 		};

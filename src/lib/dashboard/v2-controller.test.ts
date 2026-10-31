@@ -119,7 +119,7 @@ vi.mock('$lib/api/marin/traffic-corridors', async (orig) => ({
 	fetchTrafficCorridorsOrThrow: fetchers.traffic
 }));
 
-const { createDashboardV2Controller, DATASET_POLICY, V2_MIN_REFRESH_GAP_MS } =
+const { createDashboardV2Controller, DATASET_POLICY, V2_MIN_REFRESH_GAP_MS, V2_REFRESH_MS } =
 	await import('./v2-controller');
 const { effectiveState } = await import('./source-status');
 const { COST_DATASETS } = await import('./cost');
@@ -820,6 +820,30 @@ describe('createDashboardV2Controller', () => {
 			kind: 'live',
 			observedAt: NOW - 60_000
 		});
+	});
+
+	it('refreshIfDue: nothing inside the cycle, and a cycle once one is due (a machine waking)', async () => {
+		const c = controller();
+		await c.start();
+		clock += V2_REFRESH_MS - 1;
+		await c.refreshIfDue();
+		expect(fetchers.gas).toHaveBeenCalledTimes(1);
+		clock += 1;
+		await c.refreshIfDue();
+		expect(fetchers.gas).toHaveBeenCalledTimes(2);
+	});
+
+	it('a successful read after a failed one is live again, with its own time', async () => {
+		const c = controller();
+		await c.start();
+		await c.ensure('airport');
+		fetchers.airport.mockRejectedValueOnce(new Error('HTTP 502'));
+		clock += V2_MIN_REFRESH_GAP_MS + 1;
+		await c.refresh();
+		expect(get(c.datasetOutcomes).airport.kind).toBe('failed');
+		clock += V2_MIN_REFRESH_GAP_MS + 1;
+		await c.refresh();
+		expect(get(c.datasetOutcomes).airport.kind).toBe('live');
 	});
 
 	it('a failed detail refresh keeps the last value, retained with its own time', async () => {

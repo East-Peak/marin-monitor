@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-10-31',
+		title: 'Fresh sooner after sleep',
+		description:
+			'A dashboard left open on a computer that went to sleep now rereads its sources within about 30 seconds of waking, so traffic and the rest no longer sit “out of date” for minutes while the sources are fine.'
+	},
+	{
+		date: '2026-10-31',
 		title: 'Alerts are alerts',
 		description:
 			'On the TV and the classic layout, ALERT now means a source that publishes alerts says so, and it’s still current: police alerts, 511 transit, National Park Service closures and larger earthquakes. A city page that mentions a “fire lane” no longer counts, and an old police notice leaves after a day instead of staying forever.'

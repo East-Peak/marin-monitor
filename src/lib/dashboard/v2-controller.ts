@@ -108,6 +108,12 @@ import {
 import type { SourceStatusEntry } from './source-status';
 
 export const V2_REFRESH_MS = 5 * 60_000;
+/**
+ * How often a page asks whether a cycle is due. A machine waking from sleep fires no
+ * visibilitychange (the page stayed visible) and a paused 5-minute timer picks up where it left
+ * off, so a plain interval would leave reads "out of date" for minutes while the sources are fine.
+ */
+export const V2_WAKE_CHECK_MS = 30_000;
 export const V2_MIN_REFRESH_GAP_MS = 60_000;
 const DAY_MS = 86_400_000;
 
@@ -474,6 +480,8 @@ export interface ControllerDeps {
 export interface DashboardV2Controller {
 	start(): Promise<void>;
 	refresh(options?: { force?: boolean }): Promise<void>;
+	/** A cycle only once V2_REFRESH_MS has passed since the last: call it often. */
+	refreshIfDue(): Promise<void>;
 	ensure(id: string): Promise<void>;
 	earthquakes: Readable<NewsItem[]>;
 	sources: Readable<SourceStatusEntry[]>;
@@ -708,6 +716,11 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 			if (running) return running;
 			if (!force && now() - lastCycleAt < V2_MIN_REFRESH_GAP_MS) return Promise.resolve();
 			return cycle();
+		},
+		refreshIfDue() {
+			if (deps.signal.aborted || !started || now() - lastCycleAt < V2_REFRESH_MS)
+				return running ?? Promise.resolve();
+			return running ?? cycle();
 		},
 		ensure: (id) => registry.ensure(id),
 		cycling: { subscribe: cycling.subscribe },

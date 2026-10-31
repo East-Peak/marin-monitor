@@ -46,6 +46,7 @@ const controller = vi.hoisted(() => ({
 	seededEntries: (() => []) as (v: NewsSnapshotView) => unknown[],
 	start: vi.fn(async () => {}),
 	refresh: vi.fn(async () => {}),
+	refreshIfDue: vi.fn(async () => {}),
 	ensure: vi.fn(async () => {}),
 	enableBriefDetail: vi.fn(async () => {}),
 	disableBriefDetail: vi.fn(),
@@ -90,7 +91,7 @@ beforeEach(() => {
 	controller.created.length = 0;
 });
 vi.mock('$lib/dashboard/v2-controller', async () => ({
-	V2_REFRESH_MS: 300_000,
+	V2_WAKE_CHECK_MS: 30_000,
 	createDashboardV2Controller: ({
 		signal,
 		initialSnapshot
@@ -104,6 +105,7 @@ vi.mock('$lib/dashboard/v2-controller', async () => ({
 		return {
 			start: controller.start,
 			refresh: controller.refresh,
+			refreshIfDue: controller.refreshIfDue,
 			ensure: controller.ensure,
 			cycling: { subscribe: controller.cycling.subscribe },
 			earthquakes: { subscribe: (fn: (v: unknown[]) => void) => (fn([]), () => {}) },

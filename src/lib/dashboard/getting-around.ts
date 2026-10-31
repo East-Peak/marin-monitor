@@ -36,7 +36,7 @@ import {
 	type SourceStatusEntry
 } from './source-status';
 
-/** Freshness limits: FAA via /api/airport-status (5-min caches), 511 traffic (2-min CDN), GTFS-RT feeds. */
+/** Freshness limits: FAA via /api/airport-status (5-min caches), 511 traffic (5-min CDN), GTFS-RT feeds. */
 export const AIRPORT_MAX_AGE_MS = 30 * 60_000;
 export const TRAFFIC_MAX_AGE_MS = 15 * 60_000;
 const TRANSIT_MAX_AGE_MS = 30 * 60_000;

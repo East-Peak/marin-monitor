@@ -384,6 +384,24 @@ test.describe('desktop 1440×900', () => {
 		await expect(s.locator('[data-line="OAK"]')).not.toContainText(ALL_CLEAR);
 	});
 
+	test('a machine waking from sleep rereads traffic soon, never leaving it "out of date" for minutes', async ({
+		page
+	}) => {
+		let checkedAt = iso(T0 - MIN);
+		await stub(page, { traffic: (r) => json(r, { ...TRAFFIC, checkedAt }) });
+		await openV2(page);
+		const roads = section(page).locator('[data-ga="roads"]');
+		await expect(roads).toContainText('511', { timeout: 15_000 });
+		await expect(roads).not.toContainText('out of date');
+
+		// Asleep: the wall clock jumps and no timer runs; the page stays "visible", so no event.
+		const woke = T0 + 20 * MIN;
+		checkedAt = iso(woke);
+		await page.clock.setSystemTime(woke);
+		await page.clock.runFor(61_000);
+		await expect(roads).not.toContainText('out of date');
+	});
+
 	test('a complete, fresh read with nothing listed says so; the header stays quiet', async ({
 		page
 	}) => {
