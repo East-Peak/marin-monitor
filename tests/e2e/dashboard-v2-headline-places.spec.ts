@@ -1,5 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
-import { MILL_VALLEY, SOURCES, reportingSnapshot } from './fixtures/v2-reporting';
+import {
+	MILL_VALLEY,
+	SOURCES,
+	reportingSnapshot,
+	type ReportingStory
+} from './fixtures/v2-reporting';
 import { pinAt, settled, sourceCount } from './fixtures/v2-probe';
 
 /**
@@ -44,7 +49,44 @@ const NO_DATA_LAYERS = {
 	roads: false
 };
 
-async function stub(page: Page) {
+/**
+ * One fresh story per placement path, and two stale ones that would each be placed. The feed's
+ * point goes to news-pins; a named place to story-places; a town alone to the town's count.
+ */
+const STALE_HOURS = 8 * 24;
+const PATHS = [
+	{
+		slug: 'at-point',
+		title: 'Crews repair a culvert',
+		source: SOURCES.ij,
+		hoursAgo: 1,
+		point: { lat: 37.97, lon: -122.53 }
+	},
+	...STORIES,
+	{
+		slug: 'stale-place',
+		title: 'Boaters rescued on Tomales Bay',
+		source: SOURCES.ij,
+		hoursAgo: STALE_HOURS,
+		town: { name: 'Tomales', slug: 'tomales' }
+	},
+	{
+		slug: 'stale-point',
+		title: 'Crews finish an old culvert',
+		source: SOURCES.ij,
+		hoursAgo: STALE_HOURS,
+		point: { lat: 38.1, lon: -122.57 }
+	},
+	{
+		slug: 'stale-town',
+		title: 'Mill Valley parade recap',
+		source: SOURCES.ij,
+		hoursAgo: STALE_HOURS,
+		town: MILL_VALLEY
+	}
+];
+
+async function stub(page: Page, stories: ReportingStory[] = STORIES) {
 	await page.addInitScript((layers) => {
 		localStorage.setItem('mm_sections_v2', JSON.stringify({ version: 3, open: {}, layers }));
 	}, NO_DATA_LAYERS);
@@ -56,7 +98,7 @@ async function stub(page: Page) {
 		r.fulfill({
 			status: 200,
 			contentType: 'application/json',
-			body: reportingSnapshot(T0, STORIES)
+			body: reportingSnapshot(T0, stories)
 		})
 	);
 }
@@ -139,6 +181,39 @@ async function clickHaloEdge(page: Page) {
 
 test.describe('desktop /map 1440×900', () => {
 	test.use({ viewport: { width: 1440, height: 900 } });
+
+	test('each path places exactly its fresh story, and a stale story shows on none', async ({
+		page
+	}) => {
+		await stub(page, PATHS);
+		await page.goto('/map?probe');
+		await expect(page.locator('[data-layout="explore"][data-hydrated="true"]')).toBeVisible();
+		await settled(page);
+		expect(await sourceCount(page, 'news-pins')).toBe(1);
+		expect(await sourceCount(page, 'story-places')).toBe(1);
+		const towns = await page.evaluate(() => {
+			type Town = { properties: { slug: string; total: number } };
+			const m = (
+				window as unknown as {
+					__v2ProbeMap?: {
+						getSource(id: string): { serialize(): { data: { features: Town[] } } };
+					};
+				}
+			).__v2ProbeMap;
+			return m
+				?.getSource('towns')
+				.serialize()
+				.data.features.filter((f) => Number(f.properties.total) > 0)
+				.map((f) => [f.properties.slug, f.properties.total]);
+		});
+		expect(towns).toEqual([['mill-valley', 1]]);
+		const panel = page.getByRole('complementary', { name: 'In view' });
+		await expect
+			.poll(async () => (await rows(panel)).filter((id) => id?.startsWith('news:')).sort())
+			.toEqual(
+				['at-point', 'forum', 'kayak'].map((slug) => `news:${SOURCES.ij.id}:${slug}`).sort()
+			);
+	});
 
 	test('a click on the halo’s edge opens the story with its place', async ({ page }) => {
 		await stub(page);
