@@ -9,7 +9,11 @@ import { stubCams } from './cams';
  * §13.3 height acceptance at 390×844, shared by the flag-off spec and the Lifestyle Index's
  * populated one (LIFE2, Decision 10): one scenario, one set of limits.
  */
-export const T0 = Math.floor(Date.now() / 1000) * 1000;
+/**
+ * Pinned: the page is laid out from this clock, so a moving one moved the height. Every read the
+ * page makes is stubbed from it too; a live marine or air read here swung the page 5,418–5,515.
+ */
+export const T0 = Date.parse('2026-10-31T19:00:00.000Z');
 const H = 3_600_000;
 const iso = (ms: number) => new Date(ms).toISOString();
 const json = (route: Route, body: unknown, status = 200) =>
@@ -58,6 +62,57 @@ export async function stub(page: Page) {
 		})
 	);
 	await stubCams(page, { lastModified: T0 - 240_000 });
+	await stubOutdoorsFixed(page);
+}
+
+/** Outdoors' tallest honest state: a wave reading with its chart, an air reading, a long fire. */
+async function stubOutdoorsFixed(page: Page) {
+	const hours = Array.from({ length: 72 }, (_, i) => i);
+	await page.route(/marine-api\.open-meteo\.com/, (r) =>
+		json(r, {
+			hourly: {
+				time: hours.map((i) => (T0 + i * H) / 1000),
+				wave_height: hours.map((i) => 4 + Math.sin(i / 6)),
+				wave_period: hours.map(() => 12),
+				wave_direction: hours.map(() => 250)
+			}
+		})
+	);
+	await page.route(/\/api\/air-quality\b/, (r) =>
+		json(r, {
+			aqi: 18,
+			category: 'Good',
+			color: '#00e400',
+			pollutant: 'OZONE',
+			area: 'San Rafael',
+			observedAt: T0 - H,
+			timestamp: T0
+		})
+	);
+	await page.route(/services3\.arcgis\.com/, (r) => json(r, { features: [] }));
+	await page.route('**/api/calfire', (r) =>
+		json(r, {
+			features: [
+				{
+					geometry: { type: 'Point', coordinates: [-122.3, 38.4] },
+					properties: {
+						Name: 'Long Named Prescribed Burn Unit',
+						Final: false,
+						Updated: iso(T0 - 2 * H),
+						Started: iso(T0 - 24 * H),
+						County: 'Napa',
+						AcresBurned: 30,
+						PercentContained: null,
+						Latitude: 38.4,
+						Longitude: -122.3,
+						Type: 'Wildfire',
+						UniqueId: 'height-fire',
+						IsActive: 'true'
+					}
+				}
+			]
+		})
+	);
 }
 
 export type HeightMode = 'first visit' | 'every section saved open' | 'every camera down';
@@ -188,8 +243,8 @@ export async function phoneHeight(
 	if (mode === 'every section saved open') {
 		// §13.3: with every disclosure open the whole document is ≤ 5,498 (no strip exemption: Codex r1
 		// #8). Re-baselined from 5,110 on Stuart's ruling, 2026-10-30 (COST0): the approved receipt, its
-		// total, the highlight and the 44 px way in measured 5,480 or 5,498 over 40 runs on this
-		// worst-case fixture, with the tallest household on the card.
+		// total, the highlight and the 44 px way measure exactly 5,498 on this worst-case fixture,
+		// with the tallest household on the card and the clock and every read pinned (SWEEP1).
 		const ga = page.locator('section#getting-around');
 		await expect(ga.locator('[data-ga="roads"] [data-row]')).toHaveCount(3);
 		await expect(ga.locator('[data-ga="transit"] [data-row]')).toHaveCount(3, {
