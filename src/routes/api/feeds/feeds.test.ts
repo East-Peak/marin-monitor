@@ -6,14 +6,14 @@ vi.mock('$lib/server/fetch-utils', () => ({ fetchWithTimeout }));
 const { GET } = await import('./+server');
 const { FEEDS } = await import('$lib/config/feeds');
 
-const MARIN_LATELY = 'https://marinlately.substack.com/feed';
+const MARIN_LATELY = 'https://www.marinlately.com/latest/rss/';
 const get = (feedUrl: string) =>
 	GET({
 		url: new URL(`https://marinmonitor.com/api/feeds?url=${encodeURIComponent(feedUrl)}`)
 	} as never);
 
 describe('Marin Lately feed', () => {
-	it('is configured at its Substack feed (marinlately.com redirects to a dead page)', () => {
+	it('is configured at its own Ghost site (it left Substack in Oct 2026)', () => {
 		expect(FEEDS.satire.map((f) => [f.name, f.url])).toEqual([['Marin Lately', MARIN_LATELY]]);
 	});
 
@@ -28,8 +28,12 @@ describe('Marin Lately feed', () => {
 		expect(fetchWithTimeout.mock.calls[0][0]).toBe(MARIN_LATELY);
 	});
 
-	it('no longer proxies the retired marinlately.com feed', async () => {
-		await expect(get('https://marinlately.com/feed/')).rejects.toMatchObject({ status: 400 });
+	it('no longer proxies its retired feeds', async () => {
+		for (const retired of [
+			'https://marinlately.com/feed/',
+			'https://marinlately.substack.com/feed'
+		])
+			await expect(get(retired)).rejects.toMatchObject({ status: 400 });
 	});
 });
 

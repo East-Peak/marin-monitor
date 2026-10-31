@@ -12,7 +12,7 @@ import type { SourceStatusEntry } from './source-status';
 
 export const LATELY_SOURCE = 'Marin Lately';
 export const LATELY_FEED_ID = 'news:marin-lately';
-export const LATELY_LINK = 'https://marinlately.substack.com/';
+export const LATELY_LINK = 'https://www.marinlately.com/';
 const LATELY_MAX = 6;
 /** The band's recency window: a newest piece older than this hides it. */
 const LATELY_MAX_AGE_MS = 30 * 86_400_000;

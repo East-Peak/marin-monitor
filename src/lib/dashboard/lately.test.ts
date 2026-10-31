@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { fromSnapshotRead } from './source-adapters';
-import { latelyView } from './lately';
+import { LATELY_LINK, latelyView } from './lately';
 import {
 	resetStories,
 	snapshotEntries,
@@ -39,6 +39,13 @@ const DAY = 86_400_000;
 const iso = (ms: number) => new Date(ms).toISOString();
 
 describe('Marin Lately band (Goal 4; DASH-FLIP1 gate)', () => {
+	it('links out to their own site, and each piece to its post there', () => {
+		expect(LATELY_LINK).toBe('https://www.marinlately.com/');
+		const link = 'https://www.marinlately.com/a-made-up-piece/';
+		const out = run([piece('A Made-Up Piece', iso(NOW - DAY), { link })]);
+		expect(out?.pieces[0].link).toBe(link);
+	});
+
 	it('newest piece exactly 30 days old → shown', () => {
 		const out = run([piece('Edge Satire', iso(NOW - 30 * DAY))]);
 		expect(out?.pieces.map((p) => p.title)).toEqual(['Edge Satire']);
