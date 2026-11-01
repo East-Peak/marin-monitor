@@ -115,6 +115,82 @@ describe('the Lifestyle card', () => {
 		expect(c.textContent).not.toMatch(/business 0%/);
 	});
 
+	describe('the month map', () => {
+		const tiles = (c: Element) =>
+			[...c.querySelectorAll('a[data-tile]')].map((a) => a.getAttribute('data-tile'));
+		const caption = (c: Element) => text(c, '[data-map-caption]');
+		const section = (name: string) =>
+			budget('larkspur')
+				.lines.filter((l) => l.section === name)
+				.map((l) => l.id);
+
+		it('every tile links to its section, in words, with no caption for a whole month', () => {
+			const c = card(summary(budget('larkspur')));
+			const housing = c.querySelector('a[data-tile="housing"]');
+			expect(housing?.getAttribute('href')).toBe('/cost/larkspur#section-housing');
+			expect(housing?.getAttribute('aria-label')).toMatch(
+				/^Housing · \$[\d,]+ a month · \d+% of spending$/
+			);
+			expect(caption(c)).toBeNull();
+		});
+
+		it('an unreadable section has no tile, and a line says so', () => {
+			const { utilities: _gone, ...sections } = budget('larkspur').sections;
+			const c = card(
+				summary(unread(section('utilities'), { sections, complete: false, breakEven: null }))
+			);
+			expect(tiles(c)).not.toContain('utilities');
+			expect(c.querySelector('[data-month-map]')?.textContent).not.toMatch(/utilities \$/i);
+			expect(caption(c)).toBe('Spending so far. Can’t be read: utilities.');
+		});
+
+		it('a section at $0 with an unread line can’t be read either', () => {
+			const b = budget('larkspur');
+			const c = card(
+				summary(
+					unread(section('business'), {
+						sections: { ...b.sections, business: 0 },
+						complete: false,
+						breakEven: null
+					})
+				)
+			);
+			expect(tiles(c)).not.toContain('business');
+			expect(caption(c)).toContain('Can’t be read: business.');
+		});
+
+		it('an unread optional line says "so far" while the budget is complete', () => {
+			const b = budget('larkspur');
+			const id = b.lines.find((l) => l.section === 'kids')!.id;
+			const c = card(summary(unread([id], { complete: true })));
+			expect(caption(c)).toBe('Spending so far.');
+			expect(c.querySelector('a[data-tile="kids"]')?.getAttribute('aria-label')).toContain(
+				'a month so far'
+			);
+		});
+
+		it('a business that makes money has no tile, and the caption says what’s left out', () => {
+			const b = budget('larkspur');
+			const c = card(summary({ ...b, sections: { ...b.sections, business: -1200 } }));
+			expect(tiles(c)).not.toContain('business');
+			expect(caption(c)).toBe('The business brings in $1,200 a month, not shown.');
+		});
+
+		it('with nothing priced there are no tiles, only the words', () => {
+			const b = budget('larkspur');
+			const c = card(
+				summary(
+					unread(
+						b.lines.map((l) => l.id),
+						{ sections: {}, complete: false, breakEven: null, burnMonthly: 0 }
+					)
+				)
+			);
+			expect(tiles(c)).toEqual([]);
+			expect(caption(c)).toMatch(/^Spending so far\. Can’t be read: /);
+		});
+	});
+
 	it('the picker still changes household', async () => {
 		const { container } = render(LifestyleCard, {
 			now: NOW,

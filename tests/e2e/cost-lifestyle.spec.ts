@@ -255,6 +255,8 @@ test.describe('the TV', () => {
 			await expect(hero).toBeVisible({ timeout: 20_000 });
 			await expect(hero).toHaveAttribute('data-tv-lifestyle', town);
 			await expect(hero.locator('[data-tv-footer]')).toBeVisible();
+			await expect(hero.locator('[data-section-stack]')).toBeVisible();
+			await expect(hero.locator('[data-month-map]')).toHaveCount(0);
 			if (note) await expect(hero).toContainText(note);
 			const shown = await expectNothingClipped(page, hero);
 			console.log(`[tv] ${town}: ${shown} highlights whole`);

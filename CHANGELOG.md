@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-11-01
 
+### Added — Click into the month (COST2)
+
+- **The month is a map**: on the desktop card a treemap of the month by section replaces the bar, under the highlight and down to the receipt's foot. `/cost/<town>` heads its budget with the same map, on phones too. The phone card, the tablet card and the TV keep what they had.
+- **Every tile is a link**: click, tap or Enter lands on that section. Hover or focus reads its amount and share of spending. Sections under 3% share a tile, "The rest", which names them.
+- **Honest about gaps**: shares are of spending; a business that makes money is named in a caption, a section that can't be read gets no tile and a line that says so, and a partly read section says "so far".
+
 ### Added — Read a chart by pointing at it (CHARTREAD1)
 
 - **One readout**: a rule, a dot and a label, by mouse, touch or keyboard. It snaps to real readings, says what kind of number each is, and never interpolates. Each chart is one slider for screen readers.

@@ -9,6 +9,7 @@
 		pricedSoFar,
 		type LifestyleCard
 	} from '$lib/lifestyle/view';
+	import MonthMap from '../lifestyle/MonthMap.svelte';
 	import ReceiptRow from '../lifestyle/ReceiptRow.svelte';
 	import SectionStack from '../lifestyle/SectionStack.svelte';
 	import CardSource from './CardSource.svelte';
@@ -115,6 +116,7 @@
 						<span class="modelled" data-modelled data-text-role="meta">modelled</span>{/if}
 				</p>
 			{/if}
+			<div class="map"><MonthMap sections={h.sections} slug={h.slug} {soFar} floor={24} /></div>
 		</div>
 	{:else}
 		<p class="empty" data-text-role="body">{why(view)}</p>
@@ -219,16 +221,47 @@
 		gap: var(--v2-s2);
 		min-width: 0;
 	}
-	/* Full section width on desktop: the month beside the receipt, the highlight under the month. */
+	.map {
+		display: none;
+	}
+	/* Full section width on desktop: the month beside the receipt, the highlight under the month,
+	   and the map taking what's left down to the receipt's foot. The receipt sets the height: the
+	   map is out of flow, so it can't add any. The left column's gaps are margins, so a household
+	   with no highlight has no empty row. */
 	@media (min-width: 1024px) {
 		.body {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
-			grid-template-rows: auto 1fr;
-			column-gap: 28px;
+			grid-template-rows: auto auto minmax(96px, 1fr);
+			gap: 0 28px;
 		}
 		.receipt-side {
 			grid-column: 2;
-			grid-row: 1 / span 2;
+			grid-row: 1 / span 3;
+		}
+		.half:not(.receipt-side),
+		.hl,
+		.map {
+			grid-column: 1;
+		}
+		.hl,
+		.map {
+			margin-top: var(--v2-s3);
+		}
+		.hl {
+			grid-row: 2;
+		}
+		.map {
+			display: block;
+			grid-row: 3;
+			position: relative;
+		}
+		.map > :global(.month-map) {
+			position: absolute;
+			inset: 0;
+			height: auto;
+		}
+		.bar {
+			display: none;
 		}
 	}
 	.hero {

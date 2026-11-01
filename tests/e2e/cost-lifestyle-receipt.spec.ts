@@ -54,7 +54,7 @@ const flows: [string, (page: Page, phone: boolean) => Promise<void>][] = [
 				/^To break even: \$[\d,]+ a year before tax$/
 			);
 			await expect(c.locator('[data-card-highlight]')).toBeVisible();
-			await expect(c.locator('[data-section-stack]')).toBeVisible({ visible: !phone });
+			await expect(c.locator('[data-section-stack]')).toBeHidden();
 			await expect(c.locator('[data-colour-exception="rank"]')).toHaveCount(0);
 			await expect(page.locator('[data-colour-exception="rank"]')).toHaveCount(0);
 			const all = c.locator('[data-see-all]');

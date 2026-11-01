@@ -3,8 +3,10 @@
 	import { afterNavigate } from '$app/navigation';
 	import '$lib/components/dashboard-v2/v2-tokens.css';
 	import ClassChips from '$lib/components/lifestyle/ClassChips.svelte';
+	import MonthMap from '$lib/components/lifestyle/MonthMap.svelte';
 	import { PACIFIC } from '$lib/dashboard/pacific-time';
 	import type { PricedInput } from '$lib/lifestyle/model';
+	import { sectionAnchor } from '$lib/lifestyle/treemap';
 	import {
 		FICTION_LABEL,
 		formatInput,
@@ -38,10 +40,18 @@
 
 	const soFar = $derived(!!h && pricedSoFar(h));
 
-	/** The line a receipt row just landed on: outlined while its summary holds focus. */
+	/** The line or section just landed on: outlined while it holds focus. */
 	let arrived = $state<string | null>(null);
 
 	function arrive(hash: string) {
+		if (hash.startsWith('#section-')) {
+			const heading = document.getElementById(hash.slice(1));
+			if (!(heading instanceof HTMLHeadingElement)) return;
+			heading.scrollIntoView({ block: 'start' });
+			heading.focus({ preventScroll: true });
+			arrived = heading.dataset.heading ?? null;
+			return;
+		}
 		if (!hash.startsWith('#line-')) return;
 		const line = document.getElementById(hash.slice(1));
 		if (!(line instanceof HTMLDetailsElement)) return;
@@ -183,10 +193,27 @@
 			{/if}
 
 			<section class="budget" aria-label="The budget">
+				<div class="map">
+					<!-- A fragment followed twice is no navigation, so the page lands it itself. -->
+					<MonthMap
+						sections={p.sections}
+						slug={h.slug}
+						{soFar}
+						floor={44}
+						onpick={(hash) => setTimeout(() => arrive(hash))}
+					/>
+				</div>
 				{#each p.sections as s (s.section)}
 					<div class="sec" data-section={s.section}>
 						<div class="sec-head">
-							<h2 data-text-role="section-title">
+							<h2
+								id={sectionAnchor(s.section)}
+								class:arrived={arrived === s.section}
+								tabindex="-1"
+								data-heading={s.section}
+								data-text-role="section-title"
+								onblur={() => (arrived = null)}
+							>
 								<i class="sw" style:background={SECTION_COLOR[s.section]}></i>{s.section}
 							</h2>
 							<span class="num" data-section-total data-text-role="label"
@@ -484,6 +511,15 @@
 		display: flex;
 		flex-direction: column;
 	}
+	.map {
+		height: 300px;
+		margin-bottom: var(--v2-s3);
+	}
+	@media (max-width: 767px) {
+		.map {
+			height: 420px;
+		}
+	}
 	.sec {
 		border-top: 1px solid var(--border-light);
 		padding-block: var(--v2-s3);
@@ -513,6 +549,17 @@
 		position: absolute;
 		inset: 0 auto 0 0;
 		border-radius: 2px;
+	}
+	.sec-head h2 {
+		scroll-margin-top: var(--v2-s3);
+		border-radius: 2px;
+	}
+	.sec-head h2:focus {
+		outline: none;
+	}
+	.sec-head h2.arrived {
+		outline: 2px solid var(--accent);
+		outline-offset: 2px;
 	}
 	.sw {
 		display: inline-block;
