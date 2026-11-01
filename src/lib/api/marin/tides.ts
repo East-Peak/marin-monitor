@@ -12,7 +12,7 @@ import type { TidePrediction } from '$lib/types';
 import { logger } from '$lib/config/api';
 import { liveData, serviceClient } from '$lib/services/client';
 import type { OwnerOptions } from './fetch-helpers';
-import { pacificDate } from '$lib/dashboard/pacific-time';
+import { pacificDate, parsePacificWallTime } from '$lib/dashboard/pacific-time';
 import type { TideEvent } from '$lib/weather/brief';
 
 interface NoaaTidePrediction {
@@ -133,6 +133,12 @@ function parseGmtMinute(value: string): number | null {
 	return Number.isFinite(ms) && new Date(ms).toISOString() === iso ? ms : null;
 }
 
+/** Today's Pacific midnight as NOAA's GMT `YYYYMMDD HH:MM`: a bare date would start at GMT's. */
+function pacificDayStartGmt(now: number): string {
+	const midnight = parsePacificWallTime(`${pacificDate(now)}T00:00`) as number;
+	return new Date(midnight).toISOString().slice(0, 16).replace(/-/g, '').replace('T', ' ');
+}
+
 /** The v2 brief's request: 48 h from the station's local midnight, in GMT (no end_date). */
 async function requestPredictionsOrThrow(
 	station: string,
@@ -146,7 +152,7 @@ async function requestPredictionsOrThrow(
 			signal,
 			revalidateInBackground: false,
 			params: {
-				begin_date: pacificDate(Date.now()).replace(/-/g, ''),
+				begin_date: pacificDayStartGmt(Date.now()),
 				range: 48,
 				station,
 				product: 'predictions',

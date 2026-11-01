@@ -12,6 +12,7 @@ import type { EarthquakeRead } from '$lib/api/marin/usgs';
 import type { HourlyForecast, HourlyPop, TideEvent } from '$lib/weather/brief';
 import type { BriefCard, BriefState } from './brief-store';
 import { stationColumns, stationKey } from './brief-desktop';
+import type { Reading } from './chart-readout';
 import type { HourColumn } from './hour-columns';
 import { PACIFIC, pacificDate, pacificDay, pacificMidnightAfter } from './pacific-time';
 import { emptyWording, mapMeasured, measuredFromEntry, type Measured } from './measured';
@@ -86,20 +87,24 @@ export function tempSeries(periods: readonly HourlyPop[], now: number): TempSeri
 
 export interface RainSeries {
 	bars: (number | null)[];
+	/** Each bar's hour. */
+	hours: number[];
 	meta: string;
 	/** Every one of the 24 hours forecast, each at 0%: the only case that may read as dry. */
 	allDry: boolean;
 }
 
 export function rainSeries(periods: readonly HourlyPop[], now: number): RainSeries {
-	const bars = next24(periods, now).map(({ p }) => p?.pop ?? null);
+	const window = next24(periods, now);
+	const bars = window.map(({ p }) => p?.pop ?? null);
+	const hours = window.map(({ atMs }) => atMs);
 	const known = bars.filter((b): b is number => b !== null);
-	if (known.length === 0) return { bars, meta: 'no rain chance forecast', allDry: false };
+	if (known.length === 0) return { bars, hours, meta: 'no rain chance forecast', allDry: false };
 	const peak = Math.max(...known);
 	const missing = bars.length - known.length;
-	if (missing === 0 && peak === 0) return { bars, meta: '0% every hour', allDry: true };
+	if (missing === 0 && peak === 0) return { bars, hours, meta: '0% every hour', allDry: true };
 	const gap = missing ? ` · ${missing} ${missing === 1 ? 'hour' : 'hours'} not forecast` : '';
-	return { bars, meta: `peak ${peak}%${gap}`, allDry: false };
+	return { bars, hours, meta: `peak ${peak}%${gap}`, allDry: false };
 }
 
 export interface DayRange {
@@ -264,19 +269,21 @@ export function airRow(m: Measured<AirQualityData | null>): GroundRow {
 
 export interface SurfView {
 	current: { waveFt: number; periodS: number | null; directionDeg: number | null } | null;
-	/** Significant wave height for the next 48 hours; a missing hour stays null. */
-	heights: (number | null)[];
+	/** Significant wave height for the next 48 hours, each at its hour; a missing one stays null. */
+	series: Reading[];
 }
 
 export function surfView(m: Measured<MarineForecastRead>): SurfView {
-	if (m.kind !== 'value') return { current: null, heights: [] };
+	if (m.kind !== 'value') return { current: null, series: [] };
 	const first = m.value.points[0];
 	return {
 		current:
 			first && first.waveFt !== null
 				? { waveFt: first.waveFt, periodS: first.periodS, directionDeg: first.directionDeg }
 				: null,
-		heights: m.value.points.slice(0, 48).map((p) => p.waveFt)
+		series: m.value.points
+			.slice(0, 48)
+			.map((p) => ({ at: p.atMs, value: p.waveFt, kind: 'forecast', unit: ' ft' }))
 	};
 }
 

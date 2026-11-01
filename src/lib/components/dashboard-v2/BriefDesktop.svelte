@@ -12,7 +12,10 @@
 	import { effectiveState, type SourceEntryState } from '$lib/dashboard/source-status';
 	import { buildChart } from '$lib/utils/chart';
 	import { nextTide, OBSERVATION_PLACE, restOfTodayRainChance } from '$lib/weather/brief';
+	import { stamp } from '$lib/dashboard/chart-readout';
+	import { heightStops, seriesStops, startAt } from '$lib/dashboard/chart-stops';
 	import CardSource from './CardSource.svelte';
+	import ChartReadout from './ChartReadout.svelte';
 	import WeatherColumns from './WeatherColumns.svelte';
 
 	/**
@@ -80,6 +83,15 @@
 			})
 	);
 
+	const tideStops = $derived(
+		day && tideChart
+			? heightStops(day.points, day.events, (ft) => (16 + tideChart.yScale(ft)) / TIDE_H, now, {
+					hourly: stateOf(brief.tideHourly) === 'stale',
+					events: stateOf(brief.tides) === 'stale'
+				})
+			: []
+	);
+
 	const surf = $derived(ocean.view.current);
 	const oceanState = $derived<SourceEntryState>(
 		ocean.measured.kind === 'value'
@@ -89,14 +101,27 @@
 			: ocean.measured.kind
 	);
 	let sparkW = $state(0);
+	const waves = $derived(ocean.view.series.slice(0, 24));
+	const waveDomain = $derived<[number, number]>([waves[0]?.at ?? 0, waves.at(-1)?.at ?? 1]);
 	const sparkChart = $derived(
 		buildChart({
 			width: sparkW || 200,
 			height: SPARK_H,
 			margins: { top: 2, right: 2, bottom: 2, left: 2 },
 			accentColor: '#3b82f6',
-			data: ocean.view.heights.slice(0, 24).map((v) => ({ value: v ?? Number.NaN }))
+			xDomain: waveDomain,
+			data: waves.map((r) => ({ x: r.at, value: r.value ?? Number.NaN }))
 		})
+	);
+	const waveStops = $derived(
+		sparkChart
+			? seriesStops(waves, {
+					y: (ft) => (2 + sparkChart.yScale(ft)) / SPARK_H,
+					when: (ms) => stamp(ms, now),
+					format: (v) => `${v.toFixed(1)} ft`,
+					stale: oceanState === 'stale'
+				})
+			: []
 	);
 </script>
 
@@ -175,45 +200,59 @@
 		{/if}
 		<div class="chart" bind:clientWidth={tideW}>
 			{#if day && tideChart}
-				<svg
-					data-chart="tide"
-					data-text-role="meta"
-					viewBox="0 0 {tideW || 280} {TIDE_H}"
-					style:height="{TIDE_H}px"
-					role="img"
-					aria-label="Today's tide, NOAA hourly prediction"
+				<ChartReadout
+					label="Today's tide, NOAA hourly prediction"
+					stops={tideStops}
+					plot={{ domain: day.domain, left: 8, right: (tideW || 280) - 8, width: tideW || 280 }}
+					start={startAt(tideStops, now)}
+					color="#14b8a6"
+					resetKey={brief.tides.scope ?? ''}
 				>
-					<g transform="translate(8,16)">
-						<path d={tideChart.areaPath} fill="#14b8a6" fill-opacity="0.15" />
-						<path data-line d={tideChart.linePath} fill="none" stroke="#14b8a6" stroke-width="2" />
-						{#if now >= day.domain[0] && now <= day.domain[1]}
-							<line
-								x1={tideChart.xScale(now)}
-								x2={tideChart.xScale(now)}
-								y1="0"
-								y2={TIDE_H - 32}
-								stroke="currentColor"
-								stroke-opacity="0.4"
-								stroke-dasharray="2 3"
+					<svg
+						data-chart="tide"
+						data-text-role="meta"
+						viewBox="0 0 {tideW || 280} {TIDE_H}"
+						style:height="{TIDE_H}px"
+						aria-hidden="true"
+					>
+						<g transform="translate(8,16)">
+							<path d={tideChart.areaPath} fill="#14b8a6" fill-opacity="0.15" />
+							<path
+								data-line
+								d={tideChart.linePath}
+								fill="none"
+								stroke="#14b8a6"
+								stroke-width="2"
 							/>
-						{/if}
-						{#each day.events as e (e.atMs)}
-							<circle
-								data-event={e.type}
-								cx={tideChart.xScale(e.atMs)}
-								cy={tideChart.yScale(e.heightFt)}
-								r="3"
-								fill="#14b8a6"
-							/>
-							<text
-								x={tideChart.xScale(e.atMs)}
-								y={tideChart.yScale(e.heightFt) + (e.type === 'L' ? 14 : -6)}
-								text-anchor={anchor(tideChart.xScale(e.atMs), (tideW || 280) - 16)}
-								>{e.type === 'H' ? 'High' : 'Low'} {clock(e.atMs)}</text
-							>
-						{/each}
-					</g>
-				</svg>
+							{#if now >= day.domain[0] && now <= day.domain[1]}
+								<line
+									x1={tideChart.xScale(now)}
+									x2={tideChart.xScale(now)}
+									y1="0"
+									y2={TIDE_H - 32}
+									stroke="currentColor"
+									stroke-opacity="0.4"
+									stroke-dasharray="2 3"
+								/>
+							{/if}
+							{#each day.events as e (e.atMs)}
+								<circle
+									data-event={e.type}
+									cx={tideChart.xScale(e.atMs)}
+									cy={tideChart.yScale(e.heightFt)}
+									r="3"
+									fill="#14b8a6"
+								/>
+								<text
+									x={tideChart.xScale(e.atMs)}
+									y={tideChart.yScale(e.heightFt) + (e.type === 'L' ? 14 : -6)}
+									text-anchor={anchor(tideChart.xScale(e.atMs), (tideW || 280) - 16)}
+									>{e.type === 'H' ? 'High' : 'Low'} {clock(e.atMs)}</text
+								>
+							{/each}
+						</g>
+					</svg>
+				</ChartReadout>
 			{:else if brief.tideHourly.state === 'loading'}
 				<p class="muted" data-text-role="meta">Loading tide curve…</p>
 			{:else}
@@ -245,16 +284,28 @@
 				</p>
 				{#if sparkChart}
 					<div class="spark" bind:clientWidth={sparkW}>
-						<svg
-							viewBox="0 0 {sparkW || 200} {SPARK_H}"
-							style:height="{SPARK_H}px"
-							role="img"
-							aria-label="Wave height, next 24 hours"
+						<ChartReadout
+							label="Wave height, next 24 hours"
+							stops={waveStops}
+							plot={{
+								domain: waveDomain,
+								left: 2,
+								right: (sparkW || 200) - 2,
+								width: sparkW || 200
+							}}
+							start={0}
+							color="#3b82f6"
 						>
-							<g transform="translate(2,2)">
-								<path d={sparkChart.linePath} fill="none" stroke="#3b82f6" stroke-width="1.6" />
-							</g>
-						</svg>
+							<svg
+								viewBox="0 0 {sparkW || 200} {SPARK_H}"
+								style:height="{SPARK_H}px"
+								aria-hidden="true"
+							>
+								<g transform="translate(2,2)">
+									<path d={sparkChart.linePath} fill="none" stroke="#3b82f6" stroke-width="1.6" />
+								</g>
+							</svg>
+						</ChartReadout>
 					</div>
 				{/if}
 			{:else if ocean.measured.kind === 'loading'}

@@ -235,7 +235,7 @@ describe('fetchTideEventsOrThrow', () => {
 			interval: 'hilo',
 			time_zone: 'gmt'
 		});
-		expect(params.begin_date).toMatch(/^\d{8}$/);
+		expect(params.begin_date).toMatch(/^\d{8} \d{2}:\d{2}$/);
 		const owner = new AbortController();
 		await fetchTideEventsOrThrow('9415020', { signal: owner.signal });
 		expect(request.mock.calls[1][2]).toMatchObject({
@@ -359,7 +359,7 @@ describe('fetchTideHourlyOrThrow (MAPX1: NOAA hourly predictions, never our own 
 			range: 48
 		});
 		expect(params).not.toHaveProperty('end_date');
-		expect(params.begin_date).toMatch(/^\d{8}$/);
+		expect(params.begin_date).toMatch(/^\d{8} \d{2}:\d{2}$/);
 	});
 	it('throws when NOAA returns no predictions', async () => {
 		request.mockResolvedValueOnce(ok({ error: { message: 'No data' } }));

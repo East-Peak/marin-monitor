@@ -6,7 +6,8 @@ import type { RequestResult } from '$lib/services/client';
 vi.mock('$lib/services/client', () => ({
 	serviceClient: {
 		request: vi.fn()
-	}
+	},
+	liveData: (r: { data: unknown }) => r.data
 }));
 
 vi.mock('$lib/config/api', () => ({
@@ -20,7 +21,7 @@ vi.mock('$lib/config/map', () => ({
 	}
 }));
 
-import { fetchTidePredictions, fetchHourlyTides } from './tides';
+import { fetchTideEventsOrThrow, fetchTidePredictions, fetchHourlyTides } from './tides';
 import { serviceClient } from '$lib/services/client';
 import { logger } from '$lib/config/api';
 
@@ -363,6 +364,37 @@ describe('NOAA Tides adapter', () => {
 			const result = await fetchHourlyTides();
 
 			expect(result[0].height).toBeCloseTo(-0.45);
+		});
+	});
+
+	describe('the v2 window starts at the Pacific day, not the GMT one', () => {
+		const beginAt = async (iso: string) => {
+			vi.useFakeTimers({ now: Date.parse(iso) });
+			mockRequest.mockResolvedValueOnce({
+				data: { predictions: [] },
+				fromCache: false
+			} as unknown as RequestResult<unknown>);
+			await fetchTideEventsOrThrow('9415020');
+			vi.useRealTimers();
+			const params = (mockRequest.mock.lastCall![2] as { params: Record<string, unknown> }).params;
+			expect(params.time_zone).toBe('gmt');
+			expect(params.range).toBe(48);
+			return params.begin_date;
+		};
+		it('in daylight time, local midnight is 07:00 GMT', async () => {
+			expect(await beginAt('2026-10-31T17:00:00Z')).toBe('20261031 07:00');
+		});
+		it('in standard time, 08:00 GMT', async () => {
+			expect(await beginAt('2026-11-15T17:00:00Z')).toBe('20261115 08:00');
+		});
+		it('on the fall-back day, that day’s midnight is still daylight time', async () => {
+			expect(await beginAt('2026-11-01T20:00:00Z')).toBe('20261101 07:00');
+		});
+		it('on the spring-forward day, that day’s midnight is still standard time', async () => {
+			expect(await beginAt('2027-03-14T20:00:00Z')).toBe('20270314 08:00');
+		});
+		it('late evening Pacific is still that Pacific day', async () => {
+			expect(await beginAt('2026-11-01T06:30:00Z')).toBe('20261031 07:00');
 		});
 	});
 

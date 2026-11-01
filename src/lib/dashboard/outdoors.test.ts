@@ -76,12 +76,14 @@ describe('rainSeries', () => {
 			Array.from({ length: 24 }, (_, i) => (i < pops.length ? pops[i] : 0))
 		);
 	it('rain: all-zero hours → "0% every hour"; a null pop stays null, not 0%', () => {
-		expect(rainSeries(day([]), NOW)).toEqual({
+		expect(rainSeries(day([]), NOW)).toMatchObject({
 			bars: Array.from({ length: 24 }, () => 0),
 			meta: '0% every hour',
 			allDry: true
 		});
 		const gappy = rainSeries(day([0, null, 30]), NOW);
+		expect(gappy.hours[1] - gappy.hours[0]).toBe(H);
+		expect(gappy.hours).toHaveLength(24);
 		expect(gappy.bars.slice(0, 3)).toEqual([0, null, 30]);
 		expect(gappy.meta).toBe('peak 30% · 1 hour not forecast');
 		const dryButGappy = rainSeries(day([0, null]), NOW);
@@ -238,7 +240,8 @@ describe('surf and air', () => {
 			)
 		);
 		expect(view.current).toEqual({ waveFt: 4.3, periodS: 12, directionDeg: 250 });
-		expect(view.heights).toEqual([4.3, null]);
+		expect(view.series.map((r) => r.value)).toEqual([4.3, null]);
+		expect(view.series.every((r) => r.kind === 'forecast' && r.unit === ' ft')).toBe(true);
 	});
 });
 

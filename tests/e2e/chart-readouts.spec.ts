@@ -161,6 +161,63 @@ test.describe('1440', () => {
 		await page.locator('#outdoors').screenshot({ path: `${dir}/outdoors-1440.png` });
 	});
 
+	test('chart 2: today’s tide reads NOAA’s hourly points and names the events', async ({
+		page
+	}) => {
+		const card = page.locator('[data-card="tide"]');
+		const chart = card.getByRole('slider');
+		await hoverAt(page, chart, 0.5);
+		await expect(readout(chart)).toHaveText(
+			/^predicted (high |low )?\d+(\.\d)? ft · \d+(:\d\d)? [AP]M$/
+		);
+		await holdsStill(page, chart, card, 0.95);
+		await chart.focus();
+		await page.keyboard.press('Home');
+		await expect(chart).toHaveAttribute('aria-valuetext', /^predicted .* ft · 12 AM$/);
+	});
+
+	test('chart 3: wave height reads each forecast hour', async ({ page }) => {
+		const card = page.locator('[data-card="ocean"]');
+		const chart = card.getByRole('slider');
+		await hoverAt(page, chart, 0);
+		await expect(readout(chart)).toHaveText('forecast 4.0 ft · 10 AM');
+		await holdsStill(page, chart, card, 0.98);
+	});
+
+	test('chart 5: rain bars read their own hour', async ({ page }) => {
+		const card = page.locator('[data-card="forecast"]');
+		const chart = card.getByRole('slider', { name: /Chance of rain/ });
+		await hoverAt(page, chart, 0.07);
+		await expect(readout(chart)).toHaveText(/^forecast \d+% chance · \d+ [AP]M$/);
+		await holdsStill(page, chart, card, 0.5);
+	});
+
+	test('chart 6: each day reads its forecast high and low', async ({ page }) => {
+		const card = page.locator('[data-card="forecast"]');
+		const chart = card.getByRole('slider', { name: 'Daily high and low' });
+		await hoverAt(page, chart, 0.02);
+		await expect(readout(chart)).toHaveText(/^forecast \d+° high · \d+° low · Today$/);
+		await holdsStill(page, chart, card, 0.98);
+	});
+
+	test('chart 7: the 48 h tide stops only on NOAA’s events', async ({ page }) => {
+		const card = page.locator('[data-card="tides"]');
+		const chart = card.getByRole('slider');
+		await hoverAt(page, chart, 0.33);
+		await expect(readout(chart)).toHaveText(
+			/^predicted (high|low) \d\.\d ft · (Fri|Sat|Sun|Mon) \d+(:\d\d)? [AP]M$/
+		);
+		await holdsStill(page, chart, card, 0.98);
+	});
+
+	test('chart 8: surf reads by time, and a missing hour is not closed up', async ({ page }) => {
+		const card = page.locator('[data-card="surf"]');
+		const chart = card.getByRole('slider');
+		await hoverAt(page, chart, 0);
+		await expect(readout(chart)).toHaveText('forecast 4.0 ft · 10 AM');
+		await holdsStill(page, chart, card, 0.98);
+	});
+
 	test('chart 1: a refresh mid-readout clears it', async ({ page }) => {
 		const card = page.locator('[data-card="weather"]');
 		const chart = card.getByRole('slider');
@@ -176,7 +233,7 @@ test.describe('1440', () => {
 
 	test('chart 4 is the same grid with 24 hours ahead, read by hover', async ({ page }) => {
 		const card = page.locator('[data-card="forecast"]');
-		const chart = card.getByRole('slider');
+		const chart = card.getByRole('slider', { name: /^Temperature/ });
 		await expect(chart.locator('[data-col-time]')).toHaveCount(29);
 		await expect(chart.locator('[data-col-temp]').nth(4)).toHaveText('57°');
 		// It opens with the past hours in view, before anything scrolls it.
@@ -204,7 +261,8 @@ test.describe('@phone chart 4', () => {
 		await toggle.scrollIntoViewIfNeeded();
 		await fingerTap(page, toggle);
 	});
-	const chart = (page: Page) => page.locator('[data-card="forecast"]').getByRole('slider');
+	const chart = (page: Page) =>
+		page.locator('[data-card="forecast"]').getByRole('slider', { name: /^Temperature/ });
 
 	test('@phone Brief and Cost charts are absent; Outdoors’ grid starts at now', async ({
 		page
@@ -254,5 +312,50 @@ test.describe('@phone chart 4', () => {
 		await swipe(page, { x: b.x + 100, y: b.y + 60 }, { x: b.x + 100, y: b.y - 120 }, 10);
 		await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(before);
 		await expect(readout(chart(page))).toHaveCount(0);
+	});
+
+	test('@phone charts 5–8 read by tap, inside their cards', async ({ page }) => {
+		const cards = [
+			['forecast', /Chance of rain/, /^forecast \d+% chance · /],
+			['forecast', /Daily high/, /^forecast \d+° high · \d+° low · /],
+			['tides', /Predicted tide/, /^predicted (high|low) \d\.\d ft · /],
+			['surf', /Wave height/, /^forecast \d\.\d ft · /]
+		] as const;
+		for (const [id, name, words] of cards) {
+			const card = page.locator(`[data-card="${id}"]`);
+			const c = card.getByRole('slider', { name });
+			await c.scrollIntoViewIfNeeded();
+			const b = await box(c);
+			await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2);
+			await expect(readout(c)).toHaveText(words);
+			const cardBox = await box(card);
+			const label = await box(readout(c));
+			expect(label.x).toBeGreaterThanOrEqual(cardBox.x);
+			expect(label.x + label.width).toBeLessThanOrEqual(cardBox.x + cardBox.width);
+			expect(label.y).toBeGreaterThanOrEqual(cardBox.y);
+		}
+	});
+
+	test('@phone a sideways drag on a chart that doesn’t scroll follows the finger', async ({
+		page
+	}) => {
+		const c = page.locator('[data-card="surf"]').getByRole('slider');
+		await c.scrollIntoViewIfNeeded();
+		const b = await box(c);
+		const y = b.y + b.height / 2;
+		const seen: string[] = [];
+		await c.evaluate((el) => {
+			new MutationObserver(() => {
+				const t = el.querySelector('[data-readout]')?.textContent;
+				if (t) (window as unknown as { __seen: Set<string> }).__seen.add(t);
+			}).observe(el, { subtree: true, childList: true, characterData: true });
+			(window as unknown as { __seen: Set<string> }).__seen = new Set();
+		});
+		await swipe(page, { x: b.x + 20, y }, { x: b.x + b.width - 20, y }, 12);
+		await expect(readout(c)).toHaveText(/^forecast \d\.\d ft · /);
+		seen.push(
+			...(await page.evaluate(() => [...(window as unknown as { __seen: Set<string> }).__seen]))
+		);
+		expect(seen.length).toBeGreaterThan(2);
 	});
 });

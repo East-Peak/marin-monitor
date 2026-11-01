@@ -3,9 +3,18 @@
 	import { barGeometry, buildChart } from '$lib/utils/chart';
 	import type { OutdoorsView } from '$lib/dashboard/outdoors';
 	import { formatAsOf } from '$lib/dashboard/pacific-time';
+	import { stamp } from '$lib/dashboard/chart-readout';
+	import {
+		dayStops,
+		eventStops,
+		rainStops,
+		seriesStops,
+		startAt
+	} from '$lib/dashboard/chart-stops';
 	import { provenance, type SourceLine } from '$lib/dashboard/provenance';
 	import { staticRow } from '$lib/dashboard/status-row';
 	import CardSource from './CardSource.svelte';
+	import ChartReadout from './ChartReadout.svelte';
 	import { OBSERVATION_PLACE } from '$lib/weather/brief';
 	import StatusRow from './StatusRow.svelte';
 	import WeatherColumns from './WeatherColumns.svelte';
@@ -29,6 +38,26 @@
 	const rainBars = $derived(
 		rain ? barGeometry(rain.bars, { width: rainInnerW, height: rainInnerH, max: 100 }) : []
 	);
+	const staleOf = (m: { kind: string; retainedAfter?: string | null }) =>
+		m.kind === 'value' && m.retainedAfter != null;
+	const forecastStale = $derived(staleOf(view.forecast.measured));
+	const rainStopList = $derived(
+		rain
+			? rainStops(
+					rain.bars,
+					rain.hours,
+					(pct) => (RAIN.top + rainInnerH * (1 - pct / 100)) / RAIN.height,
+					now,
+					forecastStale
+				)
+			: []
+	);
+	const rainPlot = $derived({
+		domain: [rain?.hours[0] ?? 0, (rain?.hours.at(-1) ?? 0) + 3_600_000] as [number, number],
+		left: RAIN.left,
+		right: W - RAIN.right,
+		width: W
+	});
 	const issuedAt = $derived(
 		view.forecast.measured.kind === 'value' ? view.forecast.measured.observedAt : null
 	);
@@ -41,6 +70,8 @@
 	const dayLo = $derived(days.length ? Math.min(...days.map((d) => d.lo)) : 0);
 	const warmest = $derived(days.length ? days.reduce((a, d) => (d.hi > a.hi ? d : a)) : null);
 	const span = (v: number) => (dayHi === dayLo ? 0 : ((dayHi - v) / (dayHi - dayLo)) * 64);
+
+	const dayList = $derived(dayStops(days, forecastStale));
 
 	const tideStep = $derived(
 		view.tides.curve.length > 1 ? view.tides.curve[1].atMs - view.tides.curve[0].atMs : 0
@@ -70,6 +101,29 @@
 	const tideEnds = $derived.by(() => {
 		const ft = view.tides.curve.map((p) => p.ft);
 		return ft.length ? [Math.max(...ft), Math.min(...ft)] : [];
+	});
+
+	const tideEvents = $derived(
+		view.tides.measured.kind === 'value' ? view.tides.measured.value : []
+	);
+	const tideStopList = $derived(
+		tideChart
+			? eventStops(
+					tideEvents,
+					(ft) => (SMALL.margins.top + tideChart.yScale(ft)) / SMALL.height,
+					now,
+					staleOf(view.tides.measured)
+				)
+			: []
+	);
+	const tidePlot = $derived({
+		domain: [view.tides.curve[0]?.atMs ?? 0, view.tides.curve.at(-1)?.atMs ?? 1] as [
+			number,
+			number
+		],
+		left: SMALL.margins.left,
+		right: SMALL.width - SMALL.margins.right,
+		width: SMALL.width
 	});
 
 	const airReading = $derived(view.ground.air.kind === 'value' ? view.ground.air.value : null);
@@ -108,15 +162,31 @@
 	]);
 
 	const surf = $derived(view.surf.view);
-	const surfKnown = $derived(surf.heights.filter((h): h is number => h !== null));
+	const surfKnown = $derived(surf.series.flatMap((r) => (r.value === null ? [] : [r.value])));
+	const surfDomain = $derived<[number, number]>([
+		surf.series[0]?.at ?? 0,
+		surf.series.at(-1)?.at ?? 1
+	]);
+	const SURF = { height: 64, margin: 4 };
 	const surfChart = $derived(
 		buildChart({
 			width: SMALL.width,
-			height: 64,
+			height: SURF.height,
 			margins: { top: 4, right: 4, bottom: 4, left: 4 },
 			accentColor: '#3b82f6',
-			data: surfKnown.map((value) => ({ value }))
+			xDomain: surfDomain,
+			data: surf.series.map((r) => ({ x: r.at, value: r.value ?? Number.NaN }))
 		})
+	);
+	const surfStops = $derived(
+		surfChart
+			? seriesStops(surf.series, {
+					y: (ft) => (SURF.margin + surfChart.yScale(ft)) / SURF.height,
+					when: (ms) => stamp(ms, now),
+					format: (v) => `${v.toFixed(1)} ft`,
+					stale: staleOf(view.surf.measured)
+				})
+			: []
 	);
 </script>
 
@@ -166,36 +236,43 @@
 						: ''}
 				</p>
 			{:else}
-				<svg
-					class="chart"
-					data-chart="rain"
-					data-text-role="meta"
-					viewBox="0 0 {W} {RAIN.height}"
-					role="img"
-					aria-label="Chance of rain by hour: {rain.meta}"
+				<ChartReadout
+					label="Chance of rain by hour: {rain.meta}"
+					stops={rainStopList}
+					plot={rainPlot}
+					start={0}
+					color="#3b82f6"
 				>
-					<g transform="translate({RAIN.left},{RAIN.top})">
-						{#each [100, 50] as pct (pct)}
-							{@const y = rainInnerH * (1 - pct / 100)}
-							<line class="grid" x1="0" x2={rainInnerW} y1={y} y2={y} />
-							<text x="-6" y={y + 4} text-anchor="end">{pct}%</text>
-						{/each}
-						<line
-							class="base"
-							data-baseline
-							x1="0"
-							x2={rainInnerW}
-							y1={rainInnerH}
-							y2={rainInnerH}
-						/>
-						<text x="-6" y={rainInnerH + 4} text-anchor="end">0%</text>
-						{#each rainBars as bar, i (i)}
-							{#if bar}
-								<rect x={bar.x} y={bar.y} width={bar.width} height={bar.height} fill="#3b82f6" />
-							{/if}
-						{/each}
-					</g>
-				</svg>
+					<svg
+						class="chart"
+						data-chart="rain"
+						data-text-role="meta"
+						viewBox="0 0 {W} {RAIN.height}"
+						aria-hidden="true"
+					>
+						<g transform="translate({RAIN.left},{RAIN.top})">
+							{#each [100, 50] as pct (pct)}
+								{@const y = rainInnerH * (1 - pct / 100)}
+								<line class="grid" x1="0" x2={rainInnerW} y1={y} y2={y} />
+								<text x="-6" y={y + 4} text-anchor="end">{pct}%</text>
+							{/each}
+							<line
+								class="base"
+								data-baseline
+								x1="0"
+								x2={rainInnerW}
+								y1={rainInnerH}
+								y2={rainInnerH}
+							/>
+							<text x="-6" y={rainInnerH + 4} text-anchor="end">0%</text>
+							{#each rainBars as bar, i (i)}
+								{#if bar}
+									<rect x={bar.x} y={bar.y} width={bar.width} height={bar.height} fill="#3b82f6" />
+								{/if}
+							{/each}
+						</g>
+					</svg>
+				</ChartReadout>
 			{/if}
 		{/if}
 
@@ -226,21 +303,24 @@
 		{/if}
 
 		{#if days.length}
-			<ol
-				class="days"
-				data-text-role="label"
-				style="--n:{days.length}"
-				aria-label="Daily high and low"
+			<ChartReadout
+				label="Daily high and low"
+				stops={dayList}
+				plot={{ domain: [0, days.length], left: 0, right: 1, width: 1 }}
+				start={0}
 			>
-				{#each days as d (d.date)}
-					<li class="day" data-day={d.date}>
-						<span class="dim" data-text-role="meta">{d.name}</span>
-						<span class="rail"><i style="top:{span(d.hi)}px;bottom:{64 - span(d.lo)}px"></i></span>
-						<b>{d.hi}°</b>
-						<span class="muted">{d.lo}°</span>
-					</li>
-				{/each}
-			</ol>
+				<ol class="days" data-text-role="label" style="--n:{days.length}" aria-hidden="true">
+					{#each days as d (d.date)}
+						<li class="day" data-day={d.date}>
+							<span class="dim" data-text-role="meta">{d.name}</span>
+							<span class="rail"><i style="top:{span(d.hi)}px;bottom:{64 - span(d.lo)}px"></i></span
+							>
+							<b>{d.hi}°</b>
+							<span class="muted">{d.lo}°</span>
+						</li>
+					{/each}
+				</ol>
+			</ChartReadout>
 		{/if}
 		<CardSource lines={[{ measured: view.forecast.measured, verb: 'issued' }]} {now} />
 	</article>
@@ -251,31 +331,39 @@
 				Tides{view.tides.station ? ` · ${view.tides.station}` : ''}
 			</h3>
 			{#if tideChart}
-				<svg
-					class="chart"
-					data-text-role="meta"
-					viewBox="0 0 {SMALL.width} {SMALL.height}"
-					role="img"
-					aria-label="Predicted tide height, 48 hours{tideEnds.length
+				<ChartReadout
+					label="Predicted tide height, 48 hours{tideEnds.length
 						? `, ${tideEnds[1].toFixed(1)} to ${tideEnds[0].toFixed(1)} ft`
 						: ''}"
+					stops={tideStopList}
+					plot={tidePlot}
+					start={startAt(tideStopList, now)}
+					color="#14b8a6"
+					resetKey={view.tides.station ?? ''}
 				>
-					<g transform="translate({SMALL.margins.left},{SMALL.margins.top})">
-						<path d={tideChart.areaPath} fill="#14b8a6" fill-opacity="0.18" />
-						<path d={tideChart.linePath} fill="none" stroke="#14b8a6" stroke-width="1.8" />
-						{#if tideNowX !== null}
-							<line class="now" x1={tideNowX} x2={tideNowX} y1="0" y2={SMALL.height - 26} />
-						{/if}
-						{#each tideEnds as ft, i (i)}
-							<text x="-6" y={tideChart.yScale(ft) + (i ? 0 : 10)} text-anchor="end"
-								>{ft.toFixed(1)} ft</text
-							>
-						{/each}
-						{#each tideDots as d (d.key)}
-							<circle cx={d.x} cy={d.y} r="2.6" fill="#14b8a6" />
-						{/each}
-					</g>
-				</svg>
+					<svg
+						class="chart"
+						data-text-role="meta"
+						viewBox="0 0 {SMALL.width} {SMALL.height}"
+						aria-hidden="true"
+					>
+						<g transform="translate({SMALL.margins.left},{SMALL.margins.top})">
+							<path d={tideChart.areaPath} fill="#14b8a6" fill-opacity="0.18" />
+							<path d={tideChart.linePath} fill="none" stroke="#14b8a6" stroke-width="1.8" />
+							{#if tideNowX !== null}
+								<line class="now" x1={tideNowX} x2={tideNowX} y1="0" y2={SMALL.height - 26} />
+							{/if}
+							{#each tideEnds as ft, i (i)}
+								<text x="-6" y={tideChart.yScale(ft) + (i ? 0 : 10)} text-anchor="end"
+									>{ft.toFixed(1)} ft</text
+								>
+							{/each}
+							{#each tideDots as d (d.key)}
+								<circle cx={d.x} cy={d.y} r="2.6" fill="#14b8a6" />
+							{/each}
+						</g>
+					</svg>
+				</ChartReadout>
 			{/if}
 			{#if view.tides.next.length}
 				<!-- Rule 1's named exception (Stuart, 2026-10-28): the tide extremes stay today's one
@@ -306,18 +394,25 @@
 				<p class="muted" data-text-role="body">No wave height this hour</p>
 			{/if}
 			{#if surfChart}
-				<svg
-					class="chart"
-					data-text-role="meta"
-					viewBox="0 0 {SMALL.width} 64"
-					role="img"
-					aria-label="Wave height, 48 hours"
+				<ChartReadout
+					label="Wave height, 48 hours"
+					stops={surfStops}
+					plot={{ domain: surfDomain, left: 4, right: SMALL.width - 4, width: SMALL.width }}
+					start={0}
+					color="#3b82f6"
 				>
-					<g transform="translate(4,4)">
-						<path d={surfChart.areaPath} fill="#3b82f6" fill-opacity="0.15" />
-						<path d={surfChart.linePath} fill="none" stroke="#3b82f6" stroke-width="1.6" />
-					</g>
-				</svg>
+					<svg
+						class="chart"
+						data-text-role="meta"
+						viewBox="0 0 {SMALL.width} 64"
+						aria-hidden="true"
+					>
+						<g transform="translate(4,4)">
+							<path d={surfChart.areaPath} fill="#3b82f6" fill-opacity="0.15" />
+							<path d={surfChart.linePath} fill="none" stroke="#3b82f6" stroke-width="1.6" />
+						</g>
+					</svg>
+				</ChartReadout>
 			{/if}
 			<p class="meta" data-text-role="meta">
 				Wave height, next 48 h{surfKnown.length

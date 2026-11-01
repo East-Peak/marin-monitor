@@ -11,6 +11,11 @@ All notable changes to Marin Monitor are documented here.
 - **One readout**: a rule, a dot and a label, by mouse, touch or keyboard. It snaps to real readings, says what kind of number each is, and never interpolates. Each chart is one slider for screen readers.
 - **The weather tile is one grid of hours**: 4 past hours at Gnoss Field, now, then 8 forecast hours at the same grid point, so the step from past to forecast is one place warming or cooling. Each column's number sits on the line, and its readout gives the report's own time. An empty column says the real silence. The forecast and the day's rain no longer come from the picked town on this tile, and if the station's forecast can't be read nothing stands in for it.
 - **Outdoors' temperature chart is the same grid**, 24 hours ahead, scrolling inside its card on a phone: there a tap reads and a swipe scrolls.
+- **Every Brief and Outdoors chart reads**: tides, waves, rain by the hour, the daily highs and lows. The 48-hour tide stops only on NOAA's own highs and lows, never on the curve drawn between them. Surf is drawn by time, so a missing hour stays a gap.
+
+### Fixed
+
+- **The tide window**: the "48 h" tide requests began at GMT's midnight, 5 PM the evening before; they now begin at the Pacific day's midnight.
 
 ---
 

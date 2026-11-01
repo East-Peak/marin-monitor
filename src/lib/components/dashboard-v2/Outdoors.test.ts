@@ -318,9 +318,9 @@ describe('Outdoors', () => {
 			(t) => t.textContent
 		);
 		expect(tide.length).toBe(2);
-		expect(container.querySelector('[data-card="tides"] svg')?.getAttribute('aria-label')).toMatch(
-			/, -?\d+\.\d to -?\d+\.\d ft$/
-		);
+		expect(
+			container.querySelector('[data-card="tides"] [role="slider"]')?.getAttribute('aria-label')
+		).toMatch(/, -?\d+\.\d to -?\d+\.\d ft$/);
 		for (const t of tide) expect(t).toMatch(/^-?\d+\.\d ft$/);
 		expect(container.querySelector('[data-card="surf"]')?.textContent).toContain('2.1–4.3 ft');
 	});
