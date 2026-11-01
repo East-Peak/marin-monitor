@@ -11,6 +11,20 @@ import { stubBrief, stubCivic, stubCost, stubRest } from './fixtures/v2-populate
 test.skip(({ baseURL }) => baseURL?.startsWith('https://') ?? false, 'stubbed');
 
 const BASELINE_FILE = 'tests/e2e/fixtures/visuals-before-text1.json';
+/**
+ * CHARTREAD1, Stuart's ruling of 2026-11-01 (weather tile C): charts 1 and 4 are replaced, not
+ * removed, by the one grid of hours. The readout's rule, dot, label and focus ring are HTML over
+ * the chart, so they add no key here.
+ */
+const REPLACED: Record<string, RegExp> = {
+	'chart 1, the 12-hour trace → the grid of hours': /^brief \| trace \| svg \| Temperature#/,
+	'chart 4, the 24-hour area chart → the grid of hours':
+		/^outdoors \| forecast \| svg \| Temperature# next # hours#/
+};
+const GRID =
+	/^(brief|outdoors) \| hours \| svg \| Temperature# # hours observed# now# then # hours forecast \|/;
+/** Every drawing added since the baseline, by name: TEXT1's own two icons and the grid. */
+const ADDITIONS = [GRID, /\| svg \| v#section#chevron \|/, /\| svg \| sr#end \|/];
 const capture = process.env.CAPTURE_VISUALS;
 
 /**
@@ -50,7 +64,9 @@ const inventory = (page: Page) =>
 				'';
 			// A class name without Svelte's per-build hash.
 			const cls = [...el.classList].filter((c) => !c.startsWith('svelte-')).join(' ');
-			const name = (el.getAttribute('aria-label') ?? el.getAttribute('alt') ?? cls)
+			// A chart's name moved to its slider (CHARTREAD1); the drawing is the same drawing.
+			const slider = el.closest('[role="slider"]')?.getAttribute('aria-label');
+			const name = (el.getAttribute('aria-label') ?? slider ?? el.getAttribute('alt') ?? cls)
 				.replace(/[\d.,:−-]+/g, '#')
 				.replace(/\s+/g, ' ')
 				.trim()
@@ -153,7 +169,12 @@ for (const [name, viewport] of [
 		expect(Object.keys(before).length).toBeGreaterThan(5);
 		const missing = Object.entries(before)
 			.filter(([key, n]) => (seen[key] ?? 0) < n)
+			.filter(([key]) => !Object.values(REPLACED).some((r) => r.test(key)))
 			.map(([key, n]) => `${key}: ${seen[key] ?? 0} of ${n}`);
 		expect(missing, 'visuals drawn before TEXT1 and not now').toEqual([]);
+		// Each replacement is in place, and nothing else was added to a chart unnamed.
+		const added = Object.keys(seen).filter((k) => !(k in before));
+		expect(added.filter((k) => GRID.test(k))).toHaveLength(name === '1440' ? 2 : 1);
+		expect(added.filter((k) => !ADDITIONS.some((a) => a.test(k)))).toEqual([]);
 	});
 }

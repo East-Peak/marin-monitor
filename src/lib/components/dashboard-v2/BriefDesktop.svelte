@@ -1,17 +1,23 @@
 <script lang="ts">
 	import type { BriefCard, BriefState } from '$lib/dashboard/brief-store';
-	import { hourlyStrip, tempTrace, tideDay } from '$lib/dashboard/brief-desktop';
+	import {
+		stationColumns,
+		stationKey,
+		TILE_HOURS_AHEAD,
+		tideDay
+	} from '$lib/dashboard/brief-desktop';
 	import type { CardItem } from '$lib/dashboard/getting-around';
 	import type { OutdoorsView } from '$lib/dashboard/outdoors';
 	import { formatAsOf } from '$lib/dashboard/pacific-time';
 	import { effectiveState, type SourceEntryState } from '$lib/dashboard/source-status';
 	import { buildChart } from '$lib/utils/chart';
-	import { nextTide, restOfTodayRainChance } from '$lib/weather/brief';
+	import { nextTide, OBSERVATION_PLACE, restOfTodayRainChance } from '$lib/weather/brief';
 	import CardSource from './CardSource.svelte';
+	import WeatherColumns from './WeatherColumns.svelte';
 
 	/**
-	 * The desktop brief (MAPX1; desktop-v2-mockup.html `.brief`, 5fr 4fr 3fr): weather with
-	 * its last 12 hours and the next hours, today's NOAA tide curve, and the ocean. The phone
+	 * The desktop brief (MAPX1; desktop-v2-mockup.html `.brief`, 5fr 4fr 3fr): weather as one
+	 * grid of hours at Gnoss Field, today's NOAA tide curve, and the ocean. The phone
 	 * keeps BriefRow; DashboardV2 mounts this only at ≥1024 px.
 	 */
 	let {
@@ -29,7 +35,6 @@
 		onjump?: (hash: string) => void;
 	} = $props();
 
-	const TRACE_H = 76;
 	const TIDE_H = 92;
 	const SPARK_H = 28;
 	const clock = (ms: number) => formatAsOf(ms, ms).replace(':00', '');
@@ -43,24 +48,13 @@
 	}
 
 	const observed = $derived(brief.observed);
-	const forecast = $derived(brief.forecast);
+	/** The tile's forecast is the station's own grid point; another place's never stands in. */
+	const forecast = $derived(brief.stationForecast);
 	const observedState = $derived(stateOf(observed));
 	const rain = $derived(forecast.value ? restOfTodayRainChance(forecast.value.periods, now) : null);
-	const strip = $derived(forecast.value ? hourlyStrip(forecast.value.periods, now) : []);
-
-	let traceW = $state(0);
-	const trace = $derived(brief.history.value ? tempTrace(brief.history.value, now) : null);
-	const traceChart = $derived(
-		trace &&
-			buildChart({
-				width: traceW || 280,
-				height: TRACE_H,
-				margins: { top: 16, right: 8, bottom: 16, left: 8 },
-				accentColor: '#ef4444',
-				xDomain: trace.domain,
-				data: trace.points
-			})
-	);
+	const settled = $derived(brief.history.state !== 'loading' && forecast.state !== 'loading');
+	const nothing = $derived(!brief.history.value && !forecast.value);
+	const cols = $derived(settled ? stationColumns(brief, now, TILE_HOURS_AHEAD) : []);
 
 	const tide = $derived(brief.tides.value ? nextTide(brief.tides.value, now) : null);
 	const tidesState = $derived<SourceEntryState>(
@@ -109,78 +103,40 @@
 <section class="brief" data-slot="brief" aria-label="Morning brief">
 	<article class="card" data-card="weather" data-state={observedState}>
 		<div class="head">
-			<h3 class="title" data-text-role="label">Weather</h3>
+			<h3 class="title" data-text-role="label">Weather · {OBSERVATION_PLACE}</h3>
 		</div>
-		<div class="split">
-			<div>
-				{#if observed.value}
-					<p class="hero" data-text-role="value">
-						{observed.value.tempF === null ? 'Temperature unknown' : `${observed.value.tempF}°F`}
-					</p>
-					<p class="muted" data-text-role="meta">
-						Observed at {observed.value.stationName} · {formatAsOf(
-							observed.value.observedAt,
-							now
-						)}{observedState === 'stale' ? ' · out of date' : ''}
-					</p>
-				{:else if observedState === 'loading'}
-					<p class="muted" data-text-role="meta">Loading observation…</p>
-				{:else}
-					<p class="muted" data-text-role="meta">Observation unavailable</p>
-				{/if}
-			</div>
-			<div class="chart" bind:clientWidth={traceW}>
-				{#if trace && traceChart}
-					<svg
-						data-chart="trace"
-						data-text-role="meta"
-						viewBox="0 0 {traceW || 280} {TRACE_H}"
-						style:height="{TRACE_H}px"
-						role="img"
-						aria-label="Temperature, last 12 hours: {trace.low.f}° to {trace.high.f}°"
-					>
-						<g transform="translate(8,16)">
-							<path d={traceChart.areaPath} fill="#ef4444" fill-opacity="0.12" />
-							<path
-								data-line
-								d={traceChart.linePath}
-								fill="none"
-								stroke="#f59e0b"
-								stroke-width="2"
-							/>
-							{#each [trace.high, trace.low] as mark, i (i)}
-								<text
-									x={traceChart.xScale(mark.atMs)}
-									y={traceChart.yScale(mark.f) + (i ? 13 : -5)}
-									text-anchor={anchor(traceChart.xScale(mark.atMs), (traceW || 280) - 16)}
-									>{mark.f}°</text
-								>
-							{/each}
-						</g>
-					</svg>
-					<p class="muted" data-text-role="meta">
-						Last 12 h at {brief.history.scope}{stateOf(brief.history) === 'stale'
-							? ' · out of date'
-							: ''}
-					</p>
-				{:else if brief.history.state === 'loading'}
-					<p class="muted" data-text-role="meta">Loading the last 12 hours…</p>
-				{:else}
-					<p class="muted" data-text-role="meta">Last 12 hours unavailable</p>
-				{/if}
-			</div>
+		<div class="now-line">
+			{#if observed.value}
+				<p class="hero" data-text-role="value">
+					{observed.value.tempF === null ? 'Temperature unknown' : `${observed.value.tempF}°F`}
+				</p>
+				<p class="muted" data-text-role="meta">
+					Observed {formatAsOf(observed.value.observedAt, now)}{observedState === 'stale'
+						? ' · out of date'
+						: ''}
+				</p>
+			{:else if observedState === 'loading'}
+				<p class="muted" data-text-role="meta">Loading observation…</p>
+			{:else}
+				<p class="muted" data-text-role="meta">Observation unavailable</p>
+			{/if}
 		</div>
-		{#if strip.length}
-			<ol class="strip" data-strip="hourly" aria-label="Next {strip.length} hours">
-				{#each strip as h (h.atMs)}
-					<li>
-						<span class="muted" data-text-role="meta">{clock(h.atMs)}</span>
-						<span data-text-role="label">{h.f === null ? '—' : `${h.f}°`}</span>
-						<span class="muted" data-text-role="meta">{h.pop === null ? '—' : `${h.pop}%`}</span>
-					</li>
-				{/each}
-			</ol>
-		{/if}
+		<div class="hours">
+			{#if !settled}
+				<p class="muted" data-text-role="meta">Loading the hours…</p>
+			{:else if nothing}
+				<p class="muted" data-text-role="meta">Hourly readings unavailable</p>
+			{:else}
+				<WeatherColumns
+					{cols}
+					resetKey={stationKey(brief)}
+					label="Temperature, 4 hours observed, now, then {TILE_HOURS_AHEAD} hours forecast"
+				/>
+				{#if stateOf(brief.history) === 'stale'}
+					<p class="muted" data-text-role="meta">Station readings out of date</p>
+				{/if}
+			{/if}
+		</div>
 		<div class="rain" data-card="rain" data-state={stateOf(forecast)}>
 			<p data-text-role="body">
 				{forecast.value
@@ -193,13 +149,10 @@
 			</p>
 			{#if forecast.value}
 				<p class="muted" data-text-role="meta">
-					{forecast.scope}{forecast.observedAt !== null
+					NWS forecast for this spot{forecast.observedAt !== null
 						? ` · issued ${formatAsOf(forecast.observedAt, now)}`
 						: ' · issue time unknown'}{stateOf(forecast) === 'stale' ? ' · out of date' : ''}
 				</p>
-			{/if}
-			{#if forecast.updatingFor}
-				<p class="muted" data-text-role="meta">Updating for {forecast.updatingFor}…</p>
 			{/if}
 			{#if forecast.detail}
 				<p class="warn" data-text-role="meta">{forecast.detail}</p>
@@ -371,11 +324,15 @@
 	.hero {
 		font-weight: 600;
 	}
-	.split {
-		display: grid;
-		grid-template-columns: auto minmax(0, 1fr);
-		gap: 16px;
-		align-items: end;
+	.now-line {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0 0.75rem;
+	}
+	.hours {
+		min-width: 0;
+		min-height: 130px;
 	}
 	.chart,
 	.spark {
@@ -389,22 +346,6 @@
 	}
 	svg text {
 		fill: var(--text-muted);
-	}
-	.strip {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-		grid-auto-flow: column;
-		gap: 4px;
-		margin: 2px 0 0;
-		padding: 4px 0 0;
-		border-top: 1px solid var(--border-light);
-		list-style: none;
-	}
-	.strip li {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		line-height: 1.4;
 	}
 	.third {
 		display: flex;

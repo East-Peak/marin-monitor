@@ -47,6 +47,7 @@ const brief: BriefState = {
 	observed: card<ObservedNow>(null),
 	tides: card(tides, { scope: 'Point Reyes' }),
 	history: card<TempReport[]>(null),
+	stationForecast: card<HourlyForecast>(null),
 	tideHourly: card<TideHeight[]>(null)
 };
 
@@ -98,9 +99,6 @@ describe('Outdoors', () => {
 		expect(container.querySelector('[data-card="surf"] [data-card-source]')?.textContent).toMatch(
 			/Open-Meteo marine forecast · checked 8:19 AM/
 		);
-		expect(
-			container.querySelector('[data-card="forecast"] svg path')?.getAttribute('d')
-		).toBeTruthy();
 		expect(container.textContent).toContain('No rain expected in the next 24 h (peak 0%)');
 		expect(container.textContent).toContain('None near');
 		expect(container.textContent).toContain('None in 7 days');
@@ -207,19 +205,64 @@ describe('Outdoors', () => {
 		expect(container.textContent).not.toContain('No rain expected');
 	});
 
-	it('a missing temperature breaks the line; the high marker sits at its own hour (Codex desk2 #4)', () => {
-		const periods = forecast.periods.map((p, i) => (i === 3 ? { ...p, temperatureF: null } : p));
-		const gappy: BriefState = {
+	it('chart 4 is the tile’s grid: the station’s hours, 4 past, Now, 24 ahead, named once', () => {
+		const station: BriefState = {
 			...brief,
-			forecast: { ...brief.forecast, value: { ...forecast, periods } }
+			history: card([{ atMs: NOW - H, tempF: 50 }]),
+			stationForecast: { ...brief.forecast, scope: 'Gnoss Field (Novato)' }
 		};
 		const { container } = render(Outdoors, {
-			view: outdoorsView(input({ brief: gappy })),
+			view: outdoorsView(input({ brief: station })),
 			now: NOW,
 			onopen: vi.fn()
 		});
-		const line = container.querySelector('[data-card="forecast"] [data-temp-line]')!;
-		expect(line.getAttribute('d')!.match(/M/g)).toHaveLength(2);
+		const card_ = container.querySelector('[data-card="forecast"]')!;
+		expect(card_.querySelector('h3')?.textContent).toContain('Novato · Gnoss Field');
+		expect(card_.querySelectorAll('[data-col-time]')).toHaveLength(29);
+		expect(card_.querySelector('[role="slider"]')?.getAttribute('aria-label')).toBe(
+			'Temperature, 4 hours observed, now, then 24 hours forecast'
+		);
+	});
+
+	it('chart 4 waits for both station reads, and a failed forecast says so', () => {
+		const loading: BriefState = {
+			...brief,
+			history: card<TempReport[]>(null, { state: 'loading' })
+		};
+		const waiting = render(Outdoors, {
+			view: outdoorsView(input({ brief: loading })),
+			now: NOW,
+			onopen: vi.fn()
+		});
+		expect(waiting.container.textContent).toContain('Loading the hours…');
+		waiting.unmount();
+		const failed: BriefState = {
+			...brief,
+			history: card([{ atMs: NOW - H, tempF: 50 }]),
+			stationForecast: card<HourlyForecast>(null, { state: 'unavailable' })
+		};
+		const { container } = render(Outdoors, {
+			view: outdoorsView(input({ brief: failed })),
+			now: NOW,
+			onopen: vi.fn()
+		});
+		expect(container.querySelector('[data-station-note]')?.textContent).toContain(
+			'Forecast unavailable'
+		);
+	});
+
+	it('a retained station forecast says it is out of date, though the town’s is fresh', () => {
+		const stale: BriefState = {
+			...brief,
+			history: card([{ atMs: NOW - H, tempF: 50 }]),
+			stationForecast: { ...brief.forecast, state: 'stale', detail: 'x' }
+		};
+		const { container } = render(Outdoors, {
+			view: outdoorsView(input({ brief: stale })),
+			now: NOW,
+			onopen: vi.fn()
+		});
+		expect(container.querySelector('[data-station-note]')?.textContent).toContain('out of date');
 	});
 
 	it('a dry day draws no rain bars: 0% sits on a labelled baseline (RAIN1)', () => {

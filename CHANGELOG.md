@@ -4,6 +4,16 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-11-01
+
+### Added — Read a chart by pointing at it (CHARTREAD1)
+
+- **One readout**: a rule, a dot and a label, by mouse, touch or keyboard. It snaps to real readings, says what kind of number each is, and never interpolates. Each chart is one slider for screen readers.
+- **The weather tile is one grid of hours**: 4 past hours at Gnoss Field, now, then 8 forecast hours at the same grid point, so the step from past to forecast is one place warming or cooling. Each column's number sits on the line, and its readout gives the report's own time. An empty column says the real silence. The forecast and the day's rain no longer come from the picked town on this tile, and if the station's forecast can't be read nothing stands in for it.
+- **Outdoors' temperature chart is the same grid**, 24 hours ahead, scrolling inside its card on a phone: there a tap reads and a swipe scrolls.
+
+---
+
 ## 2026-10-30
 
 ### Changed — The Cost card says what the money is for (COST1)

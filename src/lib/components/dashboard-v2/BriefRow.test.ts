@@ -30,6 +30,7 @@ function periods(pops: (number | null)[]) {
 function state(over: Partial<BriefState> = {}): BriefState {
 	return {
 		history: card({}),
+		stationForecast: card({}),
 		tideHourly: card({}),
 		observed: card({
 			value: {
@@ -168,6 +169,7 @@ describe('BriefRow', () => {
 			forecast: card({}),
 			tides: card({}),
 			history: card({}),
+			stationForecast: card({}),
 			tideHourly: card({})
 		});
 		expect(document.querySelector('[data-card="weather"]')!.getAttribute('data-state')).toBe(

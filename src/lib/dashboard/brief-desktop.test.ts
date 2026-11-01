@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type { HourlyPop, TideEvent } from '$lib/weather/brief';
-import { HOURLY_STRIP_HOURS, hourlyStrip, tempTrace, tideDay } from './brief-desktop';
+import type { TempReport } from '$lib/api/marin/nws-observation';
+import type { HourlyForecast, HourlyPop, TideEvent } from '$lib/weather/brief';
+import { stationColumns, stationKey, TILE_HOURS_AHEAD, tideDay } from './brief-desktop';
+import { initialBriefState, type BriefCard, type BriefState } from './brief-store';
 
 const H = 3_600_000;
 const MIN = 60_000;
@@ -17,47 +19,87 @@ function periods(from: number, n: number, over: (i: number) => Partial<HourlyPop
 	}));
 }
 
-describe('hourlyStrip', () => {
-	it(`is ${HOURLY_STRIP_HOURS} clock hours from the current one, with temperature and rain chance`, () => {
-		const strip = hourlyStrip(periods(HOUR - 2 * H, 30), NOW);
-		expect(strip).toHaveLength(HOURLY_STRIP_HOURS);
-		expect(strip[0]).toEqual({ atMs: HOUR, f: 62, pop: 10 });
-		expect(strip.at(-1)!.atMs).toBe(HOUR + (HOURLY_STRIP_HOURS - 1) * H);
-	});
-	it('an hour the forecast lacks, or a value NWS omitted, stays unknown (null), never 0', () => {
-		const list = periods(HOUR, 30, (i) => (i === 1 ? { pop: null, temperatureF: null } : {}));
-		const strip = hourlyStrip(
-			list.filter((_, i) => i !== 2),
-			NOW
-		);
-		expect(strip[1]).toEqual({ atMs: HOUR + H, f: null, pop: null });
-		expect(strip[2]).toEqual({ atMs: HOUR + 2 * H, f: null, pop: null });
-	});
-	it('no periods at all: no strip', () => {
-		expect(hourlyStrip([], NOW)).toEqual([]);
-	});
+const report = (minutesAgo: number, tempF: number) => ({ atMs: NOW - minutesAgo * MIN, tempF });
+const card = <T>(value: T | null, over: Partial<BriefCard<T>> = {}): BriefCard<T> => ({
+	value,
+	scope: 'Gnoss Field (Novato)',
+	observedAt: NOW,
+	maxAgeMs: null,
+	state: 'ok',
+	detail: null,
+	updatingFor: null,
+	...over
+});
+const OBS = {
+	stationName: 'Gnoss Field (Novato)',
+	observedAt: NOW - 5 * MIN,
+	listNewestAt: NOW - 5 * MIN,
+	tempF: 58,
+	text: null
+};
+const brief = (over: Partial<BriefState> = {}): BriefState => ({
+	...initialBriefState(),
+	observed: card(OBS),
+	history: card([report(70, 50), report(30, 52)]),
+	stationForecast: card({ updatedAt: NOW, periods: periods(HOUR, 12) }),
+	// The picked town's forecast: never read by these columns.
+	forecast: card({ updatedAt: NOW, periods: periods(HOUR, 12, () => ({ temperatureF: 99 })) }),
+	...over
 });
 
-describe('tempTrace', () => {
-	const report = (minsAgo: number, tempF: number) => ({ atMs: NOW - minsAgo * MIN, tempF });
-
-	it('spans the last 12 hours, oldest first, with its high and low', () => {
-		const t = tempTrace(
-			[report(13 * 60, 40), report(700, 50), report(20, 61), report(0, 58)],
-			NOW
-		)!;
-		expect(t.domain).toEqual([NOW - 12 * H, NOW]);
-		// 700 → 20 min ago is an 11-hour silence: a break, not a line.
-		expect(t.points.map((p) => p.value)).toEqual([50, Number.NaN, 61, 58]);
-		expect(t.high).toEqual({ f: 61, atMs: NOW - 20 * MIN });
-		expect(t.low).toEqual({ f: 50, atMs: NOW - 700 * MIN });
+describe('stationColumns', () => {
+	it('Now equals the headline, even when the history list lags it', () => {
+		const cols = stationColumns(brief(), NOW, TILE_HOURS_AHEAD);
+		expect(cols).toHaveLength(13);
+		expect(cols.find((c) => c.isNow)).toMatchObject({ f: 58, reportAt: OBS.observedAt });
 	});
-	it('a gap of over an hour between reports breaks the line: a gap stays a gap', () => {
-		const t = tempTrace([report(300, 50), report(280, 51), report(120, 55), report(100, 56)], NOW)!;
-		expect(t.points.map((p) => p.value)).toEqual([50, 51, Number.NaN, 55, 56]);
+	it('with history failed, Now is still the headline', () => {
+		const cols = stationColumns(
+			brief({ history: card<TempReport[]>(null, { state: 'unavailable' }) }),
+			NOW,
+			8
+		);
+		expect(cols.find((c) => c.isNow)).toMatchObject({ f: 58, kind: 'observed' });
 	});
-	it('fewer than two reports: no trace', () => {
-		expect(tempTrace([report(5, 60)], NOW)).toBeNull();
+	it('a stale headline reads stale though the history is fresh', () => {
+		const cols = stationColumns(brief({ observed: card(OBS, { state: 'stale' }) }), NOW, 8);
+		expect(cols.find((c) => c.isNow)?.words.tail).toContain('stale');
+	});
+	it('the key moves with the town and with a new read, not with the clock', () => {
+		const a = stationKey(brief());
+		expect(stationKey(brief())).toBe(a);
+		expect(
+			stationKey(brief({ forecast: card<HourlyForecast>(null, { scope: 'Mill Valley forecast' }) }))
+		).not.toBe(a);
+		expect(stationKey(brief({ history: card([], { observedAt: NOW + 1 }) }))).not.toBe(a);
+	});
+	it('reads the station’s grid point, never the town’s', () => {
+		const cols = stationColumns(brief(), NOW, 8);
+		expect(cols.filter((c) => c.kind === 'forecast').map((c) => c.f)).not.toContain(99);
+	});
+	it('an unavailable forecast is not replaced by the town’s', () => {
+		const cols = stationColumns(
+			brief({ stationForecast: card<HourlyForecast>(null, { state: 'unavailable' }) }),
+			NOW,
+			8
+		);
+		expect(cols.slice(5).every((c) => c.f === null)).toBe(true);
+		expect(cols.slice(5).map((c) => c.f)).not.toContain(99);
+	});
+	it('a report with a null temperature leaves the headline out of the columns', () => {
+		const cols = stationColumns(brief({ observed: card({ ...OBS, tempF: null }) }), NOW, 8);
+		expect(cols.find((c) => c.isNow)?.reportAt).toBe(NOW - 30 * MIN);
+	});
+	it('out-of-date series say stale, on their own side', () => {
+		const old = brief({
+			history: card([report(70, 50), report(30, 52)], {
+				observedAt: NOW - 3 * H,
+				maxAgeMs: 90 * MIN
+			})
+		});
+		const cols = stationColumns(old, NOW, 8);
+		expect(cols[3].words.tail).toContain('stale');
+		expect(cols[5].words.tail).not.toContain('stale');
 	});
 });
 

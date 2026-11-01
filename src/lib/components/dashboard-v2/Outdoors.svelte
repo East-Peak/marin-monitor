@@ -6,82 +6,22 @@
 	import { provenance, type SourceLine } from '$lib/dashboard/provenance';
 	import { staticRow } from '$lib/dashboard/status-row';
 	import CardSource from './CardSource.svelte';
+	import { OBSERVATION_PLACE } from '$lib/weather/brief';
 	import StatusRow from './StatusRow.svelte';
+	import WeatherColumns from './WeatherColumns.svelte';
 
 	let { view, now, onopen }: { view: OutdoorsView; now: number; onopen: () => void } = $props();
 
 	// Section.svelte mounts this body only while the section is open: mounting is opening (§7).
 	onMount(() => onopen());
 
-	const H = 3_600_000;
 	const W = 760;
-	const TEMP = { width: W, height: 190, margins: { top: 22, right: 12, bottom: 22, left: 34 } };
 	const RAIN = { height: 78, top: 6, bottom: 18, left: 34, right: 12 };
 	const SMALL = { width: 320, height: 110, margins: { top: 8, right: 6, bottom: 18, left: 46 } };
 	const clock = (ms: number) => formatAsOf(ms, ms).replace(':00', '');
 
 	const temp = $derived(view.forecast.temp);
-	/** 24 clock-hour slots: the chart's index is the hour, and a missing hour breaks the line. */
-	const tempHours = $derived(temp?.hours ?? []);
-	const tempMissing = $derived(tempHours.filter((h) => h.f === null).length);
-	/** Gaps take a neighbour's value for the scale only; they are never drawn. */
-	const tempForScale = $derived.by(() => {
-		let last: number | null = tempHours.find((h) => h.f !== null)?.f ?? null;
-		return tempHours.map((h) => (last = h.f ?? last) ?? 0);
-	});
-	const tempChart = $derived(
-		buildChart({
-			...TEMP,
-			accentColor: '#ef4444',
-			data: tempForScale.map((value) => ({ value }))
-		})
-	);
-	/** Runs of consecutive known hours; one run is the usual, gap-free case. */
-	const tempRuns = $derived.by(() => {
-		const runs: number[][] = [];
-		tempHours.forEach((h, i) => {
-			if (h.f === null) return;
-			const run = runs.at(-1);
-			if (run && run.at(-1) === i - 1) run.push(i);
-			else runs.push([i]);
-		});
-		return runs;
-	});
-	const tempInnerH = TEMP.height - TEMP.margins.top - TEMP.margins.bottom;
-	const pt = (i: number) =>
-		`${tempChart!.xScale(i)},${tempChart!.yScale(tempHours[i].f as number)}`;
-	const tempLine = $derived(
-		!tempChart
-			? ''
-			: tempMissing === 0
-				? tempChart.linePath
-				: tempRuns.map((r) => r.map((i, k) => `${k ? 'L' : 'M'}${pt(i)}`).join('')).join('')
-	);
-	const tempArea = $derived(
-		!tempChart
-			? ''
-			: tempMissing === 0
-				? tempChart.areaPath
-				: tempRuns
-						.map(
-							(r) =>
-								`M${tempChart.xScale(r[0])},${tempInnerH}${r.map((i) => `L${pt(i)}`).join('')}L${tempChart.xScale(r.at(-1)!)},${tempInnerH}Z`
-						)
-						.join('')
-	);
-	const xOfTime = (atMs: number) => {
-		if (!tempChart || tempHours.length < 2) return null;
-		const i = (atMs - tempHours[0].atMs) / H;
-		return i < 0 || i > tempHours.length - 1 ? null : tempChart.xScale(i);
-	};
-	const tempMark = (p: { f: number; atMs: number } | null) => {
-		const x = p ? xOfTime(p.atMs) : null;
-		return tempChart && p && x !== null ? { x, y: tempChart.yScale(p.f), ...p } : null;
-	};
-	const highMark = $derived(tempMark(temp?.high ?? null));
-	const lowMark = $derived(tempMark(temp?.low ?? null));
-	const nowX = $derived(xOfTime(now));
-	const tempTicks = $derived(tempHours.flatMap((h, i) => (i % 3 === 0 ? [{ i, h }] : [])));
+	const cols = $derived(view.forecast.columns);
 
 	const rain = $derived(view.forecast.rain);
 	const rainInnerW = W - RAIN.left - RAIN.right;
@@ -183,59 +123,38 @@
 <div class="out" data-slot="outdoors">
 	<article class="card" data-card="forecast">
 		<div class="card-head">
-			<h3 class="card-title" data-text-role="label">
-				Next 24 hours{view.forecast.scope
-					? ` · ${view.forecast.scope.replace(/ forecast$/, '')}`
-					: ''}
-			</h3>
+			<h3 class="card-title" data-text-role="label">Next 24 hours · {OBSERVATION_PLACE}</h3>
 			{#if temp?.high && temp.low}
 				<span class="meta" data-text-role="meta"
-					>{temp.low.f}–{temp.high.f}° · high {clock(temp.high.atMs)}{tempMissing
-						? ` · ${tempMissing} h without a temperature`
-						: ''}</span
+					>{temp.low.f}–{temp.high.f}° · high {clock(temp.high.atMs)}</span
 				>
 			{/if}
 		</div>
-		{#if tempChart && highMark && lowMark}
-			<svg
-				class="chart"
-				data-text-role="meta"
-				viewBox="0 0 {TEMP.width} {TEMP.height}"
-				role="img"
-				aria-label="Temperature, next 24 hours: low {lowMark.f}°, high {highMark.f}°"
-			>
-				<defs>
-					<linearGradient id="out-temp-fill" x1="0" y1="0" x2="0" y2="1">
-						<stop offset="0" stop-color="#ef4444" stop-opacity="0.32" />
-						<stop offset="1" stop-color="#f59e0b" stop-opacity="0" />
-					</linearGradient>
-				</defs>
-				<g transform="translate({TEMP.margins.left},{TEMP.margins.top})">
-					<path d={tempArea} fill="url(#out-temp-fill)" />
-					<path d={tempLine} data-temp-line fill="none" stroke="#f59e0b" stroke-width="2.4" />
-					{#if nowX !== null}
-						<line class="now" x1={nowX} x2={nowX} y1="-8" y2={TEMP.height - 40} />
-					{/if}
-					<circle cx={highMark.x} cy={highMark.y} r="3" fill="#ef4444" />
-					<text x={highMark.x} y={highMark.y - 8} text-anchor="middle"
-						>{highMark.f}° {clock(highMark.atMs)}</text
-					>
-					<circle cx={lowMark.x} cy={lowMark.y} r="3" fill="#f59e0b" />
-					<text x={lowMark.x} y={lowMark.y + 16} text-anchor="middle">{lowMark.f}°</text>
-					{#each tempTicks as t (t.i)}
-						<text x={tempChart.xScale(t.i)} y={TEMP.height - 30} text-anchor="middle"
-							>{clock(t.h.atMs)}</text
-						>
-					{/each}
-				</g>
-			</svg>
+		{#if cols.length}
+			<WeatherColumns
+				{cols}
+				resetKey={view.forecast.stationKey}
+				label="Temperature, 4 hours observed, now, then 24 hours forecast"
+			/>
+			<p class="meta" data-text-role="meta" data-station-note>
+				{view.forecast.stationNote ??
+					`NWS forecast for this spot${view.forecast.stationIssuedAt !== null ? ` · issued ${formatAsOf(view.forecast.stationIssuedAt, now)}` : ''}`}
+			</p>
 		{:else}
-			<p class="empty" data-text-role="body">No hourly temperatures to chart.</p>
+			<p class="empty" data-text-role="body">
+				{view.forecast.stationState === 'loading'
+					? 'Loading the hours…'
+					: 'Hourly readings unavailable'}
+			</p>
 		{/if}
 
 		{#if rain}
 			<div class="card-head">
-				<h4 class="card-title" data-text-role="label">Chance of rain, hourly</h4>
+				<h4 class="card-title" data-text-role="label">
+					Chance of rain, hourly{view.forecast.scope
+						? ` · ${view.forecast.scope.replace(/ forecast$/, '')}`
+						: ''}
+				</h4>
 				{#if !rain.allDry}
 					<span class="meta" data-text-role="meta" data-rain-meta>{rain.meta}</span>
 				{/if}
@@ -280,11 +199,13 @@
 			{/if}
 		{/if}
 
-		{#if temp?.high && temp.low}
+		{#if temp?.high || rain || days.length}
 			<div class="stats">
 				<div class="stat">
 					<div class="k" data-text-role="meta">Temp range</div>
-					<div class="v" data-text-role="value">{temp.low.f}–{temp.high.f}°</div>
+					<div class="v" data-text-role="value">
+						{temp?.high && temp.low ? `${temp.low.f}–${temp.high.f}°` : '—'}
+					</div>
 					<div class="s" data-text-role="meta">next 24 h</div>
 				</div>
 				<div class="stat">

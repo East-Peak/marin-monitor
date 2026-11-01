@@ -6,7 +6,14 @@
 import { pacificMidnightAfter } from '$lib/dashboard/pacific-time';
 
 /** One QC'd ASOS station for all of Marin; the label names it (Decision 7). */
-export const OBSERVATION_STATION = { id: 'KDVO', name: 'Gnoss Field (Novato)' } as const;
+export const OBSERVATION_STATION = {
+	id: 'KDVO',
+	name: 'Gnoss Field (Novato)',
+	lat: 38.1418,
+	lon: -122.5546
+} as const;
+/** The tile's one label for the station and its grid point (weather tile C). */
+export const OBSERVATION_PLACE = 'Novato · Gnoss Field';
 export const OBSERVATION_MAX_AGE_MS = 90 * 60_000;
 export const FORECAST_MAX_AGE_MS = 6 * 3_600_000;
 

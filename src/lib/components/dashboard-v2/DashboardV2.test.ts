@@ -49,6 +49,7 @@ const controller = vi.hoisted(() => ({
 	refreshIfDue: vi.fn(async () => {}),
 	ensure: vi.fn(async () => {}),
 	enableBriefDetail: vi.fn(async () => {}),
+	enableBriefStation: vi.fn(async () => {}),
 	disableBriefDetail: vi.fn(),
 	setLocation: vi.fn(),
 	cycling: (() => {
@@ -61,7 +62,7 @@ const controller = vi.hoisted(() => ({
 	})(),
 	created: [] as AbortSignal[],
 	EMPTY_BRIEF: Object.fromEntries(
-		['forecast', 'observed', 'tides', 'history', 'tideHourly'].map((k) => [
+		['forecast', 'observed', 'tides', 'history', 'stationForecast', 'tideHourly'].map((k) => [
 			k,
 			{
 				value: null,
@@ -168,6 +169,7 @@ vi.mock('$lib/dashboard/v2-controller', async () => ({
 			},
 			setLocation: controller.setLocation,
 			enableBriefDetail: controller.enableBriefDetail,
+			enableBriefStation: controller.enableBriefStation,
 			disableBriefDetail: controller.disableBriefDetail,
 			healthReport: { subscribe: (fn: (v: unknown) => void) => (fn(null), () => {}) },
 			datasetOutcomes: { subscribe: (fn: (v: unknown) => void) => (fn({}), () => {}) }

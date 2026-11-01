@@ -1,7 +1,6 @@
 import { fireEvent, render } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import type { BriefCard, BriefState } from '$lib/dashboard/brief-store';
-import { HOURLY_STRIP_HOURS } from '$lib/dashboard/brief-desktop';
 import {
 	measuredLoading,
 	measuredUnavailable,
@@ -51,11 +50,27 @@ function state(over: Partial<BriefState> = {}): BriefState {
 				periods: Array.from({ length: 30 }, (_, i) => ({
 					startMs: HOUR - 2 * H + i * H,
 					endMs: HOUR - H + i * H,
+					pop: 90,
+					temperatureF: 99
+				}))
+			},
+			scope: 'Central Marin forecast',
+			observedAt: NOW - H,
+			maxAgeMs: 6 * H,
+			state: 'ok'
+		}),
+		// The station's grid point: the tile reads this, whatever `forecast` (the town's) says.
+		stationForecast: card({
+			value: {
+				updatedAt: NOW - H,
+				periods: Array.from({ length: 30 }, (_, i) => ({
+					startMs: HOUR - 2 * H + i * H,
+					endMs: HOUR - H + i * H,
 					pop: i === 4 ? 30 : 0,
 					temperatureF: 55 + i
 				}))
 			},
-			scope: 'Central Marin forecast',
+			scope: 'Gnoss Field (Novato)',
 			observedAt: NOW - H,
 			maxAgeMs: 6 * H,
 			state: 'ok'
@@ -119,32 +134,80 @@ describe('BriefDesktop (MAPX1)', () => {
 		renderBrief(state());
 		const weather = q('[data-card="weather"]');
 		expect(q('[data-card="weather"] [data-text-role="value"]').textContent).toBe('58°F');
-		expect(weather.textContent).toContain('Observed at Gnoss Field (Novato) · 8:15 AM');
+		expect(weather.textContent).toContain('Observed 8:15 AM');
 		expect(weather.textContent).toContain('Rain today: 30%');
+		expect(weather.textContent).toContain('NWS forecast for this spot · issued 7:20 AM');
 	});
 
-	it(`the hourly strip has ${HOURLY_STRIP_HOURS} periods from this hour, temperature and rain chance each`, () => {
+	it('names the place once: the station, whatever town is picked', () => {
 		renderBrief(state());
-		const hours = document.querySelectorAll('[data-strip="hourly"] li');
-		expect(hours).toHaveLength(HOURLY_STRIP_HOURS);
-		expect(hours[0].textContent).toContain('8 AM');
-		expect(hours[0].textContent).toContain('57°');
-		expect(hours[2].textContent).toContain('30%');
+		const weather = q('[data-card="weather"]');
+		expect(weather.querySelector('h3')?.textContent).toBe('Weather · Novato · Gnoss Field');
+		expect(weather.textContent!.match(/Gnoss Field/g)).toHaveLength(1);
+		expect(weather.textContent).not.toContain('Central Marin');
 	});
 
-	it('the 12-hour trace is drawn from the observations, labelled with its source', () => {
+	it('one grid of hours: 4 past, Now, 8 forecast, each with its time and temperature', () => {
 		renderBrief(state());
-		expect(q('[data-chart="trace"] path[data-line]').getAttribute('d')).toMatch(/^M/);
-		expect(q('[data-card="weather"]').textContent).toContain('Last 12 h at Gnoss Field (Novato)');
+		const times = [...document.querySelectorAll('[data-col-time]')].map((t) => t.textContent);
+		expect(times).toEqual([
+			'4 AM',
+			'5 AM',
+			'6 AM',
+			'7 AM',
+			'Now',
+			'9 AM',
+			'10 AM',
+			'11 AM',
+			'12 PM',
+			'1 PM',
+			'2 PM',
+			'3 PM',
+			'4 PM'
+		]);
+		const temps = [...document.querySelectorAll('[data-col-temp]')].map((t) => t.textContent);
+		expect(temps[4]).toBe('58°'); // Now equals the headline
+		expect(temps[5]).toBe('58°'); // 9 AM forecast, the station's grid point
+		expect(document.querySelectorAll('[data-col-pop]')).toHaveLength(8);
+		expect(q('[role="slider"]').getAttribute('aria-label')).toBe(
+			'Temperature, 4 hours observed, now, then 8 hours forecast'
+		);
 	});
 
-	it('a failed history read says so; the hero and strip still show', () => {
+	it('a failed history read keeps the forecast half; past columns say readings are unavailable', () => {
 		renderBrief(
 			state({ history: card({ state: 'unavailable', detail: 'Temperature history unavailable' }) })
 		);
-		expect(document.querySelector('[data-chart="trace"]')).toBeNull();
-		expect(q('[data-card="weather"]').textContent).toContain('Last 12 hours unavailable');
-		expect(document.querySelectorAll('[data-strip="hourly"] li')).toHaveLength(HOURLY_STRIP_HOURS);
+		const temps = [...document.querySelectorAll('[data-col-temp]')].map((t) => t.textContent);
+		expect(temps.slice(0, 4)).toEqual(['—', '—', '—', '—']);
+		expect(temps[5]).toBe('58°');
+	});
+
+	it('a failed station forecast says so and is never replaced by the town’s', () => {
+		renderBrief(
+			state({
+				stationForecast: card({
+					state: 'unavailable',
+					detail: "Couldn't load the Gnoss Field forecast"
+				})
+			})
+		);
+		const weather = q('[data-card="weather"]');
+		expect(weather.textContent).toContain('Forecast unavailable');
+		expect(weather.textContent).toContain("Couldn't load the Gnoss Field forecast");
+		expect(weather.textContent).not.toContain('99°');
+		expect(weather.textContent).not.toContain('Rain today');
+	});
+
+	it('both station reads failed: the tile says so, with no grid', () => {
+		renderBrief(
+			state({
+				history: card({ state: 'unavailable' }),
+				stationForecast: card({ state: 'unavailable' })
+			})
+		);
+		expect(document.querySelector('[data-chart="hours"]')).toBeNull();
+		expect(q('[data-card="weather"]').textContent).toContain('Hourly readings unavailable');
 	});
 
 	it('the tide curve passes through each of today’s hi/lo events, marked on it', () => {
@@ -235,9 +298,7 @@ describe('BriefDesktop honesty (MAPX1, Codex #1, #3)', () => {
 				detail: "Couldn't load Point Reyes hourly tides"
 			}
 		});
-		expect(q('[data-card="weather"]').textContent).toContain(
-			'Last 12 h at Gnoss Field (Novato) · out of date'
-		);
+		expect(q('[data-card="weather"]').textContent).toContain('Station readings out of date');
 		expect(q('[data-card="tide"]').textContent).toContain('curve out of date');
 	});
 });

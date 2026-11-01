@@ -320,4 +320,87 @@ describe('createBriefStore — disableDetail (MAPX1, Codex #4)', () => {
 		await s.enableDetail();
 		expect(history).toHaveBeenCalledTimes(2);
 	});
+
+	describe('the station reads (weather tile C)', () => {
+		const STATION = { lat: 38.1418, lon: -122.5546 };
+		const history = vi.fn(async () => [{ atMs: 1, tempF: 50 }]);
+
+		it('reads the forecast at the station, never at the picked town', async () => {
+			const hourly = vi.fn(async (lat: number) => forecast(lat));
+			const s = createBriefStore(fetchers({ hourly, history }), new AbortController().signal);
+			await s.load(MILL_VALLEY);
+			expect(hourly).toHaveBeenCalledTimes(1);
+			await s.enableStation();
+			expect(hourly).toHaveBeenLastCalledWith(STATION.lat, STATION.lon, expect.anything());
+			expect(get(s).stationForecast).toMatchObject({
+				value: forecast(STATION.lat),
+				scope: 'Gnoss Field (Novato)',
+				state: 'ok'
+			});
+			expect(get(s).history.value).toEqual([{ atMs: 1, tempF: 50 }]);
+		});
+
+		it('is not read until asked for', async () => {
+			const hourly = vi.fn(async (lat: number) => forecast(lat));
+			const s = createBriefStore(fetchers({ hourly, history }), new AbortController().signal);
+			await s.load(CENTRAL);
+			expect(hourly).toHaveBeenCalledTimes(1);
+			expect(get(s).stationForecast.state).toBe('loading');
+		});
+
+		it('the desktop detail asks for it, and every later load refreshes it', async () => {
+			const hourly = vi.fn(async (lat: number) => forecast(lat));
+			const s = createBriefStore(fetchers({ hourly, history }), new AbortController().signal);
+			await s.load(CENTRAL);
+			await s.enableDetail();
+			expect(hourly).toHaveBeenCalledTimes(2);
+			await s.load(CENTRAL);
+			expect(hourly).toHaveBeenCalledTimes(4);
+		});
+
+		it('leaving desktop keeps it while Outdoors asked for it', async () => {
+			const hourly = vi.fn(async (lat: number) => forecast(lat));
+			const s = createBriefStore(fetchers({ hourly, history }), new AbortController().signal);
+			await s.load(CENTRAL);
+			await s.enableDetail();
+			await s.enableStation();
+			s.disableDetail();
+			hourly.mockClear();
+			await s.load(CENTRAL);
+			expect(hourly).toHaveBeenCalledTimes(2);
+		});
+
+		it('a failed station forecast stays unavailable; the town forecast never fills in', async () => {
+			const hourly = vi.fn(async (lat: number) => {
+				if (lat === STATION.lat) throw new Error('HTTP 500');
+				return forecast(lat);
+			});
+			const s = createBriefStore(fetchers({ hourly, history }), new AbortController().signal);
+			await s.load(CENTRAL);
+			await s.enableStation();
+			expect(get(s).stationForecast).toMatchObject({
+				value: null,
+				state: 'unavailable',
+				detail: "Couldn't load the Gnoss Field forecast"
+			});
+			expect(get(s).forecast.value).toEqual(forecast(CENTRAL.lat));
+		});
+
+		it('a later failure keeps the last forecast, stale', async () => {
+			let fail = false;
+			const hourly = vi.fn(async (lat: number) => {
+				if (fail && lat === STATION.lat) throw new Error('HTTP 500');
+				return forecast(lat);
+			});
+			const s = createBriefStore(fetchers({ hourly, history }), new AbortController().signal);
+			await s.load(CENTRAL);
+			await s.enableStation();
+			fail = true;
+			await s.load(CENTRAL);
+			expect(get(s).stationForecast).toMatchObject({
+				value: forecast(STATION.lat),
+				state: 'stale'
+			});
+		});
+	});
 });

@@ -1,66 +1,53 @@
 /**
- * The desktop brief's charts (MAPX1): an hourly strip, the station's last 12
- * hours, and today's tide. Every point is a reported or predicted value; an
- * hour or report we don't have stays a gap, and no curve is drawn by us.
+ * The desktop brief's charts (MAPX1): the station's hour columns and today's tide. Every point
+ * is a reported or predicted value; an hour or report we don't have stays a gap, and no curve
+ * is drawn by us.
  */
-import type { TempReport } from '$lib/api/marin/nws-observation';
 import type { TideHeight } from '$lib/api/marin/tides';
-import type { HourlyPop, TideEvent } from '$lib/weather/brief';
+import type { TideEvent } from '$lib/weather/brief';
+import type { BriefCard, BriefState } from './brief-store';
+import { hourColumns, type HourColumn } from './hour-columns';
 import { pacificDate, pacificMidnightAfter, parsePacificWallTime } from './pacific-time';
+import { effectiveState } from './source-status';
 
-const H = 3_600_000;
-export const HOURLY_STRIP_HOURS = 8;
-const TRACE_MS = 12 * H;
+/** The tile: 4 past hours, now, 8 ahead. Outdoors shows 24 ahead. */
+export const TILE_HOURS_AHEAD = 8;
 /** NOAA's hourly series: anything wider than an hour (plus slack) is a missing hour. */
 const TIDE_GAP_MS = 90 * 60_000;
-/** KDVO reports every 20 minutes; a silence longer than this is shown as a break. */
-const TRACE_GAP_MS = H;
 
-export interface StripHour {
-	atMs: number;
-	f: number | null;
-	pop: number | null;
+/** A card's series is out of date: its readings say so. */
+function isStale(card: BriefCard<unknown>, now: number): boolean {
+	const { state, observedAt, maxAgeMs, detail } = card;
+	const entry = { id: '', name: '', state, observedAt, maxAgeMs, detail };
+	return effectiveState(entry, now) === 'stale';
 }
 
-/** Clock hours from the current one; an hour without a period, or a value NWS omitted, is null. */
-export function hourlyStrip(periods: readonly HourlyPop[], now: number): StripHour[] {
-	if (periods.length === 0) return [];
-	const byStart = new Map(periods.map((p) => [p.startMs, p]));
-	const start = Math.floor(now / H) * H;
-	return Array.from({ length: HOURLY_STRIP_HOURS }, (_, i) => {
-		const atMs = start + i * H;
-		const p = byStart.get(atMs);
-		const whole = p && p.endMs === atMs + H ? p : null;
-		return { atMs, f: whole?.temperatureF ?? null, pop: whole?.pop ?? null };
+/**
+ * The hour columns of charts 1 and 4, one implementation: the station's reports, plus the
+ * headline's own report so Now can equal it, and the forecast at the station's grid point. The
+ * town's forecast is never read here, so a failed read stays failed.
+ */
+export function stationColumns(brief: BriefState, now: number, ahead: number): HourColumn[] {
+	const { history, stationForecast, observed } = brief;
+	const report = observed.value;
+	const headline =
+		report && report.tempF !== null ? { atMs: report.observedAt, tempF: report.tempF } : null;
+	const others = history.value?.filter((r) => r.atMs !== headline?.atMs);
+	return hourColumns({
+		reports: others && headline ? [...others, headline] : (others ?? null),
+		headline,
+		periods: stationForecast.value?.periods ?? null,
+		now,
+		ahead,
+		staleReports: isStale(history, now),
+		staleForecast: isStale(stationForecast, now),
+		staleHeadline: isStale(observed, now)
 	});
 }
 
-export interface TempTrace {
-	domain: [number, number];
-	/** `value` NaN marks a break: the chart draws no line across a missing stretch. */
-	points: { x: number; value: number }[];
-	high: { f: number; atMs: number };
-	low: { f: number; atMs: number };
-}
-
-export function tempTrace(reports: readonly TempReport[], now: number): TempTrace | null {
-	const from = now - TRACE_MS;
-	const shown = reports
-		.filter((r) => r.atMs >= from && r.atMs <= now)
-		.sort((a, b) => a.atMs - b.atMs);
-	if (shown.length < 2) return null;
-	const points: TempTrace['points'] = [];
-	let high = { f: shown[0].tempF, atMs: shown[0].atMs };
-	let low = high;
-	shown.forEach((r, i) => {
-		if (i > 0 && r.atMs - shown[i - 1].atMs > TRACE_GAP_MS)
-			points.push({ x: (r.atMs + shown[i - 1].atMs) / 2, value: Number.NaN });
-		points.push({ x: r.atMs, value: r.tempF });
-		if (r.tempF > high.f) high = { f: r.tempF, atMs: r.atMs };
-		if (r.tempF < low.f) low = { f: r.tempF, atMs: r.atMs };
-	});
-	return { domain: [from, now], points, high, low };
-}
+/** Moves with a new read or a town switch, never the clock: a pinned readout clears on it. */
+export const stationKey = ({ history, stationForecast, observed, forecast }: BriefState) =>
+	[history.observedAt, stationForecast.observedAt, observed.observedAt, forecast.scope].join('|');
 
 export interface TideDay {
 	domain: [number, number];

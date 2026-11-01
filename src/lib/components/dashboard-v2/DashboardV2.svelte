@@ -181,7 +181,7 @@
 			now: $clock
 		})
 	);
-	// The desktop brief (MAPX1): its trace, tide curve and ocean load as soon as the page is
+	// The desktop brief (MAPX1): its station reads, tide curve and ocean load as soon as the page is
 	// desktop, never waiting on the Outdoors section. The phone never asks for them.
 	$effect(() => {
 		if (!desktop || !controller) return;
@@ -191,6 +191,7 @@
 		return () => controller.disableBriefDetail();
 	});
 	function openOutdoors() {
+		void controller?.enableBriefStation();
 		for (const d of Object.values(OUTDOORS_DATASETS)) void controller?.ensure(d.id);
 	}
 	const costReads =

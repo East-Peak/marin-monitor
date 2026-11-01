@@ -165,10 +165,10 @@ test('each brief card answers with its value, scope and time', async ({ page }) 
 	await openV2(page);
 	const weather = page.locator('[data-card="weather"]');
 	await expect(weather).toContainText('60°F');
-	await expect(weather).toContainText('Observed at Gnoss Field (Novato) · 7:55 AM');
+	await expect(weather).toContainText('Observed 7:55 AM');
 	const rain = page.locator('[data-card="rain"]');
 	await expect(rain).toContainText('Rain today: 40%');
-	await expect(rain).toContainText('Central Marin forecast · issued 7:30 AM');
+	await expect(rain).toContainText('NWS forecast for this spot · issued 7:30 AM');
 	const tide = page.locator('[data-card="tide"]');
 	await expect(tide).toContainText('High 6.3 ft · 12:41 PM');
 	await expect(tide).toContainText('Point Reyes · NOAA prediction');
@@ -188,7 +188,7 @@ test('weather: /latest has no temperature, the QC’d list does: the card shows 
 	await openV2(page);
 	const weather = page.locator('[data-card="weather"]');
 	await expect(weather).toContainText('60°F');
-	await expect(weather).toContainText('Observed at Gnoss Field (Novato) · 7:35 AM');
+	await expect(weather).toContainText('Observed 7:35 AM');
 	await expect(weather).not.toContainText('Temperature unknown');
 });
 
@@ -208,7 +208,7 @@ test('weather: nothing usable within 90 min → "Temperature unknown" at the new
 	await openV2(page);
 	const weather = page.locator('[data-card="weather"]');
 	await expect(weather).toContainText('Temperature unknown');
-	await expect(weather).toContainText('Observed at Gnoss Field (Novato) · 7:55 AM');
+	await expect(weather).toContainText('Observed 7:55 AM');
 	await expect(weather).not.toContainText('60°F');
 });
 
@@ -265,9 +265,11 @@ test('a missing precipitation probability reads unknown, never 0%', async ({ pag
 	await expect(rain).not.toContainText('%');
 });
 
-test('a failed new-town forecast keeps the old value under its old label and names the town', async ({
+test('a failed new-town forecast keeps the old value under its old label and names the town (phone)', async ({
 	page
 }) => {
+	// The desktop tile stays on Gnoss Field; the phone's rain row follows the town.
+	await page.setViewportSize({ width: 390, height: 844 });
 	await stubAll(page, { millValleyHourly: (r) => r.fulfill({ status: 500, body: 'down' }) });
 	await openV2(page);
 	const rain = page.locator('[data-card="rain"]');
@@ -278,7 +280,19 @@ test('a failed new-town forecast keeps the old value under its old label and nam
 	await expect(rain).toContainText("Couldn't load the Mill Valley forecast", { timeout: 20_000 });
 	await expect(rain).toContainText('Central Marin forecast');
 	await expect(rain).toContainText('Rain today: 40%');
-	await expect(page.locator('[data-card="tide"]')).toContainText('San Francisco · NOAA prediction');
+	await expect(page.locator('[data-card="tide"]')).toContainText('San Francisco');
+});
+
+test('the desktop tile stays on Gnoss Field whatever town is picked', async ({ page }) => {
+	await stubAll(page);
+	await openV2(page);
+	const weather = page.locator('[data-card="weather"]');
+	await expect(weather).toContainText('Weather · Novato · Gnoss Field');
+	await page.locator('[data-layout="v2"] .picker-trigger').click();
+	await page.getByRole('option', { name: 'Mill Valley' }).click();
+	await expect(page.locator('[data-card="tide"]')).toContainText('San Francisco');
+	await expect(weather).toContainText('Weather · Novato · Gnoss Field');
+	await expect(weather).not.toContainText('Mill Valley');
 });
 
 test('the health indicator names degraded sources from /api/health', async ({ page }) => {

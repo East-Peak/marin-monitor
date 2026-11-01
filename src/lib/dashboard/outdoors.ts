@@ -11,10 +11,17 @@ import type { MarineForecastRead } from '$lib/api/marin/marine';
 import type { EarthquakeRead } from '$lib/api/marin/usgs';
 import type { HourlyForecast, HourlyPop, TideEvent } from '$lib/weather/brief';
 import type { BriefCard, BriefState } from './brief-store';
+import { stationColumns, stationKey } from './brief-desktop';
+import type { HourColumn } from './hour-columns';
 import { PACIFIC, pacificDate, pacificDay, pacificMidnightAfter } from './pacific-time';
 import { emptyWording, mapMeasured, measuredFromEntry, type Measured } from './measured';
 import { datasetEntry, type DatasetFetch } from './source-adapters';
-import { presentSection, type SectionPresentation, type SourceStatusEntry } from './source-status';
+import {
+	effectiveState,
+	presentSection,
+	type SectionPresentation,
+	type SourceStatusEntry
+} from './source-status';
 
 export const SURF_SOURCE = 'Open-Meteo marine forecast';
 export const AIR_SOURCE = 'AirNow';
@@ -289,7 +296,15 @@ export interface OutdoorsView {
 	forecast: {
 		measured: Measured<HourlyForecast>;
 		scope: string | null;
+		/** Chart 4 and its range: the station's grid point, as on the tile, whatever the town. */
 		temp: TempSeries | null;
+		/** 4 past hours, now, 24 ahead; empty until both of the station's reads have settled. */
+		columns: HourColumn[];
+		stationState: 'loading' | 'ok' | 'unavailable';
+		/** Why chart 4's forecast half is missing or old; null when it's current. */
+		stationNote: string | null;
+		stationKey: string;
+		stationIssuedAt: number | null;
 		rain: RainSeries | null;
 		days: DayRange[];
 	};
@@ -326,6 +341,9 @@ function briefEntry(
 		detail: card.detail
 	};
 }
+
+const briefEntryStale = (card: BriefCard<unknown>, now: number) =>
+	effectiveState(briefEntry('', '', card), now) === 'stale';
 
 export function outdoorsView(input: OutdoorsInput): OutdoorsView {
 	const { brief, now } = input;
@@ -375,6 +393,10 @@ export function outdoorsView(input: OutdoorsInput): OutdoorsView {
 		(r) => r.reading
 	);
 	const periods = forecast.kind === 'value' ? forecast.value.periods : [];
+	const station = brief?.stationForecast;
+	const stationSettled =
+		!!brief && brief.history.state !== 'loading' && station?.state !== 'loading';
+	const stationReady = stationSettled && (!!brief?.history.value || !!station?.value);
 	const tideEvents = tides.kind === 'value' ? tides.value : [];
 	const all = Object.values(entries);
 	const valued = [forecast, tides, marine, fires, quakes, air].filter(
@@ -384,7 +406,17 @@ export function outdoorsView(input: OutdoorsInput): OutdoorsView {
 		forecast: {
 			measured: forecast,
 			scope: brief?.forecast.scope ?? null,
-			temp: tempSeries(periods, now),
+			temp: tempSeries(station?.value?.periods ?? [], now),
+			columns: stationReady ? stationColumns(brief, now, HOURS_SHOWN) : [],
+			stationState: !stationSettled ? 'loading' : stationReady ? 'ok' : 'unavailable',
+			stationNote:
+				stationReady && !station?.value
+					? 'Forecast unavailable'
+					: station && briefEntryStale(station, now)
+						? 'Forecast out of date'
+						: null,
+			stationKey: brief ? stationKey(brief) : '',
+			stationIssuedAt: station?.value?.updatedAt ?? null,
 			rain: periods.length ? rainSeries(periods, now) : null,
 			days: dailyRange(periods, now)
 		},

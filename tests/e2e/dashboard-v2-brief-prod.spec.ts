@@ -11,7 +11,7 @@ test('production brief: every card answers or says why not; nothing says LIVE or
 	await page.goto(`/?layout=v2&cb=${Date.now()}`);
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 	await expect(page.locator('[data-card="weather"]')).toContainText(
-		/Observed at Gnoss Field \(Novato\)|Observation unavailable/,
+		/Observed \d|Observation unavailable/,
 		{ timeout: 30_000 }
 	);
 	await expect(page.locator('[data-card="rain"]')).toContainText(
@@ -74,7 +74,7 @@ test('production weather card agrees with the browser’s own KDVO observation l
 	});
 	await page.goto(`/?layout=v2&cb=${Date.now()}`);
 	const card = page.locator('[data-card="weather"]');
-	await expect(card).toContainText(/Observed at Gnoss Field \(Novato\)|Observation unavailable/, {
+	await expect(card).toContainText(/Observed \d|Observation unavailable/, {
 		timeout: 30_000
 	});
 	const seen = await Promise.race([list, page.waitForTimeout(5_000).then(() => null)]);
@@ -117,7 +117,7 @@ test('production weather card agrees with the browser’s own KDVO observation l
 	}
 	const shown = (r: Report) => ({
 		value: usable(r) ? `${Math.round((r.c! * 9) / 5 + 32)}°F` : 'Temperature unknown',
-		meta: `Observed at Gnoss Field (Novato) · ${formatAsOf(r.at, now)}`
+		meta: `Observed ${formatAsOf(r.at, now)}`
 	});
 	const actual = { value: (await value.innerText()).trim(), meta: (await meta.innerText()).trim() };
 	expect(

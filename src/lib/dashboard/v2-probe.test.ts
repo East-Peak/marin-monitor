@@ -50,6 +50,7 @@ describe('the v2 test hook (Codex r3 #5)', () => {
 				tides: card('stale', 'Mill Valley'),
 				// Desktop-only detail stays loading on the phone: never pending (MAPX1).
 				history: card('loading'),
+				stationForecast: card('loading'),
 				tideHourly: card('loading')
 			})
 		).toEqual(['brief:forecast', 'brief:tides']);
@@ -59,6 +60,7 @@ describe('the v2 test hook (Codex r3 #5)', () => {
 				observed: card('ok'),
 				tides: card('ok'),
 				history: card('loading'),
+				stationForecast: card('loading'),
 				tideHourly: card('loading')
 			})
 		).toEqual([]);

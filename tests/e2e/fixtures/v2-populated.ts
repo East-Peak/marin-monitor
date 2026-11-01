@@ -13,9 +13,9 @@ export const stubRest = (page: Page) =>
 	);
 
 /** Outdoors' reads with real shapes (Goal 2): NWS points + hourly, marine, fires, USGS 7 d, AQI. */
-export async function stubOutdoors(page: Page) {
+export async function stubOutdoors(page: Page, now = Date.now()) {
 	const H = 3_600_000;
-	const hour0 = Math.floor(Date.now() / H) * H;
+	const hour0 = Math.floor(now / H) * H;
 	const json = (body: unknown) => ({
 		status: 200,
 		contentType: 'application/json',
@@ -56,7 +56,7 @@ export async function stubOutdoors(page: Page) {
 		r.fulfill(json({ features: [] }))
 	);
 	await page.route(/earthquake\.usgs\.gov/, (r) =>
-		r.fulfill(json({ features: [], metadata: { generated: Date.now() } }))
+		r.fulfill(json({ features: [], metadata: { generated: now } }))
 	);
 	await page.route(/\/api\/air-quality\b/, (r) =>
 		r.fulfill(
@@ -67,16 +67,15 @@ export async function stubOutdoors(page: Page) {
 				pollutant: 'OZONE',
 				area: 'San Rafael',
 				observedAt: hour0 - H,
-				timestamp: Date.now()
+				timestamp: now
 			})
 		)
 	);
 }
 
 /** Cost's reads with real shapes (Goal 3): a gas week of 4-hourly readings, fitness with history. */
-export async function stubCost(page: Page) {
+export async function stubCost(page: Page, now = Date.now()) {
 	const H = 3_600_000;
-	const now = Date.now();
 	const json = (body: unknown) => ({
 		status: 200,
 		contentType: 'application/json',
@@ -201,9 +200,8 @@ export async function stubCivic(page: Page) {
 }
 
 /** The brief's own reads with real shapes (MAPX1): 12 h of KDVO, NOAA hi/lo + hourly, marine. */
-export async function stubBrief(page: Page) {
+export async function stubBrief(page: Page, now = Date.now()) {
 	const H = 3_600_000;
-	const now = Date.now();
 	const json = (body: unknown) => ({
 		status: 200,
 		contentType: 'application/json',
@@ -265,5 +263,5 @@ export async function stubBrief(page: Page) {
 			})
 		)
 	);
-	await stubOutdoors(page);
+	await stubOutdoors(page, now);
 }

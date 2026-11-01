@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { stubCams } from './fixtures/cams';
-import { stubBrief, stubCivic, stubCost, stubOutdoors, stubRest } from './fixtures/v2-populated';
+import { stubBrief, stubCivic, stubCost, stubRest } from './fixtures/v2-populated';
 
 /**
  * Desktop frame (plan-dashboard-desktop Goal 1): full width to 2,240 px, sections always
@@ -97,11 +97,11 @@ test.describe('desktop 1700+', () => {
 test.describe('desktop 1440: Outdoors beside Getting Around (Goal 2)', () => {
 	test.use({ viewport: { width: 1440, height: 1000 } });
 
-	test('Outdoors and Getting Around share a row; the temperature chart has a path', async ({
+	test('Outdoors and Getting Around share a row; the temperature chart draws its hours', async ({
 		page
 	}) => {
 		await stubRest(page);
-		await stubOutdoors(page);
+		await stubBrief(page);
 		await stubCams(page);
 		await page.goto('/?layout=v2');
 		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
@@ -110,8 +110,9 @@ test.describe('desktop 1440: Outdoors beside Getting Around (Goal 2)', () => {
 		expect(Math.abs(out.y - ga.y)).toBeLessThanOrEqual(4);
 		expect(out.x).toBeLessThan(ga.x);
 		expect(out.width).toBeGreaterThan(ga.width);
-		const path = page.locator('#outdoors [data-card="forecast"] svg path').first();
-		await expect(path).toHaveAttribute('d', /\S/);
+		await expect(
+			page.locator('#outdoors [data-chart="hours"] [data-segment]').first()
+		).toBeVisible();
 		// The three-source card names each source on its row; the other cards keep one foot (TEXT1 1d).
 		await expect(page.locator('#outdoors [data-card-source]')).toHaveCount(3);
 		await expect(page.locator('#outdoors [data-card="ground"]')).toContainText('None near');
@@ -295,10 +296,7 @@ for (const width of [1440, 2000]) {
 			await page.goto('/?layout=v2');
 			await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 			const brief = page.locator('[data-slot="brief"]');
-			await expect(brief.locator('[data-chart="trace"] path[data-line]')).toHaveAttribute(
-				'd',
-				/^M/
-			);
+			await expect(brief.locator('[data-chart="hours"] [data-col-time]')).toHaveCount(13);
 			await expect(brief.locator('[data-chart="tide"] circle[data-event]').first()).toBeVisible();
 			await expect(brief.locator('[data-card="ocean"]')).toHaveAttribute('data-state', 'ok');
 

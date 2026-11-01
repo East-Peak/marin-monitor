@@ -45,8 +45,10 @@ export interface BriefState {
 	forecast: BriefCard<HourlyForecast>;
 	observed: BriefCard<ObservedNow>;
 	tides: BriefCard<TideEvent[]>;
-	/** The station's last 12 hours (desktop only; loading until enabled). */
+	/** The station's last 12 hours (loading until enabled: the desktop tile, or Outdoors opened). */
 	history: BriefCard<TempReport[]>;
+	/** The forecast at the station's own grid point, whatever town is picked (weather tile C). */
+	stationForecast: BriefCard<HourlyForecast>;
 	/** NOAA's hourly heights for the tide curve (desktop only; loading until enabled). */
 	tideHourly: BriefCard<TideHeight[]>;
 }
@@ -70,6 +72,7 @@ export function initialBriefState(): BriefState {
 		observed: emptyCard(OBSERVATION_MAX_AGE_MS),
 		tides: emptyCard(null),
 		history: emptyCard(OBSERVATION_MAX_AGE_MS),
+		stationForecast: emptyCard(FORECAST_MAX_AGE_MS),
 		tideHourly: emptyCard(null)
 	};
 }
@@ -80,8 +83,10 @@ export function createBriefStore(
 	options: { deadlineMs?: number } = {}
 ): Readable<BriefState> & {
 	load(preset: LocationPreset): Promise<void>;
-	/** The desktop brief's trace and tide curve: loaded now (once a town is set) and on every load. */
+	/** The desktop brief's station reads and tide curve: loaded now and on every load. */
 	enableDetail(): Promise<void>;
+	/** The station's reports and forecast alone (Outdoors opened): loaded now and on every load. */
+	enableStation(): Promise<void>;
 	/** Below desktop again: later loads skip the detail (values are kept). */
 	disableDetail(): void;
 } {
@@ -92,6 +97,7 @@ export function createBriefStore(
 	const state = writable<BriefState>(initialBriefState());
 	let latest = 0;
 	let detail = false;
+	let stationAsked = false;
 	let current: LocationPreset | null = null;
 
 	function patch<T>(key: keyof BriefState, next: (card: BriefCard<T>) => BriefCard<T>) {
@@ -173,52 +179,74 @@ export function createBriefStore(
 		}
 	}
 
-	let historyRun: Promise<void> | null = null;
-	/** The trace's one fixed station: overlapping loads share one request, as the observation does. */
-	function loadHistory(): Promise<void> {
-		const read = fetchers.history;
-		if (!read) return Promise.resolve();
-		historyRun ??= (async () => {
+	/** One fixed station: overlapping loads share a request, as the observation does. */
+	const stationRuns = new Map<string, Promise<void>>();
+	function loadStationRead<T>(
+		key: 'history' | 'stationForecast',
+		failure: string,
+		run: (signal: AbortSignal) => Promise<T>,
+		observedAtOf: (value: T) => number | null
+	): Promise<void> {
+		let running = stationRuns.get(key);
+		if (running) return running;
+		running = (async () => {
 			try {
-				const value = await bounded('brief history', (s) => read(OBSERVATION_STATION, s));
-				patch<TempReport[]>('history', (c) => ({
+				const value = await bounded(`brief ${key}`, run);
+				patch<T>(key, (c) => ({
 					...c,
 					value,
 					scope: OBSERVATION_STATION.name,
-					observedAt: value.length ? value[value.length - 1].atMs : null,
+					observedAt: observedAtOf(value),
 					state: 'ok',
 					detail: null
 				}));
 			} catch {
-				patch<TempReport[]>('history', (c) => ({
+				patch<T>(key, (c) => ({
 					...c,
 					state: c.value === null ? 'unavailable' : 'stale',
-					detail: 'Temperature history unavailable'
+					detail: failure
 				}));
 			}
-		})().finally(() => {
-			historyRun = null;
-		});
-		return historyRun;
+		})().finally(() => stationRuns.delete(key));
+		stationRuns.set(key, running);
+		return running;
 	}
 
-	/** The detail cards for one location, under the same latest-request-wins rule. */
+	function loadStation(): Promise<unknown> {
+		const { lat, lon } = OBSERVATION_STATION;
+		const history = fetchers.history;
+		return Promise.all([
+			history
+				? loadStationRead(
+						'history',
+						'Temperature history unavailable',
+						(s) => history(OBSERVATION_STATION, s),
+						(v) => (v.length ? v[v.length - 1].atMs : null)
+					)
+				: undefined,
+			loadStationRead(
+				'stationForecast',
+				"Couldn't load the Gnoss Field forecast",
+				(s) => fetchers.hourly(lat, lon, s),
+				(v) => v.updatedAt
+			)
+		]);
+	}
+
+	/** The tide curve for one location, under the same latest-request-wins rule. */
 	function loadDetail(preset: LocationPreset, requestId: number): Promise<unknown> {
 		const read = fetchers.tideHourly;
-		return Promise.all([
-			loadHistory(),
-			read
-				? loadScoped(
-						'tideHourly',
-						requestId,
-						preset.name,
-						preset.tideStationName,
-						`Couldn't load ${preset.tideStationName} hourly tides`,
-						() => bounded('brief tide curve', (s) => read(preset.tideStation, s)),
-						() => null
-					)
-				: undefined
-		]);
+		return read
+			? loadScoped(
+					'tideHourly',
+					requestId,
+					preset.name,
+					preset.tideStationName,
+					`Couldn't load ${preset.tideStationName} hourly tides`,
+					() => bounded('brief tide curve', (s) => read(preset.tideStation, s)),
+					() => null
+				)
+			: Promise.resolve();
 	}
 
 	return {
@@ -229,7 +257,12 @@ export function createBriefStore(
 		async enableDetail() {
 			if (detail || signal.aborted) return;
 			detail = true;
-			if (current) await loadDetail(current, latest);
+			await Promise.all([current ? loadDetail(current, latest) : undefined, loadStation()]);
+		},
+		async enableStation() {
+			if (stationAsked || signal.aborted) return;
+			stationAsked = true;
+			if (!detail) await loadStation();
 		},
 		async load(preset) {
 			if (signal.aborted) return;
@@ -256,7 +289,8 @@ export function createBriefStore(
 					() => null
 				),
 				loadObserved(),
-				detail ? loadDetail(preset, requestId) : undefined
+				detail ? loadDetail(preset, requestId) : undefined,
+				detail || stationAsked ? loadStation() : undefined
 			]);
 		}
 	};
