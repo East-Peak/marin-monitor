@@ -221,6 +221,10 @@
 		gap: var(--v2-s2);
 		min-width: 0;
 	}
+	.hl {
+		margin: 0;
+		color: var(--text-secondary);
+	}
 	.map {
 		display: none;
 	}
@@ -305,10 +309,6 @@
 		gap: 0 var(--v2-s3);
 		padding-top: var(--v2-s2);
 		border-top: 2px solid var(--border-light);
-		color: var(--text-secondary);
-	}
-	.hl {
-		margin: 0;
 		color: var(--text-secondary);
 	}
 	.hl .num {

@@ -67,6 +67,15 @@ for (const width of [1440, 1024]) {
 				expect(Math.abs(hero!.x - map1!.x)).toBeLessThan(2);
 				expect(side!.x).toBeGreaterThan(map1!.x + map1!.width);
 				expect(side!.y).toBeLessThanOrEqual(hero!.y + 40);
+				// The column's gaps hold: the highlight, where there is one, doesn't touch the month.
+				const hl = c.locator('[data-card-highlight]');
+				if (await hl.count()) {
+					const [hlBox, month] = [
+						await hl.boundingBox(),
+						await c.locator('.half').first().boundingBox()
+					];
+					expect(hlBox!.y - (month!.y + month!.height)).toBeGreaterThanOrEqual(8);
+				}
 				const [mapBox, receipt] = [
 					await map.boundingBox(),
 					await c.locator('[data-receipt-total]').boundingBox()
