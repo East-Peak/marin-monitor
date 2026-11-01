@@ -203,7 +203,7 @@
 	onblur={clear}
 	onkeydown={keydown}
 >
-	<span id="{id}-hint" class="hint">Arrow keys read each value</span>
+	<span id="{id}-hint" class="hint" data-text-role="meta">Arrow keys read each value</span>
 	{#if stop}
 		<div class="label" data-readout bind:clientWidth={labelW} style:left="{labelX}px">
 			{#if stop.words.lead}<span data-text-role="meta">{`${stop.words.lead} `}</span>{/if}<span

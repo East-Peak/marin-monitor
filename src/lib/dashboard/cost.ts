@@ -13,7 +13,10 @@ import type { GroceryBasketData } from '$lib/types/grocery';
 import type { SchoolIndexData } from '$lib/types/school';
 import type { WineIndexData } from '$lib/types/wine';
 import { gasChangeOverDays } from '$lib/utils/gas-change';
+import { gapStop, rangeWords, silences, type Reading, type ReadoutStop } from './chart-readout';
+import { seriesStops } from './chart-stops';
 import { mapMeasured, measuredFromEntry, type Measured } from './measured';
+import { pacificDate, pacificDay } from './pacific-time';
 import { datasetEntry, type DatasetFetch } from './source-adapters';
 import { presentSection, type SectionPresentation } from './source-status';
 import { DATASET_POLICY } from './dataset-policy';
@@ -180,8 +183,12 @@ export interface SubIndexTile {
 	kind: 'value' | 'loading' | 'unknown' | 'unavailable';
 	value: string;
 	detail: string | null;
-	/** At least two points, oldest first; null otherwise. */
-	spark: number[] | null;
+	/** Dated readings, oldest first, nulls kept, with at least two values; null otherwise. */
+	spark: Reading[] | null;
+	/** How the readout writes a reading: its figure, its date, and what else it must say. */
+	sparkFormat: (value: number) => string;
+	sparkWhen: (ms: number) => string;
+	sparkNotes: readonly string[];
 	noHistory: boolean;
 	/** Why there is no sparkline, for a tile whose source publishes none. */
 	noHistoryReason: string | null;
@@ -198,6 +205,8 @@ const usd0 = (n: number) => usd(n, 0);
 export const signed = (n: number, dec: number, pre = '$') =>
 	`${n > 0 ? '+' : n < 0 ? '−' : '±'}${pre}${Math.abs(n).toFixed(dec)}`;
 
+type Dated = Pick<Reading, 'at' | 'value'>;
+
 interface TileSpec<T> {
 	id: string;
 	title: string;
@@ -205,8 +214,13 @@ interface TileSpec<T> {
 	measured: Measured<T>;
 	value: (v: T) => string;
 	detail: (v: T) => string | null;
-	/** Values oldest first; nulls are dropped, never drawn as 0. */
-	series: ((v: T) => (number | null)[]) | null;
+	/** Dated values oldest first; a null is a slot with no reading, never drawn as 0. */
+	series: ((v: T) => Dated[]) | null;
+	/** The figure in a readout; a tile's own value form may round further. */
+	format?: (value: number) => string;
+	/** How this series writes its date (housing is monthly). */
+	when?: (ms: number) => string;
+	notes?: readonly string[];
 	noHistoryReason?: string;
 	untimed?: (v: T) => string | undefined;
 	/** The source can't vouch for when the value was true (a fixed estimate, a maintained list). */
@@ -219,7 +233,10 @@ function tile<T>(spec: TileSpec<T>): SubIndexTile {
 		id: spec.id,
 		title: spec.title,
 		color: spec.color,
-		measured: m as Measured<unknown>
+		measured: m as Measured<unknown>,
+		sparkFormat: spec.format ?? ((n) => usd(n)),
+		sparkWhen: spec.when ?? pacificDay,
+		sparkNotes: spec.notes ?? []
 	};
 	if (m.kind !== 'value') {
 		const value = { loading: 'Loading…', unknown: 'Unknown', unavailable: 'Unavailable' }[m.kind];
@@ -235,8 +252,12 @@ function tile<T>(spec: TileSpec<T>): SubIndexTile {
 		};
 	}
 	const muted = spec.muted?.(m.value) ?? false;
-	const points = spec.series ? spec.series(m.value).filter((n): n is number => n !== null) : [];
-	const spark = points.length >= 2 ? points : null;
+	const points = spec.series?.(m.value) ?? [];
+	const kind = muted ? 'reference' : 'observed';
+	const spark =
+		points.filter((p) => p.value !== null).length >= 2
+			? points.map((p) => ({ ...p, kind, unit: '' }) satisfies Reading)
+			: null;
 	return {
 		...base,
 		// A muted value keeps its read's status but never shows that read's time as its own.
@@ -251,6 +272,20 @@ function tile<T>(spec: TileSpec<T>): SubIndexTile {
 		untimed: spec.untimed?.(m.value)
 	};
 }
+
+/** One reading per snapshot, each at its own time, for a tile's spark. */
+function dated<S extends { timestamp: string }>(
+	d: { current: S | null; history: readonly S[] },
+	value: (s: S) => number | null
+): Dated[] {
+	return readings(d.current, d.history).map((s) => ({
+		at: Date.parse(s.timestamp),
+		value: value(s)
+	}));
+}
+
+const monthOf = (ms: number) =>
+	new Date(ms).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
 
 const monthName = (month: string) =>
 	new Date(`${month}T12:00:00Z`).toLocaleDateString('en-US', {
@@ -276,6 +311,62 @@ const COMPOSITE_ITEM_TILES = [
 	{ id: 'ikon-pass', title: 'Ikon Pass', color: '#06b6d4', detail: 'Ski season, amortized' },
 	{ id: 'camp-prices', title: 'Summer camp', color: '#eab308', detail: '2 kids, amortized' }
 ] as const;
+
+// ── What each chart's readout says (CHARTREAD1) ──────────────────────────
+
+/** Gas reports every 4–8 h, composite weekly: a silence past these is a missed scrape. */
+const GAS_GAP_MS = 3 * DAY_MS;
+const COMPOSITE_GAP_MS = 15 * DAY_MS;
+
+const isStale = (m: Measured<unknown>) => m.kind === 'value' && m.retainedAfter !== null;
+
+export function sparkStops(t: SubIndexTile, y: (value: number) => number): ReadoutStop[] {
+	const lastOfDay = new Map((t.spark ?? []).map((r) => [pacificDate(r.at), r]));
+	return seriesStops([...lastOfDay.values()], {
+		y,
+		when: t.sparkWhen,
+		format: t.sparkFormat,
+		notes: t.sparkNotes,
+		stale: isStale(t.measured)
+	});
+}
+
+export function compositeStops(
+	series: CompositeView['series'],
+	y: (value: number) => number,
+	stale = false
+): ReadoutStop[] {
+	return seriesStops(
+		series.map((p) => ({ at: p.atMs, value: p.score, kind: 'observed', unit: '' })),
+		{ y, when: pacificDay, format: (v) => v.toFixed(1), stale, gapMs: COMPOSITE_GAP_MS }
+	);
+}
+
+/** Gas draws every reading; its readout stops on each Pacific day's last (CHARTREAD0). */
+export function gasStops(
+	series: GasView['series'],
+	y: (value: number) => number,
+	stale = false
+): ReadoutStop[] {
+	const byDay = new Map(series.map((p) => [pacificDate(p.atMs), p]));
+	const days = [...byDay.values()].sort((a, b) => a.atMs - b.atMs);
+	const points: ReadoutStop[] = days.map((p) => ({
+		at: p.atMs,
+		y: y(p.avg),
+		words: rangeWords(
+			usd(p.avg),
+			p.min === null ? null : usd(p.min),
+			p.max === null ? null : usd(p.max),
+			pacificDay(p.atMs),
+			stale
+		)
+	}));
+	const gaps = silences(
+		series.map((p) => p.atMs),
+		GAS_GAP_MS
+	).map((g) => gapStop(g, pacificDay));
+	return [...points, ...gaps].sort((a, b) => a.at - b.at);
+}
 
 // ── The section's one view ──────────────────────────────────────────────
 
@@ -362,7 +453,7 @@ export function costView(input: CostInput): CostView {
 			},
 			detail: (d) =>
 				`${d.current!.primaryDrinkSummary.label.toLowerCase()} median · ${d.current!.pricedShopCount} shops`,
-			series: (d) => readings(d.current, d.history).map((h) => h.primaryDrinkSummary.medianPrice)
+			series: (d) => dated(d, (h) => h.primaryDrinkSummary.medianPrice)
 		}),
 		tile({
 			id: 'cappuccino',
@@ -378,7 +469,7 @@ export function costView(input: CostInput): CostView {
 						: '';
 				return `avg of ${c.pricedShopCount ?? c.shopCount} shops${range}`;
 			},
-			series: (d) => readings(d.current, d.history).map((h) => h.avgPrice)
+			series: (d) => dated(d, (h) => h.avgPrice)
 		}),
 		tile({
 			id: 'grocery',
@@ -387,7 +478,7 @@ export function costView(input: CostInput): CostView {
 			measured: read(entries.grocery, withCurrent(input.grocery), 'Instacart prices'),
 			value: (d) => (d.current!.totalCheapest === null ? 'Unknown' : usd(d.current!.totalCheapest)),
 			detail: (d) => `cheapest mix · ${d.current!.itemsFound} items priced`,
-			series: (d) => readings(d.current, d.history).map((h) => h.totalCheapest)
+			series: (d) => dated(d, (h) => h.totalCheapest)
 		}),
 		tile({
 			id: 'wine',
@@ -400,9 +491,7 @@ export function costView(input: CostInput): CostView {
 			},
 			detail: () => 'Napa & Sonoma median bottle',
 			series: (d) =>
-				readings(d.current, d.history).map(
-					(h) => h.categories.find((c) => c.category === 'napa-sonoma')?.medianPrice ?? null
-				)
+				dated(d, (h) => h.categories.find((c) => c.category === 'napa-sonoma')?.medianPrice ?? null)
 		}),
 		tile({
 			id: 'fitness',
@@ -418,7 +507,8 @@ export function costView(input: CostInput): CostView {
 				];
 				return ['median class', ...parts.filter(Boolean)].join(' · ');
 			},
-			series: (d) => readings(d.current, d.history).map((h) => h.medianPrice)
+			series: (d) => dated(d, (h) => h.medianPrice),
+			format: usd0
 		}),
 		tile({
 			id: 'school',
@@ -433,7 +523,10 @@ export function costView(input: CostInput): CostView {
 					? `K–12 private, cumulative · high school ${usd0(high.avgTuition)}/yr`
 					: 'K–12 private, cumulative';
 			},
-			series: (d) => readings(d.current, d.history).map((h) => h.cumulativeK12),
+			series: (d) => dated(d, (h) => h.cumulativeK12),
+			format: (n) => `$${Math.round(n / 1000)}k`,
+			// A recompute of a maintained list, not a day tuition was read (CHARTREAD0).
+			notes: ['recomputed'],
 			untimed: () => 'reference prices, recomputed monthly',
 			muted: () => true
 		}),
@@ -455,7 +548,11 @@ export function costView(input: CostInput): CostView {
 				return `${monthName(latest.month)} · ${signed(pct, 0, '')}% vs a year earlier`;
 			},
 			series: (d) =>
-				[...d].sort((a, b) => a.month.localeCompare(b.month)).map((m) => m.medianPrice),
+				[...d]
+					.sort((a, b) => a.month.localeCompare(b.month))
+					.map((m) => ({ at: Date.parse(`${m.month}T12:00:00Z`), value: m.medianPrice })),
+			format: (n) => `$${(n / 1e6).toFixed(2)}M`,
+			when: monthOf,
 			// Redfin's months carry no read time, so the latest month is the only date it can claim.
 			untimed: (d) => `latest month published: ${monthName(latestHome(d)!.month)}`,
 			muted: () => true
@@ -471,7 +568,8 @@ export function costView(input: CostInput): CostView {
 			series: (g) =>
 				g.series
 					.filter((p) => p.atMs > (g.series.at(-1)?.atMs ?? 0) - 30 * DAY_MS)
-					.map((p) => p.avg)
+					.map((p) => ({ at: p.atMs, value: p.avg })),
+			format: (n) => usd(n)
 		}),
 		...(input.lifestyleOn ? [] : COMPOSITE_ITEM_TILES).map((t) =>
 			tile<MarinNumberItem | null>({

@@ -116,7 +116,6 @@
 		fill: var(--text-primary);
 	}
 	text.temp {
-		font-size: 13px;
 		font-weight: 600;
 	}
 	.now {

@@ -12,6 +12,7 @@ All notable changes to Marin Monitor are documented here.
 - **The weather tile is one grid of hours**: 4 past hours at Gnoss Field, now, then 8 forecast hours at the same grid point, so the step from past to forecast is one place warming or cooling. Each column's number sits on the line, and its readout gives the report's own time. An empty column says the real silence. The forecast and the day's rain no longer come from the picked town on this tile, and if the station's forecast can't be read nothing stands in for it.
 - **Outdoors' temperature chart is the same grid**, 24 hours ahead, scrolling inside its card on a phone: there a tap reads and a swipe scrolls.
 - **Every Brief and Outdoors chart reads**: tides, waves, rain by the hour, the daily highs and lows. The 48-hour tide stops only on NOAA's own highs and lows, never on the curve drawn between them. Surf is drawn by time, so a missing hour stays a gap.
+- **Every Cost chart reads**: the composite by week, county gas with its day's low and high, and each sub-index at its own cadence. Tuition says its date is a recompute, and a reference tile says so. These charts now plot by time, so a missed reading shows its real width.
 
 ### Fixed
 

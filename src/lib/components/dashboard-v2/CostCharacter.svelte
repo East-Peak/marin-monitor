@@ -2,9 +2,18 @@
 	import { onMount } from 'svelte';
 	import { buildChart } from '$lib/utils/chart';
 	import { PACIFIC } from '$lib/dashboard/pacific-time';
-	import { axisTicks, signed, type CostView, type SubIndexTile } from '$lib/dashboard/cost';
+	import {
+		axisTicks,
+		compositeStops,
+		gasStops,
+		signed,
+		sparkStops,
+		type CostView,
+		type SubIndexTile
+	} from '$lib/dashboard/cost';
 	import type { Measured } from '$lib/dashboard/measured';
 	import CardSource from './CardSource.svelte';
+	import ChartReadout from './ChartReadout.svelte';
 	import LifestyleCard from './LifestyleCard.svelte';
 
 	let { view, now, onopen }: { view: CostView; now: number; onopen: () => void } = $props();
@@ -55,16 +64,33 @@
 				? ''
 				: `${m.kind === 'unknown' ? 'Unknown' : 'Unavailable'} · ${m.reason}`;
 
+	const ends = (series: readonly { atMs: number }[]): [number, number] => [
+		series[0]?.atMs ?? 0,
+		series.at(-1)?.atMs ?? 1
+	];
+	const staleOf = (m: Measured<unknown>) => m.kind === 'value' && m.retainedAfter !== null;
+
 	const comp = $derived(view.composite.kind === 'value' ? view.composite.value : null);
+	const trendDomain = $derived(ends(comp?.series ?? []));
 	const trend = $derived(
 		comp
 			? buildChart({
 					...TREND,
 					accentColor: '#dc2626',
-					data: comp.series.map((p) => ({ value: p.score })),
+					xDomain: trendDomain,
+					data: comp.series.map((p) => ({ x: p.atMs, value: p.score })),
 					include: [100]
 				})
 			: null
+	);
+	const trendStops = $derived(
+		comp && trend
+			? compositeStops(
+					comp.series,
+					(v) => (TREND.margins.top + trend.yScale(v)) / TREND.height,
+					staleOf(view.composite)
+				)
+			: []
 	);
 	const items = $derived(
 		comp ? [...comp.marinNumber.items].sort((a, b) => b.monthly - a.monthly) : []
@@ -72,12 +98,14 @@
 	const liveCount = $derived(items.filter((i) => i.source === 'live').length);
 
 	const gas = $derived(view.gas.kind === 'value' ? view.gas.value : null);
+	const gasDomain = $derived(ends(gas?.series ?? []));
 	const gasChart = $derived(
 		gas
 			? buildChart({
 					...GAS,
 					accentColor: '#10b981',
-					data: gas.series.map((p) => ({ value: p.avg })),
+					xDomain: gasDomain,
+					data: gas.series.map((p) => ({ x: p.atMs, value: p.avg })),
 					include: gas.series.flatMap((p) => [p.min, p.max].filter((v): v is number => v !== null))
 				})
 			: null
@@ -85,8 +113,8 @@
 	/** The low–high band, drawn only through readings that report both ends. */
 	const gasBand = $derived.by(() => {
 		if (!gas || !gasChart) return '';
-		const pts = gas.series.flatMap((p, i) =>
-			p.min !== null && p.max !== null ? [{ x: gasChart.xScale(i), lo: p.min, hi: p.max }] : []
+		const pts = gas.series.flatMap((p) =>
+			p.min !== null && p.max !== null ? [{ x: gasChart.xScale(p.atMs), lo: p.min, hi: p.max }] : []
 		);
 		if (pts.length < 2) return '';
 		const top = pts.map((p, k) => `${k ? 'L' : 'M'}${p.x},${gasChart.yScale(p.hi)}`).join('');
@@ -102,11 +130,20 @@
 		// The first and last labels sit inside the plot, never clipped at its edges.
 		return idx.map((i, k) => ({
 			i,
-			x: gasChart.xScale(i),
+			x: gasChart.xScale(gas.series[i].atMs),
 			label: day(gas.series[i].atMs),
 			anchor: k === 0 ? 'start' : k === idx.length - 1 ? 'end' : 'middle'
 		}));
 	});
+	const gasStopList = $derived(
+		gas && gasChart
+			? gasStops(
+					gas.series,
+					(v) => (GAS.margins.top + gasChart.yScale(v)) / GAS.height,
+					staleOf(view.gas)
+				)
+			: []
+	);
 	const notes = $derived(
 		gas
 			? [
@@ -117,9 +154,22 @@
 	);
 
 	function spark(t: SubIndexTile) {
-		return t.spark
-			? buildChart({ ...SPARK, accentColor: t.color, data: t.spark.map((value) => ({ value })) })
-			: null;
+		const series = t.spark;
+		if (!series) return null;
+		const domain: [number, number] = [series[0].at, series[series.length - 1].at];
+		const chart = buildChart({
+			...SPARK,
+			accentColor: t.color,
+			xDomain: domain,
+			data: series.map((r) => ({ x: r.at, value: r.value ?? Number.NaN }))
+		});
+		if (!chart) return null;
+		const { left, right, top } = SPARK.margins;
+		return {
+			chart,
+			stops: sparkStops(t, (v) => (top + chart.yScale(v)) / SPARK.height),
+			plot: { domain, left, right: SPARK.width - right, width: SPARK.width }
+		};
 	}
 </script>
 
@@ -148,32 +198,43 @@
 						{/if}
 					</div>
 					{#if trend}
-						<svg
-							class="chart"
-							data-text-role="meta"
-							viewBox="0 0 {TREND.width} {TREND.height}"
-							role="img"
-							aria-label="Composite index by week, now {comp.score.toFixed(1)}"
+						<ChartReadout
+							label="Composite index by week, now {comp.score.toFixed(1)}"
+							stops={trendStops}
+							plot={{
+								domain: trendDomain,
+								left: TREND.margins.left,
+								right: TREND.width - TREND.margins.right,
+								width: TREND.width
+							}}
+							color="#dc2626"
 						>
-							<g transform="translate({TREND.margins.left},{TREND.margins.top})">
-								<line
-									class="base"
-									x1="0"
-									x2={TREND.width - TREND.margins.left - TREND.margins.right}
-									y1={trend.yScale(100)}
-									y2={trend.yScale(100)}
-								/>
-								<text x="4" y={trend.yScale(100) - 4}>base 100</text>
-								<path d={trend.areaPath} fill="#dc2626" fill-opacity="0.12" />
-								<path d={trend.linePath} fill="none" stroke="#dc2626" stroke-width="2" />
-								<text x="-6" y={trend.yScale(trend.yMax) + 10} text-anchor="end"
-									>{Math.round(trend.yMax)}</text
-								>
-								<text x="-6" y={trend.yScale(trend.yMin)} text-anchor="end"
-									>{Math.round(trend.yMin)}</text
-								>
-							</g>
-						</svg>
+							<svg
+								class="chart"
+								data-text-role="meta"
+								viewBox="0 0 {TREND.width} {TREND.height}"
+								aria-hidden="true"
+							>
+								<g transform="translate({TREND.margins.left},{TREND.margins.top})">
+									<line
+										class="base"
+										x1="0"
+										x2={TREND.width - TREND.margins.left - TREND.margins.right}
+										y1={trend.yScale(100)}
+										y2={trend.yScale(100)}
+									/>
+									<text x="4" y={trend.yScale(100) - 4}>base 100</text>
+									<path d={trend.areaPath} fill="#dc2626" fill-opacity="0.12" />
+									<path d={trend.linePath} fill="none" stroke="#dc2626" stroke-width="2" />
+									<text x="-6" y={trend.yScale(trend.yMax) + 10} text-anchor="end"
+										>{Math.round(trend.yMax)}</text
+									>
+									<text x="-6" y={trend.yScale(trend.yMin)} text-anchor="end"
+										>{Math.round(trend.yMin)}</text
+									>
+								</g>
+							</svg>
+						</ChartReadout>
 					{/if}
 					<div>
 						{#each comp.tiers as t (t.category)}
@@ -255,29 +316,40 @@
 			</div>
 			{#if gas}
 				{#if gasChart}
-					<svg
-						class="chart"
-						data-text-role="meta"
-						viewBox="0 0 {GAS.width} {GAS.height}"
-						role="img"
-						aria-label="County average regular price with its low–high band"
+					<ChartReadout
+						label="County average regular price with its low–high band"
+						stops={gasStopList}
+						plot={{
+							domain: gasDomain,
+							left: GAS.margins.left,
+							right: GAS.width - GAS.margins.right,
+							width: GAS.width
+						}}
+						color="#10b981"
 					>
-						<g transform="translate({GAS.margins.left},{GAS.margins.top})">
-							{#if gasBand}<path d={gasBand} fill="rgba(16,185,129,.12)" />{/if}
-							<path d={gasChart.linePath} fill="none" stroke="#10b981" stroke-width="2" />
-							<text x="-6" y={gasChart.yScale(gasChart.yMax) + 10} text-anchor="end"
-								>{usd(gasChart.yMax)}</text
-							>
-							<text x="-6" y={gasChart.yScale(gasChart.yMin)} text-anchor="end"
-								>{usd(gasChart.yMin)}</text
-							>
-							{#each gasTicks as t (t.i)}
-								<text x={t.x} y={GAS.height - GAS.margins.top - 4} text-anchor={t.anchor}
-									>{t.label}</text
+						<svg
+							class="chart"
+							data-text-role="meta"
+							viewBox="0 0 {GAS.width} {GAS.height}"
+							aria-hidden="true"
+						>
+							<g transform="translate({GAS.margins.left},{GAS.margins.top})">
+								{#if gasBand}<path d={gasBand} fill="rgba(16,185,129,.12)" />{/if}
+								<path d={gasChart.linePath} fill="none" stroke="#10b981" stroke-width="2" />
+								<text x="-6" y={gasChart.yScale(gasChart.yMax) + 10} text-anchor="end"
+									>{usd(gasChart.yMax)}</text
 								>
-							{/each}
-						</g>
-					</svg>
+								<text x="-6" y={gasChart.yScale(gasChart.yMin)} text-anchor="end"
+									>{usd(gasChart.yMin)}</text
+								>
+								{#each gasTicks as t (t.i)}
+									<text x={t.x} y={GAS.height - GAS.margins.top - 4} text-anchor={t.anchor}
+										>{t.label}</text
+									>
+								{/each}
+							</g>
+						</svg>
+					</ChartReadout>
 				{/if}
 				<div class="stats">
 					<div class="stat">
@@ -360,20 +432,21 @@
 					>
 					{#if t.detail}<span class="d" data-text-role="meta">{t.detail}</span>{/if}
 					{#if sp}
-						<svg
-							class="spark"
-							data-spark
-							data-text-role="meta"
-							viewBox="0 0 {SPARK.width} {SPARK.height}"
-							preserveAspectRatio="none"
-							role="img"
-							aria-label="{t.title} trend"
-						>
-							<g transform="translate({SPARK.margins.left},{SPARK.margins.top})">
-								<path d={sp.areaPath} fill={t.color} fill-opacity="0.18" />
-								<path d={sp.linePath} fill="none" stroke={t.color} stroke-width="1.7" />
-							</g>
-						</svg>
+						<ChartReadout label="{t.title} trend" stops={sp.stops} plot={sp.plot} color={t.color}>
+							<svg
+								class="spark"
+								data-spark
+								data-text-role="meta"
+								viewBox="0 0 {SPARK.width} {SPARK.height}"
+								preserveAspectRatio="none"
+								aria-hidden="true"
+							>
+								<g transform="translate({SPARK.margins.left},{SPARK.margins.top})">
+									<path d={sp.chart.areaPath} fill={t.color} fill-opacity="0.18" />
+									<path d={sp.chart.linePath} fill="none" stroke={t.color} stroke-width="1.7" />
+								</g>
+							</svg>
+						</ChartReadout>
 					{:else if t.kind === 'value'}
 						<div class="nohist" data-no-history data-text-role="meta">
 							No history yet{t.noHistoryReason ? ` · ${t.noHistoryReason}` : ''}

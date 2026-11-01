@@ -42,6 +42,16 @@ async function stubSeries(page: Page, now = T0) {
 	await stubCivic(page);
 	await stubCams(page);
 	await page.route(/stations\/KDVO\/observations/, (r) => r.fulfill(json({ features: REPORTS })));
+	const week = (i: number) => ({
+		timestamp: new Date(now - i * 7 * 24 * H).toISOString(),
+		lastSuccessfulScrapeAt: new Date(now - i * 7 * 24 * H).toISOString(),
+		compositeScore: 104 - i,
+		tiers: [],
+		marinNumber: { total: 100, annualized: 1200, items: [] }
+	});
+	await page.route(/\/api\/data\/composite\b/, (r) =>
+		r.fulfill(json({ current: week(0), history: [week(3), week(2), week(1), week(0)] }))
+	);
 }
 
 const box = async (l: Locator) => (await l.boundingBox())!;
@@ -216,6 +226,35 @@ test.describe('1440', () => {
 		await hoverAt(page, chart, 0);
 		await expect(readout(chart)).toHaveText('forecast 4.0 ft · 10 AM');
 		await holdsStill(page, chart, card, 0.98);
+	});
+
+	test('chart 10: gas stops on each day’s last reading, with its range', async ({ page }) => {
+		const card = page.locator('[data-card="gas"]');
+		const chart = card.getByRole('slider');
+		await hoverAt(page, chart, 0.99);
+		await expect(readout(chart)).toHaveText(/^\$6\.\d\d average · \$5\.80–\$6\.90 · Oct 31$/);
+		await holdsStill(page, chart, card, 0.5);
+		await chart.focus();
+		await page.keyboard.press('Home');
+		await expect(chart).toHaveAttribute('aria-valuetext', /average · \$5\.80–\$6\.90 · Oct \d+$/);
+	});
+
+	test('chart 11: a sub-index spark reads its own dates', async ({ page }) => {
+		const card = page.locator('[data-tile="fitness"]');
+		const chart = card.getByRole('slider');
+		await hoverAt(page, chart, 0);
+		await expect(readout(chart)).toHaveText('$30 · Aug 31');
+		await hoverAt(page, chart, 0.99);
+		await expect(readout(chart)).toHaveText('$32 · Oct 30');
+		await holdsStill(page, chart, card, 0.5);
+	});
+
+	test('chart 9: the composite reads each week', async ({ page }) => {
+		const card = page.locator('[data-card="composite"]');
+		const chart = card.getByRole('slider');
+		await hoverAt(page, chart, 0.99);
+		await expect(readout(chart)).toHaveText('104.0 · Oct 31');
+		await holdsStill(page, chart, card, 0.5);
 	});
 
 	test('chart 1: a refresh mid-readout clears it', async ({ page }) => {

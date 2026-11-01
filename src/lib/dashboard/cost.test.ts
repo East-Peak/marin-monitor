@@ -10,9 +10,16 @@ import {
 	compositeView,
 	costDatasetIds,
 	costView,
+	compositeStops,
+	gasStops,
+	sparkStops,
 	tierBar,
-	type CostInput
+	type CostInput,
+	type SubIndexTile
 } from './cost';
+import { wordsText } from './chart-readout';
+import { measuredValue } from './measured';
+import { pacificDay } from './pacific-time';
 
 const NOW = Date.parse('2026-10-15T18:00:00Z');
 const DAY = 86_400_000;
@@ -156,7 +163,8 @@ describe('cost model', () => {
 				(t) => t.id === 'fitness'
 			)!;
 		expect(tile(one)).toMatchObject({ kind: 'value', value: '$32', noHistory: true, spark: null });
-		expect(tile(two)).toMatchObject({ kind: 'value', noHistory: false, spark: [30, 32] });
+		expect(tile(two)).toMatchObject({ kind: 'value', noHistory: false });
+		expect(tile(two).spark?.map((r) => r.value)).toEqual([30, 32]);
 
 		// Items the composite prices with no published history of their own say so.
 		const comp: CompositeData = { current: composite(NOW - DAY, 100.6), history: [] };
@@ -169,6 +177,23 @@ describe('cost model', () => {
 			noHistory: true,
 			spark: null
 		});
+	});
+
+	it('a spark keeps each reading’s date, and its null where it falls', () => {
+		const f = fitness([
+			{ at: NOW - 40 * DAY, median: 30 },
+			{ at: NOW - 20 * DAY, median: null as unknown as number },
+			{ at: NOW - DAY, median: 32 }
+		]);
+		const tile = costView(input({ fitness: f, outcomes: { fitness: live() } })).tiles.find(
+			(t) => t.id === 'fitness'
+		)!;
+		expect(tile.spark).toEqual([
+			{ at: NOW - 40 * DAY, value: 30, kind: 'observed', unit: '' },
+			{ at: NOW - 20 * DAY, value: null, kind: 'observed', unit: '' },
+			{ at: NOW - DAY, value: 32, kind: 'observed', unit: '' }
+		]);
+		expect(tile.sparkFormat(32)).toBe('$32');
 	});
 
 	it('failed sub-index read → unavailable wording, never 0 or $0', () => {
@@ -390,5 +415,119 @@ describe('cost model', () => {
 			expect(policy, healthName).toBeDefined();
 			expect(policy!.maxAgeDays).toBe(maxAgeDays);
 		}
+	});
+});
+
+describe('sparkStops', () => {
+	const tile = (over: Partial<SubIndexTile>): SubIndexTile =>
+		({
+			id: 't',
+			title: 'T',
+			color: '#000',
+			kind: 'value',
+			value: '$1',
+			detail: null,
+			noHistory: false,
+			noHistoryReason: null,
+			muted: false,
+			measured: measuredValue(1, 'x', NOW),
+			sparkFormat: (n: number) => `$${n}`,
+			sparkWhen: pacificDay,
+			sparkNotes: [],
+			spark: [
+				{ at: NOW - DAY, value: 30, kind: 'observed', unit: '' },
+				{ at: NOW, value: null, kind: 'observed', unit: '' }
+			],
+			...over
+		}) as SubIndexTile;
+	const said = (t: SubIndexTile) => sparkStops(t, () => 0).map((s) => wordsText(s.words));
+
+	it('a dated reading, and a null slot', () => {
+		expect(said(tile({}))).toEqual(['$30 · Oct 14', 'No reading · Oct 15']);
+	});
+	it('several readings in a Pacific day stop once, on the last', () => {
+		const spark = [
+			{ at: Date.parse('2026-10-14T16:00:00Z'), value: 5.8, kind: 'observed' as const, unit: '' },
+			{ at: Date.parse('2026-10-14T22:00:00Z'), value: 5.9, kind: 'observed' as const, unit: '' },
+			{ at: Date.parse('2026-10-15T16:00:00Z'), value: 6, kind: 'observed' as const, unit: '' }
+		];
+		expect(said(tile({ spark }))).toEqual(['$5.9 · Oct 14', '$6 · Oct 15']);
+	});
+	it('stale when the series is kept after a failure', () => {
+		const measured = measuredValue(1, 'x', NOW, 'refresh failed');
+		expect(said(tile({ measured }))[0]).toBe('$30 · Oct 14 · stale');
+	});
+	it('tuition: its date is a recompute, and a muted tile keeps its reference word', () => {
+		const spark = [{ at: NOW, value: 412, kind: 'reference' as const, unit: '' }];
+		expect(said(tile({ spark, sparkNotes: ['recomputed'] }))).toEqual([
+			'$412 · Oct 15 · recomputed · reference'
+		]);
+	});
+});
+
+describe('gasStops', () => {
+	const at = (s: string) => Date.parse(s);
+	const p = (iso: string, avg: number, min: number | null = 5.29, max: number | null = 6.79) => ({
+		atMs: at(iso),
+		avg,
+		min,
+		max
+	});
+	it('stops on each Pacific day’s last reading, with its range', () => {
+		const stops = gasStops(
+			[
+				p('2026-10-30T16:00:00Z', 5.8),
+				p('2026-10-31T02:00:00Z', 5.89), // Oct 30, 7 PM Pacific: that day's last
+				p('2026-10-31T16:00:00Z', 5.9)
+			],
+			() => 0
+		);
+		expect(stops.map((s) => wordsText(s.words))).toEqual([
+			'$5.89 average · $5.29–$6.79 · Oct 30',
+			'$5.90 average · $5.29–$6.79 · Oct 31'
+		]);
+	});
+	it('either end of the range missing shows only the average', () => {
+		const [s] = gasStops([p('2026-10-30T16:00:00Z', 5.8, null)], () => 0);
+		expect(wordsText(s.words)).toBe('$5.80 average · Oct 30');
+	});
+	it('a silence over 3 days is said', () => {
+		const stops = gasStops(
+			[p('2026-10-20T16:00:00Z', 5.8), p('2026-10-30T16:00:00Z', 5.9)],
+			() => 0
+		);
+		expect(wordsText(stops[1].words)).toBe('No readings Oct 20–Oct 30');
+	});
+	it('a silence is measured between all readings, not between each day’s last', () => {
+		const stops = gasStops(
+			[
+				p('2026-10-20T23:00:00Z', 5.8),
+				p('2026-10-23T22:00:00Z', 5.85),
+				p('2026-10-24T02:00:00Z', 5.9)
+			],
+			() => 0
+		);
+		expect(stops.map((s) => wordsText(s.words)).join()).not.toContain('No readings');
+	});
+	it('stale', () => {
+		const [s] = gasStops([p('2026-10-30T16:00:00Z', 5.8)], () => 0, true);
+		expect(s.words.tail).toContain('stale');
+	});
+});
+
+describe('compositeStops', () => {
+	it('reads each week’s score, and says a missed run', () => {
+		const stops = compositeStops(
+			[
+				{ atMs: NOW - 21 * DAY, score: 101.84 },
+				{ atMs: NOW, score: 100.6 }
+			],
+			() => 0
+		);
+		expect(stops.map((s) => wordsText(s.words))).toEqual([
+			'101.8 · Sep 24',
+			'No readings Sep 24–Oct 15',
+			'100.6 · Oct 15'
+		]);
 	});
 });
