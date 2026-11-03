@@ -43,7 +43,7 @@ function unread(ids: readonly string[], over: Partial<PricedBudget> = {}): Price
 describe('the Lifestyle card', () => {
 	it('leads with the month, keeps break-even to a meta line and links both ways in', () => {
 		const c = card(summary(budget('larkspur')));
-		expect(text(c, '[data-burn]')).toBe('$42,560 a month');
+		expect(text(c, '[data-burn]')).toBe('$42,614 a month');
 		expect(text(c, '[data-break-even]')).toMatch(/^To break even: \$[\d,]+ a year before tax$/);
 		expect(c.querySelector('[data-break-even]')?.getAttribute('data-text-role')).toBe('meta');
 		expect(c.querySelector('a[data-burn]')?.getAttribute('href')).toBe('/cost/larkspur');
@@ -61,7 +61,7 @@ describe('the Lifestyle card', () => {
 		expect(rows[0].hasAttribute('target')).toBe(false);
 		expect(rows.at(-1)?.textContent).toContain('Bikes (woom, amortised 3 yr)');
 		expect(c.querySelector('[data-classes]')).toBeNull();
-		expect(text(c, '[data-receipt-total]')).toBe('40 lines$42,560 a month');
+		expect(text(c, '[data-receipt-total]')).toBe('40 lines$42,614 a month');
 	});
 
 	it('shows Ross’s mortgage at $0 with its note, and no other note', async () => {
@@ -73,7 +73,16 @@ describe('the Lifestyle card', () => {
 	});
 
 	it('says stale on a signature line priced from a stale input', () => {
-		const c = card(summary(budget('millvalley')));
+		// e.g. the clean extras' hand-read shelf prices past their 30-day re-check.
+		const mv = budget('millvalley');
+		const c = card(
+			summary({
+				...mv,
+				lines: mv.lines.map((l) =>
+					l.id === 'millvalley.food.clean' ? { ...l, availability: 'stale' as const } : l
+				)
+			})
+		);
 		expect(row(c, 'millvalley.food.clean')?.textContent).toContain('stale');
 		expect(row(c, 'millvalley.biz')?.textContent).not.toContain('stale');
 	});

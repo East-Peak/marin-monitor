@@ -4,7 +4,7 @@
  * was written. A fallback, default or reference price is never `ok`; a value
  * we cannot vouch for is `unavailable`, never a substitute.
  */
-import type { Availability, LiveKey, LiveRead, LiveReads } from '$lib/lifestyle/model';
+import type { LiveKey, LiveRead, LiveReads } from '$lib/lifestyle/model';
 import { FUTURE_TOLERANCE_MS, parseTimestamp } from '$lib/server/health/evaluate';
 import { SOURCE_INVENTORY } from '$lib/server/health/inventory';
 
@@ -12,21 +12,11 @@ import { SOURCE_INVENTORY } from '$lib/server/health/inventory';
 export const LIVE_BLOBS = {
 	gas: 'marin-gas-prices.json',
 	cappuccino: 'marin-cappuccino.json',
-	grocery: 'marin-grocery-basket.json',
-	ikon: 'marin-ikon-pass.json',
-	rivian: 'marin-rivian-lease.json'
+	ikon: 'marin-ikon-pass.json'
 } as const;
 export type LiveBlobName = keyof typeof LIVE_BLOBS;
 /** Parsed blob JSON, or null when the blob could not be read. */
 export type RawLiveBlobs = Record<LiveBlobName, unknown>;
-
-const GROCERY_ITEMS = {
-	'grocery.collagen': 'vital-proteins-collagen',
-	'grocery.manuka': 'manuka-honey',
-	'grocery.kombucha': 'marin-kombucha',
-	'grocery.oatMilk': 'oatly-oatmilk',
-	'grocery.silverOak': 'silver-oak-cabernet'
-} as const;
 
 const DAY_MS = 86_400_000;
 
@@ -59,26 +49,22 @@ function observed(
 	source: string,
 	value: number | null,
 	at: unknown,
-	now: Date,
-	fallbackReason?: string
+	now: Date
 ): LiveRead {
 	if (value === null) return unavailable(blob, source, 'no value');
 	const ms = parseTimestamp(at);
 	if (ms === null) return unavailable(blob, source, 'no successful read');
 	if (ms > now.getTime() + FUTURE_TOLERANCE_MS)
 		return unavailable(blob, source, 'read time in the future');
-	const observedAt = new Date(ms).toISOString();
-	const tooOld = now.getTime() - ms > maxAgeDays(blob) * DAY_MS;
-	const availability: Availability = fallbackReason || tooOld ? 'stale' : 'ok';
-	const reason = fallbackReason ?? (tooOld ? `older than ${maxAgeDays(blob)}d` : undefined);
 	const maxAge = maxAgeDays(blob);
+	const tooOld = now.getTime() - ms > maxAge * DAY_MS;
 	return {
-		availability,
+		availability: tooOld ? 'stale' : 'ok',
 		value,
-		observedAt,
+		observedAt: new Date(ms).toISOString(),
 		maxAgeDays: maxAge,
 		source,
-		...(reason ? { reason } : {})
+		...(tooOld ? { reason: `older than ${maxAge}d` } : {})
 	};
 }
 
@@ -138,55 +124,16 @@ function cappuccino(raw: unknown, now: Date): LiveRead {
 }
 
 /**
- * A grocery price is a read only from a run that itself succeeded (its own
- * time is the last success): a blocked run writes reference prices under
- * plain store names. Inside a good run, an item marked "(ref)" fell back.
+ * The Ikon sync writes the previous price when a scrape fails, so the value is
+ * the newest snapshot whose own field was read.
  */
-function groceryItem(raw: unknown, itemId: string, now: Date): LiveRead {
-	const source = `Instacart, cheapest Marin store (${itemId})`;
-	const current = record(record(raw)?.current);
-	if (!current) return unavailable('grocery', source, 'no snapshot');
-	const ran = parseTimestamp(current.timestamp);
-	if (ran === null || ran !== parseTimestamp(current.lastSuccessfulScrapeAt)) {
-		return unavailable('grocery', source, 'the latest run was not a successful read');
-	}
-	const found = list(current.items)
-		.map(record)
-		.find((i) => i?.itemId === itemId);
-	if (!found) return unavailable('grocery', source, 'item not in the basket');
-	const store = typeof found.cheapestStore === 'string' ? found.cheapestStore : '';
-	const reference = store.endsWith('(ref)') ? 'reference price, not read this run' : undefined;
-	return observed('grocery', source, amount(found.cheapest), iso(ran), now, reference);
-}
-
-/** sync-rivian-lease.mjs writes this lease when its lease scrape fails. */
-const RIVIAN_DEFAULT_LEASE = 899;
-
-/**
- * The monthly syncs write a default (Rivian) or the previous price (Ikon) when
- * a scrape fails, so the value is the newest snapshot whose own field was read.
- */
-function lastScraped(
-	blob: 'ikon' | 'rivian',
-	raw: unknown,
-	field: string,
-	source: string,
-	now: Date
-): LiveRead {
+function lastScraped(raw: unknown, field: string, source: string, now: Date): LiveRead {
 	const root = record(raw);
 	const snapshots = [root?.current, ...list(root?.history)].map(record);
-	const read = (s: Json | null): s is Json => {
-		if (s?.scraped !== true || amount(s[field]) === null) return false;
-		if (blob !== 'rivian') return true;
-		// `scraped` also covers an MSRP-only read; older snapshots predate `leaseScraped`.
-		return s.leaseScraped === undefined
-			? s[field] !== RIVIAN_DEFAULT_LEASE
-			: s.leaseScraped === true;
-	};
-	const hit = snapshots.find(read);
-	if (!hit) return unavailable(blob, source, 'never read');
+	const hit = snapshots.find((s): s is Json => s?.scraped === true && amount(s[field]) !== null);
+	if (!hit) return unavailable('ikon', source, 'never read');
 	return observed(
-		blob,
+		'ikon',
 		source,
 		amount(hit[field]),
 		hit.lastSuccessfulScrapeAt ?? hit.timestamp,
@@ -198,25 +145,7 @@ export function readLive(blobs: RawLiveBlobs, now: Date): LiveReads {
 	const reads: Record<LiveKey, LiveRead> = {
 		'gas.regular': gas(blobs.gas, now),
 		'coffee.cappuccino': cappuccino(blobs.cappuccino, now),
-		'grocery.collagen': groceryItem(blobs.grocery, GROCERY_ITEMS['grocery.collagen'], now),
-		'grocery.manuka': groceryItem(blobs.grocery, GROCERY_ITEMS['grocery.manuka'], now),
-		'grocery.kombucha': groceryItem(blobs.grocery, GROCERY_ITEMS['grocery.kombucha'], now),
-		'grocery.oatMilk': groceryItem(blobs.grocery, GROCERY_ITEMS['grocery.oatMilk'], now),
-		'grocery.silverOak': groceryItem(blobs.grocery, GROCERY_ITEMS['grocery.silverOak'], now),
-		'ikon.adult': lastScraped(
-			'ikon',
-			blobs.ikon,
-			'adultPrice',
-			'Ikon Pass adult, ikonpass.com',
-			now
-		),
-		'rivian.lease': lastScraped(
-			'rivian',
-			blobs.rivian,
-			'leaseMonthly',
-			'Rivian R1S lease, rivian.com',
-			now
-		)
+		'ikon.adult': lastScraped(blobs.ikon, 'adultPrice', 'Ikon Pass adult, ikonpass.com', now)
 	};
 	return reads;
 }

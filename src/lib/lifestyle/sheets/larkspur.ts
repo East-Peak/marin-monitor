@@ -112,7 +112,7 @@ const lines: LineSpec[] = [
 	},
 	...car('larkspur', 'rivian', 'Rivian R1S', {
 		lease: {
-			pay: live('rivian.lease'),
+			pay: cite('rivian.lease'),
 			due: cite('rivian.dueAtSigning'),
 			months: 36,
 			signature: true
@@ -176,7 +176,7 @@ const lines: LineSpec[] = [
 		section: 'food',
 		label: 'Wine',
 		required: true,
-		inputs: { bottles: persona(2, 'bottles a month'), price: live('grocery.silverOak') },
+		inputs: { bottles: persona(2, 'bottles a month'), price: cite('silverOak.alexanderValley') },
 		terms: [monthly('bottles', 'price')]
 	},
 	{

@@ -13,6 +13,9 @@ function freeze<T extends object>(entries: T[]): readonly Readonly<T>[] {
 	return Object.freeze(entries.map((entry) => Object.freeze(entry)));
 }
 
+// Retired 2026-11-03 (COSTDATA Q1): Grocery Basket and Rivian Lease. Their
+// scrapes stopped (publisher terms), so they are never fresh again; their blobs
+// keep the last real read, shown as no longer updated.
 const ALL_SOURCES: readonly SourcePolicy[] = freeze<SourcePolicy>([
 	// Vercel cron every 4h.
 	{
@@ -40,13 +43,6 @@ const ALL_SOURCES: readonly SourcePolicy[] = freeze<SourcePolicy>([
 		observedAt: 'content'
 	},
 	// Mac mini launchd; falls back to reference prices without advancing the observation.
-	{
-		name: 'Grocery Basket',
-		blobKey: 'marin-grocery-basket.json',
-		cadence: 'weekly',
-		maxAgeDays: 10,
-		observedAt: 'content'
-	},
 	// Mac mini launchd.
 	{
 		name: 'Wine Index',
@@ -193,13 +189,6 @@ const ALL_SOURCES: readonly SourcePolicy[] = freeze<SourcePolicy>([
 	{
 		name: 'Ikon Pass',
 		blobKey: 'marin-ikon-pass.json',
-		cadence: 'monthly',
-		maxAgeDays: 45,
-		observedAt: 'content'
-	},
-	{
-		name: 'Rivian Lease',
-		blobKey: 'marin-rivian-lease.json',
 		cadence: 'monthly',
 		maxAgeDays: 45,
 		observedAt: 'content'

@@ -18,13 +18,7 @@ const EARLIER_AT = '2026-10-13T10:00:00.000Z';
 const LIVE: Record<LiveKey, number> = {
 	'gas.regular': 6.179,
 	'coffee.cappuccino': 4.925,
-	'grocery.collagen': 13.47,
-	'grocery.manuka': 10.99,
-	'grocery.kombucha': 4.79,
-	'grocery.oatMilk': 3.99,
-	'grocery.silverOak': 83.49,
-	'ikon.adult': 1449,
-	'rivian.lease': 1209
+	'ikon.adult': 1449
 };
 const reads = (over: Partial<Record<LiveKey, Partial<LiveRead>>>, at = AT) =>
 	Object.fromEntries(
@@ -42,23 +36,23 @@ const reads = (over: Partial<Record<LiveKey, Partial<LiveRead>>>, at = AT) =>
 	) as LiveReads;
 
 /**
- * The LIFE2 e2e seed: the real sheets priced by the real engine. Mill Valley's kombucha is a
- * reference price (stale); Ross's wine could not be read, so Ross is incomplete and the run
- * did not succeed. Its history has the week before, when gas was $5.90 (LIFE3's movers).
+ * The LIFE2 e2e seed: the real sheets priced by the real engine. Mill Valley's cappuccino read
+ * is stale; Ross's Ikon pass could not be read, so Ross is incomplete and the run did not
+ * succeed. Its history has the week before, when gas was $5.90 (LIFE3's movers).
  */
 function seed(): LifestyleDoc {
-	const kombucha = { availability: 'stale', reason: 'reference price, not read this run' } as const;
+	const stale = { availability: 'stale', reason: 'older than 10d' } as const;
+	const unread = { availability: 'unavailable', value: null, reason: 'no read' } as const;
 	const price = (now: Date, at: string, over: Partial<Record<LiveKey, Partial<LiveRead>>>) =>
 		SHEETS.map((s) =>
 			priceSheet(
 				s,
 				reads(
 					s.id === 'ross'
-						? {
-								...over,
-								'grocery.silverOak': { availability: 'unavailable', value: null, reason: 'no read' }
-							}
-						: { ...over, 'grocery.kombucha': kombucha },
+						? { ...over, 'ikon.adult': unread }
+						: s.id === 'millvalley'
+							? { ...over, 'coffee.cappuccino': stale }
+							: over,
 					at
 				),
 				now

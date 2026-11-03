@@ -9,6 +9,11 @@
  * rendered in the initial HTML as "Lease from $899/mo" or similar.
  */
 
+// Stopped 2026-11-03 (COSTDATA Q1, Stuart): the publisher's terms bar automated
+// access. Kept for the record; it refuses to run. Permitted sources: COSTDATA-2.
+console.error("[sync-rivian-lease] stopped 2026-11-03: the publisher's terms bar automated access");
+process.exit(0);
+
 import { put, head } from '@vercel/blob';
 import { withPreservedSuccessfulScrapeMetadata } from './shared/scrape-metadata.mjs';
 

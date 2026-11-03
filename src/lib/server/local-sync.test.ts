@@ -10,14 +10,7 @@ import { join } from 'node:path';
 
 const ROOT = process.cwd();
 const read = (path: string) => readFileSync(join(ROOT, path), 'utf8');
-const LOCAL_JOBS = [
-	'coffee-index',
-	'cappuccino',
-	'grocery-basket',
-	'wine-index',
-	'ikon-pass',
-	'dog-walker'
-];
+const LOCAL_JOBS = ['coffee-index', 'cappuccino', 'wine-index', 'ikon-pass', 'dog-walker'];
 const runner = read('scripts/sync-runner.sh');
 const manager = read('scripts/manage-sync.sh');
 
@@ -37,9 +30,25 @@ describe('residential syncs on launchd', () => {
 	});
 
 	it('manage-sync installs every plist in scripts/launchd', () => {
-		const plists = readdirSync(join(ROOT, 'scripts/launchd')).map((f) => f.replace(/\.plist$/, ''));
+		const plists = readdirSync(join(ROOT, 'scripts/launchd'))
+			.filter((f) => f.endsWith('.plist'))
+			.map((f) => f.replace(/\.plist$/, ''));
 		for (const name of plists) expect(manager).toContain(`"${name}"`);
 	});
+
+	it.each(['grocery-basket', 'rivian-lease'])(
+		'%s is stopped (COSTDATA Q1, publisher terms): not installed, refused by the runner and the script',
+		(job) => {
+			expect(manager).not.toContain(`"com.marin-monitor.sync-${job}"`);
+			expect(existsSync(join(ROOT, `scripts/launchd/com.marin-monitor.sync-${job}.plist`))).toBe(
+				false
+			);
+			expect(runner).toMatch(new RegExp(`\\b${job}\\b[^\\n]*\\)\\n\\s+# Stopped 2026-11-03`));
+			expect(read(`scripts/sync-${job}.mjs`)).toMatch(
+				/stopped 2026-11-03[\s\S]*process\.exit\(0\)/
+			);
+		}
+	);
 
 	it('gives residential jobs the blob token only, never the scrape proxy', () => {
 		expect(runner).toMatch(/unset SCRAPE_PROXY_URL SCRAPE_PROXY_SECRET/);

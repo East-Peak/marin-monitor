@@ -60,4 +60,9 @@ export interface GrocerySnapshot {
 export interface GroceryBasketData {
 	current: GrocerySnapshot | null;
 	history: GrocerySnapshot[];
+	/**
+	 * Set since the Instacart scrape stopped (2026-11-03, its terms bar
+	 * automated access): the basket is its last real read, never updated again.
+	 */
+	frozen?: { asOf: string | null; noLongerUpdated: true };
 }

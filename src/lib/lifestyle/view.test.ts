@@ -17,13 +17,7 @@ const NOW = new Date('2026-10-20T18:00:00.000Z');
 const LIVE: Record<LiveKey, number> = {
 	'gas.regular': 6.207,
 	'coffee.cappuccino': 5,
-	'grocery.collagen': 13.47,
-	'grocery.manuka': 10.99,
-	'grocery.kombucha': 4.79,
-	'grocery.oatMilk': 3.99,
-	'grocery.silverOak': 83.49,
-	'ikon.adult': 1529,
-	'rivian.lease': 1209
+	'ikon.adult': 1529
 };
 const reads = (over: Partial<Record<LiveKey, Partial<LiveRead>>> = {}) =>
 	Object.fromEntries(
@@ -105,7 +99,7 @@ describe('the card summary', () => {
 	});
 
 	it('counts the lines priced from a stale input', () => {
-		const b = priced('millvalley', reads({ 'grocery.kombucha': { availability: 'stale' } }));
+		const b = priced('millvalley', reads({ 'coffee.cappuccino': { availability: 'stale' } }));
 		const s = householdSummary(b, sheet('millvalley'));
 		expect(s.stale).toBe(b.lines.filter((l) => l.availability === 'stale').length);
 		expect(s.stale).toBeGreaterThanOrEqual(1);
@@ -187,11 +181,11 @@ describe('the household page', () => {
 	});
 
 	it('says a section is partial while one of its lines cannot be read, and sorts it by what it has', () => {
-		const b = priced('ross', reads({ 'grocery.silverOak': { availability: 'unavailable' } }));
+		const b = priced('ross', reads({ 'ikon.adult': { availability: 'unavailable' } }));
 		const p = householdPage(b, sheet('ross'));
-		const food = p.sections.find((s) => s.section === 'food')!;
-		expect(food.monthly).toBeGreaterThan(0);
-		expect(food.partial).toBe(true);
+		const travel = p.sections.find((s) => s.section === 'travel')!;
+		expect(travel.monthly).toBeGreaterThan(0);
+		expect(travel.partial).toBe(true);
 		expect(p.sections.find((s) => s.section === 'help')!.partial).toBe(false);
 	});
 
@@ -271,12 +265,13 @@ describe('the receipt', () => {
 	});
 
 	it('a stale signature line stays priced and says stale', () => {
-		const b = priced('millvalley', reads({ 'grocery.kombucha': { availability: 'stale' } }));
-		const clean = householdSummary(b, sheet('millvalley')).receipt.find(
-			(l) => l.id === 'millvalley.food.clean'
+		// Rivian's cited offer ended 2026-11-02: the lease reads stale after it, still priced.
+		const b = priceSheet(sheet('larkspur'), reads(), new Date('2026-11-03T18:00:00.000Z'));
+		const lease = householdSummary(b, sheet('larkspur')).receipt.find(
+			(l) => l.id === 'larkspur.car.rivian.lease'
 		)!;
-		expect(clean.availability).toBe('stale');
-		expect(clean.monthly).not.toBeNull();
+		expect(lease.availability).toBe('stale');
+		expect(lease.monthly).not.toBeNull();
 	});
 
 	it('an anchor is the line id with dots turned into dashes', () => {

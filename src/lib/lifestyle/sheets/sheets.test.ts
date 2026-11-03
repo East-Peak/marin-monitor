@@ -11,13 +11,7 @@ const NOW = new Date('2026-10-20T18:00:00.000Z');
 const LIFE0_LIVE: Record<LiveKey, number> = {
 	'gas.regular': 6.207,
 	'coffee.cappuccino': 5,
-	'grocery.collagen': 13.47,
-	'grocery.manuka': 10.99,
-	'grocery.kombucha': 4.79,
-	'grocery.oatMilk': 3.99,
-	'grocery.silverOak': 83.49,
-	'ikon.adult': 1529,
-	'rivian.lease': 1209
+	'ikon.adult': 1529
 };
 const reads = Object.fromEntries(
 	Object.entries(LIFE0_LIVE).map(([k, value]): [string, LiveRead] => [
@@ -32,7 +26,13 @@ const reads = Object.fromEntries(
 	])
 ) as LiveReads;
 
-/** Each approved line's monthly figure, from the sheets Stuart approved on 2026-10-20. */
+/**
+ * Each approved line's monthly figure, from the sheets Stuart approved on 2026-10-20.
+ * Four moved on his COSTDATA Q1 call (2026-11-03): the grocery and Rivian scrapes
+ * stopped, so those inputs are cited by hand at the right size and from one offer:
+ * Rivian's lease +$41.67 ($9,104 due, not $7,604), the clean extras +$107.26, and
+ * Silver Oak at $90 (Larkspur +$13.02, Ross +$52.08).
+ */
 const APPROVED: Record<string, Record<string, number>> = {
 	larkspur: {
 		'home.pi': 13299.27,
@@ -46,7 +46,7 @@ const APPROVED: Record<string, Record<string, number>> = {
 		'util.net': 240,
 		'health.prem': 570.83,
 		'health.oop': 333.33,
-		'car.rivian.lease': 1420.22,
+		'car.rivian.lease': 1461.89,
 		'car.rivian.charge': 82.8,
 		'car.rivian.reg': 84.77,
 		'car.rivian.ins': 203.33,
@@ -58,7 +58,7 @@ const APPROVED: Record<string, Record<string, number>> = {
 		'food.groceries': 1681.8,
 		'food.coffee': 220,
 		'food.dining': 1000,
-		'food.wine': 166.98,
+		'food.wine': 180,
 		'kids.foundation': 275,
 		'kids.soccer': 397.92,
 		'kids.math': 499,
@@ -99,7 +99,7 @@ const APPROVED: Record<string, Record<string, number>> = {
 		'car.modelY.ins': 203.33,
 		'car.modelY.maint': 42,
 		'food.groceries': 1785.2,
-		'food.clean': 157.48,
+		'food.clean': 264.74,
 		'food.coffee': 260,
 		'food.dining': 750,
 		'kids.foundation': 266.67,
@@ -141,7 +141,7 @@ const APPROVED: Record<string, Record<string, number>> = {
 		'food.groceries': 1723.6,
 		'food.club': 400,
 		'food.dining': 800,
-		'food.wine': 667.92,
+		'food.wine': 720,
 		'kids.tuition': 10254.17,
 		'kids.crew': 450,
 		'kids.squash': 400,
@@ -174,21 +174,22 @@ const APPROVED: Record<string, Record<string, number>> = {
  * Break-even sits $414 / $440 / $707 above the approved figures: flat parcel
  * taxes are paid but no longer deducted (Stuart, 2026-10-22). Ross's then falls
  * $1,735: the Tahoe cabin's property tax is deducted like the house's (Stuart, 2026-10-23).
+ * Burn and break-even then move with the four COSTDATA Q1 lines above (2026-11-03).
  */
 const TOTALS = {
 	larkspur: {
-		burn: 42577.15,
-		breakEven: 903076,
+		burn: 42631.82,
+		breakEven: 904462,
 		within: 2,
 		personaOnly: 0.117
 	},
 	millvalley: {
-		burn: 27038.37,
-		breakEven: 545206,
+		burn: 27145.6,
+		breakEven: 547591,
 		within: 50,
 		personaOnly: 0.241
 	},
-	ross: { burn: 63778.64, breakEven: 1394314, within: 2, personaOnly: 0.306 }
+	ross: { burn: 63830.69, breakEven: 1395668, within: 2, personaOnly: 0.306 }
 } as const;
 
 const priced = (id: string) => priceSheet(SHEETS.find((s) => s.id === id)!, reads, NOW);

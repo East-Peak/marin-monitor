@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { CoffeeData, CoffeeShop } from '$lib/types/coffee';
 	import type { GroceryBasketData, BasketItemPrices } from '$lib/types/grocery';
+	import { frozenBasketNote } from '$lib/config/grocery-basket';
 	import type { GasPriceData, GasStation } from '$lib/types/gas';
 	import { buildTvSparkline } from '$lib/components/tv/sparkline';
 
@@ -184,7 +185,10 @@
 					<span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400"
 						>Grocery Basket</span
 					>
-					<span class="text-[10px] text-zinc-500">{grocery?.current?.itemsFound ?? 0} items</span>
+					<span class="text-[10px] text-zinc-500" data-grocery-frozen
+						>{frozenBasketNote(grocery?.frozen) ??
+							`${grocery?.current?.itemsFound ?? 0} items`}</span
+					>
 				</div>
 				<div class="flex items-center gap-2 mt-1">
 					<span class="text-2xl font-bold tabular-nums" style="color: #f59e0b">

@@ -10,6 +10,7 @@ import type { CompositeData, CompositeSnapshot, MarinNumberItem } from '$lib/typ
 import type { FitnessData } from '$lib/types/fitness';
 import type { GasPriceData, GasStation } from '$lib/types/gas';
 import type { GroceryBasketData } from '$lib/types/grocery';
+import { frozenBasketNote } from '$lib/config/grocery-basket';
 import type { SchoolIndexData } from '$lib/types/school';
 import type { WineIndexData } from '$lib/types/wine';
 import { gasChangeOverDays } from '$lib/utils/gas-change';
@@ -32,10 +33,12 @@ export const COST_DATASETS = {
 		maxAgeDays: 10
 	},
 	cappuccino: { id: 'cappuccino', name: 'Cappuccino', healthName: 'Cappuccino', maxAgeDays: 10 },
-	grocery: { id: 'grocery', name: 'Grocery basket', healthName: 'Grocery Basket', maxAgeDays: 10 },
+	// Its scrape stopped 2026-11-03 (COSTDATA Q1): the last real read never ages into an alarm;
+	// the tile says it is no longer updated instead. Health retired it.
+	grocery: { id: 'grocery', name: 'Grocery basket', healthName: null, maxAgeDays: Infinity },
 	wine: { id: 'wine', name: 'Wine index', healthName: 'Wine Index', maxAgeDays: 10 },
 	school: { id: 'school', name: 'School tuition', healthName: 'School Tuition', maxAgeDays: 45 },
-	housing: { id: 'housing', name: 'Redfin housing', healthName: 'Housing', maxAgeDays: 45 },
+	housing: { id: 'housing', name: 'Redfin housing', healthName: 'Housing', maxAgeDays: 60 },
 	lifestyle: {
 		id: 'lifestyle',
 		name: 'Lifestyle index',
@@ -475,9 +478,10 @@ export function costView(input: CostInput): CostView {
 			id: 'grocery',
 			title: 'Grocery basket',
 			color: '#f97316',
-			measured: read(entries.grocery, withCurrent(input.grocery), 'Instacart prices'),
+			measured: read(entries.grocery, withCurrent(input.grocery), 'Last Instacart read'),
 			value: (d) => (d.current!.totalCheapest === null ? 'Unknown' : usd(d.current!.totalCheapest)),
-			detail: (d) => `cheapest mix · ${d.current!.itemsFound} items priced`,
+			detail: (d) =>
+				frozenBasketNote(d.frozen) ?? `cheapest mix · ${d.current!.itemsFound} items priced`,
 			series: (d) => dated(d, (h) => h.totalCheapest)
 		}),
 		tile({

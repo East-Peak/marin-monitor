@@ -33,17 +33,7 @@ const cappuccino = (shops: object[], at = '2026-10-19T10:40:39.208Z') => ({
 	history: []
 });
 
-const item = (itemId: string, cheapest: number | null, cheapestStore: string | null) => ({
-	itemId,
-	cheapest,
-	cheapestStore
-});
-const grocery = (items: object[], at = '2026-10-18T16:11:03.844Z') => ({
-	current: { timestamp: at, lastSuccessfulScrapeAt: at, items },
-	history: []
-});
-
-/** The shape the monthly Ikon and Rivian syncs write. */
+/** The shape the monthly Ikon sync writes. */
 const monthly = (
 	field: string,
 	entries: { timestamp: string; value: number; scraped: boolean }[]
@@ -60,18 +50,8 @@ const monthly = (
 const healthy = (): RawLiveBlobs => ({
 	gas: gas('2026-10-20T12:00:00.000Z'),
 	cappuccino: cappuccino([shop(5, 'live'), shop(4.85, 'live'), shop(5, 'live')]),
-	grocery: grocery([
-		item('vital-proteins-collagen', 13.47, 'Walmart'),
-		item('manuka-honey', 10.99, 'Sprouts Farmers Market'),
-		item('marin-kombucha', 4.79, 'Whole Foods'),
-		item('oatly-oatmilk', 3.99, 'FoodMaxx'),
-		item('silver-oak-cabernet', 83.49, 'Total Wine & More')
-	]),
 	ikon: monthly('adultPrice', [
 		{ timestamp: '2026-10-02T19:10:39.582Z', value: 1529, scraped: true }
-	]),
-	rivian: monthly('leaseMonthly', [
-		{ timestamp: '2026-10-04T16:15:33.243Z', value: 1209, scraped: true }
 	])
 });
 
@@ -83,9 +63,7 @@ describe('readLive', () => {
 			observedAt: '2026-10-20T04:38:21.000Z'
 		});
 		expect(live['gas.regular'].value).toBeCloseTo(6.207, 6);
-		expect(live['grocery.silverOak']).toMatchObject({ availability: 'ok', value: 83.49 });
 		expect(live['ikon.adult']).toMatchObject({ availability: 'ok', value: 1529 });
-		expect(live['rivian.lease']).toMatchObject({ availability: 'ok', value: 1209 });
 		for (const read of Object.values(live)) expect(read.availability).toBe('ok');
 		// Each read carries its source's max age from the health inventory, so pricing can re-check it.
 		expect([live['gas.regular'].maxAgeDays, live['ikon.adult'].maxAgeDays]).toEqual([2, 45]);
@@ -130,44 +108,6 @@ describe('readLive', () => {
 			value: 4.75,
 			observedAt: '2026-10-18T09:00:00.000Z'
 		});
-	});
-
-	it('reads no grocery price from a run that did not itself succeed', () => {
-		const blobs = healthy();
-		// A blocked run writes reference prices without "(ref)" and keeps the last success time.
-		blobs.grocery = {
-			current: {
-				timestamp: '2026-10-19T16:00:00.000Z',
-				lastSuccessfulScrapeAt: '2026-10-18T16:11:03.844Z',
-				items: [item('silver-oak-cabernet', 89.99, 'Total Wine & More')]
-			},
-			history: []
-		};
-		expect(readLive(blobs, NOW)['grocery.silverOak']).toMatchObject({
-			availability: 'unavailable',
-			value: null
-		});
-	});
-
-	it('trusts a Rivian lease only when the lease itself was read', () => {
-		const blobs = healthy();
-		const snap = (over: object) => ({
-			current: {
-				timestamp: '2026-10-04T16:15:33.243Z',
-				lastSuccessfulScrapeAt: '2026-10-04T16:15:33.243Z',
-				scraped: true,
-				...over
-			},
-			history: []
-		});
-		blobs.rivian = snap({ leaseMonthly: 899, leaseScraped: false });
-		expect(readLive(blobs, NOW)['rivian.lease'].availability).toBe('unavailable');
-		blobs.rivian = snap({ leaseMonthly: 899 }); // legacy entry: $899 is the writer's default
-		expect(readLive(blobs, NOW)['rivian.lease'].availability).toBe('unavailable');
-		blobs.rivian = snap({ leaseMonthly: 1209 }); // legacy entry with a real price
-		expect(readLive(blobs, NOW)['rivian.lease']).toMatchObject({ availability: 'ok', value: 1209 });
-		blobs.rivian = snap({ leaseMonthly: 899, leaseScraped: true });
-		expect(readLive(blobs, NOW)['rivian.lease']).toMatchObject({ availability: 'ok', value: 899 });
 	});
 
 	it('marks a missing blob, a missing value or a write with no successful read unavailable', () => {
@@ -215,27 +155,25 @@ describe('readLive', () => {
 		});
 	});
 
-	it('never calls a grocery reference price ok', () => {
+	it('reads a monthly sync’s last successful scrape, not the price a failed run carried over', () => {
 		const blobs = healthy();
-		blobs.grocery = grocery([item('marin-kombucha', 4.79, "Driver's Market (ref)")]);
-		const read = readLive(blobs, NOW)['grocery.kombucha'];
-		expect(read.availability).toBe('stale');
-		expect(read.value).toBe(4.79);
-		expect(read.reason).toMatch(/reference/);
-		expect(readLive(blobs, NOW)['grocery.collagen'].availability).toBe('unavailable');
+		blobs.ikon = monthly('adultPrice', [
+			{ timestamp: '2026-10-02T19:10:39.582Z', value: 1399, scraped: false },
+			{ timestamp: '2026-09-10T16:11:40.159Z', value: 1529, scraped: true }
+		]);
+		expect(readLive(blobs, NOW)['ikon.adult']).toMatchObject({
+			availability: 'ok',
+			value: 1529,
+			observedAt: '2026-09-10T16:11:40.159Z'
+		});
 	});
 
-	it('reads a monthly sync’s last successful scrape, not the default a failed run wrote', () => {
-		const blobs = healthy();
-		blobs.rivian = monthly('leaseMonthly', [
-			{ timestamp: '2026-10-04T16:15:33.243Z', value: 899, scraped: false },
-			{ timestamp: '2026-09-24T12:14:11.069Z', value: 1239, scraped: true }
+	it('has no grocery or Rivian reads: those scrapes stopped (COSTDATA Q1)', () => {
+		expect(Object.keys(readLive(healthy(), NOW)).sort()).toEqual([
+			'coffee.cappuccino',
+			'gas.regular',
+			'ikon.adult'
 		]);
-		expect(readLive(blobs, NOW)['rivian.lease']).toMatchObject({
-			availability: 'ok',
-			value: 1239,
-			observedAt: '2026-09-24T12:14:11.069Z'
-		});
 	});
 
 	it('marks a monthly sync that never scraped unavailable: a default is never a read', () => {

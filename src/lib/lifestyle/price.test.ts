@@ -29,13 +29,7 @@ const read = (value: number, availability: LiveRead['availability'] = 'ok'): Liv
 const LIVE_VALUES: Record<LiveKey, number> = {
 	'gas.regular': 6.207,
 	'coffee.cappuccino': 5,
-	'grocery.collagen': 13.47,
-	'grocery.manuka': 10.99,
-	'grocery.kombucha': 4.79,
-	'grocery.oatMilk': 3.99,
-	'grocery.silverOak': 83.49,
-	'ikon.adult': 1529,
-	'rivian.lease': 1209
+	'ikon.adult': 1529
 };
 const liveReads = (overrides: Partial<Record<LiveKey, LiveRead>> = {}): LiveReads =>
 	({
@@ -140,7 +134,7 @@ const LINES: LineSpec[] = [
 		inputs: {
 			rent: persona(4000, 'rent'),
 			sales: persona(8000, 'sales'),
-			wine: live('grocery.silverOak')
+			wine: live('ikon.adult')
 		},
 		terms: [monthly('rent'), less('sales'), monthly('wine')]
 	}
@@ -206,7 +200,7 @@ describe('priceSheet', () => {
 		);
 		expect(line(b, 't.cars.lease').monthly).toBeCloseTo(999 + 8995 / 24, 6);
 		expect(line(b, 't.home.tax').monthly).toBeCloseTo((2501250 * 1.02 ** 2 * 0.01 + 1906) / 12, 6);
-		expect(line(b, 't.biz').monthly).toBeCloseTo(4000 - 8000 + 83.49, 6);
+		expect(line(b, 't.biz').monthly).toBeCloseTo(4000 - 8000 + 1529, 6);
 	});
 
 	it('prices a household employee at employer cost: wage + FICA + FUTA + CA UI/ETT', () => {
@@ -325,7 +319,7 @@ describe('availability: a fallback is never ok', () => {
 	it('keeps a budget complete when only an optional line is unavailable', () => {
 		const b = priceSheet(
 			defineSheet(base()),
-			liveReads({ 'grocery.silverOak': read(0, 'unavailable') }),
+			liveReads({ 'ikon.adult': read(0, 'unavailable') }),
 			NOW
 		);
 		expect(line(b, 't.biz').monthly).toBeNull();
@@ -365,7 +359,7 @@ describe('purchase facts are frozen', () => {
 
 	it('refuses a live input on the mortgage line', () => {
 		const bad = base();
-		bad.lines = [{ ...LINES[0], inputs: { ...LINES[0].inputs, price: live('rivian.lease') } }];
+		bad.lines = [{ ...LINES[0], inputs: { ...LINES[0].inputs, price: live('ikon.adult') } }];
 		expect(() => defineSheet(bad)).toThrow(/frozen/);
 	});
 
@@ -647,7 +641,7 @@ describe('Codex 1b-i: inputs the engine cannot vouch for', () => {
 				inputs: {
 					rent: persona(100, 'r'),
 					sales: persona(9000, 's'),
-					wine: live('grocery.silverOak')
+					wine: live('ikon.adult')
 				}
 			}
 		];

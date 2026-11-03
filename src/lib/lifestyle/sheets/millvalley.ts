@@ -142,13 +142,13 @@ const lines: LineSpec[] = [
 		required: true,
 		inputs: {
 			collagenTubs: persona(2, 'collagen tubs a month'),
-			collagen: live('grocery.collagen'),
+			collagen: cite('vitalProteins.collagen'),
 			honeyJars: persona(2, 'manuka jars a month'),
-			honey: live('grocery.manuka'),
+			honey: cite('manukaHealth.mgo263'),
 			kombuchas: persona(16, 'kombuchas a month'),
-			kombucha: live('grocery.kombucha'),
+			kombucha: cite('goodEggs.kombucha'),
 			oatMilks: persona(8, 'oat milks a month'),
-			oatMilk: live('grocery.oatMilk')
+			oatMilk: cite('goodEggs.oatly')
 		},
 		terms: [
 			monthly('collagenTubs', 'collagen'),

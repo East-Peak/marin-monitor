@@ -425,87 +425,16 @@ describe('/api/cron/sync-composite', () => {
 // ══════════════════════════════════════════════════════════
 
 describe('/api/cron/sync-grocery-basket', () => {
-	const mockSnapshot = {
-		timestamp: '2026-04-01T00:00:00Z',
-		totalCheapest: 87.42,
-		totalExpensive: 112.55,
-		itemsFound: 12,
-		lastSuccessfulScrapeAt: '2026-04-01T00:00:00Z',
-		items: [
-			{
-				itemId: 'eggs',
-				itemName: 'Large Eggs (dozen)',
-				cheapest: 4.99,
-				cheapestStore: "Trader Joe's",
-				mostExpensive: 7.49,
-				mostExpensiveStore: 'Whole Foods',
-				storePrices: []
-			}
-		]
-	};
-
-	function mockGrocerySuccess() {
-		mockScrapeGroceryBasket.mockResolvedValue(mockSnapshot);
-		mockWithPreservedSuccessfulScrapeMetadata.mockReturnValue(mockSnapshot);
-		// head() for reading existing blob — not found (first sync)
-		mockHead.mockRejectedValue(new Error('not found'));
-	}
-
-	it('returns 401 when Authorization header is missing', async () => {
-		const response = await getGroceryBasket(noAuthEvent());
-		expect(response.status).toBe(401);
-	});
-
-	it('returns 401 when CRON_SECRET is wrong', async () => {
-		const response = await getGroceryBasket(badAuthEvent());
-		expect(response.status).toBe(401);
-	});
-
-	it('returns 200 on successful sync', async () => {
-		mockGrocerySuccess();
-
+	// COSTDATA Q1 (Stuart, 2026-11-03): Instacart's terms bar automated access.
+	it('is stopped: 410, and never scrapes or writes', async () => {
 		const response = await getGroceryBasket(authedEvent());
-		expect(response.status).toBe(200);
-
-		const data = await response.json();
-		expect(data.ok).toBe(true);
-		expect(data.itemsFound).toBe(12);
-		expect(data.totalCheapest).toBe(87.42);
-	});
-
-	it('writes grocery blob via put()', async () => {
-		mockGrocerySuccess();
-
-		await getGroceryBasket(authedEvent());
-
-		expect(mockPut).toHaveBeenCalledWith(
-			'marin-grocery-basket.json',
-			expect.any(String),
-			expect.objectContaining({
-				access: 'private',
-				contentType: 'application/json',
-				token: 'test-blob-token'
-			})
-		);
-	});
-
-	it('handles scraper failure gracefully (returns 500, does not crash)', async () => {
-		mockScrapeGroceryBasket.mockRejectedValue(new Error('Store website changed layout'));
-
-		const response = await getGroceryBasket(authedEvent());
-		expect(response.status).toBe(500);
-
-		const data = await response.json();
-		expect(data.ok).toBe(false);
-		expect(data.error).toBe('sync failed');
-	});
-
-	it('does not write to blob when scraper throws', async () => {
-		mockScrapeGroceryBasket.mockRejectedValue(new Error('Network error'));
-
-		await getGroceryBasket(authedEvent());
-
+		expect(response.status).toBe(410);
+		expect(mockScrapeGroceryBasket).not.toHaveBeenCalled();
 		expect(mockPut).not.toHaveBeenCalled();
+	});
+
+	it('still checks auth first', async () => {
+		expect((await getGroceryBasket(noAuthEvent())).status).toBe(401);
 	});
 });
 

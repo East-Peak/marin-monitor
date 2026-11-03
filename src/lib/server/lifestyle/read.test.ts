@@ -19,28 +19,18 @@ import {
 
 const signal = new AbortController().signal;
 const liveReads = Object.fromEntries(
-	(
-		[
-			'gas.regular',
-			'coffee.cappuccino',
-			'grocery.collagen',
-			'grocery.manuka',
-			'grocery.kombucha',
-			'grocery.oatMilk',
-			'grocery.silverOak',
-			'ikon.adult',
-			'rivian.lease'
-		] satisfies LiveKey[]
-	).map((k): [string, LiveRead] => [
-		k,
-		{
-			availability: 'ok',
-			value: 10,
-			observedAt: '2026-10-20T12:00:00.000Z',
-			maxAgeDays: 10,
-			source: 'test'
-		}
-	])
+	(['gas.regular', 'coffee.cappuccino', 'ikon.adult'] satisfies LiveKey[]).map(
+		(k): [string, LiveRead] => [
+			k,
+			{
+				availability: 'ok',
+				value: 10,
+				observedAt: '2026-10-20T12:00:00.000Z',
+				maxAgeDays: 10,
+				source: 'test'
+			}
+		]
+	)
 ) as LiveReads;
 const budget = (town: string) =>
 	({

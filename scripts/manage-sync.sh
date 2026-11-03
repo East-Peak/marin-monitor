@@ -9,12 +9,12 @@ PLIST_DIR="$SCRIPT_DIR/launchd"
 LAUNCH_AGENTS="$HOME/Library/LaunchAgents"
 LOG_DIR="$HOME/Library/Logs/marin-monitor"
 
+# sync-grocery-basket stopped 2026-11-03 (COSTDATA Q1): Instacart's terms bar automated access.
 PLISTS=(
   "com.marin-monitor.sync-activity"
   "com.marin-monitor.sync-police"
   "com.marin-monitor.sync-coffee-index"
   "com.marin-monitor.sync-cappuccino"
-  "com.marin-monitor.sync-grocery-basket"
   "com.marin-monitor.sync-wine-index"
   "com.marin-monitor.sync-ikon-pass"
   "com.marin-monitor.sync-dog-walker"

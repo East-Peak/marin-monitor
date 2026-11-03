@@ -92,10 +92,8 @@ const DAY_MS = 86_400_000;
 
 /**
  * A run succeeds when every budget is complete and every live read is
- * available and observed inside its own max age. A labelled fallback inside a
- * fresh run (a grocery reference price) reads stale on its line but is not a
- * pipeline failure; nor is a cited figure past its re-check, which is a
- * re-check chore shown on the page.
+ * available and observed inside its own max age. A cited figure past its
+ * re-check is not a pipeline failure: it is a re-check chore shown on the page.
  */
 function succeeded(budgets: readonly PricedBudget[], live: LiveReads, now: Date): boolean {
 	const fresh = Object.values(live).every((r) => {

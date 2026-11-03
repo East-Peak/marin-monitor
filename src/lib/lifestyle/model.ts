@@ -70,16 +70,7 @@ export interface CitedSource {
 	readonly validUntil?: string;
 }
 
-export type LiveKey =
-	| 'gas.regular'
-	| 'coffee.cappuccino'
-	| 'grocery.collagen'
-	| 'grocery.manuka'
-	| 'grocery.kombucha'
-	| 'grocery.oatMilk'
-	| 'grocery.silverOak'
-	| 'ikon.adult'
-	| 'rivian.lease';
+export type LiveKey = 'gas.regular' | 'coffee.cappuccino' | 'ikon.adult';
 
 /** One live value as read from our own data, with its own observation time. */
 export interface LiveRead {

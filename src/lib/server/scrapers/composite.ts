@@ -245,6 +245,25 @@ function hasLiveRivianData(data: RivianLeaseData | null): boolean {
 	return data?.current?.scraped === true;
 }
 
+const asOfDay = (iso: string | null | undefined): string | null => {
+	const ms = iso ? Date.parse(iso) : NaN;
+	return Number.isFinite(ms)
+		? new Date(ms).toLocaleDateString('en-US', {
+				month: 'short',
+				day: 'numeric',
+				year: 'numeric',
+				timeZone: 'America/Los_Angeles'
+			})
+		: null;
+};
+
+/**
+ * A stopped scrape (COSTDATA Q1, 2026-11-03: Instacart's and Rivian's terms
+ * bar automated access) shows its last real read with its date, never as live.
+ */
+const noLongerUpdated = (asOf: string | null, lead = '') =>
+	asOf ? `${lead}as of ${asOf}, no longer updated` : `${lead}no longer updated`;
+
 /**
  * Build a complete composite snapshot from all available index data.
  */
@@ -298,12 +317,19 @@ export function buildCompositeSnapshot(inputs: CompositeInputs): CompositeSnapsh
 			source: hasLiveHousingData(inputs.housing) ? 'live' : 'static',
 			sourceIndex: 'housing'
 		},
-		{
-			label: 'Groceries (Bare Essentials x 4.3)',
-			monthly: groceryMonthly,
-			source: getGroceryMonthly(inputs.grocery) !== null ? 'live' : 'static',
-			sourceIndex: 'grocery-basket'
-		},
+		inputs.grocery?.frozen
+			? {
+					label: `Groceries (Bare Essentials x 4.3; ${noLongerUpdated(asOfDay(inputs.grocery.frozen.asOf), 'prices ')})`,
+					monthly: groceryMonthly,
+					source: 'static',
+					sourceIndex: 'grocery-basket'
+				}
+			: {
+					label: 'Groceries (Bare Essentials x 4.3)',
+					monthly: groceryMonthly,
+					source: getGroceryMonthly(inputs.grocery) !== null ? 'live' : 'static',
+					sourceIndex: 'grocery-basket'
+				},
 		{
 			label: 'Coffee (daily primary coffee x 22)',
 			monthly: coffeeMonthly,
@@ -340,11 +366,15 @@ export function buildCompositeSnapshot(inputs: CompositeInputs): CompositeSnapsh
 	const upgradedStaticItems: MarinNumberItem[] = STATIC_MARIN_NUMBER_ITEMS.map((item) => {
 		switch (item.sourceIndex) {
 			case 'rivian-lease':
-				return {
-					...item,
-					monthly: rivianLease,
-					source: hasLiveRivianData(inputs.rivianLease) ? 'live' : 'static'
-				};
+				// Only a real read is shown; the scrape is stopped, so it is never live.
+				return hasLiveRivianData(inputs.rivianLease)
+					? {
+							...item,
+							label: `${item.label} (${noLongerUpdated(asOfDay(inputs.rivianLease?.current?.lastSuccessfulScrapeAt))})`,
+							monthly: rivianLease,
+							source: 'static'
+						}
+					: { ...item, source: 'static' };
 			case 'dog-walker':
 				return {
 					...item,

@@ -323,6 +323,7 @@ describe('buildCompositeSnapshot', () => {
 
 		const groceryItem = snapshot.marinNumber.items.find((i) => i.label.includes('Groceries'));
 		expect(groceryItem?.source).toBe('live');
+		expect(groceryItem?.label).toBe('Groceries (Bare Essentials x 4.3)');
 
 		const coffeeItem = snapshot.marinNumber.items.find((i) => i.label.includes('Coffee'));
 		expect(coffeeItem?.source).toBe('static'); // null input = fallback = static
@@ -353,6 +354,36 @@ describe('buildCompositeSnapshot', () => {
 		expect(snapshot.marinNumber.total).toBeLessThan(25000);
 	});
 
+	it('labels a stopped source as its last read, no longer updated, never live (COSTDATA Q1)', () => {
+		const grocery = {
+			...makeGroceryData(174.93),
+			frozen: { asOf: '2026-11-01T17:11:00.558Z', noLongerUpdated: true as const }
+		};
+		const snapshot = buildCompositeSnapshot({
+			...ALL_NULL_INPUTS,
+			grocery,
+			rivianLease: {
+				current: {
+					leaseMonthly: 1209,
+					msrp: 85885,
+					scraped: true,
+					lastSuccessfulScrapeAt: '2026-10-04T16:00:00.000Z'
+				}
+			}
+		});
+		const items = snapshot.marinNumber.items;
+		expect(items.find((i) => i.label.startsWith('Groceries'))).toMatchObject({
+			label: 'Groceries (Bare Essentials x 4.3; prices as of Nov 1, 2026, no longer updated)',
+			monthly: Math.round(174.93 * 4.3),
+			source: 'static'
+		});
+		expect(items.find((i) => i.label.startsWith('Rivian'))).toMatchObject({
+			label: 'Rivian R1S payment (as of Oct 4, 2026, no longer updated)',
+			monthly: 1209,
+			source: 'static'
+		});
+	});
+
 	it('upgrades static items to live when blob data exists', () => {
 		const inputs: CompositeInputs = {
 			...ALL_NULL_INPUTS,
@@ -371,9 +402,11 @@ describe('buildCompositeSnapshot', () => {
 		};
 		const snapshot = buildCompositeSnapshot(inputs);
 
+		// Rivian's scrape is stopped (COSTDATA Q1): its last read, never live.
 		const rivianItem = snapshot.marinNumber.items.find((i) => i.label.includes('Rivian'));
-		expect(rivianItem?.source).toBe('live');
+		expect(rivianItem?.source).toBe('static');
 		expect(rivianItem?.monthly).toBe(950);
+		expect(rivianItem?.label).toBe('Rivian R1S payment (no longer updated)');
 
 		const skiItem = snapshot.marinNumber.items.find((i) => i.label.includes('Ski season'));
 		expect(skiItem?.source).toBe('live');

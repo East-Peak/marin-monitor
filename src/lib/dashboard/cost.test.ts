@@ -411,6 +411,7 @@ describe('cost model', () => {
 
 	it('freshness policies are G0a’s own (pinned to SOURCE_INVENTORY)', () => {
 		for (const { healthName, maxAgeDays } of Object.values(COST_DATASETS)) {
+			if (healthName === null) continue; // stopped and retired from health (COSTDATA Q1)
 			const policy = SOURCE_INVENTORY.find((p) => p.name === healthName);
 			expect(policy, healthName).toBeDefined();
 			expect(policy!.maxAgeDays).toBe(maxAgeDays);

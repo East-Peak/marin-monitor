@@ -2,7 +2,7 @@
 # sync-runner.sh — Wrapper for launchd-scheduled sync jobs.
 # Usage: sync-runner.sh <job>
 #
-# Residential jobs (coffee-index, cappuccino, grocery-basket, wine-index,
+# Residential jobs (coffee-index, cappuccino, wine-index,
 # ikon-pass, dog-walker) run here because their targets block datacenter IPs.
 # They get the blob token from .env.local and nothing else, and never the
 # scrape proxy: this machine is the residential egress.
@@ -58,7 +58,11 @@ run_with_timeout() {
     police)
       node scripts/extract-police-logs.mjs
       ;;
-    coffee-index | cappuccino | grocery-basket | wine-index | ikon-pass | dog-walker)
+    grocery-basket | rivian-lease)
+      # Stopped 2026-11-03 (COSTDATA Q1): their publishers' terms bar automated access.
+      echo "sync:${JOB} is stopped (publisher terms); not run" >&2
+      ;;
+    coffee-index | cappuccino | wine-index | ikon-pass | dog-walker)
       unset SCRAPE_PROXY_URL SCRAPE_PROXY_SECRET
       BLOB_READ_WRITE_TOKEN="$(grep '^BLOB_READ_WRITE_TOKEN=' .env.local | cut -d= -f2- | tr -d '"' || true)"
       [[ -n "$BLOB_READ_WRITE_TOKEN" ]] || { echo "BLOB_READ_WRITE_TOKEN missing from .env.local" >&2; exit 1; }

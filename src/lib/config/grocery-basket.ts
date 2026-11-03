@@ -1,6 +1,6 @@
 // src/lib/config/grocery-basket.ts
 
-import type { BasketItem } from '$lib/types/grocery';
+import type { BasketItem, GroceryBasketData } from '$lib/types/grocery';
 
 /**
  * The Bare Essentials — 12 aggressively Marin grocery items.
@@ -133,3 +133,17 @@ export const BASKET_REFERENCE_TOTAL = BASKET_ITEMS.reduce(
 	(sum, item) => sum + item.referencePrice,
 	0
 );
+
+/** The Grocery Basket's note since its scrape stopped (COSTDATA Q1, 2026-11-03). */
+export function frozenBasketNote(frozen: GroceryBasketData['frozen']): string | null {
+	if (!frozen) return null;
+	const ms = frozen.asOf ? Date.parse(frozen.asOf) : NaN;
+	if (!Number.isFinite(ms)) return 'No longer updated';
+	const day = new Date(ms).toLocaleDateString('en-US', {
+		month: 'short',
+		day: 'numeric',
+		year: 'numeric',
+		timeZone: 'America/Los_Angeles'
+	});
+	return `Prices as of ${day}, no longer updated`;
+}

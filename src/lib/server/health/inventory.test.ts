@@ -14,7 +14,6 @@ const EXPECTED_SOURCES = [
 	'Gas Prices',
 	'Housing',
 	'Marin Coffee Index',
-	'Grocery Basket',
 	'Wine Index',
 	'School Tuition',
 	'Fitness',
@@ -32,8 +31,7 @@ const EXPECTED_SOURCES = [
 	'Cappuccino',
 	'Camp Prices',
 	'Dog Walker',
-	'Ikon Pass',
-	'Rivian Lease'
+	'Ikon Pass'
 ];
 
 describe('SOURCE_INVENTORY', () => {
@@ -75,7 +73,6 @@ describe('SOURCE_INVENTORY', () => {
 		expect(keyOf('Camp Prices')).toBe('marin-camp-prices.json');
 		expect(keyOf('Dog Walker')).toBe('marin-dog-walker.json');
 		expect(keyOf('Ikon Pass')).toBe('marin-ikon-pass.json');
-		expect(keyOf('Rivian Lease')).toBe('marin-rivian-lease.json');
 	});
 
 	it('declares no reference data — Driveway is judged by its live DMV observation, never as static', () => {
@@ -90,15 +87,13 @@ describe('SOURCE_INVENTORY', () => {
 		);
 		for (const name of [
 			'Marin Coffee Index',
-			'Grocery Basket',
 			'EV Charging',
 			'News Snapshot',
 			'Driveway',
 			'Cappuccino',
 			'Camp Prices',
 			'Dog Walker',
-			'Ikon Pass',
-			'Rivian Lease'
+			'Ikon Pass'
 		]) {
 			expect(contentSources).toContain(name);
 		}

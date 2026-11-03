@@ -11,6 +11,13 @@
  * and the blob persistence from src/routes/api/cron/sync-grocery-basket/+server.ts.
  */
 
+// Stopped 2026-11-03 (COSTDATA Q1, Stuart): the publisher's terms bar automated
+// access. Kept for the record; it refuses to run. Permitted sources: COSTDATA-2.
+console.error(
+	"[sync-grocery-basket] stopped 2026-11-03: the publisher's terms bar automated access"
+);
+process.exit(0);
+
 import { put, head } from '@vercel/blob';
 import { proxyFetch } from './shared/proxy-fetch.mjs';
 import { withPreservedSuccessfulScrapeMetadata } from './shared/scrape-metadata.mjs';

@@ -249,14 +249,25 @@ describe('/api/data/cappuccino', () => {
 // ── /api/data/grocery-basket ───────────────────────────
 
 describe('/api/data/grocery-basket', () => {
-	const samplePayload = {
-		current: {
-			totalCost: 87.42,
-			stores: ['Whole Foods', "Trader Joe's"],
-			timestamp: '2026-04-01T00:00:00Z'
-		},
-		history: [{ totalCost: 86.3, timestamp: '2026-03-31T00:00:00Z' }]
+	const read = {
+		timestamp: '2026-11-01T17:11:00.558Z',
+		lastSuccessfulScrapeAt: '2026-11-01T17:11:00.558Z',
+		totalCheapest: 6.57,
+		totalExpensive: 7.49,
+		itemsFound: 1,
+		items: [
+			{
+				itemId: 'vital-farms-eggs',
+				itemName: 'eggs',
+				cheapest: 6.57,
+				cheapestStore: 'Walmart',
+				mostExpensive: 7.49,
+				mostExpensiveStore: 'Sprouts',
+				storePrices: []
+			}
+		]
 	};
+	const samplePayload = { current: read, history: [read] };
 
 	it('returns blob data with cache headers on success', async () => {
 		mockBlobSuccess(samplePayload);
@@ -265,7 +276,11 @@ describe('/api/data/grocery-basket', () => {
 
 		expect(response.status).toBe(200);
 		const data = await response.json();
-		expect(data).toEqual(samplePayload);
+		// The scrape is stopped: the last real read, marked no longer updated.
+		expect(data).toEqual({
+			...samplePayload,
+			frozen: { asOf: '2026-11-01T17:11:00.558Z', noLongerUpdated: true }
+		});
 
 		const cc = response.headers.get('Cache-Control');
 		expect(cc).toContain('s-maxage=300');

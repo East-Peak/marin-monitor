@@ -17,24 +17,8 @@ const BLOBS: Record<string, unknown> = {
 	[LIVE_BLOBS.cappuccino]: {
 		current: { shops: [{ price: 5, priceSource: 'live', isStale: false, updateTime: AT }] }
 	},
-	[LIVE_BLOBS.grocery]: {
-		current: {
-			timestamp: AT,
-			lastSuccessfulScrapeAt: AT,
-			items: [
-				['vital-proteins-collagen', 13.47],
-				['manuka-honey', 10.99],
-				['marin-kombucha', 4.79],
-				['oatly-oatmilk', 3.99],
-				['silver-oak-cabernet', 83.49]
-			].map(([itemId, cheapest]) => ({ itemId, cheapest, cheapestStore: 'Store' }))
-		}
-	},
 	[LIVE_BLOBS.ikon]: {
 		current: { timestamp: AT, adultPrice: 1449, scraped: true, lastSuccessfulScrapeAt: AT }
-	},
-	[LIVE_BLOBS.rivian]: {
-		current: { timestamp: AT, leaseMonthly: 1209, scraped: true, leaseScraped: true }
 	}
 };
 
@@ -155,27 +139,23 @@ describe('runLifestyle', () => {
 		expect(doc.current.lastSuccessfulScrapeAt).toBe(NOW.toISOString());
 	});
 
-	it('still succeeds when a fresh run carries a labelled reference price', async () => {
+	it('never reads the grocery or Rivian blobs: those lines are cited (COSTDATA Q1)', async () => {
 		const api = createMemoryBlobApi();
-		const grocery = BLOBS[LIVE_BLOBS.grocery] as { current: { items: object[] } };
-		const withRef: Record<string, unknown> = {
-			...BLOBS,
-			[LIVE_BLOBS.grocery]: {
-				current: {
-					...grocery.current,
-					items: grocery.current.items.map((i) =>
-						(i as { itemId: string }).itemId === 'marin-kombucha'
-							? { ...i, cheapestStore: "Driver's Market (ref)" }
-							: i
-					)
+		const asked: string[] = [];
+		await runLifestyle(
+			deps(api, {
+				readInput: async (key) => {
+					asked.push(key);
+					return BLOBS[key] ?? null;
 				}
-			}
-		};
-		await runLifestyle(deps(api, { readInput: async (key) => withRef[key] ?? null }));
-		const doc = stored(api);
-		const mv = doc.current.budgets.find((b) => b.town === 'millvalley')!;
-		expect(mv.lines.find((l) => l.id === 'millvalley.food.clean')!.availability).toBe('stale');
-		expect(doc.current.lastSuccessfulScrapeAt).toBe(NOW.toISOString());
+			})
+		);
+		expect(asked).not.toContain('marin-grocery-basket.json');
+		expect(asked).not.toContain('marin-rivian-lease.json');
+		const mv = stored(api).current.budgets.find((b) => b.town === 'millvalley')!;
+		const clean = mv.lines.find((l) => l.id === 'millvalley.food.clean')!;
+		expect(clean.classes).not.toContain('live');
+		expect(clean.inputs.filter((i) => i.class === 'cited')).toHaveLength(4);
 	});
 
 	it('gives up on an input read that outlives the run’s deadline', async () => {

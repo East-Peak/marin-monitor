@@ -19,12 +19,12 @@ import { SCHOOL_TUITION_BLOB_KEY } from '$lib/config/schools';
 import type { RequestHandler } from './$types';
 import type { CompositeData, CompositeSnapshot } from '$lib/types/composite';
 import type { CoffeeData, CoffeeIndexData } from '$lib/types/coffee';
-import type { GroceryBasketData } from '$lib/types/grocery';
 import type { WineIndexData } from '$lib/types/wine';
 import type { FitnessData } from '$lib/types/fitness';
 import type { SchoolIndexData } from '$lib/types/school';
 import type { GasPriceData } from '$lib/types/gas';
 import { housingMonths } from '$lib/server/scrapers/housing';
+import { frozenBasket } from '$lib/server/grocery-frozen';
 
 export const config = { maxDuration: 60 };
 
@@ -89,7 +89,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			dogWalker,
 			rivianLease
 		] = await Promise.all([
-			readBlob<GroceryBasketData>(GROCERY_BLOB_KEY),
+			readBlob<unknown>(GROCERY_BLOB_KEY).then(frozenBasket),
 			readBlob<CoffeeIndexData>(COFFEE_INDEX_BLOB_KEY),
 			readBlob<CoffeeData>(CAPPUCCINO_BLOB_KEY),
 			readBlob<WineIndexData>(WINE_INDEX_BLOB_KEY),

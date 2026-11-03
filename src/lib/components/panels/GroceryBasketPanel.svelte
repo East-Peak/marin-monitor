@@ -4,6 +4,7 @@
 	import { Panel } from '$lib/components/common';
 	import { fetchGroceryBasketDataWithStatus } from '$lib/api/marin/grocery-basket';
 	import { groceryBasketStore } from '$lib/stores/grocery-basket';
+	import { frozenBasketNote } from '$lib/config/grocery-basket';
 	import { buildChart, type ChartPaths } from '$lib/utils/chart';
 	import type { GroceryBasketData, BasketItemPrices } from '$lib/types/grocery';
 
@@ -22,6 +23,8 @@
 	let showAllItems = $state(false);
 
 	const current = $derived(data.current);
+	/** The scrape stopped 2026-11-03: the last real read, said so. */
+	const frozenNote = $derived(frozenBasketNote(data.frozen));
 	const history = $derived(
 		data.history
 			.filter((h) => h.totalCheapest !== null)
@@ -151,6 +154,9 @@
 </script>
 
 <Panel id="grocery-basket" title="The Bare Essentials" loading={dataLoading} error={dataError}>
+	{#if frozenNote}
+		<p class="frozen-note" data-grocery-frozen>{frozenNote}</p>
+	{/if}
 	{#if current}
 		<div class="headline-bar">
 			<div class="basket-total">
@@ -643,5 +649,10 @@
 		.items-found {
 			text-align: left;
 		}
+	}
+	.frozen-note {
+		margin: 0 0 0.4rem;
+		font-size: 0.65rem;
+		color: var(--text-muted, #888);
 	}
 </style>

@@ -141,7 +141,7 @@ describe('/api/health', () => {
 	it('reports a missing blob as unavailable and an unreadable one as unknown', async () => {
 		mockReadBlobFreshnessTimestamp.mockImplementation(async (blobKey: string) => {
 			if (blobKey === 'marin-ikon-pass.json') throw new MockBlobNotFoundError('missing');
-			if (blobKey === 'marin-rivian-lease.json') throw new Error('network down');
+			if (blobKey === 'marin-dog-walker.json') throw new Error('network down');
 			const now = new Date().toISOString();
 			return { uploadedAt: now, lastUpdated: now };
 		});
@@ -149,7 +149,7 @@ describe('/api/health', () => {
 		const statusOf = (name: string) =>
 			data.sources.find((s: { name: string }) => s.name === name).status;
 		expect(statusOf('Ikon Pass')).toBe('unavailable');
-		expect(statusOf('Rivian Lease')).toBe('unknown');
+		expect(statusOf('Dog Walker')).toBe('unknown');
 	});
 
 	it('returns JSON with no-cache', async () => {
@@ -201,7 +201,7 @@ describe('/api/cron/check-freshness', () => {
 	});
 
 	it('returns non-2xx when degraded', async () => {
-		freshExcept('marin-grocery-basket.json');
+		freshExcept('marin-wine-index.json');
 		const response = await getFreshness(authedFreshness());
 		expect(response.status).toBe(503);
 		expect((await response.json()).status).toBe('degraded');

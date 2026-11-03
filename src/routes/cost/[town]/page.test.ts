@@ -32,7 +32,7 @@ const sectionTotal = (root: Element, section: string) =>
 describe('/cost/<town>', () => {
 	it('leads with the month and keeps the equation', () => {
 		const c = page(budget('larkspur'));
-		expect(text(c, '[data-burn]')).toBe('$42,560 a month');
+		expect(text(c, '[data-burn]')).toBe('$42,614 a month');
 		expect(c.querySelector('[data-burn]')?.getAttribute('data-text-role')).toBe('headline');
 		expect(c.querySelector('.equation [data-break-even]')).not.toBeNull();
 		expect(text(c, '[data-budget-total]')).toContain('calculated, mixed provenance');
@@ -54,10 +54,10 @@ describe('/cost/<town>', () => {
 		const c = page(budget('ross'));
 		expect(text(c, '[data-burn]')).toMatch(/a month so far$/);
 		expect(text(c, '[data-incomplete]')).toBe('incomplete');
-		expect(sectionTotal(c, 'food')).toMatch(/\/mo so far$/);
+		expect(sectionTotal(c, 'travel')).toMatch(/\/mo so far$/);
 		expect(sectionTotal(c, 'housing')).toMatch(/%$/);
 		expect(text(c, '[data-budget-total]')).toMatch(/\/mo so far$/);
-		expect(text(c, '[data-line="ross.food.wine"] summary')).toContain('can’t be read');
+		expect(text(c, '[data-line="ross.travel.ikon"] summary')).toContain('can’t be read');
 	});
 
 	it('a non-required line unread: so far, with the break-even kept', () => {

@@ -156,7 +156,7 @@ const lines: LineSpec[] = [
 		section: 'food',
 		label: 'Wine',
 		required: true,
-		inputs: { bottles: persona(8, 'bottles a month'), price: live('grocery.silverOak') },
+		inputs: { bottles: persona(8, 'bottles a month'), price: cite('silverOak.alexanderValley') },
 		terms: [monthly('bottles', 'price')]
 	},
 	{

@@ -22,19 +22,7 @@ type PageData = {
 
 const NOW = new Date('2026-10-20T18:00:00.000Z');
 const reads = Object.fromEntries(
-	(
-		[
-			'gas.regular',
-			'coffee.cappuccino',
-			'grocery.collagen',
-			'grocery.manuka',
-			'grocery.kombucha',
-			'grocery.oatMilk',
-			'grocery.silverOak',
-			'ikon.adult',
-			'rivian.lease'
-		] as LiveKey[]
-	).map((k): [string, LiveRead] => [
+	(['gas.regular', 'coffee.cappuccino', 'ikon.adult'] as LiveKey[]).map((k): [string, LiveRead] => [
 		k,
 		{ availability: 'ok', value: 5, observedAt: NOW.toISOString(), maxAgeDays: 10, source: 't' }
 	])

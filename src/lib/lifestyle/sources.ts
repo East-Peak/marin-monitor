@@ -79,6 +79,22 @@ const dmv = from({
 	recheckDays: 365,
 	validUntil: '2026-12-31'
 });
+/** Read by hand on the R1S page (2026-11-03): the scrape stopped, Rivian's terms bar automated access. */
+const rivian = from({
+	url: 'https://rivian.com/r1s',
+	period: 'example offer, orders 2026-10-01 to 11-02',
+	scope: '2027 R1S Premium, $85,885 vehicle price, 36 mo, 10,000 mi/yr, US',
+	checkedAt: '2026-11-03',
+	recheckDays: 30,
+	validUntil: '2026-11-02'
+});
+/**
+ * The clean extras and the wine, read by hand at the right size on the
+ * maker's own store or a Bay Area grocer (2026-11-03): the Instacart scrape
+ * stopped, its terms bar automated access (COSTDATA Q1).
+ */
+const shelf = (url: string, scope: string) =>
+	from({ url, period: 'shelf price, 2026-11-03', scope, checkedAt: '2026-11-03', recheckDays: 30 });
 const ikon = from({
 	url: 'https://www.ikonpass.com/en/shop-passes',
 	period: '2026-27 season',
@@ -206,6 +222,27 @@ export const CITED = {
 	'usda.liberal.m51to70': usda(449.1, 'male 51-70'),
 	'usda.liberal.f51to70': usda(399.5, 'female 51-70'),
 
+	'vitalProteins.collagen': shelf(
+		'https://www.vitalproteins.com/products/vp-collagen-peptides',
+		'Vital Proteins Collagen Peptides, Unflavored, 19.3 oz tub (no 20 oz sold now), vitalproteins.com'
+	)(45, 'collagen tub, 19.3 oz'),
+	'manukaHealth.mgo263': shelf(
+		'https://us.manukahealth.com/products/original-mgo-263-manuka-honey-us',
+		'Manuka Health Original MGO 263+, 8.8 oz jar, us.manukahealth.com'
+	)(29.49, 'manuka honey MGO 263+, 8.8 oz'),
+	'goodEggs.kombucha': shelf(
+		'https://www.goodeggs.com/marinkombucha/original-oak-kombucha/69261985beff800012fbd6f9',
+		'Marin Kombucha Original Oak, 16 fl oz, Good Eggs (SF Bay delivery)'
+	)(3.99, 'kombucha, 16 fl oz'),
+	'goodEggs.oatly': shelf(
+		'https://www.goodeggs.com/oatlysfbay/original-oat-milk/5bb7ca3121cc66000f5492b4',
+		'Oatly Original Oatmilk, 64 fl oz, Good Eggs (SF Bay delivery)'
+	)(6.49, 'oat milk, 64 fl oz'),
+	'silverOak.alexanderValley': shelf(
+		'https://silveroak.com/products/2022-alexander-valley-cabernet-sauvignon-750ml',
+		'Silver Oak 2022 Alexander Valley Cabernet Sauvignon, 750 ml, silveroak.com'
+	)(90, 'Silver Oak Alexander Valley, 750 ml'),
+
 	// Kids
 	'spark.ask': from({
 		url: 'https://sparkschools.org/how-to-donate/',
@@ -291,14 +328,9 @@ export const CITED = {
 	})(2750, 'functional-medicine membership, $/yr'),
 
 	// Cars
-	'rivian.dueAtSigning': from({
-		url: 'https://rivian.com/offers',
-		period: 'orders to 2026-11-02',
-		scope: 'Rivian R1S Dual Large lease, US',
-		checkedAt: CHECKED,
-		recheckDays: 30,
-		validUntil: '2026-11-02'
-	})(7604, 'due at signing'),
+	// One offer, both parts (COSTDATA Q1): Rivian's own disclosure, read by hand.
+	'rivian.lease': rivian(1209, 'lease, $/mo'),
+	'rivian.dueAtSigning': rivian(9104, 'due at signing'),
 	'rangeRover.lease': from({
 		url: 'https://www.rangerover.com/en-us/current-offers/range-rover-sport-offers.html',
 		period: 'deliveries by 2026-11-02',

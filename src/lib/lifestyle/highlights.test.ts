@@ -10,13 +10,7 @@ const NOW = new Date('2026-10-23T11:36:55.978Z');
 const LIVE: Record<LiveKey, number> = {
 	'gas.regular': 6.179,
 	'coffee.cappuccino': 4.925,
-	'grocery.collagen': 13.47,
-	'grocery.manuka': 10.99,
-	'grocery.kombucha': 4.79,
-	'grocery.oatMilk': 3.99,
-	'grocery.silverOak': 83.49,
-	'ikon.adult': 1449,
-	'rivian.lease': 1209
+	'ikon.adult': 1449
 };
 const reads = (over: Partial<Record<LiveKey, Partial<LiveRead>>> = {}) =>
 	Object.fromEntries(
@@ -279,11 +273,11 @@ describe('rank across the households', () => {
 
 describe('an incomplete household', () => {
 	const live = reads({
-		'grocery.silverOak': { availability: 'unavailable', value: null, reason: 'no read' }
+		'gas.regular': { availability: 'unavailable', value: null, reason: 'no read' }
 	});
 
 	it('has no highlights, and leaves the rank to the households priced in full', () => {
-		// Silver Oak is Larkspur's and Ross's wine: both are incomplete without it.
+		// Gas fuels Larkspur's SUV and Ross's Range Rover (Mill Valley drives EVs): both are incomplete without it.
 		const ctx = context({ budgets: budgets(live) });
 		const f = highlightFacts(ctx);
 		expect(ctx.budgets.filter((b) => !b.complete).map((b) => b.town)).toEqual(['larkspur', 'ross']);
