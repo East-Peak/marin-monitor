@@ -13,8 +13,8 @@ export const GET: RequestHandler = async ({ request }) => {
 
 	const start = Date.now();
 	try {
-		const data = await scrapeHousing();
-		await put('marin-housing.json', JSON.stringify(data), {
+		const doc = await scrapeHousing();
+		await put('marin-housing.json', JSON.stringify(doc), {
 			access: 'private',
 			contentType: 'application/json',
 			addRandomSuffix: false,
@@ -22,10 +22,15 @@ export const GET: RequestHandler = async ({ request }) => {
 			token: env.BLOB_READ_WRITE_TOKEN
 		});
 
-		console.log(`[sync-housing] OK: ${data.length} items in ${Date.now() - start}ms`);
-		return new Response(JSON.stringify({ ok: true, count: data.length }), {
-			headers: { 'Content-Type': 'application/json' }
-		});
+		console.log(
+			`[sync-housing] OK: ${doc.months.length} months to ${doc.periodEnd} in ${Date.now() - start}ms`
+		);
+		return new Response(
+			JSON.stringify({ ok: true, count: doc.months.length, periodEnd: doc.periodEnd }),
+			{
+				headers: { 'Content-Type': 'application/json' }
+			}
+		);
 	} catch (err) {
 		return cronErrorResponse('sync-housing', err, start);
 	}

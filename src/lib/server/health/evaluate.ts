@@ -22,9 +22,11 @@ export interface SourcePolicy {
 	 * Which timestamp counts as an observation. `content` = the scrape
 	 * metadata inside the blob (`lastSuccessfulScrapeAt`): a fallback write
 	 * does not advance it. `upload` = blob upload time, for snapshot datasets
-	 * whose every write is a real observation.
+	 * whose every write is a real observation. `period` = the source's own
+	 * period end inside the blob (`periodEnd`): re-reading an old month never
+	 * makes it fresh.
 	 */
-	readonly observedAt: 'content' | 'upload';
+	readonly observedAt: 'content' | 'upload' | 'period';
 	/** Deliberately static data: acceptable at any age, but must exist. */
 	readonly reference?: true;
 	readonly note?: string;
@@ -142,7 +144,7 @@ function evaluateSource(
 	if (observation.kind === 'error') return result('unknown', 'blob unreadable');
 
 	const raw =
-		policy.observedAt === 'content' ? observation.contentTimestamp : observation.uploadedAt;
+		policy.observedAt === 'upload' ? observation.uploadedAt : observation.contentTimestamp;
 	if (raw === null || raw === undefined) {
 		return policy.reference
 			? result('reference', null)

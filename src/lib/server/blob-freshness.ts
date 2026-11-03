@@ -36,6 +36,17 @@ export function extractBlobFreshnessTimestamp(data: unknown): string | null {
 }
 
 /**
+ * The source's own period end (`periodEnd`), from the document or its
+ * `current` snapshot: for data whose age is the age of the period it
+ * describes, however recently we re-read it.
+ */
+export function extractSourcePeriodEnd(data: unknown): string | null {
+	if (!isJsonRecord(data)) return null;
+	const current = isJsonRecord(data.current) ? asString(data.current.periodEnd) : null;
+	return current ?? asString(data.periodEnd);
+}
+
+/**
  * Read freshness timestamp for a blob.
  *
  * Two distinct semantics:
@@ -54,6 +65,8 @@ export async function readBlobFreshnessTimestamp(
 	token: string,
 	options: {
 		preferContent?: boolean;
+		/** With preferContent: which content time counts (default: our last good read). */
+		contentField?: 'scrape' | 'period';
 		timeoutMs?: number;
 	} = {}
 ): Promise<{ uploadedAt: string | null; lastUpdated: string | null }> {
@@ -76,7 +89,9 @@ export async function readBlobFreshnessTimestamp(
 		}
 
 		const data = await response.json();
-		return { uploadedAt, lastUpdated: extractBlobFreshnessTimestamp(data) };
+		const extract =
+			options.contentField === 'period' ? extractSourcePeriodEnd : extractBlobFreshnessTimestamp;
+		return { uploadedAt, lastUpdated: extract(data) };
 	} catch {
 		return { uploadedAt, lastUpdated: null };
 	}

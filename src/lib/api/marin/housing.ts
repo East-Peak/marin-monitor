@@ -2,11 +2,11 @@
  * Housing data adapter for Marin County
  *
  * Uses pre-extracted Redfin Data Center data stored as a static JSON file.
- * The source data comes from Redfin's national county_market_tracker.tsv000.gz,
- * filtered to Marin County "All Residential" and saved to static/data/marin-housing.json.
+ * The source data comes from Redfin's Data Center all_counties.csv (monthly),
+ * filtered to Marin County (all residential); static/data/marin-housing.json is the fallback.
  *
  * To refresh: the housing cron triggers `scrapeHousing()` server-side, which
- * streams and filters the Redfin TSV and stores the result as a blob.
+ * streams and filters the Redfin CSV and stores the result as a blob.
  */
 
 import { logger } from '$lib/config/api';

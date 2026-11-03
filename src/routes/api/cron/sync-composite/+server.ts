@@ -24,7 +24,7 @@ import type { WineIndexData } from '$lib/types/wine';
 import type { FitnessData } from '$lib/types/fitness';
 import type { SchoolIndexData } from '$lib/types/school';
 import type { GasPriceData } from '$lib/types/gas';
-import type { HousingMetric } from '$lib/api/marin/housing';
+import { housingMonths } from '$lib/server/scrapers/housing';
 
 export const config = { maxDuration: 60 };
 
@@ -95,7 +95,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			readBlob<WineIndexData>(WINE_INDEX_BLOB_KEY),
 			readBlob<FitnessData>(FITNESS_BLOB_KEY),
 			readBlob<SchoolIndexData>(SCHOOL_TUITION_BLOB_KEY),
-			readBlob<HousingMetric[]>(HOUSING_BLOB_KEY),
+			readBlob<unknown>(HOUSING_BLOB_KEY).then(housingMonths),
 			readBlob<GasPriceData>(GAS_BLOB_KEY),
 			readBlob<CampPriceData>(CAMP_PRICES_BLOB_KEY),
 			readBlob<IkonPassData>(IKON_PASS_BLOB_KEY),

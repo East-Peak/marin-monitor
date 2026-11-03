@@ -73,6 +73,20 @@ describe('evaluate', () => {
 		expect(resultFor(stale, 'Snapshot')?.status).toBe('stale');
 	});
 
+	it('ages a period-observed source by its period, even when re-read and uploaded today', () => {
+		const PERIOD = { ...LIVE, name: 'Period', observedAt: 'period', maxAgeDays: 60 } as const;
+		// Prod's housing on 2026-11-03: uploaded 10-26, but Redfin's last month ended 05-31.
+		const now = new Date('2026-11-03T12:00:00.000Z');
+		const may = found('2026-05-31T00:00:00.000Z', daysAgo(0, now));
+		const sep = found('2026-09-30T00:00:00.000Z', daysAgo(0, now));
+		expect(resultFor(evaluate(inventory(PERIOD), { Period: may }, now), 'Period')?.status).toBe(
+			'stale'
+		);
+		expect(resultFor(evaluate(inventory(PERIOD), { Period: sep }, now), 'Period')?.status).toBe(
+			'ok'
+		);
+	});
+
 	it('is unknown, not ok, when the observation timestamp is missing', () => {
 		const report = evaluate(inventory(LIVE), { Live: found(null) }, NOW);
 		expect(resultFor(report, 'Live')).toMatchObject({ status: 'unknown', ageDays: null });

@@ -27,8 +27,9 @@ const ALL_SOURCES: readonly SourcePolicy[] = freeze<SourcePolicy>([
 		name: 'Housing',
 		blobKey: 'marin-housing.json',
 		cadence: 'monthly',
-		maxAgeDays: 45,
-		observedAt: 'upload'
+		maxAgeDays: 60,
+		observedAt: 'period',
+		note: "Redfin's month, not our read: month M is issued in the 2nd week of M+1"
 	},
 	// Mac mini launchd (Playwright; residential IP).
 	{

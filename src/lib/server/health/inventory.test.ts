@@ -118,6 +118,12 @@ describe('SOURCE_INVENTORY', () => {
 		expect((gg?.maxAgeDays ?? 0) * 24).toBeCloseTo(1);
 	});
 
+	it('ages period-dated sources by the source period, never by our read or upload (COSTDATA-1)', () => {
+		const housing = SOURCE_INVENTORY.find((s) => s.name === 'Housing');
+		// Redfin issues month M in the 2nd week of M+1, so 60 days from M's end spans one late release.
+		expect(housing).toMatchObject({ observedAt: 'period', cadence: 'monthly', maxAgeDays: 60 });
+	});
+
 	it('gives every source a positive max age', () => {
 		for (const source of SOURCE_INVENTORY) expect(source.maxAgeDays).toBeGreaterThan(0);
 	});

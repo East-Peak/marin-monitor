@@ -7,7 +7,7 @@ const mockFetchWithTimeout = vi.fn();
 vi.mock('@vercel/blob', () => ({ head: mockHead }));
 vi.mock('$lib/server/fetch-utils', () => ({ fetchWithTimeout: mockFetchWithTimeout }));
 
-const { extractBlobFreshnessTimestamp, readBlobFreshnessTimestamp } =
+const { extractBlobFreshnessTimestamp, extractSourcePeriodEnd, readBlobFreshnessTimestamp } =
 	await import('./blob-freshness');
 
 beforeEach(() => {
@@ -70,6 +70,23 @@ describe('extractBlobFreshnessTimestamp', () => {
 
 	it('returns null for array-backed blobs without embedded metadata', () => {
 		expect(extractBlobFreshnessTimestamp([{ timestamp: '2026-03-30T12:00:00.000Z' }])).toBeNull();
+	});
+});
+
+describe('extractSourcePeriodEnd', () => {
+	it('reads the source period end from the document or its current snapshot', () => {
+		expect(extractSourcePeriodEnd({ periodEnd: '2026-09-30T00:00:00.000Z', months: [] })).toBe(
+			'2026-09-30T00:00:00.000Z'
+		);
+		expect(extractSourcePeriodEnd({ current: { periodEnd: '2026-09-30T00:00:00.000Z' } })).toBe(
+			'2026-09-30T00:00:00.000Z'
+		);
+	});
+	it('never stands in our read time for a missing period', () => {
+		expect(
+			extractSourcePeriodEnd({ lastSuccessfulScrapeAt: '2026-11-03T00:00:00.000Z' })
+		).toBeNull();
+		expect(extractSourcePeriodEnd([{ month: '2026-05-01' }])).toBeNull();
 	});
 });
 
