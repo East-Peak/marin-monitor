@@ -28,6 +28,13 @@ const BLOBS: Record<string, unknown> = {
 			periodEnd: '2026-09-30T00:00:00.000Z',
 			values: Object.fromEntries(USDA_KEYS.map((k) => [k, 400]))
 		}
+	},
+	[LIVE_BLOBS.pge]: {
+		current: {
+			lastSuccessfulScrapeAt: AT,
+			period: 'effective Jun 1, 2026',
+			values: { 'pge.ev2a.peak': 0.41099, 'pge.ev2a.offPeak': 0.22558 }
+		}
 	}
 };
 

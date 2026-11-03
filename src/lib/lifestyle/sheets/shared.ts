@@ -31,9 +31,9 @@ export function electricity(
 		inputs: {
 			kwh: persona(use.kwh, 'kWh a month'),
 			offShare: persona(use.offPeakShare, 'off-peak share'),
-			off: cite('pge.ev2a.offPeak'),
+			off: live('pge.ev2a.offPeak'),
 			peakShare: persona(1 - use.offPeakShare, 'peak share'),
-			peak: cite('pge.ev2a.peak'),
+			peak: live('pge.ev2a.peak'),
 			baseCharge: persona(use.baseCharge, `Base Services Charge ~$${use.baseCharge}`)
 		},
 		terms: [
@@ -139,7 +139,7 @@ export function car(
 					required: true,
 					inputs: {
 						miles: persona(opts.miles, 'miles a month'),
-						rate: cite('pge.ev2a.offPeak'),
+						rate: live('pge.ev2a.offPeak'),
 						efficiency: persona(power.milesPerKwh, 'miles per kWh')
 					},
 					terms: [spread(['miles', 'rate'], ['efficiency'])]

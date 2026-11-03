@@ -19,7 +19,9 @@ const LIVE: Record<LiveKey, number> = {
 	'usda.liberal.m12to13': 460.6,
 	'usda.liberal.m14to18': 473.9,
 	'usda.liberal.m19to50': 486.8,
-	'usda.liberal.m51to70': 449.1
+	'usda.liberal.m51to70': 449.1,
+	'pge.ev2a.peak': 0.41,
+	'pge.ev2a.offPeak': 0.23
 };
 const reads = (over: Partial<Record<LiveKey, Partial<LiveRead>>> = {}) =>
 	Object.fromEntries(

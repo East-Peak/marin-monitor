@@ -1,4 +1,4 @@
-import { USDA_KEYS } from '$lib/lifestyle/model';
+import { PGE_EV2_KEYS, USDA_KEYS } from '$lib/lifestyle/model';
 import { describe, expect, it, vi } from 'vitest';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -20,18 +20,20 @@ import {
 
 const signal = new AbortController().signal;
 const liveReads = Object.fromEntries(
-	[...(['gas.regular', 'coffee.cappuccino', 'ikon.adult'] satisfies LiveKey[]), ...USDA_KEYS].map(
-		(k): [string, LiveRead] => [
-			k,
-			{
-				availability: 'ok',
-				value: 10,
-				observedAt: '2026-10-20T12:00:00.000Z',
-				maxAgeDays: 10,
-				source: 'test'
-			}
-		]
-	)
+	[
+		...(['gas.regular', 'coffee.cappuccino', 'ikon.adult'] satisfies LiveKey[]),
+		...USDA_KEYS,
+		...PGE_EV2_KEYS
+	].map((k): [string, LiveRead] => [
+		k,
+		{
+			availability: 'ok',
+			value: 10,
+			observedAt: '2026-10-20T12:00:00.000Z',
+			maxAgeDays: 10,
+			source: 'test'
+		}
+	])
 ) as LiveReads;
 const budget = (town: string) =>
 	({

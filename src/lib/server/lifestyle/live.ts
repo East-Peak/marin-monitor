@@ -4,7 +4,13 @@
  * was written. A fallback, default or reference price is never `ok`; a value
  * we cannot vouch for is `unavailable`, never a substitute.
  */
-import { USDA_KEYS, type LiveKey, type LiveRead, type LiveReads } from '$lib/lifestyle/model';
+import {
+	PGE_EV2_KEYS,
+	USDA_KEYS,
+	type LiveKey,
+	type LiveRead,
+	type LiveReads
+} from '$lib/lifestyle/model';
 import { FUTURE_TOLERANCE_MS, parseTimestamp } from '$lib/server/health/evaluate';
 import { SOURCE_INVENTORY } from '$lib/server/health/inventory';
 
@@ -13,7 +19,8 @@ export const LIVE_BLOBS = {
 	gas: 'marin-gas-prices.json',
 	cappuccino: 'marin-cappuccino.json',
 	ikon: 'marin-ikon-pass.json',
-	usda: 'marin-usda-food-plans.json'
+	usda: 'marin-usda-food-plans.json',
+	pge: 'marin-pge-ev2.json'
 } as const;
 export type LiveBlobName = keyof typeof LIVE_BLOBS;
 /** Parsed blob JSON, or null when the blob could not be read. */
@@ -178,6 +185,9 @@ function published(
 const usdaSource = (period: string | undefined) =>
 	`USDA Liberal food plan${period ? `, ${period}` : ''} (fna.usda.gov)`;
 
+const ev2Source = (period: string | undefined) =>
+	`PG&E Schedule EV2, winter${period ? `, ${period}` : ''} (pge.com)`;
+
 export function readLive(blobs: RawLiveBlobs, now: Date): LiveReads {
 	const reads: Record<LiveKey, LiveRead> = {
 		'gas.regular': gas(blobs.gas, now),
@@ -185,7 +195,11 @@ export function readLive(blobs: RawLiveBlobs, now: Date): LiveReads {
 		'ikon.adult': lastScraped(blobs.ikon, 'adultPrice', 'Ikon Pass adult, ikonpass.com', now),
 		...(Object.fromEntries(
 			USDA_KEYS.map((key) => [key, published('usda', blobs.usda, key, 'period', usdaSource, now)])
-		) as Record<(typeof USDA_KEYS)[number], LiveRead>)
+		) as Record<(typeof USDA_KEYS)[number], LiveRead>),
+		// A tariff is the rate in effect: our check ages it, its effective date rides along.
+		...(Object.fromEntries(
+			PGE_EV2_KEYS.map((key) => [key, published('pge', blobs.pge, key, 'checked', ev2Source, now)])
+		) as Record<(typeof PGE_EV2_KEYS)[number], LiveRead>)
 	};
 	return reads;
 }

@@ -84,7 +84,11 @@ export const USDA_KEYS = [
 ] as const;
 export type UsdaKey = (typeof USDA_KEYS)[number];
 
-export type LiveKey = 'gas.regular' | 'coffee.cappuccino' | 'ikon.adult' | UsdaKey;
+/** PG&E Schedule EV2's winter total bundled rates, $/kWh. */
+export const PGE_EV2_KEYS = ['pge.ev2a.peak', 'pge.ev2a.offPeak'] as const;
+export type PgeEv2Key = (typeof PGE_EV2_KEYS)[number];
+
+export type LiveKey = 'gas.regular' | 'coffee.cappuccino' | 'ikon.adult' | UsdaKey | PgeEv2Key;
 
 /** One live value as read from our own data, with its own observation time. */
 export interface LiveRead {

@@ -25,13 +25,6 @@ const redfin = from({
 	checkedAt: CHECKED,
 	recheckDays: 3650
 });
-const pge = from({
-	url: 'https://www.pge.com/assets/pge/docs/account/rate-plans/residential-electric-rate-plan-pricing.pdf.coredownload.pdf',
-	period: 'effective 2026-03-01, winter',
-	scope: 'PG&E bundled residential, EV2-A',
-	checkedAt: CHECKED,
-	recheckDays: 180
-});
 const mmwd = from({
 	url: 'https://marinwater.org/wp-content/uploads/2026/06/English_Marin-Water-Rate-Tables_Effective-July-1-2026.pdf',
 	period: 'effective 2026-07-01',
@@ -170,14 +163,13 @@ export const CITED = {
 	})(0.01, '1% base (Prop 13)'),
 
 	// Utilities
-	'pge.ev2a.offPeak': pge(0.23, 'EV2-A off-peak, $/kWh'),
-	'pge.ev2a.peak': pge(0.41, 'EV2-A peak (4–9 pm), $/kWh'),
 	'pge.gas.therm': from({
 		url: 'https://www.pge.com/assets/pge/docs/account/rate-plans/gas-rate-advisory-0326.pdf',
 		period: 'effective 2026-03-01',
 		scope: 'PG&E bundled residential gas, non-CARE',
 		checkedAt: CHECKED,
-		recheckDays: 180
+		// Stays cited (COSTDATA Q2): the only monthly series is tiered, a model change.
+		recheckDays: 90
 	})(2.792, '$/therm'),
 	'mmwd.tier1': mmwd(10.86, 'tier 1, $/unit'),
 	'mmwd.tier2': mmwd(14.19, 'tier 2, $/unit'),

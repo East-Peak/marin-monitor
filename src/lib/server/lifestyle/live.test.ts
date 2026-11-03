@@ -59,8 +59,20 @@ const usda = (periodEnd = '2026-09-30T00:00:00.000Z', checked = '2026-10-19T12:0
 	}
 });
 
+const ev2 = (checked = '2026-10-19T12:00:00.000Z') => ({
+	current: {
+		timestamp: checked,
+		lastSuccessfulScrapeAt: checked,
+		url: 'https://www.pge.com/tariffs/x.pdf',
+		period: 'effective Jun 1, 2026',
+		effective: '2026-06-01',
+		values: { 'pge.ev2a.peak': 0.41099, 'pge.ev2a.offPeak': 0.22558 }
+	}
+});
+
 const healthy = (): RawLiveBlobs => ({
 	usda: usda(),
+	pge: ev2(),
 	gas: gas('2026-10-20T12:00:00.000Z'),
 	cappuccino: cappuccino([shop(5, 'live'), shop(4.85, 'live'), shop(5, 'live')]),
 	ikon: monthly('adultPrice', [
@@ -219,6 +231,19 @@ describe('readLive', () => {
 		expect(readLive({ ...healthy(), usda: null }, NOW)['usda.liberal.m19to50'].availability).toBe(
 			'unavailable'
 		);
+	});
+
+	it('reads the EV2 winter rate as the rate in effect at our check, with its effective date', () => {
+		expect(readLive(healthy(), NOW)['pge.ev2a.offPeak']).toEqual({
+			availability: 'ok',
+			value: 0.22558,
+			observedAt: '2026-10-19T12:00:00.000Z',
+			maxAgeDays: 10,
+			source: 'PG&E Schedule EV2, winter, effective Jun 1, 2026 (pge.com)',
+			period: 'effective Jun 1, 2026'
+		});
+		const old = { ...healthy(), pge: ev2('2026-10-01T12:00:00.000Z') };
+		expect(readLive(old, NOW)['pge.ev2a.peak'].availability).toBe('stale');
 	});
 
 	it('has no grocery or Rivian reads: those scrapes stopped (COSTDATA Q1)', () => {

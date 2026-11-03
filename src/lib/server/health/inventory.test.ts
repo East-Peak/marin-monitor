@@ -32,7 +32,8 @@ const EXPECTED_SOURCES = [
 	'Camp Prices',
 	'Dog Walker',
 	'Ikon Pass',
-	'USDA Food Plans'
+	'USDA Food Plans',
+	'PG&E EV2'
 ];
 
 describe('SOURCE_INVENTORY', () => {

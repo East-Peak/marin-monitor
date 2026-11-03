@@ -200,6 +200,14 @@ const ALL_SOURCES: readonly SourcePolicy[] = freeze<SourcePolicy>([
 		maxAgeDays: 75,
 		observedAt: 'period',
 		note: "USDA's report month, not our read: month M is issued mid M+1"
+	},
+	{
+		name: 'PG&E EV2',
+		blobKey: 'marin-pge-ev2.json',
+		cadence: 'weekly',
+		maxAgeDays: 10,
+		observedAt: 'content',
+		note: 'the rate in effect at our weekly check; its effective date rides in the blob'
 	}
 ]);
 
