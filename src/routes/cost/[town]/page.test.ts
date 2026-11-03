@@ -54,10 +54,10 @@ describe('/cost/<town>', () => {
 		const c = page(budget('ross'));
 		expect(text(c, '[data-burn]')).toMatch(/a month so far$/);
 		expect(text(c, '[data-incomplete]')).toBe('incomplete');
-		expect(sectionTotal(c, 'travel')).toMatch(/\/mo so far$/);
+		expect(sectionTotal(c, 'food')).toMatch(/\/mo so far$/);
 		expect(sectionTotal(c, 'housing')).toMatch(/%$/);
 		expect(text(c, '[data-budget-total]')).toMatch(/\/mo so far$/);
-		expect(text(c, '[data-line="ross.travel.ikon"] summary')).toContain('can’t be read');
+		expect(text(c, '[data-line="ross.food.groceries"] summary')).toContain('can’t be read');
 	});
 
 	it('a non-required line unread: so far, with the break-even kept', () => {

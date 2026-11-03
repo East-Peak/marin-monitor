@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { priceAnchors } from '$lib/lifestyle/anchors';
 import { historyEntry } from '$lib/lifestyle/history';
-import type { LiveKey, LiveRead, LiveReads } from '$lib/lifestyle/model';
+import { USDA_KEYS, type LiveKey, type LiveRead, type LiveReads } from '$lib/lifestyle/model';
 import { priceSheet } from '$lib/lifestyle/price';
 import { SHEETS } from '$lib/lifestyle/sheets';
 import type { LifestyleDoc } from './producer';
@@ -52,22 +52,24 @@ const reads = (over: Partial<Record<LiveKey, Partial<LiveRead>>>, at = AT) =>
 	) as LiveReads;
 
 /**
- * The LIFE2 e2e seed: the real sheets priced by the real engine. Mill Valley's cappuccino read
- * is stale; Ross's Ikon pass could not be read, so Ross is incomplete and the run did not
- * succeed. Its history has the week before, when gas was $5.90 (LIFE3's movers).
+ * The LIFE2 e2e seed: the real sheets priced by the real engine. Mill Valley's USDA read is
+ * stale; Ross's could not be read, so Ross's groceries (not a signature line) leave it
+ * incomplete and the run did not succeed. Its history has the week before, when gas was $5.90
+ * (LIFE3's movers).
  */
 function seed(): LifestyleDoc {
-	const stale = { availability: 'stale', reason: 'older than 10d' } as const;
-	const unread = { availability: 'unavailable', value: null, reason: 'no read' } as const;
+	const usda = (r: Partial<LiveRead>) => Object.fromEntries(USDA_KEYS.map((k) => [k, r]));
+	const stale = usda({ availability: 'stale', reason: 'older than 75d' });
+	const unread = usda({ availability: 'unavailable', value: null, reason: 'no read' });
 	const price = (now: Date, at: string, over: Partial<Record<LiveKey, Partial<LiveRead>>>) =>
 		SHEETS.map((s) =>
 			priceSheet(
 				s,
 				reads(
 					s.id === 'ross'
-						? { ...over, 'ikon.adult': unread }
+						? { ...over, ...unread }
 						: s.id === 'millvalley'
-							? { ...over, 'coffee.cappuccino': stale }
+							? { ...over, ...stale }
 							: over,
 					at
 				),

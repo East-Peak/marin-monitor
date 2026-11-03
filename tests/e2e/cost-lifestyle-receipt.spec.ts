@@ -4,8 +4,8 @@ import { stub } from './fixtures/v2-height';
 /**
  * COST1: the card's receipt and its landing on /cost/<town>, on the seeded server (see
  * cost-lifestyle.spec.ts). Each flow runs at 1440 here and, tagged `@phone`, on an iPhone 13
- * (WebKit) and a Pixel 7 (Chromium). The seed: Larkspur complete, Mill Valley's clean extras
- * stale, Ross incomplete (wine, not a signature line).
+ * (WebKit) and a Pixel 7 (Chromium). The seed: Larkspur complete, Mill Valley's groceries
+ * stale, Ross incomplete (groceries, not a signature line).
  */
 test.skip(({ baseURL }) => baseURL?.startsWith('https://') ?? false, 'seeded');
 
@@ -128,7 +128,8 @@ const flows: [string, (page: Page, phone: boolean) => Promise<void>][] = [
 		'the receipt: stale, $0 with its note, and an incomplete household',
 		async (page, phone) => {
 			const c = await openCard(page, phone, 'mill-valley');
-			await expect(c.locator('a[data-line="millvalley.food.clean"]')).toContainText('stale');
+			// No signature line is live since COSTDATA Q1; stale on a receipt row is a component test.
+			await expect(c.locator('[data-card-source]')).toContainText('lines read stale');
 			await expect(c.locator('[data-see-all]')).toHaveText('See all 42 lines →');
 			await c.locator('[data-town="ross"]').click();
 			const mortgage = c.locator('a[data-line="ross.home.pi"]');

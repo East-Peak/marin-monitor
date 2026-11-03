@@ -6,7 +6,7 @@ import { phoneHeight, stub } from './fixtures/v2-height';
 /**
  * The Lifestyle Index's display (LIFE2), on its own preview with the flag on and the engine-written
  * seed (src/lib/server/lifestyle/fixture.test.ts): Larkspur complete, Mill Valley with stale
- * lines, Ross incomplete (its wine could not be read). Every number is the seed's own.
+ * lines, Ross incomplete (its USDA groceries could not be read). Every number is the seed's own.
  */
 test.skip(({ baseURL }) => baseURL?.startsWith('https://') ?? false, 'seeded');
 
@@ -82,7 +82,9 @@ for (const [label, viewport] of [
 			await c.locator('[data-town="ross"]').click();
 			await expect(c.locator('[data-incomplete]')).toHaveText('incomplete');
 			await expect(c.locator('[data-break-even]')).toHaveCount(0);
-			await expect(c).toContainText('no break-even while Wine can’t be read');
+			await expect(c).toContainText(
+				'no break-even while Groceries (USDA Liberal plan) can’t be read'
+			);
 
 			await c.locator('[data-town="larkspur"]').click();
 			await c.getByRole('link', { name: 'See all 40 lines →' }).click();
@@ -110,9 +112,10 @@ for (const [label, viewport] of [
 			await expect(price).toContainText('checked');
 			// The market tracker carries its own provenance and is never called today’s.
 			const tracker = page.locator('[data-market-tracker]');
-			await expect(tracker.locator('[data-classes]')).toHaveAttribute('data-classes', 'cited');
-			await expect(tracker.getByRole('link')).toHaveAttribute('href', /^https:\/\//);
-			await expect(tracker).toContainText('checked');
+			// Redfin's 3-month city median, read live (COSTDATA Q3): it says when we read it.
+			await expect(tracker.locator('[data-classes]')).toHaveAttribute('data-classes', 'live');
+			await expect(tracker).toContainText('all residential, Redfin');
+			await expect(tracker).toContainText('read');
 			await expect(tracker).not.toContainText('Today');
 			const rate = pi.locator('[data-input="ratePct"]');
 			await expect(rate).toHaveAttribute('data-class', 'persona');
@@ -187,9 +190,9 @@ for (const [label, viewport] of [
 			await expect(page.locator('[data-incomplete]')).toHaveText('incomplete');
 			await expect(page.locator('[data-break-even]')).toHaveCount(0);
 			await expect(page.locator('main')).toContainText(
-				'No break-even while these can’t be read: Wine'
+				'No break-even while these can’t be read: Groceries (USDA Liberal plan)'
 			);
-			await expect(page.locator('details[data-line="ross.food.wine"]')).toHaveAttribute(
+			await expect(page.locator('details[data-line="ross.food.groceries"]')).toHaveAttribute(
 				'data-availability',
 				'unavailable'
 			);

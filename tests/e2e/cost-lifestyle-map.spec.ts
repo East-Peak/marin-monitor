@@ -4,7 +4,7 @@ import { stub } from './fixtures/v2-height';
 
 /**
  * COST2: the month as a treemap, on the seeded server (see cost-lifestyle.spec.ts): the card at
- * desktop widths, the page at every width. The seed: Larkspur complete; Ross incomplete, its wine
+ * desktop widths, the page at every width. The seed: Larkspur complete; Ross incomplete, its groceries
  * unread, Business at $0 with its lines read. The TEXT1 visuals check inventories only SVG, canvas
  * and images, so the map and the bars it leaves alone are asserted here, directly.
  */
