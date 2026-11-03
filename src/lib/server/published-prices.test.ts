@@ -61,6 +61,14 @@ describe('PG&E Schedule EV2 (sheet 2, Advice 7921-E)', () => {
 		expect(ev2.effective).toBe('2026-06-01');
 	});
 
+	it('never takes a Winter row from past the bundled-rates sheet', () => {
+		const sheet = fixture('pge-ev2-sheet2.txt');
+		const later =
+			'\nSome other table\n         Winter Usage    $0.99999 (R)   $0.88888 (R)   $0.77777 (R)\n';
+		const text = sheet.replace(/\s*Winter Usage[^\n]*\n/, '\n') + later;
+		expect(() => parsePgeEv2(text)).toThrow(/Winter/);
+	});
+
 	it('refuses a sheet without the Winter row', () => {
 		expect(() =>
 			parsePgeEv2(fixture('pge-ev2-sheet2.txt').replace('Winter Usage', 'Usage'))
@@ -91,6 +99,22 @@ describe('Range Rover Sport offers (one offer, all its parts)', () => {
 		expect(() =>
 			parseRangeRoverOffer(html.replace('$8,995 CASH DUE AT SIGNING', '$9,995 CASH DUE AT SIGNING'))
 		).toThrow(/due at signing/);
+	});
+
+	it('rejects a disclosure for another trim than the headline’s', () => {
+		expect(() =>
+			parseRangeRoverOffer(
+				html.replace('New Range Rover Sport P360 with', 'New Range Rover Sport P400 with')
+			)
+		).toThrow(/disclosure/);
+	});
+
+	it('rejects a disclosure whose total of payments is not the headline’s monthly × term', () => {
+		expect(() =>
+			parseRangeRoverOffer(
+				html.replace('Total of lease payments $23,976', 'Total of lease payments $47,976')
+			)
+		).toThrow(/total/);
 	});
 
 	it('rejects an offer with no end date', () => {

@@ -384,6 +384,15 @@ describe('buildCompositeSnapshot', () => {
 		});
 	});
 
+	it('never labels the default a last read when no real grocery read exists (Codex)', () => {
+		const snapshot = buildCompositeSnapshot({
+			...ALL_NULL_INPUTS,
+			grocery: { current: null, history: [], frozen: { asOf: null, noLongerUpdated: true } }
+		});
+		const item = snapshot.marinNumber.items.find((i) => i.label.startsWith('Groceries'));
+		expect(item).toMatchObject({ label: 'Groceries (Bare Essentials x 4.3)', source: 'static' });
+	});
+
 	it('upgrades static items to live when blob data exists', () => {
 		const inputs: CompositeInputs = {
 			...ALL_NULL_INPUTS,

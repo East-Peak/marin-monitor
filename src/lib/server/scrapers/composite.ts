@@ -317,7 +317,7 @@ export function buildCompositeSnapshot(inputs: CompositeInputs): CompositeSnapsh
 			source: hasLiveHousingData(inputs.housing) ? 'live' : 'static',
 			sourceIndex: 'housing'
 		},
-		inputs.grocery?.frozen
+		inputs.grocery?.frozen?.asOf && inputs.grocery.current
 			? {
 					label: `Groceries (Bare Essentials x 4.3; ${noLongerUpdated(asOfDay(inputs.grocery.frozen.asOf), 'prices ')})`,
 					monthly: groceryMonthly,

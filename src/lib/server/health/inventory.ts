@@ -215,7 +215,8 @@ const ALL_SOURCES: readonly SourcePolicy[] = freeze<SourcePolicy>([
 		cadence: 'weekly',
 		maxAgeDays: 10,
 		observedAt: 'content',
-		note: "our weekly read of the offer page; the offer's own end is enforced where it is priced"
+		offer: true,
+		note: 'our weekly read of the offer page, and stale once the offer itself ends'
 	},
 	{
 		name: 'Redfin Cities',

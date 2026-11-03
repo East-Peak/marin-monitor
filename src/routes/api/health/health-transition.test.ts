@@ -32,7 +32,11 @@ const event = () => ({ request: new Request('https://localhost/api/health') }) a
 beforeEach(() => {
 	mockReadBlobFreshnessTimestamp.mockReset();
 	const now = new Date().toISOString();
-	mockReadBlobFreshnessTimestamp.mockResolvedValue({ uploadedAt: now, lastUpdated: now });
+	mockReadBlobFreshnessTimestamp.mockResolvedValue({
+		uploadedAt: now,
+		lastUpdated: now,
+		validUntil: '2099-12-31'
+	});
 	mockReadNewsHealthFromBlob.mockReset();
 	mockReadNewsHealthFromBlob.mockResolvedValue({
 		observation: { kind: 'found', uploadedAt: null, contentTimestamp: now },
@@ -62,7 +66,7 @@ describe('/api/health status transition', () => {
 		mockReadBlobFreshnessTimestamp.mockImplementation(async (key: string) =>
 			key === blobKey
 				? { uploadedAt: null, lastUpdated: null }
-				: { uploadedAt: now, lastUpdated: now }
+				: { uploadedAt: now, lastUpdated: now, validUntil: '2099-12-31' }
 		);
 		expect((await getHealth(event())).status).toBe(503);
 	});

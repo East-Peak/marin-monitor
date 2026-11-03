@@ -87,6 +87,24 @@ describe('evaluate', () => {
 		);
 	});
 
+	it('calls a freshly read offer stale once the offer itself has ended (Codex)', () => {
+		const OFFER = { ...LIVE, name: 'Offer', offer: true } as const;
+		const read = (validUntil: unknown): Observation => ({
+			kind: 'found',
+			uploadedAt: daysAgo(0),
+			contentTimestamp: daysAgo(0),
+			validUntil
+		});
+		const status = (o: Observation, now = NOW) =>
+			resultFor(evaluate(inventory(OFFER), { Offer: o }, now), 'Offer');
+		expect(status(read('2026-09-28'))?.status).toBe('ok'); // through its last day
+		expect(status(read('2026-09-27'))).toMatchObject({
+			status: 'stale',
+			reason: 'offer ended 2026-09-27'
+		});
+		expect(status(read(undefined))).toMatchObject({ status: 'unknown', reason: 'no offer end' });
+	});
+
 	it('is unknown, not ok, when the observation timestamp is missing', () => {
 		const report = evaluate(inventory(LIVE), { Live: found(null) }, NOW);
 		expect(resultFor(report, 'Live')).toMatchObject({ status: 'unknown', ageDays: null });

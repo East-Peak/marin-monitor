@@ -98,10 +98,15 @@ export const PGE_EV2_URL =
 export function parsePgeEv2(text) {
 	const start = text.indexOf('TOTAL BUNDLED RATES');
 	if (start < 0) throw new Error('EV2 schedule has no TOTAL BUNDLED RATES table');
-	const sheet = text.slice(start);
-	const winter = /Winter Usage\s+\$(\d\.\d{5})[^$\n]*\$(\d\.\d{5})[^$\n]*\$(\d\.\d{5})/.exec(sheet);
+	// The table runs to its sheet's footer ("Advice …"), which carries the sheet's effective date.
+	const footer = text.indexOf('Advice', start);
+	if (footer < 0) throw new Error('EV2 rates sheet has no footer');
+	const table = text.slice(start, footer);
+	const winter = /Winter Usage\s+\$(\d\.\d{5})[^$\n]*\$(\d\.\d{5})[^$\n]*\$(\d\.\d{5})/.exec(table);
 	if (!winter) throw new Error('EV2 total bundled rates have no Winter Usage row');
-	const effective = /Effective\s+([A-Z][a-z]+) (\d{1,2}), (\d{4})/.exec(sheet);
+	const effective = /Effective\s+([A-Z][a-z]+) (\d{1,2}), (\d{4})/.exec(
+		text.slice(footer, footer + 600)
+	);
 	const month = effective ? MONTHS.indexOf(effective[1]) + 1 : 0;
 	if (!effective || month === 0) throw new Error('EV2 rates sheet has no effective date');
 	const pad = (/** @type {number|string} */ n) => String(n).padStart(2, '0');
@@ -151,14 +156,26 @@ export function parseRangeRoverOffer(html) {
 	const months = Number(monthsText);
 	if (months !== RANGE_ROVER_MONTHS) throw new Error(`Range Rover offer term is ${months} months`);
 
-	const terms =
-		/with (\d+)-month lease is based on[\s\S]*?Customer must take new vehicle delivery from retailer stock by (\d{2})\/(\d{2})\/(\d{4})/.exec(
-			text
-		);
-	if (!terms) throw new Error('Range Rover offer disclosure has no end date');
-	if (Number(terms[1]) !== months)
+	// The headline's own disclosure: one on the page, for the same model and term.
+	const disclosures = [
+		...text.matchAll(
+			/New (Range Rover Sport [A-Z0-9]+) with (\d+)-month lease is based on[\s\S]*?Customer must take new vehicle delivery from retailer stock by (\d{2})\/(\d{2})\/(\d{4})/g
+		)
+	];
+	if (disclosures.length === 0) throw new Error('Range Rover offer disclosure has no end date');
+	if (disclosures.length > 1)
+		throw new Error('Range Rover page has more than one lease disclosure');
+	const terms = disclosures[0];
+	if (!trim.includes(` ${terms[1]} `)) {
+		throw new Error(`Range Rover offer disclosure is for ${terms[1]}, not ${trim}`);
+	}
+	if (Number(terms[2]) !== months)
 		throw new Error('Range Rover offer term disagrees with its disclosure');
 	const disclosure = terms[0];
+	const total = /Total of lease payments (\$[\d,]+)/.exec(disclosure);
+	if (!total || dollars(total[1]) !== dollars(monthlyText) * months) {
+		throw new Error('Range Rover offer total of payments disagrees with its monthly × term');
+	}
 
 	const parts =
 		/(\$[\d,]+) due at signing includes (\$[\d,]+) down payment, (\$[\d,]+) security deposit, (\$[\d,]+) acquisition fee and first month/.exec(
@@ -180,7 +197,7 @@ export function parseRangeRoverOffer(html) {
 		months,
 		dueAtSigning,
 		region: 'US',
-		validUntil: `${terms[4]}-${terms[2]}-${terms[3]}`
+		validUntil: `${terms[5]}-${terms[3]}-${terms[4]}`
 	};
 }
 

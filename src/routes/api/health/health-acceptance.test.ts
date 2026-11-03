@@ -65,7 +65,7 @@ function stravaAt(stravaTs: string | null) {
 	mockReadBlobFreshnessTimestamp.mockImplementation(async (key: string) =>
 		STRAVA.has(key)
 			? { uploadedAt: stravaTs, lastUpdated: stravaTs }
-			: { uploadedAt: now, lastUpdated: now }
+			: { uploadedAt: now, lastUpdated: now, validUntil: '2099-12-31' }
 	);
 }
 

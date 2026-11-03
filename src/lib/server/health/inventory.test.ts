@@ -129,6 +129,13 @@ describe('SOURCE_INVENTORY', () => {
 		});
 	});
 
+	it('judges the Range Rover lease by its offer’s end as well as our read', () => {
+		expect(SOURCE_INVENTORY.find((s) => s.name === 'Range Rover Lease')).toMatchObject({
+			observedAt: 'content',
+			offer: true
+		});
+	});
+
 	it('gives every source a positive max age', () => {
 		for (const source of SOURCE_INVENTORY) expect(source.maxAgeDays).toBeGreaterThan(0);
 	});

@@ -14,6 +14,7 @@ import {
 	lifestyleOn,
 	readLifestyleDoc
 } from '$lib/server/lifestyle/read';
+import { offerCacheControl } from '$lib/lifestyle/offers';
 import type { RequestHandler } from './$types';
 
 const READ_MS = 8000;
@@ -34,7 +35,7 @@ export const GET: RequestHandler = async () => {
 	return new Response(JSON.stringify(lifestyleCard(read.current, SHEETS, highlights)), {
 		headers: {
 			'Content-Type': 'application/json',
-			'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200'
+			'Cache-Control': offerCacheControl(read.current.budgets, new Date(), 3600, 7200)
 		}
 	});
 };

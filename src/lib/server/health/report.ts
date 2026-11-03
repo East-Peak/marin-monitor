@@ -16,14 +16,19 @@ import { NEWS_SNAPSHOT_SOURCE, readNewsHealthFromBlob } from '$lib/server/news/h
 
 async function observe(policy: SourcePolicy, token: string): Promise<Observation> {
 	try {
-		const { uploadedAt, lastUpdated } = await readBlobFreshnessTimestamp(policy.blobKey, token, {
-			preferContent: policy.observedAt !== 'upload',
-			contentField: policy.observedAt === 'period' ? 'period' : 'scrape'
-		});
+		const { uploadedAt, lastUpdated, validUntil } = await readBlobFreshnessTimestamp(
+			policy.blobKey,
+			token,
+			{
+				preferContent: policy.observedAt !== 'upload',
+				contentField: policy.observedAt === 'period' ? 'period' : 'scrape'
+			}
+		);
 		return {
 			kind: 'found',
 			uploadedAt,
-			contentTimestamp: policy.observedAt === 'upload' ? null : lastUpdated
+			contentTimestamp: policy.observedAt === 'upload' ? null : lastUpdated,
+			...(policy.offer ? { validUntil } : {})
 		};
 	} catch (error) {
 		return error instanceof BlobNotFoundError ? { kind: 'missing' } : { kind: 'error' };

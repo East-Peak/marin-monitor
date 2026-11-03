@@ -107,3 +107,32 @@ export function withOfferEnds(
 			: dropped(b, now);
 	});
 }
+
+/**
+ * Cache-Control for a response built from these budgets: never fresh, or
+ * served stale, past the first offer still running in them, so a cached page
+ * cannot show a lease after its offer ends (Codex).
+ */
+export function offerCacheControl(
+	budgets: readonly PricedBudget[],
+	now: Date,
+	sMaxAge: number,
+	staleWhileRevalidate: number
+): string {
+	const ends = budgets.flatMap((b) =>
+		b.lines.flatMap((l) =>
+			l.inputs.flatMap((i) =>
+				i.class === 'live' && i.availability !== 'unavailable' && i.validUntil
+					? [Date.parse(`${i.validUntil}T23:59:59.999Z`)]
+					: []
+			)
+		)
+	);
+	const left = ends.length
+		? Math.max(0, Math.floor((Math.min(...ends) - now.getTime()) / 1000))
+		: Infinity;
+	if (left === 0) return 'private, no-store';
+	const fresh = Math.min(sMaxAge, left);
+	const stale = Math.max(0, Math.min(staleWhileRevalidate, left - fresh));
+	return `public, s-maxage=${fresh}, stale-while-revalidate=${stale}`;
+}

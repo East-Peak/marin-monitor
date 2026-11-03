@@ -29,6 +29,8 @@ export interface SourcePolicy {
 	readonly observedAt: 'content' | 'upload' | 'period';
 	/** Deliberately static data: acceptable at any age, but must exist. */
 	readonly reference?: true;
+	/** An offer: also stale once its own end (`validUntil`, YYYY-MM-DD) has passed, however fresh our read. */
+	readonly offer?: true;
 	readonly note?: string;
 }
 
@@ -68,7 +70,7 @@ export interface HealthInventory {
 }
 
 export type Observation =
-	| { kind: 'found'; uploadedAt: string | null; contentTimestamp: unknown }
+	| { kind: 'found'; uploadedAt: string | null; contentTimestamp: unknown; validUntil?: unknown }
 	| { kind: 'missing' }
 	| { kind: 'error' };
 
@@ -163,6 +165,17 @@ function evaluateSource(
 	if (policy.reference) return result('reference', null, observedAt, ageDays);
 	if (ageMs > policy.maxAgeDays * DAY_MS) {
 		return result('stale', `older than ${policy.maxAgeDays}d`, observedAt, ageDays);
+	}
+	if (policy.offer) {
+		const end =
+			typeof observation.validUntil === 'string' &&
+			/^\d{4}-\d{2}-\d{2}$/.test(observation.validUntil)
+				? Date.parse(`${observation.validUntil}T23:59:59.999Z`)
+				: NaN;
+		if (!Number.isFinite(end)) return result('unknown', 'no offer end', observedAt, ageDays);
+		if (now.getTime() > end) {
+			return result('stale', `offer ended ${observation.validUntil}`, observedAt, ageDays);
+		}
 	}
 	return result('ok', null, observedAt, ageDays);
 }

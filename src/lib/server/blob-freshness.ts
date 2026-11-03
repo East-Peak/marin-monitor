@@ -69,7 +69,7 @@ export async function readBlobFreshnessTimestamp(
 		contentField?: 'scrape' | 'period';
 		timeoutMs?: number;
 	} = {}
-): Promise<{ uploadedAt: string | null; lastUpdated: string | null }> {
+): Promise<{ uploadedAt: string | null; lastUpdated: string | null; validUntil?: unknown }> {
 	const blob = await head(blobKey, { token });
 	const uploadedAt = blob.uploadedAt?.toISOString() ?? null;
 
@@ -91,7 +91,13 @@ export async function readBlobFreshnessTimestamp(
 		const data = await response.json();
 		const extract =
 			options.contentField === 'period' ? extractSourcePeriodEnd : extractBlobFreshnessTimestamp;
-		return { uploadedAt, lastUpdated: extract(data) };
+		const current = isJsonRecord(data) && isJsonRecord(data.current) ? data.current : data;
+		const validUntil = isJsonRecord(current) ? current.validUntil : undefined;
+		return {
+			uploadedAt,
+			lastUpdated: extract(data),
+			...(validUntil !== undefined ? { validUntil } : {})
+		};
 	} catch {
 		return { uploadedAt, lastUpdated: null };
 	}

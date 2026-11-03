@@ -73,7 +73,11 @@ const authedFreshness = () => makeEvent('/api/cron/check-freshness', 'Bearer tes
 
 function allFresh() {
 	const now = new Date().toISOString();
-	mockReadBlobFreshnessTimestamp.mockResolvedValue({ uploadedAt: now, lastUpdated: now });
+	mockReadBlobFreshnessTimestamp.mockResolvedValue({
+		uploadedAt: now,
+		lastUpdated: now,
+		validUntil: '2099-12-31'
+	});
 }
 
 /** Every source fresh except the named one, whose content is 99 days old. */
@@ -82,8 +86,8 @@ function freshExcept(staleBlobKey: string) {
 	const old = new Date(Date.now() - 99 * 86_400_000).toISOString();
 	mockReadBlobFreshnessTimestamp.mockImplementation(async (blobKey: string) =>
 		blobKey === staleBlobKey
-			? { uploadedAt: now, lastUpdated: old }
-			: { uploadedAt: now, lastUpdated: now }
+			? { uploadedAt: now, lastUpdated: old, validUntil: '2099-12-31' }
+			: { uploadedAt: now, lastUpdated: now, validUntil: '2099-12-31' }
 	);
 }
 
@@ -143,7 +147,7 @@ describe('/api/health', () => {
 			if (blobKey === 'marin-ikon-pass.json') throw new MockBlobNotFoundError('missing');
 			if (blobKey === 'marin-dog-walker.json') throw new Error('network down');
 			const now = new Date().toISOString();
-			return { uploadedAt: now, lastUpdated: now };
+			return { uploadedAt: now, lastUpdated: now, validUntil: '2099-12-31' };
 		});
 		const data = await (await getHealth(publicHealth())).json();
 		const statusOf = (name: string) =>

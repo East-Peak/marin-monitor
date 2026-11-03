@@ -14,6 +14,7 @@ import {
 	lifestyleOn,
 	readLifestyleDoc
 } from '$lib/server/lifestyle/read';
+import { offerCacheControl } from '$lib/lifestyle/offers';
 import type { PageServerLoad } from './$types';
 
 const READ_MS = 8000;
@@ -32,7 +33,7 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
 	// A failed read is never edge-cached as the household's page.
 	setHeaders({
 		'Cache-Control': budget
-			? 'public, s-maxage=600, stale-while-revalidate=3600'
+			? offerCacheControl([budget], new Date(), 600, 3600)
 			: 'private, no-store'
 	});
 	return {

@@ -1,3 +1,4 @@
+import { PGE_EV2_KEYS, RANGE_ROVER_KEYS, REDFIN_KEYS, USDA_KEYS } from '$lib/lifestyle/model';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -22,7 +23,13 @@ type PageData = {
 
 const NOW = new Date('2026-10-20T18:00:00.000Z');
 const reads = Object.fromEntries(
-	(['gas.regular', 'coffee.cappuccino', 'ikon.adult'] as LiveKey[]).map((k): [string, LiveRead] => [
+	[
+		...(['gas.regular', 'coffee.cappuccino', 'ikon.adult'] as LiveKey[]),
+		...USDA_KEYS,
+		...PGE_EV2_KEYS,
+		...RANGE_ROVER_KEYS,
+		...REDFIN_KEYS
+	].map((k): [string, LiveRead] => [
 		k,
 		{ availability: 'ok', value: 5, observedAt: NOW.toISOString(), maxAgeDays: 10, source: 't' }
 	])
