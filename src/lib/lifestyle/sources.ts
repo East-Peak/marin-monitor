@@ -305,22 +305,6 @@ export const CITED = {
 	// One offer, both parts (COSTDATA Q1): Rivian's own disclosure, read by hand.
 	'rivian.lease': rivian(1209, 'lease, $/mo'),
 	'rivian.dueAtSigning': rivian(9104, 'due at signing'),
-	'rangeRover.lease': from({
-		url: 'https://www.rangerover.com/en-us/current-offers/range-rover-sport-offers.html',
-		period: 'deliveries by 2026-11-02',
-		scope: 'Range Rover Sport P360 SE, US offer, 24 mo',
-		checkedAt: CHECKED,
-		recheckDays: 30,
-		validUntil: '2026-11-02'
-	})(999, 'lease, $/mo'),
-	'rangeRover.dueAtSigning': from({
-		url: 'https://www.rangerover.com/en-us/current-offers/range-rover-sport-offers.html',
-		period: 'deliveries by 2026-11-02',
-		scope: 'Range Rover Sport P360 SE, US offer',
-		checkedAt: CHECKED,
-		recheckDays: 30,
-		validUntil: '2026-11-02'
-	})(8995, 'due at signing'),
 	'kbb.ex90.lease': from({
 		url: 'https://www.kbb.com/volvo/ex90/deals-incentives/',
 		period: 'expires 2026-11-02',

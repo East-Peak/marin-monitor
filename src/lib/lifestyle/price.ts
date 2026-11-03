@@ -156,6 +156,9 @@ export function defineSheet(sheet: HouseholdSheet): HouseholdSheet {
 }
 
 const endOfDay = (date: string) => Date.parse(`${date}T23:59:59.999Z`);
+/** Past an offer's last day (UTC), or an end we cannot read: it prices nothing. */
+export const offerEnded = (validUntil: string, now: Date) =>
+	!(now.getTime() <= endOfDay(validUntil));
 
 export function priceInput(name: string, spec: InputSpec, live: LiveReads, now: Date): PricedInput {
 	switch (spec.class) {
@@ -195,7 +198,7 @@ export function priceInput(name: string, spec: InputSpec, live: LiveReads, now: 
 				...(read.validUntil ? { validUntil: read.validUntil } : {})
 			};
 			// An offer past its end is no price at all, however recently we read it (Codex R2 P1).
-			if (read.validUntil !== undefined && !(now.getTime() <= endOfDay(read.validUntil))) {
+			if (read.validUntil !== undefined && offerEnded(read.validUntil, now)) {
 				return {
 					name,
 					label: spec.label ?? read.source,

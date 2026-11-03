@@ -35,6 +35,14 @@ const BLOBS: Record<string, unknown> = {
 			period: 'effective Jun 1, 2026',
 			values: { 'pge.ev2a.peak': 0.41099, 'pge.ev2a.offPeak': 0.22558 }
 		}
+	},
+	[LIVE_BLOBS.rangeRover]: {
+		current: {
+			lastSuccessfulScrapeAt: AT,
+			period: 'offer, deliveries by Nov 30, 2026',
+			validUntil: '2026-11-30',
+			values: { 'rangeRover.lease': 999, 'rangeRover.dueAtSigning': 8995 }
+		}
 	}
 };
 

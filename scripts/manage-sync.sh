@@ -20,6 +20,7 @@ PLISTS=(
   "com.marin-monitor.sync-dog-walker"
   "com.marin-monitor.sync-usda-food-plans"
   "com.marin-monitor.sync-pge-ev2"
+  "com.marin-monitor.sync-range-rover-lease"
 )
 
 case "${1:-}" in

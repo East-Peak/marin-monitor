@@ -105,7 +105,7 @@ const lines: LineSpec[] = [
 		terms: [yearly('oop')]
 	},
 	...car('ross', 'rangeRover', 'Range Rover Sport', {
-		lease: { pay: cite('rangeRover.lease'), due: cite('rangeRover.dueAtSigning'), months: 24 },
+		lease: { pay: live('rangeRover.lease'), due: live('rangeRover.dueAtSigning'), months: 24 },
 		power: { kind: 'gas', mpg: 20 },
 		value: 95000,
 		vlfRate: 0.0065,

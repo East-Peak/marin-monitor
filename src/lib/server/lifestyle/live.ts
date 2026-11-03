@@ -6,6 +6,7 @@
  */
 import {
 	PGE_EV2_KEYS,
+	RANGE_ROVER_KEYS,
 	USDA_KEYS,
 	type LiveKey,
 	type LiveRead,
@@ -20,7 +21,8 @@ export const LIVE_BLOBS = {
 	cappuccino: 'marin-cappuccino.json',
 	ikon: 'marin-ikon-pass.json',
 	usda: 'marin-usda-food-plans.json',
-	pge: 'marin-pge-ev2.json'
+	pge: 'marin-pge-ev2.json',
+	rangeRover: 'marin-range-rover-lease.json'
 } as const;
 export type LiveBlobName = keyof typeof LIVE_BLOBS;
 /** Parsed blob JSON, or null when the blob could not be read. */
@@ -188,6 +190,9 @@ const usdaSource = (period: string | undefined) =>
 const ev2Source = (period: string | undefined) =>
 	`PG&E Schedule EV2, winter${period ? `, ${period}` : ''} (pge.com)`;
 
+const rangeRoverSource = (period: string | undefined) =>
+	`Range Rover Sport P360 SE lease, 24 mo, US${period ? `, ${period}` : ''} (rangerover.com)`;
+
 export function readLive(blobs: RawLiveBlobs, now: Date): LiveReads {
 	const reads: Record<LiveKey, LiveRead> = {
 		'gas.regular': gas(blobs.gas, now),
@@ -199,7 +204,14 @@ export function readLive(blobs: RawLiveBlobs, now: Date): LiveReads {
 		// A tariff is the rate in effect: our check ages it, its effective date rides along.
 		...(Object.fromEntries(
 			PGE_EV2_KEYS.map((key) => [key, published('pge', blobs.pge, key, 'checked', ev2Source, now)])
-		) as Record<(typeof PGE_EV2_KEYS)[number], LiveRead>)
+		) as Record<(typeof PGE_EV2_KEYS)[number], LiveRead>),
+		// One offer: both parts from the same read, and both end with it (validUntil).
+		...(Object.fromEntries(
+			RANGE_ROVER_KEYS.map((key) => [
+				key,
+				published('rangeRover', blobs.rangeRover, key, 'checked', rangeRoverSource, now)
+			])
+		) as Record<(typeof RANGE_ROVER_KEYS)[number], LiveRead>)
 	};
 	return reads;
 }

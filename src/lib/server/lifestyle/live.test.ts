@@ -70,9 +70,24 @@ const ev2 = (checked = '2026-10-19T12:00:00.000Z') => ({
 	}
 });
 
+const rangeRover = (validUntil = '2026-11-30') => ({
+	current: {
+		timestamp: '2026-10-19T12:00:00.000Z',
+		lastSuccessfulScrapeAt: '2026-10-19T12:00:00.000Z',
+		url: 'https://www.rangerover.com/x.html',
+		period: 'offer, deliveries by Nov 30, 2026',
+		validUntil,
+		trim: '2026 Range Rover Sport P360 SE',
+		months: 24,
+		region: 'US',
+		values: { 'rangeRover.lease': 999, 'rangeRover.dueAtSigning': 8995 }
+	}
+});
+
 const healthy = (): RawLiveBlobs => ({
 	usda: usda(),
 	pge: ev2(),
+	rangeRover: rangeRover(),
 	gas: gas('2026-10-20T12:00:00.000Z'),
 	cappuccino: cappuccino([shop(5, 'live'), shop(4.85, 'live'), shop(5, 'live')]),
 	ikon: monthly('adultPrice', [
@@ -244,6 +259,22 @@ describe('readLive', () => {
 		});
 		const old = { ...healthy(), pge: ev2('2026-10-01T12:00:00.000Z') };
 		expect(readLive(old, NOW)['pge.ev2a.peak'].availability).toBe('stale');
+	});
+
+	it('reads both lease parts from the one offer, each carrying its end', () => {
+		const live = readLive(healthy(), NOW);
+		for (const [key, value] of [
+			['rangeRover.lease', 999],
+			['rangeRover.dueAtSigning', 8995]
+		] as const) {
+			expect(live[key]).toMatchObject({
+				availability: 'ok',
+				value,
+				observedAt: '2026-10-19T12:00:00.000Z',
+				validUntil: '2026-11-30',
+				period: 'offer, deliveries by Nov 30, 2026'
+			});
+		}
 	});
 
 	it('has no grocery or Rivian reads: those scrapes stopped (COSTDATA Q1)', () => {

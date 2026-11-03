@@ -1,4 +1,4 @@
-import { PGE_EV2_KEYS, USDA_KEYS } from '$lib/lifestyle/model';
+import { PGE_EV2_KEYS, RANGE_ROVER_KEYS, USDA_KEYS } from '$lib/lifestyle/model';
 import { describe, expect, it, vi } from 'vitest';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -23,7 +23,8 @@ const liveReads = Object.fromEntries(
 	[
 		...(['gas.regular', 'coffee.cappuccino', 'ikon.adult'] satisfies LiveKey[]),
 		...USDA_KEYS,
-		...PGE_EV2_KEYS
+		...PGE_EV2_KEYS,
+		...RANGE_ROVER_KEYS
 	].map((k): [string, LiveRead] => [
 		k,
 		{
@@ -308,5 +309,29 @@ describe('the card’s data', () => {
 			]
 		});
 		expect(card.households.map((h) => h.highlights?.length)).toEqual([0, 1]);
+	});
+});
+
+describe('an offer that ends between runs (Codex R2 P1)', () => {
+	const ross = SHEETS.find((s) => s.id === 'ross')!;
+	const offer = { period: 'offer, deliveries by Nov 2, 2026', validUntil: '2026-11-02' };
+	const reads = {
+		...liveReads,
+		'rangeRover.lease': { ...liveReads['rangeRover.lease'], value: 999, ...offer },
+		'rangeRover.dueAtSigning': { ...liveReads['rangeRover.dueAtSigning'], value: 8995, ...offer }
+	} as LiveReads;
+	const stored = priceSheet(ross, reads, new Date('2026-10-26T14:30:00.000Z'));
+	const lease = (b: PricedBudget) => b.lines.find((l) => l.id === 'ross.car.rangeRover.lease')!;
+
+	it('reads the stored lease unavailable once the clock passes its end, with no run between', async () => {
+		const text = JSON.stringify({ current: snapshot([stored]), history: [] });
+		const before = await readLifestyleDoc(api(text), signal, new Date('2026-11-02T20:00:00Z'));
+		const after = await readLifestyleDoc(api(text), signal, new Date('2026-11-03T08:00:00Z'));
+		expect(lease(before!.current.budgets[0]).availability).toBe('ok');
+		expect(lease(after!.current.budgets[0])).toMatchObject({
+			monthly: null,
+			availability: 'unavailable'
+		});
+		expect(after!.current.budgets[0].breakEven).toBeNull();
 	});
 });

@@ -11,7 +11,7 @@ import { join } from 'node:path';
 const ROOT = process.cwd();
 const read = (path: string) => readFileSync(join(ROOT, path), 'utf8');
 /** COSTDATA-1's published series, read weekly ahead of the Lifestyle run. */
-const PUBLISHED_JOBS = ['usda-food-plans', 'pge-ev2'];
+const PUBLISHED_JOBS = ['usda-food-plans', 'pge-ev2', 'range-rover-lease'];
 const LOCAL_JOBS = [
 	'coffee-index',
 	'cappuccino',

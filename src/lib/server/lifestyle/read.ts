@@ -11,7 +11,9 @@ import type { Anchor } from '$lib/lifestyle/anchors';
 import { renderHighlight, type Highlight } from '$lib/lifestyle/highlight-copy';
 import { highlightFacts } from '$lib/lifestyle/highlights';
 import type { HistoryEntry } from '$lib/lifestyle/history';
-import { SECTIONS, type HouseholdSheet } from '$lib/lifestyle/model';
+import { SECTIONS, type HouseholdSheet, type PricedBudget } from '$lib/lifestyle/model';
+import { withOfferEnds } from '$lib/lifestyle/offers';
+import { SHEETS } from '$lib/lifestyle/sheets';
 import { budgetsAgainstSheets, householdSummary, type LifestyleCard } from '$lib/lifestyle/view';
 import { abortable } from '$lib/server/news/abortable';
 import type { BlobApi } from '$lib/server/news/snapshot-store';
@@ -173,7 +175,8 @@ export interface LifestyleRead {
  */
 export async function readLifestyleDoc(
 	api: BlobApi,
-	signal: AbortSignal
+	signal: AbortSignal,
+	now = new Date()
 ): Promise<LifestyleRead | null> {
 	try {
 		const stored = await api.read(LIFESTYLE_KEY, signal);
@@ -186,8 +189,10 @@ export async function readLifestyleDoc(
 		const anchors =
 			Array.isArray(current.anchors) && current.anchors.every(isAnchor) ? current.anchors : [];
 		const history = isObject(doc) && Array.isArray(doc.history) ? doc.history : null;
+		// An offer that ended since the run reads unavailable now, not at the next run.
+		const budgets = withOfferEnds(current.budgets as PricedBudget[], SHEETS, now);
 		return {
-			current: { ...current, anchors } as unknown as LifestyleSnapshot,
+			current: { ...current, anchors, budgets } as unknown as LifestyleSnapshot,
 			history: history?.every(isHistoryEntry) ? history : null
 		};
 	} catch {

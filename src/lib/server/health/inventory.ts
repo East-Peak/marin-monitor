@@ -208,6 +208,14 @@ const ALL_SOURCES: readonly SourcePolicy[] = freeze<SourcePolicy>([
 		maxAgeDays: 10,
 		observedAt: 'content',
 		note: 'the rate in effect at our weekly check; its effective date rides in the blob'
+	},
+	{
+		name: 'Range Rover Lease',
+		blobKey: 'marin-range-rover-lease.json',
+		cadence: 'weekly',
+		maxAgeDays: 10,
+		observedAt: 'content',
+		note: "our weekly read of the offer page; the offer's own end is enforced where it is priced"
 	}
 ]);
 

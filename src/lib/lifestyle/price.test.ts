@@ -40,7 +40,9 @@ const LIVE_VALUES: Record<LiveKey, number> = {
 	'usda.liberal.m19to50': 486.8,
 	'usda.liberal.m51to70': 449.1,
 	'pge.ev2a.peak': 0.41,
-	'pge.ev2a.offPeak': 0.23
+	'pge.ev2a.offPeak': 0.23,
+	'rangeRover.lease': 999,
+	'rangeRover.dueAtSigning': 8995
 };
 const liveReads = (overrides: Partial<Record<LiveKey, LiveRead>> = {}): LiveReads =>
 	({
@@ -108,11 +110,11 @@ const LINES: LineSpec[] = [
 	{
 		id: 't.cars.lease',
 		section: 'cars',
-		label: 'Range Rover lease',
+		label: 'A lease',
 		required: true,
 		inputs: {
-			pay: cite('rangeRover.lease'),
-			due: cite('rangeRover.dueAtSigning'),
+			pay: cite('kbb.ex90.lease'),
+			due: cite('kbb.ex90.dueAtSigning'),
 			months: persona(24, 'lease months')
 		},
 		terms: [monthly('pay'), spread(['due'], ['months'])]
@@ -209,7 +211,7 @@ describe('priceSheet', () => {
 			(15 * 10.86 + 7 * 14.19 + 22 * 0.66 + 92.08) / 2,
 			6
 		);
-		expect(line(b, 't.cars.lease').monthly).toBeCloseTo(999 + 8995 / 24, 6);
+		expect(line(b, 't.cars.lease').monthly).toBeCloseTo(889 + 889 / 24, 6);
 		expect(line(b, 't.home.tax').monthly).toBeCloseTo((2501250 * 1.02 ** 2 * 0.01 + 1906) / 12, 6);
 		expect(line(b, 't.biz').monthly).toBeCloseTo(4000 - 8000 + 1529, 6);
 	});
@@ -395,7 +397,7 @@ describe('availability: a fallback is never ok', () => {
 		const afterOffer = priceSheet(sheet, liveReads(), new Date('2026-11-03T08:00:00Z'));
 		const lease = line(afterOffer, 't.cars.lease');
 		expect(lease.availability).toBe('stale');
-		expect(lease.monthly).toBeCloseTo(999 + 8995 / 24, 6);
+		expect(lease.monthly).toBeCloseTo(889 + 889 / 24, 6);
 		expect(lease.inputs.find((i) => i.name === 'pay')).toMatchObject({
 			availability: 'stale',
 			asOf: '2026-10-20'
