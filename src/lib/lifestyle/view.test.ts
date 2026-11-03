@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { LiveKey, LiveRead, LiveReads, PricedBudget } from './model';
+import type { LiveKey, LiveRead, LiveReads, PricedBudget, PricedInput } from './model';
 import { priceSheet } from './price';
 import { SHEETS } from './sheets';
 import {
@@ -7,6 +7,7 @@ import {
 	formatInput,
 	householdPage,
 	householdSummary,
+	inputWhen,
 	lineAnchor,
 	sheetForSlug,
 	sourceLink,
@@ -17,7 +18,16 @@ const NOW = new Date('2026-10-20T18:00:00.000Z');
 const LIVE: Record<LiveKey, number> = {
 	'gas.regular': 6.207,
 	'coffee.cappuccino': 5,
-	'ikon.adult': 1529
+	'ikon.adult': 1529,
+	'usda.liberal.c6to8': 357.2,
+	'usda.liberal.c9to11': 408.2,
+	'usda.liberal.f12to13': 401.1,
+	'usda.liberal.f19to50': 429.6,
+	'usda.liberal.f51to70': 399.5,
+	'usda.liberal.m12to13': 460.6,
+	'usda.liberal.m14to18': 473.9,
+	'usda.liberal.m19to50': 486.8,
+	'usda.liberal.m51to70': 449.1
 };
 const reads = (over: Partial<Record<LiveKey, Partial<LiveRead>>> = {}) =>
 	Object.fromEntries(
@@ -395,5 +405,39 @@ describe('an input as shown', () => {
 		});
 		expect(sourceLink('Ikon Pass adult, ikonpass.com')).toBeNull();
 		expect(sourceLink('javascript:alert(1) (x)')).toBeNull();
+	});
+});
+
+describe('when an input is from (COSTDATA-1)', () => {
+	const input = (over: Partial<PricedInput>): PricedInput => ({
+		name: 'x',
+		label: 'x',
+		class: 'live',
+		value: 1,
+		availability: 'ok',
+		asOf: '2026-11-03T12:34:34.116Z',
+		source: 's',
+		...over
+	});
+
+	it('says when we read a live input, and when we checked a cited one', () => {
+		expect(inputWhen(input({}))).toBe('read Nov 3, 2026');
+		expect(inputWhen(input({ class: 'cited', asOf: '2026-11-03' }))).toBe('checked Nov 3, 2026');
+	});
+
+	it('leads with the source’s own period, then our read, never the period end as a read', () => {
+		const usda = input({
+			asOf: '2026-09-30T00:00:00.000Z',
+			period: 'September 2026',
+			checkedAt: '2026-11-03T12:34:34.116Z'
+		});
+		expect(inputWhen(usda)).toBe('September 2026, read Nov 3, 2026');
+	});
+
+	it('keeps the period when the read cannot be used', () => {
+		expect(
+			inputWhen(input({ asOf: null, availability: 'unavailable', period: 'offer to Nov 2, 2026' }))
+		).toBe('offer to Nov 2, 2026');
+		expect(inputWhen(input({ asOf: null }))).toBeNull();
 	});
 });

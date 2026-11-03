@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SHEETS } from '$lib/lifestyle/sheets';
 import { createMemoryBlobApi } from '$lib/server/news/memory-blob-api';
+import { USDA_KEYS } from '$lib/lifestyle/model';
 import { LIVE_BLOBS } from './live';
 import { LIFESTYLE_KEY, runLifestyle, type LifestyleDoc } from './producer';
 
@@ -19,6 +20,14 @@ const BLOBS: Record<string, unknown> = {
 	},
 	[LIVE_BLOBS.ikon]: {
 		current: { timestamp: AT, adultPrice: 1449, scraped: true, lastSuccessfulScrapeAt: AT }
+	},
+	[LIVE_BLOBS.usda]: {
+		current: {
+			lastSuccessfulScrapeAt: AT,
+			period: 'September 2026',
+			periodEnd: '2026-09-30T00:00:00.000Z',
+			values: Object.fromEntries(USDA_KEYS.map((k) => [k, 400]))
+		}
 	}
 };
 

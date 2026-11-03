@@ -10,7 +10,16 @@ const NOW = new Date('2026-10-23T11:36:55.978Z');
 const LIVE: Record<LiveKey, number> = {
 	'gas.regular': 6.179,
 	'coffee.cappuccino': 4.925,
-	'ikon.adult': 1449
+	'ikon.adult': 1449,
+	'usda.liberal.c6to8': 357.2,
+	'usda.liberal.c9to11': 408.2,
+	'usda.liberal.f12to13': 401.1,
+	'usda.liberal.f19to50': 429.6,
+	'usda.liberal.f51to70': 399.5,
+	'usda.liberal.m12to13': 460.6,
+	'usda.liberal.m14to18': 473.9,
+	'usda.liberal.m19to50': 486.8,
+	'usda.liberal.m51to70': 449.1
 };
 const reads = (over: Partial<Record<LiveKey, Partial<LiveRead>>> = {}) =>
 	Object.fromEntries(

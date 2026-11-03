@@ -1,3 +1,4 @@
+import { USDA_KEYS } from '$lib/lifestyle/model';
 import { describe, expect, it, vi } from 'vitest';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -19,7 +20,7 @@ import {
 
 const signal = new AbortController().signal;
 const liveReads = Object.fromEntries(
-	(['gas.regular', 'coffee.cappuccino', 'ikon.adult'] satisfies LiveKey[]).map(
+	[...(['gas.regular', 'coffee.cappuccino', 'ikon.adult'] satisfies LiveKey[]), ...USDA_KEYS].map(
 		(k): [string, LiveRead] => [
 			k,
 			{

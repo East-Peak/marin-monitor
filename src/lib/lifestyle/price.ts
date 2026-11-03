@@ -188,6 +188,26 @@ export function priceInput(name: string, spec: InputSpec, live: LiveReads, now: 
 		}
 		case 'live': {
 			const read = live[spec.live];
+			const own = {
+				maxAgeDays: read.maxAgeDays,
+				...(read.period ? { period: read.period } : {}),
+				...(read.checkedAt ? { checkedAt: read.checkedAt } : {}),
+				...(read.validUntil ? { validUntil: read.validUntil } : {})
+			};
+			// An offer past its end is no price at all, however recently we read it (Codex R2 P1).
+			if (read.validUntil !== undefined && !(now.getTime() <= endOfDay(read.validUntil))) {
+				return {
+					name,
+					label: spec.label ?? read.source,
+					class: 'live',
+					value: null,
+					availability: 'unavailable',
+					asOf: null,
+					source: read.source,
+					reason: `offer ended ${read.validUntil}`,
+					...own
+				};
+			}
 			// A usable read has a finite value and a real observation time, or it is not a read.
 			const at = read.observedAt === null ? NaN : Date.parse(read.observedAt);
 			const vouched =
@@ -215,7 +235,8 @@ export function priceInput(name: string, spec: InputSpec, live: LiveReads, now: 
 				availability,
 				asOf: vouched ? read.observedAt : null,
 				source: read.source,
-				...(reason ? { reason } : {})
+				...(reason ? { reason } : {}),
+				...own
 			};
 		}
 	}

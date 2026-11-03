@@ -18,6 +18,7 @@ PLISTS=(
   "com.marin-monitor.sync-wine-index"
   "com.marin-monitor.sync-ikon-pass"
   "com.marin-monitor.sync-dog-walker"
+  "com.marin-monitor.sync-usda-food-plans"
 )
 
 case "${1:-}" in

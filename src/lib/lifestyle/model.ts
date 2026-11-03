@@ -70,7 +70,21 @@ export interface CitedSource {
 	readonly validUntil?: string;
 }
 
-export type LiveKey = 'gas.regular' | 'coffee.cappuccino' | 'ikon.adult';
+/** USDA's Liberal food plan, monthly, per age-sex group: the sheets' grocery lines. */
+export const USDA_KEYS = [
+	'usda.liberal.c6to8',
+	'usda.liberal.c9to11',
+	'usda.liberal.f12to13',
+	'usda.liberal.f19to50',
+	'usda.liberal.f51to70',
+	'usda.liberal.m12to13',
+	'usda.liberal.m14to18',
+	'usda.liberal.m19to50',
+	'usda.liberal.m51to70'
+] as const;
+export type UsdaKey = (typeof USDA_KEYS)[number];
+
+export type LiveKey = 'gas.regular' | 'coffee.cappuccino' | 'ikon.adult' | UsdaKey;
 
 /** One live value as read from our own data, with its own observation time. */
 export interface LiveRead {
@@ -83,6 +97,12 @@ export interface LiveRead {
 	readonly source: string;
 	/** Why it is not `ok`, when it isn't. */
 	readonly reason?: string;
+	/** The source's own period or effective date, as it states it (e.g. "September 2026"). */
+	readonly period?: string;
+	/** Our last successful read of the source, when that is not `observedAt`. */
+	readonly checkedAt?: string;
+	/** An offer's own end (YYYY-MM-DD): past it, the value is unavailable wherever it is read. */
+	readonly validUntil?: string;
 }
 export type LiveReads = Readonly<Record<LiveKey, LiveRead>>;
 
@@ -199,6 +219,11 @@ export interface PricedInput {
 	readonly asOf: string | null;
 	readonly source: string | null;
 	readonly reason?: string;
+	/** Live only: the read's own times, as `LiveRead` carries them. */
+	readonly period?: string;
+	readonly checkedAt?: string;
+	readonly validUntil?: string;
+	readonly maxAgeDays?: number;
 }
 
 export interface PricedLine {

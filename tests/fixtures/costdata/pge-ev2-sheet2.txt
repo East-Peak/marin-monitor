@@ -1,0 +1,56 @@
+
+    U 39          Oakland, California
+
+                                    ELECTRIC SCHEDULE EV2                                               Sheet 2
+                                    RESIDENTIAL TIME-OF-USE
+                        SERVICE FOR PLUG-IN ELECTRIC VEHICLE CUSTOMERS
+
+RATES:              Total bundled service charges are calculated using the total rates below. Customers on this
+                    schedule will pay a monthly base services charge, with the base services charge revenue used to
+                    reduce their $ per kWh energy rates. For the purposes of assessing the base services charge,
+                    customers are assigned to one of the following income tiers and pay the associated monthly base
+                    services charge amount for their income tier:
+
+                        •    Income Tier 1: Customers with incomes of 0 to 200 percent of the Federal Poverty
+                             Guideline levels applicable to households taking service on PG&E’s California Alternate
+                             Rates for Energy (CARE) program; or
+                        •    Income Tier 2: Customers either (a) with incomes above 200 percent and below 250
+                             percent of the Federal Poverty Guideline levels applicable to households who take service
+                             on PG&E’s Family Electric Rate Assistance (FERA) program or (b) who live in an
+                             affordable rental unit within a property listed in the California Housing Partnership’s
+                             database that is restricted by the rules of federal or state subsidies to residents who have
+                             incomes at or below 80 percent of Area Median Income; or,
+                        •    Income Tier 3: Customers who do not qualify for Tier 1 or Tier 2.
+
+                    Direct Access (DA) and Community Choice Aggregation (CCA) charges shall be calculated in
+                    accordance with the paragraph in this rate schedule titled Billing.
+                                               TOTAL BUNDLED RATES
+
+         Total Energy Rates ($ per kWh)                                PEAK             PART-PEAK            OFF-PEAK
+         Summer Usage                                              $0.53809 (R)         $0.42760 (R)        $0.22558 (R)
+         Winter Usage                                              $0.41099 (R)         $0.39428 (R)        $0.22558 (R)
+
+         Base Services Charge Rates ($ per customer per
+         day)
+           Income Tier 1                                           $0.19713     (N)
+           Income Tier 2                                           $0.39688     (N)
+           Income Tier 3                                           $0.79343     (N)
+
+
+         California Climate Credit (per household, semi-annual                          ($36.18)                               (N)
+         payment occurring in the August and September bill                                                                     |
+         cycles)                                                                                                               (N)
+
+Total bundled service charges shown on a customer’s bills are unbundled according to the component rates shown below.
+
+
+
+
+                                                                                                              (Continued)
+
+ Advice        7921-E                                 Issued by                        Submitted                June 1, 2026
+ Decision      D.26-04-036                         Shilpa Ramaiya                      Effective                June 1, 2026
+                                                    Vice President                     Resolution
+                                                 Regulatory and Rates
+                                                                            Revised         Cal. P.U.C. Sheet No.         61171-E
+

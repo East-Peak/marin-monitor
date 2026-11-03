@@ -11,7 +11,16 @@ const NOW = new Date('2026-10-20T18:00:00.000Z');
 const LIFE0_LIVE: Record<LiveKey, number> = {
 	'gas.regular': 6.207,
 	'coffee.cappuccino': 5,
-	'ikon.adult': 1529
+	'ikon.adult': 1529,
+	'usda.liberal.c6to8': 357.2,
+	'usda.liberal.c9to11': 408.2,
+	'usda.liberal.f12to13': 401.1,
+	'usda.liberal.f19to50': 429.6,
+	'usda.liberal.f51to70': 399.5,
+	'usda.liberal.m12to13': 460.6,
+	'usda.liberal.m14to18': 473.9,
+	'usda.liberal.m19to50': 486.8,
+	'usda.liberal.m51to70': 449.1
 };
 const reads = Object.fromEntries(
 	Object.entries(LIFE0_LIVE).map(([k, value]): [string, LiveRead] => [

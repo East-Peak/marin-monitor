@@ -29,7 +29,16 @@ const read = (value: number, availability: LiveRead['availability'] = 'ok'): Liv
 const LIVE_VALUES: Record<LiveKey, number> = {
 	'gas.regular': 6.207,
 	'coffee.cappuccino': 5,
-	'ikon.adult': 1529
+	'ikon.adult': 1529,
+	'usda.liberal.c6to8': 357.2,
+	'usda.liberal.c9to11': 408.2,
+	'usda.liberal.f12to13': 401.1,
+	'usda.liberal.f19to50': 429.6,
+	'usda.liberal.f51to70': 399.5,
+	'usda.liberal.m12to13': 460.6,
+	'usda.liberal.m14to18': 473.9,
+	'usda.liberal.m19to50': 486.8,
+	'usda.liberal.m51to70': 449.1
 };
 const liveReads = (overrides: Partial<Record<LiveKey, LiveRead>> = {}): LiveReads =>
 	({
@@ -285,6 +294,57 @@ describe('quantities live only on the sheet', () => {
 	it('refuses wage shares that do not sum to 1 or do not match the deferrals', () => {
 		expect(() => defineSheet({ ...base(), split: [0.8, 0.15] })).toThrow(/split/);
 		expect(() => defineSheet({ ...base(), deferrals: [24500] })).toThrow(/deferral/);
+	});
+});
+
+describe('a live input’s own times (COSTDATA-1)', () => {
+	const dated = (validUntil: string): LiveRead => ({
+		...read(1529),
+		period: 'deliveries by ' + validUntil,
+		checkedAt: '2026-10-19T10:40:39.208Z',
+		validUntil
+	});
+	const input = (b: ReturnType<typeof priceSheet>) =>
+		line(b, 't.biz').inputs.find((i) => i.name === 'wine')!;
+
+	it('carries the source’s period, our check, its max age and its end to the priced input', () => {
+		const b = priceSheet(
+			defineSheet(base()),
+			liveReads({ 'ikon.adult': dated('2026-11-02') }),
+			NOW
+		);
+		expect(input(b)).toMatchObject({
+			availability: 'ok',
+			value: 1529,
+			period: 'deliveries by 2026-11-02',
+			checkedAt: '2026-10-19T10:40:39.208Z',
+			maxAgeDays: 10,
+			validUntil: '2026-11-02'
+		});
+	});
+
+	it('reads an offer past its end unavailable, carrying no value, however fresh the read', () => {
+		const after = new Date('2026-11-03T00:00:01.000Z');
+		const reads = liveReads({
+			'ikon.adult': { ...dated('2026-11-02'), observedAt: after.toISOString() }
+		});
+		const b = priceSheet(defineSheet(base()), reads, after);
+		expect(input(b)).toMatchObject({
+			availability: 'unavailable',
+			value: null,
+			reason: 'offer ended 2026-11-02'
+		});
+		expect(line(b, 't.biz').monthly).toBeNull();
+	});
+
+	it('keeps the offer through its last day', () => {
+		const lastDay = new Date('2026-11-02T23:00:00.000Z');
+		const b = priceSheet(
+			defineSheet(base()),
+			liveReads({ 'ikon.adult': dated('2026-11-02') }),
+			lastDay
+		);
+		expect(input(b).availability).not.toBe('unavailable');
 	});
 });
 

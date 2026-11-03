@@ -345,3 +345,24 @@ export function sourceLink(
 		return null;
 	}
 }
+
+/** An instant on Pacific's calendar; a bare date (YYYY-MM-DD) is that date, wherever it is read. */
+const pacificDay = (when: string) =>
+	new Date(when).toLocaleDateString('en-US', {
+		month: 'short',
+		day: 'numeric',
+		year: 'numeric',
+		timeZone: /^\d{4}-\d{2}-\d{2}$/.test(when) ? 'UTC' : 'America/Los_Angeles'
+	});
+
+/**
+ * When an input is from. Cited: when we checked the publication. Live: the
+ * source's own period or effective date first, when it states one, then when
+ * we read it; a period end is never passed off as our read.
+ */
+export function inputWhen(i: PricedInput): string | null {
+	const read = i.checkedAt ?? i.asOf;
+	if (i.class !== 'live') return i.asOf === null ? null : `checked ${pacificDay(i.asOf)}`;
+	const when = i.asOf === null || read === null ? null : `read ${pacificDay(read)}`;
+	return [i.period, when].filter(Boolean).join(', ') || null;
+}

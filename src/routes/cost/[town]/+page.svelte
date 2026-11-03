@@ -5,11 +5,11 @@
 	import ClassChips from '$lib/components/lifestyle/ClassChips.svelte';
 	import MonthMap from '$lib/components/lifestyle/MonthMap.svelte';
 	import { PACIFIC } from '$lib/dashboard/pacific-time';
-	import type { PricedInput } from '$lib/lifestyle/model';
 	import { sectionAnchor } from '$lib/lifestyle/treemap';
 	import {
 		FICTION_LABEL,
 		formatInput,
+		inputWhen,
 		lineAnchor,
 		pricedSoFar,
 		SECTION_COLOR,
@@ -35,8 +35,6 @@
 			timeZone: PACIFIC
 		});
 	/** Live: when the source saw it. Cited: when we checked the publication. */
-	const when = (i: PricedInput) =>
-		i.asOf === null ? null : `${i.class === 'live' ? 'read' : 'checked'} ${day(i.asOf)}`;
 
 	const soFar = $derived(!!h && pricedSoFar(h));
 
@@ -124,8 +122,8 @@
 										href={trackerLink.href}
 										rel="noopener noreferrer"
 										target="_blank">{trackerLink.host}</a
-									>{/if}{#if when(t)}, {when(t)}{/if}{#if t.availability !== 'ok'}<span class="flag"
-										>, {t.availability}{t.reason ? `: ${t.reason}` : ''}</span
+									>{/if}{#if inputWhen(t)}, {inputWhen(t)}{/if}{#if t.availability !== 'ok'}<span
+										class="flag">, {t.availability}{t.reason ? `: ${t.reason}` : ''}</span
 									>{/if}, is context only: it never reprices this household’s home.
 							</span>
 						</p>
@@ -270,7 +268,7 @@
 												{:else if i.source && i.class === 'live'}
 													· {i.source}
 												{/if}
-												{#if when(i)}· {when(i)}{/if}
+												{#if inputWhen(i)}· {inputWhen(i)}{/if}
 												{#if i.availability !== 'ok'}
 													<span class="flag"
 														>· {i.availability}{i.reason ? `: ${i.reason}` : ''}</span

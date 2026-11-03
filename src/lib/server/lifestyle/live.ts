@@ -4,7 +4,7 @@
  * was written. A fallback, default or reference price is never `ok`; a value
  * we cannot vouch for is `unavailable`, never a substitute.
  */
-import type { LiveKey, LiveRead, LiveReads } from '$lib/lifestyle/model';
+import { USDA_KEYS, type LiveKey, type LiveRead, type LiveReads } from '$lib/lifestyle/model';
 import { FUTURE_TOLERANCE_MS, parseTimestamp } from '$lib/server/health/evaluate';
 import { SOURCE_INVENTORY } from '$lib/server/health/inventory';
 
@@ -12,7 +12,8 @@ import { SOURCE_INVENTORY } from '$lib/server/health/inventory';
 export const LIVE_BLOBS = {
 	gas: 'marin-gas-prices.json',
 	cappuccino: 'marin-cappuccino.json',
-	ikon: 'marin-ikon-pass.json'
+	ikon: 'marin-ikon-pass.json',
+	usda: 'marin-usda-food-plans.json'
 } as const;
 export type LiveBlobName = keyof typeof LIVE_BLOBS;
 /** Parsed blob JSON, or null when the blob could not be read. */
@@ -141,11 +142,50 @@ function lastScraped(raw: unknown, field: string, source: string, now: Date): Li
 	);
 }
 
+const str = (v: unknown): string | undefined => (typeof v === 'string' && v ? v : undefined);
+
+/**
+ * A published series (scripts/sync-*.mjs, COSTDATA-1): one value per key in
+ * `current.values`, with three times kept apart. `observedAt` is what ages it:
+ * the report's period end where the source has periods, our check where the
+ * figure is "in effect" (a tariff, an offer). Fetching again never refreshes an
+ * old period; an offer's own end rides along to be enforced wherever it is read.
+ */
+function published(
+	blob: LiveBlobName,
+	raw: unknown,
+	key: string,
+	measure: 'period' | 'checked',
+	source: (period: string | undefined) => string,
+	now: Date
+): LiveRead {
+	const current = record(record(raw)?.current);
+	const period = str(current?.period);
+	const label = source(period);
+	if (!current) return unavailable(blob, label, 'no snapshot');
+	const checked = parseTimestamp(current.lastSuccessfulScrapeAt);
+	const at = measure === 'period' ? current.periodEnd : current.lastSuccessfulScrapeAt;
+	const read = observed(blob, label, amount(record(current.values)?.[key]), at, now);
+	const validUntil = str(current.validUntil);
+	return {
+		...read,
+		...(period ? { period } : {}),
+		...(measure === 'period' && checked !== null ? { checkedAt: iso(checked) } : {}),
+		...(validUntil ? { validUntil } : {})
+	};
+}
+
+const usdaSource = (period: string | undefined) =>
+	`USDA Liberal food plan${period ? `, ${period}` : ''} (fna.usda.gov)`;
+
 export function readLive(blobs: RawLiveBlobs, now: Date): LiveReads {
 	const reads: Record<LiveKey, LiveRead> = {
 		'gas.regular': gas(blobs.gas, now),
 		'coffee.cappuccino': cappuccino(blobs.cappuccino, now),
-		'ikon.adult': lastScraped(blobs.ikon, 'adultPrice', 'Ikon Pass adult, ikonpass.com', now)
+		'ikon.adult': lastScraped(blobs.ikon, 'adultPrice', 'Ikon Pass adult, ikonpass.com', now),
+		...(Object.fromEntries(
+			USDA_KEYS.map((key) => [key, published('usda', blobs.usda, key, 'period', usdaSource, now)])
+		) as Record<(typeof USDA_KEYS)[number], LiveRead>)
 	};
 	return reads;
 }

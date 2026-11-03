@@ -31,7 +31,8 @@ const EXPECTED_SOURCES = [
 	'Cappuccino',
 	'Camp Prices',
 	'Dog Walker',
-	'Ikon Pass'
+	'Ikon Pass',
+	'USDA Food Plans'
 ];
 
 describe('SOURCE_INVENTORY', () => {
@@ -117,6 +118,12 @@ describe('SOURCE_INVENTORY', () => {
 		const housing = SOURCE_INVENTORY.find((s) => s.name === 'Housing');
 		// Redfin issues month M in the 2nd week of M+1, so 60 days from M's end spans one late release.
 		expect(housing).toMatchObject({ observedAt: 'period', cadence: 'monthly', maxAgeDays: 60 });
+		const usda = SOURCE_INVENTORY.find((s) => s.name === 'USDA Food Plans');
+		expect(usda).toMatchObject({
+			blobKey: 'marin-usda-food-plans.json',
+			observedAt: 'period',
+			maxAgeDays: 75
+		});
 	});
 
 	it('gives every source a positive max age', () => {

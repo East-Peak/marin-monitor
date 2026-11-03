@@ -47,7 +47,20 @@ const monthly = (
 	return { current: snaps[0], history: snaps };
 };
 
+/** The shape the published-series syncs write (scripts/sync-usda-food-plans.mjs and kin). */
+const usda = (periodEnd = '2026-09-30T00:00:00.000Z', checked = '2026-10-19T12:00:00.000Z') => ({
+	current: {
+		timestamp: checked,
+		lastSuccessfulScrapeAt: checked,
+		url: 'https://www.fna.usda.gov/x.pdf',
+		period: 'September 2026',
+		periodEnd,
+		values: { 'usda.liberal.m19to50': 486.8, 'usda.liberal.f19to50': 429.6 }
+	}
+});
+
 const healthy = (): RawLiveBlobs => ({
+	usda: usda(),
 	gas: gas('2026-10-20T12:00:00.000Z'),
 	cappuccino: cappuccino([shop(5, 'live'), shop(4.85, 'live'), shop(5, 'live')]),
 	ikon: monthly('adultPrice', [
@@ -64,7 +77,13 @@ describe('readLive', () => {
 		});
 		expect(live['gas.regular'].value).toBeCloseTo(6.207, 6);
 		expect(live['ikon.adult']).toMatchObject({ availability: 'ok', value: 1529 });
-		for (const read of Object.values(live)) expect(read.availability).toBe('ok');
+		for (const read of [
+			live['gas.regular'],
+			live['coffee.cappuccino'],
+			live['ikon.adult'],
+			live['usda.liberal.m19to50']
+		])
+			expect(read.availability).toBe('ok');
 		// Each read carries its source's max age from the health inventory, so pricing can re-check it.
 		expect([live['gas.regular'].maxAgeDays, live['ikon.adult'].maxAgeDays]).toEqual([2, 45]);
 	});
@@ -168,12 +187,43 @@ describe('readLive', () => {
 		});
 	});
 
+	it('reads a USDA figure dated by its report month, with our check beside it', () => {
+		expect(readLive(healthy(), NOW)['usda.liberal.m19to50']).toEqual({
+			availability: 'ok',
+			value: 486.8,
+			observedAt: '2026-09-30T00:00:00.000Z',
+			maxAgeDays: 75,
+			source: 'USDA Liberal food plan, September 2026 (fna.usda.gov)',
+			period: 'September 2026',
+			checkedAt: '2026-10-19T12:00:00.000Z'
+		});
+	});
+
+	it('keeps an old report stale even when it was fetched again today', () => {
+		const blobs = {
+			...healthy(),
+			usda: usda('2026-07-31T00:00:00.000Z', '2026-10-20T12:00:00.000Z')
+		};
+		expect(readLive(blobs, NOW)['usda.liberal.m19to50']).toMatchObject({
+			availability: 'stale',
+			value: 486.8,
+			reason: 'older than 75d'
+		});
+	});
+
+	it('marks a figure missing from the report, or a missing blob, unavailable', () => {
+		expect(readLive(healthy(), NOW)['usda.liberal.c6to8']).toMatchObject({
+			availability: 'unavailable',
+			value: null
+		});
+		expect(readLive({ ...healthy(), usda: null }, NOW)['usda.liberal.m19to50'].availability).toBe(
+			'unavailable'
+		);
+	});
+
 	it('has no grocery or Rivian reads: those scrapes stopped (COSTDATA Q1)', () => {
-		expect(Object.keys(readLive(healthy(), NOW)).sort()).toEqual([
-			'coffee.cappuccino',
-			'gas.regular',
-			'ikon.adult'
-		]);
+		const keys = Object.keys(readLive(healthy(), NOW));
+		expect(keys.filter((k) => k.startsWith('grocery.') || k.startsWith('rivian.'))).toEqual([]);
 	});
 
 	it('marks a monthly sync that never scraped unavailable: a default is never a read', () => {

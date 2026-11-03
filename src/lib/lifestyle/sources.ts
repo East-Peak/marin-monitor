@@ -40,13 +40,6 @@ const mmwd = from({
 	recheckDays: 365,
 	validUntil: '2027-06-30'
 });
-const usda = from({
-	url: 'https://www.fns.usda.gov/sites/default/files/resource-files/CostofFoodSep2026LowModLib.pdf',
-	period: 'September 2026, monthly',
-	scope: 'USDA Liberal food plan, US average, 4-person household',
-	checkedAt: CHECKED,
-	recheckDays: 120
-});
 const payroll = from({
 	url: 'https://www.irs.gov/pub/irs-pdf/p926.pdf',
 	period: '2026',
@@ -210,17 +203,6 @@ export const CITED = {
 		checkedAt: CHECKED,
 		recheckDays: 365
 	})(6850, 'avg worker contribution, family, $/yr'),
-
-	// Food
-	'usda.liberal.m19to50': usda(486.8, 'male 19-50'),
-	'usda.liberal.f19to50': usda(429.6, 'female 19-50'),
-	'usda.liberal.c6to8': usda(357.2, 'child 6-8'),
-	'usda.liberal.c9to11': usda(408.2, 'child 9-11'),
-	'usda.liberal.m12to13': usda(460.6, 'male 12-13'),
-	'usda.liberal.f12to13': usda(401.1, 'female 12-13'),
-	'usda.liberal.m14to18': usda(473.9, 'male 14-18'),
-	'usda.liberal.m51to70': usda(449.1, 'male 51-70'),
-	'usda.liberal.f51to70': usda(399.5, 'female 51-70'),
 
 	'vitalProteins.collagen': shelf(
 		'https://www.vitalproteins.com/products/vp-collagen-peptides',

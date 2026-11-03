@@ -127,10 +127,10 @@ const lines: LineSpec[] = [
 		label: 'Groceries (USDA Liberal plan)',
 		required: true,
 		inputs: {
-			man: cite('usda.liberal.m19to50'),
-			woman: cite('usda.liberal.f19to50'),
-			twelve: cite('usda.liberal.m12to13'),
-			nine: cite('usda.liberal.c9to11')
+			man: live('usda.liberal.m19to50'),
+			woman: live('usda.liberal.f19to50'),
+			twelve: live('usda.liberal.m12to13'),
+			nine: live('usda.liberal.c9to11')
 		},
 		terms: [monthly('man'), monthly('woman'), monthly('twelve'), monthly('nine')]
 	},

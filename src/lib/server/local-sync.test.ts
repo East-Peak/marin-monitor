@@ -10,7 +10,16 @@ import { join } from 'node:path';
 
 const ROOT = process.cwd();
 const read = (path: string) => readFileSync(join(ROOT, path), 'utf8');
-const LOCAL_JOBS = ['coffee-index', 'cappuccino', 'wine-index', 'ikon-pass', 'dog-walker'];
+/** COSTDATA-1's published series, read weekly ahead of the Lifestyle run. */
+const PUBLISHED_JOBS = ['usda-food-plans'];
+const LOCAL_JOBS = [
+	'coffee-index',
+	'cappuccino',
+	'wine-index',
+	'ikon-pass',
+	'dog-walker',
+	...PUBLISHED_JOBS
+];
 const runner = read('scripts/sync-runner.sh');
 const manager = read('scripts/manage-sync.sh');
 
@@ -71,6 +80,19 @@ describe('residential syncs on launchd', () => {
 			expect(plist).toMatch(/<key>Weekday<\/key>\s*<integer>1<\/integer>/);
 			const hour = Number(/<key>Hour<\/key>\s*<integer>(\d+)<\/integer>/.exec(plist)?.[1]);
 			expect(hour, job).toBeLessThan(5);
+		}
+	});
+
+	it('the published-series syncs finish before the Monday Lifestyle run reads them', () => {
+		// vercel.json: sync-lifestyle at 14:30 UTC Monday = 06:30/07:30 Pacific.
+		expect(read('vercel.json')).toMatch(
+			/"path": "\/api\/cron\/sync-lifestyle", "schedule": "30 14 \* \* 1"/
+		);
+		for (const job of PUBLISHED_JOBS) {
+			const plist = read(`scripts/launchd/com.marin-monitor.sync-${job}.plist`);
+			expect(plist).toMatch(/<key>Weekday<\/key>\s*<integer>1<\/integer>/);
+			const hour = Number(/<key>Hour<\/key>\s*<integer>(\d+)<\/integer>/.exec(plist)?.[1]);
+			expect(hour, job).toBeLessThan(6);
 		}
 	});
 

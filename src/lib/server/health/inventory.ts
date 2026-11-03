@@ -192,6 +192,14 @@ const ALL_SOURCES: readonly SourcePolicy[] = freeze<SourcePolicy>([
 		cadence: 'monthly',
 		maxAgeDays: 45,
 		observedAt: 'content'
+	},
+	{
+		name: 'USDA Food Plans',
+		blobKey: 'marin-usda-food-plans.json',
+		cadence: 'monthly',
+		maxAgeDays: 75,
+		observedAt: 'period',
+		note: "USDA's report month, not our read: month M is issued mid M+1"
 	}
 ]);
 
