@@ -183,3 +183,108 @@ export function parseRangeRoverOffer(html) {
 		validUntil: `${terms[4]}-${terms[2]}-${terms[3]}`
 	};
 }
+
+// ── Redfin city medians (Q3: the market-tracker context figures) ───────────
+
+export const REDFIN_CITIES_URL =
+	'https://redfin-public-data.s3.us-west-2.amazonaws.com/redfin_data_center/housing_market/monthly/all_cities.csv';
+
+/** The sheets' market trackers, by Redfin region name. */
+export const REDFIN_TOWNS = /** @type {const} */ ({
+	'Larkspur, CA': 'redfin.larkspur.latest',
+	'Mill Valley, CA': 'redfin.millValley.latest',
+	'Ross, CA': 'redfin.ross.latest'
+});
+
+/** One CSV record (RFC 4180, no embedded newlines). @param {string} line */
+export function splitCsvLine(line) {
+	/** @type {string[]} */
+	const out = [];
+	let field = '';
+	let quoted = false;
+	for (let i = 0; i < line.length; i++) {
+		const c = line[i];
+		if (quoted) {
+			if (c === '"' && line[i + 1] === '"') {
+				field += '"';
+				i++;
+			} else if (c === '"') quoted = false;
+			else field += c;
+		} else if (c === '"') quoted = true;
+		else if (c === ',') {
+			out.push(field);
+			field = '';
+		} else field += c;
+	}
+	out.push(field);
+	return out;
+}
+
+/**
+ * Each town's newest period: Redfin's city file is all residential over a
+ * rolling 3 months (no property type, no single month), so the figure is
+ * labelled as that, with its sale count; it is context only, never budget.
+ * All three towns must share the newest period end.
+ * @param {Iterable<string>} lines the header and (at least) the towns' rows
+ * @returns {{ period: string, periodEnd: string, values: Record<string, number>, sales: Record<string, number> }}
+ */
+export function parseRedfinCities(lines) {
+	/** @type {Record<string, number> | undefined} */
+	let col;
+	/** @type {Record<string, { end: string, median: number, sold: number }>} */
+	const newest = {};
+	for (const line of lines) {
+		if (!line) continue;
+		const cells = splitCsvLine(line);
+		if (!col) {
+			const names = [
+				'FREQUENCY',
+				'PERIOD END',
+				'REGION NAME',
+				'HOMES SOLD',
+				'MEDIAN SALE PRICE NSA ($)'
+			];
+			col = Object.fromEntries(
+				names.map((n) => {
+					const i = cells.indexOf(n);
+					if (i < 0) throw new Error(`Redfin cities file has no "${n}" column`);
+					return [n, i];
+				})
+			);
+			continue;
+		}
+		const town = cells[col['REGION NAME']];
+		if (!(town in REDFIN_TOWNS)) continue;
+		if (cells[col.FREQUENCY] !== 'Rolling 3 Months') {
+			throw new Error(`Redfin ${town} row is "${cells[col.FREQUENCY]}", not Rolling 3 Months`);
+		}
+		const end = cells[col['PERIOD END']];
+		if (newest[town] && newest[town].end >= end) continue;
+		newest[town] = {
+			end,
+			median: Number(cells[col['MEDIAN SALE PRICE NSA ($)']]),
+			sold: Number(cells[col['HOMES SOLD']])
+		};
+	}
+	const ends = Object.values(newest).map((n) => n.end);
+	const latest = ends.sort().at(-1);
+	/** @type {Record<string, number>} */
+	const values = {};
+	/** @type {Record<string, number>} */
+	const sales = {};
+	for (const [town, key] of Object.entries(REDFIN_TOWNS)) {
+		const n = newest[town];
+		if (!n || n.end !== latest) throw new Error(`Redfin has no ${town} row for the newest period`);
+		if (!(n.median > 0) || !Number.isInteger(n.sold))
+			throw new Error(`Redfin ${town} row has no median`);
+		values[key] = n.median;
+		sales[key] = n.sold;
+	}
+	const [year, month] = /** @type {string} */ (latest).split('-').map(Number);
+	return {
+		period: `3 months to ${MONTHS[month - 1].slice(0, 3)} ${year}`,
+		periodEnd: `${latest}T00:00:00.000Z`,
+		values,
+		sales
+	};
+}

@@ -43,6 +43,23 @@ const BLOBS: Record<string, unknown> = {
 			validUntil: '2026-11-30',
 			values: { 'rangeRover.lease': 999, 'rangeRover.dueAtSigning': 8995 }
 		}
+	},
+	[LIVE_BLOBS.redfin]: {
+		current: {
+			lastSuccessfulScrapeAt: AT,
+			period: '3 months to Sep 2026',
+			periodEnd: '2026-09-30T00:00:00.000Z',
+			values: {
+				'redfin.larkspur.latest': 1801142,
+				'redfin.millValley.latest': 1849119,
+				'redfin.ross.latest': 3893146
+			},
+			sales: {
+				'redfin.larkspur.latest': 42,
+				'redfin.millValley.latest': 38,
+				'redfin.ross.latest': 5
+			}
+		}
 	}
 };
 

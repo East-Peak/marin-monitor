@@ -142,18 +142,6 @@ export const CITED = {
 	// Housing
 	'redfin.larkspur.2024': redfin(2501250, '2024 Larkspur SFR median'),
 	'redfin.millValley.2019': redfin(1790000, '2019 Mill Valley SFR median'),
-	'redfin.larkspur.latest': redfin(3695000, 'Larkspur SFR median, May 2026 (11 sales)', {
-		period: 'May 2026',
-		recheckDays: 60
-	}),
-	'redfin.millValley.latest': redfin(3600000, 'Mill Valley SFR median, May 2026 (13 sales)', {
-		period: 'May 2026',
-		recheckDays: 60
-	}),
-	'redfin.ross.latest': redfin(5347500, 'Ross SFR median, May 2026 (4 sales)', {
-		period: 'May 2026',
-		recheckDays: 60
-	}),
 	'prop13.baseRate': from({
 		url: 'https://leginfo.legislature.ca.gov/faces/codes_displaySection.xhtml?sectionNum=SEC.%201.&lawCode=CONS&article=XIII%20A',
 		period: 'ongoing',

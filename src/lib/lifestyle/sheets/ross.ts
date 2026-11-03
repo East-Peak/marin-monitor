@@ -362,7 +362,7 @@ export const ross: HouseholdSheet = {
 	afterTaxSavings: 0,
 	savingsNote: 'none: “already done”',
 	purchase: { firstPayment: '1998-07', paidOff: true },
-	marketTracker: cite('redfin.ross.latest'),
+	marketTracker: live('redfin.ross.latest', 'all residential, Redfin'),
 	coverage: {
 		housing: { answer: 'priced', where: 'P&I is $0: paid off' },
 		utilities: { answer: 'priced', where: 'electric, gas, water, garbage, internet + phones' },

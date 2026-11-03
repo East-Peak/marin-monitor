@@ -373,7 +373,7 @@ export const millvalley: HouseholdSheet = {
 	afterTaxSavings: 2 * 600 * 12,
 	savingsNote: '401(k) max ×2 (pre-tax); 529 $600/mo × 2 (after-tax, persona)',
 	purchase: { firstPayment: '2019-07', refiFirstPayment: '2021-03' },
-	marketTracker: cite('redfin.millValley.latest'),
+	marketTracker: live('redfin.millValley.latest', 'all residential, Redfin'),
 	coverage: {
 		housing: { answer: 'priced', where: 'P&I (2021 refi), tax, insurance, upkeep' },
 		utilities: { answer: 'priced', where: 'electric, gas, water, garbage, internet + phones' },

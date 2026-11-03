@@ -42,7 +42,10 @@ const LIVE_VALUES: Record<LiveKey, number> = {
 	'pge.ev2a.peak': 0.41,
 	'pge.ev2a.offPeak': 0.23,
 	'rangeRover.lease': 999,
-	'rangeRover.dueAtSigning': 8995
+	'rangeRover.dueAtSigning': 8995,
+	'redfin.larkspur.latest': 3695000,
+	'redfin.millValley.latest': 3600000,
+	'redfin.ross.latest': 5347500
 };
 const liveReads = (overrides: Partial<Record<LiveKey, LiveRead>> = {}): LiveReads =>
 	({
@@ -167,7 +170,7 @@ const base = (): Draft => ({
 	afterTaxSavings: 12000,
 	savingsNote: 'test',
 	purchase: { firstPayment: '2024-07' },
-	marketTracker: cite('redfin.larkspur.latest'),
+	marketTracker: live('redfin.larkspur.latest'),
 	coverage,
 	lines: LINES,
 	notModelled: ['clothing']
@@ -483,7 +486,7 @@ describe('purchase facts are frozen', () => {
 
 	it('shows today’s town median as context, outside the burn', () => {
 		const b = priceSheet(defineSheet(base()), liveReads(), NOW);
-		expect(b.marketTracker).toMatchObject({ class: 'cited', value: 3695000 });
+		expect(b.marketTracker).toMatchObject({ class: 'live', value: 3695000 });
 		expect(b.lines.some((l) => l.inputs.some((i) => i.value === 3695000))).toBe(false);
 	});
 });

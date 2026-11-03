@@ -62,7 +62,7 @@ run_with_timeout() {
       # Stopped 2026-11-03 (COSTDATA Q1): their publishers' terms bar automated access.
       echo "sync:${JOB} is stopped (publisher terms); not run" >&2
       ;;
-    coffee-index | cappuccino | wine-index | ikon-pass | dog-walker | usda-food-plans | pge-ev2 | range-rover-lease)
+    coffee-index | cappuccino | wine-index | ikon-pass | dog-walker | usda-food-plans | pge-ev2 | range-rover-lease | redfin-cities)
       unset SCRAPE_PROXY_URL SCRAPE_PROXY_SECRET
       BLOB_READ_WRITE_TOKEN="$(grep '^BLOB_READ_WRITE_TOKEN=' .env.local | cut -d= -f2- | tr -d '"' || true)"
       [[ -n "$BLOB_READ_WRITE_TOKEN" ]] || { echo "BLOB_READ_WRITE_TOKEN missing from .env.local" >&2; exit 1; }

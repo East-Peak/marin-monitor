@@ -381,7 +381,7 @@ export const larkspur: HouseholdSheet = {
 	afterTaxSavings: 2 * 500 * 12,
 	savingsNote: '401(k) max ×2 (pre-tax); 529 $500/mo × 2 kids (after-tax, persona)',
 	purchase: { firstPayment: '2024-07' },
-	marketTracker: cite('redfin.larkspur.latest'),
+	marketTracker: live('redfin.larkspur.latest', 'all residential, Redfin'),
 	coverage: {
 		housing: { answer: 'priced', where: 'P&I, tax, insurance, upkeep' },
 		utilities: { answer: 'priced', where: 'electric, gas, water, garbage, internet + phones' },

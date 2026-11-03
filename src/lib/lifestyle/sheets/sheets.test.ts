@@ -24,7 +24,10 @@ const LIFE0_LIVE: Record<LiveKey, number> = {
 	'pge.ev2a.peak': 0.41,
 	'pge.ev2a.offPeak': 0.23,
 	'rangeRover.lease': 999,
-	'rangeRover.dueAtSigning': 8995
+	'rangeRover.dueAtSigning': 8995,
+	'redfin.larkspur.latest': 3695000,
+	'redfin.millValley.latest': 3600000,
+	'redfin.ross.latest': 5347500
 };
 const reads = Object.fromEntries(
 	Object.entries(LIFE0_LIVE).map(([k, value]): [string, LiveRead] => [
@@ -305,7 +308,7 @@ describe('the approved household sheets', () => {
 			const mortgage = s.lines.find((l) => l.terms.some((t) => t.kind === 'mortgage'))!;
 			expect(Object.values(mortgage.inputs).every((i) => i.class !== 'live')).toBe(true);
 			const b = priced(s.id);
-			expect(b.marketTracker.class).toBe('cited');
+			expect(b.marketTracker.class).toBe('live'); // Redfin's 3-month median, read live (Q3)
 			expect(b.lines.flatMap((l) => l.inputs).some((i) => i.value === b.marketTracker.value)).toBe(
 				false
 			);

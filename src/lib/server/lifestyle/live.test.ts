@@ -84,7 +84,20 @@ const rangeRover = (validUntil = '2026-11-30') => ({
 	}
 });
 
+const cities = (periodEnd = '2026-09-30T00:00:00.000Z') => ({
+	current: {
+		timestamp: '2026-10-19T12:00:00.000Z',
+		lastSuccessfulScrapeAt: '2026-10-19T12:00:00.000Z',
+		url: 'https://redfin-public-data.s3.us-west-2.amazonaws.com/x/all_cities.csv',
+		period: '3 months to Sep 2026',
+		periodEnd,
+		values: { 'redfin.larkspur.latest': 1801142, 'redfin.ross.latest': 3893146 },
+		sales: { 'redfin.larkspur.latest': 42, 'redfin.ross.latest': 5 }
+	}
+});
+
 const healthy = (): RawLiveBlobs => ({
+	redfin: cities(),
 	usda: usda(),
 	pge: ev2(),
 	rangeRover: rangeRover(),
@@ -275,6 +288,19 @@ describe('readLive', () => {
 				period: 'offer, deliveries by Nov 30, 2026'
 			});
 		}
+	});
+
+	it('reads a town’s Redfin median as all residential over 3 months, with its sale count', () => {
+		expect(readLive(healthy(), NOW)['redfin.larkspur.latest']).toMatchObject({
+			availability: 'ok',
+			value: 1801142,
+			observedAt: '2026-09-30T00:00:00.000Z',
+			period: '3 months to Sep 2026, 42 sales',
+			source: 'Larkspur median sale, all residential, Redfin'
+		});
+		const old = { ...healthy(), redfin: cities('2026-05-31T00:00:00.000Z') };
+		expect(readLive(old, NOW)['redfin.ross.latest'].availability).toBe('stale');
+		expect(readLive(healthy(), NOW)['redfin.millValley.latest'].availability).toBe('unavailable');
 	});
 
 	it('has no grocery or Rivian reads: those scrapes stopped (COSTDATA Q1)', () => {

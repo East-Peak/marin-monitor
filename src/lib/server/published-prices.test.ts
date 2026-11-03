@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	parsePgeEv2,
 	parseRangeRoverOffer,
+	parseRedfinCities,
 	parseUsdaCostOfFood,
 	usdaReportUrl
 } from '../../../scripts/shared/published-prices.mjs';
@@ -94,5 +95,36 @@ describe('Range Rover Sport offers (one offer, all its parts)', () => {
 
 	it('rejects an offer with no end date', () => {
 		expect(() => parseRangeRoverOffer(html.replaceAll(/by 11\/02\/2026/g, 'soon'))).toThrow(/end/);
+	});
+});
+
+describe('Redfin city medians (all_cities.csv: all residential, rolling 3 months)', () => {
+	const lines = fixture('redfin-all-cities-marin.csv').split('\n');
+
+	it('reads each town’s newest 3 months: median and sale count, dated by the period end', () => {
+		expect(parseRedfinCities(lines)).toEqual({
+			period: '3 months to Sep 2026',
+			periodEnd: '2026-09-30T00:00:00.000Z',
+			values: {
+				'redfin.larkspur.latest': 1801142,
+				'redfin.millValley.latest': 1849119,
+				'redfin.ross.latest': 3893146
+			},
+			sales: {
+				'redfin.larkspur.latest': 42,
+				'redfin.millValley.latest': 38,
+				'redfin.ross.latest': 5
+			}
+		});
+	});
+
+	it('refuses a town whose newest period lags the others', () => {
+		const lagging = lines.filter((l) => !(l.includes('"Ross, CA"') && l.includes('"2026-09-30"')));
+		expect(() => parseRedfinCities(lagging)).toThrow(/Ross/);
+	});
+
+	it('refuses a measure that is not the rolling 3 months', () => {
+		const monthly = lines.map((l) => l.replace('"Rolling 3 Months"', '"Monthly"'));
+		expect(() => parseRedfinCities(monthly)).toThrow(/Rolling 3 Months/);
 	});
 });

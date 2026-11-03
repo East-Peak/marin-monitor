@@ -23,7 +23,10 @@ const LIVE: Record<LiveKey, number> = {
 	'pge.ev2a.peak': 0.41,
 	'pge.ev2a.offPeak': 0.23,
 	'rangeRover.lease': 999,
-	'rangeRover.dueAtSigning': 8995
+	'rangeRover.dueAtSigning': 8995,
+	'redfin.larkspur.latest': 3695000,
+	'redfin.millValley.latest': 3600000,
+	'redfin.ross.latest': 5347500
 };
 const reads = (over: Partial<Record<LiveKey, Partial<LiveRead>>> = {}) =>
 	Object.fromEntries(

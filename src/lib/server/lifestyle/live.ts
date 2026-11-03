@@ -7,6 +7,7 @@
 import {
 	PGE_EV2_KEYS,
 	RANGE_ROVER_KEYS,
+	REDFIN_KEYS,
 	USDA_KEYS,
 	type LiveKey,
 	type LiveRead,
@@ -22,7 +23,8 @@ export const LIVE_BLOBS = {
 	ikon: 'marin-ikon-pass.json',
 	usda: 'marin-usda-food-plans.json',
 	pge: 'marin-pge-ev2.json',
-	rangeRover: 'marin-range-rover-lease.json'
+	rangeRover: 'marin-range-rover-lease.json',
+	redfin: 'marin-redfin-cities.json'
 } as const;
 export type LiveBlobName = keyof typeof LIVE_BLOBS;
 /** Parsed blob JSON, or null when the blob could not be read. */
@@ -193,6 +195,27 @@ const ev2Source = (period: string | undefined) =>
 const rangeRoverSource = (period: string | undefined) =>
 	`Range Rover Sport P360 SE lease, 24 mo, US${period ? `, ${period}` : ''} (rangerover.com)`;
 
+const TOWNS: Record<(typeof REDFIN_KEYS)[number], string> = {
+	'redfin.larkspur.latest': 'Larkspur',
+	'redfin.millValley.latest': 'Mill Valley',
+	'redfin.ross.latest': 'Ross'
+};
+/** Q3: labelled as what it is, with its sale count beside its period (Ross's handful swings). */
+function redfin(raw: unknown, key: (typeof REDFIN_KEYS)[number], now: Date): LiveRead {
+	const read = published(
+		'redfin',
+		raw,
+		key,
+		'period',
+		() => `${TOWNS[key]} median sale, all residential, Redfin`,
+		now
+	);
+	const sold = record(record(record(raw)?.current)?.sales)?.[key];
+	return typeof sold === 'number' && read.period
+		? { ...read, period: `${read.period}, ${sold} sale${sold === 1 ? '' : 's'}` }
+		: read;
+}
+
 export function readLive(blobs: RawLiveBlobs, now: Date): LiveReads {
 	const reads: Record<LiveKey, LiveRead> = {
 		'gas.regular': gas(blobs.gas, now),
@@ -211,7 +234,10 @@ export function readLive(blobs: RawLiveBlobs, now: Date): LiveReads {
 				key,
 				published('rangeRover', blobs.rangeRover, key, 'checked', rangeRoverSource, now)
 			])
-		) as Record<(typeof RANGE_ROVER_KEYS)[number], LiveRead>)
+		) as Record<(typeof RANGE_ROVER_KEYS)[number], LiveRead>),
+		...(Object.fromEntries(
+			REDFIN_KEYS.map((key) => [key, redfin(blobs.redfin, key, now)])
+		) as Record<(typeof REDFIN_KEYS)[number], LiveRead>)
 	};
 	return reads;
 }

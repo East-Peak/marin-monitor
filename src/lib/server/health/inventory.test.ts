@@ -34,7 +34,8 @@ const EXPECTED_SOURCES = [
 	'Ikon Pass',
 	'USDA Food Plans',
 	'PG&E EV2',
-	'Range Rover Lease'
+	'Range Rover Lease',
+	'Redfin Cities'
 ];
 
 describe('SOURCE_INVENTORY', () => {

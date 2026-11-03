@@ -216,6 +216,14 @@ const ALL_SOURCES: readonly SourcePolicy[] = freeze<SourcePolicy>([
 		maxAgeDays: 10,
 		observedAt: 'content',
 		note: "our weekly read of the offer page; the offer's own end is enforced where it is priced"
+	},
+	{
+		name: 'Redfin Cities',
+		blobKey: 'marin-redfin-cities.json',
+		cadence: 'monthly',
+		maxAgeDays: 60,
+		observedAt: 'period',
+		note: "Redfin's 3-month period end, not our read; context only (the market trackers)"
 	}
 ]);
 

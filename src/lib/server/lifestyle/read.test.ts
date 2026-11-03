@@ -1,4 +1,4 @@
-import { PGE_EV2_KEYS, RANGE_ROVER_KEYS, USDA_KEYS } from '$lib/lifestyle/model';
+import { PGE_EV2_KEYS, RANGE_ROVER_KEYS, REDFIN_KEYS, USDA_KEYS } from '$lib/lifestyle/model';
 import { describe, expect, it, vi } from 'vitest';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -24,7 +24,8 @@ const liveReads = Object.fromEntries(
 		...(['gas.regular', 'coffee.cappuccino', 'ikon.adult'] satisfies LiveKey[]),
 		...USDA_KEYS,
 		...PGE_EV2_KEYS,
-		...RANGE_ROVER_KEYS
+		...RANGE_ROVER_KEYS,
+		...REDFIN_KEYS
 	].map((k): [string, LiveRead] => [
 		k,
 		{

@@ -92,13 +92,22 @@ export type PgeEv2Key = (typeof PGE_EV2_KEYS)[number];
 export const RANGE_ROVER_KEYS = ['rangeRover.lease', 'rangeRover.dueAtSigning'] as const;
 export type RangeRoverKey = (typeof RANGE_ROVER_KEYS)[number];
 
+/** Each town's Redfin median, all residential, 3 months: the market tracker, context only. */
+export const REDFIN_KEYS = [
+	'redfin.larkspur.latest',
+	'redfin.millValley.latest',
+	'redfin.ross.latest'
+] as const;
+export type RedfinKey = (typeof REDFIN_KEYS)[number];
+
 export type LiveKey =
 	| 'gas.regular'
 	| 'coffee.cappuccino'
 	| 'ikon.adult'
 	| UsdaKey
 	| PgeEv2Key
-	| RangeRoverKey;
+	| RangeRoverKey
+	| RedfinKey;
 
 /** One live value as read from our own data, with its own observation time. */
 export interface LiveRead {
