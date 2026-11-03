@@ -4,6 +4,7 @@ import { COVERAGE_ITEMS } from '../model';
 import { METHOD_VERSION, priceSheet } from '../price';
 import { computeTaxes, TAX_2026 } from '../tax';
 import { SHEETS } from './index';
+import { compareRuns, historyEntry } from '../history';
 
 const NOW = new Date('2026-10-20T18:00:00.000Z');
 
@@ -379,5 +380,25 @@ describe('the signature lines (COST1)', () => {
 		expect(SHEETS.flatMap((s) => s.lines).find((l) => l.id === 'ross.help.manager')?.note).toBe(
 			'Part-time.'
 		);
+	});
+});
+
+describe('the COSTDATA-1 version bump (one per household, all sources in one deploy)', () => {
+	it('moves every sheet to 2026-11-03 together', () => {
+		expect(SHEETS.map((s) => s.version)).toEqual(['2026-11-03', '2026-11-03', '2026-11-03']);
+	});
+
+	it('says not comparable across the bump, and compares again after two runs on it', () => {
+		for (const s of SHEETS) {
+			const b = priced(s.id);
+			const old = { ...historyEntry(b, '2026-10-26'), sheetVersion: '2026-10-20' };
+			const first = historyEntry(b, '2026-11-09');
+			const second = historyEntry(b, '2026-11-16');
+			expect(compareRuns(old, first)).toEqual({
+				comparable: false,
+				reason: 'not enough comparable history'
+			});
+			expect(compareRuns(first, second).comparable).toBe(true);
+		}
 	});
 });

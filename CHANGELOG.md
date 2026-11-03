@@ -4,6 +4,23 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-11-03
+
+### Changed — More of the Cost budgets move on their own (COSTDATA-1)
+
+- **Live from the publishers**: USDA's monthly Liberal food plan (the grocery lines), PG&E's EV2 winter rates (electricity and home charging), and the Range Rover Sport lease are read each Monday from the publishers' own documents. Each line says its source and its period: "September 2026", "effective Jun 1, 2026", "offer, deliveries by …".
+- **A lease is one offer**: monthly, due at signing, term, trim and region all come from the same offer, and when the offer ends the lease reads "can't be read", on the page and the card, without waiting for the next run.
+- **The town medians are Redfin's current measure**: all residential, 3 months to Sep 2026, with the sale count. Context only, as before.
+- **Two scrapes stop**: Instacart's and Rivian's terms bar automated access, so those lines are now cited by hand at the right sizes, and Rivian's from one offer. The Grocery Basket shows its last real read, "prices as of Nov 1, 2026, no longer updated", and never a reference price as a read.
+- **Movers pause**: the sheets' version moves for all three households, so "Movers" says there isn't enough comparable history yet until two weekly runs have passed (2026-11-16).
+
+### Fixed
+
+- **Housing was frozen at May**: Redfin moved its county file; the housing data now reads the new one (through Sep 2026), and health ages it by Redfin's month, not our upload.
+- **A checked date showed the day before** on the Cost page; a cited date now reads as the date it is.
+
+---
+
 ## 2026-11-01
 
 ### Added — Click into the month (COST2)

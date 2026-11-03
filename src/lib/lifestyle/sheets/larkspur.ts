@@ -370,7 +370,7 @@ const lines: LineSpec[] = [
 
 export const larkspur: HouseholdSheet = {
 	id: 'larkspur',
-	version: '2026-10-20',
+	version: '2026-11-03',
 	name: 'Larkspur strivers',
 	town: 'Larkspur',
 	who: '2 adults (42, 41): SF finance, and the shop; kids 9 and 6',

@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-11-03',
+		title: 'More of the Cost budgets move on their own',
+		description:
+			'Grocery lines follow USDA’s monthly food plan, electricity follows PG&E’s EV2 rates, and the Range Rover lease follows its current offer, each with its source and period. A lease whose offer ends says so straight away. Instacart and Rivian are no longer scraped (their terms bar it): those lines are cited by hand, and the Grocery Basket shows its last real read as no longer updated. Housing data, frozen at May since Redfin moved its file, reaches September again.'
+	},
+	{
 		date: '2026-10-31',
 		title: 'Fresh sooner after sleep',
 		description:
