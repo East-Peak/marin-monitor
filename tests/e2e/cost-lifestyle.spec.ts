@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { roleFontPx } from '../../src/lib/dashboard/type-roles';
+import { offerEnded } from '../../src/lib/lifestyle/price';
+import { RIVIAN_OFFER } from '../../src/lib/lifestyle/rivian-offer';
 import { phoneHeight, stub } from './fixtures/v2-height';
 
 /**
@@ -20,6 +22,12 @@ const seed = JSON.parse(readFileSync('tests/e2e/fixtures/lifestyle-index.json', 
 const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
 const breakEven = (id: string) =>
 	usd(seed.current.budgets.find((b) => b.town === id)!.breakEven!.gross);
+/**
+ * Mill Valley's seeded stale lines (its USDA read), plus Rivian's, once its hand-entered offer has
+ * ended: the server enforces that against the clock at every read (COSTDATA-2), so the count
+ * moves with the date until a new offer is entered.
+ */
+const millValleyStale = () => 2 + (offerEnded(RIVIAN_OFFER.validUntil, new Date()) ? 1 : 0);
 const FICTION = 'fictional household · modelled spending';
 
 /** Every other read fails fast; the Lifestyle Index is the seeded server's own. */
@@ -77,7 +85,9 @@ for (const [label, viewport] of [
 
 			await c.locator('[data-town="mill-valley"]').click();
 			await expect(c.locator('[data-break-even]')).toContainText(breakEven('millvalley'));
-			await expect(c.locator('[data-card-source]')).toContainText('2 lines read stale');
+			await expect(c.locator('[data-card-source]')).toContainText(
+				`${millValleyStale()} lines read stale`
+			);
 
 			await c.locator('[data-town="ross"]').click();
 			await expect(c.locator('[data-incomplete]')).toHaveText('incomplete');
