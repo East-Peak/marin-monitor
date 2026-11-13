@@ -24,7 +24,7 @@ type PageData = {
 const NOW = new Date('2026-10-20T18:00:00.000Z');
 const reads = Object.fromEntries(
 	[
-		...(['gas.regular', 'coffee.cappuccino', 'ikon.adult'] as LiveKey[]),
+		...(['gas.regular', 'coffee.cappuccino'] as LiveKey[]),
 		...USDA_KEYS,
 		...PGE_EV2_KEYS,
 		...RANGE_ROVER_KEYS,

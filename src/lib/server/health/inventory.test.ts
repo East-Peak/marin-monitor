@@ -31,7 +31,6 @@ const EXPECTED_SOURCES = [
 	'Cappuccino',
 	'Camp Prices',
 	'Dog Walker',
-	'Ikon Pass',
 	'USDA Food Plans',
 	'PG&E EV2',
 	'Range Rover Lease',
@@ -77,7 +76,8 @@ describe('SOURCE_INVENTORY', () => {
 		expect(keyOf('Cappuccino')).toBe('marin-cappuccino.json');
 		expect(keyOf('Camp Prices')).toBe('marin-camp-prices.json');
 		expect(keyOf('Dog Walker')).toBe('marin-dog-walker.json');
-		expect(keyOf('Ikon Pass')).toBe('marin-ikon-pass.json');
+		// Retired 2026-11-13 (COSTDATA Q1): Alterra's web terms bar bots and scraping.
+		expect(keyOf('Ikon Pass')).toBeUndefined();
 	});
 
 	it('declares no reference data — Driveway is judged by its live DMV observation, never as static', () => {
@@ -97,8 +97,7 @@ describe('SOURCE_INVENTORY', () => {
 			'Driveway',
 			'Cappuccino',
 			'Camp Prices',
-			'Dog Walker',
-			'Ikon Pass'
+			'Dog Walker'
 		]) {
 			expect(contentSources).toContain(name);
 		}

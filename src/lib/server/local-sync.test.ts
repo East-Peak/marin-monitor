@@ -18,14 +18,7 @@ const PUBLISHED_JOBS = [
 	'redfin-cities',
 	'bls-food-at-home'
 ];
-const LOCAL_JOBS = [
-	'coffee-index',
-	'cappuccino',
-	'wine-index',
-	'ikon-pass',
-	'dog-walker',
-	...PUBLISHED_JOBS
-];
+const LOCAL_JOBS = ['coffee-index', 'cappuccino', 'wine-index', 'dog-walker', ...PUBLISHED_JOBS];
 const runner = read('scripts/sync-runner.sh');
 const manager = read('scripts/manage-sync.sh');
 
@@ -51,16 +44,20 @@ describe('residential syncs on launchd', () => {
 		for (const name of plists) expect(manager).toContain(`"${name}"`);
 	});
 
-	it.each(['grocery-basket', 'rivian-lease'])(
+	it.each([
+		['grocery-basket', '2026-11-03'],
+		['rivian-lease', '2026-11-03'],
+		['ikon-pass', '2026-11-13']
+	])(
 		'%s is stopped (COSTDATA Q1, publisher terms): not installed, refused by the runner and the script',
-		(job) => {
+		(job, day) => {
 			expect(manager).not.toContain(`"com.marin-monitor.sync-${job}"`);
 			expect(existsSync(join(ROOT, `scripts/launchd/com.marin-monitor.sync-${job}.plist`))).toBe(
 				false
 			);
-			expect(runner).toMatch(new RegExp(`\\b${job}\\b[^\\n]*\\)\\n\\s+# Stopped 2026-11-03`));
+			expect(runner).toMatch(new RegExp(`\\b${job}\\b[^\\n]*\\)\\n\\s+# Stopped ${day}`));
 			expect(read(`scripts/sync-${job}.mjs`)).toMatch(
-				/stopped 2026-11-03[\s\S]*process\.exit\(0\)/
+				new RegExp(`stopped ${day}[\\s\\S]*process\\.exit\\(0\\)`)
 			);
 		}
 	);

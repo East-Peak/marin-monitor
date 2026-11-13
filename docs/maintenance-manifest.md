@@ -46,10 +46,10 @@ A checklist of all hardcoded values that need periodic updating. Run through thi
 
 ### August-September: Ski Passes
 
-**File:** Scraped from ikonpass.com, fallback in composite config
+**File:** `src/lib/lifestyle/sources.ts` (`ikon.adult`, cited by hand). The scrape stopped 2026-11-13: Alterra's web terms bar bots and scraping.
 
-- Check: ikonpass.com/en/shop-passes for new season pricing
-- Current: Adult $1,399, Child $399
+- Check by hand: ikonpass.com/en/shop-passes for new season pricing (recheck every 60 days)
+- Current: Adult $1,449 (read 2026-09-29), Child $499
 
 ### September: Census Income Data
 

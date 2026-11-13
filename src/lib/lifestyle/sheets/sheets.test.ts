@@ -12,7 +12,6 @@ const NOW = new Date('2026-10-20T18:00:00.000Z');
 const LIFE0_LIVE: Record<LiveKey, number> = {
 	'gas.regular': 6.207,
 	'coffee.cappuccino': 5,
-	'ikon.adult': 1529,
 	'usda.liberal.c6to8': 357.2,
 	'usda.liberal.c9to11': 408.2,
 	'usda.liberal.f12to13': 401.1,
@@ -87,7 +86,7 @@ const APPROVED: Record<string, Record<string, number>> = {
 		'help.nanny': 3951.71,
 		'help.cleaner': 238.33,
 		'well.pilates': 189,
-		'travel.ikon': 338,
+		'travel.ikon': 324.67,
 		'travel.skiweek': 483.33,
 		'travel.summer': 1000,
 		'belong.kqed': 8,
@@ -130,7 +129,7 @@ const APPROVED: Record<string, Record<string, number>> = {
 		'well.therapy': 1430,
 		'well.fm': 458.33,
 		'well.retreat': 268,
-		'travel.ikon': 338,
+		'travel.ikon': 324.67,
 		'travel.skiweek': 350,
 		'travel.wellness': 1166.67,
 		'belong.kqed': 83.33,
@@ -170,7 +169,7 @@ const APPROVED: Record<string, Record<string, number>> = {
 		'help.manager': 9988.54,
 		'well.tennis': 520,
 		'well.physio': 350,
-		'travel.ikon': 443,
+		'travel.ikon': 429.67,
 		'travel.cabin': 2192.3,
 		'travel.xmas': 2500,
 		'belong.club': 1800,
@@ -192,22 +191,22 @@ const APPROVED: Record<string, Record<string, number>> = {
  * Break-even sits $414 / $440 / $707 above the approved figures: flat parcel
  * taxes are paid but no longer deducted (Stuart, 2026-10-22). Ross's then falls
  * $1,735: the Tahoe cabin's property tax is deducted like the house's (Stuart, 2026-10-23).
- * Burn and break-even then move with the four COSTDATA Q1 lines above (2026-11-03).
+ * Burn and break-even then move with the four COSTDATA Q1 lines above (2026-11-03), and with Ikon's adult pass cited at $1,449 rather than read at $1,529 (2026-11-13).
  */
 const TOTALS = {
 	larkspur: {
-		burn: 42631.82,
-		breakEven: 904462,
+		burn: 42618.49,
+		breakEven: 904124,
 		within: 2,
 		personaOnly: 0.117
 	},
 	millvalley: {
-		burn: 27145.6,
-		breakEven: 547591,
+		burn: 27132.27,
+		breakEven: 547295,
 		within: 50,
 		personaOnly: 0.241
 	},
-	ross: { burn: 63830.69, breakEven: 1395668, within: 2, personaOnly: 0.306 }
+	ross: { burn: 63817.36, breakEven: 1395321, within: 2, personaOnly: 0.306 }
 } as const;
 
 const priced = (id: string) => priceSheet(SHEETS.find((s) => s.id === id)!, reads, NOW);

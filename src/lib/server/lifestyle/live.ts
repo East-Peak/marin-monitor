@@ -20,7 +20,6 @@ import { SOURCE_INVENTORY } from '$lib/server/health/inventory';
 export const LIVE_BLOBS = {
 	gas: 'marin-gas-prices.json',
 	cappuccino: 'marin-cappuccino.json',
-	ikon: 'marin-ikon-pass.json',
 	usda: 'marin-usda-food-plans.json',
 	pge: 'marin-pge-ev2.json',
 	rangeRover: 'marin-range-rover-lease.json',
@@ -136,24 +135,6 @@ function cappuccino(raw: unknown, now: Date): LiveRead {
 	return observed('cappuccino', source, median(menus.map((d) => d.price)), iso(at), now);
 }
 
-/**
- * The Ikon sync writes the previous price when a scrape fails, so the value is
- * the newest snapshot whose own field was read.
- */
-function lastScraped(raw: unknown, field: string, source: string, now: Date): LiveRead {
-	const root = record(raw);
-	const snapshots = [root?.current, ...list(root?.history)].map(record);
-	const hit = snapshots.find((s): s is Json => s?.scraped === true && amount(s[field]) !== null);
-	if (!hit) return unavailable('ikon', source, 'never read');
-	return observed(
-		'ikon',
-		source,
-		amount(hit[field]),
-		hit.lastSuccessfulScrapeAt ?? hit.timestamp,
-		now
-	);
-}
-
 const str = (v: unknown): string | undefined => (typeof v === 'string' && v ? v : undefined);
 
 /**
@@ -251,7 +232,6 @@ export function readLive(blobs: RawLiveBlobs, now: Date): LiveReads {
 	const reads: Record<LiveKey, LiveRead> = {
 		'gas.regular': gas(blobs.gas, now),
 		'coffee.cappuccino': cappuccino(blobs.cappuccino, now),
-		'ikon.adult': lastScraped(blobs.ikon, 'adultPrice', 'Ikon Pass adult, ikonpass.com', now),
 		...(Object.fromEntries(
 			USDA_KEYS.map((key) => [key, published('usda', blobs.usda, key, 'period', usdaSource, now)])
 		) as Record<(typeof USDA_KEYS)[number], LiveRead>),

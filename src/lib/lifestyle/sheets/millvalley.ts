@@ -297,7 +297,7 @@ const lines: LineSpec[] = [
 		required: true,
 		inputs: {
 			adults: persona(2, 'adults'),
-			adult: live('ikon.adult'),
+			adult: cite('ikon.adult'),
 			kids: persona(2, 'kids'),
 			child: cite('ikon.child')
 		},

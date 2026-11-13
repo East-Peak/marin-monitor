@@ -18,9 +18,6 @@ const BLOBS: Record<string, unknown> = {
 	[LIVE_BLOBS.cappuccino]: {
 		current: { shops: [{ price: 5, priceSource: 'live', isStale: false, updateTime: AT }] }
 	},
-	[LIVE_BLOBS.ikon]: {
-		current: { timestamp: AT, adultPrice: 1449, scraped: true, lastSuccessfulScrapeAt: AT }
-	},
 	[LIVE_BLOBS.usda]: {
 		current: {
 			lastSuccessfulScrapeAt: AT,

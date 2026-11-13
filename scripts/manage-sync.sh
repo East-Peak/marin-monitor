@@ -10,13 +10,13 @@ LAUNCH_AGENTS="$HOME/Library/LaunchAgents"
 LOG_DIR="$HOME/Library/Logs/marin-monitor"
 
 # sync-grocery-basket stopped 2026-11-03 (COSTDATA Q1): Instacart's terms bar automated access.
+# sync-ikon-pass stopped 2026-11-13 (COSTDATA Q1): Alterra's web terms bar bots and scraping.
 PLISTS=(
   "com.marin-monitor.sync-activity"
   "com.marin-monitor.sync-police"
   "com.marin-monitor.sync-coffee-index"
   "com.marin-monitor.sync-cappuccino"
   "com.marin-monitor.sync-wine-index"
-  "com.marin-monitor.sync-ikon-pass"
   "com.marin-monitor.sync-dog-walker"
   "com.marin-monitor.sync-usda-food-plans"
   "com.marin-monitor.sync-pge-ev2"
@@ -68,7 +68,7 @@ case "${1:-}" in
     # Show last run timestamps from logs
     if [[ -d "$LOG_DIR" ]]; then
       echo "--- Recent log entries ---"
-      for job in activity police coffee-index cappuccino grocery-basket wine-index ikon-pass dog-walker; do
+      for job in activity police coffee-index cappuccino wine-index dog-walker; do
         logfile="$LOG_DIR/sync-${job}.log"
         if [[ -f "$logfile" ]]; then
           echo "[$job] $(tail -3 "$logfile" | head -1)"

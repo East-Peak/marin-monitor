@@ -144,7 +144,7 @@ describe('/api/health', () => {
 
 	it('reports a missing blob as unavailable and an unreadable one as unknown', async () => {
 		mockReadBlobFreshnessTimestamp.mockImplementation(async (blobKey: string) => {
-			if (blobKey === 'marin-ikon-pass.json') throw new MockBlobNotFoundError('missing');
+			if (blobKey === 'marin-camp-prices.json') throw new MockBlobNotFoundError('missing');
 			if (blobKey === 'marin-dog-walker.json') throw new Error('network down');
 			const now = new Date().toISOString();
 			return { uploadedAt: now, lastUpdated: now, validUntil: '2099-12-31' };
@@ -152,7 +152,7 @@ describe('/api/health', () => {
 		const data = await (await getHealth(publicHealth())).json();
 		const statusOf = (name: string) =>
 			data.sources.find((s: { name: string }) => s.name === name).status;
-		expect(statusOf('Ikon Pass')).toBe('unavailable');
+		expect(statusOf('Camp Prices')).toBe('unavailable');
 		expect(statusOf('Dog Walker')).toBe('unknown');
 	});
 

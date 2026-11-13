@@ -164,7 +164,9 @@ const ALL_SOURCES: readonly SourcePolicy[] = freeze<SourcePolicy>([
 		note: '1h = 4 missed 15-minute runs'
 	},
 	// Composite inputs, unmonitored before G0a. Camp + Rivian: GitHub Actions;
-	// Cappuccino, Dog Walker, Ikon: Mac mini launchd (residential IP).
+	// Retired 2026-11-13 (COSTDATA Q1): Ikon Pass. The scrape stopped (Alterra's web
+	// terms bar bots and scraping); the adult price is cited by hand.
+	// Cappuccino, Dog Walker: Mac mini launchd (residential IP).
 	{
 		name: 'Cappuccino',
 		blobKey: 'marin-cappuccino.json',
@@ -182,13 +184,6 @@ const ALL_SOURCES: readonly SourcePolicy[] = freeze<SourcePolicy>([
 	{
 		name: 'Dog Walker',
 		blobKey: 'marin-dog-walker.json',
-		cadence: 'monthly',
-		maxAgeDays: 45,
-		observedAt: 'content'
-	},
-	{
-		name: 'Ikon Pass',
-		blobKey: 'marin-ikon-pass.json',
 		cadence: 'monthly',
 		maxAgeDays: 45,
 		observedAt: 'content'

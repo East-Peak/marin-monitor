@@ -18,7 +18,6 @@ const NOW = new Date('2026-10-20T18:00:00.000Z');
 const LIVE: Record<LiveKey, number> = {
 	'gas.regular': 6.207,
 	'coffee.cappuccino': 5,
-	'ikon.adult': 1529,
 	'usda.liberal.c6to8': 357.2,
 	'usda.liberal.c9to11': 408.2,
 	'usda.liberal.f12to13': 401.1,
@@ -178,7 +177,7 @@ describe('the household page', () => {
 	});
 
 	it('keeps a section whose every line is unavailable, with its lines and no spending', () => {
-		const b = priced('larkspur', reads({ 'ikon.adult': { availability: 'unavailable' } }));
+		const b = priced('larkspur');
 		const travel = b.lines.filter((l) => l.section === 'travel');
 		const gone = { ...b, sections: { ...b.sections, travel: undefined } } as PricedBudget;
 		delete (gone.sections as Record<string, unknown>).travel;
@@ -199,11 +198,11 @@ describe('the household page', () => {
 	});
 
 	it('says a section is partial while one of its lines cannot be read, and sorts it by what it has', () => {
-		const b = priced('ross', reads({ 'ikon.adult': { availability: 'unavailable' } }));
+		const b = priced('ross', reads({ 'usda.liberal.m51to70': { availability: 'unavailable' } }));
 		const p = householdPage(b, sheet('ross'));
-		const travel = p.sections.find((s) => s.section === 'travel')!;
-		expect(travel.monthly).toBeGreaterThan(0);
-		expect(travel.partial).toBe(true);
+		const food = p.sections.find((s) => s.section === 'food')!;
+		expect(food.monthly).toBeGreaterThan(0);
+		expect(food.partial).toBe(true);
 		expect(p.sections.find((s) => s.section === 'help')!.partial).toBe(false);
 	});
 

@@ -21,7 +21,7 @@ import {
 const signal = new AbortController().signal;
 const liveReads = Object.fromEntries(
 	[
-		...(['gas.regular', 'coffee.cappuccino', 'ikon.adult'] satisfies LiveKey[]),
+		...(['gas.regular', 'coffee.cappuccino'] satisfies LiveKey[]),
 		...USDA_KEYS,
 		...PGE_EV2_KEYS,
 		...RANGE_ROVER_KEYS,

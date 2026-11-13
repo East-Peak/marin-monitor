@@ -418,8 +418,30 @@ describe('buildCompositeSnapshot', () => {
 		expect(rivianItem?.label).toBe('Rivian R1S payment (no longer updated)');
 
 		const skiItem = snapshot.marinNumber.items.find((i) => i.label.includes('Ski season'));
-		expect(skiItem?.source).toBe('live');
+		// Ikon's scrape is stopped too (COSTDATA Q1): its last read, never live.
+		expect(skiItem?.source).toBe('static');
 		expect(skiItem?.monthly).toBe(300);
+		expect(skiItem?.label).toBe('Ski season (amortized) (no longer updated)');
+	});
+
+	it('shows Ikon’s preserved last real read after a failed run, dated, never live', () => {
+		const snapshot = buildCompositeSnapshot({
+			...ALL_NULL_INPUTS,
+			ikonPass: {
+				current: {
+					adultPrice: 1449,
+					childPrice: 399,
+					familyOf4: 3696,
+					monthlyAmortized: 308,
+					scraped: false,
+					lastSuccessfulScrapeAt: '2026-09-29T19:00:00.000Z'
+				}
+			}
+		});
+		const ski = snapshot.marinNumber.items.find((i) => i.label.includes('Ski season'));
+		expect(ski?.source).toBe('static');
+		expect(ski?.monthly).toBe(308);
+		expect(ski?.label).toBe('Ski season (amortized) (as of Sep 29, 2026, no longer updated)');
 	});
 
 	it('keeps fallback standalone snapshots marked static', () => {

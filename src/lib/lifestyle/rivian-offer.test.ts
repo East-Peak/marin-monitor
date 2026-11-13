@@ -124,7 +124,6 @@ describe('the sheet reads the record, and its end is enforced at read time', () 
 	const reads = {
 		'gas.regular': ok(6.2),
 		'coffee.cappuccino': ok(5),
-		'ikon.adult': ok(1529),
 		...Object.fromEntries(USDA_KEYS.map((k) => [k, ok(400)])),
 		...Object.fromEntries(PGE_EV2_KEYS.map((k) => [k, ok(0.3)])),
 		...Object.fromEntries(REDFIN_KEYS.map((k) => [k, ok(3000000)])),
@@ -172,7 +171,6 @@ describe('repricing a stored budget whose Silver Oak line used the live read', (
 		const reads = {
 			'gas.regular': ok(6.2),
 			'coffee.cappuccino': ok(5),
-			'ikon.adult': ok(1529),
 			...Object.fromEntries(USDA_KEYS.map((k) => [k, ok(400)])),
 			...Object.fromEntries(PGE_EV2_KEYS.map((k) => [k, ok(0.3)])),
 			...Object.fromEntries(REDFIN_KEYS.map((k) => [k, ok(3000000)])),

@@ -233,8 +233,9 @@ function hasLiveHousingData(housing: HousingMetric[] | null): boolean {
 	return getHousingPITI(housing) !== null;
 }
 
-function hasLiveIkonData(data: IkonPassData | null): boolean {
-	return data?.current?.scraped === true;
+/** A real read, now or preserved by a later failed run (`lastSuccessfulScrapeAt`). */
+function hasIkonRead(data: IkonPassData | null): boolean {
+	return data?.current?.scraped === true || asOfDay(data?.current?.lastSuccessfulScrapeAt) !== null;
 }
 
 function hasLiveDogWalkerData(data: DogWalkerData | null): boolean {
@@ -382,11 +383,15 @@ export function buildCompositeSnapshot(inputs: CompositeInputs): CompositeSnapsh
 					source: hasLiveDogWalkerData(inputs.dogWalker) ? 'live' : 'static'
 				};
 			case 'ikon-pass':
-				return {
-					...item,
-					monthly: skiSeason,
-					source: hasLiveIkonData(inputs.ikonPass) ? 'live' : 'static'
-				};
+				// Only a real read is shown; the scrape is stopped (COSTDATA Q1), so it is never live.
+				return hasIkonRead(inputs.ikonPass)
+					? {
+							...item,
+							label: `${item.label} (${noLongerUpdated(asOfDay(inputs.ikonPass?.current?.lastSuccessfulScrapeAt))})`,
+							monthly: skiSeason,
+							source: 'static'
+						}
+					: { ...item, source: 'static' };
 			case 'camp-prices':
 				return {
 					...item,

@@ -10,6 +10,12 @@
  * carried forward from the previous snapshot and marked unobserved.
  */
 
+// Stopped 2026-11-13 (COSTDATA Q1): Alterra's web terms bar bots and scraping.
+// Kept for the record; it refuses to run. The adult price is cited by hand
+// (last read 2026-09-29, $1,449) in src/lib/lifestyle/sources.ts.
+console.error("[sync-ikon-pass] stopped 2026-11-13: the publisher's terms bar automated access");
+process.exit(0);
+
 import { put, head } from '@vercel/blob';
 import { chromium } from '@playwright/test';
 import { IKON_PASS_URL, parseIkonAdultPrice } from './shared/ikon-pass.mjs';

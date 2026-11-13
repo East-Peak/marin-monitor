@@ -111,7 +111,6 @@ export type WineKey = (typeof WINE_KEYS)[number];
 export type LiveKey =
 	| 'gas.regular'
 	| 'coffee.cappuccino'
-	| 'ikon.adult'
 	| UsdaKey
 	| PgeEv2Key
 	| RangeRoverKey

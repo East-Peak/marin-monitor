@@ -322,6 +322,12 @@ export const CITED = {
 	'dmv.evRoadFee': dmv(121, 'road improvement fee (zero-emission)'),
 
 	// Travel, belonging, giving, business
+	// Read by hand on Ikon's page (2026-09-29): the scrape stopped, Alterra's web terms bar bots and scraping.
+	'ikon.adult': ikon(1449, 'adult', {
+		checkedAt: '2026-09-29',
+		recheckDays: 60,
+		period: '2026-27 season, adult, last read 2026-09-29'
+	}),
 	'ikon.child': ikon(499, 'child 5-12'),
 	'ikon.youngAdult': ikon(1129, 'young adult 13-22'),
 	'truckee.median': from({

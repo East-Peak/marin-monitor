@@ -33,20 +33,6 @@ const cappuccino = (shops: object[], at = '2026-10-19T10:40:39.208Z') => ({
 	history: []
 });
 
-/** The shape the monthly Ikon sync writes. */
-const monthly = (
-	field: string,
-	entries: { timestamp: string; value: number; scraped: boolean }[]
-) => {
-	const snaps = entries.map((e) => ({
-		timestamp: e.timestamp,
-		[field]: e.value,
-		scraped: e.scraped,
-		lastSuccessfulScrapeAt: e.scraped ? e.timestamp : null
-	}));
-	return { current: snaps[0], history: snaps };
-};
-
 /** The shape the published-series syncs write (scripts/sync-usda-food-plans.mjs and kin). */
 const usda = (periodEnd = '2026-09-30T00:00:00.000Z', checked = '2026-10-19T12:00:00.000Z') => ({
 	current: {
@@ -103,10 +89,7 @@ const healthy = (): RawLiveBlobs => ({
 	rangeRover: rangeRover(),
 	gas: gas('2026-10-20T12:00:00.000Z'),
 	cappuccino: cappuccino([shop(5, 'live'), shop(4.85, 'live'), shop(5, 'live')]),
-	wine: null,
-	ikon: monthly('adultPrice', [
-		{ timestamp: '2026-10-02T19:10:39.582Z', value: 1529, scraped: true }
-	])
+	wine: null
 });
 
 describe('readLive', () => {
@@ -117,16 +100,14 @@ describe('readLive', () => {
 			observedAt: '2026-10-20T04:38:21.000Z'
 		});
 		expect(live['gas.regular'].value).toBeCloseTo(6.207, 6);
-		expect(live['ikon.adult']).toMatchObject({ availability: 'ok', value: 1529 });
 		for (const read of [
 			live['gas.regular'],
 			live['coffee.cappuccino'],
-			live['ikon.adult'],
 			live['usda.liberal.m19to50']
 		])
 			expect(read.availability).toBe('ok');
 		// Each read carries its source's max age from the health inventory, so pricing can re-check it.
-		expect([live['gas.regular'].maxAgeDays, live['ikon.adult'].maxAgeDays]).toEqual([2, 45]);
+		expect([live['gas.regular'].maxAgeDays, live['coffee.cappuccino'].maxAgeDays]).toEqual([2, 10]);
 	});
 
 	it('uses the upstream observation time, never the blob write time', () => {
@@ -215,19 +196,6 @@ describe('readLive', () => {
 		});
 	});
 
-	it('reads a monthly sync’s last successful scrape, not the price a failed run carried over', () => {
-		const blobs = healthy();
-		blobs.ikon = monthly('adultPrice', [
-			{ timestamp: '2026-10-02T19:10:39.582Z', value: 1399, scraped: false },
-			{ timestamp: '2026-09-10T16:11:40.159Z', value: 1529, scraped: true }
-		]);
-		expect(readLive(blobs, NOW)['ikon.adult']).toMatchObject({
-			availability: 'ok',
-			value: 1529,
-			observedAt: '2026-09-10T16:11:40.159Z'
-		});
-	});
-
 	it('reads a USDA figure dated by its report month, with our check beside it', () => {
 		expect(readLive(healthy(), NOW)['usda.liberal.m19to50']).toEqual({
 			availability: 'ok',
@@ -304,31 +272,12 @@ describe('readLive', () => {
 		expect(readLive(healthy(), NOW)['redfin.millValley.latest'].availability).toBe('unavailable');
 	});
 
-	it('has no grocery or Rivian reads: those scrapes stopped (COSTDATA Q1)', () => {
+	it('has no grocery, Rivian or Ikon reads: those scrapes stopped (COSTDATA Q1)', () => {
 		const keys = Object.keys(readLive(healthy(), NOW));
-		expect(keys.filter((k) => k.startsWith('grocery.') || k.startsWith('rivian.'))).toEqual([]);
-	});
-
-	it('marks a monthly sync that never scraped unavailable: a default is never a read', () => {
-		const blobs = healthy();
-		blobs.ikon = monthly('adultPrice', [
-			{ timestamp: '2026-10-02T19:10:39.582Z', value: 1399, scraped: false },
-			{ timestamp: '2026-09-02T16:11:40.159Z', value: 1399, scraped: false }
-		]);
-		expect(readLive(blobs, NOW)['ikon.adult']).toMatchObject({
-			availability: 'unavailable',
-			value: null
-		});
-	});
-
-	it('goes stale past the source’s max age in the health inventory', () => {
-		const blobs = healthy();
-		blobs.ikon = monthly('adultPrice', [
-			{ timestamp: '2026-08-01T00:00:00.000Z', value: 1449, scraped: true }
-		]);
-		expect(readLive(blobs, NOW)['ikon.adult']).toMatchObject({
-			availability: 'stale',
-			value: 1449
-		});
+		expect(
+			keys.filter(
+				(k) => k.startsWith('grocery.') || k.startsWith('rivian.') || k.startsWith('ikon.')
+			)
+		).toEqual([]);
 	});
 });

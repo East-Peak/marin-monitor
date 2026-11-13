@@ -29,7 +29,6 @@ const read = (value: number, availability: LiveRead['availability'] = 'ok'): Liv
 const LIVE_VALUES: Record<LiveKey, number> = {
 	'gas.regular': 6.207,
 	'coffee.cappuccino': 5,
-	'ikon.adult': 1529,
 	'usda.liberal.c6to8': 357.2,
 	'usda.liberal.c9to11': 408.2,
 	'usda.liberal.f12to13': 401.1,
@@ -151,7 +150,7 @@ const LINES: LineSpec[] = [
 		inputs: {
 			rent: persona(4000, 'rent'),
 			sales: persona(8000, 'sales'),
-			wine: live('ikon.adult')
+			wine: live('pge.ev2a.offPeak')
 		},
 		terms: [monthly('rent'), less('sales'), monthly('wine')]
 	}
@@ -217,7 +216,7 @@ describe('priceSheet', () => {
 		);
 		expect(line(b, 't.cars.lease').monthly).toBeCloseTo(889 + 889 / 24, 6);
 		expect(line(b, 't.home.tax').monthly).toBeCloseTo((2501250 * 1.02 ** 2 * 0.01 + 1906) / 12, 6);
-		expect(line(b, 't.biz').monthly).toBeCloseTo(4000 - 8000 + 1529, 6);
+		expect(line(b, 't.biz').monthly).toBeCloseTo(4000 - 8000 + 0.23, 6);
 	});
 
 	it('prices a household employee at employer cost: wage + FICA + FUTA + CA UI/ETT', () => {
@@ -318,7 +317,7 @@ describe('a live input’s own times (COSTDATA-1)', () => {
 	it('carries the source’s period, our check, its max age and its end to the priced input', () => {
 		const b = priceSheet(
 			defineSheet(base()),
-			liveReads({ 'ikon.adult': dated('2026-11-02') }),
+			liveReads({ 'pge.ev2a.offPeak': dated('2026-11-02') }),
 			NOW
 		);
 		expect(input(b)).toMatchObject({
@@ -334,7 +333,7 @@ describe('a live input’s own times (COSTDATA-1)', () => {
 	it('reads an offer past its end unavailable, carrying no value, however fresh the read', () => {
 		const after = new Date('2026-11-03T00:00:01.000Z');
 		const reads = liveReads({
-			'ikon.adult': { ...dated('2026-11-02'), observedAt: after.toISOString() }
+			'pge.ev2a.offPeak': { ...dated('2026-11-02'), observedAt: after.toISOString() }
 		});
 		const b = priceSheet(defineSheet(base()), reads, after);
 		expect(input(b)).toMatchObject({
@@ -349,7 +348,7 @@ describe('a live input’s own times (COSTDATA-1)', () => {
 		const lastDay = new Date('2026-11-02T23:00:00.000Z');
 		const b = priceSheet(
 			defineSheet(base()),
-			liveReads({ 'ikon.adult': dated('2026-11-02') }),
+			liveReads({ 'pge.ev2a.offPeak': dated('2026-11-02') }),
 			lastDay
 		);
 		expect(input(b).availability).not.toBe('unavailable');
@@ -387,7 +386,7 @@ describe('availability: a fallback is never ok', () => {
 	it('keeps a budget complete when only an optional line is unavailable', () => {
 		const b = priceSheet(
 			defineSheet(base()),
-			liveReads({ 'ikon.adult': read(0, 'unavailable') }),
+			liveReads({ 'pge.ev2a.offPeak': read(0, 'unavailable') }),
 			NOW
 		);
 		expect(line(b, 't.biz').monthly).toBeNull();
@@ -427,7 +426,7 @@ describe('purchase facts are frozen', () => {
 
 	it('refuses a live input on the mortgage line', () => {
 		const bad = base();
-		bad.lines = [{ ...LINES[0], inputs: { ...LINES[0].inputs, price: live('ikon.adult') } }];
+		bad.lines = [{ ...LINES[0], inputs: { ...LINES[0].inputs, price: live('pge.ev2a.offPeak') } }];
 		expect(() => defineSheet(bad)).toThrow(/frozen/);
 	});
 
@@ -709,7 +708,7 @@ describe('Codex 1b-i: inputs the engine cannot vouch for', () => {
 				inputs: {
 					rent: persona(100, 'r'),
 					sales: persona(9000, 's'),
-					wine: live('ikon.adult')
+					wine: live('pge.ev2a.offPeak')
 				}
 			}
 		];

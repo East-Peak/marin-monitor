@@ -6,6 +6,10 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-11-13
 
+### Changed — The Ikon Pass scrape stops; the adult price is cited (COSTDATA-1)
+
+- **Alterra's web terms bar bots and scraping**, so the monthly Ikon read (timing out since 2 October) stops, its launchd job is booted out and its plist moved to `scripts/launchd/stopped/`. The adult pass is cited by hand at $1,449 (last read 2026-09-29), to recheck within 60 days, and the budgets use it instead of a live read. Health no longer expects an Ikon Pass blob; the Marin Number's ski line reads "no longer updated".
+
 ### Changed — The grocery panel leads with SF-area grocery inflation (COSTDATA-2)
 
 - **A real moving series**: the Grocery panel and the default dashboard's grocery tile now lead with BLS's CPI for food at home, San Francisco area, read each Monday from BLS's public API. It is an index, never dollars: "+4.4%, 12 months to Sep 2026", with its own monthly chart. The 12-month change always compares the same month a year earlier, and the newest month that has one leads; October 2026's reads "Unavailable" because BLS published no October 2025 (the funding lapse), and the chart breaks there rather than bridging it.

@@ -10,7 +10,6 @@ const NOW = new Date('2026-10-23T11:36:55.978Z');
 const LIVE: Record<LiveKey, number> = {
 	'gas.regular': 6.179,
 	'coffee.cappuccino': 4.925,
-	'ikon.adult': 1449,
 	'usda.liberal.c6to8': 357.2,
 	'usda.liberal.c9to11': 408.2,
 	'usda.liberal.f12to13': 401.1,
