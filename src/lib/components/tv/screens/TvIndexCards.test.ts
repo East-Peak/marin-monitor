@@ -299,6 +299,16 @@ describe('tv index cards', () => {
 		expect(container.querySelectorAll('svg')).toHaveLength(3);
 	});
 
+	it('names the dates a grocery change compares, never "last week" (COSTDATA-2)', () => {
+		const { container } = render(TvDailyLifeCard, {
+			props: { cappuccino: cappuccinoData, grocery: groceryData, gas: gasData }
+		});
+		const text = container.textContent ?? '';
+		expect(text).toMatch(/\+\$7\.00 since Mar 26/);
+		expect(text).toMatch(/Biggest Movers since Mar 26/);
+		expect(text).not.toMatch(/last week|this week/i);
+	});
+
 	it('renders both structural sparklines', () => {
 		const { container } = render(TvStructuralCard, {
 			props: {

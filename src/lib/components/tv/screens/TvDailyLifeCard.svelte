@@ -54,6 +54,18 @@
 		fmtDelta(grocery?.current?.totalCheapest, grocery?.history?.[1]?.totalCheapest)
 	);
 
+	/** The read the change compares with, by its own date: a frozen basket's "last week" was not. */
+	const groceryComparedWith = $derived.by(() => {
+		const at = grocery?.history?.[1]?.timestamp;
+		return at
+			? new Date(at).toLocaleDateString('en-US', {
+					month: 'short',
+					day: 'numeric',
+					timeZone: 'America/Los_Angeles'
+				})
+			: null;
+	});
+
 	const grocerySparkline = $derived.by(() =>
 		buildTvSparkline(grocery?.history?.map((h) => h.totalCheapest) ?? [], 80, 24)
 	);
@@ -197,7 +209,9 @@
 					<span class="text-[10px] text-zinc-500">cheapest</span>
 					{#if groceryDelta}
 						<span class="text-sm font-semibold tabular-nums {groceryDelta.color}">
-							{groceryDelta.text}
+							{groceryDelta.text}{groceryComparedWith && groceryDelta.text !== 'flat'
+								? ` since ${groceryComparedWith}`
+								: ''}
 						</span>
 					{/if}
 					{#if grocerySparkline}
@@ -237,7 +251,7 @@
 			<!-- Biggest Movers -->
 			<div class="flex-1 px-3 py-2 overflow-hidden">
 				<div class="text-[9px] font-semibold uppercase tracking-wider text-zinc-500 mb-1.5">
-					Biggest Movers
+					Biggest Movers{groceryComparedWith ? ` since ${groceryComparedWith}` : ''}
 				</div>
 				{#each biggestMovers as item}
 					<div class="flex items-center justify-between py-0.5">
