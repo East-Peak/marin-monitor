@@ -12,6 +12,7 @@ import {
 	waterInputs,
 	yearly
 } from '../sheet-kit';
+import { RIVIAN_OFFER } from '../rivian-offer';
 import { car, electricity, NOT_MODELLED, propertyTax } from './shared';
 
 const price = () => cite('redfin.larkspur.2024', undefined, 2501250);
@@ -114,11 +115,11 @@ const lines: LineSpec[] = [
 		lease: {
 			pay: cite('rivian.lease'),
 			due: cite('rivian.dueAtSigning'),
-			months: 36,
+			months: RIVIAN_OFFER.termMonths,
 			signature: true
 		},
 		power: { kind: 'ev', milesPerKwh: 2.5 },
-		value: 85885,
+		value: RIVIAN_OFFER.vehiclePrice,
 		vlfRate: 0.0065,
 		tif: 'dmv.tif.over60k',
 		miles: 900,

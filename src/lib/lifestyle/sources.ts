@@ -73,7 +73,7 @@ const dmv = from({
 const rivian = from({
 	url: RIVIAN_OFFER.url,
 	period: RIVIAN_OFFER.period,
-	scope: `${RIVIAN_OFFER.trim}, $${RIVIAN_OFFER.vehiclePrice.toLocaleString('en-US')} vehicle price, ${RIVIAN_OFFER.termMonths} mo, ${RIVIAN_OFFER.milesPerYear.toLocaleString('en-US')} mi/yr, ${RIVIAN_OFFER.region}`,
+	scope: `${RIVIAN_OFFER.trim}, $${RIVIAN_OFFER.vehiclePrice.toLocaleString('en-US')} vehicle price, ${RIVIAN_OFFER.termMonths} mo, ${RIVIAN_OFFER.milesPerYear.toLocaleString('en-US')} mi/yr, ${RIVIAN_OFFER.region}${RIVIAN_OFFER.dueIncludesFirstPayment === null ? ', first-payment inclusion not stated' : ''}`,
 	checkedAt: RIVIAN_OFFER.checkedAt,
 	recheckDays: 30,
 	validUntil: RIVIAN_OFFER.validUntil

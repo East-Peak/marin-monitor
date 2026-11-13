@@ -71,6 +71,10 @@ export function validateRivianOffer(o: RivianOffer): string[] {
 	if (!/^https:\/\/(www\.)?rivian\.com\//.test(o.url)) problems.push('url must be on rivian.com');
 	if (o.dueIncludesFirstPayment === true && o.dueAtSigning < o.monthlyPayment)
 		problems.push('due at signing cannot hold a first payment larger than itself');
+	// Without it the first payment may be counted twice, so only a record read after its own offer
+	// had ended (stale anyway: the legacy record) may leave it unsaid.
+	if (o.dueIncludesFirstPayment === null && !(o.validUntil < o.checkedAt))
+		problems.push('the disclosure must say whether due at signing includes the first payment');
 	// The parts are one offer only if its own disclosure states them all.
 	if (!o.disclosure.includes(dollars(o.monthlyPayment)))
 		problems.push(`disclosure does not state the monthly payment ${dollars(o.monthlyPayment)}`);

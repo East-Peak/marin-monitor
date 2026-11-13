@@ -71,6 +71,26 @@ describe('one dated record per Rivian offer, every part from the one offer', () 
 		).toBeGreaterThan(0);
 	});
 
+	it('does not accept an unknown first-payment flag on an offer that was running when it was read', () => {
+		const running = { ...good, dueIncludesFirstPayment: null, validUntil: '2026-12-02' };
+		expect(validateRivianOffer(running)).toEqual(
+			expect.arrayContaining([expect.stringMatching(/first payment/)])
+		);
+		// Only the legacy record, read after its own offer had ended, may leave it unsaid.
+		expect(validateRivianOffer(RIVIAN_OFFER)).toEqual([]);
+		expect(CITED['rivian.dueAtSigning'].scope).toMatch(/first-payment inclusion not stated/);
+	});
+
+	it('the Larkspur sheet takes the term and the vehicle price from the record', () => {
+		const larkspur = SHEETS.find((s) => s.id === 'larkspur')!;
+		const lease = larkspur.lines.find((l) => l.id === 'larkspur.car.rivian.lease')!;
+		expect(lease.inputs.months).toMatchObject({ value: RIVIAN_OFFER.termMonths });
+		const value = larkspur.lines
+			.flatMap((l) => Object.values(l.inputs))
+			.filter((i) => i.class === 'persona' && i.value === RIVIAN_OFFER.vehiclePrice);
+		expect(value.length).toBeGreaterThan(0);
+	});
+
 	it('never counts the first payment twice', () => {
 		// The sheet adds the monthly payment for every month, so a due-at-signing that already holds the first one gives it up.
 		expect(rivianSheetDue({ ...good, dueIncludesFirstPayment: true })).toBe(9104 - 1209);
