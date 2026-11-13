@@ -11,6 +11,7 @@
 import { put, head } from '@vercel/blob';
 import { fetchShopifyCollection, requireNonEmpty } from './shared/shopify-collection.mjs';
 import { withSuccessfulScrapeMetadata } from './shared/scrape-metadata.mjs';
+import { IDENTIFYING_USER_AGENT, matchSilverOakAlexanderValley2022 } from './shared/wine-exact.mjs';
 
 // ---- Config (from src/lib/config/wine.ts) ----
 
@@ -113,23 +114,19 @@ function buildStaffPick(product, listingType) {
 	};
 }
 
+// We identify ourselves to PlumpJack's public JSON and ask slowly (COSTDATA-2).
 const SHOPIFY_HEADERS = {
-	Accept: 'application/json, text/plain, */*',
-	'Accept-Language': 'en-US,en;q=0.9',
-	'Accept-Encoding': 'gzip, deflate, br',
-	'User-Agent':
-		'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-	Referer: 'https://plumpjackwines.com/',
-	'Sec-Fetch-Dest': 'empty',
-	'Sec-Fetch-Mode': 'cors',
-	'Sec-Fetch-Site': 'same-origin'
+	Accept: 'application/json',
+	'User-Agent': IDENTIFYING_USER_AGENT
 };
+const SHOPIFY_PAGE_DELAY_MS = 1500;
 
 /** Any failed page throws, so a partial or blocked scrape never overwrites the blob. */
 async function fetchCollectionProducts(collectionHandle) {
 	const products = await fetchShopifyCollection(PLUMPJACK_BASE_URL, collectionHandle, {
 		pageLimit: SHOPIFY_PAGE_LIMIT,
 		timeoutMs: SHOPIFY_FETCH_TIMEOUT,
+		delayMs: SHOPIFY_PAGE_DELAY_MS,
 		headers: SHOPIFY_HEADERS
 	});
 	return extractProducts({ products });
@@ -181,11 +178,25 @@ async function main() {
 	const allocatedWines = allocatedProducts.map((p) => buildStaffPick(p, 'allocated'));
 	console.log(`[wine-index] Allocated wines: ${allocatedWines.length} wines`);
 
+	// 3b. The Silver Oak line: the whole catalogue, for one exact listing. Any failed page
+	// throws before a write, as every other collection does.
+	console.log('[wine-index] Fetching the whole catalogue for the exact Silver Oak listing...');
+	const catalogue = await fetchShopifyCollection(PLUMPJACK_BASE_URL, 'all', {
+		pageLimit: SHOPIFY_PAGE_LIMIT,
+		timeoutMs: SHOPIFY_FETCH_TIMEOUT,
+		delayMs: SHOPIFY_PAGE_DELAY_MS,
+		headers: SHOPIFY_HEADERS
+	});
+	requireNonEmpty('all', catalogue);
+	const silverOak = matchSilverOakAlexanderValley2022(catalogue);
+	console.log(`[wine-index] Silver Oak AV 2022 750 ml: ${silverOak.status}`);
+
 	const snapshot = withSuccessfulScrapeMetadata({
 		timestamp: new Date().toISOString(),
 		categories: categorySnapshots,
 		staffPicks,
-		allocatedWines
+		allocatedWines,
+		silverOak: { ...silverOak, readAt: new Date().toISOString(), products: catalogue.length }
 	});
 
 	// 4. Read existing blob

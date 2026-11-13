@@ -9,7 +9,7 @@ import { proxyFetch } from './proxy-fetch.mjs';
  *
  * @param {string} baseUrl
  * @param {string} handle
- * @param {{ fetchImpl?: typeof proxyFetch, pageLimit?: number, timeoutMs?: number, delayMs?: number, headers?: Record<string, string> }} [options]
+ * @param {{ fetchImpl?: typeof proxyFetch, pageLimit?: number, timeoutMs?: number, delayMs?: number, headers?: Record<string, string>, sleep?: (ms: number) => Promise<void>, maxRetries?: number }} [options]
  * @returns {Promise<any[]>}
  */
 export async function fetchShopifyCollection(baseUrl, handle, options = {}) {
@@ -18,7 +18,9 @@ export async function fetchShopifyCollection(baseUrl, handle, options = {}) {
 		pageLimit = 250,
 		timeoutMs = 15000,
 		delayMs = 500,
-		headers = {}
+		headers = {},
+		sleep = (/** @type {number} */ ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+		maxRetries = 3
 	} = options;
 	const products = [];
 	for (let page = 1; ; page++) {
@@ -28,7 +30,15 @@ export async function fetchShopifyCollection(baseUrl, handle, options = {}) {
 		const timer = setTimeout(() => controller.abort(), timeoutMs);
 		let body;
 		try {
-			const res = await fetchImpl(url, { signal: controller.signal, headers });
+			let res = await fetchImpl(url, { signal: controller.signal, headers });
+			// Back off when told to slow down: wait what the shop asks (capped), then ask again.
+			for (let retry = 0; res.status === 429 && retry < maxRetries; retry++) {
+				const asked = Number(res.headers.get('Retry-After'));
+				await sleep(
+					Math.min(60, Number.isFinite(asked) && asked > 0 ? asked : 5 * 2 ** retry) * 1000
+				);
+				res = await fetchImpl(url, { signal: controller.signal, headers });
+			}
 			if (!res.ok) throw new Error(`HTTP ${res.status}`);
 			body = await res.json();
 		} catch (err) {
@@ -39,7 +49,7 @@ export async function fetchShopifyCollection(baseUrl, handle, options = {}) {
 		if (!Array.isArray(body?.products)) throw new Error(`${where}: no products array`);
 		products.push(...body.products);
 		if (body.products.length < pageLimit) return products;
-		if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));
+		if (delayMs > 0) await sleep(delayMs);
 	}
 }
 
