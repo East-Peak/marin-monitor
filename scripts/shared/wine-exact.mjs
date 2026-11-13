@@ -12,7 +12,7 @@
 export const IDENTIFYING_USER_AGENT = 'MarinMonitor/1.0 (+https://marinmonitor.com)';
 
 const MAGNUM_OR_HALF = /\b(1\.5\s?l|3\s?l|375\s?ml|1500\s?ml|magnum|half[- ]bottle|case)\b/i;
-/** A variant that is another vintage, or a pack or set, is not one bottle of the 2022. */
+/** A product or variant that is a pack or set, or another vintage, is not one bottle of the 2022. */
 const OTHER_PACKAGE = /\b(\d+\s?(pack|pk|bottles?)|case|gift|set|vertical)\b/i;
 const SIZE_750 = /\b(750\s?ml|0?\.75\s?l)\b/i;
 
@@ -45,7 +45,7 @@ export function matchSilverOakAlexanderValley2022(products) {
 				.filter((x) => typeof x === 'string')
 				.join(' | ');
 			const years = own.match(/\b(19|20)\d\d\b/g) ?? [];
-			if (years.some((y) => y !== '2022') || OTHER_PACKAGE.test(own)) continue;
+			if (years.some((y) => y !== '2022') || OTHER_PACKAGE.test(stated)) continue;
 			if (!SIZE_750.test(stated) || MAGNUM_OR_HALF.test(stated)) continue;
 			if (variant.available !== true || price(variant.price) === null) continue;
 			hits.push({ product, variant });

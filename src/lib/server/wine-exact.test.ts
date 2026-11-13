@@ -88,6 +88,16 @@ describe('Silver Oak Alexander Valley 2022, 750 ml, regular price: the exact mat
 		],
 		['a variant of another vintage', {}, { title: '2019 750ml', option1: '2019 750ml' }],
 		['a multi-bottle pack', {}, { title: '6 Pack 750ml', option1: '6 Pack 750ml' }],
+		[
+			'a pack named only in the product title',
+			{ title: '2022 Silver Oak Alexander Valley Cabernet Sauvignon 750ml 6 Pack' },
+			{ title: 'Default Title', price: '539.94' }
+		],
+		[
+			'a gift set named only in the product title',
+			{ title: '2022 Silver Oak Alexander Valley Cabernet Sauvignon 750ml Gift Set' },
+			{ title: 'Default Title' }
+		],
 		['sold out', {}, { available: false }],
 		['no price', {}, { price: '0.00' }]
 	])('is not a match: %s', (_why, product, variant) => {
