@@ -11,7 +11,7 @@
 import { put, head } from '@vercel/blob';
 import { fetchShopifyCollection, requireNonEmpty } from './shared/shopify-collection.mjs';
 import { withSuccessfulScrapeMetadata } from './shared/scrape-metadata.mjs';
-import { IDENTIFYING_USER_AGENT, matchSilverOakAlexanderValley2022 } from './shared/wine-exact.mjs';
+import { IDENTIFYING_USER_AGENT, silverOakEvidence } from './shared/wine-exact.mjs';
 
 // ---- Config (from src/lib/config/wine.ts) ----
 
@@ -178,17 +178,19 @@ async function main() {
 	const allocatedWines = allocatedProducts.map((p) => buildStaffPick(p, 'allocated'));
 	console.log(`[wine-index] Allocated wines: ${allocatedWines.length} wines`);
 
-	// 3b. The Silver Oak line: the whole catalogue, for one exact listing. Any failed page
-	// throws before a write, as every other collection does.
+	// 3b. The Silver Oak line: the whole catalogue, for one exact listing. This lookup is optional:
+	// its failure is recorded as unavailable evidence and never stops the publication below.
 	console.log('[wine-index] Fetching the whole catalogue for the exact Silver Oak listing...');
-	const catalogue = await fetchShopifyCollection(PLUMPJACK_BASE_URL, 'all', {
-		pageLimit: SHOPIFY_PAGE_LIMIT,
-		timeoutMs: SHOPIFY_FETCH_TIMEOUT,
-		delayMs: SHOPIFY_PAGE_DELAY_MS,
-		headers: SHOPIFY_HEADERS
-	});
-	requireNonEmpty('all', catalogue);
-	const silverOak = matchSilverOakAlexanderValley2022(catalogue);
+	const silverOak = await silverOakEvidence(
+		() =>
+			fetchShopifyCollection(PLUMPJACK_BASE_URL, 'all', {
+				pageLimit: SHOPIFY_PAGE_LIMIT,
+				timeoutMs: SHOPIFY_FETCH_TIMEOUT,
+				delayMs: SHOPIFY_PAGE_DELAY_MS,
+				headers: SHOPIFY_HEADERS
+			}),
+		new Date()
+	);
 	console.log(`[wine-index] Silver Oak AV 2022 750 ml: ${silverOak.status}`);
 
 	const snapshot = withSuccessfulScrapeMetadata({
@@ -196,7 +198,7 @@ async function main() {
 		categories: categorySnapshots,
 		staffPicks,
 		allocatedWines,
-		silverOak: { ...silverOak, readAt: new Date().toISOString(), products: catalogue.length }
+		silverOak
 	});
 
 	// 4. Read existing blob

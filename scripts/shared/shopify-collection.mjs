@@ -26,25 +26,32 @@ export async function fetchShopifyCollection(baseUrl, handle, options = {}) {
 	for (let page = 1; ; page++) {
 		const url = `${baseUrl}/collections/${handle}/products.json?limit=${pageLimit}&page=${page}`;
 		const where = `${handle} page ${page}`;
-		const controller = new AbortController();
-		const timer = setTimeout(() => controller.abort(), timeoutMs);
+		// Each attempt has its own timeout; a back-off wait never spends it.
+		const attempt = async () => {
+			const controller = new AbortController();
+			const timer = setTimeout(() => controller.abort(), timeoutMs);
+			try {
+				const res = await fetchImpl(url, { signal: controller.signal, headers });
+				return { res, body: res.ok ? await res.json() : undefined };
+			} finally {
+				clearTimeout(timer);
+			}
+		};
 		let body;
 		try {
-			let res = await fetchImpl(url, { signal: controller.signal, headers });
+			let got = await attempt();
 			// Back off when told to slow down: wait what the shop asks (capped), then ask again.
-			for (let retry = 0; res.status === 429 && retry < maxRetries; retry++) {
-				const asked = Number(res.headers.get('Retry-After'));
+			for (let retry = 0; got.res.status === 429 && retry < maxRetries; retry++) {
+				const asked = Number(got.res.headers.get('Retry-After'));
 				await sleep(
 					Math.min(60, Number.isFinite(asked) && asked > 0 ? asked : 5 * 2 ** retry) * 1000
 				);
-				res = await fetchImpl(url, { signal: controller.signal, headers });
+				got = await attempt();
 			}
-			if (!res.ok) throw new Error(`HTTP ${res.status}`);
-			body = await res.json();
+			if (!got.res.ok) throw new Error(`HTTP ${got.res.status}`);
+			body = got.body;
 		} catch (err) {
 			throw new Error(`${where}: ${err instanceof Error ? err.message : String(err)}`);
-		} finally {
-			clearTimeout(timer);
 		}
 		if (!Array.isArray(body?.products)) throw new Error(`${where}: no products array`);
 		products.push(...body.products);

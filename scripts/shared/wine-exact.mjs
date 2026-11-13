@@ -12,6 +12,8 @@
 export const IDENTIFYING_USER_AGENT = 'MarinMonitor/1.0 (+https://marinmonitor.com)';
 
 const MAGNUM_OR_HALF = /\b(1\.5\s?l|3\s?l|375\s?ml|1500\s?ml|magnum|half[- ]bottle|case)\b/i;
+/** A variant that is another vintage, or a pack or set, is not one bottle of the 2022. */
+const OTHER_PACKAGE = /\b(\d+\s?(pack|pk|bottles?)|case|gift|set|vertical)\b/i;
 const SIZE_750 = /\b(750\s?ml|0?\.75\s?l)\b/i;
 
 /** @param {unknown} v */
@@ -39,6 +41,11 @@ export function matchSilverOakAlexanderValley2022(products) {
 			const stated = [title, variant.title, variant.option1, variant.option2, variant.option3]
 				.filter((s) => typeof s === 'string')
 				.join(' | ');
+			const own = [variant.title, variant.option1, variant.option2, variant.option3]
+				.filter((x) => typeof x === 'string')
+				.join(' | ');
+			const years = own.match(/\b(19|20)\d\d\b/g) ?? [];
+			if (years.some((y) => y !== '2022') || OTHER_PACKAGE.test(own)) continue;
 			if (!SIZE_750.test(stated) || MAGNUM_OR_HALF.test(stated)) continue;
 			if (variant.available !== true || price(variant.price) === null) continue;
 			hits.push({ product, variant });
@@ -69,4 +76,26 @@ export function matchSilverOakAlexanderValley2022(products) {
 		onSale,
 		available: true
 	};
+}
+
+/**
+ * The evidence the wine sync writes: the match, or why there is none. The
+ * catalogue lookup is optional, so its failure is recorded as unavailable
+ * evidence (replacing any earlier match) and never stops the wine publication.
+ * @param {() => Promise<any[]>} readCatalogue
+ * @param {Date} now
+ */
+export async function silverOakEvidence(readCatalogue, now) {
+	const readAt = now.toISOString();
+	try {
+		const catalogue = await readCatalogue();
+		if (catalogue.length === 0) throw new Error('the catalogue is empty');
+		return { ...matchSilverOakAlexanderValley2022(catalogue), readAt, products: catalogue.length };
+	} catch (err) {
+		return {
+			status: 'unavailable',
+			reason: `catalogue read failed: ${err instanceof Error ? err.message : String(err)}`,
+			readAt
+		};
+	}
 }

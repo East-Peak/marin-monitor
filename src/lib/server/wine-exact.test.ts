@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import {
 	IDENTIFYING_USER_AGENT,
-	matchSilverOakAlexanderValley2022
+	matchSilverOakAlexanderValley2022,
+	silverOakEvidence
 } from '../../../scripts/shared/wine-exact.mjs';
 import { fetchShopifyCollection } from '../../../scripts/shared/shopify-collection.mjs';
 
@@ -85,6 +86,8 @@ describe('Silver Oak Alexander Valley 2022, 750 ml, regular price: the exact mat
 			{ title: '2022 Silver Oak Napa Valley Cabernet Sauvignon 750ml' },
 			{}
 		],
+		['a variant of another vintage', {}, { title: '2019 750ml', option1: '2019 750ml' }],
+		['a multi-bottle pack', {}, { title: '6 Pack 750ml', option1: '6 Pack 750ml' }],
 		['sold out', {}, { available: false }],
 		['no price', {}, { price: '0.00' }]
 	])('is not a match: %s', (_why, product, variant) => {
@@ -98,6 +101,28 @@ describe('Silver Oak Alexander Valley 2022, 750 ml, regular price: the exact mat
 		]);
 		expect(match.status).toBe('ambiguous');
 		expect(match).not.toHaveProperty('regularPrice');
+	});
+});
+
+describe('the optional catalogue lookup never takes the wine publication down', () => {
+	it('records unavailable evidence when the lookup fails, replacing any earlier match', async () => {
+		const evidence = await silverOakEvidence(async () => {
+			throw new Error('all page 4: HTTP 503');
+		}, new Date('2026-11-16T12:00:00Z'));
+		expect(evidence).toMatchObject({
+			status: 'unavailable',
+			reason: expect.stringMatching(/HTTP 503/),
+			readAt: '2026-11-16T12:00:00.000Z'
+		});
+		expect(evidence).not.toHaveProperty('regularPrice');
+	});
+
+	it('records the match, with the catalogue size, when the lookup works', async () => {
+		const evidence = await silverOakEvidence(
+			async () => [listing()],
+			new Date('2026-11-16T12:00:00Z')
+		);
+		expect(evidence).toMatchObject({ status: 'match', regularPrice: 89.99, products: 1 });
 	});
 });
 
@@ -142,5 +167,23 @@ describe('how we ask PlumpJack', () => {
 			})
 		).rejects.toThrow(/429/);
 		expect(fetchImpl.mock.calls.length).toBeLessThanOrEqual(4);
+	});
+
+	it('gives each attempt its own timeout, so a long Retry-After never aborts the retry', async () => {
+		let secondAborted: boolean | null = null;
+		const fetchImpl = vi
+			.fn()
+			.mockResolvedValueOnce(new Response('', { status: 429, headers: { 'Retry-After': '1' } }))
+			.mockImplementationOnce(async (_url: string, init: { signal: AbortSignal }) => {
+				secondAborted = init.signal.aborted;
+				return page(1);
+			});
+		await fetchShopifyCollection('https://shop.example', 'all', {
+			fetchImpl,
+			timeoutMs: 20,
+			delayMs: 0,
+			sleep: () => new Promise((resolve) => setTimeout(resolve, 80))
+		});
+		expect(secondAborted).toBe(false);
 	});
 });
