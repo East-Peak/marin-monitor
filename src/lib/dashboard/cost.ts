@@ -487,7 +487,8 @@ export function costView(input: CostInput): CostView {
 	const inflationRead: Measured<GroceryInflation & { status: 'ok' }> =
 		groceryRaw.kind !== 'value'
 			? (groceryRaw as Measured<never>)
-			: groceryRaw.value.status === 'ok'
+			: // A value kept after a failed refresh, or past its max age, is not this week's read.
+				groceryRaw.retainedAfter === null && groceryRaw.value.status === 'ok'
 				? (groceryRaw as Measured<GroceryInflation & { status: 'ok' }>)
 				: measuredUnavailable(groceryRaw.source, "BLS couldn't be read");
 

@@ -625,4 +625,20 @@ describe('the grocery tile is SF-area grocery inflation (COSTDATA-2)', () => {
 			maxAgeDays: 75
 		});
 	});
+
+	it('shows no figure when the cached view is ok but the refresh failed or the read aged out', () => {
+		const failedKept: DatasetFetch = {
+			kind: 'failed',
+			error: 'HTTP 503',
+			retained: true,
+			observedAt: at - DAY
+		};
+		const afterFailure = tileOf({ outcomes: { groceryInflation: failedKept } as never });
+		expect(afterFailure).toMatchObject({ kind: 'unavailable', value: 'Unavailable', spark: null });
+		// A read whose own month is older than 75 days is out of date, even though its payload says ok.
+		const aged = tileOf({
+			outcomes: { groceryInflation: { kind: 'live', observedAt: at - 80 * DAY } } as never
+		});
+		expect(aged).toMatchObject({ kind: 'unavailable', value: 'Unavailable' });
+	});
 });
