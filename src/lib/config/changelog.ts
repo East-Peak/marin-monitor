@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-11-13',
+		title: 'Grocery prices, as a real moving series',
+		description:
+			'The Grocery panel and tile now lead with BLS’s food-at-home index for the San Francisco area, with its own month and a chart that breaks where BLS published nothing. The old Marin basket stays underneath as a dated reference, no longer updated. Rivian’s lease is entered by hand from one offer, and Silver Oak goes live from PlumpJack only for an exact listing.'
+	},
+	{
 		date: '2026-11-03',
 		title: 'More of the Cost budgets move on their own',
 		description:

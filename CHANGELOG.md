@@ -4,6 +4,18 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-11-13
+
+### Changed — The grocery panel leads with SF-area grocery inflation (COSTDATA-2)
+
+- **A real moving series**: the Grocery panel and the default dashboard's grocery tile now lead with BLS's CPI for food at home, San Francisco area, read each Monday from BLS's public API. It is an index, never dollars: "+4.4%, 12 months to Sep 2026", with its own monthly chart. The 12-month change always compares the same month a year earlier, and the newest month that has one leads; October 2026's reads "Unavailable" because BLS published no October 2025 (the funding lapse), and the chart breaks there rather than bridging it.
+- **The Marin basket is a dated reference**: "Marin basket, prices as of Nov 1, 2026, no longer updated", dashed and grey beneath the index, with no trend, movers or "vs last week". The index never enters a household's dollars. On the TV, the basket's change now names the dates it compares ("since Oct 11") instead of saying last week; the tile's stray "time not reported" is gone.
+- **Rivian is entered by hand**: one dated record per offer (trim, region, payment, due at signing, term, mileage, end date, source and disclosure), checked as one offer, with the first payment never counted twice. Past its end the line reads stale at read time, and cached pages stop at the end. The monthly Rivian workflow is no longer scheduled.
+- **Silver Oak from PlumpJack, only for an exact match**: Alexander Valley 2022, 750 ml, regular price. With no exact listing (today's has none) the line keeps its citation. The wine reader now identifies itself, goes slowly and backs off on a 429.
+- **Health** watches the BLS series by its newest reference month.
+
+---
+
 ## 2026-11-03
 
 ### Changed — More of the Cost budgets move on their own (COSTDATA-1)
