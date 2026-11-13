@@ -1,8 +1,8 @@
 name: Sync Rivian Lease
 
+# Unscheduled 2026-11-13 (COSTDATA-2): the script refuses to run (rivian.com bars automated
+# access), so a monthly run only ever showed green. Kept for a manual run.
 on:
-  schedule:
-    - cron: '0 12 4 * *'
   workflow_dispatch:
 
 permissions:

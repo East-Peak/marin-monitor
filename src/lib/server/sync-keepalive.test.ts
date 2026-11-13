@@ -51,3 +51,12 @@ describe('sync keepalive workflow', () => {
 		expect(listed).toEqual(onDisk);
 	});
 });
+
+describe('the stopped Rivian workflow (COSTDATA-2)', () => {
+	it('is no longer scheduled, so a refusing script does not show green every month, and stays runnable by hand', () => {
+		const yml = read('sync-rivian-lease.yml');
+		expect(yml).not.toMatch(/^\s*schedule:/m);
+		expect(yml).not.toMatch(/cron:/);
+		expect(yml).toContain('workflow_dispatch:');
+	});
+});
