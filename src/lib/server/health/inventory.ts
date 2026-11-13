@@ -219,6 +219,14 @@ const ALL_SOURCES: readonly SourcePolicy[] = freeze<SourcePolicy>([
 		note: 'our weekly read of the offer page, and stale once the offer itself ends'
 	},
 	{
+		name: 'BLS Food at Home',
+		blobKey: 'marin-bls-food-at-home.json',
+		cadence: 'monthly',
+		maxAgeDays: 75,
+		observedAt: 'period',
+		note: "BLS's newest reference month, not our read: a month is published about 45 days after it ends; context only (the grocery inflation lead)"
+	},
+	{
 		name: 'Redfin Cities',
 		blobKey: 'marin-redfin-cities.json',
 		cadence: 'monthly',

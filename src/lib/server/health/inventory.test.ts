@@ -35,6 +35,7 @@ const EXPECTED_SOURCES = [
 	'USDA Food Plans',
 	'PG&E EV2',
 	'Range Rover Lease',
+	'BLS Food at Home',
 	'Redfin Cities'
 ];
 
@@ -127,6 +128,18 @@ describe('SOURCE_INVENTORY', () => {
 			observedAt: 'period',
 			maxAgeDays: 75
 		});
+	});
+
+	it('ages the BLS food-at-home index by its newest reference month, monthly, within 75 days (COSTDATA-2)', async () => {
+		const { BLS_MAX_AGE_DAYS } = await import('../../../../scripts/shared/bls-series.mjs');
+		const bls = SOURCE_INVENTORY.find((s) => s.name === 'BLS Food at Home');
+		expect(bls).toMatchObject({
+			blobKey: 'marin-bls-food-at-home.json',
+			cadence: 'monthly',
+			observedAt: 'period',
+			maxAgeDays: BLS_MAX_AGE_DAYS
+		});
+		expect(bls?.maxAgeDays).toBe(75);
 	});
 
 	it('judges the Range Rover lease by its offer’s end as well as our read', () => {

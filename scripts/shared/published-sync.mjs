@@ -32,7 +32,7 @@ export async function pdfText(/** @type {Response} */ response) {
 
 /**
  * @param {string} blobKey
- * @param {{ url: string, period: string, periodEnd?: string, validUntil?: string, values: Record<string, number>, [k: string]: unknown }} read
+ * @param {{ url: string, period: string, periodEnd?: string, validUntil?: string, values?: Record<string, number>, [k: string]: unknown }} read
  */
 export async function writePublished(blobKey, read) {
 	const token = process.env.BLOB_READ_WRITE_TOKEN;

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.marin-monitor.sync-bls-food-at-home</string>
+
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Users/tammypais/projects/marin-monitor/scripts/sync-runner.sh</string>
+		<string>bls-food-at-home</string>
+	</array>
+
+	<!-- Local time, Mondays. Reads BLS's public v1 API for SF-area food at home (COSTDATA-2). -->
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Weekday</key>
+		<integer>1</integer>
+		<key>Hour</key>
+		<integer>5</integer>
+		<key>Minute</key>
+		<integer>25</integer>
+	</dict>
+
+	<key>WorkingDirectory</key>
+	<string>/Users/tammypais/projects/marin-monitor</string>
+
+	<key>StandardOutPath</key>
+	<string>/Users/tammypais/Library/Logs/marin-monitor/sync-bls-food-at-home-launchd.log</string>
+
+	<key>StandardErrorPath</key>
+	<string>/Users/tammypais/Library/Logs/marin-monitor/sync-bls-food-at-home-launchd.log</string>
+</dict>
+</plist>
