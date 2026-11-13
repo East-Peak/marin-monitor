@@ -136,3 +136,35 @@ describe('the sheet reads the record, and its end is enforced at read time', () 
 		);
 	});
 });
+
+describe('repricing a stored budget whose Silver Oak line used the live read', () => {
+	it('keeps the live price when an offer ends between runs, rather than falling back to the citation', () => {
+		const ok = (value: number, extra: Partial<LiveRead> = {}): LiveRead => ({
+			availability: 'ok',
+			value,
+			observedAt: '2026-10-26T12:00:00.000Z',
+			maxAgeDays: 10,
+			source: 'test',
+			...extra
+		});
+		const ross = SHEETS.find((s) => s.id === 'ross')!;
+		const offer = { validUntil: '2026-11-02' };
+		const reads = {
+			'gas.regular': ok(6.2),
+			'coffee.cappuccino': ok(5),
+			'ikon.adult': ok(1529),
+			...Object.fromEntries(USDA_KEYS.map((k) => [k, ok(400)])),
+			...Object.fromEntries(PGE_EV2_KEYS.map((k) => [k, ok(0.3)])),
+			...Object.fromEntries(REDFIN_KEYS.map((k) => [k, ok(3000000)])),
+			'rangeRover.lease': ok(999, offer),
+			'rangeRover.dueAtSigning': ok(8995, offer),
+			'wine.silverOak.av2022': ok(87.5)
+		} as unknown as LiveReads;
+		const stored = priceSheet(ross, reads, new Date('2026-10-26T14:30:00Z'));
+		const price = (b: typeof stored) =>
+			b.lines.find((l) => l.id === 'ross.food.wine')!.inputs.find((i) => i.name === 'price')!;
+		expect(price(stored)).toMatchObject({ class: 'live', value: 87.5 });
+		const [read] = withOfferEnds([stored], SHEETS, new Date('2026-11-03T08:00:00Z'));
+		expect(price(read)).toMatchObject({ class: 'live', value: 87.5 });
+	});
+});

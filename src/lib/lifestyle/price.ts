@@ -173,6 +173,17 @@ export function priceInput(name: string, spec: InputSpec, live: LiveReads, now: 
 				source: null
 			};
 		case 'cited': {
+			// A preferred live read replaces the citation only while it is a vouched, in-date read.
+			const preferred = spec.prefer ? live[spec.prefer] : undefined;
+			if (preferred && preferred.availability === 'ok') {
+				const used = priceInput(
+					name,
+					{ class: 'live', live: spec.prefer!, label: spec.label },
+					live,
+					now
+				);
+				if (used.availability === 'ok') return used;
+			}
 			const src: CitedSource = CITED[spec.cite];
 			const lapsed = now.getTime() > endOfDay(src.checkedAt) + src.recheckDays * DAY_MS;
 			const ended = src.validUntil !== undefined && now.getTime() > endOfDay(src.validUntil);

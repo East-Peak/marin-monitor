@@ -45,7 +45,8 @@ const LIVE_VALUES: Record<LiveKey, number> = {
 	'rangeRover.dueAtSigning': 8995,
 	'redfin.larkspur.latest': 3695000,
 	'redfin.millValley.latest': 3600000,
-	'redfin.ross.latest': 5347500
+	'redfin.ross.latest': 5347500,
+	'wine.silverOak.av2022': 90
 };
 const liveReads = (overrides: Partial<Record<LiveKey, LiveRead>> = {}): LiveReads =>
 	({

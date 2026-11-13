@@ -176,7 +176,10 @@ const lines: LineSpec[] = [
 		section: 'food',
 		label: 'Wine',
 		required: true,
-		inputs: { bottles: persona(2, 'bottles a month'), price: cite('silverOak.alexanderValley') },
+		inputs: {
+			bottles: persona(2, 'bottles a month'),
+			price: cite('silverOak.alexanderValley', undefined, undefined, 'wine.silverOak.av2022')
+		},
 		terms: [monthly('bottles', 'price')]
 	},
 	{
@@ -370,7 +373,7 @@ const lines: LineSpec[] = [
 
 export const larkspur: HouseholdSheet = {
 	id: 'larkspur',
-	version: '2026-11-03',
+	version: '2026-11-13',
 	name: 'Larkspur strivers',
 	town: 'Larkspur',
 	who: '2 adults (42, 41): SF finance, and the shop; kids 9 and 6',

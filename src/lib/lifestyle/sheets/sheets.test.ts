@@ -28,7 +28,8 @@ const LIFE0_LIVE: Record<LiveKey, number> = {
 	'rangeRover.dueAtSigning': 8995,
 	'redfin.larkspur.latest': 3695000,
 	'redfin.millValley.latest': 3600000,
-	'redfin.ross.latest': 5347500
+	'redfin.ross.latest': 5347500,
+	'wine.silverOak.av2022': 90
 };
 const reads = Object.fromEntries(
 	Object.entries(LIFE0_LIVE).map(([k, value]): [string, LiveRead] => [
@@ -385,7 +386,15 @@ describe('the signature lines (COST1)', () => {
 
 describe('the COSTDATA-1 version bump (one per household, all sources in one deploy)', () => {
 	it('moves every sheet to 2026-11-03 together', () => {
-		expect(SHEETS.map((s) => s.version)).toEqual(['2026-11-03', '2026-11-03', '2026-11-03']);
+		expect(SHEETS.map((s) => s.version)).toEqual(['2026-11-13', '2026-11-03', '2026-11-13']);
+	});
+
+	it('COSTDATA-2 moves only the two households whose Silver Oak line can go live, together, to 2026-11-13', () => {
+		expect(Object.fromEntries(SHEETS.map((s) => [s.id, s.version]))).toEqual({
+			larkspur: '2026-11-13',
+			millvalley: '2026-11-03',
+			ross: '2026-11-13'
+		});
 	});
 
 	it('says not comparable across the bump, and compares again after two runs on it', () => {

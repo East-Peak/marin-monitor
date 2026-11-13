@@ -59,6 +59,9 @@ function repriced(b: PricedBudget, sheet: HouseholdSheet, now: Date): PricedBudg
 		for (const [name, input] of Object.entries(spec.inputs)) {
 			const priced = line?.inputs.find((i) => i.name === name);
 			if (input.class === 'live' && priced) reads[input.live] = asRead(priced, now);
+			// A preferred read that was used is repriced from; one that was not leaves the citation.
+			if (input.class === 'cited' && input.prefer && priced?.class === 'live')
+				reads[input.prefer] = asRead(priced, now);
 		}
 	}
 	if (sheet.marketTracker.class === 'live') {

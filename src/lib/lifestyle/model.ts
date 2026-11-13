@@ -100,6 +100,14 @@ export const REDFIN_KEYS = [
 ] as const;
 export type RedfinKey = (typeof REDFIN_KEYS)[number];
 
+/**
+ * Silver Oak Alexander Valley 2022, 750 ml, regular price, from PlumpJack: a
+ * read the sheets only prefer. With no exact match the line keeps its citation,
+ * so this key is never a pipeline failure.
+ */
+export const WINE_KEYS = ['wine.silverOak.av2022'] as const;
+export type WineKey = (typeof WINE_KEYS)[number];
+
 export type LiveKey =
 	| 'gas.regular'
 	| 'coffee.cappuccino'
@@ -107,6 +115,7 @@ export type LiveKey =
 	| UsdaKey
 	| PgeEv2Key
 	| RangeRoverKey
+	| WineKey
 	| RedfinKey;
 
 /** One live value as read from our own data, with its own observation time. */
@@ -137,6 +146,8 @@ export type InputSpec =
 			readonly cite: CitedId;
 			/** A frozen fact's figure, written on the sheet: a catalogue revision must not move it. */
 			readonly pinned?: number;
+			/** A live read that replaces the citation while it is ok; otherwise the citation stands. */
+			readonly prefer?: WineKey;
 	  }
 	| { readonly class: 'live'; readonly label?: string; readonly live: LiveKey };
 

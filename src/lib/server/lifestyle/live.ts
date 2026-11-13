@@ -24,7 +24,8 @@ export const LIVE_BLOBS = {
 	usda: 'marin-usda-food-plans.json',
 	pge: 'marin-pge-ev2.json',
 	rangeRover: 'marin-range-rover-lease.json',
-	redfin: 'marin-redfin-cities.json'
+	redfin: 'marin-redfin-cities.json',
+	wine: 'marin-wine-index.json'
 } as const;
 export type LiveBlobName = keyof typeof LIVE_BLOBS;
 /** Parsed blob JSON, or null when the blob could not be read. */
@@ -216,6 +217,36 @@ function redfin(raw: unknown, key: (typeof REDFIN_KEYS)[number], now: Date): Liv
 		: read;
 }
 
+const WINE_SOURCE = 'Silver Oak Alexander Valley 2022, 750 ml, regular price (plumpjackwines.com)';
+
+/**
+ * The exact listing the wine sync matched, checked again here from its own
+ * evidence: Alexander Valley, 2022, 750 ml, available, a regular price at or
+ * above any sale price. Anything less is no price and the citation stands.
+ */
+function silverOak(raw: unknown, now: Date): LiveRead {
+	const current = record(record(raw)?.current);
+	const e = record(current?.silverOak);
+	const title = str(e?.productTitle) ?? '';
+	const regular = amount(e?.regularPrice);
+	const sale = amount(e?.price);
+	const compare = amount(e?.compareAtPrice);
+	const exact =
+		e?.status === 'match' &&
+		/silver oak/i.test(title) &&
+		/alexander valley/i.test(title) &&
+		/\b2022\b/.test(title) &&
+		e.size === '750 ml' &&
+		e.available === true &&
+		regular !== null &&
+		sale !== null &&
+		sale <= regular &&
+		// The regular price is the marked-down-from price when there is one, else the price.
+		(compare !== null && compare > sale ? regular === compare : regular === sale);
+	if (!exact) return unavailable('wine', WINE_SOURCE, str(e?.reason) ?? 'no exact match');
+	return observed('wine', WINE_SOURCE, regular, current?.lastSuccessfulScrapeAt, now);
+}
+
 export function readLive(blobs: RawLiveBlobs, now: Date): LiveReads {
 	const reads: Record<LiveKey, LiveRead> = {
 		'gas.regular': gas(blobs.gas, now),
@@ -235,6 +266,7 @@ export function readLive(blobs: RawLiveBlobs, now: Date): LiveReads {
 				published('rangeRover', blobs.rangeRover, key, 'checked', rangeRoverSource, now)
 			])
 		) as Record<(typeof RANGE_ROVER_KEYS)[number], LiveRead>),
+		'wine.silverOak.av2022': silverOak(blobs.wine, now),
 		...(Object.fromEntries(
 			REDFIN_KEYS.map((key) => [key, redfin(blobs.redfin, key, now)])
 		) as Record<(typeof REDFIN_KEYS)[number], LiveRead>)

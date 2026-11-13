@@ -12,7 +12,12 @@
  */
 import { priceAnchors, type Anchor } from '$lib/lifestyle/anchors';
 import { historyEntry, mergeHistory, type HistoryEntry } from '$lib/lifestyle/history';
-import type { HouseholdSheet, LiveReads, PricedBudget } from '$lib/lifestyle/model';
+import {
+	WINE_KEYS,
+	type HouseholdSheet,
+	type LiveReads,
+	type PricedBudget
+} from '$lib/lifestyle/model';
 import { priceSheet } from '$lib/lifestyle/price';
 import { BlobWriteConflict, type BlobApi } from '$lib/server/news/snapshot-store';
 import { LIVE_BLOBS, readLive, type LiveBlobName, type RawLiveBlobs } from './live';
@@ -96,7 +101,9 @@ const DAY_MS = 86_400_000;
  * re-check is not a pipeline failure: it is a re-check chore shown on the page.
  */
 function succeeded(budgets: readonly PricedBudget[], live: LiveReads, now: Date): boolean {
-	const fresh = Object.values(live).every((r) => {
+	const fresh = Object.entries(live).every(([key, r]) => {
+		// A preferred read (the Silver Oak match) has no match most weeks: the citation stands, no failure.
+		if ((WINE_KEYS as readonly string[]).includes(key)) return true;
 		const at = r.observedAt === null ? NaN : Date.parse(r.observedAt);
 		return r.availability !== 'unavailable' && now.getTime() - at <= r.maxAgeDays * DAY_MS;
 	});

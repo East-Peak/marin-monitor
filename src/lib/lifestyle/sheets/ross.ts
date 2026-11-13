@@ -156,7 +156,10 @@ const lines: LineSpec[] = [
 		section: 'food',
 		label: 'Wine',
 		required: true,
-		inputs: { bottles: persona(8, 'bottles a month'), price: cite('silverOak.alexanderValley') },
+		inputs: {
+			bottles: persona(8, 'bottles a month'),
+			price: cite('silverOak.alexanderValley', undefined, undefined, 'wine.silverOak.av2022')
+		},
 		terms: [monthly('bottles', 'price')]
 	},
 	{
@@ -351,7 +354,7 @@ const lines: LineSpec[] = [
 
 export const ross: HouseholdSheet = {
 	id: 'ross',
-	version: '2026-11-03',
+	version: '2026-11-13',
 	name: 'Ross old money',
 	town: 'Ross',
 	who: '2 adults (61, 58), kids 16 and 13',

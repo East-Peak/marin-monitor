@@ -1,15 +1,21 @@
 /** Small constructors for writing household sheets as plain data. */
 import type { CitedId } from './sources';
-import type { InputSpec, LiveKey, Term } from './model';
+import type { InputSpec, LiveKey, Term, WineKey } from './model';
 
 export const persona = (value: number, label: string): InputSpec => ({
 	class: 'persona',
 	label,
 	value
 });
-export const cite = (id: CitedId, label?: string, pinned?: number): InputSpec => ({
+export const cite = (
+	id: CitedId,
+	label?: string,
+	pinned?: number,
+	prefer?: WineKey
+): InputSpec => ({
 	class: 'cited',
 	cite: id,
+	...(prefer ? { prefer } : {}),
 	...(label ? { label } : {}),
 	...(pinned !== undefined ? { pinned } : {})
 });

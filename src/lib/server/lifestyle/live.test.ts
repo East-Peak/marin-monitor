@@ -103,6 +103,7 @@ const healthy = (): RawLiveBlobs => ({
 	rangeRover: rangeRover(),
 	gas: gas('2026-10-20T12:00:00.000Z'),
 	cappuccino: cappuccino([shop(5, 'live'), shop(4.85, 'live'), shop(5, 'live')]),
+	wine: null,
 	ikon: monthly('adultPrice', [
 		{ timestamp: '2026-10-02T19:10:39.582Z', value: 1529, scraped: true }
 	])
