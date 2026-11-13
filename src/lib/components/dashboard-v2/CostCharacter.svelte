@@ -428,7 +428,9 @@
 						class="v num"
 						class:muted={t.kind !== 'value'}
 						data-colour-exception="series"
-						data-text-role="value">{t.value}</span
+						data-text-role="value"
+						>{t.value}{#if t.valueNote}
+							<small class="vnote" data-text-role="meta">{t.valueNote}</small>{/if}</span
 					>
 					{#if t.detail}<span class="d" data-text-role="meta">{t.detail}</span>{/if}
 					{#if sp}
@@ -451,6 +453,9 @@
 						<div class="nohist" data-no-history data-text-role="meta">
 							No history yet{t.noHistoryReason ? ` · ${t.noHistoryReason}` : ''}
 						</div>
+					{/if}
+					{#if t.refLine}
+						<span class="refline" data-tile-reference data-text-role="meta">{t.refLine}</span>
 					{/if}
 					<CardSource
 						lines={[{ measured: t.measured, untimed: t.untimed, muted: t.muted }]}
@@ -751,6 +756,17 @@
 	}
 	.ix .v.muted {
 		color: var(--text-muted);
+	}
+	.vnote {
+		margin-left: 4px;
+		color: var(--text-secondary);
+		font-weight: 400;
+	}
+	/* The dated reference: dashed and grey, never the tile's series colour. */
+	.refline {
+		padding-top: 4px;
+		border-top: 1px dashed rgba(148, 163, 184, 0.3);
+		color: #94a3b8;
 	}
 	.spark {
 		display: block;

@@ -26,6 +26,7 @@ const fetchers = vi.hoisted(() => ({
 	composite: vi.fn(),
 	cappuccino: vi.fn(),
 	grocery: vi.fn(),
+	groceryInflation: vi.fn(),
 	wine: vi.fn(),
 	school: vi.fn(),
 	housing: vi.fn(),
@@ -85,6 +86,9 @@ vi.mock('$lib/api/marin/composite', async (orig) => ({
 vi.mock('$lib/api/marin/cappuccino', async (orig) => ({
 	...(await orig<object>()),
 	fetchCappuccinoDataWithStatus: fetchers.cappuccino
+}));
+vi.mock('$lib/api/marin/grocery-inflation', () => ({
+	fetchGroceryInflationWithStatus: fetchers.groceryInflation
 }));
 vi.mock('$lib/api/marin/grocery-basket', async (orig) => ({
 	...(await orig<object>()),
@@ -268,6 +272,11 @@ beforeEach(() => {
 			data: { current: scraped(new Date(NOW - 86_400_000).toISOString()), history: [] },
 			dataSource: 'live'
 		});
+	fetchers.groceryInflation.mockResolvedValue({
+		ok: true,
+		data: { status: 'unavailable', reason: 'test' },
+		dataSource: 'live'
+	});
 	fetchers.housing.mockResolvedValue({ ok: true, data: [], dataSource: 'live' });
 	for (const f of [fetchers.police, fetchers.nps])
 		f.mockResolvedValue({ ok: true, data: [], dataSource: 'live' });
@@ -708,6 +717,7 @@ describe('createDashboardV2Controller', () => {
 			fetchers.composite,
 			fetchers.cappuccino,
 			fetchers.grocery,
+			fetchers.groceryInflation,
 			fetchers.wine,
 			fetchers.school,
 			fetchers.housing

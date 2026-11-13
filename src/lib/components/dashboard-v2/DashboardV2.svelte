@@ -200,6 +200,7 @@
 			composite: null,
 			cappuccino: null,
 			grocery: null,
+			groceryInflation: null,
 			wine: null,
 			school: null,
 			housing: null,

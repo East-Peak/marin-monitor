@@ -3,138 +3,99 @@
 	import { componentLifetime } from '$lib/utils/lifetime';
 	import { Panel } from '$lib/components/common';
 	import { fetchGroceryBasketDataWithStatus } from '$lib/api/marin/grocery-basket';
+	import { fetchGroceryInflationWithStatus } from '$lib/api/marin/grocery-inflation';
 	import { groceryBasketStore } from '$lib/stores/grocery-basket';
 	import { frozenBasketNote } from '$lib/config/grocery-basket';
-	import { buildChart, type ChartPaths } from '$lib/utils/chart';
-	import type { GroceryBasketData, BasketItemPrices } from '$lib/types/grocery';
+	import { inflationChart, nearestMonth } from '$lib/grocery/inflation-chart';
+	import type { GroceryInflation } from '$lib/grocery/inflation';
+	import type { GroceryBasketData } from '$lib/types/grocery';
 
-	type HoverState = { index: number; x: number } | null;
-
-	const ACCENT = '#f59e0b'; // amber for grocery/market theme
-	const CHART_HEIGHT = 180;
-	const CHART_MARGINS = { top: 12, right: 10, bottom: 24, left: 44 };
+	/** The index's series colour: the grocery tile's orange, lightened so it never reads as dollars. */
+	const INDEX_INK = '#fb923c';
+	const CHART_HEIGHT = 170;
 
 	let data = $state<GroceryBasketData>({ current: null, history: [] });
-	let chartContainer = $state<HTMLDivElement>(undefined!);
-	let chartWidth = $state(0);
+	let inflation = $state<GroceryInflation | null>(null);
 	let dataLoading = $state(false);
 	let dataError = $state<string | null>(null);
-	let hoverState = $state<HoverState>(null);
 	let showAllItems = $state(false);
+	let chartContainer = $state<HTMLDivElement>(undefined!);
+	let chartWidth = $state(0);
+	let hover = $state<number | null>(null);
 
 	const current = $derived(data.current);
-	/** The scrape stopped 2026-11-03: the last real read, said so. */
 	const frozenNote = $derived(frozenBasketNote(data.frozen));
-	const history = $derived(
-		data.history
-			.filter((h) => h.totalCheapest !== null)
-			.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+	const ok = $derived(inflation?.status === 'ok' ? inflation : null);
+	const chart = $derived(
+		ok && chartWidth > 0
+			? inflationChart(ok.observations, { width: chartWidth, height: CHART_HEIGHT })
+			: null
 	);
-
-	// Build chart geometry reactively via shared utility
-	const chartPaths = $derived.by<ChartPaths | null>(() => {
-		if (chartWidth === 0 || history.length < 2) return null;
-		return buildChart({
-			width: chartWidth,
-			height: CHART_HEIGHT,
-			margins: CHART_MARGINS,
-			accentColor: ACCENT,
-			data: history.map((h) => ({
-				value: h.totalCheapest!,
-				label: formatDate(h.timestamp)
-			}))
-		});
+	const hovered = $derived(ok && hover !== null ? ok.observations[hover] : null);
+	const hoveredChange = $derived.by(() => {
+		if (!ok || hover === null) return null;
+		const now = ok.observations[hover];
+		const then = ok.observations[hover - 12];
+		if (now?.value == null || then?.value == null) return null;
+		return { pct: (now.value / then.value - 1) * 100, against: then.label };
 	});
 
-	const weekOverWeekChange = $derived.by<number | null>(() => {
-		if (!current?.totalCheapest || history.length < 2) return null;
-		const prev = history[history.length - 2];
-		if (!prev?.totalCheapest) return null;
-		return Math.round((current.totalCheapest - prev.totalCheapest) * 100) / 100;
-	});
-
-	const biggestMovers = $derived.by<(BasketItemPrices & { _delta: number })[]>(() => {
-		if (!current?.items || history.length < 2) return [];
-		const prevSnapshot = history[history.length - 2];
-		if (!prevSnapshot?.items) return [];
-
-		const prevMap = new Map(prevSnapshot.items.map((i) => [i.itemId, i.cheapest]));
-
-		return [...current.items]
-			.filter(
-				(item) =>
-					item.cheapest !== null && prevMap.has(item.itemId) && prevMap.get(item.itemId) !== null
-			)
-			.map((item) => ({
-				...item,
-				_delta: item.cheapest! - (prevMap.get(item.itemId) ?? 0)
-			}))
-			.sort((a, b) => Math.abs(b._delta) - Math.abs(a._delta))
-			.slice(0, 3);
-	});
-
-	function formatPrice(price: number): string {
-		return `$${price.toFixed(2)}`;
-	}
-
-	function formatDate(iso: string): string {
-		return new Date(iso).toLocaleDateString('en-US', {
+	const price = (n: number) => `$${n.toFixed(2)}`;
+	const pct = (n: number) => `${n >= 0 ? '+' : '−'}${Math.abs(n).toFixed(1)}%`;
+	const day = (iso: string) =>
+		new Date(iso).toLocaleDateString('en-US', {
 			month: 'short',
-			day: 'numeric'
+			day: 'numeric',
+			year: 'numeric',
+			timeZone: 'America/Los_Angeles'
 		});
+
+	function measure() {
+		if (chartContainer) chartWidth = chartContainer.clientWidth;
 	}
 
-	function updateHover(event: PointerEvent) {
-		if (!chartPaths) return;
-		const target = event.currentTarget as SVGSVGElement;
-		const rect = target.getBoundingClientRect();
-		const innerWidth = rect.width - CHART_MARGINS.left - CHART_MARGINS.right;
-		const relativeX = Math.max(
-			0,
-			Math.min(innerWidth, event.clientX - rect.left - CHART_MARGINS.left)
-		);
-		const ratio = innerWidth <= 0 ? 0 : relativeX / innerWidth;
-		const index = Math.max(
-			0,
-			Math.min(chartPaths.dots.length - 1, Math.round(ratio * (chartPaths.dots.length - 1)))
-		);
-		hoverState = { index, x: CHART_MARGINS.left + chartPaths.dots[index].x };
+	function move(event: PointerEvent) {
+		if (!chart) return;
+		const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+		hover = nearestMonth(chart, ((event.clientX - rect.left) / rect.width) * chart.width);
 	}
 
-	function clearHover() {
-		hoverState = null;
-	}
-
-	function measureWidth() {
-		if (chartContainer) {
-			chartWidth = chartContainer.clientWidth;
-		}
+	function step(event: KeyboardEvent) {
+		if (!ok) return;
+		const last = ok.observations.length - 1;
+		if (event.key === 'ArrowLeft') hover = Math.max(0, (hover ?? last) - 1);
+		else if (event.key === 'ArrowRight') hover = Math.min(last, (hover ?? last - 1) + 1);
+		else if (event.key === 'Escape') hover = null;
+		else return;
+		event.preventDefault();
 	}
 
 	const lifetime = componentLifetime();
 
 	onMount(() => {
-		measureWidth();
-
-		let resizeTimer: ReturnType<typeof setTimeout>;
-		function handleResize() {
-			clearTimeout(resizeTimer);
-			resizeTimer = setTimeout(measureWidth, 150);
-		}
-
-		window.addEventListener('resize', handleResize);
+		measure();
+		let timer: ReturnType<typeof setTimeout>;
+		const onResize = () => {
+			clearTimeout(timer);
+			timer = setTimeout(measure, 150);
+		};
+		window.addEventListener('resize', onResize);
 
 		void (async () => {
 			dataLoading = true;
 			dataError = null;
 			try {
-				const result = await fetchGroceryBasketDataWithStatus({ signal: lifetime });
+				const [index, basket] = await Promise.all([
+					fetchGroceryInflationWithStatus({ signal: lifetime }),
+					fetchGroceryBasketDataWithStatus({ signal: lifetime })
+				]);
 				if (lifetime.aborted) return; // destroyed while in flight: never write the shared store
-				if (result.ok) {
-					data = result.data;
-					groceryBasketStore.set(result.data);
-				} else {
-					dataError = `Live data unavailable (${result.error})`;
+				inflation = index.ok
+					? index.data
+					: { status: 'unavailable', reason: 'the BLS read could not be loaded' };
+				if (basket.ok) {
+					data = basket.data;
+					groceryBasketStore.set(basket.data);
 				}
 			} finally {
 				dataLoading = false;
@@ -142,336 +103,313 @@
 		})();
 
 		return () => {
-			window.removeEventListener('resize', handleResize);
-			clearTimeout(resizeTimer);
+			window.removeEventListener('resize', onResize);
+			clearTimeout(timer);
 		};
 	});
 
-	// Re-measure width when history arrives (container may have been hidden)
 	$effect(() => {
-		if (history.length > 1) measureWidth();
+		if (ok) measure();
 	});
 </script>
 
-<Panel id="grocery-basket" title="The Bare Essentials" loading={dataLoading} error={dataError}>
-	{#if frozenNote}
-		<p class="frozen-note" data-grocery-frozen>{frozenNote}</p>
-	{/if}
-	{#if current}
-		<div class="headline-bar">
-			<div class="basket-total">
-				<span class="total-value"
-					>{current.totalCheapest !== null ? formatPrice(current.totalCheapest) : 'N/A'}</span
-				>
-				<span class="total-label">12-item basket</span>
+<Panel
+	id="grocery-basket"
+	title="SF-area grocery inflation"
+	loading={dataLoading}
+	error={dataError}
+>
+	{#if ok}
+		<div class="ix-lead" data-grocery-inflation="ok">
+			<span class="ix-kicker">CPI food at home · San Francisco area</span>
+			<div class="ix-row">
+				<span class="ix-big" data-grocery-lead>{pct(ok.lead.pct)}</span>
+				<span class="ix-big-l">over the 12 months to {ok.lead.label}</span>
 			</div>
-			{#if weekOverWeekChange !== null}
-				<div class="week-change {weekOverWeekChange <= 0 ? 'positive' : 'warning'}">
-					<span class="change-value">
-						{weekOverWeekChange >= 0 ? '+' : ''}{formatPrice(weekOverWeekChange)}
-					</span>
-					<span class="change-label">vs last week</span>
+			<div class="ix-stats">
+				<div class="stat">
+					<span class="k">Latest month</span>
+					<span class="v"
+						>{ok.latest.value.toFixed(1)} <small>index · {ok.latest.label}</small></span
+					>
+					{#if ok.latest.monthPct !== null}
+						<span class="s">{pct(ok.latest.monthPct)} on {ok.latest.monthLabel?.split(' ')[0]}</span
+						>
+					{/if}
 				</div>
-			{/if}
-			<div class="items-found">
-				<span class="found-value">{current.itemsFound}/12</span>
-				<span class="found-label">items priced</span>
+				{#if ok.latestYoy.pct === null}
+					<div class="stat" data-grocery-latest-yoy="unavailable">
+						<span class="k">12 months to {ok.latestYoy.label.split(' ')[0]}</span>
+						<span class="v dim">Unavailable</span>
+						<span class="s">{ok.latestYoy.reason}</span>
+					</div>
+				{/if}
 			</div>
 		</div>
 
-		{#if current.totalExpensive !== null && current.totalCheapest !== null}
-			<div class="spread-bar">
-				<span class="spread-label">Spread:</span>
-				<span class="spread-cheap">{formatPrice(current.totalCheapest)} cheapest mix</span>
-				<span class="spread-sep">&rarr;</span>
-				<span class="spread-expensive">{formatPrice(current.totalExpensive)} premium stores</span>
-			</div>
-		{/if}
-	{/if}
-
-	{#if history.length > 1}
-		<div class="chart-section">
-			<div class="section-label">Basket Cost Trend (cheapest mix)</div>
-			<div class="chart-wrap" bind:this={chartContainer}>
-				{#if chartPaths}
-					<svg
-						class="chart-svg"
-						width={chartWidth}
-						height={CHART_HEIGHT}
-						role="img"
-						aria-label="Grocery basket cost trend"
-						onpointermove={updateHover}
-						onpointerleave={clearHover}
-					>
-						<g transform={`translate(${CHART_MARGINS.left},${CHART_MARGINS.top})`}>
-							<!-- Filled area -->
-							<path d={chartPaths.areaPath} fill="rgba(245, 158, 11, 0.1)" />
-							<!-- Line -->
-							<path d={chartPaths.linePath} fill="none" stroke={ACCENT} stroke-width="1.5" />
-							<!-- Dots -->
-							{#each chartPaths.dots as dot}
-								<circle cx={dot.x} cy={dot.y} r="2.5" fill={ACCENT} />
-							{/each}
-							<!-- Hover crosshair + highlight -->
-							{#if hoverState}
-								<line
-									x1={chartPaths.dots[hoverState.index].x}
-									x2={chartPaths.dots[hoverState.index].x}
-									y1="0"
-									y2={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom}
-									stroke="rgba(255,255,255,0.35)"
-									stroke-width="1"
-									stroke-dasharray="3,3"
-								/>
+		<div class="section-label">
+			Index, monthly · {ok.observations[0].label} – {ok.observations[ok.observations.length - 1]
+				.label}
+		</div>
+		<div class="ix-chart" bind:this={chartContainer}>
+			{#if chart}
+				<div
+					class="chart-hit"
+					role="slider"
+					aria-valuemin={0}
+					aria-valuemax={ok.observations.length - 1}
+					aria-valuenow={hover ?? ok.observations.length - 1}
+					aria-valuetext={hovered
+						? hovered.value === null
+							? `${hovered.label}: no reading`
+							: `${hovered.label}: index ${hovered.value.toFixed(3)}`
+						: `${ok.latest.label}: index ${ok.latest.value.toFixed(3)}`}
+					data-grocery-chart
+					tabindex="0"
+					aria-label="CPI food at home, SF area, monthly index {ok.observations[0].label} to {ok
+						.observations[ok.observations.length - 1].label}. Arrow keys step through months."
+					onpointermove={move}
+					onpointerleave={() => (hover = null)}
+					onkeydown={step}
+					onblur={() => (hover = null)}
+				>
+					<svg width={chart.width} height={chart.height} aria-hidden="true">
+						{#each chart.yTicks as t}
+							<line
+								x1={chart.plot.left}
+								x2={chart.plot.right}
+								y1={t.y}
+								y2={t.y}
+								stroke="rgba(148,163,184,0.12)"
+							/>
+							<text
+								x={chart.plot.left - 4}
+								y={t.y}
+								text-anchor="end"
+								dominant-baseline="middle"
+								fill="var(--text-muted)"
+								font-size="8">{t.label}</text
+							>
+						{/each}
+						{#each chart.xTicks as t, i}
+							<text
+								x={t.x}
+								y={chart.height - 6}
+								text-anchor={i === 0 ? 'start' : 'middle'}
+								fill="var(--text-muted)"
+								font-size="8">Jan {t.label}</text
+							>
+						{/each}
+						{#each chart.runs as run}
+							<path d={run.area} fill={INDEX_INK} fill-opacity="0.1" />
+							<path
+								d={run.line}
+								fill="none"
+								stroke={INDEX_INK}
+								stroke-width="1.6"
+								stroke-linejoin="round"
+							/>
+						{/each}
+						{#each chart.gaps as g}
+							<line
+								x1={g.x}
+								x2={g.x}
+								y1={chart.plot.top}
+								y2={chart.plot.bottom}
+								stroke="var(--text-muted)"
+								stroke-dasharray="2,3"
+							/>
+							<text
+								x={g.x - 4}
+								y={chart.plot.bottom - 4}
+								text-anchor="end"
+								fill="var(--text-muted)"
+								font-size="8">{g.label} not published</text
+							>
+						{/each}
+						{#if chart.last}
+							<circle cx={chart.last.x} cy={chart.last.y} r="3" fill={INDEX_INK} />
+						{/if}
+						{#if hover !== null && hovered}
+							<line
+								x1={chart.x(hover)}
+								x2={chart.x(hover)}
+								y1={chart.plot.top}
+								y2={chart.plot.bottom}
+								stroke="rgba(255,255,255,0.35)"
+								stroke-dasharray="3,3"
+							/>
+							{#if hovered.value !== null}
 								<circle
-									cx={chartPaths.dots[hoverState.index].x}
-									cy={chartPaths.dots[hoverState.index].y}
+									cx={chart.x(hover)}
+									cy={chart.y(hovered.value)}
 									r="4"
-									fill={ACCENT}
+									fill={INDEX_INK}
 									stroke="#111"
-									stroke-width="1"
 								/>
 							{/if}
-							<!-- Y axis labels -->
-							<text
-								x="-4"
-								y={chartPaths.yScale(chartPaths.yMax)}
-								text-anchor="end"
-								dominant-baseline="middle"
-								fill="#888"
-								font-size="7px">{formatPrice(chartPaths.yMax)}</text
-							>
-							<text
-								x="-4"
-								y={chartPaths.yScale(chartPaths.yMin)}
-								text-anchor="end"
-								dominant-baseline="middle"
-								fill="#888"
-								font-size="7px">{formatPrice(chartPaths.yMin)}</text
-							>
-							<!-- X axis labels -->
-							{#each chartPaths.axisLabels.x as lbl}
-								<text
-									x={lbl.x}
-									y={CHART_HEIGHT - CHART_MARGINS.top - CHART_MARGINS.bottom + 14}
-									text-anchor="middle"
-									fill="#666"
-									font-size="7px">{lbl.label}</text
-								>
-							{/each}
-						</g>
-					</svg>
-				{/if}
-				{#if hoverState}
-					<div class="chart-tooltip" style={`left:${Math.max(20, hoverState.x - 80)}px`}>
-						<div class="tooltip-time">{formatDate(history[hoverState.index].timestamp)}</div>
-						{#if history[hoverState.index].totalCheapest !== null}
-							<div class="tooltip-line">
-								Basket {formatPrice(history[hoverState.index].totalCheapest!)}
-							</div>
 						{/if}
-						<div class="tooltip-line tooltip-dim">
-							{history[hoverState.index].itemsFound}/12 items
-						</div>
-					</div>
+					</svg>
+				</div>
+			{/if}
+			{#if hovered}
+				<div class="readout" data-grocery-readout role="status">
+					<b>{hovered.label}</b>
+					<span>
+						{#if hovered.value === null}
+							no reading: BLS didn't publish this month
+						{:else}
+							index {hovered.value.toFixed(3)} · {hoveredChange
+								? `${pct(hoveredChange.pct)} on ${hoveredChange.against}`
+								: '12-month change unavailable'}
+						{/if}
+					</span>
+				</div>
+			{/if}
+		</div>
+		<p class="not-dollars">
+			An index, not a price: it shows how much SF-area grocery prices moved, not what a basket
+			costs. Each point is one month; the 12-month change compares the same month a year earlier.
+		</p>
+		<div class="src">
+			Source: <b>BLS CPI-U, food at home, San Francisco–Oakland–Hayward</b> ({ok.seriesId}) ·
+			monthly · latest {ok.latest.label} · read {day(ok.checkedAt)}
+		</div>
+	{:else if inflation}
+		<div class="empty" data-grocery-inflation={inflation.status}>
+			{#if inflation.status === 'stale'}
+				<span class="t">SF-area grocery prices are out of date</span>
+				<span class="s"
+					>The newest month we hold is {inflation.lastGood.period}, read {day(
+						inflation.lastGood.checkedAt
+					)}, and BLS has published nothing newer that we have read. No figure is shown until the
+					next good read.</span
+				>
+			{:else}
+				<span class="t">SF-area grocery prices can't be read right now</span>
+				<span class="s"
+					>There is no BLS figure to show. The next check is Monday; nothing older is carried
+					forward as current.</span
+				>
+			{/if}
+		</div>
+	{/if}
+
+	{#if current}
+		<div class="ref" data-grocery-reference>
+			<div class="ref-h">
+				<span class="ref-t">The Bare Essentials · Marin basket</span>
+				{#if current.totalCheapest !== null}
+					<span class="ref-v">{price(current.totalCheapest)}</span>
 				{/if}
 			</div>
-		</div>
-	{:else if dataLoading}
-		<div class="chart-loading">Loading grocery basket data...</div>
-	{:else if !current}
-		<div class="empty-state">Grocery basket data will appear after the first weekly sync.</div>
-	{/if}
-
-	{#if biggestMovers.length > 0}
-		<div class="movers-section">
-			<div class="section-label">Biggest Movers This Week</div>
-			{#each biggestMovers as item}
-				<div class="item-row">
-					<div class="item-info">
-						<span class="item-name">{item.itemName}</span>
-						<span class="item-store">{item.cheapestStore ?? ''}</span>
-					</div>
-					<div class="item-prices">
-						<span class="item-price"
-							>{item.cheapest !== null ? formatPrice(item.cheapest) : 'N/A'}</span
-						>
-						<span class="item-delta {item._delta <= 0 ? 'positive' : 'warning'}">
-							{item._delta >= 0 ? '+' : ''}{formatPrice(item._delta)}
-						</span>
-					</div>
-				</div>
-			{/each}
-		</div>
-	{/if}
-
-	{#if current?.items && current.items.length > 0}
-		<div class="items-section">
-			<button class="toggle-items" onclick={() => (showAllItems = !showAllItems)}>
-				<span class="section-label">{showAllItems ? 'Hide' : 'Show'} All Items</span>
-				<span class="toggle-arrow">{showAllItems ? '\u25B2' : '\u25BC'}</span>
-			</button>
-
-			{#if showAllItems}
-				<div class="item-list">
-					{#each current.items as item}
-						<div class="item-row">
-							<div class="item-info">
-								<span class="item-name">{item.itemName}</span>
-								<span class="item-store">
-									{#if item.cheapestStore}
-										{item.cheapestStore}
-										{#if item.mostExpensiveStore && item.mostExpensiveStore !== item.cheapestStore}
-											&mdash; {item.mostExpensiveStore}
-										{/if}
-									{:else}
-										Not found
-									{/if}
-								</span>
+			<span class="ref-note" data-grocery-frozen>
+				{frozenNote
+					? frozenNote.replace(/^Prices/, 'Marin basket, prices')
+					: 'Marin basket, no longer updated'} · {current.itemsFound}/12 items, cheapest mix
+			</span>
+			{#if current.items.length > 0}
+				<button
+					class="toggle-items"
+					type="button"
+					aria-expanded={showAllItems}
+					onclick={() => (showAllItems = !showAllItems)}
+				>
+					<span class="section-label"
+						>{showAllItems ? 'Hide' : 'Show'} the {current.items.length} items</span
+					>
+					<span class="toggle-arrow">{showAllItems ? '▲' : '▼'}</span>
+				</button>
+				{#if showAllItems}
+					<div class="item-list">
+						{#each current.items as item}
+							<div class="item-row">
+								<div class="item-info">
+									<span class="item-name">{item.itemName}</span>
+									<span class="item-store">{item.cheapestStore ?? 'Not found'}</span>
+								</div>
+								<span class="item-price"
+									>{item.cheapest !== null ? price(item.cheapest) : 'N/A'}</span
+								>
 							</div>
-							<div class="item-prices">
-								{#if item.cheapest !== null}
-									<span class="item-price positive">{formatPrice(item.cheapest)}</span>
-									{#if item.mostExpensive !== null && item.mostExpensive !== item.cheapest}
-										<span class="item-price-range">&ndash; {formatPrice(item.mostExpensive)}</span>
-									{/if}
-								{:else}
-									<span class="item-price dim">N/A</span>
-								{/if}
-							</div>
-						</div>
-					{/each}
-				</div>
+						{/each}
+					</div>
+				{/if}
 			{/if}
 		</div>
 	{/if}
 </Panel>
 
 <style>
-	.headline-bar {
-		display: grid;
-		grid-template-columns: 1fr auto auto;
-		gap: 0.75rem;
-		align-items: center;
-		margin-bottom: 0.65rem;
+	.ix-lead {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
 		padding-bottom: 0.65rem;
+		margin-bottom: 0.65rem;
 		border-bottom: 1px solid var(--border);
 	}
-
-	.basket-total {
-		text-align: left;
+	.ix-kicker {
+		font-size: 0.6rem;
+		color: var(--text-muted);
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		font-weight: 600;
 	}
-
-	.total-value {
-		display: block;
-		font-size: 1.4rem;
+	.ix-row {
+		display: flex;
+		align-items: baseline;
+		gap: 0.6rem;
+		flex-wrap: wrap;
+	}
+	.ix-big {
+		font-size: 1.6rem;
 		font-weight: 700;
-		color: #f59e0b;
-		letter-spacing: 0.01em;
+		color: #fb923c;
+		font-variant-numeric: tabular-nums;
 	}
-
-	.total-label {
-		display: block;
-		font-size: 0.52rem;
+	.ix-big-l {
+		font-size: 0.72rem;
+		color: var(--text-secondary);
+	}
+	.ix-stats {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.5rem;
+		margin-top: 0.5rem;
+	}
+	.stat {
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		padding: 0.4rem 0.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+	}
+	.stat .k {
+		font-size: 0.5rem;
 		color: var(--text-muted);
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
-		margin-top: 0.1rem;
 	}
-
-	.week-change {
-		text-align: center;
-		padding: 0.45rem 0.6rem;
-		border-radius: 4px;
-	}
-
-	.week-change.positive {
-		background: rgba(16, 185, 129, 0.1);
-	}
-
-	.week-change.warning {
-		background: rgba(245, 158, 11, 0.1);
-	}
-
-	.change-value {
-		display: block;
+	.stat .v {
 		font-size: 0.85rem;
-		font-weight: 700;
-		color: var(--text);
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
 	}
-
-	.week-change.positive .change-value {
-		color: #10b981;
-	}
-
-	.week-change.warning .change-value {
-		color: #f59e0b;
-	}
-
-	.change-label {
-		display: block;
-		font-size: 0.48rem;
+	.stat .v small {
+		font-size: 0.6rem;
+		font-weight: 400;
 		color: var(--text-muted);
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
 	}
-
-	.items-found {
-		text-align: center;
-	}
-
-	.found-value {
-		display: block;
-		font-size: 0.85rem;
-		font-weight: 700;
-		color: var(--text);
-	}
-
-	.found-label {
-		display: block;
-		font-size: 0.48rem;
+	.stat .v.dim {
 		color: var(--text-muted);
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
 	}
-
-	.spread-bar {
-		display: flex;
-		align-items: center;
-		gap: 0.4rem;
+	.stat .s {
 		font-size: 0.55rem;
 		color: var(--text-dim);
-		margin-bottom: 0.65rem;
-		padding-bottom: 0.65rem;
-		border-bottom: 1px solid var(--border);
+		line-height: 1.35;
 	}
-
-	.spread-label {
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		color: var(--text-muted);
-		font-size: 0.5rem;
-	}
-
-	.spread-cheap {
-		color: #10b981;
-	}
-
-	.spread-sep {
-		color: var(--text-muted);
-	}
-
-	.spread-expensive {
-		color: #f59e0b;
-	}
-
-	.chart-section {
-		margin-bottom: 0.65rem;
-		padding-bottom: 0.65rem;
-		border-bottom: 1px solid var(--border);
-	}
-
 	.section-label {
 		font-size: 0.55rem;
 		font-weight: 600;
@@ -480,76 +418,115 @@
 		color: var(--text-muted);
 		margin-bottom: 0.3rem;
 	}
-
-	.chart-svg {
-		width: 100%;
-		height: 180px;
-		display: block;
-	}
-
-	.chart-wrap {
+	.ix-chart {
 		position: relative;
 	}
-
-	.chart-tooltip {
+	.ix-chart svg {
+		display: block;
+		width: 100%;
+	}
+	.chart-hit {
+		outline-offset: 2px;
+	}
+	.readout {
 		position: absolute;
-		top: 0.25rem;
-		z-index: 2;
-		min-width: 124px;
-		padding: 0.35rem 0.45rem;
+		top: 2px;
+		left: 34px;
+		padding: 0.25rem 0.45rem;
 		background: rgba(8, 8, 8, 0.95);
 		border: 1px solid rgba(255, 255, 255, 0.14);
-		pointer-events: none;
-		font-size: 0.55rem;
+		font-size: 0.56rem;
 		line-height: 1.4;
+		pointer-events: none;
 	}
-
-	.tooltip-time {
+	.readout b {
 		color: var(--text);
-		font-weight: 700;
-		margin-bottom: 0.14rem;
 	}
-
-	.tooltip-line {
+	.readout span {
 		color: var(--text-dim);
 	}
-
-	.tooltip-dim {
+	.not-dollars {
+		font-size: 0.55rem;
 		color: var(--text-muted);
-		font-size: 0.5rem;
+		line-height: 1.45;
+		margin: 0.4rem 0 0;
 	}
-
-	.movers-section {
-		margin-bottom: 0.65rem;
-		padding-bottom: 0.55rem;
-		border-bottom: 1px solid var(--border);
+	.src {
+		font-size: 0.55rem;
+		color: var(--text-muted);
+		margin-top: 0.4rem;
+		line-height: 1.45;
 	}
-
-	.items-section {
-		margin-bottom: 0.35rem;
+	.src b {
+		color: var(--text-dim);
+		font-weight: 500;
 	}
-
+	.empty {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		border: 1px solid var(--border);
+		border-radius: 4px;
+		padding: 0.75rem;
+	}
+	.empty .t {
+		font-size: 0.75rem;
+		color: var(--text-secondary);
+		font-weight: 500;
+	}
+	.empty .s {
+		font-size: 0.65rem;
+		color: var(--text-dim);
+		line-height: 1.45;
+	}
+	/* The dated reference: dashed, grey, never the series colour. */
+	.ref {
+		margin-top: 0.75rem;
+		border: 1px dashed rgba(148, 163, 184, 0.35);
+		border-radius: 4px;
+		padding: 0.5rem 0.6rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+	.ref-h {
+		display: flex;
+		justify-content: space-between;
+		align-items: baseline;
+		gap: 0.6rem;
+	}
+	.ref-t {
+		font-size: 0.55rem;
+		font-weight: 600;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: #94a3b8;
+	}
+	.ref-v {
+		font-size: 0.95rem;
+		font-weight: 600;
+		color: var(--text-secondary);
+		font-variant-numeric: tabular-nums;
+	}
+	.ref-note {
+		font-size: 0.6rem;
+		color: #94a3b8;
+	}
 	.toggle-items {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		width: 100%;
-		padding: 0.35rem 0;
+		padding: 0.2rem 0 0;
 		border: none;
 		background: none;
 		cursor: pointer;
 		color: var(--text-muted);
 	}
-
 	.toggle-arrow {
 		font-size: 0.5rem;
 		color: var(--text-muted);
 	}
-
-	.item-list {
-		margin-top: 0.25rem;
-	}
-
 	.item-row {
 		display: flex;
 		justify-content: space-between;
@@ -557,18 +534,15 @@
 		padding: 0.3rem 0;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 	}
-
 	.item-row:last-child {
 		border-bottom: none;
 	}
-
 	.item-info {
 		display: flex;
 		flex-direction: column;
 		min-width: 0;
 		flex: 1;
 	}
-
 	.item-name {
 		font-size: 0.58rem;
 		font-weight: 600;
@@ -577,82 +551,15 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
-
 	.item-store {
 		font-size: 0.48rem;
 		color: var(--text-dim);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
 	}
-
-	.item-prices {
-		display: flex;
-		align-items: center;
-		gap: 0.3rem;
-		margin-left: 0.5rem;
-		white-space: nowrap;
-	}
-
 	.item-price {
 		font-size: 0.68rem;
 		font-weight: 700;
-	}
-
-	.item-price.positive {
-		color: #10b981;
-	}
-
-	.item-price.dim {
-		color: var(--text-muted);
-	}
-
-	.item-price-range {
-		font-size: 0.55rem;
-		color: var(--text-dim);
-	}
-
-	.item-delta {
-		font-size: 0.55rem;
-		font-weight: 600;
-	}
-
-	.item-delta.positive {
-		color: #10b981;
-	}
-
-	.item-delta.warning {
-		color: #f59e0b;
-	}
-
-	.chart-loading {
-		font-size: 0.6rem;
-		color: var(--text-muted);
-		text-align: center;
-		padding: 0.5rem;
-	}
-
-	.empty-state {
-		text-align: center;
-		color: var(--text-dim);
-		font-size: 0.7rem;
-		padding: 1rem;
-	}
-
-	@media (max-width: 600px) {
-		.headline-bar {
-			grid-template-columns: 1fr;
-			gap: 0.4rem;
-		}
-
-		.week-change,
-		.items-found {
-			text-align: left;
-		}
-	}
-	.frozen-note {
-		margin: 0 0 0.4rem;
-		font-size: 0.65rem;
-		color: var(--text-muted, #888);
+		color: var(--text-secondary);
+		margin-left: 0.5rem;
+		white-space: nowrap;
 	}
 </style>

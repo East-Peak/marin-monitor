@@ -20,6 +20,9 @@ import {
 import { wordsText } from './chart-readout';
 import { measuredValue } from './measured';
 import { pacificDay } from './pacific-time';
+import { readFileSync } from 'node:fs';
+import { parseBlsSeries } from '../../../scripts/shared/bls-series.mjs';
+import { groceryInflation as inflationView } from '$lib/grocery/inflation';
 
 const NOW = Date.parse('2026-10-15T18:00:00Z');
 const DAY = 86_400_000;
@@ -115,6 +118,7 @@ function input(over: Partial<CostInput> = {}): CostInput {
 		coffee: null,
 		cappuccino: null,
 		grocery: null,
+		groceryInflation: null,
 		wine: null,
 		fitness: null,
 		school: null,
@@ -530,5 +534,95 @@ describe('compositeStops', () => {
 			'No readings Sep 24–Oct 15',
 			'100.6 · Oct 15'
 		]);
+	});
+});
+
+describe('the grocery tile is SF-area grocery inflation (COSTDATA-2)', () => {
+	const bls = parseBlsSeries(
+		JSON.parse(readFileSync('tests/fixtures/costdata/bls-cuurs49bsaf11.json', 'utf8'))
+	);
+	const at = Date.parse('2026-11-12T15:00:00Z');
+	const view = inflationView(
+		{ current: { lastSuccessfulScrapeAt: iso(at), url: 'u', ...bls } },
+		new Date(at)
+	);
+	const snap = {
+		timestamp: '2026-11-01T17:11:00Z',
+		totalCheapest: 174.93,
+		totalExpensive: 209.05,
+		itemsFound: 12,
+		items: []
+	};
+	const basket = {
+		current: snap,
+		history: [snap, { ...snap, timestamp: '2026-10-11T17:11:00Z', totalCheapest: 174.45 }],
+		frozen: { asOf: snap.timestamp, noLongerUpdated: true as const }
+	};
+	const tileOf = (over: Partial<CostInput>) =>
+		costView(
+			input({
+				now: at,
+				grocery: basket,
+				groceryInflation: view,
+				outcomes: { grocery: live(), groceryInflation: live(), ...over.outcomes },
+				...over
+			})
+		).tiles.find((t) => t.id === 'grocery')!;
+
+	it('leads with the 12-month change and its month, and says what October lacks', () => {
+		const t = tileOf({});
+		expect(t).toMatchObject({
+			title: 'SF-area grocery inflation',
+			kind: 'value',
+			value: '+4.4%',
+			valueNote: '12 months to Sep 2026'
+		});
+		expect(t.detail).toBe("Oct 2026 index 363.6 \u00b7 its 12-month change isn't published");
+	});
+
+	it('draws the index with the gap kept as a null, not a dollar basket trend', () => {
+		const t = tileOf({});
+		expect(t.spark).toHaveLength(46);
+		expect(t.spark!.filter((r) => r.value === null)).toHaveLength(1);
+		expect(t.sparkFormat(363.564)).toBe('363.6');
+	});
+
+	it('keeps the dated Marin basket as a grey reference line, never as a trend or a mover', () => {
+		const t = tileOf({});
+		expect(t.refLine).toBe('Marin basket $174.93, prices as of Nov 1, 2026, no longer updated');
+		expect(JSON.stringify(t)).not.toMatch(/last week|Instacart|time not reported/);
+	});
+
+	it('names the series, its month and our read, with no freshness claim of its own', () => {
+		const t = tileOf({});
+		expect(t.muted).toBe(true);
+		expect(t.untimed).toBe('Oct 2026 \u00b7 read Nov 12');
+		expect(t.measured.source).toBe('BLS CPI food at home, SF area');
+	});
+
+	it('is unavailable with no figure when BLS cannot be read, but keeps the reference', () => {
+		const t = tileOf({ groceryInflation: { status: 'unavailable', reason: 'x' } });
+		expect(t).toMatchObject({ kind: 'unavailable', value: 'Unavailable', spark: null });
+		expect(t.detail).toBe("BLS couldn't be read");
+		expect(t.refLine).toContain('$174.93');
+	});
+
+	it('is unavailable, not carried forward, when the series is stale', () => {
+		const t = tileOf({
+			groceryInflation: {
+				status: 'stale',
+				reason: 'older',
+				lastGood: { period: 'Oct 2026', checkedAt: iso(at) }
+			}
+		});
+		expect(t.kind).toBe('unavailable');
+		expect(t.value).toBe('Unavailable');
+	});
+
+	it('is watched by BLS Food at Home in health, aged 75 days', () => {
+		expect(COST_DATASETS.groceryInflation).toMatchObject({
+			healthName: 'BLS Food at Home',
+			maxAgeDays: 75
+		});
 	});
 });

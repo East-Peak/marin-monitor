@@ -11,12 +11,13 @@ import type { FitnessData } from '$lib/types/fitness';
 import type { GasPriceData, GasStation } from '$lib/types/gas';
 import type { GroceryBasketData } from '$lib/types/grocery';
 import { frozenBasketNote } from '$lib/config/grocery-basket';
+import type { GroceryInflation } from '$lib/grocery/inflation';
 import type { SchoolIndexData } from '$lib/types/school';
 import type { WineIndexData } from '$lib/types/wine';
 import { gasChangeOverDays } from '$lib/utils/gas-change';
 import { gapStop, rangeWords, silences, type Reading, type ReadoutStop } from './chart-readout';
 import { seriesStops } from './chart-stops';
-import { mapMeasured, measuredFromEntry, type Measured } from './measured';
+import { mapMeasured, measuredFromEntry, measuredUnavailable, type Measured } from './measured';
 import { pacificDate, pacificDay } from './pacific-time';
 import { datasetEntry, type DatasetFetch } from './source-adapters';
 import { presentSection, type SectionPresentation } from './source-status';
@@ -34,8 +35,15 @@ export const COST_DATASETS = {
 	},
 	cappuccino: { id: 'cappuccino', name: 'Cappuccino', healthName: 'Cappuccino', maxAgeDays: 10 },
 	// Its scrape stopped 2026-11-03 (COSTDATA Q1): the last real read never ages into an alarm;
-	// the tile says it is no longer updated instead. Health retired it.
+	// the tile's reference line says it is no longer updated instead. Health retired it.
 	grocery: { id: 'grocery', name: 'Grocery basket', healthName: null, maxAgeDays: Infinity },
+	// BLS food at home, SF area (COSTDATA-2): aged by its newest reference month, as health does.
+	groceryInflation: {
+		id: 'groceryInflation',
+		name: 'SF-area grocery inflation',
+		healthName: 'BLS Food at Home',
+		maxAgeDays: 75
+	},
 	wine: { id: 'wine', name: 'Wine index', healthName: 'Wine Index', maxAgeDays: 10 },
 	school: { id: 'school', name: 'School tuition', healthName: 'School Tuition', maxAgeDays: 45 },
 	housing: { id: 'housing', name: 'Redfin housing', healthName: 'Housing', maxAgeDays: 60 },
@@ -193,6 +201,10 @@ export interface SubIndexTile {
 	sparkWhen: (ms: number) => string;
 	sparkNotes: readonly string[];
 	noHistory: boolean;
+	/** A small note beside the value ("12 months to Sep 2026"). */
+	valueNote?: string;
+	/** A dated reference beneath the tile, visibly apart from its own series. */
+	refLine?: string;
 	/** Why there is no sparkline, for a tile whose source publishes none. */
 	noHistoryReason: string | null;
 	measured: Measured<unknown>;
@@ -205,6 +217,13 @@ export interface SubIndexTile {
 const usd = (n: number, dec = 2) =>
 	`$${n.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec })}`;
 const usd0 = (n: number) => usd(n, 0);
+const pct1 = (n: number) => `${n >= 0 ? '+' : '\u2212'}${Math.abs(n).toFixed(1)}%`;
+const shortDay = (iso: string) =>
+	new Date(iso).toLocaleDateString('en-US', {
+		month: 'short',
+		day: 'numeric',
+		timeZone: 'America/Los_Angeles'
+	});
 export const signed = (n: number, dec: number, pre = '$') =>
 	`${n > 0 ? '+' : n < 0 ? '−' : '±'}${pre}${Math.abs(n).toFixed(dec)}`;
 
@@ -226,6 +245,10 @@ interface TileSpec<T> {
 	notes?: readonly string[];
 	noHistoryReason?: string;
 	untimed?: (v: T) => string | undefined;
+	valueNote?: (v: T) => string | undefined;
+	refLine?: (v: T) => string | undefined;
+	/** The series is observed even where the tile claims no read time of its own. */
+	observedSeries?: true;
 	/** The source can't vouch for when the value was true (a fixed estimate, a maintained list). */
 	muted?: (v: T) => boolean;
 }
@@ -251,12 +274,13 @@ function tile<T>(spec: TileSpec<T>): SubIndexTile {
 			spark: null,
 			noHistory: false,
 			noHistoryReason: null,
-			muted: false
+			muted: false,
+			refLine: spec.refLine?.(null as T)
 		};
 	}
 	const muted = spec.muted?.(m.value) ?? false;
 	const points = spec.series?.(m.value) ?? [];
-	const kind = muted ? 'reference' : 'observed';
+	const kind = muted && !spec.observedSeries ? 'reference' : 'observed';
 	const spark =
 		points.filter((p) => p.value !== null).length >= 2
 			? points.map((p) => ({ ...p, kind, unit: '' }) satisfies Reading)
@@ -272,7 +296,9 @@ function tile<T>(spec: TileSpec<T>): SubIndexTile {
 		spark,
 		noHistory: spark === null,
 		noHistoryReason: spark === null ? (spec.noHistoryReason ?? null) : null,
-		untimed: spec.untimed?.(m.value)
+		untimed: spec.untimed?.(m.value),
+		valueNote: spec.valueNote?.(m.value),
+		refLine: spec.refLine?.(m.value)
 	};
 }
 
@@ -379,6 +405,7 @@ export interface CostInput {
 	coffee: CoffeeIndexData | null;
 	cappuccino: CoffeeData | null;
 	grocery: GroceryBasketData | null;
+	groceryInflation: GroceryInflation | null;
 	wine: WineIndexData | null;
 	fitness: FitnessData | null;
 	school: SchoolIndexData | null;
@@ -422,6 +449,7 @@ export function costView(input: CostInput): CostView {
 		fitness: essential('fitness', 'Fitness drop-ins'),
 		cappuccino: own('cappuccino'),
 		grocery: own('grocery'),
+		groceryInflation: own('groceryInflation'),
 		wine: own('wine'),
 		school: own('school'),
 		housing: own('housing'),
@@ -443,6 +471,25 @@ export function costView(input: CostInput): CostView {
 			compositeRaw,
 			(d) => d.current!.marinNumber.items.find((i) => i.sourceIndex === key) ?? null
 		);
+
+	const basket = withCurrent(input.grocery);
+	const basketNote = frozenBasketNote(basket?.frozen);
+	const basketRef =
+		basket?.current?.totalCheapest != null && basketNote
+			? `Marin basket ${usd(basket.current.totalCheapest)}, ${basketNote.replace(/^Prices/, 'prices')}`
+			: undefined;
+	const groceryRaw = read(
+		entries.groceryInflation,
+		input.groceryInflation,
+		'BLS CPI food at home, SF area'
+	);
+	// Only a vouched, in-date series is a value; anything else is unavailable, never carried forward.
+	const inflationRead: Measured<GroceryInflation & { status: 'ok' }> =
+		groceryRaw.kind !== 'value'
+			? (groceryRaw as Measured<never>)
+			: groceryRaw.value.status === 'ok'
+				? (groceryRaw as Measured<GroceryInflation & { status: 'ok' }>)
+				: measuredUnavailable(groceryRaw.source, "BLS couldn't be read");
 
 	const tiles: SubIndexTile[] = [
 		tile({
@@ -474,15 +521,30 @@ export function costView(input: CostInput): CostView {
 			},
 			series: (d) => dated(d, (h) => h.avgPrice)
 		}),
-		tile({
+		tile<GroceryInflation & { status: 'ok' }>({
 			id: 'grocery',
-			title: 'Grocery basket',
-			color: '#f97316',
-			measured: read(entries.grocery, withCurrent(input.grocery), 'Last Instacart read'),
-			value: (d) => (d.current!.totalCheapest === null ? 'Unknown' : usd(d.current!.totalCheapest)),
-			detail: (d) =>
-				frozenBasketNote(d.frozen) ?? `cheapest mix · ${d.current!.itemsFound} items priced`,
-			series: (d) => dated(d, (h) => h.totalCheapest)
+			title: 'SF-area grocery inflation',
+			color: '#fb923c',
+			measured: inflationRead,
+			value: (v) => pct1(v.lead.pct),
+			valueNote: (v) => `12 months to ${v.lead.label}`,
+			detail: (v) =>
+				v.latestYoy.pct === null
+					? `${v.latest.label} index ${v.latest.value.toFixed(1)} \u00b7 its 12-month change isn't published`
+					: `${v.latest.label} index ${v.latest.value.toFixed(1)}`,
+			series: (v) =>
+				v.observations.map((o) => ({
+					at: Date.parse(`${o.period}-01T12:00:00Z`),
+					value: o.value
+				})),
+			format: (n) => n.toFixed(1),
+			when: monthOf,
+			notes: ['index'],
+			observedSeries: true,
+			// BLS's month is its own date; we claim no read time beyond the line below.
+			untimed: (v) => `${v.latest.label} \u00b7 read ${shortDay(v.checkedAt)}`,
+			muted: () => true,
+			refLine: () => basketRef
 		}),
 		tile({
 			id: 'wine',

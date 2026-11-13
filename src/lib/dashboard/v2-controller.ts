@@ -72,6 +72,8 @@ import { fetchCompositeDataWithStatus } from '$lib/api/marin/composite';
 import { fetchLifestyleWithStatus } from '$lib/api/marin/lifestyle';
 import { fetchCappuccinoDataWithStatus } from '$lib/api/marin/cappuccino';
 import { fetchGroceryBasketDataWithStatus } from '$lib/api/marin/grocery-basket';
+import { fetchGroceryInflationWithStatus } from '$lib/api/marin/grocery-inflation';
+import type { GroceryInflation } from '$lib/grocery/inflation';
 import { fetchWineIndexDataWithStatus } from '$lib/api/marin/wine-index';
 import { fetchSchoolTuitionDataWithStatus } from '$lib/api/marin/school-tuition';
 import { fetchHousingDataWithStatus, type HousingMetric } from '$lib/api/marin/housing';
@@ -300,6 +302,7 @@ export interface CostReads {
 	composite: CompositeData | null;
 	cappuccino: CoffeeData | null;
 	grocery: GroceryBasketData | null;
+	groceryInflation: GroceryInflation | null;
 	wine: WineIndexData | null;
 	school: SchoolIndexData | null;
 	housing: HousingMetric[] | null;
@@ -326,6 +329,17 @@ function costDatasets(store: Writable<CostReads>): DatasetDef[] {
 		def('composite', (signal) => fetchCompositeDataWithStatus({ signal }), scrapedAt),
 		def('cappuccino', (signal) => fetchCappuccinoDataWithStatus({ signal }), scrapedAt),
 		def('grocery', (signal) => fetchGroceryBasketDataWithStatus({ signal }), scrapedAt),
+		// BLS's own month ages it, as health does: our read never refreshes an old period.
+		def(
+			'groceryInflation',
+			(signal) => fetchGroceryInflationWithStatus({ signal }),
+			(d) =>
+				d.status === 'ok'
+					? new Date(
+							Date.UTC(Number(d.latest.period.slice(0, 4)), Number(d.latest.period.slice(5, 7)), 0)
+						).toISOString()
+					: null
+		),
 		def('wine', (signal) => fetchWineIndexDataWithStatus({ signal }), scrapedAt),
 		def('school', (signal) => fetchSchoolTuitionDataWithStatus({ signal }), scrapedAt),
 		// Redfin's months carry no read time; G0a dates the blob by upload, which v2 can't see.
@@ -550,6 +564,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		composite: null,
 		cappuccino: null,
 		grocery: null,
+		groceryInflation: null,
 		wine: null,
 		school: null,
 		housing: null,
