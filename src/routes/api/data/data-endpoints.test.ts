@@ -37,6 +37,7 @@ const { GET: getStravaLeaderboards } = await import('./strava-leaderboards/+serv
 const { GET: getCappuccino } = await import('./cappuccino/+server');
 const { GET: getGroceryBasket } = await import('./grocery-basket/+server');
 const { GET: getActivity } = await import('./activity/+server');
+const { GET: getGroceryInflation } = await import('./grocery-inflation/+server');
 
 function jsonResponse(body: unknown): Response {
 	return new Response(JSON.stringify(body), {
@@ -316,6 +317,49 @@ describe('/api/data/grocery-basket', () => {
 		mockBlobSuccess(samplePayload);
 		await getGroceryBasket({} as any);
 		expect(mockHead).toHaveBeenCalledWith('marin-grocery-basket.json', { token: 'test-token' });
+	});
+});
+
+// ── /api/data/grocery-inflation ────────────────────────
+
+describe('/api/data/grocery-inflation', () => {
+	const blob = {
+		current: {
+			lastSuccessfulScrapeAt: new Date().toISOString(),
+			url: 'https://data.bls.gov/timeseries/CUURS49BSAF11',
+			seriesId: 'CUURS49BSAF11',
+			frequency: 'monthly',
+			maxAgeDays: 75,
+			period: 'October 2026',
+			periodEnd: new Date(Date.now() - 5 * 86_400_000).toISOString(),
+			observations: [
+				{ period: '2025-09', value: 341.203 },
+				{ period: '2026-09', value: 356.147 }
+			],
+			gaps: []
+		}
+	};
+
+	it('serves the derived view, never the raw series', async () => {
+		mockBlobSuccess(blob);
+		const response = await getGroceryInflation({} as any);
+		expect(response.status).toBe(200);
+		const body = await response.json();
+		expect(body.status).toBe('ok');
+		expect(body.lead.label).toBe('Sep 2026');
+		expect(mockHead).toHaveBeenCalledWith('marin-bls-food-at-home.json', { token: 'test-token' });
+	});
+
+	it('says unavailable, with no figure, for a blob it cannot vouch for', async () => {
+		mockBlobSuccess({ current: { observations: [] } });
+		const body = await (await getGroceryInflation({} as any)).json();
+		expect(body.status).toBe('unavailable');
+		expect(body.lead).toBeUndefined();
+	});
+
+	it('is a 503 when the blob is missing', async () => {
+		mockBlobMissing();
+		expect((await getGroceryInflation({} as any)).status).toBe(503);
 	});
 });
 
