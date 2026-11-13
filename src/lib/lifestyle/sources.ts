@@ -5,6 +5,10 @@
  * its own end date passes; it is never quietly refreshed in code.
  */
 import type { CitedSource } from './model';
+import { RIVIAN_OFFER, rivianSheetDue, validateRivianOffer } from './rivian-offer';
+
+const notOneOffer = validateRivianOffer(RIVIAN_OFFER);
+if (notOneOffer.length) throw new Error(`Rivian offer is not one offer: ${notOneOffer.join('; ')}`);
 
 const CHECKED = '2026-10-20';
 
@@ -65,14 +69,14 @@ const dmv = from({
 	recheckDays: 365,
 	validUntil: '2026-12-31'
 });
-/** Read by hand on the R1S page (2026-11-03): the scrape stopped, Rivian's terms bar automated access. */
+/** Entered by hand from rivian.com's own page: one record per offer (rivian-offer.ts). */
 const rivian = from({
-	url: 'https://rivian.com/r1s',
-	period: 'example offer, orders 2026-10-01 to 11-02',
-	scope: '2027 R1S Premium, $85,885 vehicle price, 36 mo, 10,000 mi/yr, US',
-	checkedAt: '2026-11-03',
+	url: RIVIAN_OFFER.url,
+	period: RIVIAN_OFFER.period,
+	scope: `${RIVIAN_OFFER.trim}, $${RIVIAN_OFFER.vehiclePrice.toLocaleString('en-US')} vehicle price, ${RIVIAN_OFFER.termMonths} mo, ${RIVIAN_OFFER.milesPerYear.toLocaleString('en-US')} mi/yr, ${RIVIAN_OFFER.region}`,
+	checkedAt: RIVIAN_OFFER.checkedAt,
 	recheckDays: 30,
-	validUntil: '2026-11-02'
+	validUntil: RIVIAN_OFFER.validUntil
 });
 /**
  * The clean extras and the wine, read by hand at the right size on the
@@ -291,8 +295,8 @@ export const CITED = {
 
 	// Cars
 	// One offer, both parts (COSTDATA Q1): Rivian's own disclosure, read by hand.
-	'rivian.lease': rivian(1209, 'lease, $/mo'),
-	'rivian.dueAtSigning': rivian(9104, 'due at signing'),
+	'rivian.lease': rivian(RIVIAN_OFFER.monthlyPayment, 'lease, $/mo'),
+	'rivian.dueAtSigning': rivian(rivianSheetDue(RIVIAN_OFFER), 'due at signing'),
 	'kbb.ex90.lease': from({
 		url: 'https://www.kbb.com/volvo/ex90/deals-incentives/',
 		period: 'expires 2026-11-02',

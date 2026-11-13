@@ -94,12 +94,46 @@ function dropped(b: PricedBudget, now: Date): PricedBudget {
 	return { ...b, lines, sections, burnMonthly: burn, complete, breakEven: null };
 }
 
+/**
+ * A cited figure whose own end has passed (a hand-entered offer) is stale at
+ * read time too: the figure stays, as it always did past its end, but a budget
+ * priced while it still ran never reads fresh after it.
+ */
+const endedCited = (i: PricedInput, now: Date) =>
+	i.class === 'cited' &&
+	i.availability === 'ok' &&
+	i.validUntil !== undefined &&
+	offerEnded(i.validUntil, now);
+
+const RANK = { unavailable: 0, stale: 1, ok: 2 } as const;
+
+function staled(b: PricedBudget, now: Date): PricedBudget {
+	if (!b.lines.some((l) => l.inputs.some((i) => endedCited(i, now)))) return b;
+	return {
+		...b,
+		lines: b.lines.map((l): PricedLine => {
+			if (!l.inputs.some((i) => endedCited(i, now))) return l;
+			const inputs = l.inputs.map((i) =>
+				endedCited(i, now)
+					? { ...i, availability: 'stale' as const, reason: `past ${i.validUntil}` }
+					: i
+			);
+			const availability = inputs.reduce<PricedLine['availability']>(
+				(w, i) => (RANK[i.availability] < RANK[w] ? i.availability : w),
+				'ok'
+			);
+			return { ...l, inputs, availability };
+		})
+	};
+}
+
 export function withOfferEnds(
 	budgets: readonly PricedBudget[],
 	sheets: readonly HouseholdSheet[],
 	now: Date
 ): PricedBudget[] {
-	return budgets.map((b) => {
+	return budgets.map((priced) => {
+		const b = staled(priced, now);
 		if (!b.lines.some((l) => l.inputs.some((i) => ended(i, now)))) return b;
 		const sheet = sheets.find((s) => s.id === b.town);
 		return sheet && sheet.version === b.sheetVersion && b.methodVersion === METHOD_VERSION
@@ -122,7 +156,10 @@ export function offerCacheControl(
 	const ends = budgets.flatMap((b) =>
 		b.lines.flatMap((l) =>
 			l.inputs.flatMap((i) =>
-				i.class === 'live' && i.availability !== 'unavailable' && i.validUntil
+				(i.class === 'live' || i.class === 'cited') &&
+				i.availability !== 'unavailable' &&
+				i.validUntil &&
+				!offerEnded(i.validUntil, now)
 					? [Date.parse(`${i.validUntil}T23:59:59.999Z`)]
 					: []
 			)

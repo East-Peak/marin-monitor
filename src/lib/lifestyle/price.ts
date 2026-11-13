@@ -186,6 +186,7 @@ export function priceInput(name: string, spec: InputSpec, live: LiveReads, now: 
 				availability: reason ? 'stale' : 'ok',
 				asOf: src.checkedAt,
 				source: `${src.url} (${src.period}; ${src.scope})`,
+				...(src.validUntil ? { validUntil: src.validUntil } : {}),
 				...(reason ? { reason } : {})
 			};
 		}
