@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parseBlsSeries } from '../../../scripts/shared/bls-series.mjs';
+import { failureRecord } from '../../../scripts/shared/published-sync.mjs';
 import { groceryInflation } from './inflation';
 
 const parsed = parseBlsSeries(
@@ -97,6 +98,26 @@ describe('when it cannot be vouched for', () => {
 	it('is unavailable with no year-over-year pair at all', () => {
 		const v = groceryInflation(
 			blob({ observations: [{ period: '2026-10', value: 363.5 }], gaps: [] }),
+			NOW
+		);
+		expect(v.status).toBe('unavailable');
+	});
+});
+
+describe('a failed sync is unavailable, never the last good figure', () => {
+	it('reads the failure the sync recorded as unavailable, with its reason', () => {
+		const failed = {
+			current: failureRecord('https://data.bls.gov/x', 'BLS returned 503', new Date(NOW))
+		};
+		expect(groceryInflation(failed, NOW)).toEqual({
+			status: 'unavailable',
+			reason: 'the last BLS sync failed: BLS returned 503'
+		});
+	});
+
+	it('suppresses the figures even if a failure marker sits beside old observations', () => {
+		const v = groceryInflation(
+			blob({ failure: { at: NOW.toISOString(), reason: 'timeout' } }),
 			NOW
 		);
 		expect(v.status).toBe('unavailable');

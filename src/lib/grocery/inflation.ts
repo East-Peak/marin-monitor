@@ -63,6 +63,12 @@ const unavailable = (reason: string): GroceryInflation => ({ status: 'unavailabl
 export function groceryInflation(raw: unknown, now: Date): GroceryInflation {
 	const c = rec(rec(raw)?.current);
 	if (!c) return unavailable('no BLS read yet');
+	// The sync's last attempt failed: whatever figures sit beside the marker are not current.
+	const failure = rec(c.failure);
+	if (failure) {
+		const why = typeof failure.reason === 'string' ? failure.reason : 'no reason given';
+		return unavailable(`the last BLS sync failed: ${why}`);
+	}
 	const values = new Map<string, number>();
 	for (const o of Array.isArray(c.observations) ? c.observations : []) {
 		const r = rec(o);

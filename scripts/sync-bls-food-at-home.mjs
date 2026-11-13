@@ -4,8 +4,8 @@
  * Francisco area, through the public v1 API (no key). The blob holds the
  * series as BLS published it, one observation per reference month. Fetching
  * again never makes a new observation or refreshes an old period: the blob is
- * dated by its newest month, and a failed read writes nothing, so the last
- * good read ages honestly. The index is context only and never enters a
+ * dated by its newest month. A failed read replaces the blob with a failure
+ * marker, so the endpoint stops serving the last good figure as current. The index is context only and never enters a
  * household's dollars.
  */
 import {
@@ -15,12 +15,21 @@ import {
 	blsRequestBody,
 	parseBlsSeries
 } from './shared/bls-series.mjs';
-import { run, writePublished } from './shared/published-sync.mjs';
+import { run, writeFailure, writePublished } from './shared/published-sync.mjs';
 
 const BLOB_KEY = 'marin-bls-food-at-home.json';
 const USER_AGENT = 'MarinMonitor/1.0 (+https://marinmonitor.com)';
 
 run('sync-bls-food-at-home', async () => {
+	try {
+		return await sync();
+	} catch (err) {
+		await writeFailure(BLOB_KEY, BLS_SOURCE_URL, err).catch(() => {});
+		throw err;
+	}
+});
+
+async function sync() {
 	const response = await fetch(BLS_URL, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json', 'User-Agent': USER_AGENT },
@@ -36,4 +45,4 @@ run('sync-bls-food-at-home', async () => {
 		observations: read.observations.length,
 		gaps: read.gaps.map((g) => g.period)
 	};
-});
+}

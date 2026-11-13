@@ -49,6 +49,34 @@ export async function writePublished(blobKey, read) {
 	return current;
 }
 
+/**
+ * What a sync that could not vouch for its read leaves behind: no observations and no
+ * last-success time, so nothing reads as a current figure (COSTDATA-2: on failure the read is
+ * unavailable, never carried forward as fresh). The next good sync replaces it whole.
+ * @param {string} url @param {string} reason @param {Date} at
+ */
+export function failureRecord(url, reason, at) {
+	return { timestamp: at.toISOString(), url, failure: { at: at.toISOString(), reason } };
+}
+
+/** Record a failed read in the blob, so readers stop serving the previous good one. */
+export async function writeFailure(
+	/** @type {string} */ blobKey,
+	/** @type {string} */ url,
+	/** @type {unknown} */ err
+) {
+	const token = process.env.BLOB_READ_WRITE_TOKEN;
+	if (!token) return;
+	const reason = (err instanceof Error ? err.message : String(err)).slice(0, 200);
+	await put(blobKey, JSON.stringify({ current: failureRecord(url, reason, new Date()) }), {
+		access: 'private',
+		contentType: 'application/json',
+		addRandomSuffix: false,
+		allowOverwrite: true,
+		token
+	});
+}
+
 /** Run a sync: log its result, or fail the job without writing anything. */
 export async function run(/** @type {string} */ name, /** @type {() => Promise<unknown>} */ sync) {
 	try {
