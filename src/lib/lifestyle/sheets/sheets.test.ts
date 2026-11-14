@@ -63,7 +63,7 @@ const APPROVED: Record<string, Record<string, number>> = {
 		'util.net': 240,
 		'health.prem': 570.83,
 		'health.oop': 333.33,
-		'car.rivian.lease': 1461.89,
+		'car.rivian.lease': 1428.31,
 		'car.rivian.charge': 82.8,
 		'car.rivian.reg': 84.77,
 		'car.rivian.ins': 203.33,
@@ -191,12 +191,13 @@ const APPROVED: Record<string, Record<string, number>> = {
  * Break-even sits $414 / $440 / $707 above the approved figures: flat parcel
  * taxes are paid but no longer deducted (Stuart, 2026-10-22). Ross's then falls
  * $1,735: the Tahoe cabin's property tax is deducted like the house's (Stuart, 2026-10-23).
- * Burn and break-even then move with the four COSTDATA Q1 lines above (2026-11-03), and with Ikon's adult pass cited at $1,449 rather than read at $1,529 (2026-11-13).
+ * Burn and break-even then move with the four COSTDATA Q1 lines above (2026-11-03), and with Ikon's adult pass cited at $1,449 rather than read at $1,529 (2026-11-13). Larkspur then falls $33.59 a month and $851 of break-even:
+ * Rivian's $9,104 due at signing holds the first $1,209 payment, which the sheet already charges (2026-11-14).
  */
 const TOTALS = {
 	larkspur: {
-		burn: 42618.49,
-		breakEven: 904124,
+		burn: 42584.9,
+		breakEven: 903273,
 		within: 2,
 		personaOnly: 0.117
 	},

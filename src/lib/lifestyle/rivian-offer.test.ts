@@ -21,11 +21,14 @@ const good: RivianOffer = {
 describe('one dated record per Rivian offer, every part from the one offer', () => {
 	it('the record on file is valid, and is the example offer that ended 2026-11-02', () => {
 		expect(validateRivianOffer(RIVIAN_OFFER)).toEqual([]);
+		expect(RIVIAN_OFFER.disclosure).toMatch(/due at signing includes .*first month's payment/);
 		expect(RIVIAN_OFFER).toMatchObject({
 			monthlyPayment: 1209,
 			dueAtSigning: 9104,
+			dueIncludesFirstPayment: true,
 			termMonths: 36,
 			validUntil: '2026-11-02',
+			checkedAt: '2026-11-14',
 			url: 'https://rivian.com/r1s'
 		});
 	});
@@ -77,8 +80,11 @@ describe('one dated record per Rivian offer, every part from the one offer', () 
 			expect.arrayContaining([expect.stringMatching(/first payment/)])
 		);
 		// Only the legacy record, read after its own offer had ended, may leave it unsaid.
-		expect(validateRivianOffer(RIVIAN_OFFER)).toEqual([]);
-		expect(CITED['rivian.dueAtSigning'].scope).toMatch(/first-payment inclusion not stated/);
+		const unsaid = { ...RIVIAN_OFFER, dueIncludesFirstPayment: null };
+		expect(validateRivianOffer(unsaid)).toEqual([]);
+		expect(validateRivianOffer({ ...unsaid, checkedAt: '2026-11-01' })).not.toEqual([]);
+		// The record on file now says it, so its scope no longer carries the caveat.
+		expect(CITED['rivian.dueAtSigning'].scope).not.toMatch(/first-payment inclusion not stated/);
 	});
 
 	it('the Larkspur sheet takes the term and the vehicle price from the record', () => {
@@ -101,7 +107,9 @@ describe('one dated record per Rivian offer, every part from the one offer', () 
 describe('the sheet reads the record, and its end is enforced at read time', () => {
 	it('the cited Rivian figures are the record’s, with its end and no change to the maths', () => {
 		expect(CITED['rivian.lease']).toMatchObject({ figure: 1209, validUntil: '2026-11-02' });
-		expect(CITED['rivian.dueAtSigning']).toMatchObject({ figure: 9104, validUntil: '2026-11-02' });
+		// $9,104 is stated due at signing; $1,209 of it is the first payment the sheet charges monthly.
+		expect(CITED['rivian.dueAtSigning']).toMatchObject({ figure: 7895, validUntil: '2026-11-02' });
+		expect(rivianSheetDue(RIVIAN_OFFER)).toBe(9104 - 1209);
 	});
 
 	it('an ended offer reads stale, with the figure kept, never fresh', () => {

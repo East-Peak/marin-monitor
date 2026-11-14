@@ -34,22 +34,27 @@ export interface RivianOffer {
 	readonly disclosure: string;
 }
 
-/** The offer read by hand on 2026-11-03: the last one on file. It ended 2026-11-02. */
+/**
+ * The offer read by hand on 2026-11-03 and re-read on 2026-11-14 from rivian.com/r1s's
+ * "Disclosures" panel: the last one on file. It ended 2026-11-02, and the page still names no later
+ * window, so it reads stale. The re-read added that the $9,104 due at signing includes the first
+ * monthly payment (and a $7,000 capitalized cost reduction, $895 acquisition fee, no security deposit).
+ */
 export const RIVIAN_OFFER: RivianOffer = {
 	trim: '2027 R1S Premium',
 	region: 'US',
 	vehiclePrice: 85885,
 	monthlyPayment: 1209,
 	dueAtSigning: 9104,
-	dueIncludesFirstPayment: null,
+	dueIncludesFirstPayment: true,
 	termMonths: 36,
 	milesPerYear: 10000,
 	validUntil: '2026-11-02',
-	checkedAt: '2026-11-03',
+	checkedAt: '2026-11-14',
 	url: 'https://rivian.com/r1s',
 	period: 'example offer, orders 2026-10-01 to 11-02',
 	disclosure:
-		'2027 R1S Premium, $85,885 vehicle price: 36 monthly payments of $1,209 with $9,104 due at signing, 10,000 miles a year. Orders October 1 to November 2, 2026.'
+		"2027 R1S Premium, $85,885 vehicle price: 36 monthly payments of $1,209 with $9,104 due at signing, 10,000 miles a year. Orders October 1 to November 2, 2026. The $9,104 due at signing includes the first month's payment, a $7,000 capitalized cost reduction (with the $500 order deposit) and a $895 acquisition fee; no security deposit."
 };
 
 const DATE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
