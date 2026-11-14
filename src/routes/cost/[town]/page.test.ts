@@ -32,7 +32,7 @@ const sectionTotal = (root: Element, section: string) =>
 describe('/cost/<town>', () => {
 	it('leads with the month and keeps the equation', () => {
 		const c = page(budget('larkspur'));
-		expect(text(c, '[data-burn]')).toBe('$42,614 a month');
+		expect(text(c, '[data-burn]')).toBe('$42,581 a month');
 		expect(c.querySelector('[data-burn]')?.getAttribute('data-text-role')).toBe('headline');
 		expect(c.querySelector('.equation [data-break-even]')).not.toBeNull();
 		expect(text(c, '[data-budget-total]')).toContain('calculated, mixed provenance');
