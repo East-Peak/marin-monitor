@@ -1,0 +1,91 @@
+{
+	"From": "goldengate@service.govdelivery.com",
+	"FromName": "GGBHTD",
+	"MessageStream": "inbound",
+	"FromFull": {
+		"Email": "goldengate@service.govdelivery.com",
+		"Name": "GGBHTD",
+		"MailboxHash": ""
+	},
+	"To": "00000000000000000000000000000000@inbound.postmarkapp.com",
+	"ToFull": [
+		{
+			"Email": "00000000000000000000000000000000@inbound.postmarkapp.com",
+			"Name": "",
+			"MailboxHash": ""
+		}
+	],
+	"Cc": "",
+	"CcFull": [],
+	"Bcc": "",
+	"BccFull": [],
+	"OriginalRecipient": "00000000000000000000000000000000@inbound.postmarkapp.com",
+	"Subject": "Rider Alert Route GGTransit Route 580 Sunday, 11/15, WB Richmond-San Rafael Bridge Closure",
+	"MessageID": "00000000-0000-4000-8000-000000000010",
+	"ReplyTo": "",
+	"MailboxHash": "",
+	"Date": "Fri, 13 Nov 2026 18:09:29 +0000",
+	"TextBody": "The Richmond-San Rafael Bridge will be closed in the *westbound* direction starting Saturday night, 11/14,  at 11pm  through Sunday, 11/15, at 8am.\n\nTwo westbound 580 trips will be affected on Sunday morning leaving the Del Norte Bart Station and may have a delayed arrival in San Rafael due to the detour:\n\n*647am* trip will not serve Tewskbury, and will travel to the San Rafael Transit Center via the Bay Bridge through San Francisco.\n\n*747am *trip will do the same as above \"unless\" the bridge has reopened by that time. If that is the case, the route will proceed as usual to the San Rafael Transit Center. \n\n580 eastbound trips will not be affected. \n\n-----\n\nFor trip-planning assistance, call 511/415-455-2000 (say \"Golden Gate Transit,\" or \"Golden Gate Ferry\" then \"operator\" to bypass recorded messages)/TDD 711. Customer service representatives are available weekdays from 7:00 am to 6:00 pm. \n\nBookmark and Share [ https://content.govdelivery.com/accounts/CAGOLDEN/bulletins/432b85f?reqfrom=share ]\n\n \n\n________________________________________________________________________\n\n\nUpdate your subscriptions, modify your password or e-mail address, or stop subscriptions at any time on your Subscriber Preferences Page [ https://public.govdelivery.com/accounts/CAGOLDEN/subscriber/edit?preferences=true#tab1 ]. You will need to use your email address to log in. If you have questions or problems with the subscription service, please visit subscriberhelp.govdelivery.com [ https://subscriberhelp.govdelivery.com/ ]. All other inquiries may be directed to contact@goldengate.org.\n\nThis service is provided to you at no charge by Golden Gate Bridge, Highway and Transportation District [ http://www.goldengate.org/ ].\n\n________________________________________________________________________\n\n\nThis email was sent to 00000000000000000000000000000000@inbound.postmarkapp.com using Granicus Communications Cloud on behalf of: Golden Gate Bridge District · 1011 Andersen Drive · Rafael, CA 94901 · 415-455-2000 · www.goldengate.org [ http://www.goldengate.org ]  Granicus Communications logo [ https://granicus.com/solution/digital-communication-engagement/ ]\n",
+	"HtmlBody": "<p>HTML body omitted from the fixture: the reader uses TextBody.</p>",
+	"StrippedTextReply": "",
+	"Tag": "",
+	"Headers": [
+		{
+			"Name": "Return-Path",
+			"Value": "<bounce-fixture@bounce.service.govdelivery.com>"
+		},
+		{
+			"Name": "Received",
+			"Value": "by p-pm-inboundg03a-aws-useast1a.inbound.postmarkapp.com (Postfix, from userid 996)\tid EDB91438039; Fri, 13 Nov 2026 18:09:30 +0000 (UTC)"
+		},
+		{
+			"Name": "X-Spam-Checker-Version",
+			"Value": "SpamAssassin 3.4.0 (2014-02-07) on\tp-pm-inboundg03a-aws-useast1a"
+		},
+		{
+			"Name": "X-Spam-Status",
+			"Value": "No"
+		},
+		{
+			"Name": "X-Spam-Score",
+			"Value": "-7.6"
+		},
+		{
+			"Name": "X-Spam-Tests",
+			"Value": "DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HTML_MESSAGE,\tRCVD_IN_DNSWL_NONE,RCVD_IN_ZEN_BLOCKED_OPENDNS,SPF_HELO_NONE,SPF_PASS,\tURIBL_DBL_BLOCKED_OPENDNS,URIBL_ZEN_BLOCKED_OPENDNS,USER_IN_DEF_DKIM_WL"
+		},
+		{
+			"Name": "Received-SPF",
+			"Value": "pass (bounce.service.govdelivery.com: 66.179.16.34 is authorized to use 'bounce-fixture@bounce.service.govdelivery.com' in 'mfrom' identity (mechanism 'ip4:66.179.16.0/22' matched)) receiver=p-pm-inboundg03a-aws-useast1a; identity=mailfrom; envelope-from=\"bounce-fixture@bounce.service.govdelivery.com\"; helo=mailer016034.govd1.service.govdelivery.com; client-ip=66.179.16.34"
+		},
+		{
+			"Name": "Received",
+			"Value": "from mailer016034.govd1.service.govdelivery.com (mailer016034.govd1.service.govdelivery.com [66.179.16.34])\t(using TLSv1.2 with cipher AES128-SHA256 (128/128 bits))\t(No client certificate requested)\tby p-pm-inboundg03a-aws-useast1a.inbound.postmarkapp.com (Postfix) with ESMTPS id A40D7453CA2\tfor <00000000000000000000000000000000@inbound.postmarkapp.com>; Fri, 13 Nov 2026 18:09:30 +0000 (UTC)"
+		},
+		{
+			"Name": "DKIM-Signature",
+			"Value": "v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;\ts=6t7o5wv7kwzuu3qbjz3epqmzq3fxxmie; d=service.govdelivery.com;\tt=1794593370;\th=Content-Type:MIME-Version:From:To:List-Unsubscribe-Post:List-Unsubscribe:Subject:Message-ID:Date;\tbh=YR4rLSn1KQMhidrBKID++LxSY2kbS7gNg3zcbvKx9n0=;\tb=REDACTED"
+		},
+		{
+			"Name": "DKIM-Signature",
+			"Value": "v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;\ts=ze3gktvrunh2xnq6mcdo2laexpdini6q; d=messagingfabric.com;\tt=1794593370;\th=Content-Type:MIME-Version:From:To:List-Unsubscribe-Post:List-Unsubscribe:Subject:Message-ID:Date:Feedback-ID;\tbh=YR4rLSn1KQMhidrBKID++LxSY2kbS7gNg3zcbvKx9n0=;\tb=REDACTED"
+		},
+		{
+			"Name": "MIME-Version",
+			"Value": "1.0"
+		},
+		{
+			"Name": "X-Accountcode",
+			"Value": "CAGOLDEN"
+		},
+		{
+			"Name": "Errors-To",
+			"Value": "messages@service.govdelivery.com"
+		},
+		{
+			"Name": "Message-ID",
+			"Value": "<fixture-transit-route-580@us-west-2.messagingfabric.com>"
+		}
+	],
+	"Attachments": []
+}

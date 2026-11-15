@@ -1,0 +1,91 @@
+{
+	"From": "goldengate@service.govdelivery.com",
+	"FromName": "GGBHTD",
+	"MessageStream": "inbound",
+	"FromFull": {
+		"Email": "goldengate@service.govdelivery.com",
+		"Name": "GGBHTD",
+		"MailboxHash": ""
+	},
+	"To": "00000000000000000000000000000000@inbound.postmarkapp.com",
+	"ToFull": [
+		{
+			"Email": "00000000000000000000000000000000@inbound.postmarkapp.com",
+			"Name": "",
+			"MailboxHash": ""
+		}
+	],
+	"Cc": "",
+	"CcFull": [],
+	"Bcc": "",
+	"BccFull": [],
+	"OriginalRecipient": "00000000000000000000000000000000@inbound.postmarkapp.com",
+	"Subject": "ALERT GGBRIDGE 11/16-11/20 OVERNIGHT EAST SIDEWALK CYCLIST DETOUR",
+	"MessageID": "00000000-0000-4000-8000-000000000003",
+	"ReplyTo": "",
+	"MailboxHash": "",
+	"Date": "Thu, 5 Nov 2026 20:03:14 +0000",
+	"TextBody": "Due to seismic retrofit construction, from Monday, 11/16, through Friday, 11/20, cyclists should use west sidewalk during detour. \n\nMonday through Thursday, 8pm - 5am, and Friday, 9pm - 7am. Thank you for your patience!\n\n________________________________________________________________________\n\n\nFor trip-planning assistance, call 511/415-455-2000/TDD 711. Customer service representatives are available weekdays from 7:00 am to 6:00 pm. \n\n \n\n \n\n \n\n \n\nBookmark and Share [ https://content.govdelivery.com/accounts/CAGOLDEN/bulletins/431d083?reqfrom=share ]\n\n \n\n________________________________________________________________________\n\n\nUpdate your subscriptions, modify your password or e-mail address, or stop subscriptions at any time on your Subscriber Preferences Page [ https://public.govdelivery.com/accounts/CAGOLDEN/subscriber/edit?preferences=true#tab1 ]. You will need to use your email address to log in. If you have questions or problems with the subscription service, please visit subscriberhelp.govdelivery.com [ https://subscriberhelp.govdelivery.com/ ]. All other inquiries may be directed to contact@goldengate.org.\n\nThis service is provided to you at no charge by Golden Gate Bridge, Highway and Transportation District [ http://www.goldengate.org/ ].\n\n________________________________________________________________________\n\n\nThis email was sent to 00000000000000000000000000000000@inbound.postmarkapp.com using Granicus Communications Cloud on behalf of: Golden Gate Bridge District · 1011 Andersen Drive · Rafael, CA 94901 · 415-455-2000 · www.goldengate.org [ http://www.goldengate.org ]  Granicus Communications logo [ https://granicus.com/solution/digital-communication-engagement/ ]\n",
+	"HtmlBody": "<p>HTML body omitted from the fixture: the reader uses TextBody.</p>",
+	"StrippedTextReply": "",
+	"Tag": "",
+	"Headers": [
+		{
+			"Name": "Return-Path",
+			"Value": "<bounce-fixture@bounce.service.govdelivery.com>"
+		},
+		{
+			"Name": "Received",
+			"Value": "by p-pm-inboundg05c-aws-useast1c.inbound.postmarkapp.com (Postfix, from userid 996)\tid C884045D7E0; Thu,  5 Nov 2026 20:03:15 +0000 (UTC)"
+		},
+		{
+			"Name": "X-Spam-Checker-Version",
+			"Value": "SpamAssassin 3.4.0 (2014-02-07) on\tp-pm-inboundg05c-aws-useast1c"
+		},
+		{
+			"Name": "X-Spam-Status",
+			"Value": "No"
+		},
+		{
+			"Name": "X-Spam-Score",
+			"Value": "-7.1"
+		},
+		{
+			"Name": "X-Spam-Tests",
+			"Value": "DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HTML_MESSAGE,\tRCVD_IN_DNSWL_BLOCKED,RCVD_IN_ZEN_BLOCKED_OPENDNS,SPF_HELO_NONE,SPF_PASS,\tSUBJ_ALL_CAPS,URIBL_DBL_BLOCKED_OPENDNS,URIBL_ZEN_BLOCKED_OPENDNS,\tUSER_IN_DEF_DKIM_WL"
+		},
+		{
+			"Name": "Received-SPF",
+			"Value": "pass (bounce.service.govdelivery.com: 66.179.18.30 is authorized to use 'bounce-fixture@bounce.service.govdelivery.com' in 'mfrom' identity (mechanism 'ip4:66.179.16.0/22' matched)) receiver=p-pm-inboundg05c-aws-useast1c; identity=mailfrom; envelope-from=\"bounce-fixture@bounce.service.govdelivery.com\"; helo=mailer018030.govd1.service.govdelivery.com; client-ip=66.179.18.30"
+		},
+		{
+			"Name": "Received",
+			"Value": "from mailer018030.govd1.service.govdelivery.com (mailer018030.govd1.service.govdelivery.com [66.179.18.30])\t(using TLSv1.2 with cipher AES128-SHA256 (128/128 bits))\t(No client certificate requested)\tby p-pm-inboundg05c-aws-useast1c.inbound.postmarkapp.com (Postfix) with ESMTPS id 8BF2645D7E2\tfor <00000000000000000000000000000000@inbound.postmarkapp.com>; Thu,  5 Nov 2026 20:03:15 +0000 (UTC)"
+		},
+		{
+			"Name": "DKIM-Signature",
+			"Value": "v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;\ts=6t7o5wv7kwzuu3qbjz3epqmzq3fxxmie; d=service.govdelivery.com;\tt=1793908995;\th=Content-Type:MIME-Version:From:To:List-Unsubscribe-Post:List-Unsubscribe:Subject:Message-ID:Date;\tbh=iXOox9tGZ7rBohjzOaeYbklRCCpnRZ/i4MfTpARaTlw=;\tb=REDACTED"
+		},
+		{
+			"Name": "DKIM-Signature",
+			"Value": "v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;\ts=ze3gktvrunh2xnq6mcdo2laexpdini6q; d=messagingfabric.com;\tt=1793908995;\th=Content-Type:MIME-Version:From:To:List-Unsubscribe-Post:List-Unsubscribe:Subject:Message-ID:Date:Feedback-ID;\tbh=iXOox9tGZ7rBohjzOaeYbklRCCpnRZ/i4MfTpARaTlw=;\tb=REDACTED"
+		},
+		{
+			"Name": "MIME-Version",
+			"Value": "1.0"
+		},
+		{
+			"Name": "X-Accountcode",
+			"Value": "CAGOLDEN"
+		},
+		{
+			"Name": "Errors-To",
+			"Value": "messages@service.govdelivery.com"
+		},
+		{
+			"Name": "Message-ID",
+			"Value": "<fixture-bridge-sidewalk-detour@us-west-2.messagingfabric.com>"
+		}
+	],
+	"Attachments": []
+}

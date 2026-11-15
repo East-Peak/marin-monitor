@@ -1,0 +1,95 @@
+{
+	"From": "goldengate@service.govdelivery.com",
+	"FromName": "GGBHTD",
+	"MessageStream": "inbound",
+	"FromFull": {
+		"Email": "goldengate@service.govdelivery.com",
+		"Name": "GGBHTD",
+		"MailboxHash": ""
+	},
+	"To": "00000000000000000000000000000000@inbound.postmarkapp.com",
+	"ToFull": [
+		{
+			"Email": "00000000000000000000000000000000@inbound.postmarkapp.com",
+			"Name": "",
+			"MailboxHash": ""
+		}
+	],
+	"Cc": "",
+	"CcFull": [],
+	"Bcc": "",
+	"BccFull": [],
+	"OriginalRecipient": "00000000000000000000000000000000@inbound.postmarkapp.com",
+	"Subject": "Welcome New User",
+	"MessageID": "00000000-0000-4000-8000-000000000001",
+	"ReplyTo": "",
+	"MailboxHash": "",
+	"Date": "Sat, 24 Oct 2026 14:25:36 +0000",
+	"TextBody": "Welcome,\n\nYou have successfully created subscriber preferences for Golden Gate Bridge District. You are now able to take advantage of the convenient email updates offered by Golden Gate Bridge District.\n\nPlease write down your access information for future use:\n\n\n  * Email address: 00000000000000000000000000000000@inbound.postmarkapp.com \n\n \n\n________________________________________________________________________\r\n\nUpdate your subscriptions, modify your password or e-mail address, or stop subscriptions at any time on your Subscriber Preferences Page [ https://public.govdelivery.com/accounts/CAGOLDEN/subscriber/edit?preferences=true#tab1 ]. You will need to use your e-mail address to log in. If you have questions or problems with the subscription service, please contact subscriberhelp.govdelivery.com [ https://subscriberhelp.govdelivery.com/ ]. All other inquiries may be directed to contact@goldengate.org.\n\nThis service is provided to you at no charge by the Golden Gate Bridge, Highway and Transportation District [ https://www.goldengate.org/ ].\n\n________________________________________________________________________\r\n\nThis email was sent to 00000000000000000000000000000000@inbound.postmarkapp.com using Granicus Communications Cloud on behalf of: Golden Gate Bridge District · 1011 Andersen Drive · Rafael, CA 94901 · 415-455-2000 · www.goldengate.org [ http://www.goldengate.org ]  Granicus Communications logo [ https://granicus.com/solution/digital-communication-engagement/ ]\n",
+	"HtmlBody": "<p>HTML body omitted from the fixture: the reader uses TextBody.</p>",
+	"StrippedTextReply": "",
+	"Tag": "",
+	"Headers": [
+		{
+			"Name": "Return-Path",
+			"Value": "<bounce-fixture@bounce.service.govdelivery.com>"
+		},
+		{
+			"Name": "Received",
+			"Value": "by p-pm-inboundg04a-aws-useast1a.inbound.postmarkapp.com (Postfix, from userid 996)\tid 03FCB404C3E; Sat, 24 Oct 2026 14:25:38 +0000 (UTC)"
+		},
+		{
+			"Name": "X-Spam-Checker-Version",
+			"Value": "SpamAssassin 3.4.0 (2014-02-07) on\tp-pm-inboundg04a-aws-useast1a"
+		},
+		{
+			"Name": "X-Spam-Status",
+			"Value": "No"
+		},
+		{
+			"Name": "X-Spam-Score",
+			"Value": "-7.9"
+		},
+		{
+			"Name": "X-Spam-Tests",
+			"Value": "DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HTML_MESSAGE,\tRCVD_IN_DNSWL_BLOCKED,RCVD_IN_ZEN_BLOCKED_OPENDNS,SPF_HELO_NONE,SPF_PASS,\tURIBL_DBL_BLOCKED_OPENDNS,URIBL_ZEN_BLOCKED_OPENDNS,USER_IN_DEF_DKIM_WL"
+		},
+		{
+			"Name": "Received-SPF",
+			"Value": "pass (bounce.service.govdelivery.com: 66.179.16.200 is authorized to use 'bounce-fixture@bounce.service.govdelivery.com' in 'mfrom' identity (mechanism 'ip4:66.179.16.0/22' matched)) receiver=p-pm-inboundg04a-aws-useast1a; identity=mailfrom; envelope-from=\"bounce-fixture@bounce.service.govdelivery.com\"; helo=mailer016200.govd2.service.govdelivery.com; client-ip=66.179.16.200"
+		},
+		{
+			"Name": "Received",
+			"Value": "from mailer016200.govd2.service.govdelivery.com (mailer016200.govd2.service.govdelivery.com [66.179.16.200])\t(using TLSv1.2 with cipher AES128-SHA256 (128/128 bits))\t(No client certificate requested)\tby p-pm-inboundg04a-aws-useast1a.inbound.postmarkapp.com (Postfix) with ESMTPS id B8185405C52\tfor <00000000000000000000000000000000@inbound.postmarkapp.com>; Sat, 24 Oct 2026 14:25:37 +0000 (UTC)"
+		},
+		{
+			"Name": "DKIM-Signature",
+			"Value": "v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;\ts=6t7o5wv7kwzuu3qbjz3epqmzq3fxxmie; d=service.govdelivery.com;\tt=1792851937;\th=Date:From:Message-ID:Subject:Mime-Version:Content-Type:To;\tbh=gO+6ZkweBr2w2B5WHjzO9CxyWVfjb7p/5ltI09Roxyk=;\tb=REDACTED"
+		},
+		{
+			"Name": "DKIM-Signature",
+			"Value": "v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;\ts=ze3gktvrunh2xnq6mcdo2laexpdini6q; d=messagingfabric.com;\tt=1792851937;\th=Date:From:Message-ID:Subject:Mime-Version:Content-Type:To:Feedback-ID;\tbh=gO+6ZkweBr2w2B5WHjzO9CxyWVfjb7p/5ltI09Roxyk=;\tb=REDACTED"
+		},
+		{
+			"Name": "Message-ID",
+			"Value": "<fixture-account-welcome@us-west-2.messagingfabric.com>"
+		},
+		{
+			"Name": "Mime-Version",
+			"Value": "1.0"
+		},
+		{
+			"Name": "X-AccountCode",
+			"Value": "CAGOLDEN"
+		},
+		{
+			"Name": "message-type",
+			"Value": "welcome_new_subscriber"
+		},
+		{
+			"Name": "Errors-To",
+			"Value": "messages@service.govdelivery.com"
+		}
+	],
+	"Attachments": []
+}
