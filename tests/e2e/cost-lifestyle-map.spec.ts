@@ -10,6 +10,20 @@ import { stub } from './fixtures/v2-height';
  */
 test.skip(({ baseURL }) => baseURL?.startsWith('https://') ?? false, 'seeded');
 
+/**
+ * The card and the page read nothing live. Left to reach the map's tile and style hosts, the open
+ * data sites and every /api read the stubs below don't name, a loaded machine kept the page busy
+ * past its waits (a navigation that never committed). Answer them at once; registered
+ * first, so the specs' own stubs and the lifestyle read still win. Phone runs are left as they are.
+ */
+test.beforeEach(async ({ page }, info) => {
+	if (info.project.name !== 'lifestyle') return;
+	await page.route(
+		(url) => url.pathname.startsWith('/api/') || url.hostname !== 'localhost',
+		(route) => route.fulfill({ status: 503, body: 'stubbed' })
+	);
+});
+
 const tiles = (scope: Page | Locator) => scope.locator('a[data-tile]');
 
 async function openCard(page: Page, town = 'larkspur') {
@@ -22,6 +36,14 @@ async function openCard(page: Page, town = 'larkspur') {
 	await c.locator(`[data-town="${town}"]`).click();
 	await expect(c).toHaveAttribute('data-household', town);
 	return c;
+}
+
+/** Back to the dashboard: the entry is current, hydrated, and the card has its households. */
+async function backToDashboard(page: Page) {
+	await page.goBack();
+	await expect(page).toHaveURL(/\/\?probe$/);
+	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+	await expect(page.locator('#cost [data-card="lifestyle"] [data-town]')).toHaveCount(3);
 }
 
 /** On screen, unobscured, focused and marked. */
@@ -144,11 +166,11 @@ for (const width of [1440, 1024]) {
 			await tiles(c).first().click();
 			await expect(page).toHaveURL(/\/cost\/larkspur#section-housing$/);
 			await landed(page, 'housing');
-			await page.goBack();
-			await expect(page.locator('[data-layout="v2"]')).toBeVisible();
+			await backToDashboard(page);
 			await page.goForward();
+			await expect(page).toHaveURL(/\/cost\/larkspur#section-housing$/);
 			await landed(page, 'housing');
-			await page.goBack();
+			await backToDashboard(page);
 			const again = page.locator('#cost [data-card="lifestyle"]');
 			await again.locator('[data-town="larkspur"]').click();
 			await tiles(again).nth(1).focus();
