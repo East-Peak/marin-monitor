@@ -238,6 +238,9 @@ test.describe('phone 390×844', () => {
 		await page.setViewportSize({ width: 390, height: 480 });
 		await openV2(page);
 		for (const t of await page.locator('[data-section-toggle]').all()) await t.click(); // all open: a long page
+		// Data landing grows the sections above the focused control after Tab scrolled to it:
+		// walk the page only once every placeholder is replaced and the layout is final.
+		await expect(page.getByText('Loading…')).toHaveCount(0, { timeout: 30_000 });
 		await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
 		await page.evaluate(() => window.scrollTo(0, 0));
 		const hidden: string[] = [];
