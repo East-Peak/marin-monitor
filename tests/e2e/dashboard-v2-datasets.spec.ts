@@ -44,6 +44,13 @@ test('a tab-visible event inside a minute does not refetch; the 5-minute refresh
 }) => {
 	const installedAt = Date.now();
 	await page.clock.install({ time: installedAt });
+	// Everything else the cycle reads (NPS, airport, transit, the browser's own NWS/USGS reads ...)
+	// would reach the live upstreams, and a slow one holds the cycle open to its 15 s deadline
+	// under load: answer them at once. Registered first, so the essentials' route below wins.
+	await page.route(
+		(url) => url.pathname.startsWith('/api/') || url.hostname !== 'localhost',
+		(route) => route.fulfill({ status: 503, body: 'stubbed' })
+	);
 	// The browser's own HTTP cache would add stale-while-revalidate background requests
 	// (/api/data/* sends s-maxage + stale-while-revalidate, no max-age) that the app never
 	// made; serve the essentials uncacheable so the count is the app's own requests.
@@ -74,8 +81,9 @@ test('a tab-visible event inside a minute does not refetch; the 5-minute refresh
 	await page.clock.fastForward(5 * 60_000 - sinceInstall - 5_000);
 	await page.waitForTimeout(1_000);
 	for (const path of ESSENTIAL) expect(count(seen, path), `${path} after focus`).toBe(1);
-	// ... then 5 s past the interval's.
-	await page.clock.fastForward(sinceInstall + 10_000);
+	// ... then one wake-check period (V2_WAKE_CHECK_MS): the jump re-armed the check from its own
+	// end, so the next one is due 30 s on, now past five minutes (never left to real time).
+	await page.clock.fastForward(30_000);
 	await expect
 		.poll(() => ESSENTIAL.every((p) => count(seen, p) === 2), { timeout: 15_000 })
 		.toBe(true);
