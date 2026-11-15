@@ -42,7 +42,7 @@ const UNREADABLE = {
 
 export async function stub(page: Page) {
 	await page.route(
-		/\/api\/(data|nps|transit|airport-status|traffic|health|feeds|article|geocode)\b|earthquake\.usgs\.gov|api\.weather\.gov\/(points|gridpoints|stations)|tidesandcurrents/,
+		/\/api\/(data|nps|transit|airport-status|traffic|health|feeds|article|geocode)\b|earthquake\.usgs\.gov|api\.weather\.gov\/stations|tidesandcurrents/,
 		(r) => r.fulfill({ status: 503, body: 'stubbed' })
 	);
 	await page.route(/api\.weather\.gov\/alerts\/active/, (r) =>
@@ -68,6 +68,23 @@ export async function stub(page: Page) {
 /** Outdoors' tallest honest state: a wave reading with its chart, an air reading, a long fire. */
 async function stubOutdoorsFixed(page: Page) {
 	const hours = Array.from({ length: 72 }, (_, i) => i);
+	await page.route(/api\.weather\.gov\/points\//, (r) =>
+		json(r, { properties: { gridId: 'MTR', gridX: 83, gridY: 115 } })
+	);
+	await page.route(/api\.weather\.gov\/gridpoints\/MTR\/83,115\/forecast\/hourly/, (r) =>
+		json(r, {
+			properties: {
+				updateTime: iso(T0 - H),
+				periods: hours.map((i) => ({
+					startTime: iso(T0 + i * H),
+					endTime: iso(T0 + (i + 1) * H),
+					temperature: 55 + Math.round(12 * Math.sin((i / 24) * 2 * Math.PI)),
+					temperatureUnit: 'F',
+					probabilityOfPrecipitation: { value: i % 7 === 0 ? 20 : 0 }
+				}))
+			}
+		})
+	);
 	await page.route(/marine-api\.open-meteo\.com/, (r) =>
 		json(r, {
 			hourly: {
@@ -126,8 +143,13 @@ export async function phoneHeight(
 	mode: HeightMode,
 	{
 		routes = async () => {},
-		populated = async () => {}
-	}: { routes?: (page: Page) => Promise<void>; populated?: (page: Page) => Promise<void> } = {}
+		populated = async () => {},
+		documentLimit = 5498
+	}: {
+		routes?: (page: Page) => Promise<void>;
+		populated?: (page: Page) => Promise<void>;
+		documentLimit?: number;
+	} = {}
 ) {
 	await page.clock.install({ time: T0 });
 	if (mode === 'every section saved open') {
@@ -256,6 +278,13 @@ export async function phoneHeight(
 			timeout: 15_000
 		});
 		await expect(ga.locator('[data-line="OAK"]')).toContainText('Ground delay');
+		// The Outdoors forecast chart is drawn: its limit below includes it.
+		await expect(
+			page
+				.locator('[data-card="forecast"]')
+				.getByRole('slider', { name: /^Temperature/ })
+				.locator('[data-col-time]')
+		).toHaveCount(29);
 		// Every section really is open before the document is measured (Codex B2 #3); Strava
 		// renders only when enabled, so every toggle on the page is checked too.
 		for (const id of ['getting-around', 'outdoors', 'news', 'cost', 'events'])
@@ -265,7 +294,9 @@ export async function phoneHeight(
 			);
 		await expect(page.locator('[data-section-toggle][aria-expanded="false"]')).toHaveCount(0);
 		const doc = await page.evaluate(() => document.documentElement.scrollHeight);
-		console.log(`[${mode}] document ${doc} px (≤ 5,498, Getting Around populated)`);
-		expect(doc).toBeLessThanOrEqual(5498);
+		console.log(
+			`[${mode}] document ${doc} px (≤ ${documentLimit.toLocaleString('en-US')}, Getting Around populated)`
+		);
+		expect(doc).toBeLessThanOrEqual(documentLimit);
 	}
 }

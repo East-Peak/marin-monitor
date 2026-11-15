@@ -376,6 +376,8 @@ test.describe('phone 390×844, Cost populated', () => {
 		page
 	}) => {
 		await phoneHeight(page, 'every section saved open', {
+			// 5,950 includes the drawn Outdoors forecast chart (measured 5,904); owner ruling 2026-11-15.
+			documentLimit: 5950,
 			routes: async (p) => {
 				await p.route('**/api/data/lifestyle', (r) => r.continue());
 			},
