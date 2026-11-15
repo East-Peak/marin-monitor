@@ -251,6 +251,8 @@
 			fixIt: $fixIt,
 			police: $civicReads.police,
 			nps: $civicReads.nps,
+			emailIntake: $emailIntake,
+			emailLastReceivedAt: $healthReport?.information?.emailIntake.lastEmailReceivedAt,
 			outcomes: $outcomes,
 			now: $clock
 		})

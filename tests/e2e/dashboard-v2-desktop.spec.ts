@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { stubCams } from './fixtures/cams';
 import { stubBrief, stubCivic, stubCost, stubRest } from './fixtures/v2-populated';
+import { newsEmailsRead } from './fixtures/gg-news-emails';
 
 /**
  * Desktop frame (plan-dashboard-desktop Goal 1): full width to 2,240 px, sections always
@@ -350,3 +351,91 @@ test.describe('desktop 1440: the advisory reader (MAPX1)', () => {
 		if (dir) await page.screenshot({ path: `${dir}/mapx1-top-1440.png` });
 	});
 });
+
+/**
+ * Golden Gate's newsletters and meeting notices join the wire (email intake v1): one row each in
+ * date order among the feeds' rows, the subject linking its bulletin, the header still counting
+ * feeds alone, the footer saying when the last email came. The phone shows the same rows.
+ */
+for (const [name, viewport] of [
+	['desktop 1440', { width: 1440, height: 1000 }],
+	['phone 390', { width: 390, height: 844 }]
+] as const) {
+	test.describe(`${name}: Golden Gate's news emails in the wire`, () => {
+		test.use({ viewport, ...(viewport.width < 500 ? { hasTouch: true, isMobile: true } : {}) });
+
+		test('each email is a wire row linking its bulletin, dated and town-tagged; the footer says when the last arrived', async ({
+			page
+		}) => {
+			const now = Date.now();
+			const reply = (body: unknown) => ({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify(body)
+			});
+			const emails = await newsEmailsRead(now);
+			await stubRest(page);
+			await stubCivic(page);
+			await stubCams(page);
+			await page.route('**/api/data/email-intake', (r) => r.fulfill(reply(emails)));
+			await page.route('**/api/health', (r) =>
+				r.fulfill(
+					reply({
+						status: 'healthy',
+						sources: [
+							{
+								name: 'News snapshot',
+								status: 'ok',
+								reason: null,
+								maxAgeDays: 1,
+								observedAt: new Date(now).toISOString()
+							}
+						],
+						subsources: [],
+						information: {
+							emailIntake: { lastEmailReceivedAt: new Date(now - 24 * 60 * 60_000).toISOString() }
+						}
+					})
+				)
+			);
+			await page.goto('/?layout=v2');
+			await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+			if (viewport.width < 500) await page.locator('[data-section-toggle="news"]').click();
+
+			const wire = page.locator('#news [data-card="wire"]');
+			const rows = wire.locator('[data-wire-row]');
+			// Twelve feed rows, then the two emails (older than all of them), the newest first.
+			await expect(rows).toHaveCount(14);
+			const meeting = rows.nth(12);
+			const newsletter = rows.nth(13);
+			await expect(meeting.locator('a')).toHaveText(
+				/^Join our Nov\. 5 Public Meeting on the Larkspur/
+			);
+			await expect(meeting.locator('a')).toHaveAttribute(
+				'href',
+				/^https:\/\/content\.govdelivery\.com\/accounts\/CAGOLDEN\/bulletins\/[0-9a-f]+$/
+			);
+			await expect(meeting.locator('.meta')).toHaveText(
+				/^Golden Gate District · email · [A-Z][a-z]{2} \d{1,2} · Larkspur$/
+			);
+			await expect(newsletter.locator('a')).toHaveText(
+				'Golden Gate Transit October 2026 Newsletter'
+			);
+			await expect(newsletter.locator('.meta')).toHaveText(
+				/^Golden Gate District · email · [A-Z][a-z]{2} \d{1,2} · County-wide$/
+			);
+			// The same row component and styling as every other wire row; nothing else of the email.
+			await expect(wire.locator('[data-wire-row]')).toHaveCount(14);
+			await expect(wire).not.toContainText('Dear Community Member');
+			// Emails are not feeds: the header counts the snapshot's feeds alone.
+			await expect(page.locator('#news [data-section-meta]')).toHaveText(/^\d+ of \d+ feeds OK$/);
+			await expect(wire.locator('[data-card-source]')).toContainText(
+				/Golden Gate emails · last received [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M/
+			);
+			const overflow = await page.evaluate(
+				() => document.documentElement.scrollWidth - window.innerWidth
+			);
+			expect(overflow).toBeLessThanOrEqual(1);
+		});
+	});
+}

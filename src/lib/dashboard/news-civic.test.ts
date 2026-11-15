@@ -237,3 +237,137 @@ describe('News & Civic (Goal 4)', () => {
 		);
 	});
 });
+
+describe("Golden Gate's news emails in the wire (email intake v1, Option A)", () => {
+	const link = (id: string) => `https://content.govdelivery.com/accounts/CAGOLDEN/bulletins/${id}`;
+	const mail = (over: Record<string, unknown> = {}) => ({
+		v: 1 as const,
+		key: 'a'.repeat(32),
+		sender: 'goldengate@service.govdelivery.com',
+		rule: 'gg-newsletter',
+		destination: 'news' as const,
+		subject: 'Golden Gate Transit October 2026 Newsletter',
+		sentAt: new Date(NOW - 2 * D).toISOString(),
+		receivedAt: new Date(NOW - 2 * D).toISOString(),
+		description: null,
+		permalink: link('4309f1a'),
+		topics: [],
+		...over
+	});
+	const read = (...items: ReturnType<typeof mail>[]) => ({
+		checkedAt: new Date(NOW).toISOString(),
+		items
+	});
+	const rowsOf = (over: Partial<Parameters<typeof newsCivicView>[0]>) => {
+		const out = newsCivicView(input(over));
+		return out.wire.kind === 'value' ? out.wire.value : [];
+	};
+	const GG = 'Golden Gate District · email';
+
+	it('is one wire row: the subject, its bulletin, the wire’s own age, no town named means County-wide', () => {
+		const row = rowsOf({ emailIntake: read(mail()) }).find((r) => r.source === GG)!;
+		expect(row).toMatchObject({
+			id: `email:${'a'.repeat(32)}`,
+			title: 'Golden Gate Transit October 2026 Newsletter',
+			link: link('4309f1a'),
+			age: 'Oct 13',
+			scope: 'County-wide',
+			publishedAt: NOW - 2 * D,
+			retained: null
+		});
+	});
+
+	it('names the town the headline names, by the wire’s own tagger', () => {
+		const row = rowsOf({
+			emailIntake: read(
+				mail({
+					key: 'b'.repeat(32),
+					rule: 'gg-public-meeting',
+					subject: 'Join our Nov. 5 public meeting on the Larkspur Ferry Service Expansion',
+					sentAt: new Date(NOW - 5 * H).toISOString()
+				})
+			)
+		}).find((r) => r.source === GG)!;
+		expect([row.age, row.scope]).toEqual(['5 h ago', 'Larkspur']);
+	});
+
+	it('collapses a resend’s markers out of the headline', () => {
+		const titles = rowsOf({
+			emailIntake: read(
+				mail({ subject: 'Reminder! Join our Nov. 5 public meeting' }),
+				mail({
+					key: 'c'.repeat(32),
+					subject: 'REMINDER! [Updated 1:00PM] Join us',
+					permalink: link('4309f1b'),
+					sentAt: new Date(NOW - 2 * D - H).toISOString()
+				})
+			)
+		})
+			.filter((r) => r.source === GG)
+			.map((r) => r.title);
+		expect(titles).toEqual(['Join our Nov. 5 public meeting', 'Join us']);
+	});
+
+	it('merges with the feed rows in date order, none displaced', () => {
+		const rows = rowsOf({
+			emailIntake: read(mail({ sentAt: new Date(NOW - 6.5 * H).toISOString() }))
+		});
+		expect(rows).toHaveLength(WIRE_MAX + 1);
+		expect(rows.map((r) => r.publishedAt)).toEqual(
+			[...rows.map((r) => r.publishedAt)].sort((a, b) => b - a)
+		);
+		const at = rows.findIndex((r) => r.source === GG);
+		expect(rows[at - 1].title).toBe('Distinct headline 6'); // 6 h ago, the wire's first
+		expect(rows[at + 1].title).toBe('Distinct headline 7');
+	});
+
+	it('an email older than every feed row still shows, last', () => {
+		const rows = rowsOf({
+			emailIntake: read(mail({ sentAt: new Date(NOW - 12 * D).toISOString() }))
+		});
+		expect(rows.at(-1)!.source).toBe(GG);
+	});
+
+	it('shows for 14 days after it was sent', () => {
+		const sent = (days: number) =>
+			rowsOf({ emailIntake: read(mail({ sentAt: new Date(NOW - days * D).toISOString() })) }).some(
+				(r) => r.source === GG
+			);
+		expect([sent(13.9), sent(14.1)]).toEqual([true, false]);
+	});
+
+	it('shows only news, and only with a bulletin to link', () => {
+		const rows = rowsOf({
+			emailIntake: read(
+				mail({ key: 'd'.repeat(32), destination: 'transit', subject: 'Rider Alert Route 580' }),
+				mail({ key: 'e'.repeat(32), subject: 'No bulletin', permalink: null })
+			)
+		});
+		expect(rows.filter((r) => r.source === GG)).toEqual([]);
+	});
+
+	it('is not a feed: the header still counts the snapshot’s feeds', () => {
+		const out = newsCivicView(input({ emailIntake: read(mail()) }));
+		expect(out.feeds).toEqual({ ok: 1, total: 2 });
+		resetStories();
+		const without = newsCivicView(input());
+		resetStories();
+		const empty = newsCivicView(input({ emailIntake: read() }));
+		expect(empty.wire).toEqual(without.wire);
+	});
+
+	it('a failed or unread email read adds no rows', () => {
+		expect(rowsOf({ emailIntake: null })).toHaveLength(WIRE_MAX);
+		expect(rowsOf({})).toHaveLength(WIRE_MAX);
+	});
+
+	it('the footer says when the last email arrived, and says nothing if none ever did', () => {
+		const at = '2026-10-14T17:09:40.000Z';
+		expect(newsCivicView(input({ emailLastReceivedAt: at })).emailNote).toBe(
+			'Golden Gate emails · last received Oct 14, 10:09 AM'
+		);
+		expect(newsCivicView(input({ emailLastReceivedAt: null })).emailNote).toBeNull();
+		expect(newsCivicView(input()).emailNote).toBeNull();
+		expect(newsCivicView(input({ emailLastReceivedAt: 'soon' })).emailNote).toBeNull();
+	});
+});

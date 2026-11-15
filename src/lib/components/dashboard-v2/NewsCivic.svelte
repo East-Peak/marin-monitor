@@ -49,7 +49,11 @@
 		{:else}
 			<p class="empty" data-text-role="body">{notShown(view.wire)}</p>
 		{/if}
-		<CardSource lines={[{ measured: view.wire }]} {now} />
+		<CardSource
+			lines={[{ measured: view.wire }]}
+			notes={view.emailNote ? [view.emailNote] : []}
+			{now}
+		/>
 	</article>
 
 	<div class="pair">

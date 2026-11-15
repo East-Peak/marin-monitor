@@ -214,6 +214,22 @@ describe('readEmailIntake', () => {
 		]);
 	});
 
+	it('a news item reaches the client as its subject and bulletin link alone', async () => {
+		vi.setSystemTime(new Date('2026-11-04T12:00:00.000Z'));
+		await ingest('public-meeting-reminder');
+		await ingest('transit-route-580', { Date: 'Tue, 3 Nov 2026 12:00:00 +0000' });
+		const items = (await read()).items;
+		const news = items.find((i) => i.destination === 'news')!;
+		expect(news.permalink).toMatch(
+			/^https:\/\/content\.govdelivery\.com\/accounts\/CAGOLDEN\/bulletins\//
+		);
+		expect([news.description, news.topics]).toEqual([null, []]);
+		// An alert keeps its first paragraph and topic: Transit and Roads show them.
+		const alert = items.find((i) => i.destination === 'transit')!;
+		expect(alert.description).not.toBeNull();
+		expect(alert.topics).not.toEqual([]);
+	});
+
 	it('an item past 14 days leaves the read', async () => {
 		vi.setSystemTime(new Date('2026-11-06T00:00:00.000Z'));
 		await ingest('bridge-marathon'); // sent Oct 28

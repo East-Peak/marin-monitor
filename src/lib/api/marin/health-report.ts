@@ -13,6 +13,8 @@ export interface HealthReportJson {
 	status: 'healthy' | 'degraded';
 	sources: HealthSourceJson[];
 	subsources: HealthSubsourceJson[];
+	/** Facts that are not health (email intake v1): never a source, never in `status`. */
+	information?: { emailIntake: { lastEmailReceivedAt: string } };
 }
 
 const STATES = new Set(['ok', 'stale', 'unavailable', 'reference', 'unknown']);
@@ -51,7 +53,19 @@ export function parseHealthReport(json: unknown): HealthReportJson | null {
 	const { sources, subsources } = json;
 	if (!Array.isArray(sources) || sources.length === 0 || !sources.every(isSource)) return null;
 	if (!Array.isArray(subsources) || !subsources.every(isSubsource)) return null;
-	return { status: json.status, sources, subsources };
+	const received =
+		isRec(json.information) && isRec(json.information.emailIntake)
+			? json.information.emailIntake.lastEmailReceivedAt
+			: null;
+	return {
+		status: json.status,
+		sources,
+		subsources,
+		// Only a readable time is kept; anything else is "nothing to say", never a failed report.
+		...(typeof received === 'string' && time(received)
+			? { information: { emailIntake: { lastEmailReceivedAt: received } } }
+			: {})
+	};
 }
 
 const EMPTY: HealthReportJson = { status: 'degraded', sources: [], subsources: [] };

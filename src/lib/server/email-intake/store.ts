@@ -119,6 +119,10 @@ async function mapLimited<T, R>(items: T[], limit: number, fn: (t: T) => Promise
 	return out;
 }
 
+/** A news row is its subject and bulletin link: nothing else of the email leaves the server. */
+const forClient = (item: EmailItem): EmailItem =>
+	item.destination === 'news' ? { ...item, description: null, topics: [] } : item;
+
 /**
  * The public read: the date prefixes the window can touch (today back 14 days, plus tomorrow for
  * clock skew), every item read and validated; held and out-of-window items left out, revisions
@@ -147,7 +151,7 @@ export async function readEmailIntake(deps: {
 		checkedAt: new Date(now).toISOString(),
 		items: collapseRevisions(
 			items.filter((i) => i.destination !== 'held' && i.permalink !== null && withinWindow(i, now))
-		)
+		).map(forClient)
 	};
 }
 

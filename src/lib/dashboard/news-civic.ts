@@ -4,6 +4,8 @@
  * its rows; each card keeps its own read, so a failed one is unavailable, never 0 or "none".
  */
 import { PARK_NAMES, type NpsAlert } from '$lib/api/marin/nps';
+import { detectTown } from '$lib/config/keywords';
+import { revisionBase, withinWindow, type EmailIntakeRead } from '$lib/email-intake';
 import { orderedReporting } from '$lib/news/reporting';
 import type { NewsSnapshotView } from '$lib/news/snapshot';
 import type { NewsItem } from '$lib/types';
@@ -17,7 +19,7 @@ import {
 	type ReportingRow
 } from './latest-reporting';
 import { emptyWording, mapMeasured, measuredFromEntry, type Measured } from './measured';
-import { PACIFIC, nextDate, pacificDate } from './pacific-time';
+import { PACIFIC, formatDayTime, nextDate, pacificDate } from './pacific-time';
 import {
 	SNAPSHOT_OBSERVATION_MAX_AGE_MS,
 	datasetEntry,
@@ -72,6 +74,8 @@ export interface NewsCivicView {
 	wire: Measured<readonly ReportingRow[]>;
 	/** "Nothing beyond the five above", only for a fresh, complete, empty wire (Codex desk4 #5). */
 	wireEmpty: string | null;
+	/** "Golden Gate emails · last received Nov 13, 10:09 AM": null when none has ever arrived. */
+	emailNote: string | null;
 	fixIt: Measured<FixItSummary>;
 	police: Measured<readonly CivicRow[]>;
 	parks: Measured<readonly CivicRow[]>;
@@ -165,6 +169,42 @@ function parkRows(alerts: readonly NpsAlert[]): CivicRow[] {
 	}));
 }
 
+const EMAIL_SOURCE = 'Golden Gate District · email';
+
+/**
+ * Golden Gate's newsletters and meeting notices, as wire rows: the subject as the headline,
+ * its bulletin as the link, shown for 14 days after the send. Not feeds, so never counted as one.
+ */
+function emailRows(read: EmailIntakeRead | null | undefined, now: number): ReportingRow[] {
+	return (read?.items ?? []).flatMap((item) => {
+		if (item.destination !== 'news' || item.permalink === null || !withinWindow(item, now))
+			return [];
+		const title = revisionBase(item.subject);
+		const sentAt = Date.parse(item.sentAt);
+		return [
+			{
+				id: `email:${item.key}`,
+				title,
+				link: item.permalink,
+				source: EMAIL_SOURCE,
+				age: formatItemAge(sentAt, now),
+				scope: detectTown(title)?.name ?? 'County-wide',
+				publishedAt: sentAt,
+				retained: null
+			}
+		];
+	});
+}
+
+/** The feed rows (already newest first) with the emails among them; ties keep the feed first. */
+const merged = (feed: readonly ReportingRow[], mail: readonly ReportingRow[]) =>
+	[...feed, ...mail].sort((a, b) => b.publishedAt - a.publishedAt);
+
+function emailNote(lastReceivedAt: string | null | undefined): string | null {
+	const at = lastReceivedAt ? Date.parse(lastReceivedAt) : NaN;
+	return Number.isFinite(at) ? `Golden Gate emails · last received ${formatDayTime(at)}` : null;
+}
+
 export function newsCivicView(input: {
 	view: NewsSnapshotView | null;
 	sources: readonly SourceStatusEntry[];
@@ -173,6 +213,10 @@ export function newsCivicView(input: {
 	fixIt: readonly NewsItem[] | null;
 	police: readonly NewsItem[] | null;
 	nps: readonly NpsAlert[] | null;
+	/** Golden Gate's emails (email intake v1): news-routed items join the wire. */
+	emailIntake?: EmailIntakeRead | null;
+	/** /api/health's information.emailIntake.lastEmailReceivedAt. */
+	emailLastReceivedAt?: string | null;
 	outcomes: Readonly<Record<string, DatasetFetch>>;
 	now: number;
 }): NewsCivicView {
@@ -187,8 +231,9 @@ export function newsCivicView(input: {
 				.slice(0, WIRE_MAX)
 				.map((e) => toReportingRow(e, now))
 		: [];
+	const shown = merged(rows, emailRows(input.emailIntake, now));
 	const feeds = reportingFeeds(usable, sources);
-	const wire = feedCoverage(viewM, feeds, rows as readonly ReportingRow[], now, REPORTING_FEEDS);
+	const wire = feedCoverage(viewM, feeds, shown as readonly ReportingRow[], now, REPORTING_FEEDS);
 
 	const fixItEntry = sources.find((e) => e.id === 'part:seeclickfix');
 	const fixItRead = measuredFromEntry(fixItEntry, input.fixIt, 'Fix It Marin (SeeClickFix)', now);
@@ -220,6 +265,7 @@ export function newsCivicView(input: {
 			now,
 			maxAgeMs: SNAPSHOT_OBSERVATION_MAX_AGE_MS
 		}),
+		emailNote: emailNote(input.emailLastReceivedAt),
 		fixIt,
 		police,
 		parks,

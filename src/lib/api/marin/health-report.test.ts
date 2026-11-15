@@ -17,6 +17,21 @@ describe('parseHealthReport (strict; Codex r1 #6)', () => {
 	it('accepts a well-formed report', () => {
 		expect(parseHealthReport(BODY)).toEqual(BODY);
 	});
+	it('keeps when Golden Gate’s last email arrived, as information', () => {
+		const body = {
+			...BODY,
+			information: { emailIntake: { lastEmailReceivedAt: '2026-11-13T18:09:40.000Z' } }
+		};
+		expect(parseHealthReport(body)?.information).toEqual(body.information);
+	});
+	it.each([
+		['never received', { emailIntake: { lastEmailReceivedAt: null } }],
+		['unreadable', { emailIntake: { lastEmailReceivedAt: null, readable: false } }],
+		['malformed', { emailIntake: { lastEmailReceivedAt: 'yesterday' } }],
+		['not an object', 'x']
+	])('says nothing of the email when it is %s, and the report still reads', (_l, information) => {
+		expect(parseHealthReport({ ...BODY, information })).toEqual(BODY);
+	});
 	it.each([
 		['an empty inventory', { ...BODY, sources: [] }],
 		['an unknown report status', { ...BODY, status: 'fine' }],

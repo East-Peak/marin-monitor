@@ -4,6 +4,12 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-11-15
+
+### Added — Golden Gate's newsletters and meeting notices in the News & Civic wire
+
+- **Each Golden Gate newsletter or public-meeting email is one row in "More from the wire"**, merged by date with the feeds' rows in the same styling: the subject (resend markers dropped) linking its public bulletin, "Golden Gate District · email · Nov 13 · Larkspur" (the town the headline names, else County-wide). Rows show for 14 days after sending; no end date is read from the text; an email with no bulletin link is not shown. The header still counts feeds only, and the card's footer adds "Golden Gate emails · last received Nov 13, 10:09 AM" (from `/api/health`'s email information) when any email has ever arrived. Phones show the same rows in the News section. Only the subject and bulletin link of these emails reach the browser.
+
 ## 2026-11-14
 
 ### Added — Golden Gate's alert emails in Getting Around (email intake v1)
