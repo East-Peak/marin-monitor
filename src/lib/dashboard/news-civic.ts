@@ -200,9 +200,16 @@ function emailRows(read: EmailIntakeRead | null | undefined, now: number): Repor
 const merged = (feed: readonly ReportingRow[], mail: readonly ReportingRow[]) =>
 	[...feed, ...mail].sort((a, b) => b.publishedAt - a.publishedAt);
 
-function emailNote(lastReceivedAt: string | null | undefined): string | null {
+/** A read that failed, or was served from a fallback, is never a fresh one. */
+const notFreshRead = (fetch: DatasetFetch | undefined) =>
+	fetch?.kind === 'failed' || fetch?.kind === 'fallback';
+
+/** A failed latest read says so, ahead of when the last email arrived; rows kept stay in their window. */
+function emailNote(lastReceivedAt: string | null | undefined, failed: boolean): string | null {
 	const at = lastReceivedAt ? Date.parse(lastReceivedAt) : NaN;
-	return Number.isFinite(at) ? `Golden Gate emails · last received ${formatDayTime(at)}` : null;
+	const received = Number.isFinite(at) ? `last received ${formatDayTime(at)}` : null;
+	const parts = [failed ? "couldn't load" : null, received].filter((p) => p !== null);
+	return parts.length ? ['Golden Gate emails', ...parts].join(' · ') : null;
 }
 
 export function newsCivicView(input: {
@@ -265,7 +272,7 @@ export function newsCivicView(input: {
 			now,
 			maxAgeMs: SNAPSHOT_OBSERVATION_MAX_AGE_MS
 		}),
-		emailNote: emailNote(input.emailLastReceivedAt),
+		emailNote: emailNote(input.emailLastReceivedAt, notFreshRead(input.outcomes['email-intake'])),
 		fixIt,
 		police,
 		parks,

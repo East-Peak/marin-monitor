@@ -263,6 +263,8 @@ describe("Golden Gate's news emails in the wire (email intake v1, Option A)", ()
 		return out.wire.kind === 'value' ? out.wire.value : [];
 	};
 	const GG = 'Golden Gate District · email';
+	const rowsOf2 = (out: ReturnType<typeof newsCivicView>) =>
+		out.wire.kind === 'value' ? out.wire.value : [];
 
 	it('is one wire row: the subject, its bulletin, the wire’s own age, no town named means County-wide', () => {
 		const row = rowsOf({ emailIntake: read(mail()) }).find((r) => r.source === GG)!;
@@ -369,5 +371,56 @@ describe("Golden Gate's news emails in the wire (email intake v1, Option A)", ()
 		expect(newsCivicView(input({ emailLastReceivedAt: null })).emailNote).toBeNull();
 		expect(newsCivicView(input()).emailNote).toBeNull();
 		expect(newsCivicView(input({ emailLastReceivedAt: 'soon' })).emailNote).toBeNull();
+	});
+
+	describe('when the latest email read failed', () => {
+		const at = '2026-10-14T17:09:40.000Z';
+		const failed = {
+			kind: 'failed' as const,
+			error: 'HTTP 503',
+			retained: true,
+			observedAt: null
+		};
+		const withEmail = (fetch: unknown, over: Record<string, unknown> = {}) =>
+			newsCivicView(input({ outcomes: { ...outcomes, 'email-intake': fetch as never }, ...over }));
+
+		it('the footer says it could not load, then when the last email arrived if known', () => {
+			expect(withEmail(failed, { emailLastReceivedAt: at }).emailNote).toBe(
+				"Golden Gate emails · couldn't load · last received Oct 14, 10:09 AM"
+			);
+			expect(withEmail(failed).emailNote).toBe("Golden Gate emails · couldn't load");
+			expect(withEmail(failed, { emailLastReceivedAt: 'soon' }).emailNote).toBe(
+				"Golden Gate emails · couldn't load"
+			);
+		});
+
+		it('a read served from a fallback is not a fresh one either', () => {
+			const fallback = {
+				kind: 'fallback' as const,
+				dataSource: 'static-fallback',
+				observedAt: null
+			};
+			expect(withEmail(fallback).emailNote).toBe("Golden Gate emails · couldn't load");
+		});
+
+		it('a good read, or one not yet answered, keeps the plain footer', () => {
+			expect(withEmail(live, { emailLastReceivedAt: at }).emailNote).toBe(
+				'Golden Gate emails · last received Oct 14, 10:09 AM'
+			);
+			expect(withEmail(undefined, { emailLastReceivedAt: at }).emailNote).toBe(
+				'Golden Gate emails · last received Oct 14, 10:09 AM'
+			);
+			expect(withEmail(undefined).emailNote).toBeNull();
+		});
+
+		it('rows kept from the earlier read stay only inside their 14-day window', () => {
+			const kept = (days: number) =>
+				rowsOf2(
+					withEmail(failed, {
+						emailIntake: read(mail({ sentAt: new Date(NOW - days * D).toISOString() }))
+					})
+				).some((r) => r.source === GG);
+			expect([kept(13.9), kept(14.1)]).toEqual([true, false]);
+		});
 	});
 });

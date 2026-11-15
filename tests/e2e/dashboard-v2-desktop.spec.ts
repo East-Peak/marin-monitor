@@ -437,5 +437,54 @@ for (const [name, viewport] of [
 			);
 			expect(overflow).toBeLessThanOrEqual(1);
 		});
+
+		test('an email read that fails says so in the footer, with when the last email arrived', async ({
+			page
+		}) => {
+			const now = Date.now();
+			const reply = (body: unknown) => ({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify(body)
+			});
+			await stubRest(page);
+			await stubCivic(page);
+			await stubCams(page);
+			await page.route('**/api/data/email-intake', (r) =>
+				r.fulfill({ status: 503, contentType: 'application/json', body: '{}' })
+			);
+			await page.route('**/api/health', (r) =>
+				r.fulfill(
+					reply({
+						status: 'healthy',
+						sources: [
+							{
+								name: 'News snapshot',
+								status: 'ok',
+								reason: null,
+								maxAgeDays: 1,
+								observedAt: new Date(now).toISOString()
+							}
+						],
+						subsources: [],
+						information: {
+							emailIntake: { lastEmailReceivedAt: new Date(now - 24 * 60 * 60_000).toISOString() }
+						}
+					})
+				)
+			);
+			await page.goto('/?layout=v2');
+			await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+			if (viewport.width < 500) await page.locator('[data-section-toggle="news"]').click();
+
+			const source = page.locator('#news [data-card="wire"] [data-card-source]');
+			await expect(source).toContainText(
+				/Golden Gate emails · couldn't load · last received [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M/
+			);
+			await expect(page.locator('#news [data-card="wire"] [data-wire-row]')).not.toHaveCount(0);
+			await expect(page.locator('#news [data-card="wire"]')).not.toContainText(
+				'Golden Gate District'
+			);
+		});
 	});
 }
