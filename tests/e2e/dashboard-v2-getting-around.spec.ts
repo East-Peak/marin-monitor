@@ -222,6 +222,8 @@ async function stub(
 		traffic?: Handler;
 		/** goldengate.org's list (GGALERT1); default: down, with the rest of /api/data. */
 		gg?: Handler;
+		/** Golden Gate's alert emails (email intake v1); default: an ok read with none in the window. */
+		email?: Handler;
 	} = {}
 ) {
 	await page.route(
@@ -242,6 +244,10 @@ async function stub(
 	await page.route('**/api/airport-status', over.airport ?? ((r) => json(r, AIRPORTS)));
 	await page.route('**/api/traffic/corridors', over.traffic ?? ((r) => json(r, TRAFFIC)));
 	if (over.gg) await page.route('**/api/data/gg-alerts', over.gg);
+	await page.route(
+		'**/api/data/email-intake',
+		over.email ?? ((r) => json(r, { checkedAt: iso(T0 - MIN), items: [] }))
+	);
 	await stubCams(page, { lastModified: T0 - 4 * MIN });
 }
 function requests(page: Page, path: string): string[] {
@@ -441,7 +447,8 @@ test.describe('desktop 1440×900', () => {
 		await stub(page, {
 			transit: { GG: down, GF: down, MA: down, SA: down, AF: down },
 			airport: down,
-			traffic: down
+			traffic: down,
+			email: down
 		});
 		await openV2(page);
 		const s = section(page);
@@ -727,6 +734,91 @@ for (const [name, viewport] of [
 			const more = transit(page).locator('[data-ga-foot] a');
 			await expect(more).toHaveText('1 more · All Golden Gate alerts (goldengate.org) ↗');
 			await expect(more).toHaveAttribute('href', 'https://www.goldengate.org/alerts/');
+		});
+	});
+}
+
+/** Two of 2026-11's alert emails, as the intake serves them, sent an hour and a day ago. */
+const emailItem = (over: Record<string, unknown>) => ({
+	v: 1,
+	sender: 'goldengate@service.govdelivery.com',
+	receivedAt: iso(T0 - 60 * MIN),
+	...over
+});
+const EMAILS = {
+	checkedAt: iso(T0 - MIN),
+	items: [
+		emailItem({
+			key: 'a'.repeat(32),
+			rule: 'gg-ferry-alert',
+			destination: 'transit',
+			subject: '[Updated 1:00PM] Rider Alert 11/4 Golden Gate Ferry Larkspur',
+			sentAt: iso(T0 - 60 * MIN),
+			description: 'Due to a mechanical issue, some trips will be delayed/disrupted today.',
+			permalink: 'https://content.govdelivery.com/accounts/CAGOLDEN/bulletins/431aeb0',
+			topics: ['Larkspur Ferry']
+		}),
+		emailItem({
+			key: 'b'.repeat(32),
+			rule: 'gg-bridge-alert',
+			destination: 'roads',
+			subject: 'REMINDER! ALERT GGBRIDGE 11/16-11/20 OVERNIGHT EAST SIDEWALK CYCLIST DETOUR',
+			sentAt: iso(T0 - 24 * 60 * MIN),
+			description:
+				'Due to seismic retrofit construction, cyclists should use west sidewalk during detour.',
+			permalink: 'https://content.govdelivery.com/accounts/CAGOLDEN/bulletins/432ba78',
+			topics: ['Golden Gate Bridge']
+		})
+	]
+};
+const EMAIL_META =
+	/^Golden Gate alert emails, last 14 days · email sent [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M$/;
+
+for (const [name, viewport] of [
+	['1440×900', { width: 1440, height: 900 }],
+	['390×844', { width: 390, height: 844 }]
+] as const) {
+	test.describe(`Golden Gate's alert emails (email intake v1) at ${name}`, () => {
+		test.use({ viewport });
+
+		test('a transit email leads transit, a bridge email leads roads; each dated by its send, its panel links the bulletin', async ({
+			page
+		}) => {
+			await stub(page, {
+				email: (r) => json(r, EMAILS),
+				gg: (r) => json(r, ggBlob(GG_PAGE))
+			});
+			await openV2(page, '#getting-around');
+			const s = section(page);
+			const ferry = s.locator('[data-ga="transit"] [data-row]').first();
+			await expect(body(ferry)).toHaveText(
+				'[Updated 1:00PM] Rider Alert 11/4 Golden Gate Ferry Larkspur',
+				{ timeout: 15_000 }
+			);
+			await expect(label(ferry)).toContainText('Golden Gate');
+			await expect(ferry.locator('[data-sr-chip]')).toHaveText(['Larkspur Ferry']);
+			await expect(meta(ferry)).toHaveText(EMAIL_META);
+			// goldengate.org's rows follow, still under their own check time.
+			await expect(meta(s.locator('[data-ga="transit"] [data-row]').nth(1))).toHaveText(
+				/^goldengate\.org · checked/
+			);
+			const bridge = s.locator('[data-ga="roads"] [data-row]').first();
+			await expect(label(bridge)).toContainText('Golden Gate Bridge');
+			await expect(meta(bridge)).toHaveText(EMAIL_META);
+			// 511's own roads still show after it.
+			await expect(s.locator('[data-ga="roads"] [data-row]')).toHaveCount(3);
+			await ferry.locator('button[data-kind="detail"]').click();
+			const panel = page.getByRole('dialog');
+			await expect(panel).toContainText('Due to a mechanical issue');
+			await expect(panel.locator('a[href]')).toHaveAttribute(
+				'href',
+				'https://content.govdelivery.com/accounts/CAGOLDEN/bulletins/431aeb0'
+			);
+			await expect(panel).not.toContainText('511');
+			const overflow = await page.evaluate(
+				() => document.documentElement.scrollWidth - window.innerWidth
+			);
+			expect(overflow).toBeLessThanOrEqual(1);
 		});
 	});
 }

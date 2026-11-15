@@ -90,7 +90,8 @@ function itemRow(p: Part, r: Row): StatusRow {
 				title: r.label,
 				paragraphs: r.full,
 				meta: [provenance, ...r.meta.map((m) => m.text)].filter((m): m is string => m !== null),
-				links: [...link('This alert', r.url), ALL_511]
+				// 511's list is the way on for 511's rows only; an email's bulletin is its own page.
+				links: [...link('This alert', r.url), ...(r.source === '511' ? [ALL_511] : [])]
 			}
 		});
 	const href = webHref(r.url);

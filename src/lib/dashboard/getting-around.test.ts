@@ -3,6 +3,7 @@ import type { TransitAgencyRead, TransitAlertRow } from '$lib/api/marin/transit'
 import type { TrafficCorridorsData } from '$lib/api/marin/traffic-corridors';
 import type { AirportStatus, AirportStatusData } from '$lib/types/airport';
 import type { GgAlert, GgAlertsBlob } from '$lib/gg-alerts';
+import type { EmailIntakeRead, EmailItem } from '$lib/email-intake';
 import type { DatasetFetch } from './source-adapters';
 import { describePresentation } from './source-status';
 import { gettingAroundParts } from './getting-around-rows';
@@ -617,7 +618,8 @@ describe('gettingAroundView', () => {
 			outcomes: {
 				airport: live(NOW - 3 * MIN),
 				traffic: failed(false),
-				'gg-alerts': failed(false)
+				'gg-alerts': failed(false),
+				'email-intake': failed(false)
 			},
 			traffic: null,
 			transit: { reads: null, error: 'transit: HTTP 503' }
@@ -1594,5 +1596,185 @@ describe('gettingAroundParts: what a feed hands us is checked before it is a lin
 			text: 'latest check: the source returned an error',
 			attention: true
 		});
+	});
+});
+
+describe('Getting Around: Golden Gate alert emails (email intake v1)', () => {
+	// NOW = 2026-10-14 16:00 PDT.
+	const email = (over: Partial<EmailItem> = {}): EmailItem => ({
+		v: 1,
+		key: 'a'.repeat(32),
+		sender: 'goldengate@service.govdelivery.com',
+		rule: 'gg-ferry-alert',
+		destination: 'transit',
+		subject: 'Rider Alert 10/14 Golden Gate Ferry Larkspur',
+		sentAt: '2026-10-14T13:48:14.000Z', // 6:48 AM PDT
+		receivedAt: '2026-10-14T13:48:20.000Z',
+		description: 'Due to a mechanical issue, some trips will be delayed.',
+		permalink: 'https://content.govdelivery.com/accounts/CAGOLDEN/bulletins/4319d18',
+		topics: ['Larkspur Ferry'],
+		...over
+	});
+	const BRIDGE = email({
+		key: 'b'.repeat(32),
+		rule: 'gg-bridge-alert',
+		destination: 'roads',
+		subject: 'ALERT GGBRIDGE 10/16-10/20 OVERNIGHT EAST SIDEWALK CYCLIST DETOUR',
+		sentAt: '2026-10-12T20:03:14.000Z',
+		topics: ['Golden Gate Bridge']
+	});
+	const NEWS = email({
+		key: 'c'.repeat(32),
+		rule: 'gg-newsletter',
+		destination: 'news',
+		subject: 'Golden Gate Transit October 2026 Newsletter',
+		topics: ['Golden Gate Transit']
+	});
+	const read = (items: EmailItem[]): EmailIntakeRead => ({
+		checkedAt: new Date(NOW - MIN).toISOString(),
+		items
+	});
+	const at = new Date(NOW - 20 * MIN).toISOString();
+	const siteBlob = (headline: string): GgAlertsBlob => ({
+		checkedAt: at,
+		lastSuccessfulScrapeAt: at,
+		alerts: [{ id: '549', headline, routes: ['Larkspur Ferry'] }],
+		lastFailure: null
+	});
+	const withEmails = (
+		items: EmailItem[],
+		over: Partial<GettingAroundInput> = {},
+		fetch: DatasetFetch = live(NOW - MIN)
+	) =>
+		input({
+			emailIntake: read(items),
+			...over,
+			outcomes: {
+				airport: live(NOW - 3 * MIN),
+				traffic: live(NOW - MIN),
+				'gg-alerts': live(NOW - 20 * MIN),
+				'email-intake': fetch,
+				...over.outcomes
+			}
+		});
+	const WINDOW = 'Golden Gate alert emails, last 14 days';
+
+	it('a transit email is a dated Golden Gate row: topics, the subject, its bulletin, "email sent"', () => {
+		const t = gettingAroundView(withEmails([email()])).transit;
+		expect(t.rows[0]).toEqual({
+			id: `email-${'a'.repeat(32)}`,
+			tags: ['Larkspur Ferry'],
+			label: 'Golden Gate',
+			body: 'Rider Alert 10/14 Golden Gate Ferry Larkspur',
+			original: null,
+			url: 'https://content.govdelivery.com/accounts/CAGOLDEN/bulletins/4319d18',
+			source: 'email',
+			meta: [{ text: 'email sent Oct 14, 6:48 AM', attention: false }],
+			tone: null,
+			full: ['Due to a mechanical issue, some trips will be delayed.']
+		});
+		expect(t.sources.email).toBe(WINDOW);
+	});
+
+	it('merge order: emails (newest first), then the site, then 511 rows no headline matches', () => {
+		const older = email({
+			key: 'd'.repeat(32),
+			subject: 'Rider Alert Older',
+			sentAt: '2026-10-10T13:00:00.000Z'
+		});
+		const t = gettingAroundView(
+			withEmails([email(), older], {
+				ggAlerts: siteBlob('10/19-10/23 GGFERRY WEEKDAY SERVICE DISRUPTIONS'),
+				transit: {
+					reads: reads({
+						GF: {
+							alerts: [
+								alert('511-GF-1', 'rider alert 10/14  golden gate ferry larkspur'),
+								alert('511-GF-2', 'Something else on 511')
+							]
+						}
+					}),
+					error: null
+				}
+			})
+		).transit;
+		expect(t.rows.map((r) => [r.id, r.source])).toEqual([
+			[`email-${'a'.repeat(32)}`, 'email'],
+			[`email-${'d'.repeat(32)}`, 'email'],
+			['gg-549', 'goldengate.org']
+		]);
+		expect(t.more).toBe(1); // 511-GF-2, beyond the preview
+	});
+
+	it("an email the trusted site lists under the same headline gives way: the site's current text shows", () => {
+		const v = (over: Partial<GettingAroundInput> = {}) =>
+			gettingAroundView(
+				withEmails([email({ subject: 'GGFERRY LARKSPUR SERVICE CHANGE' })], {
+					ggAlerts: siteBlob('GGFerry  Larkspur service change'),
+					...over
+				})
+			).transit.rows.map((r) => r.source);
+		expect(v()).toEqual(['goldengate.org']);
+		// A site read we can't trust hides nothing.
+		expect(
+			v({ outcomes: { 'gg-alerts': failed(true, NOW - 20 * MIN) } as Record<string, DatasetFetch> })
+		).toEqual(['email', 'goldengate.org']);
+	});
+
+	it('bridge emails lead the roads part, and 511 still speaks for its own list', () => {
+		const r = gettingAroundView(withEmails([BRIDGE])).roads;
+		expect(r.rows.map((x) => [x.label, x.body, x.source])).toEqual([
+			[
+				'Golden Gate Bridge',
+				'ALERT GGBRIDGE 10/16-10/20 OVERNIGHT EAST SIDEWALK CYCLIST DETOUR',
+				'email'
+			]
+		]);
+		expect(r.rows[0].tags).toEqual(['Golden Gate Bridge']);
+		expect(r.note).toBe('511 reports no incidents on these roads');
+		expect(r.sources.email).toBe(WINDOW);
+		expect(gettingAroundView(withEmails([BRIDGE])).transit.rows).toEqual([]);
+	});
+
+	it('a failed 511 traffic read still shows the bridge emails', () => {
+		const r = gettingAroundView(
+			withEmails([BRIDGE], { outcomes: { traffic: failed(false) } as Record<string, DatasetFetch> })
+		).roads;
+		expect(r.note).toBe('Traffic incidents unavailable');
+		expect(r.rows.map((x) => x.source)).toEqual(['email']);
+	});
+
+	it('news items are not shown in Getting Around', () => {
+		const v = gettingAroundView(withEmails([NEWS]));
+		expect([...v.transit.rows, ...v.roads.rows]).toEqual([]);
+	});
+
+	it('the email read is one of the section’s sources; a failed one adds no row, the header says it', () => {
+		const ok = gettingAroundView(withEmails([email()]));
+		const bad = gettingAroundView(
+			withEmails(
+				[],
+				{ emailIntake: null },
+				{ kind: 'failed', error: 'HTTP 503', retained: false, observedAt: null }
+			)
+		);
+		expect(bad.transit.rows.filter((r) => r.source === 'email')).toEqual([]);
+		expect(bad.transit.lines.map((l) => l.id)).not.toContain('email');
+		expect(describePresentation(bad.status, NOW)).not.toEqual(describePresentation(ok.status, NOW));
+	});
+
+	it('as StatusRows: an email row opens its panel, linking the bulletin only, never 511', () => {
+		const t = gettingAroundParts(gettingAroundView(withEmails([email()]))).find(
+			(p) => p.key === 'transit'
+		)!;
+		const row = t.items.find((x) => x.row.id.startsWith('email-'))!.row;
+		expect(row.meta.map((m) => m.text)).toEqual([WINDOW, 'email sent Oct 14, 6:48 AM']);
+		if (row.kind !== 'detail') throw new Error('not a detail row');
+		expect(row.detail.paragraphs).toEqual([
+			'Due to a mechanical issue, some trips will be delayed.'
+		]);
+		expect(row.detail.links.map((l) => l.href)).toEqual([
+			'https://content.govdelivery.com/accounts/CAGOLDEN/bulletins/4319d18'
+		]);
 	});
 });

@@ -14,6 +14,12 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
 	{
+		date: '2026-11-14',
+		title: 'Golden Gate’s alert emails',
+		description:
+			'Golden Gate’s ferry, bus and bridge alert emails now show in Getting Around, dated by when they were sent: rider alerts under Transit, bridge detours under Roads. An updated or reminder email replaces the one before it, and each stays for 14 days.'
+	},
+	{
 		date: '2026-11-13',
 		title: 'Ikon Pass is cited, not scraped',
 		description:

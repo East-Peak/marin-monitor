@@ -65,6 +65,11 @@ export function pacificDay(ms: number): string {
 	return plain(DAY.format(ms));
 }
 
+/** "Oct 19, 6:12 AM": a dated item's own time, the day always named. */
+export function formatDayTime(ms: number): string {
+	return `${plain(DAY.format(ms))}, ${plain(TIME.format(ms))}`;
+}
+
 export function formatAsOf(ms: number, now: number): string {
 	const time = plain(TIME.format(ms));
 	return pacificDate(ms) === pacificDate(now) ? time : `${plain(DAY.format(ms))}, ${time}`;

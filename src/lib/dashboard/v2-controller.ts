@@ -31,6 +31,7 @@ import {
 import { boundedOp, DEFAULT_OP_DEADLINE_MS } from '$lib/api/marin/bounded-op';
 import { fetchAirportStatusOrThrow } from '$lib/api/marin/airport-status';
 import { fetchGgAlertsWithStatus } from '$lib/api/marin/gg-alerts';
+import { fetchEmailIntakeWithStatus } from '$lib/api/marin/email-intake';
 import { readFireIncidentsOrThrow, type FireRead } from '$lib/api/marin/calfire';
 import { readMarineForecastOrThrow, type MarineForecastRead } from '$lib/api/marin/marine';
 import { readAirQualityOrThrow, type AirQualityRead } from '$lib/api/marin/airnow';
@@ -50,12 +51,14 @@ import {
 import type { TransitAgencyRead } from '$lib/api/marin/transit';
 import type { AirportStatusData } from '$lib/types/airport';
 import type { GgAlertsBlob } from '$lib/gg-alerts';
+import type { EmailIntakeRead } from '$lib/email-intake';
 import type { LocationPreset } from '$lib/config/locations';
 import type { AdvisoryFeedState, ParsedAlerts } from '$lib/weather/advisories';
 import { createAdvisoryFeed } from './advisory-feed';
 import { createBriefStore, type BriefFetchers, type BriefState } from './brief-store';
 import {
 	AIRPORT_MAX_AGE_MS,
+	EMAIL_INTAKE_MAX_AGE_MS,
 	GG_ALERTS_MAX_AGE_MS,
 	TRAFFIC_MAX_AGE_MS,
 	type TransitState
@@ -521,6 +524,8 @@ export interface DashboardV2Controller {
 	transit: Readable<TransitState>;
 	/** goldengate.org's alert list (GGALERT1): read with transit, whatever sections are open. */
 	ggAlerts: Readable<GgAlertsBlob | null>;
+	/** Golden Gate's alert emails (email intake v1): read with transit, like goldengate.org's list. */
+	emailIntake: Readable<EmailIntakeRead | null>;
 	/** Getting Around's details, loaded through ensure('airport' | 'traffic'). */
 	airport: Readable<AirportStatusData | null>;
 	traffic: Readable<TrafficCorridorsData | null>;
@@ -554,6 +559,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 	};
 	const transit = writable<TransitState>({ reads: null, error: null });
 	const ggAlerts = writable<GgAlertsBlob | null>(null);
+	const emailIntake = writable<EmailIntakeRead | null>(null);
 	const outdoors: OutdoorsStores = {
 		marine: writable(null),
 		fires: writable(null),
@@ -592,6 +598,15 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 			commit: (d) => ggAlerts.set(d),
 			observedAtOf: (d) => d?.lastSuccessfulScrapeAt,
 			maxAgeMs: GG_ALERTS_MAX_AGE_MS
+		}),
+		dataset<EmailIntakeRead | null>({
+			id: 'email-intake',
+			name: 'Golden Gate alert emails',
+			tier: 'essential',
+			load: (signal) => fetchEmailIntakeWithStatus({ signal }),
+			commit: (d) => emailIntake.set(d),
+			observedAtOf: (d) => d?.checkedAt,
+			maxAgeMs: EMAIL_INTAKE_MAX_AGE_MS
 		}),
 		...detailDatasets(airport, traffic),
 		...outdoorsDatasets(outdoors),
@@ -747,6 +762,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		healthReport: { subscribe: healthReport.subscribe },
 		transit: { subscribe: transit.subscribe },
 		ggAlerts: { subscribe: ggAlerts.subscribe },
+		emailIntake: { subscribe: emailIntake.subscribe },
 		airport: { subscribe: airport.subscribe },
 		traffic: { subscribe: traffic.subscribe },
 		places: {

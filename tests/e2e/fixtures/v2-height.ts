@@ -170,6 +170,11 @@ export async function phoneHeight(
 				lastFailure: null
 			})
 		);
+		// Golden Gate's alert emails answered, none in the window (email intake v1): left on the
+		// blanket 503 the section would measure a failure state.
+		await page.route('**/api/data/email-intake', (r) =>
+			json(r, { checkedAt: iso(T0 - 60_000), items: [] })
+		);
 		await page.route('**/api/airport-status', (r) =>
 			json(r, {
 				lastUpdated: iso(T0 - 180_000),

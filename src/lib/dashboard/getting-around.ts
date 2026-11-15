@@ -14,6 +14,7 @@ import {
 } from '$lib/api/marin/transit';
 import type { TrafficCorridorsData } from '$lib/api/marin/traffic-corridors';
 import { GG_ALERTS_PAGE, type GgAlertsBlob } from '$lib/gg-alerts';
+import { EMAIL_WINDOW_DAYS, type EmailIntakeRead, type EmailItem } from '$lib/email-intake';
 import { ROAD_SCOPE, TRIP_LABEL } from '$lib/config/traffic-corridors';
 import type {
 	AirportOperationalStatus,
@@ -23,7 +24,7 @@ import type {
 } from '$lib/types/airport';
 import { FAILURE_WORDS, failureKindOf } from './failure-kind';
 import { formatItemAge } from './latest-reporting';
-import { formatAsOf } from './pacific-time';
+import { formatAsOf, formatDayTime } from './pacific-time';
 import { dropAlertPrefix, sourceSentenceCase } from './source-case';
 import { datasetEntry, type DatasetFetch } from './source-adapters';
 import type { MetaField } from './status-row';
@@ -42,6 +43,8 @@ export const TRAFFIC_MAX_AGE_MS = 15 * 60_000;
 const TRANSIT_MAX_AGE_MS = 30 * 60_000;
 /** sync-gg-alerts runs every 15 min: an hour is 4 missed runs (/api/health's own limit). */
 export const GG_ALERTS_MAX_AGE_MS = 60 * 60_000;
+/** The intake's read is served live (60 s CDN): an hour old is out of date. */
+export const EMAIL_INTAKE_MAX_AGE_MS = 60 * 60_000;
 const PREVIEW = 3;
 const SUMMARY_AIRPORTS = ['SFO', 'OAK'] as const;
 const OUT_OF_DATE = ' · out of date';
@@ -61,7 +64,7 @@ export const LINKS = {
 } as const;
 
 /** Whose list a transit row speaks from: a mixed list keeps a source on every row (rule 3). */
-export type TransitSource = '511' | 'goldengate.org';
+export type TransitSource = '511' | 'goldengate.org' | 'email';
 
 export interface Line {
 	id: string;
@@ -127,6 +130,8 @@ export interface GettingAroundInput {
 	traffic: TrafficCorridorsData | null;
 	/** goldengate.org's list as sync-gg-alerts last wrote it; its read is outcomes['gg-alerts']. */
 	ggAlerts: GgAlertsBlob | null;
+	/** Golden Gate's alert emails (email intake v1); its read is outcomes['email-intake']. */
+	emailIntake?: EmailIntakeRead | null;
 	outcomes: Readonly<Record<string, DatasetFetch>>;
 	/** Airports and roads load only while the section is open; closed, they are not in its status. */
 	open: boolean;
@@ -288,8 +293,12 @@ const short = (where: string) =>
 function roads(
 	fetch: DatasetFetch | undefined,
 	data: TrafficCorridorsData | null,
-	now: number
+	now: number,
+	mail: Emails
 ): Built {
+	// Bridge emails lead, whatever 511 says: 511's note speaks for 511's list alone.
+	const lead = mail.roads;
+	const sources = lead.length ? { email: EMAIL_WINDOW } : {};
 	const read = datasetEntry('traffic', '511 traffic', fetch, TRAFFIC_MAX_AGE_MS);
 	// Records the server couldn't read or place: the list isn't complete, so it can't be "ok" (Codex r1 #3).
 	const entry: SourceStatusEntry =
@@ -299,7 +308,11 @@ function roads(
 	const state = effectiveState(entry, now);
 	if (data === null || state === 'loading' || state === 'unavailable') {
 		const note = state === 'loading' ? 'Loading traffic…' : 'Traffic incidents unavailable';
-		return { part: part({ note, scope: ROAD_SCOPE, state }), entries: [entry], answered: 0 };
+		return {
+			part: part({ ...preview(lead), note, scope: ROAD_SCOPE, state, sources }),
+			entries: [entry],
+			answered: 0
+		};
 	}
 	const rows = data.events.map((e): Row => {
 		const at = parseObservedAt(e.reportedAt);
@@ -337,7 +350,8 @@ function roads(
 				: 'Traffic not verified';
 	return {
 		part: part({
-			...preview(rows),
+			...preview([...lead, ...rows]),
+			sources,
 			note: rows.length ? null : empty,
 			noteMeta: rows.length || state !== 'ok' ? [] : ["congestion isn't measured"],
 			meta: timed('511', 'checked', entry.observedAt, now, state === 'stale'),
@@ -650,13 +664,66 @@ function ggSite(fetch: DatasetFetch | undefined, blob: GgAlertsBlob | null, now:
 	};
 }
 
-function transit(t: TransitState, gg: Site, now: number): Built {
+// ── Golden Gate's alert emails (email intake v1) ──
+
+const EMAIL_SOURCE = 'email';
+const EMAIL_WINDOW = `Golden Gate alert emails, last ${EMAIL_WINDOW_DAYS} days`;
+const EMAIL_LABELS: Partial<Record<EmailItem['destination'], string>> = {
+	transit: 'Golden Gate',
+	roads: 'Golden Gate Bridge'
+};
+
+interface Emails {
+	entry: SourceStatusEntry;
+	/** Dated, newest first (the read's order); each keyed by its folded subject. */
+	transit: Summary[];
+	roads: Row[];
+}
+
+/** Each email is dated by its own send time; the window, not a parsed end time, retires it. */
+function emailRow(item: EmailItem): Row {
+	const body = sourceSentenceCase(item.subject, GG_SOURCE);
+	return {
+		id: `email-${item.key}`,
+		tags: item.topics,
+		label: EMAIL_LABELS[item.destination] ?? 'Golden Gate',
+		body,
+		original: body === item.subject ? null : item.subject,
+		url: item.permalink,
+		source: EMAIL_SOURCE,
+		meta: fields([`email sent ${formatDayTime(Date.parse(item.sentAt))}`]),
+		tone: null,
+		full: item.description ? [item.description] : null
+	};
+}
+
+function emails(fetch: DatasetFetch | undefined, read: EmailIntakeRead | null | undefined): Emails {
+	const entry = datasetEntry(
+		'email-intake',
+		'Golden Gate alert emails',
+		fetch,
+		EMAIL_INTAKE_MAX_AGE_MS
+	);
+	const items = read?.items ?? [];
+	return {
+		entry,
+		transit: items
+			.filter((i) => i.destination === 'transit')
+			.map((i) => ({ row: emailRow(i), alerts: 1, key: folded(i.subject) })),
+		roads: items.filter((i) => i.destination === 'roads').map(emailRow)
+	};
+}
+
+function transit(t: TransitState, gg: Site, mail: Emails, now: number): Built {
 	const entries: SourceStatusEntry[] = [];
 	const lines: Line[] = [];
 	const shown: Summary[] = [];
 	const quiet: (typeof MARIN_AGENCIES)[number][] = [];
 	const claims: TransitAgencyRead[] = [];
 	const onSite = new Set(gg.rows.map((s) => s.key));
+	// An email the trusted site lists under the same headline gives way to the site's current text.
+	const dated = mail.transit.filter((s) => !(gg.trusted && onSite.has(s.key)));
+	const inMail = new Set(dated.map((s) => s.key));
 	for (const agency of MARIN_AGENCIES) {
 		const read = t.reads?.find((r) => r.id === agency.id);
 		const entry = agencyEntry(agency, t, read);
@@ -665,8 +732,12 @@ function transit(t: TransitState, gg: Site, now: number): Built {
 		if (read?.alerts) claims.push(read);
 		// The site's ok read speaks for Golden Gate: 511's GG/GF alerts show unless the site lists the
 		// same headline (by 511's own headline, before grouping). A site read we can't trust hides nothing.
+		// An email shown under the same headline is that alert too.
 		const speaks = GOLDEN_GATE.has(agency.id) && gg.trusted;
-		const alerts = read?.alerts?.filter((a) => !speaks || !onSite.has(folded(a.headline)));
+		const alerts = read?.alerts?.filter((a) => {
+			const h = folded(a.headline);
+			return !(speaks && onSite.has(h)) && !(GOLDEN_GATE.has(agency.id) && inMail.has(h));
+		});
 		const own = alerts ? summaries(agency.name, alerts, now) : [];
 		shown.push(...own);
 		if (speaks) continue;
@@ -719,8 +790,8 @@ function transit(t: TransitState, gg: Site, now: number): Built {
 						false
 					)
 				: '511 · time unknown';
-	// Golden Gate's own rows first, in page order; then 511's, in feed order.
-	const all = [...gg.rows, ...shown];
+	// Golden Gate's emails first (dated, newest first); its site's rows, in page order; then 511's.
+	const all = [...dated, ...gg.rows, ...shown];
 	const hidden = all.slice(PREVIEW);
 	return {
 		part: part({
@@ -728,26 +799,29 @@ function transit(t: TransitState, gg: Site, now: number): Built {
 			rows: all.slice(0, PREVIEW).map((s) => s.row),
 			more: hidden.reduce((n, s) => n + s.alerts, 0),
 			sources: {
+				...(dated.length ? { [EMAIL_SOURCE]: EMAIL_WINDOW } : {}),
 				...(gg.meta ? { [GG_SOURCE]: gg.meta } : {}),
 				...(meta511 ? { '511': meta511 } : {})
 			},
 			link: hidden.length && hidden.every((s) => s.row.source === GG_SOURCE) ? GG_ALL : null
 		}),
-		entries: [...entries, gg.entry],
-		answered: claims.length + (gg.meta ? 1 : 0)
+		entries: [...entries, gg.entry, mail.entry],
+		answered: claims.length + (gg.meta ? 1 : 0) + (mail.entry.state === 'ok' ? 1 : 0)
 	};
 }
 
 // ── The section ───────────────────────────────────────────────────────────
 
 export function gettingAroundView(input: GettingAroundInput): GettingAroundView {
+	const mail = emails(input.outcomes['email-intake'], input.emailIntake);
 	const t = transit(
 		input.transit,
 		ggSite(input.outcomes['gg-alerts'], input.ggAlerts, input.now),
+		mail,
 		input.now
 	);
 	const a = input.open ? airports(input.outcomes.airport, input.airport, input.now) : null;
-	const r = input.open ? roads(input.outcomes.traffic, input.traffic, input.now) : null;
+	const r = input.open ? roads(input.outcomes.traffic, input.traffic, input.now, mail) : null;
 	const built = [a, r, t].filter((b): b is Built => b !== null);
 	const answered = built.reduce((n, b) => n + b.answered, 0);
 	return {

@@ -4,6 +4,13 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-11-14
+
+### Added — Golden Gate's alert emails in Getting Around (email intake v1)
+
+- **Golden Gate's GovDelivery alert emails now reach the dashboard**, the earliest and only dated channel. A Postmark inbound webhook (`POST /api/inbound/postmark`) accepts only basic-authed calls carrying mail from `goldengate@service.govdelivery.com` to our inbound address, with Postmark's own SPF pass, SpamAssassin's `DKIM_VALID_AU` and Golden Gate's `CAGOLDEN` account code; a repeated copy of any of those headers is rejected. Each message is routed by an explicit subject rule that it records: rider alerts to Transit, bridge construction and detours to Roads, newsletters and public meetings to news (stored, not shown yet), account mail dropped, anything else held privately and never served. One blob per message (by Message-ID): re-deliveries are idempotent and concurrent ones never collide. Only sanitised fields are stored, never the raw email.
+- **Rows** lead Transit and Roads: the subject, the topic ("Larkspur Ferry", "Route 580"), "email sent Nov 13, 10:09 AM", and a panel with the first paragraph and the public bulletin. An `[Updated …]`, `[UPDATED]` or `REMINDER!` resend folds onto its alert, newest winning. Emails show for 14 days after sending ("Golden Gate alert emails, last 14 days"); no end time is guessed. `/api/health` says when the last email arrived, as information, never a verdict.
+
 ## 2026-11-13
 
 ### Changed — The Ikon Pass scrape stops; the adult price is cited (COSTDATA-1)
