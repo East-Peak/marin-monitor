@@ -278,6 +278,9 @@ export async function phoneHeight(
 			timeout: 15_000
 		});
 		await expect(ga.locator('[data-line="OAK"]')).toContainText('Ground delay');
+		// 511's per-agency reads answer on their own clocks: each agency row reads "Loading…" (71 px
+		// apiece, +214 px for three) until its read lands, so the page is not settled before then.
+		await expect(ga).not.toContainText('Loading…');
 		// The Outdoors forecast chart is drawn: its limit below includes it.
 		await expect(
 			page
