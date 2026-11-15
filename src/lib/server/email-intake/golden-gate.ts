@@ -93,6 +93,9 @@ export function bulletinLink(text: string): string | null {
 
 const DESCRIPTION_MAX = 500;
 
+/** A GovDelivery click-tracking URL: its path encodes the recipient, so it is never kept. */
+const TRACKED_LINK = /https?:\/\/links-\d*\.govdelivery\.com\/CL0\/\S*/gi;
+
 /** The body's first paragraph as plain words: "[ url ]" annotations and *emphasis* removed. */
 export function firstParagraph(text: string, inbound: string): string | null {
 	const first = text
@@ -102,6 +105,7 @@ export function firstParagraph(text: string, inbound: string): string | null {
 				.split(inbound)
 				.join('')
 				.replace(/\[\s*https?:\/\/[^\]]*\]/gi, '')
+				.replace(TRACKED_LINK, '')
 				.replace(/\*/g, '')
 				.replace(/\s+/g, ' ')
 				.replace(/\s+([.,;:!?])/g, '$1')

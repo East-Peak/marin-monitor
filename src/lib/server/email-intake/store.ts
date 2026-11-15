@@ -47,14 +47,19 @@ export const messageKey = (messageId: string) =>
 export const itemPath = (sentAt: string, key: string) =>
 	`${EMAIL_PREFIX}${sentAt.slice(0, 10)}/${key}.json`;
 
-/** Text that must never reach storage: subscriber tokens, tracked links, our own address. */
+/**
+ * Last-line guard: precise secret patterns only, never English words (an alert may say
+ * "subscribers"). Sanitising happens earlier, in the reader; this catches what slipped through.
+ */
 function unsafe(item: EmailItem, inbound: string): boolean {
 	const text = JSON.stringify(item).toLowerCase();
 	const address = inbound.toLowerCase();
 	return [
 		'verification=',
 		'links-2.govdelivery.com',
-		'subscriber',
+		'x-subscriber',
+		'subscriber_id',
+		'bulletin_recipient_id',
 		address,
 		address.replace('@', '%40')
 	].some((bad) => bad !== '' && text.includes(bad));

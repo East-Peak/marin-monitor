@@ -106,6 +106,43 @@ describe('ingestEmail', () => {
 		expect(await keys()).toEqual([]);
 	});
 
+	it('stores and routes an alert whose prose says "subscribers"', async () => {
+		const raw = fixture('transit-route-580');
+		raw.TextBody = `Ferry subscribers should expect delays this weekend.\n\n${raw.TextBody}`;
+		expect(await ingestEmail(parsePostmark(raw)!, deps())).toMatchObject({
+			outcome: 'stored',
+			rule: 'gg-transit-alert',
+			destination: 'transit'
+		});
+		expect((await stored())[0].description).toMatch(/^Ferry subscribers should expect delays/);
+	});
+
+	it('strips a tracked link from the description and stores it', async () => {
+		const raw = fixture('transit-route-580');
+		raw.TextBody = `Details at https://links-2.govdelivery.com/CL0/https:%2F%2Fexample.org%2Fa/1/0100abc-000/xyz= now.\n\n${raw.TextBody}`;
+		expect(await ingestEmail(parsePostmark(raw)!, deps())).toMatchObject({ outcome: 'stored' });
+		const text = api.peek((await keys())[0])!;
+		expect(text).not.toContain('govdelivery.com/CL0');
+		expect(text).not.toContain('links-2.govdelivery.com');
+	});
+
+	it.each([
+		['verification=', 'See https://x.example/?verification=5.abc today.'],
+		['x-subscriber', 'Header x-subscriber: someone'],
+		['subscriber_id', 'subscriber_id 12345 here'],
+		['bulletin_recipient_id', 'bulletin_recipient_id=99 here'],
+		['the inbound address', `Sent to ${FAKE_INBOUND} today`],
+		['the encoded inbound address', `Sent to ${FAKE_INBOUND.replace('@', '%40')} today`]
+	])('stores nothing when text carries %s', async (_n, line) => {
+		const raw = fixture('transit-route-580');
+		raw.Subject = `${raw.Subject} ${line}`;
+		expect(await ingestEmail(parsePostmark(raw)!, deps())).toMatchObject({
+			outcome: 'dropped',
+			rule: 'gg-unsafe'
+		});
+		expect(await keys()).toEqual([]);
+	});
+
 	it('a re-delivery is idempotent: one blob per Message-ID', async () => {
 		await ingest('transit-route-580');
 		expect(await ingest('transit-route-580')).toMatchObject({ outcome: 'duplicate' });
