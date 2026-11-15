@@ -209,7 +209,9 @@ test.describe('desktop 1440×900', () => {
 	test('an open story that ages out on the clock leaves with "No longer listed"', async ({
 		page
 	}) => {
-		// Six days, 23 hours and 58 minutes old at T0: out of the window three clock ticks later.
+		// Six days, 23 hours and 58 minutes old at T0: out of the window at the next clock tick.
+		// A jump fires that tick once (runFor stepped every tick and map frame of three minutes, and
+		// overran the test under load).
 		await page.route('**/api/news/snapshot', (r) =>
 			r.fulfill({
 				status: 200,
@@ -219,9 +221,10 @@ test.describe('desktop 1440×900', () => {
 		);
 		await explore(page, '/map?sel=news:point-reyes-light:a');
 		await expect(drawer(page).locator('[data-detail]')).toContainText('Miller Avenue bike lane');
-		await page.clock.runFor(3 * 60_000);
+		await page.clock.fastForward(3 * 60_000);
 		await expect(drawer(page).locator('[data-in-view-notice]')).toHaveText('No longer listed');
-		expect(await sourceCount(page, 'news-pins')).toBe(0);
+		// The map redraws its source after the list says so, on its own frame: poll, don't assume.
+		await expect.poll(() => sourceCount(page, 'news-pins')).toBe(0);
 	});
 
 	test('the stale fire is hidden, and the map and Outdoors name it, never "None near"', async ({
