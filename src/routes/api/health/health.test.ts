@@ -9,6 +9,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const mockReadBlobFreshnessTimestamp = vi.fn();
 const mockFetchWithTimeout = vi.fn();
 const mockReadNewsHealthFromBlob = vi.fn();
+const mockEmailIntakeInformation = vi.fn();
 
 class MockBlobNotFoundError extends Error {}
 
@@ -41,6 +42,10 @@ vi.mock('$lib/server/fetch-utils', () => ({
 vi.mock('$lib/server/news/health', () => ({
 	NEWS_SNAPSHOT_SOURCE: 'News Snapshot',
 	readNewsHealthFromBlob: mockReadNewsHealthFromBlob
+}));
+
+vi.mock('$lib/server/email-intake/health', () => ({
+	emailIntakeInformation: mockEmailIntakeInformation
 }));
 
 const freshNews = (failures: unknown[] = []) => ({
@@ -96,11 +101,37 @@ beforeEach(() => {
 	mockFetchWithTimeout.mockReset();
 	mockReadNewsHealthFromBlob.mockReset();
 	mockReadNewsHealthFromBlob.mockResolvedValue(freshNews());
+	mockEmailIntakeInformation.mockReset();
+	mockEmailIntakeInformation.mockResolvedValue({ lastEmailReceivedAt: null });
 	vi.spyOn(console, 'error').mockImplementation(() => {});
 	vi.spyOn(console, 'log').mockImplementation(() => {});
 });
 
 describe('/api/health', () => {
+	it('says when the last email arrived, as information: no source, no verdict', async () => {
+		allFresh();
+		mockEmailIntakeInformation.mockResolvedValue({
+			lastEmailReceivedAt: '2026-11-13T19:02:40.000Z'
+		});
+		const response = await getHealth(publicHealth());
+		const data = await response.json();
+		expect(data.information).toEqual({
+			emailIntake: { lastEmailReceivedAt: '2026-11-13T19:02:40.000Z' }
+		});
+		expect(JSON.stringify(data.sources)).not.toMatch(/email/i);
+		expect(data.summary.total).toBe(SOURCE_INVENTORY.length);
+		expect(data.status).toBe('healthy');
+		expect(response.status).toBe(200);
+	});
+
+	it('a silent or unreadable intake changes no verdict', async () => {
+		allFresh();
+		mockEmailIntakeInformation.mockResolvedValue({ lastEmailReceivedAt: null, readable: false });
+		const response = await getHealth(publicHealth());
+		expect((await response.json()).status).toBe('healthy');
+		expect(response.status).toBe(200);
+	});
+
 	it('lists every inventory source', async () => {
 		allFresh();
 		const data = await (await getHealth(publicHealth())).json();

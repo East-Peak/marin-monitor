@@ -11,6 +11,7 @@
 import { env } from '$env/dynamic/private';
 import { fetchWithTimeout } from '$lib/server/fetch-utils';
 import { hasValidCronAuth } from '$lib/server/cron-auth';
+import { emailIntakeInformation } from '$lib/server/email-intake/health';
 import { buildHealthReport, inventoryBlobKeys } from '$lib/server/health/report';
 import type { HealthReport } from '$lib/server/health/evaluate';
 import type { RequestHandler } from './$types';
@@ -65,7 +66,11 @@ async function internalDiagnostics(report: HealthReport): Promise<Record<string,
 
 export const GET: RequestHandler = async ({ request }) => {
 	const now = new Date();
-	const report = await buildHealthReport(env.BLOB_READ_WRITE_TOKEN ?? '', now);
+	const token = env.BLOB_READ_WRITE_TOKEN ?? '';
+	const [report, emailIntake] = await Promise.all([
+		buildHealthReport(token, now),
+		emailIntakeInformation(token)
+	]);
 	const internal = hasValidCronAuth(request) ? await internalDiagnostics(report) : undefined;
 
 	return new Response(
@@ -82,6 +87,8 @@ export const GET: RequestHandler = async ({ request }) => {
 					status,
 					...(accepted ? { acceptedUntil: accepted.expiresAt } : {})
 				})),
+				// Information, not health: never a source, never in status (email intake v1).
+				information: { emailIntake },
 				...(internal ? { internal } : {})
 			},
 			null,
