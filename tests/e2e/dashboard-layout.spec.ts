@@ -155,6 +155,13 @@ test.describe('dashboard layout flag', () => {
 	test('client navigation v2 → legacy → v2, then back/forward, keeps exactly one layout', async ({
 		page
 	}) => {
+		// The map's tile hosts and every live read both dashboards make would keep the page's thread
+		// busy past the waits below under load: answer them at once (the requests are still seen).
+		// The server's own __data.json is not one of them.
+		await page.route(
+			(url) => url.pathname.startsWith('/api/') || url.hostname !== 'localhost',
+			(route) => route.fulfill({ status: 503, body: 'stubbed' })
+		);
 		await page.goto('/?layout=v2');
 		await v2Hydrated(page);
 		await page.evaluate(() => {
