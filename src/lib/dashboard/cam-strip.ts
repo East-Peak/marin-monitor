@@ -65,3 +65,17 @@ export function stripNotice(inView: readonly TileStatus[]): StripNotice {
 	if (inView.every((s) => s === 'offline' || s === 'stale')) return 'not-updating';
 	return null;
 }
+
+/**
+ * A strip camera our server serves the first frame of (LCP1): `/`'s largest paint, in the HTML.
+ * Only sources that give the browser no capture time: an <img> can't read the age a Caltrans
+ * tile shows, nor its stand-in card, so those keep loading in script.
+ */
+export function serverFrameCamera(id: string): CameraConfig | null {
+	return stripCameras().find((c) => c.id === id && !exposesCaptureTime(c)) ?? null;
+}
+
+/** Our same-origin route for the camera's first frame, or null when it has none. */
+export function serverFrameUrl(cam: CameraConfig): string | null {
+	return serverFrameCamera(cam.id) ? `/api/cams/frame/${cam.id}` : null;
+}

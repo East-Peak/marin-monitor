@@ -4,6 +4,8 @@ import {
 	SOURCE_STALE_MS,
 	captureAgeLabel,
 	exposesCaptureTime,
+	serverFrameCamera,
+	serverFrameUrl,
 	stripCameras,
 	stripFrameUrl,
 	stripNotice
@@ -81,5 +83,21 @@ describe('stripNotice (Decision 5)', () => {
 		expect(stripNotice(['offline', 'live'])).toBeNull();
 		expect(stripNotice(['stale', 'connecting'])).toBeNull();
 		expect(stripNotice(['offline', 'connecting'])).toBeNull();
+	});
+});
+
+describe('the server-rendered first frame (LCP1)', () => {
+	it("is served for ridge cams only: Caltrans tiles read the source's age, which an <img> can't", () => {
+		expect(serverFrameUrl(byId('alert-tam-east'))).toBe('/api/cams/frame/alert-tam-east');
+		expect(serverFrameUrl(byId('caltrans-spencer'))).toBeNull();
+	});
+	it('a camera off the strip has none', () => {
+		expect(serverFrameCamera('abc7-tam')).toBeNull();
+		expect(serverFrameCamera('caltrans-spencer')).toBeNull();
+		expect(serverFrameCamera('nope')).toBeNull();
+		expect(serverFrameCamera('alert-tam-west')?.id).toBe('alert-tam-west');
+	});
+	it("the strip's first camera has one: it is the phone page's largest paint", () => {
+		expect(serverFrameUrl(stripCameras(CAMERAS)[0])).not.toBeNull();
 	});
 });
