@@ -6,6 +6,10 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-11-15
 
+### Removed — Leftovers of the old dashboard layout
+
+- **Dead code and policy entries only; nothing visible changes.** The in-app changelog data, the legacy panel, preset, onboarding, auto-refresh and map-toggle store methods, five unused style rules, seven unused silent-fallback data fetchers, and the Content-Security-Policy allowances for nominatim.openstreetmap.org, api.sunrise-sunset.org and currentuvindex.com (nothing calls them). Saved browser settings from the old layout still load.
+
 ### Removed — The old dashboard layout (RETIRE1)
 
 - **The pre-redesign dashboard is gone, and so is its rollback URL.** `marinmonitor.com/?layout=legacy` and `?layout=edit` (its layout editor) now open the current dashboard, as does any other `?layout=` value; none is an error or a redirect, and each names `/` as its canonical page. The header's "Old dashboard" link is removed. A seeded page is edge-cached for a minute whatever its `?layout=`, and one whose news read failed is never cached, as before.
