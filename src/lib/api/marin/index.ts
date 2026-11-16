@@ -10,6 +10,5 @@ export { fetchAirQuality } from './airnow';
 export { fetchStreamGauges, type StreamGauge } from './streams';
 export { fetchFireIncidents, type FireIncident } from './calfire';
 export { fetchObservedWeather, type ObservedWeather } from './open-meteo';
-export { fetchGasPriceData } from './gas-prices';
 export { fetchAirportStatus } from './airport-status';
 export { readSeeClickFixIssues } from './seeclickfix';
