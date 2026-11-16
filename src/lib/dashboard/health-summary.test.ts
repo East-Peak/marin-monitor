@@ -113,24 +113,34 @@ describe("the browser's own live reads count too (a healthy server is not a heal
 	it('failingReads: only a failed or fallback read, never health (its own label) or a live one', () => {
 		const reads = failingReads(outcomes, names);
 		expect(reads.map((e) => [e.name, e.state])).toEqual([
-			['NWS weather', 'unavailable'],
-			['NOAA tides', 'stale']
+			['NWS weather (read by this page)', 'unavailable'],
+			['NOAA tides (read by this page)', 'stale']
 		]);
 		expect(failingReads({ health: live, gas: live }, names)).toEqual([]);
 		// A dataset without a name is still listed, by its id.
-		expect(failingReads({ marine: outcomes.weather }, {}).map((e) => e.name)).toEqual(['marine']);
+		expect(failingReads({ marine: outcomes.weather }, {}).map((e) => e.name)).toEqual([
+			'marine (read by this page)'
+		]);
 	});
 	it('a healthy G0a report with a failing browser read is never "all OK"', () => {
 		const s = summarizeHealth(HEALTHY, live, NOW, failingReads(outcomes, names));
 		expect(s).toMatchObject({ state: 'degraded', label: 'Sources: 2 degraded' });
-		expect(s.degraded.map((e) => e.name)).toEqual(['NWS weather', 'NOAA tides']);
+		expect(s.degraded.map((e) => e.name)).toEqual([
+			'NWS weather (read by this page)',
+			'NOAA tides (read by this page)'
+		]);
 		expect(s.label).toMatch(SETTLED_HEALTH_LABEL);
 	});
 	it("the server's degraded sources and the browser's failing reads are counted together, and the dialog lists both", () => {
 		const s = summarizeHealth(REPORT, live, NOW, failingReads(outcomes, names));
 		expect(s.label).toBe('Sources: 4 degraded');
 		expect(s.all.map((e) => e.name)).toEqual(
-			expect.arrayContaining(['Gas Prices', 'Wine Index', 'NWS weather', 'NOAA tides'])
+			expect.arrayContaining([
+				'Gas Prices',
+				'Wine Index',
+				'NWS weather (read by this page)',
+				'NOAA tides (read by this page)'
+			])
 		);
 	});
 	it('with every read live the label is unchanged', () => {
@@ -146,6 +156,20 @@ describe("the browser's own live reads count too (a healthy server is not a heal
 			failingReads(outcomes, names)
 		);
 		expect(s.label).toBe('Source health may be out of date');
-		expect(s.all.map((e) => e.name)).toContain('NWS weather');
+		expect(s.all.map((e) => e.name)).toContain('NWS weather (read by this page)');
+	});
+	it('with the report unavailable, the failing reads are still known and listed', () => {
+		const reads = failingReads(outcomes, names);
+		const failed = {
+			kind: 'failed',
+			error: 'HTTP 500',
+			retained: false,
+			observedAt: null
+		} as const;
+		expect(summarizeHealth(null, failed, NOW, reads)).toMatchObject({
+			state: 'unknown',
+			label: 'Source health unknown',
+			all: [{ name: 'NWS weather (read by this page)' }, { name: 'NOAA tides (read by this page)' }]
+		});
 	});
 });

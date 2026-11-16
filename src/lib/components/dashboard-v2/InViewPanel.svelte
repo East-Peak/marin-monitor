@@ -155,41 +155,45 @@
 	{#if items.length === 0}
 		<p class="muted" data-text-role="body">{emptyText ?? 'Nothing listed in this view.'}</p>
 	{/if}
-	{#each groups as group (group.layer)}
-		<h4 class="group" data-text-role="meta">{LAYER_NAME[group.layer]}</h4>
-		<ul>
-			{#each group.rows as row (row.id)}
-				<li>
-					<button
-						type="button"
-						class="row"
-						class:heading={row.heading}
-						class:under={!row.heading && row.rank !== undefined}
-						data-in-view-row={row.id}
-						tabindex={tabStop === row.id ? 0 : -1}
-						aria-keyshortcuts="ArrowDown ArrowUp Home End"
-						onkeydown={navigate}
-						data-hovered={hovered === row.id ? 'true' : undefined}
-						onclick={(e) => choose(row.id, e.detail === 0)}
-						onmouseenter={() => onhover(row.id)}
-						onmouseleave={() => onhover(null)}
-						onfocus={(e) => {
-							lastFocused = row.id;
-							// Only a keyboard's focus lights the row's camera; focus put back by Back
-							// after a pointer's selection does not (CAMDESEL1).
-							if (!restoring && e.currentTarget.matches(':focus-visible')) onhover(row.id);
-						}}
-						onblur={() => onhover(null)}
-					>
-						<span data-text-role="body">{row.title}</span>
-						{#if row.detail.meta.length}
-							<span class="muted" data-text-role="meta">{row.detail.meta.join(' · ')}</span>
-						{/if}
-					</button>
-				</li>
-			{/each}
-		</ul>
-	{/each}
+	<!-- The rows are one composite control: a roving tabindex with arrow keys (a toolbar), so a
+	     screen reader leaves browse mode for the arrows. -->
+	<div role="toolbar" aria-orientation="vertical" aria-label="In view items">
+		{#each groups as group (group.layer)}
+			<h4 class="group" data-text-role="meta">{LAYER_NAME[group.layer]}</h4>
+			<ul>
+				{#each group.rows as row (row.id)}
+					<li>
+						<button
+							type="button"
+							class="row"
+							class:heading={row.heading}
+							class:under={!row.heading && row.rank !== undefined}
+							data-in-view-row={row.id}
+							tabindex={tabStop === row.id ? 0 : -1}
+							aria-keyshortcuts="ArrowDown ArrowUp Home End"
+							onkeydown={navigate}
+							data-hovered={hovered === row.id ? 'true' : undefined}
+							onclick={(e) => choose(row.id, e.detail === 0)}
+							onmouseenter={() => onhover(row.id)}
+							onmouseleave={() => onhover(null)}
+							onfocus={(e) => {
+								lastFocused = row.id;
+								// Only a keyboard's focus lights the row's camera; focus put back by Back
+								// after a pointer's selection does not (CAMDESEL1).
+								if (!restoring && e.currentTarget.matches(':focus-visible')) onhover(row.id);
+							}}
+							onblur={() => onhover(null)}
+						>
+							<span data-text-role="body">{row.title}</span>
+							{#if row.detail.meta.length}
+								<span class="muted" data-text-role="meta">{row.detail.meta.join(' · ')}</span>
+							{/if}
+						</button>
+					</li>
+				{/each}
+			</ul>
+		{/each}
+	</div>
 {/snippet}
 
 {#snippet detail(item: InViewItem)}

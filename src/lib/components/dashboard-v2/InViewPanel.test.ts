@@ -117,6 +117,13 @@ describe('InViewPanel', () => {
 				.filter((r) => r.tabIndex === 0)
 				.map((r) => r.dataset.inViewRow);
 
+		it('the rows are one composite control, named', () => {
+			const { container } = render(InViewPanel, props({ items: many() }));
+			const bar = container.querySelector('[role="toolbar"]')!;
+			expect(bar.getAttribute('aria-label')).toBe('In view items');
+			expect(bar.querySelectorAll('[data-in-view-row]')).toHaveLength(5);
+		});
+
 		it('only one row is in the Tab order, the first until another takes focus', () => {
 			const { container } = render(InViewPanel, props({ items: many() }));
 			expect(stops(container)).toEqual(['news:a']);

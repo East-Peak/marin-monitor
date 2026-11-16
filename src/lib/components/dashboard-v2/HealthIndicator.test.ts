@@ -87,7 +87,7 @@ describe('HealthIndicator', () => {
 		const button = screen.getByRole('button', { name: 'Sources: 1 degraded' });
 		await fireEvent.click(button);
 		const dialog = screen.getByRole('dialog', { name: 'Source health' });
-		expect(dialog.textContent).toContain('NWS weather');
+		expect(dialog.textContent).toContain('NWS weather (read by this page)');
 		expect(dialog.textContent).toContain('Unavailable');
 	});
 });

@@ -32,7 +32,7 @@ export function failingReads(
 ): SourceStatusEntry[] {
 	return Object.entries(outcomes)
 		.filter(([id, fetch]) => id !== 'health' && fetch.kind !== 'live')
-		.map(([id, fetch]) => datasetEntry(id, names[id] ?? id, fetch, null));
+		.map(([id, fetch]) => datasetEntry(id, `${names[id] ?? id} (read by this page)`, fetch, null));
 }
 
 export function summarizeHealth(
@@ -41,9 +41,12 @@ export function summarizeHealth(
 	now: number,
 	reads: readonly SourceStatusEntry[] = []
 ): HealthSummary {
+	// Without the report there is nothing to say about the server, but the page's own failing
+	// reads are known and still listed.
+	const own = reads.map((e) => ({ ...e, state: effectiveState(e, now) }));
 	if (!fetch && !report)
-		return { state: 'checking', label: HEALTH_LABELS.checking, degraded: [], all: [] };
-	if (!report) return { state: 'unknown', label: HEALTH_LABELS.unknown, degraded: [], all: [] };
+		return { state: 'checking', label: HEALTH_LABELS.checking, degraded: own, all: own };
+	if (!report) return { state: 'unknown', label: HEALTH_LABELS.unknown, degraded: own, all: own };
 	const all = [
 		...report.sources.map(fromHealthSource),
 		...report.subsources.map(fromHealthSubsource),
