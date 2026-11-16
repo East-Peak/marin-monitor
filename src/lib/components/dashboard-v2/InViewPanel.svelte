@@ -110,6 +110,30 @@
 			rows: items.filter((i) => i.layer === layer)
 		}))
 	);
+
+	// The list is one Tab stop (a roving tabindex): the row last focused, else the first as the
+	// page lists them. Arrow keys move between rows; Tab leaves the list for the next control.
+	let lastFocused = $state<string | null>(null);
+	const tabStop = $derived(
+		items.some((i) => i.id === lastFocused) ? lastFocused : (groups[0]?.rows[0]?.id ?? null)
+	);
+	function navigate(e: KeyboardEvent) {
+		const rows = [...(root?.querySelectorAll<HTMLElement>('[data-in-view-row]') ?? [])];
+		const at = rows.indexOf(e.currentTarget as HTMLElement);
+		const to =
+			e.key === 'ArrowDown'
+				? Math.min(at + 1, rows.length - 1)
+				: e.key === 'ArrowUp'
+					? Math.max(at - 1, 0)
+					: e.key === 'Home'
+						? 0
+						: e.key === 'End'
+							? rows.length - 1
+							: -1;
+		if (to < 0 || at < 0 || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+		e.preventDefault();
+		rows[to]?.focus();
+	}
 </script>
 
 {#snippet listing()}
@@ -142,11 +166,15 @@
 						class:heading={row.heading}
 						class:under={!row.heading && row.rank !== undefined}
 						data-in-view-row={row.id}
+						tabindex={tabStop === row.id ? 0 : -1}
+						aria-keyshortcuts="ArrowDown ArrowUp Home End"
+						onkeydown={navigate}
 						data-hovered={hovered === row.id ? 'true' : undefined}
 						onclick={(e) => choose(row.id, e.detail === 0)}
 						onmouseenter={() => onhover(row.id)}
 						onmouseleave={() => onhover(null)}
 						onfocus={(e) => {
+							lastFocused = row.id;
 							// Only a keyboard's focus lights the row's camera; focus put back by Back
 							// after a pointer's selection does not (CAMDESEL1).
 							if (!restoring && e.currentTarget.matches(':focus-visible')) onhover(row.id);

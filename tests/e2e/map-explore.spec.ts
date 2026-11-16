@@ -87,6 +87,64 @@ test.describe('desktop 1440×900', () => {
 		expect(Math.hypot(c.lng + 122.49, c.lat - 37.95)).toBeLessThan(0.01);
 	});
 
+	test('the in-view list is one Tab stop: arrows move inside it, Tab leaves it for the next control', async ({
+		page
+	}) => {
+		// A long list, as the live county's is (hundreds of rows): sixty issues in view.
+		await stub(page, (r) =>
+			json(r, {
+				...FIX_IT,
+				count: 60,
+				issues: Array.from({ length: 60 }, (_, i) => ({
+					...FIX_IT.issues[0],
+					id: 1000 + i,
+					summary: `Pothole ${i}`,
+					lat: 37.95 + (i % 10) * 0.002,
+					lng: -122.49 + Math.floor(i / 10) * 0.002
+				}))
+			})
+		);
+		await explore(page, '/map?layers=311,news#13/37.955/-122.485');
+		const rows = drawer(page).locator('[data-in-view-row]');
+		await expect.poll(() => rows.count()).toBeGreaterThan(30);
+		// One row is in the Tab order, wherever Tab comes from.
+		await expect(drawer(page).locator('[data-in-view-row][tabindex="0"]')).toHaveCount(1);
+		const rowKey = () =>
+			page.evaluate(() => (document.activeElement as HTMLElement).dataset.inViewRow ?? null);
+		// Tab from the panel's own start lands on the list's one stop, then leaves the list: it
+		// does not walk row by row.
+		const head = drawer(page).locator('[data-in-view-count]');
+		await head.focus();
+		await page.keyboard.press('Tab');
+		const first = await rowKey();
+		expect(first).not.toBeNull();
+		await expect(drawer(page).locator('[data-in-view-row][tabindex="0"]')).toHaveCount(1);
+		// Arrows move inside the list; focus stays visibly on a row.
+		await page.keyboard.press('ArrowDown');
+		const second = await rowKey();
+		expect(second).not.toBeNull();
+		expect(second).not.toBe(first);
+		await expect(rows.nth(1)).toBeFocused();
+		await expect(rows.nth(1)).toHaveCSS('outline-style', 'solid');
+		await page.keyboard.press('End');
+		await expect(rows.last()).toBeFocused();
+		await page.keyboard.press('Home');
+		await expect(rows.first()).toBeFocused();
+		await page.keyboard.press('ArrowDown');
+		await page.keyboard.press('ArrowDown');
+		await expect(rows.nth(2)).toBeFocused();
+		// Tab leaves the list: the next control is not another row, and it is on the page.
+		await page.keyboard.press('Tab');
+		expect(await rowKey()).toBeNull();
+		expect(await page.evaluate(() => document.activeElement === document.body)).toBe(false);
+		// And Shift+Tab comes back to the row it left, not the first.
+		await page.keyboard.press('Shift+Tab');
+		await expect(rows.nth(2)).toBeFocused();
+		// Enter still opens the item.
+		await page.keyboard.press('Enter');
+		await expect(drawer(page).locator('[data-detail]')).toBeVisible();
+	});
+
 	test('layer toggles, selections and Back write the URL at once; a pan writes the hash', async ({
 		page
 	}) => {

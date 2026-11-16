@@ -426,8 +426,10 @@ test.describe('deselect by keyboard at 1440×900 (CAMDESEL1)', () => {
 		await page.locator('#v2-map-canvas').evaluate((el) => el.scrollIntoView({ block: 'end' }));
 		const row = panel(page).locator('[data-in-view-row="cams:alert-muir-beach"]');
 		await panel(page).locator('[data-in-view-count]').focus();
+		// The list is one Tab stop; its arrow keys walk the rows.
+		await page.keyboard.press('Tab');
 		for (let i = 0; i < 60 && !(await row.evaluate((el) => el === document.activeElement)); i++)
-			await page.keyboard.press('Tab');
+			await page.keyboard.press('ArrowDown');
 		await expect(row).toBeFocused();
 		await expect.poll(() => wedgeLit(page, 'alert-muir-beach')).toEqual(LOUD);
 		await page.keyboard.press('Enter');

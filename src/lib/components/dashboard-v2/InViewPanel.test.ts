@@ -101,6 +101,80 @@ describe('InViewPanel', () => {
 		expect((document.activeElement as HTMLElement)?.dataset.inViewRow).toBe('311:b');
 	});
 
+	describe('one Tab stop, arrow keys inside', () => {
+		const many = () => [
+			item('news:a'),
+			item('news:b'),
+			item('311:c', '311'),
+			item('311:d', '311'),
+			item('quake:e', 'quake')
+		];
+		const rows = (container: HTMLElement) => [
+			...container.querySelectorAll<HTMLElement>('[data-in-view-row]')
+		];
+		const stops = (container: HTMLElement) =>
+			rows(container)
+				.filter((r) => r.tabIndex === 0)
+				.map((r) => r.dataset.inViewRow);
+
+		it('only one row is in the Tab order, the first until another takes focus', () => {
+			const { container } = render(InViewPanel, props({ items: many() }));
+			expect(stops(container)).toEqual(['news:a']);
+		});
+
+		it('ArrowDown and ArrowUp move focus row to row, across layers, and stop at the ends', async () => {
+			const { container } = render(InViewPanel, props({ items: many() }));
+			const r = rows(container);
+			r[0].focus();
+			await fireEvent.keyDown(r[0], { key: 'ArrowUp' });
+			expect(document.activeElement).toBe(r[0]);
+			for (const next of [1, 2, 3, 4]) {
+				await fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+				expect(document.activeElement).toBe(r[next]);
+			}
+			await fireEvent.keyDown(r[4], { key: 'ArrowDown' });
+			expect(document.activeElement).toBe(r[4]);
+			await fireEvent.keyDown(r[4], { key: 'ArrowUp' });
+			expect(document.activeElement).toBe(r[3]);
+		});
+
+		it('Home and End go to the first and last row', async () => {
+			const { container } = render(InViewPanel, props({ items: many() }));
+			const r = rows(container);
+			r[2].focus();
+			await fireEvent.keyDown(r[2], { key: 'End' });
+			expect(document.activeElement).toBe(r[4]);
+			await fireEvent.keyDown(r[4], { key: 'Home' });
+			expect(document.activeElement).toBe(r[0]);
+		});
+
+		it('the focused row is the one Tab stop, so Tab leaves the list from where the reader is', async () => {
+			const { container } = render(InViewPanel, props({ items: many() }));
+			const r = rows(container);
+			r[3].focus();
+			await tick();
+			expect(stops(container)).toEqual(['311:d']);
+		});
+
+		it('when the list changes under the Tab stop, the first row takes it', async () => {
+			const p = props({ items: many() });
+			const { container, rerender } = render(InViewPanel, p);
+			rows(container)[3].focus();
+			await tick();
+			await rerender({ ...p, items: [item('news:a'), item('news:b')] });
+			expect(stops(container)).toEqual(['news:a']);
+		});
+
+		it('other keys are left alone', async () => {
+			const { container } = render(InViewPanel, props({ items: many() }));
+			const r = rows(container);
+			r[0].focus();
+			const e = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+			r[0].dispatchEvent(e);
+			expect(e.defaultPrevented).toBe(false);
+		});
+	});
+
 	it('names the enabled layers it cannot vouch for beside the list (Codex MAPX2 #5)', () => {
 		render(InViewPanel, props({ gaps: ['Traffic', 'Fire'] }));
 		expect(screen.getByText('Not shown, or not current: Traffic, Fire')).toBeTruthy();
