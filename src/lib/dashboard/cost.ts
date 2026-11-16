@@ -698,9 +698,10 @@ function latestHome(d: readonly HousingMetric[]): HousingMetric | null {
 	);
 }
 
-/** Redfin's months carry no read time; the end of the newest month dates it, as health does. Null with no months. */
+/** Redfin's months carry no read time; the end of the newest priced month dates it, as health does. Null with none. */
 export function housingObservedAt(d: readonly HousingMetric[]): string | null {
-	const newest = [...d].map((m) => m.month).sort((a, b) => b.localeCompare(a))[0];
+	// The month the tile shows: a newer row without a price vouches for nothing.
+	const newest = latestHome(d)?.month;
 	if (!newest) return null;
 	const end = Date.UTC(Number(newest.slice(0, 4)), Number(newest.slice(5, 7)), 0);
 	return Number.isFinite(end) ? new Date(end).toISOString() : null;

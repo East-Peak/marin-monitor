@@ -356,6 +356,10 @@ describe('cost model', () => {
 				'2026-10-31T00:00:00.000Z'
 			);
 			expect(housingObservedAt([])).toBeNull();
+			// A newer row with no price does not date the older price it cannot back.
+			expect(housingObservedAt([HOME('2026-05-01'), HOME('2026-10-01', null)])).toBe(
+				'2026-05-31T00:00:00.000Z'
+			);
 		});
 
 		it('month-dated reads (Redfin, BLS) carry month precision into the coverage list', () => {
