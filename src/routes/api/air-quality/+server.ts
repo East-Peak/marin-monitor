@@ -6,6 +6,9 @@ import type { RequestHandler } from './$types';
 import { MARIN_CENTER } from '$lib/config/towns';
 
 const AIRNOW_CURRENT = 'https://www.airnowapi.org/aq/observation/current/ziplatlong/';
+const EDGE_CACHED = {
+	'Cache-Control': 'public, max-age=300, s-maxage=600, stale-while-revalidate=600'
+};
 const NO_STORE = { 'Cache-Control': 'no-store' };
 
 export const GET: RequestHandler = async () => {
@@ -39,5 +42,5 @@ export const GET: RequestHandler = async () => {
 			headers: { 'Cache-Control': 'public, max-age=300' }
 		});
 	}
-	return json(reading, { headers: { 'Cache-Control': 'public, max-age=300' } });
+	return json(reading, { headers: EDGE_CACHED });
 };

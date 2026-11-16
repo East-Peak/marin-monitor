@@ -85,4 +85,10 @@ describe('GET /api/air-quality', () => {
 		expect((await get()).status).toBe(503);
 		expect(fetchWithTimeout).not.toHaveBeenCalled();
 	});
+
+	it('a reading is edge-cached (s-maxage)', async () => {
+		const edge = 'public, max-age=300, s-maxage=600, stale-while-revalidate=600';
+		fetchWithTimeout.mockResolvedValueOnce(upstream([observation]));
+		expect((await get()).headers.get('cache-control')).toBe(edge);
+	});
 });

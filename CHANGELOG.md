@@ -6,6 +6,11 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-11-15
 
+### Fixed — Public API reads are cached at the edge (NPS alerts rate limit)
+
+- **`/api/nps/alerts` no longer exhausts NPS's hourly key limit.** These routes sent `max-age` only, which Vercel's edge does not cache, so every page view called upstream. NPS alerts are now `s-maxage=900` (stale for up to an hour while revalidating); AirNow `/api/air-quality` `s-maxage=600`; `/api/calfire` and `/api/airport-status` `s-maxage=300`.
+- **A rate-limited NPS read is still a 429, never "no alerts".** The edge does not store a 429, so the route itself stops calling NPS for 5 minutes after one and answers 429 from that window.
+
 ### Fixed — Layout shift, the map's keyboard path and the sources pill (final smoke pass, P2)
 
 - **The desktop and tablet page no longer drops while it loads.** Both jump navs are in the server's HTML and CSS shows one (the row under the header from 768 px, the phone's bottom bar below), and the desktop brief's place is held in the first paint at its loaded height. The page's layout shift is at or under 0.1 at 390, 1024, 1440 and 1920 px (it was 0.2 to 1.0 on tablet and desktop); an e2e measures it at each width.
