@@ -186,10 +186,13 @@
 
 	// --- Clock ---
 	let clockText = $state('');
+	/** The wall clock in ms, ticked with the clock text: what ages the observed "Now". */
+	let clockMs = $state(Date.now());
 	let clockTimer: ReturnType<typeof setInterval> | null = null;
 
 	function updateClock() {
 		const now = new Date();
+		clockMs = now.getTime();
 		clockText =
 			now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) +
 			'  ' +
@@ -316,7 +319,7 @@
 	// "Now" is the station's observed reading (as the dashboard), never the hourly forecast.
 	let observedNow = $state<import('$lib/weather/brief').ObservedNow | null>(null);
 	let observationSettled = $state(false);
-	const currentTemp = $derived(observedNowTemp(observedNow, Date.now()));
+	const currentTemp = $derived(observedNowTemp(observedNow, clockMs));
 	const observationUnavailable = $derived(observationSettled && currentTemp === null);
 
 	// --- Region context for map sidebar ---
