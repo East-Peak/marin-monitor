@@ -6,6 +6,14 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-11-15
 
+### Fixed — Wrong data found in the final smoke pass
+
+- **The TV's "Now" is the station's observed temperature** (Gnoss Field, the reading the dashboard shows) and only while it is under 90 minutes old; with no usable report the header says "Observation unavailable" instead of showing a forecast. The map sidebar's and Conditions screen's regional temperatures are the hourly forecast and are now labeled so.
+- **A transit promotion is not an alert.** "Save Money with Clipper!" no longer counts in the TV header or fills a red ALERT box; it stays a story. The TV's news ticker also runs only stories from the last 7 days (the map's window) and drops the promotion.
+- **Cost & Character no longer reads "Partial coverage".** The retired grocery basket is not a source, and Redfin housing is dated by the end of its newest month, so neither counts as unverified.
+- **Month-stamped sources show their month.** Housing, USDA Food Plans, Redfin Cities and BLS read "Oct 2026 data" in the source-health dialog and footer, not an invented time on the day before. `/api/health` marks them with `observedAtPrecision: "month"`.
+- **The map key and the layer rail agree.** Fix It Marin and Earthquakes counts in the key come from the same in-view list as the rail.
+
 ### Removed — Leftovers of the old dashboard layout
 
 - **Dead code and policy entries only; nothing visible changes.** The in-app changelog data, the legacy panel, preset, onboarding, auto-refresh and map-toggle store methods, five unused style rules, seven unused silent-fallback data fetchers, and the Content-Security-Policy allowances for nominatim.openstreetmap.org, api.sunrise-sunset.org and currentuvindex.com (nothing calls them). Saved browser settings from the old layout still load.
