@@ -55,32 +55,32 @@ describe('Settings Store', () => {
 		}
 	});
 
-	it('should toggle panel visibility', async () => {
-		const { settings } = await import('./settings');
-
-		// Initially enabled
-		expect(get(settings).enabled['outdoors']).toBe(true);
-
-		// Toggle off
-		settings.togglePanel('outdoors');
-		expect(get(settings).enabled['outdoors']).toBe(false);
-
-		// Toggle on
-		settings.togglePanel('outdoors');
-		expect(get(settings).enabled['outdoors']).toBe(true);
-	});
-
-	it('should persist panel settings to localStorage', async () => {
-		const { settings } = await import('./settings');
-
-		settings.togglePanel('housing');
-
-		expect(localStorageMock.setItem).toHaveBeenCalledWith('mm_panels', expect.any(String));
-
-		const savedData = JSON.parse(
-			localStorageMock.setItem.mock.calls[localStorageMock.setItem.mock.calls.length - 1][1]
+	it('loads a persisted blob written by the retired panel, preset and onboarding controls', async () => {
+		localStorage.setItem(
+			'mm_panels',
+			JSON.stringify({ outdoors: false, satire: false, gone: true })
 		);
-		expect(savedData['housing']).toBe(false);
+		localStorage.setItem('mm_panelOrder', JSON.stringify(['satire', 'map', 'gone']));
+		localStorage.setItem('mm_panelSizes', JSON.stringify({ map: { width: 800 } }));
+		localStorage.setItem('mm_onboardingComplete', 'true');
+		localStorage.setItem('mm_selectedPreset', 'essentials');
+		localStorage.setItem(
+			'refreshSettings',
+			JSON.stringify({ autoRefreshEnabled: false, autoRefreshInterval: 1000 })
+		);
+
+		const [{ settings, enabledPanels }, { DEFAULT_PANEL_ORDER }] = await Promise.all([
+			import('./settings'),
+			import('../config')
+		]);
+
+		const state = get(settings);
+		expect(state.enabled['outdoors']).toBe(false);
+		expect(state.enabled['map']).toBe(true);
+		expect(state.sizes['map']).toEqual({ width: 800 });
+		expect(state.order.slice(0, 2)).toEqual(['satire', 'map']);
+		expect([...state.order].sort()).toEqual([...DEFAULT_PANEL_ORDER].sort());
+		expect(get(enabledPanels)).not.toContain('outdoors');
 	});
 
 	it('should update panel order', async () => {
@@ -133,7 +133,7 @@ describe('Settings Store', () => {
 		]);
 
 		// Make some changes
-		settings.togglePanel('outdoors');
+		settings.disablePanel('outdoors');
 		settings.updateSize('map', { width: 1000 });
 
 		// Reset
@@ -143,24 +143,6 @@ describe('Settings Store', () => {
 		expect(state.enabled['outdoors']).toBe(true);
 		expect(state.sizes['map']).toBeUndefined();
 		expect(state.order).toEqual(DEFAULT_PANEL_ORDER);
-	});
-
-	it('should enable every registered panel for the everything preset', async () => {
-		const [{ settings }, { PRESETS, DEFAULT_PANEL_ORDER }] = await Promise.all([
-			import('./settings'),
-			import('../config')
-		]);
-
-		expect(PRESETS.everything.panels).toEqual(DEFAULT_PANEL_ORDER);
-
-		settings.applyPreset('everything');
-
-		const state = get(settings);
-		expect(state.order).toEqual(DEFAULT_PANEL_ORDER);
-
-		for (const panelId of DEFAULT_PANEL_ORDER) {
-			expect(state.enabled[panelId]).toBe(true);
-		}
 	});
 
 	it('should restore missing panels into saved order', async () => {
@@ -176,8 +158,8 @@ describe('Settings Store', () => {
 		const { settings, enabledPanels } = await import('./settings');
 
 		// Disable some panels
-		settings.togglePanel('satire');
-		settings.togglePanel('correlation');
+		settings.disablePanel('satire');
+		settings.disablePanel('correlation');
 
 		const enabled = get(enabledPanels);
 		expect(enabled).not.toContain('satire');
@@ -238,7 +220,6 @@ describe('settings storage hardening (v2 retained controls)', () => {
 		try {
 			const { settings } = await import('./settings');
 			expect(get(settings).uiScale).toBe(100);
-			expect(settings.isOnboardingComplete()).toBe(false);
 			expect(() => settings.setUiScale(120)).not.toThrow();
 			expect(get(settings).uiScale).toBe(120);
 			expect(() => settings.toggleCamerasHidden()).not.toThrow();

@@ -157,22 +157,7 @@ function createInitialState(): RefreshState {
 function createRefreshStore() {
 	const { subscribe, set, update } = writable<RefreshState>(createInitialState());
 
-	let autoRefreshTimer: ReturnType<typeof setInterval> | null = null;
 	let refreshStartTime: number | null = null;
-
-	// Setup auto-refresh timer
-	function setupAutoRefresh(callback: () => void) {
-		const state = get({ subscribe });
-
-		if (autoRefreshTimer) {
-			clearInterval(autoRefreshTimer);
-			autoRefreshTimer = null;
-		}
-
-		if (state.autoRefreshEnabled && browser) {
-			autoRefreshTimer = setInterval(callback, state.autoRefreshInterval);
-		}
-	}
 
 	return {
 		subscribe,
@@ -299,51 +284,6 @@ function createRefreshStore() {
 		},
 
 		/**
-		 * Toggle auto-refresh.
-		 *
-		 * State must be updated BEFORE setupAutoRefresh runs, because
-		 * setupAutoRefresh reads the store via get() to decide whether to start
-		 * or clear the timer. Calling it inside update() would observe the
-		 * pre-update state and produce the wrong timer (toggle off keeping the
-		 * old timer running, toggle on failing to start one).
-		 */
-		toggleAutoRefresh(callback?: () => void) {
-			const state = get({ subscribe });
-			const newEnabled = !state.autoRefreshEnabled;
-			saveSettings(newEnabled, state.autoRefreshInterval);
-			update((s) => ({ ...s, autoRefreshEnabled: newEnabled }));
-			if (callback) setupAutoRefresh(callback);
-		},
-
-		/**
-		 * Set auto-refresh interval. Same ordering invariant as toggleAutoRefresh:
-		 * persist + update state first, then reschedule against the new state.
-		 */
-		setAutoRefreshInterval(intervalMs: number, callback?: () => void) {
-			const state = get({ subscribe });
-			saveSettings(state.autoRefreshEnabled, intervalMs);
-			update((s) => ({ ...s, autoRefreshInterval: intervalMs }));
-			if (callback) setupAutoRefresh(callback);
-		},
-
-		/**
-		 * Setup auto-refresh with callback
-		 */
-		setupAutoRefresh(callback: () => void) {
-			setupAutoRefresh(callback);
-		},
-
-		/**
-		 * Stop auto-refresh
-		 */
-		stopAutoRefresh() {
-			if (autoRefreshTimer) {
-				clearInterval(autoRefreshTimer);
-				autoRefreshTimer = null;
-			}
-		},
-
-		/**
 		 * Get time since last refresh
 		 */
 		getTimeSinceRefresh(): number | null {
@@ -366,10 +306,6 @@ function createRefreshStore() {
 		 * Reset store
 		 */
 		reset() {
-			if (autoRefreshTimer) {
-				clearInterval(autoRefreshTimer);
-				autoRefreshTimer = null;
-			}
 			set(createInitialState());
 		}
 	};

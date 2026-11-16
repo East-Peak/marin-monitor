@@ -144,19 +144,6 @@ describe('mapStore', () => {
 		});
 	});
 
-	describe('toggleSegments', () => {
-		it('toggles segments off', () => {
-			mapStore.toggleSegments();
-			expect(get(showSegments)).toBe(false);
-		});
-
-		it('toggles segments back on', () => {
-			mapStore.toggleSegments();
-			mapStore.toggleSegments();
-			expect(get(showSegments)).toBe(true);
-		});
-	});
-
 	describe('traffic toggles', () => {
 		it('toggleTrafficCongestion toggles congestion', () => {
 			mapStore.toggleTrafficCongestion();
@@ -168,26 +155,6 @@ describe('mapStore', () => {
 			mapStore.toggleTrafficEvents();
 			expect(get(showTrafficEvents)).toBe(false);
 			expect(get(showTrafficCongestion)).toBe(true);
-		});
-
-		it('toggleTrafficAll turns both off when both are on', () => {
-			mapStore.toggleTrafficAll();
-			expect(get(showTrafficCongestion)).toBe(false);
-			expect(get(showTrafficEvents)).toBe(false);
-		});
-
-		it('toggleTrafficAll turns both on when both are off', () => {
-			mapStore.toggleTrafficAll(); // turn off
-			mapStore.toggleTrafficAll(); // turn on
-			expect(get(showTrafficCongestion)).toBe(true);
-			expect(get(showTrafficEvents)).toBe(true);
-		});
-
-		it('toggleTrafficAll turns both off when only one is on', () => {
-			mapStore.toggleTrafficCongestion(); // only events on
-			mapStore.toggleTrafficAll(); // should turn both off (since one is still on)
-			expect(get(showTrafficCongestion)).toBe(false);
-			expect(get(showTrafficEvents)).toBe(false);
 		});
 	});
 

@@ -4,14 +4,7 @@
 
 import { writable, derived, get } from 'svelte/store';
 import { browser } from '$app/environment';
-import {
-	DEFAULT_PANEL_ORDER,
-	NON_DRAGGABLE_PANELS,
-	PRESETS,
-	ONBOARDING_STORAGE_KEY,
-	PRESET_STORAGE_KEY,
-	type PanelId
-} from '$lib/config';
+import { DEFAULT_PANEL_ORDER, NON_DRAGGABLE_PANELS, type PanelId } from '$lib/config';
 import { DEFAULT_LOCATION_ID, LOCATION_PRESETS } from '$lib/config/locations';
 import { safeGetItem, safeSetItem, safeRemoveItem } from '$lib/utils/safe-storage';
 
@@ -205,20 +198,6 @@ function createSettingsStore() {
 		},
 
 		/**
-		 * Toggle panel visibility
-		 */
-		togglePanel(panelId: PanelId) {
-			update((state) => {
-				const newEnabled = {
-					...state.enabled,
-					[panelId]: !state.enabled[panelId]
-				};
-				saveToStorage('panels', newEnabled);
-				return { ...state, enabled: newEnabled };
-			});
-		},
-
-		/**
 		 * Enable a specific panel
 		 */
 		enablePanel(panelId: PanelId) {
@@ -404,59 +383,6 @@ function createSettingsStore() {
 		getPanelSize(panelId: PanelId): { width?: number; height?: number } | undefined {
 			const state = get({ subscribe });
 			return state.sizes[panelId];
-		},
-
-		/**
-		 * Check if onboarding is complete
-		 */
-		isOnboardingComplete(): boolean {
-			if (!browser) return true;
-			return safeGetItem(ONBOARDING_STORAGE_KEY) === 'true';
-		},
-
-		/**
-		 * Get selected preset
-		 */
-		getSelectedPreset(): string | null {
-			if (!browser) return null;
-			return safeGetItem(PRESET_STORAGE_KEY);
-		},
-
-		/**
-		 * Apply a preset configuration
-		 */
-		applyPreset(presetId: string) {
-			const preset = PRESETS[presetId];
-			if (!preset) {
-				console.error('Unknown preset:', presetId);
-				return;
-			}
-
-			// Build panel settings - disable all panels first, then enable preset panels
-			const newEnabled = Object.fromEntries(
-				DEFAULT_PANEL_ORDER.map((id) => [id, preset.panels.includes(id)])
-			) as Record<PanelId, boolean>;
-
-			update((state) => {
-				const normalizedOrder = normalizePanelOrder(state.order);
-				saveToStorage('panels', newEnabled);
-				saveToStorage('order', normalizedOrder);
-				return { ...state, enabled: newEnabled, order: normalizedOrder };
-			});
-
-			// Mark onboarding complete and save preset
-			if (browser) {
-				safeSetItem(ONBOARDING_STORAGE_KEY, 'true');
-				safeSetItem(PRESET_STORAGE_KEY, presetId);
-			}
-		},
-
-		/**
-		 * Reset onboarding to show modal again
-		 */
-		resetOnboarding() {
-			safeRemoveItem(ONBOARDING_STORAGE_KEY);
-			safeRemoveItem(PRESET_STORAGE_KEY);
 		}
 	};
 }

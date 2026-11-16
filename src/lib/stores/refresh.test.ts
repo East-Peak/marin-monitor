@@ -104,29 +104,26 @@ describe('Refresh Store', () => {
 		expect(errors[0].error).toBe('API timeout');
 	});
 
-	it('should toggle auto-refresh', async () => {
-		const { refresh, autoRefreshEnabled } = await import('./refresh');
-
-		expect(get(autoRefreshEnabled)).toBe(true);
-
-		refresh.toggleAutoRefresh();
-		expect(get(autoRefreshEnabled)).toBe(false);
-
-		refresh.toggleAutoRefresh();
-		expect(get(autoRefreshEnabled)).toBe(true);
-	});
-
-	it('should persist auto-refresh settings', async () => {
+	it('loads a refreshSettings blob saved by the retired auto-refresh controls and keeps its values', async () => {
+		localStorageMock.setItem(
+			'refreshSettings',
+			JSON.stringify({ autoRefreshEnabled: false, autoRefreshInterval: 120000, lastRefresh: 5 })
+		);
 		const { refresh } = await import('./refresh');
 
-		refresh.setAutoRefreshInterval(120000);
+		expect(get(refresh).autoRefreshEnabled).toBe(false);
+		expect(get(refresh).autoRefreshInterval).toBe(120000);
+		expect(get(refresh).lastRefresh).toBe(5);
 
-		expect(localStorageMock.setItem).toHaveBeenCalledWith('refreshSettings', expect.any(String));
+		refresh.startRefresh();
+		refresh.endRefresh();
 
-		const savedData = JSON.parse(
+		const saved = JSON.parse(
 			localStorageMock.setItem.mock.calls[localStorageMock.setItem.mock.calls.length - 1][1]
 		);
-		expect(savedData.autoRefreshInterval).toBe(120000);
+		expect(saved.autoRefreshEnabled).toBe(false);
+		expect(saved.autoRefreshInterval).toBe(120000);
+		expect(saved.lastRefresh).toBeGreaterThan(5);
 	});
 
 	it('should record refresh history', async () => {
@@ -179,59 +176,6 @@ describe('Refresh Store', () => {
 
 		const state = get(refresh);
 		expect(state.refreshHistory.length).toBe(10);
-	});
-
-	// FIX-5 — auto-refresh rescheduling must read the post-update state, not the
-	// pre-update state. Previously setupAutoRefresh() was called inside the
-	// update() closure, which means it observed the OLD state via get() and
-	// produced the wrong timer. These tests pin the corrected behavior.
-
-	it('toggleAutoRefresh(callback) from enabled→disabled stops the timer', async () => {
-		const { refresh } = await import('./refresh');
-		const callback = vi.fn();
-
-		refresh.setupAutoRefresh(callback);
-
-		// Default is enabled; timer fires at the default interval.
-		vi.advanceTimersByTime(5 * 60 * 1000);
-		expect(callback).toHaveBeenCalledTimes(1);
-		callback.mockClear();
-
-		// Toggle off and re-supply the callback. With the bug, setupAutoRefresh()
-		// reads autoRefreshEnabled=true (pre-update) and keeps the timer running.
-		refresh.toggleAutoRefresh(callback);
-
-		vi.advanceTimersByTime(15 * 60 * 1000);
-		expect(callback).not.toHaveBeenCalled();
-	});
-
-	it('toggleAutoRefresh(callback) from disabled→enabled starts the timer', async () => {
-		const { refresh } = await import('./refresh');
-		const callback = vi.fn();
-
-		refresh.toggleAutoRefresh(); // → disabled, no callback yet
-
-		// Now toggle back on with a callback.
-		refresh.toggleAutoRefresh(callback);
-
-		vi.advanceTimersByTime(5 * 60 * 1000);
-		expect(callback).toHaveBeenCalledTimes(1);
-	});
-
-	it('setAutoRefreshInterval(newInterval, callback) reschedules with the new cadence', async () => {
-		const { refresh } = await import('./refresh');
-		const callback = vi.fn();
-
-		refresh.setupAutoRefresh(callback);
-
-		// New interval is 1 minute (was the 5-minute default).
-		refresh.setAutoRefreshInterval(60 * 1000, callback);
-
-		vi.advanceTimersByTime(60 * 1000);
-		expect(callback).toHaveBeenCalledTimes(1);
-
-		vi.advanceTimersByTime(60 * 1000);
-		expect(callback).toHaveBeenCalledTimes(2);
 	});
 });
 

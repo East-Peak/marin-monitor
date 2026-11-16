@@ -86,16 +86,6 @@ describe('News Store', () => {
 		expect(state.categories.outdoors.items[0].isAlert).toBe(false);
 	});
 
-	it('should set loading state', async () => {
-		const { news, localNews } = await import('./news');
-
-		news.setLoading('local', true);
-		expect(get(localNews).loading).toBe(true);
-
-		news.setLoading('local', false);
-		expect(get(localNews).loading).toBe(false);
-	});
-
 	it('should set error state', async () => {
 		const { news, localNews, hasErrors } = await import('./news');
 
@@ -413,7 +403,6 @@ describe('News Store', () => {
 		expect(get(localNews).items).toEqual([]);
 		news.setItems('local', [item('dash-late')]); // a pending dashboard write
 		news.appendItems('local', [item('dash-append')]);
-		news.setLoading('local', true);
 		news.setError('local', 'dash error');
 		expect(get(localNews)).toMatchObject({ items: [], loading: false, error: null });
 		news.setItems('local', [item('tv')], { owner: claim.token });

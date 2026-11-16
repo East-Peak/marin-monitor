@@ -102,24 +102,6 @@ function createNewsStore() {
 		},
 
 		/**
-		 * Set loading state for a category
-		 */
-		setLoading(category: NewsCategory, loading: boolean) {
-			if (!mayWrite(undefined)) return;
-			update((state) => ({
-				...state,
-				categories: {
-					...state.categories,
-					[category]: {
-						...state.categories[category],
-						loading,
-						error: loading ? null : state.categories[category].error
-					}
-				}
-			}));
-		},
-
-		/**
 		 * Set error state for a category
 		 */
 		setError(category: NewsCategory, error: string | null) {

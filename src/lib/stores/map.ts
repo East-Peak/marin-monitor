@@ -104,13 +104,6 @@ function createMapStore() {
 			}));
 		},
 
-		toggleSegments() {
-			update((state) => ({
-				...state,
-				showSegments: !state.showSegments
-			}));
-		},
-
 		toggleTrafficCongestion() {
 			update((state) => ({
 				...state,
@@ -123,17 +116,6 @@ function createMapStore() {
 				...state,
 				showTrafficEvents: !state.showTrafficEvents
 			}));
-		},
-
-		toggleTrafficAll() {
-			update((state) => {
-				const next = !(state.showTrafficCongestion || state.showTrafficEvents);
-				return {
-					...state,
-					showTrafficCongestion: next,
-					showTrafficEvents: next
-				};
-			});
 		},
 
 		setLayerActive(layer: MapLayer, active: boolean) {
