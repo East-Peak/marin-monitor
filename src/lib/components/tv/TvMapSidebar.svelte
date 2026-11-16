@@ -29,7 +29,7 @@
 				<span class="text-2xl font-bold text-gray-100">{weather.temp}&deg;F</span>
 				<span class="text-xs text-gray-400">{weather.shortForecast}</span>
 			</div>
-			<p class="text-[10px] text-gray-500">{weather.wind}</p>
+			<p class="text-[10px] text-gray-500">{weather.wind} · hourly forecast</p>
 		{/if}
 	</div>
 

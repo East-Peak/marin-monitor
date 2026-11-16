@@ -12,6 +12,7 @@ vi.mock('$lib/config/strava', async (importOriginal) => ({
 const props = {
 	paused: false,
 	currentTemp: null,
+	observationUnavailable: false,
 	stories24h: 0,
 	alertCount: 0,
 	clockText: '',
@@ -47,5 +48,27 @@ describe('TvWallboardHeader screen buttons', () => {
 				.querySelector('[data-screen-id][aria-current="true"]')
 				?.getAttribute('data-screen-id')
 		).toBe('news-wire');
+	});
+});
+
+describe('TvWallboardHeader "Now" temperature', () => {
+	it('shows an observed temperature under Now', () => {
+		const { container } = render(TvWallboardHeader, {
+			props: { ...props, currentTemp: 54, carouselIdx: 0 }
+		});
+		expect(container.textContent).toMatch(/Now\s*54/);
+	});
+
+	it('says the observation is unavailable instead of showing a number', () => {
+		const { container } = render(TvWallboardHeader, {
+			props: { ...props, observationUnavailable: true, carouselIdx: 0 }
+		});
+		expect(container.textContent).toContain('Observation unavailable');
+		expect(container.textContent).not.toMatch(/Now\s*\d/);
+	});
+
+	it('shows nothing while the observation is still loading', () => {
+		const { container } = render(TvWallboardHeader, { props: { ...props, carouselIdx: 0 } });
+		expect(container.textContent).not.toMatch(/Now|Observation/);
 	});
 });

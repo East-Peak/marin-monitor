@@ -44,6 +44,9 @@
 	import { fetchTidePredictions } from '$lib/api/marin/tides';
 	import { createTvNewsLoader, TV_NEWS_SOURCES } from './tv-news';
 	import { fetchHourlyForecast } from '$lib/api/marin/nws-hourly';
+	import { fetchLatestObservation } from '$lib/api/marin/nws-observation';
+	import { OBSERVATION_STATION } from '$lib/weather/brief';
+	import { observedNowTemp } from './tv-observed';
 	import { fetchCompositeDataWithStatus } from '$lib/api/marin/composite';
 	import { fetchLifestyleWithStatus } from '$lib/api/marin/lifestyle';
 	import { fetchCappuccinoDataWithStatus } from '$lib/api/marin/cappuccino';
@@ -310,9 +313,11 @@
 	// Derived: current map viewId (for the persistent map instance)
 	const activeMapViewId = $derived(TV_SCREENS[carouselIdx]?.mapViewId ?? 'county');
 	const isMapScreenActive = $derived(!!TV_SCREENS[carouselIdx]?.mapViewId);
-	// Use the first hourly period (current hour) for actual current temp,
-	// NOT weatherForecast[0] which is the daytime high
-	const currentTemp = $derived(hourlyPeriods[0]?.temperature ?? null);
+	// "Now" is the station's observed reading (as the dashboard), never the hourly forecast.
+	let observedNow = $state<import('$lib/weather/brief').ObservedNow | null>(null);
+	let observationSettled = $state(false);
+	const currentTemp = $derived(observedNowTemp(observedNow, Date.now()));
+	const observationUnavailable = $derived(observationSettled && currentTemp === null);
 
 	// --- Region context for map sidebar ---
 	type RegionContextItem = { label: string; value: string };
@@ -491,7 +496,20 @@
 	let lastRegionWeatherFetch = 0;
 	const REGION_WEATHER_TTL = 15 * 60 * 1000; // 15 minutes for map region weather
 
+	async function loadObservation(errors: string[]) {
+		try {
+			observedNow = await fetchLatestObservation(OBSERVATION_STATION, {
+				signal: lifetime.signal
+			});
+		} catch (err) {
+			observedNow = null;
+			errors.push(`weather/observation: ${(err as Error).message}`);
+		}
+		observationSettled = true;
+	}
+
 	async function loadWeather(errors: string[]) {
+		await loadObservation(errors);
 		try {
 			const hourly = await fetchHourlyForecast();
 			if (hourly.length > 0) hourlyPeriods = hourly;
@@ -779,6 +797,7 @@
 		{carouselIdx}
 		{paused}
 		{currentTemp}
+		{observationUnavailable}
 		{stories24h}
 		{alertCount}
 		{clockText}

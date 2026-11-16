@@ -5,6 +5,8 @@
 		carouselIdx: number;
 		paused: boolean;
 		currentTemp: number | null;
+		/** The station read finished with no usable recent report. */
+		observationUnavailable: boolean;
 		stories24h: number;
 		alertCount: number;
 		clockText: string;
@@ -16,6 +18,7 @@
 		carouselIdx,
 		paused,
 		currentTemp,
+		observationUnavailable,
 		stories24h,
 		alertCount,
 		clockText,
@@ -49,6 +52,8 @@
 		{#if currentTemp !== null}
 			<span class="text-xs text-gray-500">Now</span>
 			<span class="text-sm text-gray-300 font-medium">{currentTemp}&deg;F</span>
+		{:else if observationUnavailable}
+			<span class="text-xs text-gray-500">Observation unavailable</span>
 		{/if}
 		<span class="text-xs text-gray-500">{stories24h} stories</span>
 		{#if alertCount > 0}

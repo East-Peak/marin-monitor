@@ -131,7 +131,7 @@
 					>
 						{weather?.temp != null ? `${weather.temp}\u00b0` : '\u2014'}
 					</span>
-					<span class="text-[10px] text-zinc-500">F</span>
+					<span class="text-[10px] text-zinc-500">F forecast</span>
 				</div>
 			</div>
 
