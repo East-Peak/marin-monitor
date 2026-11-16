@@ -5,6 +5,8 @@ import { safetyNews, localNews, civicNews, alerts, threeOneOneNews } from '$lib/
 import { refresh } from '$lib/stores/refresh';
 import { stravaEvents } from '$lib/stores/strava';
 import { STRAVA_CHYRON_MAX_AGE_MS, STRAVA_ENABLED } from '$lib/config/strava';
+import { onMapWindow } from '$lib/news/recency';
+import { isPromoHeadline } from '$lib/news/promo';
 import type { TickerItem, TickerCategory, TickerStatus } from '$lib/config/tv';
 import type { NewsItem } from '$lib/types';
 import type { CompositeData } from '$lib/types/composite';
@@ -43,6 +45,10 @@ function newsToTicker(
 		status: item.isAlert ? 'elevated' : status
 	};
 }
+
+/** The chyron's stories: published inside the map's window, and not a transit promotion. */
+const tickerStories = (items: NewsItem[], now: number): NewsItem[] =>
+	items.filter((item) => onMapWindow(item, now) && !isPromoHeadline(item.title));
 
 /** Format a dollar amount with cents: $5.75 */
 function fmtPrice(n: number): string {
@@ -206,9 +212,10 @@ export const tvTickerItems = derived(
 	([$safety, $local, $civic, $alerts, $strava, $threeOneOne, $indexData, $refresh]) => {
 		// NOTE: $safety, $local, $civic are CategoryState objects — access .items for NewsItem[]
 		// $alerts is already NewsItem[]
-		const safetyItems = $safety.items ?? [];
-		const localItems = $local.items ?? [];
-		const civicItems = $civic.items ?? [];
+		const now = Date.now();
+		const safetyItems = tickerStories($safety.items ?? [], now);
+		const localItems = tickerStories($local.items ?? [], now);
+		const civicItems = tickerStories($civic.items ?? [], now);
 		const items: TickerItem[] = [];
 
 		try {
@@ -269,13 +276,12 @@ export const tvTickerItems = derived(
 			}
 
 			// 311 — latest 3
-			const threeOneOneItems = $threeOneOne.items ?? [];
+			const threeOneOneItems = tickerStories($threeOneOne.items ?? [], now);
 			for (const item of threeOneOneItems.slice(0, 3)) {
 				items.push(newsToTicker(item, '311'));
 			}
 
 			// Strava KOM/QOM events (max 4, within 48h); none while Strava is off
-			const now = Date.now();
 			const recentStravaEvents = (STRAVA_ENABLED ? ($strava.events ?? []) : [])
 				.filter((e) => now - new Date(e.detectedAt).getTime() < STRAVA_CHYRON_MAX_AGE_MS)
 				.slice(0, 4);

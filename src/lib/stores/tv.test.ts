@@ -190,6 +190,45 @@ describe('tvTickerItems', () => {
 		expect(lwItems[0].text).toBe('New park opens');
 	});
 
+	describe("freshness and promotions (the map's 7-day window, the transit promo list)", () => {
+		const DAY = 86_400_000;
+		const item = (id: string, title: string, ageDays: number) => ({
+			id,
+			title,
+			timestamp: Date.now() - ageDays * DAY,
+			isAlert: false,
+			source: 'Golden Gate',
+			category: 'safety'
+		});
+		const run = (items: unknown[]) => {
+			mocks.__mockSafetyState.set({ items, loading: false, error: null, lastUpdated: Date.now() });
+			return get(tvTickerItems).map((i: any) => i.text);
+		};
+
+		it('drops a story older than the window and keeps one inside it', () => {
+			const texts = run([
+				item('old', 'GG ROAD CLOSURE: Today (10/15) at 5PM - Grant Ave', 31),
+				item('recent', 'Ferry service resumes', 6)
+			]);
+			expect(texts).toContain('Ferry service resumes');
+			expect(texts.join(' ')).not.toContain('GG ROAD CLOSURE');
+		});
+
+		it('drops the Clipper promotion however fresh', () => {
+			const texts = run([
+				item('promo', 'Save Money with Clipper!', 0),
+				item('real', 'Ferry service resumes', 0)
+			]);
+			expect(texts.join(' ')).not.toContain('Clipper');
+			expect(texts).toContain('Ferry service resumes');
+		});
+
+		it('drops an undated story (never "recent")', () => {
+			const undated = { ...item('u', 'Undated notice', 0), timestamp: NaN };
+			expect(run([undated]).join(' ')).not.toContain('Undated notice');
+		});
+	});
+
 	it('deduplicates by base item ID across categories', () => {
 		const sharedItem = {
 			id: 'shared-1',
