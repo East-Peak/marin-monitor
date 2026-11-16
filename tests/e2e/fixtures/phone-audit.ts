@@ -249,6 +249,51 @@ export async function auditTap(page: Page, info: TestInfo, c: TapCheck): Promise
 	return why;
 }
 
+/**
+ * Everything a finger can press, wherever the page puts it. Not the map's canvas or a chart's
+ * slider (surfaces dragged or touched anywhere along them, not buttons), and not the two credit
+ * links inside the map's attribution sentence: an inline link in running text is exempt from a
+ * target-size floor (WCAG 2.5.8), and the "i" that opens it holds its 44 px.
+ */
+export const CONTROLS =
+	'a[href]:not(.maplibregl-ctrl-attrib a), button, summary, input, select, textarea, [role="button"], [role="link"], [role="option"], [tabindex="0"]:not(canvas):not([role="slider"])';
+
+/**
+ * The sweep behind the per-control audits: every visible control that matches `within` is
+ * hit-tested, so one that a page grows later (or only shows on some data) cannot slip past a
+ * list of controls named by hand. Returns what is under 44 px or has something on top of it.
+ */
+export async function undersized(
+	page: Page,
+	info: TestInfo,
+	c: { page: string; state: string; within?: string }
+): Promise<string[]> {
+	const failures: string[] = [];
+	const controls = page.locator(c.within ? `${c.within} :is(${CONTROLS})` : CONTROLS);
+	for (const control of await controls.all()) {
+		if (!(await control.isVisible())) continue;
+		const hit = await measure(control);
+		const name = await control.evaluate(
+			(el) =>
+				`${el.tagName.toLowerCase()}${el.className && typeof el.className === 'string' ? `.${el.className.split(' ')[0]}` : ''} "${(el.textContent ?? el.getAttribute('aria-label') ?? '').trim().replace(/\s+/g, ' ').slice(0, 40)}"`
+		);
+		const why: string[] = [];
+		if (hit.covered) why.push(`intercepted by ${hit.covered}`);
+		if (hit.hitW < MIN_TARGET - 1 || hit.hitH < MIN_TARGET - 1)
+			why.push(`hit area ${hit.hitW}×${hit.hitH}`);
+		record(info, {
+			page: c.page,
+			state: c.state,
+			control: `sweep ${name}`,
+			result: why.length ? 'fail' : 'pass',
+			why,
+			hit
+		});
+		failures.push(...why.map((w) => `${name}: ${w}`));
+	}
+	return failures;
+}
+
 async function passes(check: () => Promise<void>) {
 	try {
 		await check();

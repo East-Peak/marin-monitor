@@ -745,6 +745,11 @@
 		.v2-map-canvas :global(.maplibregl-ctrl-bottom-right) {
 			bottom: 3.25rem;
 		}
+		/* The preview is short: its zoom buttons run down the right edge and the opened
+		   attribution would sit over the lower one, so it ends left of them. */
+		.v2-map[data-mode='dashboard'] .v2-map-canvas :global(.maplibregl-ctrl-bottom-right) {
+			right: 3.5rem;
+		}
 		.v2-map-expand {
 			/* Bottom-left: the attribution holds bottom-right, zoom top-right, layers top-left
 			   (Codex 9c #2); above the inspectors, which are lifted clear of it below. */

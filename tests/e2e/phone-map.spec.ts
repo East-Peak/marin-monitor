@@ -5,7 +5,8 @@ import {
 	openPhone,
 	preparePhone,
 	record,
-	swipe
+	swipe,
+	undersized
 } from './fixtures/phone-audit';
 import { mapCenter, settled } from './fixtures/v2-probe';
 import { INSPECTION_CLICK_LAYERS } from '../../src/lib/components/map/map-interactions';
@@ -43,6 +44,14 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe('@phone map controls', () => {
+	test('every control on /map has a 44 px hit area, the attribution links too', async ({
+		page
+	}, info) => {
+		test.slow(); // every control, hit-tested one by one
+		const failures = await undersized(page, info, { page: PAGE, state: 'default' });
+		expect(failures).toEqual([]);
+	});
+
 	test('header: ← Dashboard goes home; the town picker opens and picks', async ({ page }, info) => {
 		const trigger = page.locator('.picker-trigger');
 		const list = page.getByRole('listbox', { name: 'Marin towns' });

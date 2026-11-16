@@ -5,8 +5,10 @@ import {
 	openPhone,
 	preparePhone,
 	record,
-	swipe
+	swipe,
+	undersized
 } from './fixtures/phone-audit';
+import { stubGettingAround } from './fixtures/phone-getting-around';
 
 /**
  * MOBILE1: every control on the phone dashboard, tapped on an iPhone (WebKit) and a Pixel
@@ -440,6 +442,27 @@ test.describe('@phone dashboard controls', () => {
 			expect(failures).toEqual([]);
 		});
 	}
+
+	test('every control on the page has a 44 px hit area, whatever data it shows', async ({
+		page
+	}, info) => {
+		test.slow(); // every control, hit-tested one by one
+		// Getting Around's footer links (more road events, more transit alerts, the FAA link) only
+		// exist on a day with that data: give it that day, then open everything.
+		await stubGettingAround(page);
+		await page.reload();
+		await expect(page.locator('[data-hydrated="true"]')).toBeVisible();
+		for (const id of SECTIONS) {
+			await toggle(page, id).tap();
+			await expect
+				.poll(async () => (await body(page, id).innerText()).trim().length, { timeout: 10_000 })
+				.toBeGreaterThan(40);
+		}
+		await expect(page.locator('[data-ga-foot] a')).toHaveCount(3, { timeout: 25_000 });
+		await expect(body(page, 'getting-around')).not.toContainText('Loading…', { timeout: 25_000 });
+		const failures = await undersized(page, info, { page: PAGE, state: 'every section open' });
+		expect(failures).toEqual([]);
+	});
 
 	test('jump bar: each target scrolls into view, opening its section', async ({ page }, info) => {
 		const nav = page.getByRole('navigation', { name: 'Jump to' });
