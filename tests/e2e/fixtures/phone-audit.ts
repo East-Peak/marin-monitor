@@ -272,7 +272,15 @@ export async function undersized(
 	const controls = page.locator(c.within ? `${c.within} :is(${CONTROLS})` : CONTROLS);
 	for (const control of await controls.all()) {
 		if (!(await control.isVisible())) continue;
-		const hit = await measure(control);
+		// A failure counts only when it holds: a smooth scroll still under way on a loaded machine
+		// can leave a control's centre off screen for the moment it is measured.
+		let hit = await measure(control);
+		for (
+			let again = 0;
+			again < 2 && (hit.covered || hit.hitW < MIN_TARGET - 1 || hit.hitH < MIN_TARGET - 1);
+			again++
+		)
+			hit = await measure(control);
 		const name = await control.evaluate(
 			(el) =>
 				`${el.tagName.toLowerCase()}${el.className && typeof el.className === 'string' ? `.${el.className.split(' ')[0]}` : ''} "${(el.textContent ?? el.getAttribute('aria-label') ?? '').trim().replace(/\s+/g, ' ').slice(0, 40)}"`
