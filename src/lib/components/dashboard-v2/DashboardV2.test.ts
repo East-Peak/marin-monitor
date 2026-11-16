@@ -263,7 +263,7 @@ describe('DashboardV2 preview shell', () => {
 		);
 		expect(order).toEqual(['getting-around', 'outdoors', 'news', 'cost', 'events']);
 		expect(container.querySelector('#sections [data-section="getting-around"]')).toBeNull();
-		expect(screen.getByRole('navigation', { name: 'Jump to' })).toBeTruthy();
+		expect(screen.getAllByRole('navigation', { name: 'Jump to' })).not.toHaveLength(0);
 	});
 
 	it('desktop (1440) follows the mockup: Cost, the Lately band, then News beside Events (Goal 4)', async () => {
@@ -384,7 +384,6 @@ describe('DashboardV2 preview shell', () => {
 		await tick();
 		expect(container.querySelector('[data-card="ocean"]')).toBeNull();
 		expect(container.querySelector('[data-brief-link="getting-around"]')).not.toBeNull();
-		expect(container.querySelector('nav.v2-jump-desk')).toBeNull();
 		expect(controller.enableBriefDetail).not.toHaveBeenCalled();
 		expect(controller.ensure).not.toHaveBeenCalledWith('marine');
 	});
@@ -399,12 +398,17 @@ describe('DashboardV2 preview shell', () => {
 			unmount();
 		}
 	});
-	it('tablet (820) has the jump row; the phone (390) line is the Getting Around status, transit only while closed (HARMONIZE1)', async () => {
-		atWidth(820);
-		const tablet = render(DashboardV2);
-		await tick();
-		expect(tablet.container.querySelector('nav.v2-jump-desk')).not.toBeNull();
-		tablet.unmount();
+	it('both jump navs are always in the markup; CSS shows one, so no width check moves the page', async () => {
+		for (const w of [390, 820, 1440]) {
+			atWidth(w);
+			const { container, unmount } = render(DashboardV2);
+			await tick();
+			expect(container.querySelectorAll('nav.v2-jump-desk'), `${w}`).toHaveLength(1);
+			expect(container.querySelectorAll('nav.v2-jump-nav'), `${w}`).toHaveLength(1);
+			unmount();
+		}
+	});
+	it('the phone (390) line is the Getting Around status, transit only while closed (HARMONIZE1)', async () => {
 		atWidth(390);
 		const { container } = render(DashboardV2);
 		await tick();

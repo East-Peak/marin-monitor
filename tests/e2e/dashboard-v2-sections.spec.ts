@@ -248,7 +248,10 @@ test.describe('phone 390×844', () => {
 			await page.keyboard.press('Tab');
 			const r = await page.evaluate(() => {
 				const el = document.activeElement as HTMLElement | null;
-				const nav = document.querySelector('nav[aria-label="Jump to"]');
+				// Both jump navs are in the markup; CSS shows one (the other has no box).
+				const nav = [...document.querySelectorAll('nav[aria-label="Jump to"]')].find(
+					(n) => n.getClientRects().length
+				);
 				if (!el || !nav || nav.contains(el) || el === document.body) return null;
 				const b = el.getBoundingClientRect();
 				return {

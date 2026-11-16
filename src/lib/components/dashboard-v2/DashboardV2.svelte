@@ -67,11 +67,7 @@
 	import { replayEarlyTaps } from '$lib/dashboard/early-taps';
 	import { createDashboardV2Controller, V2_WAKE_CHECK_MS } from '$lib/dashboard/v2-controller';
 	import { seededSnapshotEntries } from '$lib/dashboard/source-adapters';
-	import {
-		isDesktopViewport,
-		isPhoneViewport,
-		sectionFromHash
-	} from '$lib/dashboard/section-prefs';
+	import { isDesktopViewport, sectionFromHash } from '$lib/dashboard/section-prefs';
 	import { V2_SECTIONS, type V2Section } from '$lib/dashboard/v2-sections';
 
 	const LATER = 'This part arrives in a later release.';
@@ -99,8 +95,6 @@
 	let innerWidth = $state(0);
 	/** ≥1024: sections always open, the cam wall under the map. Phone and tablet keep the strip. */
 	const desktop = $derived(hydrated && isDesktopViewport(innerWidth));
-	/** ≥768: the jump row under the header (HARMONIZE1); the phone keeps its bottom bar. */
-	const wide = $derived(hydrated && !isPhoneViewport(innerWidth));
 	/**
 	 * The saved town is read from storage at module init, which SSR cannot see: Latest reporting
 	 * and the map are county-wide until mount, then narrow once (SSR output is never personalized).
@@ -393,9 +387,10 @@
 		<HealthIndicator report={healthReport} {outcomes} now={clock} />
 	</header>
 
-	{#if wide}
-		<div class="v2-jump-row"><JumpNav desktop onjump={navJump} /></div>
-	{/if}
+	<!-- Both jump navs are in the server's HTML and CSS shows one: the row under the header from
+	     768 (HARMONIZE1), the phone's bottom bar below. A width check after mount would drop the
+	     whole page under the row as it appears. -->
+	<div class="v2-jump-row"><JumpNav desktop onjump={navJump} /></div>
 
 	<main class="v2-main">
 		<!-- The phone's top is in the first paint (MOBILE1): the server's advisories, the brief's
@@ -410,6 +405,9 @@
 				onjump={navJump}
 			/>
 		{:else}
+			<!-- Desktop's brief mounts after hydration; its place is held in the server's HTML (CSS
+			     shows this only from 1024, before mount) so the map and everything under it stay put. -->
+			<div class="v2-brief-hold" aria-hidden="true"></div>
 			<BriefRow brief={briefState} now={clock} around={aroundCard} onjump={navJump} />
 			<CamStrip now={$clock} headings={controller?.camHeadings} />
 		{/if}
@@ -557,9 +555,7 @@
 
 	<CamViewerHost now={$clock} headings={controller?.camHeadings} />
 
-	{#if !wide}
-		<JumpNav onjump={navJump} />
-	{/if}
+	<JumpNav onjump={navJump} />
 </div>
 
 <style>
@@ -585,6 +581,11 @@
 	.v2-jump-row {
 		padding: 0.25rem var(--v2-gutter);
 		border-bottom: 1px solid var(--border-light);
+	}
+	@media (max-width: 767px) {
+		.v2-jump-row {
+			display: none;
+		}
 	}
 	.v2-logo {
 		color: var(--text-primary);
@@ -629,6 +630,32 @@
 	}
 	.v2-map-hold-status {
 		min-height: var(--v2-map-status-h);
+	}
+	/* The desktop brief's height with its data in: held before mount (the hold below) and while
+	   it loads (BriefDesktop's min-height), so the map under it never moves. */
+	.dash-v2 {
+		--v2-brief-h: 586px;
+	}
+	@media (min-width: 1280px) {
+		.dash-v2 {
+			--v2-brief-h: 260px;
+		}
+	}
+	@media (min-width: 1680px) {
+		.dash-v2 {
+			--v2-brief-h: 242px;
+		}
+	}
+	.v2-brief-hold {
+		display: none;
+	}
+	@media (min-width: 1024px) {
+		/* Desktop's brief mounts after hydration; its place is in the server's HTML. */
+		.dash-v2[data-hydrated='false'] .v2-brief-hold {
+			display: block;
+			margin-top: var(--v2-gap);
+			min-height: var(--v2-brief-h);
+		}
 	}
 	@media (min-width: 1024px) {
 		/* Before mount the server can't know the width: desktop never shows the phone's top. */

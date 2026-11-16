@@ -337,6 +337,8 @@
 		grid-template-columns: minmax(0, 1fr);
 		gap: var(--v2-gap, 14px);
 		margin: var(--v2-gap, 14px) 0 0;
+		/* The loaded height (DashboardV2 sets it per width): loading and loaded move nothing. */
+		min-height: var(--v2-brief-h, 0);
 	}
 	@media (max-width: 1023px) {
 		/* The render boundary's CSS half: never shown below desktop, whatever mounts it. */
