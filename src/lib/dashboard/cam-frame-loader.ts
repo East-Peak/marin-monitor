@@ -98,3 +98,49 @@ export async function loadFrame(
 export function releaseFrame(img: HTMLImageElement | null, revoke = defaultRevoke): void {
 	if (img?.src.startsWith('blob:')) revoke(img.src);
 }
+
+/**
+ * The frame the server put in the HTML (LCP1), handed to the tile once it has loaded and
+ * decoded: the same element, so nothing is fetched twice. Always settles: an image that already
+ * failed (its error event long gone) or fails to decode is no frame; a cancel or the deadline
+ * stops its download.
+ */
+export function adoptFrame(
+	img: HTMLImageElement,
+	signal?: AbortSignal
+): Promise<LoadedFrame | null> {
+	return new Promise((resolve) => {
+		let settled = false;
+		// Settled once, after decoding: the deadline and a cancel cover the decode too.
+		const finish = (frame: LoadedFrame | null) => {
+			if (settled) return;
+			settled = true;
+			clearTimeout(timer);
+			signal?.removeEventListener('abort', stop);
+			img.removeEventListener('load', loaded);
+			img.removeEventListener('error', failed);
+			resolve(frame);
+		};
+		const stop = () => {
+			if (settled) return;
+			finish(null);
+			img.src = '';
+		};
+		const loaded = () => {
+			if (img.naturalWidth === 0) return finish(null);
+			const frame = { img, capturedAt: null, placeholder: false };
+			if (typeof img.decode !== 'function') return finish(frame);
+			img.decode().then(
+				() => finish(frame),
+				() => finish(null)
+			);
+		};
+		const failed = () => finish(null);
+		const timer = setTimeout(stop, FETCH_TIMEOUT_MS);
+		if (signal?.aborted) return stop();
+		signal?.addEventListener('abort', stop, { once: true });
+		if (img.complete) return loaded();
+		img.addEventListener('load', loaded);
+		img.addEventListener('error', failed);
+	});
+}

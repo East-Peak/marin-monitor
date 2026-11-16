@@ -6,6 +6,11 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-11-15
 
+### Changed — The dashboard's first camera frame comes with the page (LCP1)
+
+- **The first camera tile's picture is in the page's HTML**, so a phone paints it with the page instead of after every script has loaded and run. It comes from our own `/api/cams/frame/<id>`, which passes on the camera's latest ALERTCalifornia thumbnail unchanged (its info bar included), with the source's own age when it gives one and a 30-second cache; a camera that doesn't answer with a picture is a 503. Only ridge cameras are served this way: Caltrans tiles keep reading their source's age in script.
+- **Nothing else changes.** Once the page is interactive the tile takes over that same picture (nothing is fetched twice) and refreshes from the source each minute as before. A failed first frame is never shown broken: the tile tries the source itself, and "Camera offline" follows a second failure. Hidden cameras still request nothing, before the scripts run too (the picture loads lazily, and the hidden strip has no box); the frame stops loading if the strip scrolls away, the tile unmounts, or the page opens on the camera viewer (`?cam=`).
+
 ### Added — Golden Gate's newsletters and meeting notices in the News & Civic wire
 
 - **Each Golden Gate newsletter or public-meeting email is one row in "More from the wire"**, merged by date with the feeds' rows in the same styling: the subject (resend markers dropped) linking its public bulletin, "Golden Gate District · email · Nov 13 · Larkspur" (the town the headline names, else County-wide). Rows show for 14 days after sending; no end date is read from the text; an email with no bulletin link is not shown. The header still counts feeds only, and the card's footer adds "Golden Gate emails · last received Nov 13, 10:09 AM" (from `/api/health`'s email information) when any email has ever arrived. Phones show the same rows in the News section. Only the subject and bulletin link of these emails reach the browser.

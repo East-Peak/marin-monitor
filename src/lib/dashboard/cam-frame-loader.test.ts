@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { loadFrame, releaseFrame } from './cam-frame-loader';
+import { adoptFrame, loadFrame, releaseFrame } from './cam-frame-loader';
 
 const URL_ = 'https://cwwp2.dot.ca.gov/x.jpg?t=1';
 const img = (src = 'blob:frame') => Object.assign(document.createElement('img'), { src });
@@ -156,5 +156,96 @@ describe('releaseFrame', () => {
 		isPlaceholder.mockClear();
 		expect((await loadFrame(URL_, false, { ...opts(), isPlaceholder }))?.placeholder).toBe(false);
 		expect(isPlaceholder).not.toHaveBeenCalled();
+	});
+});
+
+describe('adoptFrame (LCP1: the frame the server put in the HTML)', () => {
+	/** An <img> from the HTML; jsdom loads nothing, so its state is set by hand. */
+	const served = (state: { complete: boolean; naturalWidth?: number }) => {
+		const el = Object.assign(document.createElement('img'), { src: 'http://x/api/cams/frame/a' });
+		Object.defineProperty(el, 'complete', { configurable: true, get: () => state.complete });
+		Object.defineProperty(el, 'naturalWidth', { get: () => state.naturalWidth ?? 0 });
+		return el;
+	};
+
+	it('already decoded: that element, at once, with no age', async () => {
+		const el = served({ complete: true, naturalWidth: 240 });
+		expect(await adoptFrame(el)).toEqual({ img: el, capturedAt: null, placeholder: false });
+	});
+	it('loaded before hydration but undecodable (corrupt bytes): no frame', async () => {
+		const el = served({ complete: true, naturalWidth: 240 });
+		el.decode = () => Promise.reject(new DOMException('', 'EncodingError'));
+		expect(await adoptFrame(el)).toBeNull();
+	});
+	it('loaded before hydration: decoded before it is handed over', async () => {
+		const el = served({ complete: true, naturalWidth: 240 });
+		let decoded = false;
+		el.decode = () => Promise.resolve().then(() => void (decoded = true));
+		await adoptFrame(el);
+		expect(decoded).toBe(true);
+	});
+	it('a decode that never ends: given up at the deadline (Codex LCP1 diff #1)', async () => {
+		vi.useFakeTimers();
+		try {
+			const el = served({ complete: true, naturalWidth: 240 });
+			el.decode = () => new Promise(() => {});
+			const p = adoptFrame(el);
+			await vi.advanceTimersByTimeAsync(8_000);
+			expect(await p).toBeNull();
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+	it('cancelled while decoding: no frame', async () => {
+		const el = served({ complete: true, naturalWidth: 240 });
+		el.decode = () => new Promise(() => {});
+		const ctl = new AbortController();
+		const p = adoptFrame(el, ctl.signal);
+		ctl.abort();
+		expect(await p).toBeNull();
+	});
+	it('already failed (503, broken): no frame', async () => {
+		expect(await adoptFrame(served({ complete: true, naturalWidth: 0 }))).toBeNull();
+	});
+	it('still loading: waits for it, then hands it over', async () => {
+		const state = { complete: false, naturalWidth: 0 };
+		const el = served(state);
+		const p = adoptFrame(el);
+		Object.assign(state, { complete: true, naturalWidth: 240 });
+		el.dispatchEvent(new Event('load'));
+		expect((await p)?.img).toBe(el);
+	});
+	it('still loading, then an error: no frame', async () => {
+		const el = served({ complete: false });
+		const p = adoptFrame(el);
+		el.dispatchEvent(new Event('error'));
+		expect(await p).toBeNull();
+	});
+	it('cancelled while loading: no frame, and the download is stopped', async () => {
+		const el = served({ complete: false });
+		const ctl = new AbortController();
+		const p = adoptFrame(el, ctl.signal);
+		ctl.abort();
+		expect(await p).toBeNull();
+		expect(el.getAttribute('src')).toBe('');
+	});
+	it('cancelled before it starts: no frame, the download stopped', async () => {
+		const el = served({ complete: false });
+		const ctl = new AbortController();
+		ctl.abort();
+		expect(await adoptFrame(el, ctl.signal)).toBeNull();
+		expect(el.getAttribute('src')).toBe('');
+	});
+	it('a load that never ends: given up at the deadline, the download stopped', async () => {
+		vi.useFakeTimers();
+		try {
+			const el = served({ complete: false });
+			const p = adoptFrame(el);
+			await vi.advanceTimersByTimeAsync(8_000);
+			expect(await p).toBeNull();
+			expect(el.getAttribute('src')).toBe('');
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });

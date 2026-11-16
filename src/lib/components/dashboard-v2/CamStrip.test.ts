@@ -21,9 +21,10 @@ const data = vi.hoisted(() => {
 import CamStrip from './CamStrip.svelte';
 import { settings } from '$lib/stores/settings';
 import { stripCameras } from '$lib/dashboard/cam-strip';
-import type { LoadedFrame, loadFrame } from '$lib/dashboard/cam-frame-loader';
+import type { LoadedFrame, adoptFrame, loadFrame } from '$lib/dashboard/cam-frame-loader';
 
 type Load = typeof loadFrame;
+type Adopt = typeof adoptFrame;
 /** A controllable IntersectionObserver: the page observer has no root, the row's has one. */
 class FakeIO {
 	static all: FakeIO[] = [];
@@ -73,7 +74,7 @@ afterEach(() => {
 
 describe('CamStrip', () => {
 	it('an always-open "Cameras" region with every strip camera in order', async () => {
-		const { container } = render(CamStrip, { now: NOW, load: never() });
+		const { container } = render(CamStrip, { serverFrames: false, now: NOW, load: never() });
 		await flush();
 		expect(screen.getByRole('heading', { name: 'Cameras' })).toBeTruthy();
 		expect(container.querySelector('section#cams button[aria-expanded]')).toBeNull();
@@ -83,7 +84,7 @@ describe('CamStrip', () => {
 
 	it('loads only tiles near the viewport, and only while the strip itself is near', async () => {
 		const load = never();
-		render(CamStrip, { now: NOW, load });
+		render(CamStrip, { serverFrames: false, now: NOW, load });
 		await flush();
 		rowIO().fire((t) => ['alert-tam-east', 'alert-tam-west'].includes(slot(t)));
 		await flush();
@@ -107,7 +108,7 @@ describe('CamStrip', () => {
 			document.dispatchEvent(new Event('visibilitychange'));
 		};
 		try {
-			render(CamStrip, { now: NOW, load });
+			render(CamStrip, { serverFrames: false, now: NOW, load });
 			await flush();
 			pageIO().fire(() => true);
 			rowIO().fire((t) => slot(t) === 'alert-tam-east');
@@ -127,7 +128,11 @@ describe('CamStrip', () => {
 	});
 
 	it('every tried tile offline: the strip says so plainly', async () => {
-		const { container } = render(CamStrip, { now: NOW, load: vi.fn<Load>(async () => null) });
+		const { container } = render(CamStrip, {
+			serverFrames: false,
+			now: NOW,
+			load: vi.fn<Load>(async () => null)
+		});
 		await flush();
 		pageIO().fire(() => true);
 		rowIO().fire((t) => slot(t) === 'alert-tam-east');
@@ -143,7 +148,7 @@ describe('CamStrip', () => {
 		const load = vi.fn<Load>(async () =>
 			failing ? null : { img: document.createElement('img'), capturedAt: null }
 		);
-		const r = render(CamStrip, { now: NOW, load });
+		const r = render(CamStrip, { serverFrames: false, now: NOW, load });
 		await flush();
 		pageIO().fire(() => true);
 		rowIO().fire((t) => ['alert-tam-east', 'alert-tam-west'].includes(slot(t)));
@@ -171,7 +176,7 @@ describe('CamStrip', () => {
 					? Promise.resolve(null)
 					: new Promise((r) => (release = r))
 		);
-		const r = render(CamStrip, { now: NOW, load });
+		const r = render(CamStrip, { serverFrames: false, now: NOW, load });
 		await flush();
 		pageIO().fire(() => true);
 		rowIO().fire((t) => slot(t) === 'alert-tam-east');
@@ -196,7 +201,7 @@ describe('CamStrip', () => {
 		const load = vi.fn<Load>((url) =>
 			url.includes('TamEast') ? Promise.resolve(null) : new Promise(() => {})
 		);
-		const { container } = render(CamStrip, { now: NOW, load });
+		const { container } = render(CamStrip, { serverFrames: false, now: NOW, load });
 		await flush();
 		pageIO().fire(() => true);
 		rowIO().fire((t) => slot(t) === 'alert-tam-east');
@@ -212,7 +217,7 @@ describe('CamStrip', () => {
 		const load = vi.fn<Load>((url) =>
 			url.includes('TamEast') ? new Promise(() => {}) : Promise.resolve(null)
 		);
-		const { container } = render(CamStrip, { now: NOW, load });
+		const { container } = render(CamStrip, { serverFrames: false, now: NOW, load });
 		await flush();
 		pageIO().fire(() => true);
 		rowIO().fire((t) => slot(t) === 'alert-tam-east'); // TamEast's request goes out and never returns
@@ -227,7 +232,7 @@ describe('CamStrip', () => {
 	it('hidden by the ⚙ preference: says so, mounts no tile, requests nothing; Show brings them back', async () => {
 		settings.toggleCamerasHidden();
 		const load = never();
-		const { container } = render(CamStrip, { now: NOW, load });
+		const { container } = render(CamStrip, { serverFrames: false, now: NOW, load });
 		await flush();
 		expect(container.textContent).toContain('Cameras are hidden.');
 		expect(container.querySelector('[data-cam-slot]')).toBeNull();
@@ -240,7 +245,7 @@ describe('CamStrip', () => {
 
 	it('hide → show starts fresh: no stale notice, no request before new observations (Codex r1 #5)', async () => {
 		const load = vi.fn<Load>(async () => null);
-		const { container } = render(CamStrip, { now: NOW, load });
+		const { container } = render(CamStrip, { serverFrames: false, now: NOW, load });
 		await flush();
 		pageIO().fire(() => true);
 		rowIO().fire((t) => slot(t) === 'alert-tam-east');
@@ -263,12 +268,72 @@ describe('CamStrip', () => {
 	});
 
 	it('desktop pager buttons scroll the row one view', async () => {
-		const { container } = render(CamStrip, { now: NOW, load: never() });
+		const { container } = render(CamStrip, { serverFrames: false, now: NOW, load: never() });
 		await flush();
 		const row = container.querySelector('.cams-row') as HTMLElement;
 		row.scrollBy = vi.fn() as unknown as typeof row.scrollBy;
 		Object.defineProperty(row, 'clientWidth', { value: 1000 });
 		await fireEvent.click(screen.getByRole('button', { name: 'Next cameras' }));
 		expect(row.scrollBy).toHaveBeenCalledWith({ left: 1000, behavior: 'smooth' });
+	});
+
+	describe("the server's first frame (LCP1)", () => {
+		const SERVED = '/api/cams/frame/alert-tam-east';
+		const served = (c: HTMLElement) => c.querySelector(`img[src="${SERVED}"]`);
+		const decoded = () =>
+			vi.fn<Adopt>(async (img) => ({ img, capturedAt: null, placeholder: false }));
+
+		it('only the first tile holds it', () => {
+			const { container } = render(CamStrip, { now: NOW, load: never(), adopt: decoded() });
+			expect(container.querySelectorAll('img')).toHaveLength(1);
+			expect(served(container)!.closest('[data-cam-slot]')!.getAttribute('data-cam-slot')).toBe(
+				'alert-tam-east'
+			);
+		});
+
+		it('left to load until the observers report; adopted once they say it is in view', async () => {
+			const load = never();
+			const adopt = decoded();
+			const { container } = render(CamStrip, { now: NOW, load, adopt });
+			await flush();
+			expect(served(container)).not.toBeNull();
+			expect(adopt).not.toHaveBeenCalled();
+			pageIO().fire(() => true);
+			rowIO().fire((t) => slot(t) === 'alert-tam-east');
+			await flush();
+			expect(adopt).toHaveBeenCalledTimes(1);
+			expect(load).not.toHaveBeenCalled();
+			expect(
+				container.querySelector('[data-camera-id="alert-tam-east"]')!.getAttribute('data-status')
+			).toBe('live');
+		});
+
+		it('reported out of view before it was adopted: its download is stopped', async () => {
+			const adopt = decoded();
+			const srcSet = vi.spyOn(HTMLImageElement.prototype, 'src', 'set');
+			try {
+				const { container } = render(CamStrip, { now: NOW, load: never(), adopt });
+				await flush();
+				pageIO().fire(() => false);
+				rowIO().fire(() => false);
+				await flush();
+				expect(adopt).not.toHaveBeenCalled();
+				expect(srcSet).toHaveBeenCalledWith('');
+				expect(served(container)).toBeNull();
+			} finally {
+				srcSet.mockRestore();
+			}
+		});
+
+		it('hidden, then shown again: the tiles load as usual, with no server frame', async () => {
+			const { container } = render(CamStrip, { now: NOW, load: never(), adopt: decoded() });
+			await flush();
+			settings.toggleCamerasHidden();
+			await flush();
+			settings.toggleCamerasHidden();
+			await flush();
+			expect(container.querySelector('[data-cam-slot]')).not.toBeNull();
+			expect(container.querySelectorAll('img')).toHaveLength(0);
+		});
 	});
 });

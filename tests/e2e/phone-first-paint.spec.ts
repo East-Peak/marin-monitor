@@ -1,4 +1,6 @@
+import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
+import { SERVED_FRAME, stubCams } from './fixtures/cams';
 import { preparePhone } from './fixtures/phone-audit';
 
 /**
@@ -72,7 +74,9 @@ test('@phone with cameras hidden in ⚙, the page holds still and asks for no ca
 	await page.addInitScript(() => localStorage.setItem('mm_camerasHidden', 'true'));
 	const frames: string[] = [];
 	page.on('request', (r) => {
-		if (/alertcalifornia|cwwp2\.dot\.ca\.gov/.test(r.url())) frames.push(r.url());
+		// The sources, and our own first-frame route (LCP1).
+		if (/alertcalifornia|cwwp2\.dot\.ca\.gov|\/api\/cams\/frame\//.test(r.url()))
+			frames.push(r.url());
 	});
 	// The server's HTML first, alone: the app's scripts held until it has been measured.
 	let release!: () => void;
@@ -93,4 +97,45 @@ test('@phone with cameras hidden in ⚙, the page holds still and asks for no ca
 	await expect(page.getByText('Cameras are hidden.')).toBeVisible();
 	expect(Math.abs((await mapY()) - before)).toBeLessThan(1);
 	expect(frames).toEqual([]);
+});
+
+test('@phone the largest paint is the first camera frame, from the HTML, before any script (LCP1)', async ({
+	page
+}) => {
+	// A real frame's bytes: the browser ignores a flat stand-in (low entropy) as a largest paint.
+	const real = readFileSync(
+		new URL('../../src/lib/dashboard/__fixtures__/caltrans-frame.jpg', import.meta.url)
+	);
+	const seen = await stubCams(page, { jpeg: () => real });
+	let release!: () => void;
+	const held = new Promise<void>((done) => (release = done));
+	await page.route('**/_app/immutable/**/*.js', async (r) => {
+		await held;
+		await r.fallback();
+	});
+	await page.goto('/', { waitUntil: 'domcontentloaded' });
+	const first = page.locator('section#cams [data-cam-slot]').first().locator('img.cam-img');
+	await expect
+		.poll(() => first.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0))
+		.toBe(true);
+	await expect(first).toBeVisible();
+	await expect(page.locator('[data-hydrated="false"]').first()).toBeAttached();
+	expect(seen.filter((u) => SERVED_FRAME.test(u))).toHaveLength(1);
+	// The browser reports a paint a frame or more after it: wait for an image's entry (or 5 s).
+	const lcp = await page.evaluate(
+		() =>
+			new Promise<string | null>((done) => {
+				if (!PerformanceObserver.supportedEntryTypes.includes('largest-contentful-paint'))
+					return done('unsupported');
+				let last: string | null = null;
+				new PerformanceObserver((list) => {
+					const e = list.getEntries().at(-1) as unknown as { element: Element | null };
+					last = e?.element?.getAttribute('src') ?? e?.element?.tagName ?? null;
+					if (e?.element instanceof HTMLImageElement) done(last);
+				}).observe({ type: 'largest-contentful-paint', buffered: true });
+				setTimeout(() => done(last), 5_000);
+			})
+	);
+	if (lcp !== 'unsupported') expect(lcp).toMatch(SERVED_FRAME);
+	release();
 });

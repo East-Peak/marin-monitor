@@ -12,7 +12,7 @@
 		type TileState,
 		type TileStatus
 	} from '$lib/components/tv/camera-frame';
-	import { loadFrame, releaseFrame } from '$lib/dashboard/cam-frame-loader';
+	import { adoptFrame, loadFrame, releaseFrame } from '$lib/dashboard/cam-frame-loader';
 	import { camThumbs, type ThumbRegistry } from '$lib/dashboard/cam-thumbs';
 	import { camViewerOpen } from '$lib/dashboard/cam-viewer-open';
 	import {
@@ -37,6 +37,11 @@
 		onopen?: (id: string) => void;
 		/** Where the shown thumbnail is shared with the viewer's strip. */
 		thumbs?: ThumbRegistry;
+		/** Our route's URL for this camera's first frame, in the HTML (LCP1); only the strip's first. */
+		serverFrame?: string | null;
+		adopt?: typeof adoptFrame;
+		/** Whether `active` is known yet (the strip's observers reported); false keeps a server frame loading. */
+		observed?: boolean;
 	}
 	let {
 		cam,
@@ -47,7 +52,10 @@
 		clock = Date.now,
 		heading = null,
 		onopen,
-		thumbs = camThumbs
+		thumbs = camThumbs,
+		serverFrame = null,
+		adopt = adoptFrame,
+		observed = true
 	}: Props = $props();
 	/** The viewer is up: its own frames refresh, the tiles under it pause (CAMVIEW1). */
 	const live = $derived(active && !$camViewerOpen);
@@ -71,6 +79,21 @@
 	let requesting = $state(false);
 	/** The request in flight; aborted when the tile deactivates or unmounts. */
 	let pending: AbortController | null = null;
+	/**
+	 * The server's frame (LCP1): its <img> stays in the DOM where it painted, adopted as this
+	 * tile's first frame, until a refresh replaces it. Dropped, and never retried, once it fails
+	 * or the tile lets it go before adopting it.
+	 */
+	/** Read once: the HTML's frame is this mount's alone (a re-shown strip loads as usual). */
+	const servedSrc = untrack(() => serverFrame);
+	let served = $state(servedSrc !== null);
+	let servedImg = $state.raw<HTMLImageElement | null>(null);
+	const adopting = () => served && servedImg !== null && shownImg !== servedImg;
+	function dropServed() {
+		if (!served) return;
+		if (servedImg && shownImg !== servedImg) servedImg.src = ''; // stop its download
+		served = false;
+	}
 
 	const machine = $derived(tileStatus(tile, now, staleAfterMs(STRIP_REFRESH_S)));
 	/** No picture yet and a request out: connecting, even after earlier failures (Codex r2 #3). */
@@ -111,7 +134,11 @@
 		attempted = true;
 		requesting = true;
 		const ctrl = (pending = new AbortController());
-		const frame = await load(url, exposesCaptureTime(cam), { signal: ctrl.signal });
+		const first = adopting() ? servedImg! : null;
+		const frame = first
+			? await adopt(first, ctrl.signal)
+			: await load(url, exposesCaptureTime(cam), { signal: ctrl.signal });
+		if (first && !frame) served = false; // failed or cancelled: never shown broken, never retried
 		if (ctrl.signal.aborted) return releaseFrame(frame?.img ?? null); // cancel() reset the flags
 		pending = null;
 		requesting = false;
@@ -123,6 +150,7 @@
 			tile = initialTileState();
 			unavailable = true;
 		} else if (frame) {
+			if (!first) served = false; // a newer frame replaces the server's
 			unavailable = false;
 			tile = onFrameLoaded(tile, url, clock());
 			show(frame.img);
@@ -144,7 +172,14 @@
 	// Deactivated: drop the request in flight. Its own effect, because a cleanup sees the old
 	// prop value (Codex r3 #1, reproduced with the compiler).
 	$effect(() => {
-		if (!live) untrack(cancel);
+		if (live) return;
+		const known = observed || $camViewerOpen;
+		untrack(() => {
+			cancel();
+			// A server frame the tile won't adopt stops loading (Codex LCP1 #2); before the
+			// strip's observers report, "inactive" is only not-yet-known.
+			if (known) dropServed();
+		});
 	});
 
 	// Report outside tracking: the parent's write must not re-trigger this effect (a loop).
@@ -165,6 +200,7 @@
 
 	onDestroy(() => {
 		cancel();
+		dropServed(); // unmounted before adopting it: a detached image keeps loading otherwise
 		unpublish?.();
 	});
 
@@ -187,7 +223,19 @@
 	<!-- CAMBAR1: the frame shows whole and nothing of ours sits on it. ALERTCalifornia asks that
 	     their frame (its info bar along the bottom) not be cropped or covered. -->
 	<div class="cam-frame">
-		{#if shownImg}
+		{#if served}
+			<!-- LCP1: lazy, so a strip hidden before mount (app.html's mark) never fetches it. -->
+			<div class="cam-pic">
+				<img
+					bind:this={servedImg}
+					class="cam-img"
+					src={servedSrc}
+					alt={cam.name}
+					loading="lazy"
+					fetchpriority="high"
+				/>
+			</div>
+		{:else if shownImg}
 			<div class="cam-pic" use:showFrame={shownImg}></div>
 		{:else if attempted && status === 'offline'}
 			<span class="cam-state" data-text-role="meta"

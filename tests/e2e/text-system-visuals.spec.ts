@@ -19,12 +19,20 @@ const BASELINE_FILE = 'tests/e2e/fixtures/visuals-before-text1.json';
 const REPLACED: Record<string, RegExp> = {
 	'chart 1, the 12-hour trace → the grid of hours': /^brief \| trace \| svg \| Temperature#/,
 	'chart 4, the 24-hour area chart → the grid of hours':
-		/^outdoors \| forecast \| svg \| Temperature# next # hours#/
+		/^outdoors \| forecast \| svg \| Temperature# next # hours#/,
+	// LCP1: the phone strip's first frame is the same picture, from the HTML via our route.
+	"the first camera's thumbnail → the same frame from /api/cams/frame":
+		/^cams \| cams \| img \| Mt# Tam East \| \/public-camera-data\/Axis-TamEast\/latest-thumb\.jpg$/
 };
 const GRID =
 	/^(brief|outdoors) \| hours \| svg \| Temperature# # hours observed# now# then # hours forecast \|/;
 /** Every drawing added since the baseline, by name: TEXT1's own two icons and the grid. */
-const ADDITIONS = [GRID, /\| svg \| v#section#chevron \|/, /\| svg \| sr#end \|/];
+const ADDITIONS = [
+	GRID,
+	/\| svg \| v#section#chevron \|/,
+	/\| svg \| sr#end \|/,
+	/^cams \| cams \| img \| Mt# Tam East \| \/api\/cams\/frame\/alert-tam-east$/
+];
 const capture = process.env.CAPTURE_VISUALS;
 
 /**

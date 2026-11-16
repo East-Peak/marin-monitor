@@ -3,11 +3,12 @@ import { tick } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CamTile from './CamTile.svelte';
 import { CAMERAS, type CameraConfig } from '$lib/config/cameras';
-import type { LoadedFrame, loadFrame } from '$lib/dashboard/cam-frame-loader';
+import type { LoadedFrame, adoptFrame, loadFrame } from '$lib/dashboard/cam-frame-loader';
 import { createThumbRegistry } from '$lib/dashboard/cam-thumbs';
 import { camViewerOpen } from '$lib/dashboard/cam-viewer-open';
 
 type Load = typeof loadFrame;
+type Adopt = typeof adoptFrame;
 const T0 = Date.UTC(2026, 9, 13, 23, 0, 30);
 const fire = CAMERAS.find((c) => c.id === 'alert-tam-east') as CameraConfig;
 const caltrans = CAMERAS.find((c) => c.id === 'caltrans-spencer') as CameraConfig;
@@ -337,5 +338,183 @@ describe('CamTile', () => {
 		expect(revoke).toHaveBeenCalledWith('blob:late');
 		await vi.advanceTimersByTimeAsync(120_000);
 		expect(load).toHaveBeenCalledTimes(1);
+	});
+
+	describe("CamTile with the server's first frame (LCP1)", () => {
+		const SERVED = '/api/cams/frame/alert-tam-east';
+		const bucket = Math.floor(T0 / 60_000) * 60_000;
+		const upstream = `https://cameras.alertcalifornia.org/public-camera-data/Axis-TamEast/latest-thumb.jpg?t=${bucket}`;
+		const servedImg = (c: HTMLElement) =>
+			c.querySelector(`img[src="${SERVED}"]`) as HTMLImageElement | null;
+		const adopted = (): Adopt =>
+			vi.fn<Adopt>(async (img) => ({ img, capturedAt: null, placeholder: false }));
+
+		it('the HTML holds the frame: lazy (a hidden strip never fetches it), first in line, whole', () => {
+			const { container } = render(CamTile, {
+				cam: fire,
+				active: true,
+				now: T0,
+				serverFrame: SERVED,
+				adopt: vi.fn<Adopt>(() => new Promise(() => {}))
+			});
+			const img = servedImg(container)!;
+			expect(img.getAttribute('loading')).toBe('lazy');
+			expect(img.getAttribute('fetchpriority')).toBe('high');
+			expect(img.className).toContain('cam-img');
+			expect(img.alt).toBe('Mt. Tam East');
+			expect(img.parentElement!.className).toContain('cam-pic');
+		});
+
+		it('active: adopts that very element, in place; nothing is fetched again', async () => {
+			const load = vi.fn<Load>(async () => frame());
+			const adopt = adopted();
+			const { container } = render(CamTile, {
+				cam: fire,
+				active: true,
+				now: T0,
+				load,
+				serverFrame: SERVED,
+				adopt
+			});
+			const img = servedImg(container)!;
+			await flush();
+			await vi.advanceTimersByTimeAsync(1_000);
+			await flush();
+			expect(adopt).toHaveBeenCalledTimes(1);
+			expect((adopt as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe(img);
+			expect(load).not.toHaveBeenCalled();
+			expect(root(container).dataset.status).toBe('live');
+			expect(container.querySelectorAll('img')).toHaveLength(1);
+			expect(servedImg(container)).toBe(img);
+			expect(img.isConnected).toBe(true);
+		});
+
+		it('a minute later it refreshes from the source, as every tile does', async () => {
+			const load = vi.fn<Load>(async () => frame(null, 'https://x/next.jpg'));
+			const { container } = render(CamTile, {
+				cam: fire,
+				active: true,
+				now: T0,
+				load,
+				serverFrame: SERVED,
+				adopt: adopted()
+			});
+			await flush();
+			await vi.advanceTimersByTimeAsync(60_000);
+			await flush();
+			expect(load).toHaveBeenCalledTimes(1);
+			expect(load.mock.calls[0][0]).toBe(upstream.replace(`t=${bucket}`, `t=${bucket + 60_000}`));
+			expect(servedImg(container)).toBeNull();
+			expect(container.querySelectorAll('img')).toHaveLength(1);
+		});
+
+		it('a failed server frame (503) is dropped, never a broken image; the source is tried next', async () => {
+			const load = vi.fn<Load>(async () => frame());
+			const adopt = vi.fn<Adopt>(async () => null);
+			const { container } = render(CamTile, {
+				cam: fire,
+				active: true,
+				now: T0,
+				load,
+				serverFrame: SERVED,
+				adopt
+			});
+			await flush();
+			expect(servedImg(container)).toBeNull();
+			expect(root(container).dataset.status).toBe('connecting');
+			await vi.advanceTimersByTimeAsync(10_000);
+			await flush();
+			expect(load.mock.calls[0][0]).toBe(upstream);
+			expect(root(container).dataset.status).toBe('live');
+			expect(adopt).toHaveBeenCalledTimes(1);
+		});
+
+		it('the server frame and the source both failing: "Camera offline", no <img>', async () => {
+			const load = vi.fn<Load>(async () => null);
+			const { container } = render(CamTile, {
+				cam: fire,
+				active: true,
+				now: T0,
+				load,
+				serverFrame: SERVED,
+				adopt: vi.fn<Adopt>(async () => null)
+			});
+			await flush();
+			await vi.advanceTimersByTimeAsync(10_000);
+			await flush();
+			expect(root(container).dataset.status).toBe('offline');
+			expect(container.textContent).toContain('Camera offline');
+			expect(container.querySelector('img')).toBeNull();
+		});
+
+		it('deactivated while it loads: the download is cancelled, and that is no outage', async () => {
+			let signal: AbortSignal | undefined;
+			const adopt = vi.fn<Adopt>((_img, s) => {
+				signal = s;
+				return new Promise(() => {});
+			});
+			const load = vi.fn<Load>(async () => frame());
+			const r = render(CamTile, {
+				cam: fire,
+				active: true,
+				now: T0,
+				load,
+				serverFrame: SERVED,
+				adopt
+			});
+			await flush();
+			await r.rerender({ cam: fire, active: false, now: T0, load, serverFrame: SERVED, adopt });
+			await flush();
+			expect(signal?.aborted).toBe(true);
+			expect(servedImg(r.container)).toBeNull();
+			await r.rerender({ cam: fire, active: true, now: T0, load, serverFrame: SERVED, adopt });
+			await flush();
+			expect(load).toHaveBeenCalledTimes(1);
+			expect(root(r.container).dataset.status).toBe('live');
+		});
+
+		it('unmounted before it was adopted: its download is stopped (Codex LCP1 diff #2)', async () => {
+			const srcSet = vi.spyOn(HTMLImageElement.prototype, 'src', 'set');
+			try {
+				const r = render(CamTile, {
+					cam: fire,
+					active: false,
+					observed: false,
+					now: T0,
+					serverFrame: SERVED,
+					adopt: adopted()
+				});
+				await flush();
+				expect(servedImg(r.container)).not.toBeNull();
+				expect(srcSet).not.toHaveBeenCalledWith('');
+				r.unmount();
+				expect(srcSet).toHaveBeenCalledWith('');
+			} finally {
+				srcSet.mockRestore();
+			}
+		});
+
+		it('never active once mounted (viewer up, or out of view): its download is stopped', async () => {
+			camViewerOpen.set(true);
+			// The element is gone by the time render returns: watch what its src is set to.
+			const srcSet = vi.spyOn(HTMLImageElement.prototype, 'src', 'set');
+			try {
+				const adopt = adopted();
+				const { container } = render(CamTile, {
+					cam: fire,
+					active: true,
+					now: T0,
+					serverFrame: SERVED,
+					adopt
+				});
+				await flush();
+				expect(adopt).not.toHaveBeenCalled();
+				expect(srcSet).toHaveBeenCalledWith('');
+				expect(servedImg(container)).toBeNull();
+			} finally {
+				srcSet.mockRestore();
+				camViewerOpen.set(false);
+			}
+		});
 	});
 });

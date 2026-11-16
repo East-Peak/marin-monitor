@@ -1,22 +1,35 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { settings } from '$lib/stores/settings';
 	import type { CameraConfig } from '$lib/config/cameras';
 	import type { TileStatus } from '$lib/components/tv/camera-frame';
-	import { stripCameras, stripNotice } from '$lib/dashboard/cam-strip';
-	import { loadFrame } from '$lib/dashboard/cam-frame-loader';
+	import { serverFrameUrl, stripCameras, stripNotice } from '$lib/dashboard/cam-strip';
+	import { adoptFrame, loadFrame } from '$lib/dashboard/cam-frame-loader';
 	import CamTile from './CamTile.svelte';
 	import { openCamViewer } from '$lib/dashboard/cam-viewer-nav';
 	import type { CamHeadings, HeadingsState } from '$lib/dashboard/cam-headings-store';
 	import { headingFooter } from '$lib/dashboard/cam-heading';
+	import { page as appPage } from '$app/state';
+	import { camParam } from '$lib/dashboard/cam-viewer-url';
 
 	interface Props {
 		now: number;
 		cams?: CameraConfig[];
 		load?: typeof loadFrame;
+		adopt?: typeof adoptFrame;
+		/** The first tile's frame comes in the HTML, from our route (LCP1). */
+		serverFrames?: boolean;
 		/** The cameras' last reported headings (MAPX4), held while the tiles load. */
 		headings?: CamHeadings;
 	}
-	let { now, cams = stripCameras(), load = loadFrame, headings }: Props = $props();
+	let {
+		now,
+		cams = stripCameras(),
+		load = loadFrame,
+		adopt = adoptFrame,
+		serverFrames = true,
+		headings
+	}: Props = $props();
 
 	let headingState = $state<HeadingsState | null>(null);
 	$effect(() => headings?.subscribe((s) => (headingState = s)));
@@ -30,6 +43,11 @@
 	 * moves; no tile is active before mount, so a hidden strip still requests no camera.
 	 */
 	let mounted = $state(false);
+	/**
+	 * The first tile's frame is in the HTML (LCP1), except under a viewer opened by the URL: tiles
+	 * under the viewer pause, and the server knows of it from the URL alone (Codex LCP1 diff #3).
+	 */
+	const firstFrame = untrack(() => serverFrames && camParam(appPage.url) === null);
 	$effect(() => {
 		mounted = true;
 	});
@@ -38,6 +56,9 @@
 	let row = $state<HTMLElement | null>(null);
 	let stripNear = $state(false);
 	let near = $state<Record<string, boolean>>({});
+	/** Both observers have reported since the row mounted: until then a tile's "inactive" is unknown. */
+	let pageSeen = $state(false);
+	let rowSeen = $state(false);
 	let pageVisible = $state(
 		typeof document === 'undefined' || document.visibilityState !== 'hidden'
 	);
@@ -61,18 +82,23 @@
 		const el = row;
 		if (!el) return;
 		if (typeof IntersectionObserver === 'undefined') {
-			stripNear = true;
+			stripNear = pageSeen = rowSeen = true;
 			for (const c of cams) near[c.id] = true;
 			return;
 		}
-		const page = new IntersectionObserver(([e]) => (stripNear = e.isIntersecting), {
-			rootMargin: '200px 0px'
-		});
+		const page = new IntersectionObserver(
+			([e]) => {
+				stripNear = e.isIntersecting;
+				pageSeen = true;
+			},
+			{ rootMargin: '200px 0px' }
+		);
 		page.observe(el);
 		const tiles = new IntersectionObserver(
 			(entries) => {
 				for (const e of entries)
 					near[(e.target as HTMLElement).dataset.camSlot!] = e.isIntersecting;
+				rowSeen = true;
 			},
 			{ root: el, rootMargin: '0px 25%' }
 		);
@@ -81,7 +107,7 @@
 			page.disconnect();
 			tiles.disconnect();
 			// A hidden or re-mounted row starts from fresh observations and statuses (Codex r1 #5).
-			stripNear = false;
+			stripNear = pageSeen = rowSeen = false;
 			near = {};
 			attempted = {};
 		};
@@ -136,13 +162,16 @@
 	{/if}
 	{#if !mounted || !hidden}
 		<ul class="cams-row" bind:this={row} aria-label="Cameras, swipe for more">
-			{#each cams as cam (cam.id)}
+			{#each cams as cam, i (cam.id)}
 				<li data-cam-slot={cam.id}>
 					<CamTile
 						{cam}
 						active={isActive(cam.id)}
 						{now}
 						{load}
+						{adopt}
+						serverFrame={firstFrame && i === 0 && !mounted ? serverFrameUrl(cam) : null}
+						observed={(pageSeen && rowSeen) || !pageVisible}
 						heading={footer(cam.id)}
 						onstatus={(id, s) => (attempted[id] = s)}
 						onopen={(id) => openCamViewer(id, { from: 'tile' })}

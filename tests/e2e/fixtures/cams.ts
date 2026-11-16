@@ -1,5 +1,6 @@
 import zlib from 'node:zlib';
 import type { Page, Route } from '@playwright/test';
+import { CAMERAS } from '../../../src/lib/config/cameras';
 
 export const CAM_HOSTS =
 	/cameras\.alertcalifornia\.org|cwwp2\.dot\.ca\.gov|cdns\.abclocal\.go\.com/;
@@ -34,8 +35,15 @@ export function png(width: number, height: number): Buffer {
 /** ALERTCalifornia's thumbnail size (240×135, checked 2026-10-18): their frames are 16:9. */
 export const FRAME_16_9 = png(240, 135);
 
+/** Our same-origin first-frame route (LCP1); its id is the camera's config id. */
+export const SERVED_FRAME = /\/api\/cams\/frame\/([^/?#]+)/;
+/** The source thumbnail our route reads for a camera id (cam-strip's stripFrameUrl). */
+export const servedSource = (id: string) =>
+	(CAMERAS.find((c) => c.id === id)?.url ?? '').replace(/latest-frame\.jpg$/, 'latest-thumb.jpg');
+
 /**
- * Stub every camera host; returns the URLs requested. `fail(url)` → 404. Caltrans gets
+ * Stub every camera host and our first-frame route; returns the URLs requested. The route
+ * answers as its source would (`fail` sees the source's URL), or 503s when `failServed`. `fail(url)` → 404. Caltrans gets
  * `Access-Control-Allow-Origin: *` unless `cors: false` (then another origin's), and
  * `Last-Modified` when given.
  */
@@ -49,9 +57,22 @@ export async function stubCams(
 		png?: Buffer;
 		/** A real frame's bytes (JPEG) for some URLs; the rest get the stub PNG. */
 		jpeg?: (url: string) => Buffer | undefined;
+		/** Our route 503s whatever its source does (the source itself still answers). */
+		failServed?: boolean;
 	} = {}
 ): Promise<string[]> {
 	const seen: string[] = [];
+	await page.route(SERVED_FRAME, (r: Route) => {
+		const url = r.request().url();
+		seen.push(url);
+		const source = servedSource(SERVED_FRAME.exec(url)![1]);
+		if (opts.failServed || opts.fail?.(source))
+			return r.fulfill({ status: 503, body: 'camera offline' });
+		const jpeg = opts.jpeg?.(source);
+		return jpeg
+			? r.fulfill({ status: 200, contentType: 'image/jpeg', body: jpeg })
+			: r.fulfill({ status: 200, contentType: 'image/png', body: opts.png ?? PNG });
+	});
 	await page.route(CAM_HOSTS, (r: Route) => {
 		const url = r.request().url();
 		seen.push(url);

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, test, type Locator, type Page, type Request } from '@playwright/test';
-import { requestsFor, stubCams } from './fixtures/cams';
+import { SERVED_FRAME, requestsFor, stubCams } from './fixtures/cams';
 
 test.skip(({ baseURL }) => baseURL?.startsWith('https://') ?? false, 'stubbed');
 
@@ -79,10 +79,11 @@ test.describe('phone 390×844', () => {
 		await page.waitForTimeout(1500);
 		expect((await visibility(page)).slice(0, 3)).toEqual(['full', 'partial', 'none']);
 		expect(seen.some((u) => u.includes('latest-frame.jpg'))).toBe(false);
-		expect(new Set(seen.map((u) => u.split('?')[0]))).toEqual(
+		// The first frame came in the HTML, from our route (LCP1); the peek from its source.
+		expect(new Set(seen.map((u) => new URL(u).pathname))).toEqual(
 			new Set([
-				'https://cameras.alertcalifornia.org/public-camera-data/Axis-TamEast/latest-thumb.jpg',
-				'https://cameras.alertcalifornia.org/public-camera-data/Axis-TamWest/latest-thumb.jpg'
+				'/api/cams/frame/alert-tam-east',
+				'/public-camera-data/Axis-TamWest/latest-thumb.jpg'
 			])
 		);
 		expect(await decodedImages(page.locator('section#cams'))).toBe(2);
@@ -328,5 +329,151 @@ test.describe('desktop 1440', () => {
 			'https://cameras.alertcalifornia.org/public-camera-data/Axis-TamEast/latest-frame.jpg'
 		);
 		await expect(a).toHaveAttribute('target', '_blank');
+	});
+});
+
+// LCP1: the phone's largest paint, the first camera frame, is in the HTML (our route).
+test.describe("phone 390×844: the server's first frame (LCP1)", () => {
+	test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+	/** Hold the app's scripts: what happens before hydration is the HTML's alone. */
+	async function holdScripts(page: Page) {
+		let release!: () => void;
+		const held = new Promise<void>((done) => (release = done));
+		await page.route('**/_app/immutable/**/*.js', async (r) => {
+			await held;
+			await r.fallback();
+		});
+		return release;
+	}
+	const served = (page: Page) => page.locator('[data-camera-id="alert-tam-east"] img.cam-img');
+
+	test('the first frame paints before the scripts run, and the tile adopts that very image', async ({
+		page
+	}) => {
+		await stubRest(page);
+		const seen = await stubCams(page);
+		const release = await holdScripts(page);
+		await page.goto('/?layout=v2', { waitUntil: 'domcontentloaded' });
+		await expect(page.locator('[data-layout="v2"][data-hydrated="false"]')).toBeVisible();
+		await expect
+			.poll(() => served(page).evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0))
+			.toBe(true);
+		await expect(served(page)).toBeVisible();
+		await expect(served(page)).toHaveAttribute('fetchpriority', 'high');
+		expect(seen.map((u) => new URL(u).pathname)).toEqual(['/api/cams/frame/alert-tam-east']);
+		await served(page).evaluate((i) => ((i as unknown as { __ssr: boolean }).__ssr = true));
+		release();
+		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+		const tile = page.locator('[data-camera-id="alert-tam-east"]');
+		await expect(tile).toHaveAttribute('data-status', 'live');
+		await page.waitForTimeout(1500);
+		expect(
+			await served(page).evaluate((i) => (i as unknown as { __ssr?: boolean }).__ssr === true)
+		).toBe(true);
+		expect(await tile.locator('img').count()).toBe(1);
+		expect(requestsFor(seen, 'Axis-TamEast')).toBe(0); // adopted, not fetched again
+	});
+
+	test('our route failing (503): no broken image; the tile reads its source next', async ({
+		page
+	}) => {
+		await stubRest(page);
+		const seen = await stubCams(page, { failServed: true });
+		await open(page);
+		const tile = page.locator('[data-camera-id="alert-tam-east"]');
+		await expect(tile).toHaveAttribute('data-status', 'live', { timeout: 30_000 });
+		expect(seen.filter((u) => SERVED_FRAME.test(u))).toHaveLength(1);
+		expect(requestsFor(seen, 'Axis-TamEast')).toBe(1);
+		expect(await undecodedImages(page.locator('section#cams'))).toBe(0);
+	});
+
+	test('our route and the source both failing: "Camera offline", no <img>', async ({ page }) => {
+		await stubRest(page);
+		const seen = await stubCams(page, { fail: (u) => u.includes('Axis-TamEast') });
+		await open(page);
+		const tile = page.locator('[data-camera-id="alert-tam-east"]');
+		await expect(tile).toHaveAttribute('data-status', 'offline', { timeout: 30_000 });
+		await expect(tile).toContainText('Camera offline');
+		await expect(tile.locator('img')).toHaveCount(0);
+		expect(seen.filter((u) => SERVED_FRAME.test(u))).toHaveLength(1);
+	});
+
+	test('scrolled out of view before hydration: the first frame still loading is cancelled', async ({
+		page
+	}) => {
+		await stubRest(page);
+		await stubCams(page);
+		let held: Request | undefined;
+		const entered = new Promise<void>((resolve) =>
+			page.route(SERVED_FRAME, (route) => {
+				held = route.request();
+				resolve();
+			})
+		);
+		const failed = new Set<Request>();
+		page.on('requestfailed', (r) => failed.add(r));
+		const release = await holdScripts(page);
+		await page.goto('/?layout=v2', { waitUntil: 'domcontentloaded' });
+		await entered;
+		await page.locator('.cams-row').evaluate((el) => (el.scrollLeft = el.scrollWidth));
+		release();
+		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+		await expect.poll(() => failed.has(held!), { timeout: 5_000 }).toBe(true);
+		await expect(served(page)).toHaveCount(0);
+	});
+
+	test('opened on the viewer (?cam=): the tile under it never asks for its first frame (Codex LCP1 diff #3)', async ({
+		page
+	}) => {
+		await stubRest(page);
+		const seen = await stubCams(page);
+		const release = await holdScripts(page);
+		await page.goto('/?layout=v2&cam=alert-tam-west', { waitUntil: 'domcontentloaded' });
+		await page.waitForTimeout(1000);
+		expect(seen.filter((u) => SERVED_FRAME.test(u))).toEqual([]);
+		release();
+		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+		await page.waitForTimeout(1000);
+		expect(seen.filter((u) => SERVED_FRAME.test(u))).toEqual([]);
+	});
+
+	test('hidden in ⚙: before and after hydration, not even the first frame is asked for', async ({
+		page
+	}) => {
+		await page.addInitScript(() => localStorage.setItem('mm_camerasHidden', 'true'));
+		await stubRest(page);
+		const seen = await stubCams(page);
+		const release = await holdScripts(page);
+		await page.goto('/?layout=v2', { waitUntil: 'domcontentloaded' });
+		await expect(page.getByText('Cameras are hidden.')).toBeVisible();
+		await page.waitForTimeout(1000);
+		expect(seen).toEqual([]);
+		release();
+		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+		await page.waitForTimeout(1000);
+		expect(seen).toEqual([]);
+	});
+});
+
+test.describe("desktop 1440: the server's first frame (LCP1)", () => {
+	test.use({ viewport: { width: 1440, height: 900 } });
+
+	test('the strip the wall replaces never asks for its first frame', async ({ page }) => {
+		await stubRest(page);
+		const seen = await stubCams(page);
+		let release!: () => void;
+		const held = new Promise<void>((done) => (release = done));
+		await page.route('**/_app/immutable/**/*.js', async (r) => {
+			await held;
+			await r.fallback();
+		});
+		await page.goto('/?layout=v2', { waitUntil: 'domcontentloaded' });
+		await page.waitForTimeout(1000);
+		expect(seen).toEqual([]);
+		release();
+		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+		await page.waitForTimeout(1000);
+		expect(seen.filter((u) => SERVED_FRAME.test(u))).toEqual([]);
 	});
 });

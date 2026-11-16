@@ -23,6 +23,7 @@ vi.mock('./V2Map.svelte', async () => ({
 // jsdom has no IntersectionObserver, so every strip tile would be active: nothing may load.
 vi.mock('$lib/dashboard/cam-frame-loader', () => ({
 	loadFrame: vi.fn(() => new Promise(() => {})),
+	adoptFrame: vi.fn(() => new Promise(() => {})),
 	releaseFrame: vi.fn()
 }));
 /** After vi.resetModules the stub must load against the fresh Svelte runtime, not the cached one. */
