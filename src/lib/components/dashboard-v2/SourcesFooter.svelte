@@ -2,13 +2,16 @@
 	import type { Readable } from 'svelte/store';
 	import type { HealthReportJson } from '$lib/api/marin/health-report';
 	import { measuredFromEntry } from '$lib/dashboard/measured';
-	import { formatAsOf } from '$lib/dashboard/pacific-time';
 	import {
 		datasetEntry,
 		fromHealthSource,
 		type DatasetFetch
 	} from '$lib/dashboard/source-adapters';
-	import { effectiveState, type SourceEntryState } from '$lib/dashboard/source-status';
+	import {
+		effectiveState,
+		formatObserved,
+		type SourceEntryState
+	} from '$lib/dashboard/source-status';
 	import CardSource from './CardSource.svelte';
 
 	let {
@@ -44,7 +47,7 @@
 			? read.value.sources.map(fromHealthSource).map((e) => ({
 					name: e.name,
 					state: effectiveState(e, now),
-					when: e.observedAt === null ? 'time not reported' : formatAsOf(e.observedAt, now)
+					when: formatObserved(e, now)
 				}))
 			: []
 	);

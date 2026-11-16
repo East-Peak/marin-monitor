@@ -33,6 +33,7 @@ function isSource(v: unknown): v is HealthSourceJson {
 		Number.isFinite(v.maxAgeDays) &&
 		v.maxAgeDays > 0 &&
 		(v.observedAt === null || time(v.observedAt)) &&
+		(v.observedAtPrecision === undefined || v.observedAtPrecision === 'month') &&
 		(v.accepted === undefined ||
 			(isRec(v.accepted) && text(v.accepted.reason) && time(v.accepted.expiresAt)))
 	);

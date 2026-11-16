@@ -62,6 +62,9 @@ export const costDatasetIds = (lifestyleOn: boolean): string[] =>
 		.filter((d) => d.id !== (lifestyleOn ? 'composite' : 'lifestyle'))
 		.map((d) => d.id);
 
+/** Reads dated by their newest month's end (BLS, Redfin): only the month is known. */
+const MONTH_DATED: ReadonlySet<CostDatasetId> = new Set(['groceryInflation', 'housing']);
+
 export const costMaxAgeMs = (id: CostDatasetId) => COST_DATASETS[id].maxAgeDays * DAY_MS;
 
 // ── The composite: hero, trend and tier bars ────────────────────────────
@@ -435,13 +438,15 @@ export function costView(input: CostInput): CostView {
 	const { outcomes, now } = input;
 	const essential = (id: keyof typeof DATASET_POLICY, name: string) =>
 		datasetEntry(id, name, outcomes[id], DATASET_POLICY[id].maxAgeDays * DAY_MS);
-	const own = (id: CostDatasetId) =>
-		datasetEntry(
+	const own = (id: CostDatasetId) => ({
+		...datasetEntry(
 			COST_DATASETS[id].id,
 			COST_DATASETS[id].name,
 			outcomes[COST_DATASETS[id].id],
 			costMaxAgeMs(id)
-		);
+		),
+		...(MONTH_DATED.has(id) ? { observedPrecision: 'month' as const } : {})
+	});
 	const entries = {
 		composite: own('composite'),
 		gas: essential('gas', 'Gas prices'),

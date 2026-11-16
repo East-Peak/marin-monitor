@@ -87,6 +87,18 @@ describe('evaluate', () => {
 		);
 	});
 
+	it('dates a period source to its month, and no other source', () => {
+		const PERIOD = { ...LIVE, name: 'Period', observedAt: 'period', maxAgeDays: 60 } as const;
+		const read = found('2026-08-31T00:00:00.000Z', daysAgo(0));
+		const report = evaluate(
+			inventory(PERIOD, LIVE),
+			{ Period: read, Live: found(daysAgo(0)) },
+			NOW
+		);
+		expect(resultFor(report, 'Period')?.observedAtPrecision).toBe('month');
+		expect(resultFor(report, 'Live')).not.toHaveProperty('observedAtPrecision');
+	});
+
 	it('calls a freshly read offer stale once the offer itself has ended (Codex)', () => {
 		const OFFER = { ...LIVE, name: 'Offer', offer: true } as const;
 		const read = (validUntil: unknown): Observation => ({

@@ -188,6 +188,7 @@ export interface HealthSourceJson {
 	reason: string | null;
 	maxAgeDays: number;
 	observedAt: string | null;
+	observedAtPrecision?: 'month';
 	accepted?: { reason: string; expiresAt: string };
 }
 
@@ -214,6 +215,7 @@ export function fromHealthSource(s: HealthSourceJson): SourceStatusEntry {
 		name: s.name,
 		state: s.status,
 		observedAt: parseObservedAt(s.observedAt),
+		...(s.observedAtPrecision === 'month' ? { observedPrecision: 'month' as const } : {}),
 		maxAgeMs: s.status === 'reference' ? null : s.maxAgeDays * DAY_MS,
 		detail: s.accepted
 			? `Known issue until ${monthDay(s.accepted.expiresAt)}: ${s.accepted.reason}`

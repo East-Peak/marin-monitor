@@ -358,6 +358,14 @@ describe('cost model', () => {
 			expect(housingObservedAt([])).toBeNull();
 		});
 
+		it('month-dated reads (Redfin, BLS) carry month precision into the coverage list', () => {
+			const view = costView(input({ outcomes: { housing: live(), groceryInflation: live() } }));
+			const byName = (n: string) => view.status.entries.find((e) => e.name === n);
+			expect(byName('Redfin housing')?.observedPrecision).toBe('month');
+			expect(byName('SF-area grocery inflation')?.observedPrecision).toBe('month');
+			expect(byName('Wine index')?.observedPrecision).toBeUndefined();
+		});
+
 		it('the retired grocery basket is never a failing source', () => {
 			const view = costView(
 				input({

@@ -3,6 +3,7 @@ import {
 	coverageDetails,
 	describePresentation,
 	effectiveState,
+	formatObserved,
 	parseObservedAt,
 	presentSection,
 	sourceWords,
@@ -226,6 +227,22 @@ describe('sourceWords (one source, in a reader’s words: body, meta, attention)
 			meta: 'time not reported',
 			attention: false
 		});
+	});
+
+	it('a month-precision source reads as its month, never as a time or a day', () => {
+		// A UTC-midnight month end is 5 PM the day before in Pacific: that day and time were never observed.
+		const monthEnd = Date.parse('2026-10-31T00:00:00Z');
+		const m = (state: SourceStatusEntry['state']) =>
+			sourceWords(
+				entry('m', { state, observedAt: monthEnd, observedPrecision: 'month', maxAgeMs: null }),
+				NOW
+			);
+		expect(m('ok').meta).toBe('Oct 2026 data');
+		expect(m('stale').meta).toBe('Oct 2026 data');
+		expect(
+			formatObserved(entry('m', { observedAt: monthEnd, observedPrecision: 'month' }), NOW)
+		).toBe('Oct 2026 data');
+		expect(formatObserved(entry('m', { observedAt: NOW - MIN }), NOW)).toBe('10:59 AM');
 	});
 
 	it('unavailable: the kind’s words, and when it last answered (never when the failure began)', () => {

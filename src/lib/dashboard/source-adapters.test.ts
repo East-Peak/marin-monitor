@@ -245,6 +245,10 @@ describe('G0a health JSON (for the health indicator)', () => {
 	});
 	it('a malformed observation time is unknown (null), never NaN', () => {
 		expect(fromHealthSource({ ...gas, observedAt: 'not a time' }).observedAt).toBeNull();
+		expect(fromHealthSource({ ...gas, observedAtPrecision: 'month' }).observedPrecision).toBe(
+			'month'
+		);
+		expect(fromHealthSource(gas)).not.toHaveProperty('observedPrecision');
 	});
 	it('reference data has no age rule; an accepted exception is named with its end date', () => {
 		expect(fromHealthSource({ ...gas, status: 'reference', observedAt: null }).maxAgeMs).toBeNull();

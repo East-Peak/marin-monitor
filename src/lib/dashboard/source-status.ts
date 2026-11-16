@@ -21,6 +21,8 @@ export interface SourceStatusEntry {
 	state: SourceEntryState;
 	/** When the source last observed its data (epoch ms); null = unknown. */
 	observedAt: number | null;
+	/** `month`: `observedAt` is a month's end, so only the month is known, never a day or time. */
+	observedPrecision?: 'month';
 	/** Clock-driven freshness limit for `ok`; null = no age rule. */
 	maxAgeMs: number | null;
 	/** Short reason ("HTTP 503", "failures not reported by this source"); never a stack. A
@@ -87,10 +89,29 @@ export function effectiveState(entry: SourceStatusEntry, now: number): SourceEnt
 function oldestObservation(entries: readonly SourceStatusEntry[]): number | null {
 	let oldest = Infinity;
 	for (const e of entries) {
-		if (e.observedAt === null) return null;
+		// A month has no clock time to say "as of".
+		if (e.observedAt === null || e.observedPrecision === 'month') return null;
 		oldest = Math.min(oldest, e.observedAt);
 	}
 	return Number.isFinite(oldest) ? oldest : null;
+}
+
+const MONTH_YEAR = new Intl.DateTimeFormat('en-US', {
+	timeZone: 'UTC',
+	month: 'short',
+	year: 'numeric'
+});
+
+/** A source's observation as the reader should see it: a month-precision one is "Oct 2026 data", never a time. */
+export function formatObserved(
+	entry: Pick<SourceStatusEntry, 'observedAt' | 'observedPrecision'>,
+	now: number
+): string {
+	const at = entry.observedAt;
+	if (at === null || !Number.isFinite(at)) return 'time not reported';
+	return entry.observedPrecision === 'month'
+		? `${MONTH_YEAR.format(at)} data`
+		: formatAsOf(at, now);
 }
 
 /** Decision 2's precedence table, rule by rule. */
@@ -185,7 +206,11 @@ export function sourceWords(entry: SourceStatusEntry, now: number): SourceWords 
 	const state = effectiveState(entry, now);
 	const at = entry.observedAt;
 	const time = (verb: string) =>
-		at !== null && Number.isFinite(at) ? `${verb} ${formatAsOf(at, now)}` : null;
+		at === null || !Number.isFinite(at)
+			? null
+			: entry.observedPrecision === 'month'
+				? formatObserved(entry, now)
+				: `${verb} ${formatAsOf(at, now)}`;
 	const why = FAILURE_WORDS[entry.failure ?? 'unknown'];
 	const said = (body: string, meta: string | null, attention: boolean): SourceWords => ({
 		body,

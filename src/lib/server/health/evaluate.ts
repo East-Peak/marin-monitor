@@ -24,7 +24,7 @@ export interface SourcePolicy {
 	 * does not advance it. `upload` = blob upload time, for snapshot datasets
 	 * whose every write is a real observation. `period` = the source's own
 	 * period end inside the blob (`periodEnd`): re-reading an old month never
-	 * makes it fresh.
+	 * makes it fresh. Every `period` is a month, and is reported as one.
 	 */
 	readonly observedAt: 'content' | 'upload' | 'period';
 	/** Deliberately static data: acceptable at any age, but must exist. */
@@ -81,6 +81,8 @@ export interface SourceResult {
 	cadence: Cadence;
 	maxAgeDays: number;
 	observedAt: string | null;
+	/** `month` when `observedAt` is a month's end (a `period` source): the time of day and the day are not an observation. */
+	observedAtPrecision?: 'month';
 	ageDays: number | null;
 	/** Present only while an active exception covers this exact status. */
 	accepted?: Acceptance;
@@ -138,6 +140,9 @@ function evaluateSource(
 		cadence: policy.cadence,
 		maxAgeDays: policy.maxAgeDays,
 		observedAt,
+		...(observedAt !== null && policy.observedAt === 'period'
+			? { observedAtPrecision: 'month' as const }
+			: {}),
 		ageDays
 	});
 
