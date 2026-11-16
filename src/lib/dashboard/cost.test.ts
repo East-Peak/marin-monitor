@@ -12,6 +12,7 @@ import {
 	costView,
 	compositeStops,
 	gasStops,
+	housingObservedAt,
 	sparkStops,
 	tierBar,
 	type CostInput,
@@ -338,6 +339,52 @@ describe('cost model', () => {
 		expect(tuition.muted).toBe(true);
 		expect(tuition.measured.kind === 'value' && tuition.measured.observedAt).toBeNull();
 		expect(tuition.untimed).toMatch(/reference/i);
+	});
+
+	describe('coverage is the real source state', () => {
+		const HOME = (month: string, medianPrice: number | null = 1_600_000) => ({
+			month,
+			medianPrice,
+			medianPpsf: null,
+			inventory: null,
+			daysOnMarket: null,
+			homesSold: null
+		});
+
+		it('Redfin housing is dated by the end of its newest month, as health dates it', () => {
+			expect(housingObservedAt([HOME('2026-09-01'), HOME('2026-10-01')])).toBe(
+				'2026-10-31T00:00:00.000Z'
+			);
+			expect(housingObservedAt([])).toBeNull();
+		});
+
+		it('the retired grocery basket is never a failing source', () => {
+			const view = costView(
+				input({
+					outcomes: {
+						[COST_DATASETS.grocery.id]: { kind: 'live', observedAt: NOW - 40 * DAY }
+					}
+				})
+			);
+			expect(view.status.failing.map((f) => f.name)).not.toContain('Grocery basket');
+			expect(view.status.entries.map((e) => e.name)).not.toContain('Grocery basket');
+		});
+
+		it('a housing read dated by its month is reporting, not unverified', () => {
+			const housing = [HOME('2026-09-01')];
+			const view = costView(
+				input({
+					housing,
+					outcomes: {
+						[COST_DATASETS.housing.id]: {
+							kind: 'live',
+							observedAt: Date.parse('2026-09-30T00:00Z')
+						}
+					}
+				})
+			);
+			expect(view.status.failing.map((f) => f.name)).not.toContain('Redfin housing');
+		});
 	});
 
 	it('the dog line is the whole dog, not the walker alone', () => {

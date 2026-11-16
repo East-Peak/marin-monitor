@@ -64,7 +64,7 @@ import {
 	type TransitState
 } from './getting-around';
 import { AIR_MAX_AGE_MS, OUTDOORS_DATASETS, OUTDOORS_MAX_AGE_MS } from './outdoors';
-import { COST_DATASETS, costMaxAgeMs } from './cost';
+import { COST_DATASETS, costMaxAgeMs, housingObservedAt } from './cost';
 import { CIVIC_DATASETS } from './news-civic';
 import { EVENTS_DATASETS } from './events';
 import { fetchActivityReadWithStatus, type ActivityRead } from '$lib/api/marin/activity';
@@ -345,12 +345,8 @@ function costDatasets(store: Writable<CostReads>): DatasetDef[] {
 		),
 		def('wine', (signal) => fetchWineIndexDataWithStatus({ signal }), scrapedAt),
 		def('school', (signal) => fetchSchoolTuitionDataWithStatus({ signal }), scrapedAt),
-		// Redfin's months carry no read time; G0a dates the blob by upload, which v2 can't see.
-		def(
-			'housing',
-			() => fetchHousingDataWithStatus(),
-			() => null
-		),
+		// Redfin's months carry no read time: the end of the newest month dates it, as health does.
+		def('housing', () => fetchHousingDataWithStatus(), housingObservedAt),
 		// Its observation is the last run that priced every household on in-date reads.
 		def(
 			'lifestyle',

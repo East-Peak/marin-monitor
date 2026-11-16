@@ -663,7 +663,8 @@ export function costView(input: CostInput): CostView {
 		: null;
 	const shown = input.lifestyleOn ? lifestyle! : composite;
 	const hidden = input.lifestyleOn ? entries.composite : entries.lifestyle;
-	const all = Object.values(entries).filter((e) => e !== hidden);
+	// The retired basket is a frozen note, not a source: its read has no max age to be judged by.
+	const all = Object.values(entries).filter((e) => e !== hidden && e !== entries.grocery);
 	const valued = tiles.filter((t) => t.kind === 'value').length + (shown.kind === 'value' ? 1 : 0);
 	return {
 		composite,
@@ -690,6 +691,14 @@ function latestHome(d: readonly HousingMetric[]): HousingMetric | null {
 			.filter((m) => m.medianPrice !== null)
 			.sort((a, b) => b.month.localeCompare(a.month))[0] ?? null
 	);
+}
+
+/** Redfin's months carry no read time; the end of the newest month dates it, as health does. Null with no months. */
+export function housingObservedAt(d: readonly HousingMetric[]): string | null {
+	const newest = [...d].map((m) => m.month).sort((a, b) => b.localeCompare(a))[0];
+	if (!newest) return null;
+	const end = Date.UTC(Number(newest.slice(0, 4)), Number(newest.slice(5, 7)), 0);
+	return Number.isFinite(end) ? new Date(end).toISOString() : null;
 }
 
 function shiftYear(month: string): string {
