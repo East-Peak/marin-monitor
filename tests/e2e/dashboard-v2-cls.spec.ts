@@ -19,6 +19,7 @@ for (const { name, width, height } of WIDTHS) {
 		browser
 	}, info) => {
 		test.skip(info.project.name !== 'phone-chromium', 'WebKit has no LayoutShift API');
+		test.slow(); // throttled 4× and loaded: the page takes its time to arrive
 		const context = await browser.newContext({
 			viewport: { width, height },
 			baseURL: info.project.use.baseURL
@@ -56,12 +57,12 @@ for (const { name, width, height } of WIDTHS) {
 		});
 		await page.goto('/');
 		await expect(page.locator('[data-hydrated="true"][data-cycling="false"]')).toBeVisible({
-			timeout: 45_000
+			timeout: 60_000
 		});
 		await expect(page.locator('[data-card="weather"] [data-text-role="value"]')).toHaveText(
 			'64°F',
 			{
-				timeout: 15_000
+				timeout: 45_000
 			}
 		);
 		await page.waitForTimeout(2_000);

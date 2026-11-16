@@ -339,6 +339,8 @@
 		margin: var(--v2-gap, 14px) 0 0;
 		/* The loaded height (DashboardV2 sets it per width): loading and loaded move nothing. */
 		min-height: var(--v2-brief-h, 0);
+		/* Spare height goes below the cards, so a card growing as its data lands moves none. */
+		align-content: start;
 	}
 	@media (max-width: 1023px) {
 		/* The render boundary's CSS half: never shown below desktop, whatever mounts it. */
