@@ -351,43 +351,6 @@ test.describe('desktop 1440×900', () => {
 		}
 	});
 
-	test('legacy → v2 with a failing first v2 Fix It read draws no inherited 311 pins (Codex r3 #1)', async ({
-		page
-	}) => {
-		let up = true;
-		await stub(page, ALL_OF_MARIN, { fixIt: () => up });
-		const legacy311 = page.waitForResponse(
-			(r) => new URL(r.url()).pathname === '/api/data/311' && r.status() === 200
-		);
-		await page.goto('/?layout=legacy');
-		await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
-		await legacy311;
-		// Not hollow (Codex 9c #3): the response alone doesn't prove the store commit; legacy's
-		// wire renders the issue from the shared 311 store only once it is committed.
-		await expect(page.getByText(/Pothole/).first()).toBeAttached({ timeout: 30_000 });
-		up = false;
-		await page.evaluate(() => {
-			const a = document.createElement('a');
-			a.href = '/?layout=v2&probe';
-			a.id = 'to-v2';
-			a.textContent = 'Preview'; // an empty link has no box and is never "visible"
-			document.querySelector('[data-layout="legacy"]')!.append(a);
-		});
-		// Legacy may show its welcome modal over the page; dispatch the click so SvelteKit's router
-		// still takes it as a client-side navigation (the shared stores survive it).
-		await page.evaluate(() => ((window as unknown as { __noReload?: number }).__noReload = 1));
-		await page.locator('#to-v2').dispatchEvent('click');
-		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
-		// Not hollow: a full reload would empty the shared stores this test is about.
-		expect(
-			await page.evaluate(() => (window as unknown as { __noReload?: number }).__noReload)
-		).toBe(1);
-		const p = await settled(page);
-		expect(p.layers['311']).toBe('unavailable');
-		expect(p.synced!.counts['311-reports']).toBe(0);
-		expect(await sourceCount(page, '311-reports')).toBe(0);
-	});
-
 	test('a town with nothing on the map reads "nothing for this town", never "nothing new" (Codex r3 #4)', async ({
 		page
 	}) => {

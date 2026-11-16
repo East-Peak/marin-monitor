@@ -6,6 +6,12 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-11-15
 
+### Removed — The old dashboard layout (RETIRE1)
+
+- **The pre-redesign dashboard is gone, and so is its rollback URL.** `marinmonitor.com/?layout=legacy` and `?layout=edit` (its layout editor) now open the current dashboard, as does any other `?layout=` value; none is an error or a redirect, and each names `/` as its canonical page. The header's "Old dashboard" link is removed. A seeded page is edge-cached for a minute whatever its `?layout=`, and one whose news read failed is never cached, as before.
+- **What went with it:** the old layout's panels, header, footer, settings and onboarding dialogs, layout editor, ads and feedback form, its browser news loader (RSS through `/api/feeds`, article and geocode lookups) and its own readers (forecast, sun, UV, marine, hourly tides). The API routes only it called are removed: `/api/feeds`, `/api/article`, `/api/geocode`, `/api/ad-click`, `/api/feedback` and `/api/wastewater`. No producer, cron or stored data changes; the TV, the map and the Cost pages are unchanged.
+- **The page is lighter:** the old layout's stylesheet no longer loads on `/`.
+
 ### Changed — The dashboard's first camera frame comes with the page (LCP1)
 
 - **The first camera tile's picture is in the page's HTML**, so a phone paints it with the page instead of after every script has loaded and run. It comes from our own `/api/cams/frame/<id>`, which passes on the camera's latest ALERTCalifornia thumbnail unchanged (its info bar included), with the source's own age when it gives one and a 30-second cache; a camera that doesn't answer with a picture is a 503. Only ridge cameras are served this way: Caltrans tiles keep reading their source's age in script.

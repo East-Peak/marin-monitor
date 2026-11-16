@@ -223,9 +223,7 @@ test.describe('@phone dashboard controls', () => {
 		expect(failures).toEqual([]);
 	});
 
-	test('header: the logo goes to the top; Old dashboard opens the legacy layout', async ({
-		page
-	}, info) => {
+	test('header: the logo goes to the top', async ({ page }, info) => {
 		// The dashboard links to itself: a client navigation that lands at the top.
 		await page.evaluate(() => window.scrollTo(0, 600));
 		const failures = await auditTap(page, info, {
@@ -237,7 +235,6 @@ test.describe('@phone dashboard controls', () => {
 				expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 3_000 }).toBe(0)
 		});
 		await expect(page.locator('[data-hydrated="true"]')).toBeVisible();
-		failures.push(...(await auditLinks(page, info, 'default', page.locator('a.v2-old'))));
 		expect(failures).toEqual([]);
 	});
 

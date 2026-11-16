@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 async function saveTown(page: Page, slug: string) {
-	await page.goto('/?layout=legacy');
+	await page.goto('/');
 	await page.evaluate((s) => {
 		localStorage.setItem('mm_onboardingComplete', 'true');
 		localStorage.setItem('mm_town', s);
@@ -11,6 +11,34 @@ async function saveTown(page: Page, slug: string) {
 const pickerLabel = (page: Page) => page.locator('.picker-trigger .picker-label');
 const tvReady = (page: Page) =>
 	expect(page.getByRole('button', { name: 'Crime & Safety' })).toBeVisible();
+
+/**
+ * Dashboard → TV as a client navigation, so the dashboard's stores and the TV's transient
+ * overrides share one document (the dashboard has no link to /tv; the router takes any).
+ */
+async function openTvInPlace(page: Page) {
+	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
+	await page.evaluate(() => {
+		(window as unknown as { __mm: string }).__mm = 'same-document';
+		const a = document.createElement('a');
+		a.href = '/tv';
+		a.textContent = 'TV';
+		document.querySelector('[data-layout="v2"]')!.append(a);
+		a.click();
+	});
+	await expect(page).toHaveURL(/\/tv$/);
+	await tvReady(page);
+}
+
+/** TV's Escape goes to / by client navigation; the document must be the same one. */
+async function escapeToDashboard(page: Page) {
+	await page.keyboard.press('Escape');
+	await expect(page).toHaveURL(/\/$/);
+	await expect(page.locator('[data-layout="v2"]')).toBeVisible();
+	expect(await page.evaluate(() => (window as unknown as { __mm?: string }).__mm)).toBe(
+		'same-document'
+	);
+}
 
 test.describe('TV has its own transient scope', () => {
 	test('visiting /tv directly does not clear the saved dashboard town', async ({ page }) => {
@@ -24,26 +52,21 @@ test.describe('TV has its own transient scope', () => {
 		await expect(pickerLabel(page)).toHaveText('Mill Valley');
 	});
 
-	test('dashboard → TV → dashboard by keyboard (client navigation) keeps the town', async ({
+	test('dashboard → TV → dashboard (Escape) in one document restores the town', async ({
 		page
 	}) => {
 		await saveTown(page, 'mill-valley');
 		await page.reload();
 		await expect(pickerLabel(page)).toHaveText('Mill Valley');
-		await page.keyboard.press('m');
-		await expect(page).toHaveURL(/\/tv$/);
-		await tvReady(page);
-		// TV Escape goes to /, which is v2 since the flip (DASH-FLIP2); the town carries over.
-		await page.keyboard.press('Escape');
-		await expect(page).toHaveURL(/\/$/);
-		await expect(page.locator('[data-layout="v2"]')).toBeVisible();
+		await openTvInPlace(page);
+		await escapeToDashboard(page);
 		await expect(pickerLabel(page)).toHaveText('Mill Valley');
 		expect(await page.evaluate(() => localStorage.getItem('mm_town'))).toBe('mill-valley');
 	});
 });
 
 async function saveLightTheme(page: Page) {
-	await page.goto('/?layout=legacy');
+	await page.goto('/');
 	await page.evaluate(() => {
 		localStorage.setItem('mm_onboardingComplete', 'true');
 		localStorage.setItem('mm_theme', '"light"');
@@ -65,25 +88,21 @@ test.describe('TV forces dark without saving it', () => {
 		await page.reload();
 		await tvReady(page);
 		expect(await savedTheme(page)).toBe('"light"');
-		await page.goto('/?layout=legacy');
-		await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
+		await page.goto('/');
+		await expect(page.locator('[data-layout="v2"]')).toBeVisible();
 		await expect.poll(() => shownTheme(page)).toBe('light');
 		expect(await savedTheme(page)).toBe('"light"');
 	});
 
-	test('dashboard → TV → dashboard by keyboard restores the light theme', async ({ page }) => {
+	test('dashboard → TV → dashboard (Escape) in one document restores the light theme', async ({
+		page
+	}) => {
 		await saveLightTheme(page);
 		await page.reload();
 		await expect.poll(() => shownTheme(page)).toBe('light');
-		// Its keyboard shortcuts attach on mount (the legacy layout loads on demand, MOBILE1).
-		await expect(page.locator('[data-layout="legacy"][data-hydrated="true"]')).toBeVisible();
-		await page.keyboard.press('m');
-		await expect(page).toHaveURL(/\/tv$/);
-		await tvReady(page);
+		await openTvInPlace(page);
 		expect(await shownTheme(page)).toBe('dark');
-		await page.keyboard.press('Escape');
-		await expect(page).toHaveURL(/\/$/);
-		await expect(page.locator('[data-layout="v2"]')).toBeVisible();
+		await escapeToDashboard(page);
 		await expect.poll(() => shownTheme(page)).toBe('light');
 		expect(await savedTheme(page)).toBe('"light"');
 	});

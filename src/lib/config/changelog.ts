@@ -15,6 +15,12 @@ export interface ChangelogEntry {
 export const CHANGELOG: ChangelogEntry[] = [
 	{
 		date: '2026-11-15',
+		title: 'The old dashboard is retired',
+		description:
+			'The dashboard from before the redesign is gone, with its “Old dashboard” link. Old ?layout= links now open the current dashboard. The TV, the map and the Cost pages are unchanged.'
+	},
+	{
+		date: '2026-11-15',
 		title: 'Golden Gate’s newsletters in the news',
 		description:
 			'Golden Gate’s newsletters and public-meeting notices now appear in News & Civic’s “More from the wire”, in date order with the news feeds and linking Golden Gate’s own bulletin page. Each stays for 14 days, and the card says when the last email arrived.'

@@ -54,19 +54,3 @@ test('a card reads unavailable, a real frame beside it shows, and the card recov
 	});
 	await expect(tile(page, 'caltrans-sr1').locator('img')).toBeVisible();
 });
-
-test('legacy: a card reads unavailable with its picture hidden, a real frame still shows', async ({
-	page
-}) => {
-	test.setTimeout(60_000);
-	await stubCaltrans(page, (url) => (url.includes('marinsr1') ? CARD : FRAME));
-	await page.goto('/?layout=legacy');
-	const panel = page.locator('[data-camera="caltrans-sr1"]').first();
-	await panel.scrollIntoViewIfNeeded();
-	await expect(panel.locator('img')).toHaveAttribute('data-stand-in', '');
-	await expect(panel.locator('img')).toBeHidden();
-	const real = page.locator('[data-camera="caltrans-spencer"] img').first();
-	await real.scrollIntoViewIfNeeded();
-	await expect(real).toBeVisible();
-	await expect(real).not.toHaveAttribute('data-stand-in', '');
-});

@@ -1,8 +1,8 @@
 /**
- * The shared news pipeline in the BUILT app (npm run build && preview):
- * frozen feeds → lazy parser chunk → stores → dashboard Local Wire and the
- * TV Local News Wire, including a failing parser chunk. Only the network is
- * faked; the chunk is the real built asset.
+ * The TV's news in the BUILT app (npm run build && preview): a frozen snapshot
+ * → stores → the TV Local News Wire, with frozen feeds and a failing parser
+ * chunk standing by to prove the TV never needs either. Only the network is
+ * faked; every chunk is the real built asset.
  */
 import { expect, test, type Page } from '@playwright/test';
 import { snapshotEnvelope } from './fixtures/news-snapshot';
@@ -80,26 +80,12 @@ async function setup(page: Page, failParser = 0) {
 	return loads;
 }
 
-const wire = (page: Page) => page.locator('[data-panel-id="local-wire"] .news-item');
-
-async function expectDashboardWire(page: Page) {
-	await expect(wire(page).locator('.item-title')).toHaveText([DATED, UNDATED], { timeout: 20_000 });
-	await expect(wire(page).locator('.item-time')).toHaveText(['1h', 'undated']);
-}
-
 test.describe('shared news pipeline — built app', () => {
 	test.use({ viewport: { width: 1440, height: 900 } });
 
-	test('dashboard Local Wire: dated first, the undated item last and labelled "undated"', async ({
+	test('TV Local News Wire shows the dated item first and the undated one labelled "undated"', async ({
 		page
 	}) => {
-		await setup(page);
-		await page.goto('/?layout=legacy');
-		await expectDashboardWire(page);
-		await expect(page.locator('body')).not.toContainText(/NaN[dhm]\b/);
-	});
-
-	test('TV Local News Wire shows the same two items with the same labels', async ({ page }) => {
 		await setup(page);
 		await page.goto('/tv');
 		await page.getByRole('button', { name: 'Local News Wire' }).click();
@@ -109,25 +95,6 @@ test.describe('shared news pipeline — built app', () => {
 			page.locator('div.rounded-lg', { has: page.locator('h3', { hasText: title }) });
 		await expect(card(DATED).locator('span').nth(1)).toHaveText('1h');
 		await expect(card(UNDATED).locator('span').nth(1)).toHaveText('undated');
-	});
-
-	test('a failed parser chunk reloads the page once, then the news appears', async ({ page }) => {
-		const loads = await setup(page, 1);
-		await page.goto('/?layout=legacy');
-		await expectDashboardWire(page);
-		expect(loads.count).toBe(2);
-	});
-
-	test('a parser chunk that keeps failing reloads exactly once — no loop, no NaN', async ({
-		page
-	}) => {
-		const loads = await setup(page, Infinity);
-		await page.goto('/?layout=legacy');
-		await expect.poll(() => loads.count, { timeout: 15_000 }).toBe(2);
-		await page.waitForTimeout(8_000);
-		expect(loads.count).toBe(2);
-		await expect(wire(page)).toHaveCount(0);
-		await expect(page.locator('body')).not.toContainText(/NaN[dhm]\b/);
 	});
 
 	test('on /tv the parser chunk is never fetched, so a failing chunk can never reload the TV', async ({
@@ -156,7 +123,7 @@ test.describe('shared news pipeline — built app', () => {
 		await setup(page);
 		// Deterministic navigation (Codex r3 #2): the dashboard's server load reads the snapshot
 		// server-side, which page.route cannot stub. Answer its client-side data request with the
-		// valid SvelteKit payload for the default v2 page with no server snapshot (DASH-FLIP2;
+		// valid SvelteKit payload for the page with no server snapshot (DASH-FLIP2;
 		// node 0 = +layout.ts skip, node 1 = the page, devalue-indexed).
 		await page.route('**/__data.json*', (route) =>
 			route.fulfill({
@@ -169,11 +136,10 @@ test.describe('shared news pipeline — built app', () => {
 						{
 							type: 'data',
 							data: [
-								{ layout: 1, explicit: 2, bootstrap: 3, snapshot: 3, renderedAt: 4 },
-								'v2',
-								false,
+								{ snapshot: 1, advisories: 1, renderedAt: 2, lifestyle: 3 },
 								null,
-								Date.now()
+								Date.now(),
+								false
 							],
 							uses: {}
 						}
@@ -201,7 +167,7 @@ test.describe('shared news pipeline — built app', () => {
 		});
 		await page.goto('/tv');
 		await expect.poll(() => requestedAt, { timeout: 10_000 }).toBeGreaterThan(0);
-		await page.keyboard.press('Escape'); // TvWallboard: goto('/'), the v2 default since DASH-FLIP2
+		await page.keyboard.press('Escape'); // TvWallboard: goto('/')
 		await page.waitForURL((url) => url.pathname === '/', { timeout: 5_000 });
 		const reporting = page.locator('[data-slot="latest-reporting"]');
 		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible({

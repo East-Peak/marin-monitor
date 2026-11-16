@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 /**
  * The town picker is the page's scope control (§2.1 "Showing: Mill Valley ▾", §1, §4, §8).
  * The shared TownPicker hides its label at ≤ 720 px; the v2 header must still name the town,
- * on screen and to assistive tech. The legacy page keeps its icon-only phone picker.
+ * on screen and to assistive tech.
  */
 test.describe('phone 390×844', () => {
 	test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
@@ -41,13 +41,5 @@ test.describe('phone 390×844', () => {
 		expect(panel!.x).toBeGreaterThanOrEqual(0);
 		expect(panel!.x + panel!.width).toBeLessThanOrEqual(390);
 		await page.getByRole('button', { name: 'Reset sections' }).click({ timeout: 5_000 });
-	});
-
-	test('legacy guard: ?layout=legacy keeps its icon-only phone picker (the fix is v2-scoped)', async ({
-		page
-	}) => {
-		await page.goto('/?layout=legacy');
-		await expect(page.locator('[data-layout="legacy"]')).toBeVisible();
-		await expect(page.locator('.picker-trigger .picker-label').first()).toBeHidden();
 	});
 });
