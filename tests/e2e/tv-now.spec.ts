@@ -65,5 +65,5 @@ test('with no usable observation the header says so and shows no forecast as Now
 	await stub(page, [report(300, 12.2)]);
 	await page.goto('/tv');
 	await expect(page.getByText('Observation unavailable')).toBeVisible();
-	await expect(page.locator('body')).not.toContainText('Now');
+	await expect(page.locator('header').first()).not.toContainText(/Now|°F/);
 });
