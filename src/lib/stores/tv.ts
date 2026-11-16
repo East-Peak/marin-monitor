@@ -6,7 +6,7 @@ import { refresh } from '$lib/stores/refresh';
 import { stravaEvents } from '$lib/stores/strava';
 import { STRAVA_CHYRON_MAX_AGE_MS, STRAVA_ENABLED } from '$lib/config/strava';
 import { onMapWindow } from '$lib/news/recency';
-import { isPromoHeadline } from '$lib/news/promo';
+import { isPromoTitle } from '$lib/news/promo';
 import type { TickerItem, TickerCategory, TickerStatus } from '$lib/config/tv';
 import type { NewsItem } from '$lib/types';
 import type { CompositeData } from '$lib/types/composite';
@@ -48,7 +48,7 @@ function newsToTicker(
 
 /** The chyron's stories: published inside the map's window, and not a transit promotion. */
 const tickerStories = (items: NewsItem[], now: number): NewsItem[] =>
-	items.filter((item) => onMapWindow(item, now) && !isPromoHeadline(item.title));
+	items.filter((item) => onMapWindow(item, now) && !isPromoTitle(item.title));
 
 /** Format a dollar amount with cents: $5.75 */
 function fmtPrice(n: number): string {

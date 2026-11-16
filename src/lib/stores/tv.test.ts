@@ -223,6 +223,11 @@ describe('tvTickerItems', () => {
 			expect(texts).toContain('Ferry service resumes');
 		});
 
+		it('drops the promotion when 511 appends its routes to the title', () => {
+			const texts = run([item('promo-r', 'Save Money with Clipper! (4, 92)', 0)]);
+			expect(texts.join(' ')).not.toContain('Clipper');
+		});
+
 		it('drops an undated story (never "recent")', () => {
 			const undated = { ...item('u', 'Undated notice', 0), timestamp: NaN };
 			expect(run([undated]).join(' ')).not.toContain('Undated notice');
