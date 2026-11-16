@@ -1,5 +1,5 @@
 import type { ServerLoadEvent } from '@sveltejs/kit';
-import { PRIVATE_DASHBOARD_CACHE, PUBLIC_V2_DASHBOARD_CACHE } from '$lib/dashboard/layout-flag';
+import { dashboardCacheControl } from '$lib/dashboard/cache';
 import { readSnapshotForFirstPaint } from '$lib/server/news/first-paint';
 
 /**
@@ -9,6 +9,6 @@ import { readSnapshotForFirstPaint } from '$lib/server/news/first-paint';
  */
 export async function load({ setHeaders }: ServerLoadEvent) {
 	const snapshot = await readSnapshotForFirstPaint();
-	setHeaders({ 'Cache-Control': snapshot ? PUBLIC_V2_DASHBOARD_CACHE : PRIVATE_DASHBOARD_CACHE });
+	setHeaders({ 'Cache-Control': dashboardCacheControl(snapshot !== null) });
 	return { snapshot, renderedAt: Date.now() };
 }

@@ -391,8 +391,6 @@
 		>
 		<!-- In the first paint too, "Checking sources…" until the report reads (MOBILE1). -->
 		<HealthIndicator report={healthReport} {outcomes} now={clock} />
-		<!-- The rollback layout stays reachable until legacy is retired (DASH-FLIP2). -->
-		<a class="v2-old hit-44" href="/?layout=legacy" data-text-role="label">Old dashboard</a>
 	</header>
 
 	{#if wide}
@@ -598,13 +596,9 @@
 		gap: 0.5rem;
 	}
 	.v2-scope-label,
-	.v2-old,
 	.v2-muted,
 	.v2-footer {
 		color: var(--text-muted);
-	}
-	.v2-old {
-		margin-left: auto;
 	}
 	.v2-main {
 		max-width: 72rem;

@@ -231,12 +231,10 @@ describe('DashboardV2 preview shell', () => {
 		expect(root.getAttribute('data-cycling')).toBe('false');
 	});
 
-	it('the logo goes home and the old dashboard stays one link away', () => {
+	it('the logo goes home, and no link leads to the retired layout', () => {
 		render(DashboardV2);
 		expect(screen.getByRole('link', { name: 'Marin Monitor' }).getAttribute('href')).toBe('/');
-		expect(screen.getByRole('link', { name: 'Old dashboard' }).getAttribute('href')).toBe(
-			'/?layout=legacy'
-		);
+		expect(screen.queryByRole('link', { name: 'Old dashboard' })).toBeNull();
 	});
 
 	it('never starts the legacy news or Strava loaders', async () => {

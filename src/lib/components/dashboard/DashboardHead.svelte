@@ -1,13 +1,9 @@
-<!-- One <head> for whichever layout renders, so v2 and legacy share title, description and
-     link-preview tags. Only the default layout is indexable (DASH-FLIP2). -->
+<!-- The dashboard's <head>: title, description and link-preview tags. Every URL of `/`, a stale
+     `?layout=` link included, names the root as its canonical page. -->
 <script lang="ts">
-	import { dashboardRobots, type DashboardLayoutChoice } from '$lib/dashboard/layout-flag';
-
-	let { choice }: { choice: DashboardLayoutChoice } = $props();
-
 	const DESCRIPTION =
 		'Everything happening in Marin County — news, weather, tides, traffic, and the occasional coyote sighting.';
-	const robots = $derived(dashboardRobots(choice));
+	const CANONICAL_URL = 'https://marinmonitor.com/';
 </script>
 
 <svelte:head>
@@ -20,10 +16,5 @@
 	<meta name="twitter:card" content="summary" />
 	<meta name="twitter:title" content="Marin Monitor" />
 	<meta name="twitter:description" content={DESCRIPTION} />
-	{#if robots.noindex}
-		<meta name="robots" content="noindex" />
-	{/if}
-	{#if robots.canonical}
-		<link rel="canonical" href={robots.canonical} />
-	{/if}
+	<link rel="canonical" href={CANONICAL_URL} />
 </svelte:head>

@@ -1,15 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NewsSnapshotResponse, NewsSnapshotView } from '$lib/news/snapshot';
 
-const { loadLegacyBootstrap, readNewsSnapshot, readAdvisoriesForFirstPaint, env } = vi.hoisted(
-	() => ({
-		loadLegacyBootstrap: vi.fn(),
-		readNewsSnapshot: vi.fn(),
-		readAdvisoriesForFirstPaint: vi.fn(),
-		env: {} as Record<string, string | undefined>
-	})
-);
-vi.mock('$lib/dashboard/bootstrap', () => ({ loadLegacyBootstrap }));
+const { readNewsSnapshot, readAdvisoriesForFirstPaint, env } = vi.hoisted(() => ({
+	readNewsSnapshot: vi.fn(),
+	readAdvisoriesForFirstPaint: vi.fn(),
+	env: {} as Record<string, string | undefined>
+}));
 vi.mock('$lib/server/news/read-snapshot', () => ({ readNewsSnapshot }));
 vi.mock('$lib/server/advisories/first-paint', () => ({ readAdvisoriesForFirstPaint }));
 vi.mock('$env/dynamic/private', () => ({ env }));
@@ -25,20 +21,10 @@ function event(path: string) {
 	return { ev, headers };
 }
 
-const BOOT = {
-	weather: null,
-	earthquakes: [],
-	hourly: [],
-	locationId: 'central-marin',
-	timestamp: 1
-};
-
 const VIEW = { revision: 3, generatedAt: '2026-10-17T12:00:00.000Z' } as NewsSnapshotView;
 const OK: NewsSnapshotResponse = { status: 'ok', snapshot: VIEW };
 
 beforeEach(() => {
-	loadLegacyBootstrap.mockReset();
-	loadLegacyBootstrap.mockResolvedValue(BOOT);
 	readNewsSnapshot.mockReset();
 	readNewsSnapshot.mockResolvedValue(OK);
 	readAdvisoriesForFirstPaint.mockReset();
@@ -53,13 +39,12 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe('dashboard page load', () => {
-	it('renders v2 by default, publicly cacheable once seeded, without the legacy prefetch', async () => {
+	it('renders the dashboard, publicly cacheable once seeded', async () => {
 		const { ev, headers } = event('/');
-		expect(await load(ev)).toMatchObject({ layout: 'v2', explicit: false, snapshot: VIEW });
+		expect(await load(ev)).toMatchObject({ snapshot: VIEW });
 		expect(headers['Cache-Control']).toBe('s-maxage=60, stale-while-revalidate=300');
-		expect(loadLegacyBootstrap).not.toHaveBeenCalled();
 	});
-	it('v2 carries the server’s advisory read to the first paint; legacy never reads it (MOBILE1)', async () => {
+	it('carries the server’s advisory read to the first paint (MOBILE1)', async () => {
 		const ADV = {
 			advisories: [],
 			unreadable: 0,
@@ -70,9 +55,6 @@ describe('dashboard page load', () => {
 		readAdvisoriesForFirstPaint.mockResolvedValue(ADV);
 		expect(await load(event('/').ev)).toMatchObject({ advisories: ADV });
 		expect(readAdvisoriesForFirstPaint).toHaveBeenCalledWith(env);
-		readAdvisoriesForFirstPaint.mockClear();
-		await load(event('/?layout=legacy').ev);
-		expect(readAdvisoriesForFirstPaint).not.toHaveBeenCalled();
 	});
 	it('a missed advisory read is never edge-cached, like a missed snapshot (MOBILE1)', async () => {
 		const ADV = {
@@ -91,7 +73,7 @@ describe('dashboard page load', () => {
 		await load(missed.ev);
 		expect(missed.headers['Cache-Control']).toBe('private, no-store');
 	});
-	it('carries the Lifestyle Index flag to v2: off unless LIFESTYLE_INDEX is on', async () => {
+	it('carries the Lifestyle Index flag: off unless LIFESTYLE_INDEX is on', async () => {
 		expect(await load(event('/').ev)).toMatchObject({ lifestyle: false });
 		env.LIFESTYLE_INDEX = 'on';
 		try {
@@ -100,47 +82,31 @@ describe('dashboard page load', () => {
 			delete env.LIFESTYLE_INDEX;
 		}
 	});
-	it('the default v2 without a snapshot is private, no-store', async () => {
+	it('without a snapshot it is private, no-store', async () => {
 		readNewsSnapshot.mockResolvedValue({ status: 'unavailable', reason: 'missing' });
 		const { ev, headers } = event('/');
-		expect(await load(ev)).toMatchObject({ layout: 'v2', snapshot: null });
+		expect(await load(ev)).toMatchObject({ snapshot: null });
 		expect(headers['Cache-Control']).toBe('private, no-store');
 	});
-	it('?layout=v2 is private and never starts the legacy prefetch', async () => {
-		const { ev, headers } = event('/?layout=v2');
-		const data = await load(ev);
-		expect(data).toMatchObject({ layout: 'v2', bootstrap: null });
-		expect(headers['Cache-Control']).toBe('private, no-store');
-		expect(loadLegacyBootstrap).not.toHaveBeenCalled();
-	});
-	it('?layout=legacy and ?layout=edit render legacy, explicit and private', async () => {
-		for (const path of ['/?layout=legacy', '/?layout=edit']) {
+	it('a stale ?layout= link, legacy and edit included, serves the dashboard under the same rules', async () => {
+		for (const path of ['/?layout=v2', '/?layout=legacy', '/?layout=edit', '/?layout=nonsense']) {
 			const { ev, headers } = event(path);
-			expect(await load(ev)).toMatchObject({ layout: 'legacy', explicit: true });
-			expect(headers['Cache-Control']).toBe('private, no-store');
+			expect(await load(ev)).toMatchObject({ snapshot: VIEW });
+			expect(headers['Cache-Control']).toBe('s-maxage=60, stale-while-revalidate=300');
 		}
-	});
-	it('?layout=legacy runs the legacy prefetch; a failed one still renders legacy', async () => {
-		const { ev } = event('/?layout=legacy');
-		expect(await load(ev)).toEqual({ layout: 'legacy', explicit: true, bootstrap: BOOT });
-		loadLegacyBootstrap.mockResolvedValue(null);
-		expect(await load(event('/?layout=legacy').ev)).toEqual({
-			layout: 'legacy',
-			explicit: true,
-			bootstrap: null
-		});
+		readNewsSnapshot.mockResolvedValue({ status: 'unavailable', reason: 'missing' });
+		const { ev, headers } = event('/?layout=legacy');
+		expect(await load(ev)).toMatchObject({ snapshot: null });
+		expect(headers['Cache-Control']).toBe('private, no-store');
 	});
 });
 
-describe('v2 server-rendered first paint (DASH-FLIP1)', () => {
+describe('server-rendered first paint (DASH-FLIP1)', () => {
 	it('returns the reader’s view on ok, with the render time', async () => {
 		vi.useFakeTimers();
 		vi.setSystemTime(Date.parse('2026-10-17T12:03:00.000Z'));
-		const { ev } = event('/?layout=v2');
+		const { ev } = event('/');
 		expect(await load(ev)).toEqual({
-			layout: 'v2',
-			explicit: true,
-			bootstrap: null,
 			snapshot: VIEW,
 			advisories: {
 				advisories: [],
@@ -159,14 +125,14 @@ describe('v2 server-rendered first paint (DASH-FLIP1)', () => {
 	it('a read still pending at 1,201 ms → null and private, no-store', async () => {
 		vi.useFakeTimers();
 		readNewsSnapshot.mockReturnValue(new Promise(() => {}));
-		const { ev, headers } = event('/?layout=v2');
+		const { ev, headers } = event('/');
 		let data: Awaited<ReturnType<typeof load>> | undefined;
 		void load(ev).then((d) => (data = d));
 		await vi.advanceTimersByTimeAsync(1_199);
 		expect(data).toBeUndefined();
 		expect(headers['Cache-Control']).toBeUndefined();
 		await vi.advanceTimersByTimeAsync(2);
-		expect(data).toMatchObject({ layout: 'v2', snapshot: null });
+		expect(data).toMatchObject({ snapshot: null });
 		expect(headers['Cache-Control']).toBe('private, no-store');
 	});
 
@@ -178,14 +144,9 @@ describe('v2 server-rendered first paint (DASH-FLIP1)', () => {
 		];
 		for (const set of outcomes) {
 			set();
-			const { ev, headers } = event('/?layout=v2');
-			expect(await load(ev)).toMatchObject({ layout: 'v2', snapshot: null });
+			const { ev, headers } = event('/');
+			expect(await load(ev)).toMatchObject({ snapshot: null });
 			expect(headers['Cache-Control']).toBe('private, no-store');
 		}
-	});
-
-	it('the legacy layout never reads the snapshot', async () => {
-		await load(event('/?layout=legacy').ev);
-		expect(readNewsSnapshot).not.toHaveBeenCalled();
 	});
 });
