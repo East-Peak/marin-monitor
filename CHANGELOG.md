@@ -6,6 +6,13 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-11-15
 
+### Fixed — Layout shift, the map's keyboard path and the sources pill (final smoke pass, P2)
+
+- **The desktop and tablet page no longer drops while it loads.** Both jump navs are in the server's HTML and CSS shows one (the row under the header from 768 px, the phone's bottom bar below), and the desktop brief's place is held in the first paint at its loaded height. The page's layout shift is at or under 0.1 at 390, 1024, 1440 and 1920 px (it was 0.2 to 1.0 on tablet and desktop); an e2e measures it at each width.
+- **The map preview's zoom buttons are not under the attribution** on phones: the opened attribution ends left of the zoom column, so the lower button's centre can be tapped. The phone tap audit now hit-tests every visible control on `/` (with Getting Around's footer links on screen) and on `/map` for a 44 px hit area, instead of only the controls it names. Its two credit links inside the attribution sentence are exempt, as inline links in text.
+- **`/map`'s in-view list is one Tab stop.** Tab lands on the last-focused row (the first at the start) and the next Tab leaves the list; ArrowUp and ArrowDown move between rows across layers, Home and End jump to the ends. It was a Tab stop per row (hundreds).
+- **The "Sources" pill counts this page's own failing reads.** A live read in the browser that failed or was served from a fallback counts with the server's degraded sources ("Sources: N degraded") and is listed by name in the source-health dialog; "all OK" needs the server and the page both healthy.
+
 ### Fixed — Wrong data found in the final smoke pass
 
 - **The TV's "Now" is the station's observed temperature** (Gnoss Field, the reading the dashboard shows) and only while it is under 90 minutes old; with no usable report the header says "Observation unavailable" instead of showing a forecast. The map sidebar's and Conditions screen's regional temperatures are the hourly forecast and are now labeled so.
