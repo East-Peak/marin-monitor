@@ -1,3 +1,4 @@
+import { PROMO_HEADLINES } from '$lib/news/promo';
 import { describe, expect, it } from 'vitest';
 import type { TransitAgencyRead, TransitAlertRow } from '$lib/api/marin/transit';
 import type { TrafficCorridorsData } from '$lib/api/marin/traffic-corridors';
@@ -13,7 +14,6 @@ import {
 	airportWords,
 	gettingAroundCard,
 	gettingAroundView,
-	PROMO_HEADLINES,
 	transitRows,
 	type GettingAroundInput,
 	type Line,

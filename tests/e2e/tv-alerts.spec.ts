@@ -75,3 +75,26 @@ test('the header count and the alerts shown hold only the active alert', async (
 	await expect(shown).toHaveCount(1);
 	await expect(page.locator('.tv-screen')).toContainText(ACTIVE);
 });
+
+test('a transit promotion in 511 is not counted or boxed as an alert', async ({ page }) => {
+	await stub(page);
+	const clipper = {
+		Header: { Timestamp: Math.floor(Date.now() / 1000) },
+		Entities: [
+			{
+				Id: 'clipper',
+				Alert: { HeaderText: { Translations: [{ Text: 'Save Money with Clipper!' }] } }
+			}
+		]
+	};
+	await page.route('**/api/transit?agency=GF', (r) =>
+		r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(clipper) })
+	);
+	await page.goto('/tv?probe');
+	await expect(page.locator('[data-screen-id]').first()).toBeVisible();
+	await page.keyboard.press(' ');
+	await page.locator('[data-screen-id="safety"]').click();
+	await expect(page.getByText('1 alert', { exact: true })).toBeVisible();
+	await expect(page.locator('.tv-screen').getByText('Alert', { exact: true })).toHaveCount(1);
+	await expect(page.locator('.tv-screen')).not.toContainText('Clipper');
+});

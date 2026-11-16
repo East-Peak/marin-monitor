@@ -125,6 +125,24 @@ describe('fetchTransitAlerts', () => {
 		expect(item.alertLive?.seenAt).toEqual(expect.any(Number));
 	});
 
+	it('a promotion in the alert list is a story, not an alert (even with routes in its title)', async () => {
+		const promo = makeAlertEntity({
+			id: 'clipper',
+			header: ' Save Money with Clipper! ',
+			routes: ['4']
+		});
+		mockFetch
+			.mockResolvedValueOnce(makeResponse(makeGtfsResponse([promo])))
+			.mockResolvedValue(makeResponse(makeGtfsResponse([])));
+
+		const promise = fetchTransitAlerts();
+		await vi.advanceTimersByTimeAsync(3000);
+		const { items } = await promise;
+
+		expect(items).toHaveLength(1);
+		expect(items[0].isAlert).toBe(false);
+	});
+
 	it("keeps 511's active periods for the alert's status", async () => {
 		const entity = {
 			Id: 'closed',

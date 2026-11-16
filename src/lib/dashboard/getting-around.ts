@@ -2,7 +2,7 @@
  * Getting Around (spec §2.5, §13.10; v2 design 2026-10-16; cameras live in the Cams strip, decision 5a).
  * Pure: what the section says about Marin roads and the airport routes, transit, and SFO/OAK, and
  * its header status. Nothing is classified by keywords: an alert or incident is whatever 511 (or
- * goldengate.org, GGALERT1) lists; the only names matched are the promotions in PROMO_HEADLINES. An all-clear ("No airport-wide
+ * goldengate.org, GGALERT1) lists; the only names matched are the promotions in PROMO_HEADLINES (news/promo.ts). An all-clear ("No airport-wide
  * delays", "No alerts on 511", "511 reports no incidents…") is said only for an ok read: complete,
  * timed, fresh, not retained, nothing unreadable.
  */
@@ -23,6 +23,7 @@ import type {
 	DelayInfo
 } from '$lib/types/airport';
 import { FAILURE_WORDS, failureKindOf } from './failure-kind';
+import { isPromoHeadline } from '$lib/news/promo';
 import { formatItemAge } from './latest-reporting';
 import { formatAsOf, formatDayTime } from './pacific-time';
 import { dropAlertPrefix, sourceSentenceCase } from './source-case';
@@ -385,8 +386,6 @@ const NO_511 = 'No alerts on 511';
 /** 511 listed alerts, but only promotions or ones not in effect. */
 const NOTHING_NOW = 'No disruptions listed on 511 now';
 
-/** Promotions dropped by name, exact after trim (design §2: never by "no routes/stops"). */
-export const PROMO_HEADLINES: readonly string[] = ['Save Money with Clipper!'];
 /** Names shown in a group row before "…". */
 const GROUP_NAMES = 3;
 
@@ -459,7 +458,7 @@ function groupRow(
 
 function summaries(agencyName: string, alerts: TransitAlertRow[], now: number): Summary[] {
 	const kept = alerts.filter(
-		(a) => timingAt(a.periods, now) !== 'not-now' && !PROMO_HEADLINES.includes(a.headline.trim())
+		(a) => timingAt(a.periods, now) !== 'not-now' && !isPromoHeadline(a.headline)
 	);
 	const groups = new Map<string, TransitAlertRow[]>();
 	for (const a of kept) {

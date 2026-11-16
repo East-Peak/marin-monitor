@@ -14,6 +14,7 @@
 
 import type { NewsItem } from '$lib/types';
 import { logger } from '$lib/config/api';
+import { isPromoHeadline } from '$lib/news/promo';
 import { fetchAndRead, type OwnerOptions } from './fetch-helpers';
 
 /** Marin-relevant transit agencies */
@@ -210,7 +211,7 @@ function entityToNewsItem(entity: GtfsAlertEntity, agencyId: string, agencyName:
 		source,
 		category: 'safety',
 		verification: 'official',
-		isAlert: true,
+		isAlert: !isPromoHeadline(alert.HeaderText?.Translations?.[0]?.Text ?? ''),
 		alertLive: { seenAt: Date.now(), periods: alertPeriods(alert) }
 	};
 }
