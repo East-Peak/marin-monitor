@@ -60,9 +60,6 @@ export {
 // Preset configuration
 export { PRESETS, ONBOARDING_STORAGE_KEY, PRESET_STORAGE_KEY, type Preset } from './presets';
 
-// Changelog
-export { CHANGELOG, type ChangelogEntry } from './changelog';
-
 // Relevance filter
 export { isLocallyRelevant, isMixedSource } from './relevance';
 
