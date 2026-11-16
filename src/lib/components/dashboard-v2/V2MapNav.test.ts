@@ -54,11 +54,15 @@ function fakeMap() {
 	return map;
 }
 
-function mount(props: Partial<{ town: string | null }> = {}) {
+const COUNTS = { fixIt: 44, quakes: 0 };
+
+function mount(
+	props: Partial<{ town: string | null; counts: { fixIt: number; quakes: number } }> = {}
+) {
 	const map = fakeMap();
 	const onReset = vi.fn(() => map.calls.push('onReset'));
 	const view = render(V2MapNav, {
-		props: { town: null, activeLayers: ALL_ON, layers: OK, onReset, ...props },
+		props: { town: null, activeLayers: ALL_ON, layers: OK, counts: COUNTS, onReset, ...props },
 		context: new Map([['maplibre-map', { getMap: () => map, mapReady: writable(true) }]])
 	});
 	return { map, onReset, view };
@@ -128,11 +132,18 @@ describe('V2MapNav: the key says what each layer shows here', () => {
 		const { map } = mount();
 		await tick();
 		map.rendered['towns-layer'] = [];
-		map.rendered['311-reports-layer'] = map.rendered['311-reports-layer'].slice(0, 3);
 		map.emit('idle');
 		await tick();
 		expect(keyLines()[0]).toMatch(/· none in view$/);
+	});
+	it('counts points from the list the rail counts, not from what the map happens to render', async () => {
+		// The map renders no quake and 44 reports; the list holds 2 quakes and 3 reports.
+		const { map } = mount({ counts: { fixIt: 3, quakes: 2 } });
+		await tick();
+		map.emit('idle');
+		await tick();
 		expect(keyLines()[1]).toMatch(/· 3 in view$/);
+		expect(keyLines()[2]).toMatch(/· 2 in view$/);
 	});
 	it('drops earthquakes when their chip hides them', async () => {
 		const { map } = mount();

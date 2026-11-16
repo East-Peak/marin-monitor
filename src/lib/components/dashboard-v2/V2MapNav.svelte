@@ -20,11 +20,14 @@
 		town,
 		activeLayers,
 		layers,
+		counts,
 		onReset
 	}: {
 		town: string | null;
 		activeLayers: Readonly<Partial<Record<MapLayer, boolean>>>;
 		layers: V2MapData['layers'];
+		/** Points in view, from the in-view list the layer rail counts: one source for both. */
+		counts: { fixIt: number; quakes: number };
 		/** Clears the town and any open inspector; the camera move follows it. */
 		onReset: () => void;
 	} = $props();
@@ -36,7 +39,7 @@
 
 	let home = $state<MapView | null>(null);
 	let view = $state<MapView | null>(null);
-	let seen = $state<InView | null>(null);
+	let towns = $state<InView['towns'] | null>(null);
 	let quakesShown = $state(true);
 
 	const cameraOf = (map: MapLibreMap): MapView => {
@@ -49,15 +52,13 @@
 	function measure(map: MapLibreMap) {
 		view = cameraOf(map);
 		quakesShown = map.getLayoutProperty('earthquakes-layer', 'visibility') !== 'none';
-		seen = {
-			towns: renderedOn(map, 'towns-layer').map((f) => ({
-				slug: String(f.properties?.slug ?? ''),
-				total: Number(f.properties?.total ?? 0)
-			})),
-			fixIt: renderedOn(map, '311-reports-layer').length,
-			quakes: renderedOn(map, 'earthquakes-layer').length
-		};
+		towns = renderedOn(map, 'towns-layer').map((f) => ({
+			slug: String(f.properties?.slug ?? ''),
+			total: Number(f.properties?.total ?? 0)
+		}));
 	}
+	/** Town circles are drawn, so they are read from the map; points come from the list. */
+	const seen = $derived<InView | null>(towns ? { towns, ...counts } : null);
 
 	onMount(() => {
 		let detach = () => {};

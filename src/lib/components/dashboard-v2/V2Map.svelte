@@ -644,6 +644,7 @@
 				town={$townFilter}
 				activeLayers={$mapStore.activeLayers}
 				layers={data.layers}
+				counts={{ fixIt: inViewCount('311'), quakes: inViewCount('quake') }}
 				onReset={resetToMarin}
 			/>
 			<MapProbe />
