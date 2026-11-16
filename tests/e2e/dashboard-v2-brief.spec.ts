@@ -298,7 +298,8 @@ test('the desktop tile stays on Gnoss Field whatever town is picked', async ({ p
 test('the health indicator names degraded sources from /api/health', async ({ page }) => {
 	await stubAll(page);
 	await openV2(page);
-	const button = page.getByRole('button', { name: 'Sources: 2 degraded' });
+	// The two the report lists, plus this page's own reads that the stub fails (see below).
+	const button = page.getByRole('button', { name: /^Sources: \d+ degraded$/ });
 	await expect(button).toBeVisible();
 	await button.click();
 	const list = page.getByRole('dialog', { name: 'Source health' });
@@ -306,4 +307,28 @@ test('the health indicator names degraded sources from /api/health', async ({ pa
 	await expect(list.locator('[data-source-group="Needs a look"]')).toContainText('Pacific Sun');
 	// Every source is listed now (rule 6); a healthy one sits under "Reporting", not "Needs a look".
 	await expect(list.locator('[data-source-group="Needs a look"]')).not.toContainText('Gas Prices');
+});
+
+test("the health indicator counts the browser's own failing reads: a healthy server is not 'all OK'", async ({
+	page
+}) => {
+	await stubAll(page);
+	// The server says everything is fine; the browser's live read of gas prices (and the rest of
+	// /api/data) gets a 503.
+	await page.route('**/api/health', (r) =>
+		json(r, {
+			status: 'healthy',
+			acceptable: true,
+			sources: [HEALTH.sources[0]],
+			subsources: []
+		})
+	);
+	await openV2(page);
+	const button = page.locator('.v2-health-button');
+	await expect(button).toHaveText(/Sources: \d+ degraded/);
+	await expect(button).not.toContainText('all OK');
+	await button.click();
+	const list = page.getByRole('dialog', { name: 'Source health' });
+	await expect(list.locator('[data-source-group="Needs a look"]')).toContainText('Gas prices');
+	await expect(list.locator('[data-source-group="Needs a look"]')).toContainText('Unavailable');
 });

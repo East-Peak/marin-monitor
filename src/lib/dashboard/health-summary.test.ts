@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { HealthReportJson } from '$lib/api/marin/health-report';
 import { SETTLED_HEALTH_LABEL } from './health-labels';
-import { summarizeHealth } from './health-summary';
+import { failingReads, summarizeHealth } from './health-summary';
 
 const NOW = Date.parse('2026-09-29T15:00:00Z');
 const DAY = 86_400_000;
@@ -97,5 +97,55 @@ describe('summarizeHealth lists every monitored source for the health dialog (ru
 		expect(s.all.length).toBeGreaterThan(s.degraded.length);
 		expect(s.all.map((e) => e.name)).toEqual(expect.arrayContaining(s.degraded.map((e) => e.name)));
 		expect(summarizeHealth(null, undefined, NOW).all).toEqual([]);
+	});
+});
+
+describe("the browser's own live reads count too (a healthy server is not a healthy page)", () => {
+	const live = { kind: 'live', observedAt: null } as const;
+	const names = { weather: 'NWS weather', tides: 'NOAA tides', health: 'Source health' };
+	const outcomes = {
+		health: live,
+		weather: { kind: 'failed', error: 'HTTP 503', retained: false, observedAt: null },
+		tides: { kind: 'fallback', dataSource: 'cache', observedAt: null },
+		gas: live
+	} as const;
+
+	it('failingReads: only a failed or fallback read, never health (its own label) or a live one', () => {
+		const reads = failingReads(outcomes, names);
+		expect(reads.map((e) => [e.name, e.state])).toEqual([
+			['NWS weather', 'unavailable'],
+			['NOAA tides', 'stale']
+		]);
+		expect(failingReads({ health: live, gas: live }, names)).toEqual([]);
+		// A dataset without a name is still listed, by its id.
+		expect(failingReads({ marine: outcomes.weather }, {}).map((e) => e.name)).toEqual(['marine']);
+	});
+	it('a healthy G0a report with a failing browser read is never "all OK"', () => {
+		const s = summarizeHealth(HEALTHY, live, NOW, failingReads(outcomes, names));
+		expect(s).toMatchObject({ state: 'degraded', label: 'Sources: 2 degraded' });
+		expect(s.degraded.map((e) => e.name)).toEqual(['NWS weather', 'NOAA tides']);
+		expect(s.label).toMatch(SETTLED_HEALTH_LABEL);
+	});
+	it("the server's degraded sources and the browser's failing reads are counted together, and the dialog lists both", () => {
+		const s = summarizeHealth(REPORT, live, NOW, failingReads(outcomes, names));
+		expect(s.label).toBe('Sources: 4 degraded');
+		expect(s.all.map((e) => e.name)).toEqual(
+			expect.arrayContaining(['Gas Prices', 'Wine Index', 'NWS weather', 'NOAA tides'])
+		);
+	});
+	it('with every read live the label is unchanged', () => {
+		expect(summarizeHealth(HEALTHY, live, NOW, failingReads({ gas: live }, names)).label).toBe(
+			'Sources: all OK'
+		);
+	});
+	it('a stale report stays "may be out of date", the failing reads still listed', () => {
+		const s = summarizeHealth(
+			HEALTHY,
+			{ kind: 'failed', error: 'x', retained: true, observedAt: null },
+			NOW,
+			failingReads(outcomes, names)
+		);
+		expect(s.label).toBe('Source health may be out of date');
+		expect(s.all.map((e) => e.name)).toContain('NWS weather');
 	});
 });

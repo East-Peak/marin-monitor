@@ -71,4 +71,23 @@ describe('HealthIndicator', () => {
 		expect(note.textContent).toBe(button.textContent!.trim());
 		expect(note.hasAttribute('data-attention')).toBe(true);
 	});
+
+	it("a healthy server report with a failing browser read is not 'all OK'; the dialog names the read", async () => {
+		render(HealthIndicator, {
+			props: {
+				report: writable<HealthReportJson>({ status: 'healthy', sources: [], subsources: [] }),
+				outcomes: writable<Record<string, DatasetFetch>>({
+					health: { kind: 'live', observedAt: null },
+					weather: { kind: 'failed', error: 'HTTP 503', retained: false, observedAt: null }
+				}),
+				names: { weather: 'NWS weather' },
+				now: writable(NOW)
+			}
+		});
+		const button = screen.getByRole('button', { name: 'Sources: 1 degraded' });
+		await fireEvent.click(button);
+		const dialog = screen.getByRole('dialog', { name: 'Source health' });
+		expect(dialog.textContent).toContain('NWS weather');
+		expect(dialog.textContent).toContain('Unavailable');
+	});
 });

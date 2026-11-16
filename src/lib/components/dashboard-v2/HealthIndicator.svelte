@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Readable } from 'svelte/store';
 	import type { HealthReportJson } from '$lib/api/marin/health-report';
-	import { summarizeHealth } from '$lib/dashboard/health-summary';
+	import { failingReads, summarizeHealth } from '$lib/dashboard/health-summary';
 	import type { DatasetFetch } from '$lib/dashboard/source-adapters';
 	import DetailDialog from './DetailDialog.svelte';
 	import SourceList from './SourceList.svelte';
@@ -9,16 +9,21 @@
 	let {
 		report,
 		outcomes,
+		names = {},
 		now
 	}: {
 		report: Readable<HealthReportJson | null>;
 		outcomes: Readable<Readonly<Record<string, DatasetFetch>>>;
+		/** Each dataset's reader name, by id: the browser's own reads are listed with the sources. */
+		names?: Readonly<Record<string, string>>;
 		now: Readable<number>;
 	} = $props();
 
 	let open = $state(false);
 	let button = $state<HTMLButtonElement | null>(null);
-	const summary = $derived(summarizeHealth($report, $outcomes.health, $now));
+	const summary = $derived(
+		summarizeHealth($report, $outcomes.health, $now, failingReads($outcomes, names))
+	);
 	/** What the list alone can't say: a kept report, or one degraded with nothing listed. */
 	const note = $derived(
 		summary.state === 'unknown' || (summary.state === 'degraded' && !summary.degraded.length)

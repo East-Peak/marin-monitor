@@ -384,7 +384,12 @@
 			><SettingsMenu onreset={() => sections.clearTransient(window.innerWidth)} /></span
 		>
 		<!-- In the first paint too, "Checking sources…" until the report reads (MOBILE1). -->
-		<HealthIndicator report={healthReport} {outcomes} now={clock} />
+		<HealthIndicator
+			report={healthReport}
+			{outcomes}
+			names={controller?.datasetNames}
+			now={clock}
+		/>
 	</header>
 
 	<!-- Both jump navs are in the server's HTML and CSS shows one: the row under the header from

@@ -516,6 +516,8 @@ export interface DashboardV2Controller {
 	setLocation(preset: LocationPreset): void;
 	healthReport: Readable<HealthReportJson | null>;
 	datasetOutcomes: Readable<Readonly<Record<string, DatasetFetch>>>;
+	/** Each dataset's reader name, by id (the source-health dialog names a failing read). */
+	datasetNames: Readonly<Record<string, string>>;
 	/** Each transit agency's last complete read (null until the first) and the latest read's error. */
 	transit: Readable<TransitState>;
 	/** goldengate.org's alert list (GGALERT1): read with transit, whatever sections are open. */
@@ -774,6 +776,7 @@ export function createDashboardV2Controller(deps: ControllerDeps): DashboardV2Co
 		cost: { subscribe: cost.subscribe },
 		civic: { subscribe: civic.subscribe },
 		datasetOutcomes: registry.outcomes,
+		datasetNames: Object.fromEntries(defs.map((d) => [d.id, d.name])),
 		brief: { subscribe: brief.subscribe },
 		enableBriefDetail: () => brief.enableDetail(),
 		disableBriefDetail: () => brief.disableDetail(),
