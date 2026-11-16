@@ -12,7 +12,6 @@ import {
 	showSegments,
 	showTrafficCongestion,
 	showTrafficEvents,
-	showTraffic,
 	LAYER_TO_CATEGORY,
 	CATEGORY_TO_LAYER
 } from './map';
@@ -169,14 +168,6 @@ describe('mapStore', () => {
 			mapStore.toggleTrafficEvents();
 			expect(get(showTrafficEvents)).toBe(false);
 			expect(get(showTrafficCongestion)).toBe(true);
-		});
-
-		it('showTraffic derived is true when either is on', () => {
-			expect(get(showTraffic)).toBe(true);
-			mapStore.toggleTrafficCongestion();
-			expect(get(showTraffic)).toBe(true); // events still on
-			mapStore.toggleTrafficEvents();
-			expect(get(showTraffic)).toBe(false); // both off
 		});
 
 		it('toggleTrafficAll turns both off when both are on', () => {

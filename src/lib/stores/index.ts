@@ -12,17 +12,6 @@ export {
 	type SettingsState
 } from './settings';
 
-// Monitors store
-export {
-	monitors,
-	enabledMonitors,
-	monitorCount,
-	matchCount,
-	hasMatches,
-	type MonitorMatch,
-	type MonitorsState
-} from './monitors';
-
 // News store
 export {
 	news,
@@ -30,14 +19,6 @@ export {
 	civicNews,
 	safetyNews,
 	outdoorsNews,
-	housingNews,
-	cyclingNews,
-	enduranceNews,
-	humanPoweredNews,
-	showsNews,
-	prepNews,
-	farmNews,
-	satireNews,
 	threeOneOneNews,
 	allNewsItems,
 	alerts,
@@ -70,9 +51,7 @@ export { townFilter, selectedTownObj, townLocation } from './town-filter';
 // Refresh store
 export {
 	refresh,
-	isRefreshing,
 	currentStage,
-	lastRefresh,
 	autoRefreshEnabled,
 	timeSinceRefresh,
 	categoriesWithErrors,

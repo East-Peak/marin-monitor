@@ -118,24 +118,6 @@ interface CollapsibleStory {
 }
 
 /**
- * A feed that files two different stories under one GUID (the producer's
- * rule in dedupeItems): the first title keeps the id, each other distinct
- * title gets `~2`, `~3`, …; a repeated title is the same story and keeps it.
- */
-export function disambiguateReusedIds<T extends { id: string; title: string }>(
-	items: readonly T[]
-): T[] {
-	const titlesById = new Map<string, string[]>();
-	return items.map((item) => {
-		const titles = titlesById.get(item.id) ?? [];
-		titlesById.set(item.id, titles);
-		const key = titleKey(item.title);
-		const n = titles.includes(key) ? titles.indexOf(key) : titles.push(key) - 1;
-		return n === 0 ? item : { ...item, id: `${item.id}~${n + 1}` };
-	});
-}
-
-/**
  * One story from its copies. The representative is the first DATED copy —
  * compareRepresentative's first rule, with input (feed) order standing in for
  * source priority — else the first copy. Scope and provenance are MERGED

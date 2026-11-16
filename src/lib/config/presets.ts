@@ -70,8 +70,6 @@ export const PRESETS: Record<string, Preset> = {
 	}
 };
 
-export const PRESET_ORDER = ['essentials', 'safety-first', 'local-nerd', 'outdoor', 'everything'];
-
 // Storage keys
 export const ONBOARDING_STORAGE_KEY = 'mm_onboardingComplete';
 export const PRESET_STORAGE_KEY = 'mm_selectedPreset';

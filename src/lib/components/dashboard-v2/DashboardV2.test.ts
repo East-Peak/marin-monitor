@@ -37,11 +37,7 @@ vi.mock('$lib/config/strava', async (importOriginal) => ({
 	STRAVA_ENABLED: false
 }));
 
-const { loadAllNews, loadStravaData } = vi.hoisted(() => ({
-	loadAllNews: vi.fn(),
-	loadStravaData: vi.fn()
-}));
-vi.mock('$lib/api/marin/load-all', () => ({ loadAllNews }));
+const { loadStravaData } = vi.hoisted(() => ({ loadStravaData: vi.fn() }));
 vi.mock('$lib/stores/strava', () => ({ loadStravaData }));
 const controller = vi.hoisted(() => ({
 	seededEntries: (() => []) as (v: NewsSnapshotView) => unknown[],
@@ -237,10 +233,9 @@ describe('DashboardV2 preview shell', () => {
 		expect(screen.queryByRole('link', { name: 'Old dashboard' })).toBeNull();
 	});
 
-	it('never starts the legacy news or Strava loaders', async () => {
+	it('never starts the Strava loader', async () => {
 		render(DashboardV2);
 		await new Promise((resolve) => setTimeout(resolve, 0));
-		expect(loadAllNews).not.toHaveBeenCalled();
 		expect(loadStravaData).not.toHaveBeenCalled();
 	});
 

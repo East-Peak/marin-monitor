@@ -6,7 +6,6 @@ import { writable, derived, get } from 'svelte/store';
 import type { NewsItem, NewsCategory } from '$lib/types';
 import { containsAlertKeyword, detectTown, detectTopics } from '$lib/config';
 import { isLocallyRelevant } from '$lib/config/relevance';
-import { enrichItemsForLocation } from '$lib/api/marin/article-enrichment';
 import { isActiveAlert } from '$lib/news/alert-status';
 import { compareByTimestamp } from '$lib/news/order';
 import { collapseStoryCopies } from '$lib/news/identity';
@@ -91,8 +90,6 @@ function enrichNewsItem(item: NewsItem): NewsItem {
 // Create the store
 function createNewsStore() {
 	const { subscribe, set, update } = writable<NewsState>(createInitialState());
-	/** One token per enrichment run, so only the run that owns a category can release it. */
-	const inFlightLocationEnrichment = new Map<NewsCategory, symbol>();
 
 	return {
 		subscribe,
@@ -207,80 +204,6 @@ function createNewsStore() {
 		},
 
 		/**
-		 * Enrich already-filtered items with precise map locations (when available).
-		 * This runs in the background and only updates items still present in the category.
-		 */
-		async enrichLocations(category: NewsCategory, options: { signal?: AbortSignal } = {}) {
-			if (!mayWrite(undefined)) return;
-			const { signal } = options;
-			if (signal?.aborted || inFlightLocationEnrichment.has(category)) return;
-			const run = Symbol(category);
-			inFlightLocationEnrichment.set(category, run);
-			// An aborted run discards its results, so it releases the category at once:
-			// a newer view's run must not wait out this run's un-abortable fetches.
-			const release = () => {
-				if (inFlightLocationEnrichment.get(category) === run) {
-					inFlightLocationEnrichment.delete(category);
-				}
-			};
-			signal?.addEventListener('abort', release, { once: true });
-
-			try {
-				const snapshot = get({ subscribe }).categories[category].items;
-				if (snapshot.length === 0) return;
-
-				const enriched = await enrichItemsForLocation(snapshot, { signal });
-				if (signal?.aborted) return;
-				const byId = new Map(enriched.map((item) => [item.id, item]));
-
-				update((state) => {
-					if (!mayWrite(undefined)) return state;
-					let changed = false;
-					const nextItems = state.categories[category].items.map((item) => {
-						const candidate = byId.get(item.id);
-						if (!candidate) return item;
-
-						const nextLat = candidate.lat;
-						const nextLon = candidate.lon;
-						const nextConfidence = candidate.locationConfidence;
-						const nextEvidence = candidate.locationEvidence;
-
-						const same =
-							nextLat === item.lat &&
-							nextLon === item.lon &&
-							nextConfidence === item.locationConfidence &&
-							nextEvidence === item.locationEvidence;
-
-						if (same) return item;
-						changed = true;
-						return {
-							...item,
-							lat: nextLat,
-							lon: nextLon,
-							locationConfidence: nextConfidence,
-							locationEvidence: nextEvidence
-						};
-					});
-
-					if (!changed) return state;
-					return {
-						...state,
-						categories: {
-							...state.categories,
-							[category]: {
-								...state.categories[category],
-								items: nextItems
-							}
-						}
-					};
-				});
-			} finally {
-				signal?.removeEventListener('abort', release);
-				release();
-			}
-		},
-
-		/**
 		 * Get items for a category
 		 */
 		getItems(category: NewsCategory): NewsItem[] {
@@ -372,19 +295,6 @@ export const localNews = derived(news, ($news) => $news.categories.local);
 export const civicNews = derived(news, ($news) => $news.categories.civic);
 export const safetyNews = derived(news, ($news) => $news.categories.safety);
 export const outdoorsNews = derived(news, ($news) => $news.categories.outdoors);
-export const housingNews = derived(news, ($news) => $news.categories.housing);
-export const cyclingNews = derived(news, ($news) => $news.categories.cycling);
-export const enduranceNews = derived(news, ($news) => $news.categories.endurance);
-export const humanPoweredNews = derived([cyclingNews, enduranceNews], ([$cycling, $endurance]) => ({
-	items: [...$cycling.items, ...$endurance.items].sort(compareByTimestamp),
-	loading: $cycling.loading || $endurance.loading,
-	error: $cycling.error ?? $endurance.error,
-	lastUpdated: Math.max($cycling.lastUpdated ?? 0, $endurance.lastUpdated ?? 0) || null
-}));
-export const showsNews = derived(news, ($news) => $news.categories.shows);
-export const prepNews = derived(news, ($news) => $news.categories.prep);
-export const farmNews = derived(news, ($news) => $news.categories.farm);
-export const satireNews = derived(news, ($news) => $news.categories.satire);
 export const threeOneOneNews = derived(news, ($news) => $news.categories['311']);
 
 // Derived store for all news items — one entry per story (ids are

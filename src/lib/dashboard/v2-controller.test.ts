@@ -8,8 +8,6 @@ import { getLocationById } from '$lib/config/locations';
 
 vi.mock('$app/environment', () => ({ browser: true, version: 'test' }));
 vi.mock('$lib/services/client', () => ({ serviceClient: { request: vi.fn() } }));
-const { loadAllNews } = vi.hoisted(() => ({ loadAllNews: vi.fn() }));
-vi.mock('$lib/api/marin/load-all', () => ({ loadAllNews }));
 const fetchers = vi.hoisted(() => ({
 	gas: vi.fn(),
 	ev: vi.fn(),
@@ -337,12 +335,11 @@ describe('createDashboardV2Controller', () => {
 		}
 	});
 
-	it('never runs the browser feed chain or Strava; Strava only through ensure', async () => {
+	it('never runs Strava except through ensure', async () => {
 		const c = controller();
 		await c.start();
 		clock += 10 * 60_000;
 		await c.refresh();
-		expect(loadAllNews).not.toHaveBeenCalled();
 		expect(fetchers.strava).not.toHaveBeenCalled();
 		await c.ensure('strava');
 		expect(fetchers.strava).toHaveBeenCalledTimes(1);

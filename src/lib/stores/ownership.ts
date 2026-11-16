@@ -3,7 +3,7 @@
  * Untokened writes belong to the default owner — the dashboard, unchanged.
  * A view that needs the stores exclusively (the TV wallboard) claims them;
  * while the claim is held only its token writes, so work another view
- * started earlier (a pending loadAllNews, enrichment, a refresh cycle) can
+ * started earlier (a pending load, enrichment, a refresh cycle) can
  * no longer land. A released token never writes again, so a destroyed
  * owner's late work is dropped too. Enforced at the store write boundary,
  * not by chasing every code path.

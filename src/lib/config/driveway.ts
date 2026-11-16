@@ -8,9 +8,6 @@ export const DRIVEWAY_BLOB_KEY = 'marin-driveway.json';
 /** Max history entries (one per data year, ~10 years of DMV data) */
 export const MAX_DRIVEWAY_HISTORY = 10;
 
-/** Accent color (indigo -- vehicle/tech feel) */
-export const DRIVEWAY_ACCENT = '#6366f1';
-
 /** Accent color with transparency for area fills */
 export const DRIVEWAY_ACCENT_FILL = 'rgba(99, 102, 241, 0.1)';
 

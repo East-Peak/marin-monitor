@@ -11,9 +11,6 @@ export const MAX_FITNESS_HISTORY = 24;
 /** Accent color (pink) */
 export const FITNESS_ACCENT = '#ec4899';
 
-/** Accent color with transparency for area fills */
-export const FITNESS_ACCENT_FILL = 'rgba(236, 72, 153, 0.1)';
-
 /** Fitness type display order */
 export const TYPE_ORDER: FitnessType[] = ['yoga', 'pilates', 'cycling', 'hiit', 'crossfit'];
 

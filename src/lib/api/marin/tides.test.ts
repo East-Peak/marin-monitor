@@ -21,7 +21,7 @@ vi.mock('$lib/config/map', () => ({
 	}
 }));
 
-import { fetchTideEventsOrThrow, fetchTidePredictions, fetchHourlyTides } from './tides';
+import { fetchTideEventsOrThrow, fetchTidePredictions } from './tides';
 import { serviceClient } from '$lib/services/client';
 import { logger } from '$lib/config/api';
 
@@ -238,135 +238,6 @@ describe('NOAA Tides adapter', () => {
 		});
 	});
 
-	// ── fetchHourlyTides ─────────────────────────────────────────────────
-
-	describe('fetchHourlyTides', () => {
-		it('parses hourly predictions into time/height pairs', async () => {
-			mockRequest.mockResolvedValueOnce(
-				wrapResult({
-					predictions: [
-						{ t: '2026-04-01 00:00', v: '3.21' },
-						{ t: '2026-04-01 01:00', v: '2.85' },
-						{ t: '2026-04-01 02:00', v: '2.10' }
-					]
-				})
-			);
-
-			const result = await fetchHourlyTides();
-
-			expect(result).toHaveLength(3);
-			expect(result[0]).toEqual({ time: '2026-04-01 00:00', height: 3.21 });
-			expect(result[1]).toEqual({ time: '2026-04-01 01:00', height: 2.85 });
-			expect(result[2]).toEqual({ time: '2026-04-01 02:00', height: 2.1 });
-		});
-
-		it('does not include type field in output', async () => {
-			mockRequest.mockResolvedValueOnce(
-				wrapResult({
-					predictions: [{ t: '2026-04-01 00:00', v: '3.21', type: 'H' }]
-				})
-			);
-
-			const result = await fetchHourlyTides();
-
-			expect(result[0]).not.toHaveProperty('type');
-			expect(Object.keys(result[0])).toEqual(['time', 'height']);
-		});
-
-		it('uses default Point Reyes station when none specified', async () => {
-			mockRequest.mockResolvedValueOnce(wrapResult({ predictions: [] }));
-
-			await fetchHourlyTides();
-
-			expect(mockRequest).toHaveBeenCalledWith(
-				'NOAA_TIDES',
-				'',
-				expect.objectContaining({
-					params: expect.objectContaining({
-						station: '9415020',
-						interval: '60'
-					})
-				})
-			);
-		});
-
-		it('passes custom station parameter', async () => {
-			mockRequest.mockResolvedValueOnce(wrapResult({ predictions: [] }));
-
-			await fetchHourlyTides('9414290');
-
-			expect(mockRequest).toHaveBeenCalledWith(
-				'NOAA_TIDES',
-				'',
-				expect.objectContaining({
-					params: expect.objectContaining({
-						station: '9414290'
-					})
-				})
-			);
-		});
-
-		it('sends interval=60 for hourly data', async () => {
-			mockRequest.mockResolvedValueOnce(wrapResult({ predictions: [] }));
-
-			await fetchHourlyTides();
-
-			expect(mockRequest).toHaveBeenCalledWith(
-				'NOAA_TIDES',
-				'',
-				expect.objectContaining({
-					params: expect.objectContaining({
-						interval: '60'
-					})
-				})
-			);
-		});
-
-		it('returns empty array when predictions key is missing', async () => {
-			mockRequest.mockResolvedValueOnce(wrapResult({}));
-
-			const result = await fetchHourlyTides();
-
-			expect(result).toEqual([]);
-		});
-
-		it('returns empty array when predictions is empty', async () => {
-			mockRequest.mockResolvedValueOnce(wrapResult({ predictions: [] }));
-
-			const result = await fetchHourlyTides();
-
-			expect(result).toEqual([]);
-		});
-
-		it('returns empty array on network error', async () => {
-			mockRequest.mockRejectedValueOnce(new Error('fetch failed'));
-
-			const result = await fetchHourlyTides();
-
-			expect(result).toEqual([]);
-		});
-
-		it('returns empty array on HTTP 500', async () => {
-			mockRequest.mockRejectedValueOnce(new Error('HTTP 500: Internal Server Error'));
-
-			const result = await fetchHourlyTides();
-
-			expect(result).toEqual([]);
-		});
-
-		it('parses negative heights correctly', async () => {
-			mockRequest.mockResolvedValueOnce(
-				wrapResult({
-					predictions: [{ t: '2026-04-01 05:00', v: '-0.45' }]
-				})
-			);
-
-			const result = await fetchHourlyTides();
-
-			expect(result[0].height).toBeCloseTo(-0.45);
-		});
-	});
-
 	describe('the v2 window starts at the Pacific day, not the GMT one', () => {
 		const beginAt = async (iso: string) => {
 			vi.useFakeTimers({ now: Date.parse(iso) });
@@ -404,9 +275,8 @@ describe('NOAA Tides adapter', () => {
 			mockRequest.mockResolvedValue(wrapResult({ predictions: [] }));
 
 			await fetchTidePredictions('9415020', { signal: owner.signal });
-			await fetchHourlyTides('9415020', { signal: owner.signal });
 
-			expect(mockRequest).toHaveBeenCalledTimes(2);
+			expect(mockRequest).toHaveBeenCalledTimes(1);
 			for (const call of mockRequest.mock.calls) expect(call[2]?.signal).toBe(owner.signal);
 		});
 	});
@@ -419,7 +289,6 @@ describe('NOAA Tides adapter', () => {
 		});
 
 		await fetchTidePredictions('9415020', { signal: owner.signal });
-		await fetchHourlyTides('9415020', { signal: owner.signal });
 
 		expect(vi.mocked(logger.warn)).not.toHaveBeenCalled();
 	});

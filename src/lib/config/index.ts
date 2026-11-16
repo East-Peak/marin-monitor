@@ -7,7 +7,6 @@ export {
 	PANELS,
 	NON_DRAGGABLE_PANELS,
 	DEFAULT_PANEL_ORDER,
-	LISTED_PANELS,
 	type PanelConfig,
 	type PanelId
 } from './panels';
@@ -16,10 +15,10 @@ export {
 export { MARIN_TOWNS, TOWN_BY_SLUG, TOWN_BY_NAME, MARIN_CENTER, MARIN_BOUNDS } from './towns';
 
 // Feed configuration
-export { FEEDS, getAllFeedUrls, type FeedSource } from './feeds';
+export { FEEDS, type FeedSource } from './feeds';
 
 // Camera configuration
-export { CAMERAS, CAMERA_CATEGORIES, type CameraConfig, type CameraCategory } from './cameras';
+export { CAMERAS, type CameraConfig, type CameraCategory } from './cameras';
 
 // Keyword configuration
 export {
@@ -59,13 +58,7 @@ export {
 } from './map';
 
 // Preset configuration
-export {
-	PRESETS,
-	PRESET_ORDER,
-	ONBOARDING_STORAGE_KEY,
-	PRESET_STORAGE_KEY,
-	type Preset
-} from './presets';
+export { PRESETS, ONBOARDING_STORAGE_KEY, PRESET_STORAGE_KEY, type Preset } from './presets';
 
 // Changelog
 export { CHANGELOG, type ChangelogEntry } from './changelog';
@@ -75,6 +68,3 @@ export { isLocallyRelevant, isMixedSource } from './relevance';
 
 // API configuration
 export { API_DELAYS, CACHE_TTLS, API_URLS, DEBUG, logger } from './api';
-
-// Ad configuration
-export { ADS, getActiveAds, pickAds, type AdConfig } from './ads';

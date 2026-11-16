@@ -1,9 +1,5 @@
 import type { StravaSeedSegment } from '$lib/types/strava';
-import {
-	CURATED_STRAVA_SEGMENTS,
-	STRAVA_CURATED_RIDE_COUNT,
-	STRAVA_CURATED_RUN_COUNT
-} from './strava-curated.generated';
+import { CURATED_STRAVA_SEGMENTS } from './strava-curated.generated';
 
 /**
  * The one Strava switch. Off = mothballed (2026-10-01): no Strava panel, section,
@@ -37,5 +33,3 @@ export const MARIN_BOUNDING_BOXES: [number, number, number, number][] = [
 ];
 
 export const SEED_SEGMENTS: StravaSeedSegment[] = CURATED_STRAVA_SEGMENTS;
-export const STRAVA_DASHBOARD_RIDE_LIMIT = STRAVA_CURATED_RIDE_COUNT;
-export const STRAVA_DASHBOARD_RUN_LIMIT = STRAVA_CURATED_RUN_COUNT;

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
 	compareRepresentative,
-	disambiguateReusedIds,
 	isGenericUrl,
 	sameStoryByTitle,
 	collapseStoryCopies,
@@ -199,18 +198,6 @@ describe('collapseStoryCopies', () => {
 	it('drops an exact duplicate id', () => {
 		const s = story('a:1', 'A', 'T', '');
 		expect(collapseStoryCopies([s, { ...s }])).toHaveLength(1);
-	});
-});
-
-describe('disambiguateReusedIds', () => {
-	it('keeps two stories one feed filed under the same GUID apart, as the producer does', () => {
-		const out = disambiguateReusedIds([
-			{ id: 'ij:7', title: 'Sausalito ferry fares rise' },
-			{ id: 'ij:7', title: 'San Anselmo creek cleanup' },
-			{ id: 'ij:7', title: 'Sausalito ferry fares rise!' },
-			{ id: 'ij:8', title: 'Other' }
-		]);
-		expect(out.map((i) => i.id)).toEqual(['ij:7', 'ij:7~2', 'ij:7', 'ij:8']);
 	});
 });
 

@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { STRAVA_ENABLED } from './strava';
 import { TV_SCREENS, tvScreens } from './tv';
-import { DEFAULT_PANEL_ORDER, defaultPanelOrder, listedPanels } from './panels';
+import { DEFAULT_PANEL_ORDER, defaultPanelOrder } from './panels';
 import { V2_SECTIONS, v2Sections } from '$lib/dashboard/v2-sections';
 
 // Strava is mothballed (2026-10-01): scrapers, scripts, data and docs stay in
@@ -80,13 +80,5 @@ describe('vercel.json crons', () => {
 
 	it('schedule the Strava syncs only while Strava is on', () => {
 		for (const path of STRAVA_CRONS) expect(paths.includes(path)).toBe(STRAVA_ENABLED);
-	});
-});
-
-describe('settings panel list', () => {
-	it('lists the leaderboards panel only while Strava is on', () => {
-		expect(listedPanels(false).map(([id]) => id)).not.toContain('leaderboards');
-		expect(listedPanels(true).map(([id]) => id)).toContain('leaderboards');
-		expect(listedPanels(false)).toHaveLength(listedPanels(true).length - 1);
 	});
 });

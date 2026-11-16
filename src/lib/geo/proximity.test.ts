@@ -3,13 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-	haversineDistance,
-	findNearestTown,
-	isInsideMarin,
-	isNearMarin,
-	getLocationForTown
-} from './proximity';
+import { haversineDistance, findNearestTown, isNearMarin, getLocationForTown } from './proximity';
 
 describe('haversineDistance', () => {
 	it('returns 0 for identical points', () => {
@@ -67,43 +61,6 @@ describe('findNearestTown', () => {
 		// San Francisco with a very large radius
 		const slug = findNearestTown(37.7749, -122.4194, 50000);
 		expect(slug).not.toBeNull();
-	});
-});
-
-describe('isInsideMarin', () => {
-	it('returns true for central Marin coordinates', () => {
-		expect(isInsideMarin(37.9735, -122.5311)).toBe(true);
-	});
-
-	it('returns true for coordinates inside bounding box', () => {
-		// Mill Valley
-		expect(isInsideMarin(37.906, -122.545)).toBe(true);
-		// Novato
-		expect(isInsideMarin(38.1074, -122.5697)).toBe(true);
-	});
-
-	it('returns false for coordinates clearly outside Marin', () => {
-		// Los Angeles
-		expect(isInsideMarin(34.0522, -118.2437)).toBe(false);
-		// New York
-		expect(isInsideMarin(40.7128, -74.006)).toBe(false);
-	});
-
-	it('uses padding parameter to expand bounding box', () => {
-		// Just outside south boundary (37.82 - 0.03 = 37.79)
-		const latJustOutside = 37.78;
-		// Should fail with default padding
-		expect(isInsideMarin(latJustOutside, -122.5)).toBe(false);
-		// Should succeed with larger padding
-		expect(isInsideMarin(latJustOutside, -122.5, 0.05)).toBe(true);
-	});
-
-	it('uses zero padding correctly', () => {
-		// Right at the boundary edge — should fail with zero padding
-		const latAtBoundary = 37.82;
-		expect(isInsideMarin(latAtBoundary, -122.5, 0)).toBe(true);
-		const latJustBelow = 37.819;
-		expect(isInsideMarin(latJustBelow, -122.5, 0)).toBe(false);
 	});
 });
 

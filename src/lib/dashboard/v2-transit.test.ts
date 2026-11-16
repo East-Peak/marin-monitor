@@ -4,7 +4,6 @@ import type { TransitAgencyRead } from '$lib/api/marin/transit';
 
 vi.mock('$app/environment', () => ({ browser: true, version: 'test' }));
 vi.mock('$lib/services/client', () => ({ serviceClient: { request: vi.fn() } }));
-vi.mock('$lib/api/marin/load-all', () => ({ loadAllNews: vi.fn() }));
 const { fetchTransitAlerts } = vi.hoisted(() => ({ fetchTransitAlerts: vi.fn() }));
 vi.mock('$lib/api/marin/transit', async (orig) => ({
 	...(await orig<object>()),

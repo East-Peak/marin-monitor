@@ -170,7 +170,3 @@ export const hoveredTown = derived(mapStore, ($map) => $map.hoveredTown);
 export const showSegments = derived(mapStore, ($map) => $map.showSegments);
 export const showTrafficCongestion = derived(mapStore, ($map) => $map.showTrafficCongestion);
 export const showTrafficEvents = derived(mapStore, ($map) => $map.showTrafficEvents);
-export const showTraffic = derived(
-	mapStore,
-	($map) => $map.showTrafficCongestion || $map.showTrafficEvents
-);

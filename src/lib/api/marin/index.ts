@@ -1,29 +1,15 @@
-export { fetchCategory, fetchAllFeeds, type CategoryFetchResult } from './rss';
-export { fetchForecast, fetchAlerts, fetchWeather } from './nws';
 export { fetchHourlyForecast, type HourlyPeriod } from './nws-hourly';
 export { fetchNpsAlerts } from './nps';
-export {
-	fetchEarthquakes,
-	fetchEarthquakesOrThrow,
-	readEarthquakesOrThrow,
-	earthquakesToNewsItems,
-	type EarthquakeRead
-} from './usgs';
+export { readEarthquakesOrThrow, earthquakesToNewsItems, type EarthquakeRead } from './usgs';
 export { fetchTransitAlerts } from './transit';
-export { fetchTidePredictions, fetchHourlyTides } from './tides';
 export { fetchHousingData, type HousingMetric } from './housing';
 export { fetchSheriffCrimeBlotter, type SheriffCrimeRecord } from './blotter';
 export { fetchSupplementalPoliceLogs } from './police-logs';
 export { fetchSupplementalActivityFeeds } from './activity';
-export { enrichItemsForRelevance, enrichItemsForLocation } from './article-enrichment';
-export { fetchMarineSnapshot, type MarineSnapshot } from './marine';
 export { fetchAirQuality } from './airnow';
 export { fetchStreamGauges, type StreamGauge } from './streams';
 export { fetchFireIncidents, type FireIncident } from './calfire';
-export { fetchUvIndex, type UvData } from './uv';
-export { fetchSunTimes, type SunData } from './sun';
 export { fetchObservedWeather, type ObservedWeather } from './open-meteo';
 export { fetchGasPriceData } from './gas-prices';
-export { fetchEvChargingData } from './ev-charging';
 export { fetchAirportStatus } from './airport-status';
-export { fetchSeeClickFixIssues, readSeeClickFixIssues } from './seeclickfix';
+export { readSeeClickFixIssues } from './seeclickfix';

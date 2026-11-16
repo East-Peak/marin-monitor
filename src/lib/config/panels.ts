@@ -236,12 +236,3 @@ export function defaultPanelOrder(stravaEnabled: boolean): PanelId[] {
 }
 
 export const DEFAULT_PANEL_ORDER: PanelId[] = defaultPanelOrder(STRAVA_ENABLED);
-
-/** The panels the settings list offers, without the Strava panels while Strava is off. */
-export function listedPanels(stravaEnabled: boolean): [PanelId, PanelConfig][] {
-	return (Object.entries(PANELS) as [PanelId, PanelConfig][]).filter(([id]) =>
-		isActivePanel(id, stravaEnabled)
-	);
-}
-
-export const LISTED_PANELS = listedPanels(STRAVA_ENABLED);

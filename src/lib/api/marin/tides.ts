@@ -74,48 +74,6 @@ export async function fetchTidePredictions(
 	}
 }
 
-/**
- * Fetch hourly tide heights for chart display (next 24 hours)
- */
-export async function fetchHourlyTides(
-	station: string = TIDE_STATIONS.pointReyes,
-	{ signal }: OwnerOptions = {}
-): Promise<{ time: string; height: number }[]> {
-	try {
-		const now = stableHour(new Date());
-		const end = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-
-		logger.log('NOAA', `Fetching hourly tides for station ${station}`);
-
-		const result = await serviceClient.request<NoaaTideResponse>('NOAA_TIDES', '', {
-			params: {
-				begin_date: formatDate(now),
-				end_date: formatDate(end),
-				station,
-				product: 'predictions',
-				datum: 'MLLW',
-				units: 'english',
-				time_zone: 'lst_ldt',
-				interval: '60',
-				format: 'json',
-				application: 'MarinMonitor'
-			},
-			signal
-		});
-		const predictions: NoaaTidePrediction[] = result.data.predictions || [];
-
-		return predictions.map((p) => ({
-			time: p.t,
-			height: parseFloat(p.v)
-		}));
-	} catch (error) {
-		// An owner abort (destroyed dashboard or panel) is not an upstream failure.
-		if (!signal?.aborted)
-			logger.warn('NOAA', `Hourly tide fetch failed: ${(error as Error).message}`);
-		return [];
-	}
-}
-
 function formatDate(d: Date): string {
 	const y = d.getFullYear();
 	const m = String(d.getMonth() + 1).padStart(2, '0');

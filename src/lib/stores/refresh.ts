@@ -378,12 +378,7 @@ function createRefreshStore() {
 // Export singleton store
 export const refresh = createRefreshStore();
 
-// Derived stores
-export const isRefreshing = derived(refresh, ($refresh) => $refresh.isRefreshing);
-
 export const currentStage = derived(refresh, ($refresh) => $refresh.currentStage);
-
-export const lastRefresh = derived(refresh, ($refresh) => $refresh.lastRefresh);
 
 export const autoRefreshEnabled = derived(refresh, ($refresh) => $refresh.autoRefreshEnabled);
 

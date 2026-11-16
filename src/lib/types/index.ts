@@ -134,35 +134,6 @@ export interface Town {
 }
 
 /**
- * Weather data from NWS
- */
-export interface WeatherData {
-	temperature: number;
-	temperatureUnit: string;
-	windSpeed: string;
-	windDirection: string;
-	shortForecast: string;
-	detailedForecast?: string;
-	isDaytime: boolean;
-	timestamp: number;
-}
-
-/**
- * Fire weather alert from NWS
- */
-export interface FireWeatherAlert {
-	id: string;
-	event: string;
-	headline: string;
-	description: string;
-	severity: 'Extreme' | 'Severe' | 'Moderate' | 'Minor' | 'Unknown';
-	urgency: 'Immediate' | 'Expected' | 'Future' | 'Past' | 'Unknown';
-	onset: string;
-	expires: string;
-	areaDesc: string;
-}
-
-/**
  * Air quality data from AirNow
  */
 export interface AirQualityData {
@@ -204,41 +175,6 @@ export interface EarthquakeData {
 	lon: number;
 	depth: number;
 	url: string;
-}
-
-/**
- * Custom monitor created by user
- */
-export interface CustomMonitor {
-	id: string;
-	name: string;
-	keywords: string[];
-	enabled: boolean;
-	color?: string;
-	town?: string;
-	createdAt: number;
-	updatedAt?: number;
-	matchCount: number;
-}
-
-/**
- * Wastewater pathogen surveillance (Cal-SuWers)
- */
-export interface WastewaterPathogen {
-	id: string;
-	label: string;
-	status: 'high' | 'moderate' | 'low' | 'not-detected';
-	latestConc: number | null;
-	belowLod: boolean;
-	trend: number[];
-	trendDirection: 'rising' | 'falling' | 'stable';
-	lastSampleDate: string;
-}
-
-export interface WastewaterData {
-	pathogens: WastewaterPathogen[];
-	sewershedCount: number;
-	lastUpdated: string;
 }
 
 /**

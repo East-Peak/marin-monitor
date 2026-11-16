@@ -43,7 +43,7 @@ import {
 	snapshotProblems
 } from '$lib/api/marin/news-snapshot';
 
-/** Store placement, as load-all places it ('own' = the item's own category). */
+/** Store placement for each adapter's items ('own' = the item's own category). */
 const ADAPTER_BUCKET = {
 	nps: 'outdoors',
 	earthquakes: 'safety',

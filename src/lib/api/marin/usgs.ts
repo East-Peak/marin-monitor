@@ -59,19 +59,10 @@ function isWellFormed(f: UsgsFeature): boolean {
 }
 
 /**
- * Fetch recent earthquakes near Marin County. Rejects on failure or an
- * unexpected shape, so a caller that keeps last-good pins can tell a failure
- * from a real "no quakes" (TV slice 3).
- */
-export async function fetchEarthquakesOrThrow(
-	opts: OwnerOptions & { liveOnly?: boolean } = {}
-): Promise<EarthquakeData[]> {
-	return (await readEarthquakesOrThrow(opts)).quakes;
-}
-
-/**
- * fetchEarthquakesOrThrow, plus the payload's own time. A cached body keeps the
- * `generated` it arrived with, so this is the data's age, not the fetch's.
+ * Recent earthquakes near Marin County, with the payload's own time. Rejects on
+ * failure or an unexpected shape, so a caller that keeps last-good pins can tell
+ * a failure from a real "no quakes" (TV slice 3). A cached body keeps the
+ * `generated` it arrived with, so the time is the data's age, not the fetch's.
  */
 export async function readEarthquakesOrThrow({
 	signal,
@@ -142,16 +133,6 @@ function toRead(data: UsgsResponse | undefined): EarthquakeRead {
 		? generatedAt(data.metadata?.generated)
 		: null;
 	return { quakes, observedAt };
-}
-
-/** The swallowing form the dashboard uses: any failure reads as no quakes. */
-export async function fetchEarthquakes(): Promise<EarthquakeData[]> {
-	try {
-		return await fetchEarthquakesOrThrow();
-	} catch (error) {
-		logger.warn('USGS', `Earthquake fetch failed: ${(error as Error).message}`);
-		return [];
-	}
 }
 
 /**

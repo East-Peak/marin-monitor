@@ -44,23 +44,23 @@ describe('Refresh Store', () => {
 	});
 
 	it('should start with default state', async () => {
-		const { isRefreshing, lastRefresh } = await import('./refresh');
+		const { refresh } = await import('./refresh');
 
-		expect(get(isRefreshing)).toBe(false);
-		expect(get(lastRefresh)).toBeNull();
+		expect(get(refresh).isRefreshing).toBe(false);
+		expect(get(refresh).lastRefresh).toBeNull();
 	});
 
 	it('should start and end refresh cycle', async () => {
-		const { refresh, isRefreshing, currentStage, lastRefresh } = await import('./refresh');
+		const { refresh, currentStage } = await import('./refresh');
 
 		refresh.startRefresh();
-		expect(get(isRefreshing)).toBe(true);
+		expect(get(refresh).isRefreshing).toBe(true);
 		expect(get(currentStage)).toBe('critical');
 
 		refresh.endRefresh();
-		expect(get(isRefreshing)).toBe(false);
+		expect(get(refresh).isRefreshing).toBe(false);
 		expect(get(currentStage)).toBeNull();
-		expect(get(lastRefresh)).not.toBeNull();
+		expect(get(refresh).lastRefresh).not.toBeNull();
 	});
 
 	it('should progress through stages', async () => {

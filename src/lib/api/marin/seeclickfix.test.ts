@@ -83,18 +83,18 @@ function mockFetchFailure(status = 500) {
 // Tests
 // ────────────────────────────────────────────
 
-describe('fetchSeeClickFixIssues', () => {
+describe('readSeeClickFixIssues items', () => {
 	beforeEach(() => {
 		vi.restoreAllMocks();
 	});
 
 	it('parses a valid SeeClickFix API response into NewsItem[]', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [makeIssue()];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result).toHaveLength(1);
 
 		const item = result[0];
@@ -109,7 +109,7 @@ describe('fetchSeeClickFixIssues', () => {
 	});
 
 	it('rewrites external CDN image URLs to proxy format', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [
 			makeIssue({
@@ -121,13 +121,13 @@ describe('fetchSeeClickFixIssues', () => {
 		];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result[0].imageUrl).toBe('/api/data/311-image?id=12345&size=full');
 		expect(result[0].thumbnailUrl).toBe('/api/data/311-image?id=12345&size=thumb');
 	});
 
 	it('preserves already-proxied image URLs', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [
 			makeIssue({
@@ -139,24 +139,24 @@ describe('fetchSeeClickFixIssues', () => {
 		];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result[0].imageUrl).toBe('/api/data/311-image?id=12345&size=full');
 		expect(result[0].thumbnailUrl).toBe('/api/data/311-image?id=12345&size=thumb');
 	});
 
 	it('returns undefined imageUrl/thumbnailUrl when media is missing', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [makeIssue({ media: undefined })];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result[0].imageUrl).toBeUndefined();
 		expect(result[0].thumbnailUrl).toBeUndefined();
 	});
 
 	it('filters out issues outside Marin County bounding box', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [
 			makeIssue({ id: 1, lat: 37.97, lng: -122.53 }), // Inside Marin
@@ -167,13 +167,13 @@ describe('fetchSeeClickFixIssues', () => {
 		];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result).toHaveLength(1);
 		expect(result[0].id).toBe('seeclickfix-1');
 	});
 
 	it('filters out issues with null lat/lng', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [
 			makeIssue({ id: 1, lat: null, lng: null }),
@@ -182,12 +182,12 @@ describe('fetchSeeClickFixIssues', () => {
 		];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result).toHaveLength(0);
 	});
 
 	it('strips Spanish translation from category names', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [
 			makeIssue({ summary: 'Illegal Dumping / Desecho ilegal' }),
@@ -196,7 +196,7 @@ describe('fetchSeeClickFixIssues', () => {
 		];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result[0].title).toContain('Illegal Dumping');
 		expect(result[0].title).not.toContain('Desecho ilegal');
 		expect(result[1].title).toContain('Graffiti');
@@ -205,7 +205,7 @@ describe('fetchSeeClickFixIssues', () => {
 	});
 
 	it('extracts address snippet with house number stripped', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [
 			makeIssue({ address: '123 Lincoln Ave, San Rafael, CA' }),
@@ -213,35 +213,35 @@ describe('fetchSeeClickFixIssues', () => {
 		];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		// Title format: "Category · StreetSnippet"
 		expect(result[0].title).toBe('Pothole \u00b7 Lincoln Ave');
 		expect(result[1].title).toBe('Pothole \u00b7 Redwood Hwy');
 	});
 
 	it('handles address with no house number', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [makeIssue({ address: 'Bolinas Rd, Fairfax, CA' })];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result[0].title).toBe('Pothole \u00b7 Bolinas Rd');
 	});
 
 	it('handles empty address gracefully', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [makeIssue({ address: '' })];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		// With no address snippet, title is just the category
 		expect(result[0].title).toBe('Pothole');
 	});
 
 	it('detects town from address', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [
 			makeIssue({ address: '123 Lincoln Ave, San Rafael, CA' }),
@@ -249,7 +249,7 @@ describe('fetchSeeClickFixIssues', () => {
 		];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result[0].town).toBe('San Rafael');
 		expect(result[0].townSlug).toBe('san-rafael');
 		expect(result[1].town).toBe('Mill Valley');
@@ -257,18 +257,18 @@ describe('fetchSeeClickFixIssues', () => {
 	});
 
 	it('handles unknown town (no match)', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [makeIssue({ address: '123 Somewhere, Unincorporated, CA' })];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result[0].town).toBeUndefined();
 		expect(result[0].townSlug).toBeUndefined();
 	});
 
 	it('sorts items by timestamp descending (newest first)', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [
 			makeIssue({ id: 1, created_at: '2026-03-10T08:00:00Z' }),
@@ -277,55 +277,53 @@ describe('fetchSeeClickFixIssues', () => {
 		];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result.map((r) => r.id)).toEqual(['seeclickfix-2', 'seeclickfix-3', 'seeclickfix-1']);
 		expect(result[0].timestamp).toBeGreaterThan(result[1].timestamp);
 		expect(result[1].timestamp).toBeGreaterThan(result[2].timestamp);
 	});
 
-	// FIX-10 — fetchSeeClickFixIssues now throws on failure rather than
-	// silently returning []. Callers (load-all.ts) distinguish "succeeded
-	// with no issues" (clear stale data) from "fetch failed" (preserve last
-	// known good) via Promise.allSettled status.
+	// FIX-10 — the 311 read throws on failure rather than silently returning [],
+	// so a caller can tell "succeeded with no issues" (clear stale data) from
+	// "fetch failed" (preserve last known good).
 	it('throws on API failure', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		mockFetchFailure(500);
 
-		await expect(fetchSeeClickFixIssues()).rejects.toThrow(/HTTP 500/);
+		await expect(readSeeClickFixIssues()).rejects.toThrow(/HTTP 500/);
 	});
 
 	it('throws on network error', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
 
-		await expect(fetchSeeClickFixIssues()).rejects.toThrow(/Network error/);
+		await expect(readSeeClickFixIssues()).rejects.toThrow(/Network error/);
 	});
 
 	// R2 #4 — malformed responses (no `issues` array) must NOT be treated as
-	// "succeeded with zero issues." A schema break upstream needs to reach
-	// the failure-preservation branch in load-all so the 311 store keeps its
-	// last known good state.
+	// "succeeded with zero issues." A schema break upstream must reach the
+	// caller as a failure, so it keeps its last known good state.
 	it('throws when response has no issues array', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		mockFetchSuccess({ lastUpdated: '2026-03-15T12:00:00Z' });
 
-		await expect(fetchSeeClickFixIssues()).rejects.toThrow(/issues array/);
+		await expect(readSeeClickFixIssues()).rejects.toThrow(/issues array/);
 	});
 
 	it('returns empty array for empty issues list', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		mockFetchSuccess(makeBlobResponse([]));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result).toEqual([]);
 	});
 
 	it('skips issues with invalid created_at date', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [
 			makeIssue({ id: 1, created_at: 'not-a-date' }),
@@ -333,13 +331,13 @@ describe('fetchSeeClickFixIssues', () => {
 		];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result).toHaveLength(1);
 		expect(result[0].id).toBe('seeclickfix-2');
 	});
 
 	it('skips issues with no id', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [
 			makeIssue({ id: 0 }), // falsy id
@@ -347,58 +345,58 @@ describe('fetchSeeClickFixIssues', () => {
 		];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result).toHaveLength(1);
 		expect(result[0].id).toBe('seeclickfix-99');
 	});
 
 	it('truncates long descriptions to 300 characters', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const longDesc = 'A'.repeat(500);
 		const issues = [makeIssue({ description: longDesc })];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result[0].description).toHaveLength(300);
 		expect(result[0].description).toBe('A'.repeat(300));
 	});
 
 	it('generates fallback description when description is empty', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [makeIssue({ description: '' })];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result[0].description).toContain('Pothole');
 		expect(result[0].description).toContain('123 Lincoln Ave, San Rafael, CA');
 	});
 
 	it('generates fallback link when html_url is missing', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [makeIssue({ html_url: undefined })];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result[0].link).toBe('https://seeclickfix.com/issues/12345');
 	});
 
 	it('sets location confidence to exact when lat/lng present', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [makeIssue({ lat: 37.97, lng: -122.53 })];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result[0].lat).toBe(37.97);
 		expect(result[0].lon).toBe(-122.53);
 		expect(result[0].locationConfidence).toBe('exact');
 	});
 
 	it('handles boundary edge cases (items on exact bounding box edges are included)', async () => {
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 
 		const issues = [
 			makeIssue({ id: 1, lat: 37.83, lng: -122.75 }), // SW corner (min lat, min lng)
@@ -408,7 +406,7 @@ describe('fetchSeeClickFixIssues', () => {
 		];
 		mockFetchSuccess(makeBlobResponse(issues));
 
-		const result = await fetchSeeClickFixIssues();
+		const result = (await readSeeClickFixIssues()).items;
 		expect(result).toHaveLength(4);
 	});
 
@@ -427,9 +425,9 @@ describe('fetchSeeClickFixIssues', () => {
 					)
 			} as unknown as Response;
 		});
-		const { fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 		const owner = new AbortController();
-		const pending = fetchSeeClickFixIssues({ signal: owner.signal });
+		const pending = readSeeClickFixIssues({ signal: owner.signal });
 		await vi.waitFor(() => expect(requestSignal).toBeDefined());
 		owner.abort();
 		await expect(pending).rejects.toThrow(/abort/i);
@@ -476,13 +474,12 @@ describe('a malformed row never lets the blob’s time vouch for its list (Codex
 		[{ ...makeIssue(), id: 0 }],
 		[{ ...makeIssue(), created_at: 'not a date' }],
 		[{ ...makeIssue(), lat: '37.97' }]
-	])('a malformed row (%j) → observedAt null; the legacy items are unchanged', async (bad) => {
+	])('a malformed row (%j) → observedAt null; the good rows are still served', async (bad) => {
 		mockFetchSuccess({ issues: [makeIssue({ id: 7 }), bad], lastUpdated: LAST, count: 2 });
-		const { readSeeClickFixIssues, fetchSeeClickFixIssues } = await import('./seeclickfix');
+		const { readSeeClickFixIssues } = await import('./seeclickfix');
 		const r = await readSeeClickFixIssues();
 		expect(r.observedAt).toBeNull();
 		expect(r.items.map((i) => i.id)).toContain('seeclickfix-7');
-		expect(await fetchSeeClickFixIssues()).toEqual(r.items);
 	});
 
 	it('legitimate exclusions (outside Marin, no location) keep the time', async () => {

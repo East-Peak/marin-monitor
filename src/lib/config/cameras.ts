@@ -43,12 +43,6 @@ export interface CameraConfig {
 	tvCluster?: TvCameraCluster;
 }
 
-export const CAMERA_CATEGORIES: { id: CameraCategory; label: string }[] = [
-	{ id: 'traffic', label: 'Traffic' },
-	{ id: 'scenic', label: 'Scenic' },
-	{ id: 'fire', label: 'Fire' }
-];
-
 export const FIRE_SUB_REGIONS: { id: FireSubRegion; label: string }[] = [
 	{ id: 'south', label: 'South Marin' },
 	{ id: 'central', label: 'Central Marin' },

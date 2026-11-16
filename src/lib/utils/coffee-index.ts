@@ -43,19 +43,3 @@ export function getCoffeeStatusLabel(
 ): string {
 	return getCoffeeHeadlinePrice(shop, preferred) ? 'Price available' : 'Tracking soon';
 }
-
-export function sortCoffeeShopsByHeadline(
-	shops: CoffeeIndexShop[],
-	preferred: CoffeeDrinkId = COFFEE_PRIMARY_DRINK
-): CoffeeIndexShop[] {
-	return [...shops].sort((left, right) => {
-		const leftHeadline = getCoffeeHeadlinePrice(left, preferred);
-		const rightHeadline = getCoffeeHeadlinePrice(right, preferred);
-
-		if (!leftHeadline && !rightHeadline) return left.name.localeCompare(right.name);
-		if (!leftHeadline) return 1;
-		if (!rightHeadline) return -1;
-		if (leftHeadline.price !== rightHeadline.price) return leftHeadline.price - rightHeadline.price;
-		return left.name.localeCompare(right.name);
-	});
-}

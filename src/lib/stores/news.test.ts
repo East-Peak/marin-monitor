@@ -280,22 +280,6 @@ describe('News Store', () => {
 		});
 	});
 
-	it('orders derived lists dated-newest-first with NaN (undated) items last', async () => {
-		const { news, humanPoweredNews } = await import('./news');
-		const ride = (id: string, timestamp: number, category: 'cycling' | 'endurance') => ({
-			id,
-			title: `Mt Tam ride ${id} in Marin`,
-			source: 'Marin Trail Stewards',
-			link: id,
-			timestamp,
-			category,
-			verification: 'community' as const
-		});
-		news.setItems('cycling', [ride('c-undated', NaN, 'cycling'), ride('c-old', 1_000, 'cycling')]);
-		news.setItems('endurance', [ride('e-new', 3_000, 'endurance')]);
-		expect(get(humanPoweredNews).items.map((i) => i.id)).toEqual(['e-new', 'c-old', 'c-undated']);
-	});
-
 	it('allNewsItems keeps the county scope of a later county-feed copy of the same story', async () => {
 		const { news, allNewsItems } = await import('./news');
 		const copy = (id: string, source: string, category: 'local' | 'safety', extra = {}) => ({
@@ -375,76 +359,6 @@ describe('News Store', () => {
 		const local = get(localNews);
 		expect(local.items).toHaveLength(1);
 		expect(local.items[0].townSlug).toBe('ross');
-	});
-
-	it('enrichLocations never writes coordinates after its owner is gone', async () => {
-		let release!: (items: import('$lib/types').NewsItem[]) => void;
-		vi.doMock('$lib/api/marin/article-enrichment', () => ({
-			enrichItemsForLocation: () => new Promise((r) => (release = r))
-		}));
-		const { news } = await import('./news');
-		const item = {
-			id: 'x:1',
-			title: 'Mill Valley road work begins',
-			link: 'https://www.marinij.com/x',
-			timestamp: Date.parse('2026-09-28T18:00:00Z'),
-			source: 'Marin IJ',
-			category: 'local' as const,
-			verification: 'local_media' as const
-		};
-		news.setItems('local', [item]);
-		const owner = new AbortController();
-		const running = news.enrichLocations('local', { signal: owner.signal });
-		owner.abort();
-		release([
-			{ ...item, lat: 37.9, lon: -122.5, locationConfidence: 'exact', locationEvidence: 'x' }
-		]);
-		await running;
-		expect(news.getItems('local')[0].lat).toBeUndefined();
-		vi.doUnmock('$lib/api/marin/article-enrichment');
-	});
-
-	it('an aborted enrichLocations run never blocks a newer run, and never clears its flag', async () => {
-		type Items = import('$lib/types').NewsItem[];
-		const held: Array<(items: Items) => void> = [];
-		const calls = vi.fn(() => new Promise<Items>((r) => held.push(r)));
-		vi.doMock('$lib/api/marin/article-enrichment', () => ({ enrichItemsForLocation: calls }));
-		const { news } = await import('./news');
-		const item = {
-			id: 'x:1',
-			title: 'Mill Valley road work begins',
-			link: 'https://www.marinij.com/x',
-			timestamp: Date.parse('2026-09-28T18:00:00Z'),
-			source: 'Marin IJ',
-			category: 'local' as const,
-			verification: 'local_media' as const
-		};
-		const pinned = (lat: number) => [
-			{ ...item, lat, lon: -122.5, locationConfidence: 'exact' as const, locationEvidence: 'x' }
-		];
-		news.setItems('local', [item]);
-
-		// Run A (legacy controller) is aborted while its fetch is still held.
-		const ownerA = new AbortController();
-		const runA = news.enrichLocations('local', { signal: ownerA.signal });
-		ownerA.abort();
-
-		// Run B (the next view, e.g. TV's signal-less loadAllNews) must not be skipped.
-		const runB = news.enrichLocations('local');
-		expect(calls).toHaveBeenCalledTimes(2);
-
-		// A settles: it writes nothing and leaves B's in-flight flag alone.
-		held[0](pinned(1));
-		await runA;
-		expect(news.getItems('local')[0].lat).toBeUndefined();
-		const runC = news.enrichLocations('local');
-		expect(calls).toHaveBeenCalledTimes(2);
-		await runC;
-
-		held[1](pinned(37.9));
-		await runB;
-		expect(news.getItems('local')[0].lat).toBe(37.9);
-		vi.doUnmock('$lib/api/marin/article-enrichment');
 	});
 
 	it('setItems: a caller-supplied keep replaces the relevance rule (producer-judged items)', async () => {

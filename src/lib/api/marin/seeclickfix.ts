@@ -163,20 +163,8 @@ function issueToNewsItem(issue: SeeClickFixIssue): NewsItem | null {
 }
 
 /**
- * Fetch 311 issues from the pre-synced blob (via /api/data/311).
- * The cron job at /api/cron/sync-311 refreshes the blob every 4 hours.
- *
- * Throws on fetch/parse failure. Callers should distinguish "succeeded with
- * no issues" (legitimate empty) from "fetch failed" (preserve previous state)
- * via Promise.allSettled or try/catch — silently returning `[]` for both
- * caused stale 311 incidents to pin indefinitely during outages.
- */
-export async function fetchSeeClickFixIssues(opts: OwnerOptions = {}): Promise<NewsItem[]> {
-	return (await readSeeClickFixIssues(opts)).items;
-}
-
-/**
- * fetchSeeClickFixIssues, plus the blob's own `lastUpdated`: the edge may serve
+ * The 311 issues from the pre-synced blob (via /api/data/311, refreshed by
+ * /api/cron/sync-311 every 4 hours), plus the blob's own `lastUpdated`: the edge may serve
  * an older body, so only the payload knows how old the data is. A zoneless or
  * unparseable value is null, never NaN.
  */

@@ -17,12 +17,7 @@ vi.mock('$lib/config/towns', () => ({
 	MARIN_CENTER: { lat: 37.9735, lon: -122.5311 }
 }));
 
-import {
-	fetchEarthquakes,
-	fetchEarthquakesOrThrow,
-	earthquakesToNewsItems,
-	readEarthquakesWeekOrThrow
-} from './usgs';
+import { readEarthquakesOrThrow, earthquakesToNewsItems, readEarthquakesWeekOrThrow } from './usgs';
 import { serviceClient } from '$lib/services/client';
 
 const mockRequest = vi.mocked(serviceClient.request);
@@ -31,7 +26,7 @@ beforeEach(() => {
 	vi.clearAllMocks();
 });
 
-describe('fetchEarthquakes', () => {
+describe('readEarthquakesOrThrow parses the USGS feed', () => {
 	const validResponse = {
 		fromCache: false as const,
 		data: {
@@ -67,7 +62,7 @@ describe('fetchEarthquakes', () => {
 	it('parses valid USGS response into EarthquakeData[]', async () => {
 		mockRequest.mockResolvedValueOnce(validResponse);
 
-		const result = await fetchEarthquakes();
+		const result = (await readEarthquakesOrThrow()).quakes;
 
 		expect(result).toHaveLength(2);
 		expect(result[0]).toEqual({
@@ -85,33 +80,17 @@ describe('fetchEarthquakes', () => {
 	it('maps lon/lat/depth from coordinates array correctly (lon=0, lat=1, depth=2)', async () => {
 		mockRequest.mockResolvedValueOnce(validResponse);
 
-		const result = await fetchEarthquakes();
+		const result = (await readEarthquakesOrThrow()).quakes;
 		// coordinates are [lon, lat, depth]
 		expect(result[1].lon).toBe(-122.68);
 		expect(result[1].lat).toBe(37.91);
 		expect(result[1].depth).toBe(12.3);
 	});
 
-	it('returns empty array on network error', async () => {
-		mockRequest.mockRejectedValueOnce(new Error('Network timeout'));
-
-		const result = await fetchEarthquakes();
-
-		expect(result).toEqual([]);
-	});
-
 	it('returns empty array when features is empty', async () => {
 		mockRequest.mockResolvedValueOnce({ fromCache: false as const, data: { features: [] } });
 
-		const result = await fetchEarthquakes();
-
-		expect(result).toEqual([]);
-	});
-
-	it('returns empty array on HTTP error', async () => {
-		mockRequest.mockRejectedValueOnce(new Error('HTTP 500'));
-
-		const result = await fetchEarthquakes();
+		const result = (await readEarthquakesOrThrow()).quakes;
 
 		expect(result).toEqual([]);
 	});
@@ -183,7 +162,7 @@ describe('earthquakesToNewsItems', () => {
 	});
 });
 
-describe('fetchEarthquakesOrThrow (status-aware; the TV keeps last-good pins on failure)', () => {
+describe('readEarthquakesOrThrow (status-aware; the TV keeps last-good pins on failure)', () => {
 	const one = {
 		fromCache: false as const,
 		data: {
@@ -206,22 +185,22 @@ describe('fetchEarthquakesOrThrow (status-aware; the TV keeps last-good pins on 
 
 	it('success → network failure → successful empty, each reported honestly', async () => {
 		mockRequest.mockResolvedValueOnce(one);
-		expect((await fetchEarthquakesOrThrow()).map((q) => q.id)).toEqual(['nc1']);
+		expect((await readEarthquakesOrThrow()).quakes.map((q) => q.id)).toEqual(['nc1']);
 		mockRequest.mockRejectedValueOnce(new Error('Network timeout'));
-		await expect(fetchEarthquakesOrThrow()).rejects.toThrow('Network timeout');
+		await expect(readEarthquakesOrThrow()).rejects.toThrow('Network timeout');
 		mockRequest.mockResolvedValueOnce({ fromCache: false as const, data: { features: [] } });
-		expect(await fetchEarthquakesOrThrow()).toEqual([]);
+		expect((await readEarthquakesOrThrow()).quakes).toEqual([]);
 	});
 
 	it('rejects an unexpected response shape instead of reading it as "no quakes"', async () => {
 		mockRequest.mockResolvedValueOnce({ fromCache: false as const, data: {} } as never);
-		await expect(fetchEarthquakesOrThrow()).rejects.toThrow('unexpected response shape');
+		await expect(readEarthquakesOrThrow()).rejects.toThrow('unexpected response shape');
 	});
 
 	it('passes the owner signal to the service client (Codex PR 6 #1)', async () => {
 		mockRequest.mockResolvedValueOnce({ data: { features: [] } } as never);
 		const owner = new AbortController();
-		await fetchEarthquakesOrThrow({ signal: owner.signal });
+		await readEarthquakesOrThrow({ signal: owner.signal });
 		expect(mockRequest.mock.calls[0][2]).toMatchObject({ signal: owner.signal });
 	});
 });

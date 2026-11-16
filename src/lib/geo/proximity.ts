@@ -6,7 +6,7 @@
  * getLocationForTown — map a town slug to the best LocationPreset for weather/tides
  */
 
-import { MARIN_TOWNS, TOWN_BY_SLUG, MARIN_CENTER, MARIN_BOUNDS } from '$lib/config/towns';
+import { MARIN_TOWNS, TOWN_BY_SLUG, MARIN_CENTER } from '$lib/config/towns';
 import {
 	LOCATION_PRESETS,
 	DEFAULT_LOCATION_ID,
@@ -65,19 +65,6 @@ for (const town of MARIN_TOWNS) {
 	}
 
 	townLocationMap[town.slug] = bestPresetId;
-}
-
-/**
- * Check if a lat/lon point is inside Marin County (bounding box with padding).
- * Used for geocoded address validation, article enrichment, etc.
- */
-export function isInsideMarin(lat: number, lon: number, pad = 0.03): boolean {
-	return (
-		lat >= MARIN_BOUNDS.south - pad &&
-		lat <= MARIN_BOUNDS.north + pad &&
-		lon >= MARIN_BOUNDS.west - pad &&
-		lon <= MARIN_BOUNDS.east + pad
-	);
 }
 
 /**

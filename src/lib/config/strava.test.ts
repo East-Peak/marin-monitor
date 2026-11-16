@@ -1,11 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import {
-	SEED_SEGMENTS,
-	MARIN_BOUNDING_BOXES,
-	stravaLeaderboardBlob,
-	STRAVA_DASHBOARD_RIDE_LIMIT,
-	STRAVA_DASHBOARD_RUN_LIMIT
-} from './strava';
+import { SEED_SEGMENTS, MARIN_BOUNDING_BOXES, stravaLeaderboardBlob } from './strava';
+import { STRAVA_CURATED_RIDE_COUNT, STRAVA_CURATED_RUN_COUNT } from './strava-curated.generated';
 
 describe('strava config', () => {
 	it('has unique segment IDs in seed list', () => {
@@ -29,13 +24,13 @@ describe('strava config', () => {
 	});
 
 	it('has expanded coverage for cycling and trail segments', () => {
-		expect(STRAVA_DASHBOARD_RIDE_LIMIT).toBe(100);
-		expect(STRAVA_DASHBOARD_RUN_LIMIT).toBe(100);
+		expect(STRAVA_CURATED_RIDE_COUNT).toBe(100);
+		expect(STRAVA_CURATED_RUN_COUNT).toBe(100);
 		expect(SEED_SEGMENTS.filter((seg) => seg.activityType === 'ride')).toHaveLength(
-			STRAVA_DASHBOARD_RIDE_LIMIT
+			STRAVA_CURATED_RIDE_COUNT
 		);
 		expect(SEED_SEGMENTS.filter((seg) => seg.activityType === 'run')).toHaveLength(
-			STRAVA_DASHBOARD_RUN_LIMIT
+			STRAVA_CURATED_RUN_COUNT
 		);
 	});
 
