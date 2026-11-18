@@ -4,6 +4,18 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-11-18
+
+### Changed — The phone trims News & Civic
+
+- **Under 640 px, the wire shows its first 5 rows and Marin Lately its first 3.** A button follows each ("Show N more from the wire", "Show N more", N the real remaining count; none when there is nothing more) and opens the rest in place. It is a real button with `aria-expanded`, at least 44 px tall, and the choice is remembered in the section preferences (`mm_sections_v2`, a new optional `more` entry; older stores read as before). CSS does the trimming, so there is no layout jump on hydration, and the hidden rows are `display: none`: not focusable, not read. Tablet and desktop keep every row.
+
+### Added — A branded 404 and error page
+
+- **An unknown path now lands on a Marin Monitor page** (wordmark, "There's no page at /…", links to the Dashboard, Map and Cost of living by town) and still answers HTTP 404, including `/cost/<a town we do not cover>`. Any other error shows "Something went wrong" with the same links and never the error's message. Both are `noindex`.
+
+---
+
 ## 2026-11-15
 
 ### Fixed — Public API reads are cached at the edge (NPS alerts rate limit)
