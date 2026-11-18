@@ -1,8 +1,14 @@
 <script lang="ts">
 	import { LATELY_LINK, type LatelyView } from '$lib/dashboard/lately';
+	import { sectionPrefs } from '$lib/stores/section-prefs';
 	import CardSource from './CardSource.svelte';
 
 	let { view, now }: { view: LatelyView; now: number } = $props();
+
+	/** Under 640 px: the first pieces and a button for the rest (CSS trims; see NewsCivic). */
+	const SHOWN = 3;
+	const open = $derived($sectionPrefs.more?.lately === true);
+	const rest = $derived(Math.max(0, view.pieces.length - SHOWN));
 </script>
 
 <!-- Satire, clearly labelled (CLAUDE.md): its own band, never mixed into the news.
@@ -19,9 +25,9 @@
 		</p>
 		<CardSource lines={[{ measured: view.source }]} {now} />
 	</div>
-	<ol>
-		{#each view.pieces as p (p.id)}
-			<li class="hit-row">
+	<ol id="lately-pieces" class:trimmed={!open}>
+		{#each view.pieces as p, i (p.id)}
+			<li class="hit-row" class:rest={i >= SHOWN}>
 				<a class="hit-stretch" href={p.link} target="_blank" rel="noopener" data-text-role="body"
 					>{p.title}</a
 				>
@@ -31,6 +37,18 @@
 			</li>
 		{/each}
 	</ol>
+	{#if rest > 0}
+		<button
+			type="button"
+			class="more"
+			data-more="lately"
+			data-text-role="label"
+			aria-expanded={open}
+			aria-controls="lately-pieces"
+			onclick={() => sectionPrefs.setMore('lately', !open)}
+			>{open ? 'Show fewer' : `Show ${rest} more`}</button
+		>
+	{/if}
 </section>
 
 <style>
@@ -72,6 +90,30 @@
 	}
 	a:hover {
 		text-decoration: underline;
+	}
+	.more {
+		display: none;
+		box-sizing: border-box;
+		width: 100%;
+		min-height: 2.75rem;
+		padding: 0 14px;
+		border: 1px solid rgba(236, 72, 153, 0.45);
+		border-radius: 6px;
+		background: transparent;
+		color: var(--text-primary);
+		font: inherit;
+		cursor: pointer;
+	}
+	.more:hover {
+		background: var(--surface-hover);
+	}
+	@media (max-width: 639px) {
+		.more {
+			display: block;
+		}
+		ol.trimmed .rest {
+			display: none;
+		}
 	}
 	li p {
 		margin: 2px 0 0;

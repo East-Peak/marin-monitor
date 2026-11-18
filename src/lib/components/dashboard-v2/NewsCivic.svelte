@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import type { Measured } from '$lib/dashboard/measured';
 	import type { NewsCivicView } from '$lib/dashboard/news-civic';
+	import { sectionPrefs } from '$lib/stores/section-prefs';
 	import CardSource from './CardSource.svelte';
 
 	let { view, now, onopen }: { view: NewsCivicView; now: number; onopen: () => void } = $props();
@@ -14,6 +15,14 @@
 		m.kind === 'loading' ? 'Loading…' : m.kind === 'unknown' ? 'Unverified' : 'Unavailable';
 
 	const wire = $derived(view.wire.kind === 'value' ? view.wire.value : null);
+	/**
+	 * Under 640 px the wire shows its first rows and a button for the rest. CSS does the trimming
+	 * (the server cannot know the width), so hydration moves nothing; the rest are display:none,
+	 * which takes them out of the tab order and the accessibility tree.
+	 */
+	const WIRE_SHOWN = 5;
+	const wireOpen = $derived($sectionPrefs.more?.wire === true);
+	const wireRest = $derived(wire ? Math.max(0, wire.length - WIRE_SHOWN) : 0);
 	const fixIt = $derived(view.fixIt.kind === 'value' ? view.fixIt.value : null);
 	const dayMax = $derived(Math.max(1, ...(fixIt?.days.map((d) => d.count) ?? [])));
 	const typeMax = $derived(fixIt?.types[0]?.count ?? 1);
@@ -28,9 +37,9 @@
 			<span class="meta" data-text-role="meta">after the five above</span>
 		</div>
 		{#if wire && wire.length}
-			<ul class="wire">
-				{#each wire as row (row.id)}
-					<li class="hit-row" data-wire-row>
+			<ul class="wire" id="wire-rows" class:trimmed={!wireOpen}>
+				{#each wire as row, i (row.id)}
+					<li class="hit-row" class:rest={i >= WIRE_SHOWN} data-wire-row>
 						<a
 							class="hit-stretch"
 							href={row.link}
@@ -42,6 +51,18 @@
 					</li>
 				{/each}
 			</ul>
+			{#if wireRest > 0}
+				<button
+					type="button"
+					class="more"
+					data-more="wire"
+					data-text-role="label"
+					aria-expanded={wireOpen}
+					aria-controls="wire-rows"
+					onclick={() => sectionPrefs.setMore('wire', !wireOpen)}
+					>{wireOpen ? 'Show fewer' : `Show ${wireRest} more from the wire`}</button
+				>
+			{/if}
 		{:else if wire}
 			{#if view.wireEmpty}
 				<p class="empty" data-text-role="body">{view.wireEmpty}</p>
@@ -207,6 +228,31 @@
 	.wire li:last-child,
 	.rows li:last-child {
 		border-bottom: 0;
+	}
+	.more {
+		display: none;
+		box-sizing: border-box;
+		width: 100%;
+		min-height: 2.75rem;
+		margin-top: 4px;
+		padding: 0 14px;
+		border: 1px solid var(--border-light);
+		border-radius: 6px;
+		background: transparent;
+		color: var(--text-primary);
+		font: inherit;
+		cursor: pointer;
+	}
+	.more:hover {
+		background: var(--surface-hover);
+	}
+	@media (max-width: 639px) {
+		.more {
+			display: block;
+		}
+		.wire.trimmed .rest {
+			display: none;
+		}
 	}
 	@media (min-width: 1024px) {
 		.wire {

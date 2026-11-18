@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	SECTION_IDS,
 	withLayerOn,
+	withMoreOpen,
 	defaultSectionOpen,
 	emptySectionPrefs,
 	isDesktopViewport,
@@ -184,5 +185,30 @@ describe('sectionFromHash', () => {
 		expect(sectionFromHash('#')).toBeNull();
 		expect(sectionFromHash('#NEWS')).toBeNull();
 		expect(sectionFromHash('#map')).toBeNull();
+	});
+});
+
+describe('"show more" choices (phone News trim)', () => {
+	it('an older store without them parses to no choices, and serializes as before', () => {
+		const raw = '{"version":3,"open":{"news":true},"layers":{"traffic":false}}';
+		const prefs = parseSectionPrefs(raw);
+		expect(prefs.more).toBeUndefined();
+		expect(serializeSectionPrefs(prefs)).toBe(raw);
+	});
+
+	it('records an explicit choice per trimmed list and round-trips it', () => {
+		const prefs = withMoreOpen(withMoreOpen(emptySectionPrefs(), 'wire', true), 'lately', false);
+		expect(prefs.more).toEqual({ wire: true, lately: false });
+		const raw = serializeSectionPrefs(prefs);
+		expect(raw).toBe('{"version":3,"open":{},"layers":{},"more":{"wire":true,"lately":false}}');
+		expect(parseSectionPrefs(raw)).toEqual(prefs);
+	});
+
+	it('drops unknown ids and non-boolean values', () => {
+		const prefs = parseSectionPrefs(
+			'{"version":3,"open":{},"layers":{},"more":{"wire":true,"lately":"yes","x":true}}'
+		);
+		expect(prefs.more).toEqual({ wire: true });
+		expect(parseSectionPrefs('{"version":3,"open":{},"more":[true]}').more).toBeUndefined();
 	});
 });

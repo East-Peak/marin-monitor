@@ -40,6 +40,10 @@ export const LAYER_PREF_IDS = [
 ] as const;
 export type LayerPrefId = (typeof LAYER_PREF_IDS)[number];
 
+/** The phone's trimmed News & Civic lists: the wire and Marin Lately each have a "show more". */
+export const MORE_IDS = ['wire', 'lately'] as const;
+export type MoreId = (typeof MORE_IDS)[number];
+
 export const SECTION_PREFS_KEY = 'mm_sections_v2';
 /** Phone is anything narrower than 768 CSS px. */
 export const PHONE_MAX_WIDTH = 767;
@@ -53,6 +57,8 @@ export interface SectionPrefs {
 	open: Partial<Record<SectionId, boolean>>;
 	/** The map's layer switches, explicit choices only. */
 	layers: Partial<Record<LayerPrefId, boolean>>;
+	/** A trimmed list opened or closed by choice. Absent (not `{}`) until one is made, so older stores read the same. */
+	more?: Partial<Record<MoreId, boolean>>;
 }
 
 export interface SectionOpenContext {
@@ -89,6 +95,12 @@ function known<K extends string>(
 const knownChoices = (open: Record<string, unknown>) => known(SECTION_IDS, open);
 const knownLayers = (layers: unknown) => (isRecord(layers) ? known(LAYER_PREF_IDS, layers) : {});
 
+const knownMore = (more: unknown) => (isRecord(more) ? known(MORE_IDS, more) : {});
+const withMore = (more: unknown) => {
+	const choices = knownMore(more);
+	return Object.keys(choices).length > 0 ? { more: choices } : {};
+};
+
 /** Parse stored prefs. Never throws; anything invalid is dropped entry by entry. */
 export function parseSectionPrefs(raw: string | null): SectionPrefs {
 	if (raw === null) return emptySectionPrefs();
@@ -103,7 +115,8 @@ export function parseSectionPrefs(raw: string | null): SectionPrefs {
 	return {
 		version: 3,
 		open: knownChoices(value.open),
-		layers: value.version === 3 ? knownLayers(value.layers) : {}
+		layers: value.version === 3 ? knownLayers(value.layers) : {},
+		...(value.version === 3 ? withMore(value.more) : {})
 	};
 }
 
@@ -112,7 +125,8 @@ export function serializeSectionPrefs(prefs: SectionPrefs): string {
 	return JSON.stringify({
 		version: 3,
 		open: knownChoices(prefs.open),
-		layers: knownLayers(prefs.layers)
+		layers: knownLayers(prefs.layers),
+		...withMore(prefs.more)
 	});
 }
 
@@ -122,6 +136,10 @@ export function withSectionOpen(prefs: SectionPrefs, id: SectionId, open: boolea
 
 export function withLayerOn(prefs: SectionPrefs, id: LayerPrefId, on: boolean): SectionPrefs {
 	return { ...prefs, layers: { ...prefs.layers, [id]: on } };
+}
+
+export function withMoreOpen(prefs: SectionPrefs, id: MoreId, open: boolean): SectionPrefs {
+	return { ...prefs, more: { ...prefs.more, [id]: open } };
 }
 
 export function isPhoneViewport(width: number): boolean {

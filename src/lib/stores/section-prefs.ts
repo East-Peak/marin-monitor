@@ -10,8 +10,10 @@ import {
 	parseSectionPrefs,
 	serializeSectionPrefs,
 	withLayerOn,
+	withMoreOpen,
 	withSectionOpen,
 	type LayerPrefId,
+	type MoreId,
 	type SectionId,
 	type SectionPrefs
 } from '$lib/dashboard/section-prefs';
@@ -38,6 +40,15 @@ function createSectionPrefsStore() {
 		setLayer(id: LayerPrefId, on: boolean) {
 			update((prefs) => {
 				const next = withLayerOn(prefs, id, on);
+				safeSetItem(SECTION_PREFS_KEY, serializeSectionPrefs(next));
+				return next;
+			});
+		},
+
+		/** An explicit "show more" / "show fewer" on a phone's trimmed News & Civic list. */
+		setMore(id: MoreId, open: boolean) {
+			update((prefs) => {
+				const next = withMoreOpen(prefs, id, open);
 				safeSetItem(SECTION_PREFS_KEY, serializeSectionPrefs(next));
 				return next;
 			});

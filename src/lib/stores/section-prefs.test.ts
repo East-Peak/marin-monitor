@@ -113,6 +113,17 @@ describe('sectionPrefs store', () => {
 		);
 	});
 
+	it('remembers a "show more" choice, and "reset" forgets it with the section choices', async () => {
+		const { sectionPrefs } = await import('./section-prefs');
+		sectionPrefs.setMore('wire', true);
+		expect(storage.snapshot().mm_sections_v2).toBe(
+			'{"version":3,"open":{},"layers":{},"more":{"wire":true}}'
+		);
+		sectionPrefs.reset();
+		expect(get(sectionPrefs).more).toBeUndefined();
+		expect(storage.snapshot().mm_sections_v2).toBeUndefined();
+	});
+
 	it('works in memory and never throws when storage is denied', async () => {
 		storage.deny(true);
 		const { sectionPrefs } = await import('./section-prefs');
