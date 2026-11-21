@@ -390,8 +390,13 @@
 						? ` @ ${Math.round(surf.current.periodS)} s`
 						: ''}
 				</p>
-			{:else}
+			{:else if view.surf.measured.kind === 'value'}
 				<p class="muted" data-text-role="body">No wave height this hour</p>
+			{:else if view.surf.measured.kind === 'loading'}
+				<p class="muted" data-surf-lead data-text-role="body">Loading surf forecast…</p>
+			{:else}
+				<!-- A failed read is not calm water: say unavailable, never "no wave height". -->
+				<p class="muted" data-surf-lead data-text-role="body">Surf forecast unavailable</p>
 			{/if}
 			{#if surfChart}
 				<ChartReadout
@@ -414,13 +419,15 @@
 					</svg>
 				</ChartReadout>
 			{/if}
-			<p class="meta" data-text-role="meta">
-				Wave height, next 48 h{surfKnown.length
-					? ` · ${Math.min(...surfKnown).toFixed(1)}–${Math.max(...surfKnown).toFixed(1)} ft`
-					: ''}{surf.current?.directionDeg != null
-					? ` · from ${Math.round(surf.current.directionDeg)}°`
-					: ''}
-			</p>
+			{#if view.surf.measured.kind === 'value'}
+				<p class="meta" data-text-role="meta">
+					Wave height, next 48 h{surfKnown.length
+						? ` · ${Math.min(...surfKnown).toFixed(1)}–${Math.max(...surfKnown).toFixed(1)} ft`
+						: ''}{surf.current?.directionDeg != null
+						? ` · from ${Math.round(surf.current.directionDeg)}°`
+						: ''}
+				</p>
+			{/if}
 			<CardSource lines={[{ measured: view.surf.measured, verb: 'checked' }]} {now} />
 		</article>
 

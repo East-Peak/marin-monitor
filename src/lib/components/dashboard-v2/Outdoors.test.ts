@@ -115,6 +115,53 @@ describe('Outdoors', () => {
 		expect(container.querySelector('[data-card="ground"] .sr-attention')).toBeNull();
 	});
 
+	it('a failed marine read leads with unavailable wording, never "No wave height this hour"', () => {
+		const { container } = render(Outdoors, {
+			view: outdoorsView(
+				input({
+					marine: null,
+					outcomes: {
+						...input().outcomes,
+						marine: {
+							kind: 'failed',
+							error: 'Open-Meteo failed: 502',
+							retained: false,
+							observedAt: null
+						}
+					}
+				})
+			),
+			now: NOW,
+			onopen: vi.fn()
+		});
+		const surf = container.querySelector('[data-card="surf"]')!;
+		expect(surf.textContent).not.toContain('No wave height');
+		const lead = surf.querySelector('[data-surf-lead]')!;
+		expect(lead.textContent).toContain('unavailable');
+		const children = [...surf.children];
+		expect(children.indexOf(lead)).toBeLessThan(
+			children.indexOf(surf.querySelector('[data-card-source]')!)
+		);
+	});
+
+	it('"No wave height this hour" is for a good read with no value for that hour', () => {
+		const { container } = render(Outdoors, {
+			view: outdoorsView(
+				input({
+					marine: {
+						points: [{ atMs: HOUR0, waveFt: null, periodS: null, directionDeg: null }],
+						checkedAt: NOW - 60_000
+					}
+				})
+			),
+			now: NOW,
+			onopen: vi.fn()
+		});
+		const surf = container.querySelector('[data-card="surf"]')!;
+		expect(surf.textContent).toContain('No wave height this hour');
+		expect(surf.textContent).not.toContain('unavailable');
+	});
+
 	it('the tide card keeps today’s single extremes line (rule 1’s named exception, Stuart 2026-10-28)', () => {
 		const { container } = render(Outdoors, {
 			view: outdoorsView(input()),
