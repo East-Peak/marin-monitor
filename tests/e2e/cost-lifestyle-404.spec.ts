@@ -7,5 +7,5 @@ test('/cost/<unknown town> is a 404 with the branded page', async ({ page }) => 
 	await expect(page.getByRole('heading', { level: 1 })).toHaveText(
 		/^There.s no page at \/cost\/stinson$/
 	);
-	await expect(page.locator('nav a')).toHaveText(['Dashboard', 'Map', 'Cost of living by town']);
+	await expect(page.locator('nav a')).toHaveText(['Dashboard', 'Map', 'Cost of living']);
 });
