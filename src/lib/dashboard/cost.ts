@@ -12,6 +12,7 @@ import type { GasPriceData, GasStation } from '$lib/types/gas';
 import type { GroceryBasketData } from '$lib/types/grocery';
 import { frozenBasketNote } from '$lib/config/grocery-basket';
 import type { GroceryInflation } from '$lib/grocery/inflation';
+import { inflationChart, type InflationChart } from '$lib/grocery/inflation-chart';
 import type { SchoolIndexData } from '$lib/types/school';
 import type { WineIndexData } from '$lib/types/wine';
 import { gasChangeOverDays } from '$lib/utils/gas-change';
@@ -208,6 +209,8 @@ export interface SubIndexTile {
 	valueNote?: string;
 	/** A dated reference beneath the tile, visibly apart from its own series. */
 	refLine?: string;
+	/** A tile drawn as its own chart, not a spark (the CPI's months, gaps kept: COSTX1). */
+	chart?: InflationChart;
 	/** Why there is no sparkline, for a tile whose source publishes none. */
 	noHistoryReason: string | null;
 	measured: Measured<unknown>;
@@ -220,7 +223,6 @@ export interface SubIndexTile {
 const usd = (n: number, dec = 2) =>
 	`$${n.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec })}`;
 const usd0 = (n: number) => usd(n, 0);
-const pct1 = (n: number) => `${n >= 0 ? '+' : '\u2212'}${Math.abs(n).toFixed(1)}%`;
 const shortDay = (iso: string) =>
 	new Date(iso).toLocaleDateString('en-US', {
 		month: 'short',
@@ -250,6 +252,7 @@ interface TileSpec<T> {
 	untimed?: (v: T) => string | undefined;
 	valueNote?: (v: T) => string | undefined;
 	refLine?: (v: T) => string | undefined;
+	chart?: (v: T) => InflationChart;
 	/** The series is observed even where the tile claims no read time of its own. */
 	observedSeries?: true;
 	/** The source can't vouch for when the value was true (a fixed estimate, a maintained list). */
@@ -301,7 +304,8 @@ function tile<T>(spec: TileSpec<T>): SubIndexTile {
 		noHistoryReason: spark === null ? (spec.noHistoryReason ?? null) : null,
 		untimed: spec.untimed?.(m.value),
 		valueNote: spec.valueNote?.(m.value),
-		refLine: spec.refLine?.(m.value)
+		refLine: spec.refLine?.(m.value),
+		...(spec.chart ? { chart: spec.chart(m.value) } : {})
 	};
 }
 
@@ -532,12 +536,10 @@ export function costView(input: CostInput): CostView {
 			title: 'SF-area grocery inflation',
 			color: '#fb923c',
 			measured: inflationRead,
-			value: (v) => pct1(v.lead.pct),
-			valueNote: (v) => `12 months to ${v.lead.label}`,
-			detail: (v) =>
-				v.latestYoy.pct === null
-					? `${v.latest.label} index ${v.latest.value.toFixed(1)} \u00b7 its 12-month change isn't published`
-					: `${v.latest.label} index ${v.latest.value.toFixed(1)}`,
+			value: (v) => inflationChart(v).headline.text,
+			valueNote: (v) => inflationChart(v).headline.span,
+			detail: (v) => inflationChart(v).newestNote,
+			chart: inflationChart,
 			series: (v) =>
 				v.observations.map((o) => ({
 					at: Date.parse(`${o.period}-01T12:00:00Z`),

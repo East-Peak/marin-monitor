@@ -14,6 +14,7 @@
 	import type { Measured } from '$lib/dashboard/measured';
 	import CardSource from './CardSource.svelte';
 	import ChartReadout from './ChartReadout.svelte';
+	import InflationTile from './InflationTile.svelte';
 	import LifestyleCard from './LifestyleCard.svelte';
 
 	let { view, now, onopen }: { view: CostView; now: number; onopen: () => void } = $props();
@@ -422,46 +423,50 @@
 		<div class="idx">
 			{#each view.tiles as t (t.id)}
 				{@const sp = spark(t)}
-				<div class="ix" data-tile={t.id} style="--c:{t.color}">
-					<span class="t" data-text-role="label">{t.title}</span>
-					<span
-						class="v num"
-						class:muted={t.kind !== 'value'}
-						data-colour-exception="series"
-						data-text-role="value"
-						>{t.value}{#if t.valueNote}
-							<small class="vnote" data-text-role="meta">{t.valueNote}</small>{/if}</span
-					>
-					{#if t.detail}<span class="d" data-text-role="meta">{t.detail}</span>{/if}
-					{#if sp}
-						<ChartReadout label="{t.title} trend" stops={sp.stops} plot={sp.plot} color={t.color}>
-							<svg
-								class="spark"
-								data-spark
-								data-text-role="meta"
-								viewBox="0 0 {SPARK.width} {SPARK.height}"
-								preserveAspectRatio="none"
-								aria-hidden="true"
-							>
-								<g transform="translate({SPARK.margins.left},{SPARK.margins.top})">
-									<path d={sp.chart.areaPath} fill={t.color} fill-opacity="0.18" />
-									<path d={sp.chart.linePath} fill="none" stroke={t.color} stroke-width="1.7" />
-								</g>
-							</svg>
-						</ChartReadout>
-					{:else if t.kind === 'value'}
-						<div class="nohist" data-no-history data-text-role="meta">
-							No history yet{t.noHistoryReason ? ` · ${t.noHistoryReason}` : ''}
-						</div>
-					{/if}
-					{#if t.refLine}
-						<span class="refline" data-tile-reference data-text-role="meta">{t.refLine}</span>
-					{/if}
-					<CardSource
-						lines={[{ measured: t.measured, untimed: t.untimed, muted: t.muted }]}
-						{now}
-					/>
-				</div>
+				{#if t.chart}
+					<InflationTile tile={t} chart={t.chart} {now} />
+				{:else}
+					<div class="ix" data-tile={t.id} style="--c:{t.color}">
+						<span class="t" data-text-role="label">{t.title}</span>
+						<span
+							class="v num"
+							class:muted={t.kind !== 'value'}
+							data-colour-exception="series"
+							data-text-role="value"
+							>{t.value}{#if t.valueNote}
+								<small class="vnote" data-text-role="meta">{t.valueNote}</small>{/if}</span
+						>
+						{#if t.detail}<span class="d" data-text-role="meta">{t.detail}</span>{/if}
+						{#if sp}
+							<ChartReadout label="{t.title} trend" stops={sp.stops} plot={sp.plot} color={t.color}>
+								<svg
+									class="spark"
+									data-spark
+									data-text-role="meta"
+									viewBox="0 0 {SPARK.width} {SPARK.height}"
+									preserveAspectRatio="none"
+									aria-hidden="true"
+								>
+									<g transform="translate({SPARK.margins.left},{SPARK.margins.top})">
+										<path d={sp.chart.areaPath} fill={t.color} fill-opacity="0.18" />
+										<path d={sp.chart.linePath} fill="none" stroke={t.color} stroke-width="1.7" />
+									</g>
+								</svg>
+							</ChartReadout>
+						{:else if t.kind === 'value'}
+							<div class="nohist" data-no-history data-text-role="meta">
+								No history yet{t.noHistoryReason ? ` · ${t.noHistoryReason}` : ''}
+							</div>
+						{/if}
+						{#if t.refLine}
+							<span class="refline" data-tile-reference data-text-role="meta">{t.refLine}</span>
+						{/if}
+						<CardSource
+							lines={[{ measured: t.measured, untimed: t.untimed, muted: t.muted }]}
+							{now}
+						/>
+					</div>
+				{/if}
 			{/each}
 		</div>
 	</div>

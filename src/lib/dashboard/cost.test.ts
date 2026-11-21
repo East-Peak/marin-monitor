@@ -628,15 +628,27 @@ describe('the grocery tile is SF-area grocery inflation (COSTDATA-2)', () => {
 			})
 		).tiles.find((t) => t.id === 'grocery')!;
 
-	it('leads with the 12-month change and its month, and says what October lacks', () => {
+	it('leads with the 12-month change and its two months, and says what October lacks (COSTX1)', () => {
 		const t = tileOf({});
 		expect(t).toMatchObject({
 			title: 'SF-area grocery inflation',
 			kind: 'value',
 			value: '+4.4%',
-			valueNote: '12 months to Sep 2026'
+			valueNote: 'Sep 2025 → Sep 2026'
 		});
-		expect(t.detail).toBe("Oct 2026 index 363.6 \u00b7 its 12-month change isn't published");
+		expect(t.detail).toBe(
+			'Oct 2026 index 363.6: its 12-month change isn’t published. BLS published no Oct 2025: Data unavailable due to the 2025 lapse in appropriations.'
+		);
+	});
+
+	it('carries the typed chart, its gap kept, only while the read is a value (COSTX1)', () => {
+		const t = tileOf({});
+		expect(t.chart?.headline).toEqual({ text: '+4.4%', span: 'Sep 2025 → Sep 2026' });
+		expect(t.chart?.month?.label).toBe('Sep → Oct 2026, not seasonally adjusted');
+		expect(t.chart?.gaps.map((g) => g.label)).toEqual(['Oct 2025']);
+		expect(
+			tileOf({ groceryInflation: { status: 'unavailable', reason: 'x' } }).chart
+		).toBeUndefined();
 	});
 
 	it('draws the index with the gap kept as a null, not a dollar basket trend', () => {

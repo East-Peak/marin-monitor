@@ -60,7 +60,7 @@ const noSideScroll = (page: Page) =>
 test.describe('desktop 1440: the default dashboard tile', () => {
 	test.use({ viewport: { width: 1440, height: 1000 } });
 
-	test('replaces the basket tile: the index and its month, a grey dated reference, no trend words', async ({
+	test('a readable chart: the 12-month change and its months, October’s change labelled, the basket a footnote (COSTX1)', async ({
 		page
 	}) => {
 		await stubRest(page);
@@ -71,16 +71,61 @@ test.describe('desktop 1440: the default dashboard tile', () => {
 		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 		const tile = page.locator('#cost [data-tile="grocery"]');
 		await expect(tile).toContainText('SF-area grocery inflation');
-		await expect(tile).toContainText('+4.4%');
-		await expect(tile).toContainText('12 months to Sep 2026');
-		await expect(tile).toContainText("its 12-month change isn't published");
-		await expect(tile.locator('[data-tile-reference]')).toHaveText(
+		await expect(tile.locator('[data-headline]')).toHaveText('+4.4%');
+		await expect(tile.locator('[data-headline-span]')).toHaveText('Sep 2025 → Sep 2026');
+		await expect(tile.locator('[data-month-change]')).toHaveText(
+			'+2.1%Sep → Oct 2026, not seasonally adjusted'
+		);
+		await expect(tile.locator('[data-newest-note]')).toContainText(
+			'Oct 2026 index 363.6: its 12-month change isn’t published.'
+		);
+		await expect(tile.locator('[data-newest-note]')).toContainText('lapse in appropriations');
+		// The missing month is drawn as a gap, labelled, never bridged.
+		await expect(tile.locator('[data-gap="2025-10"]')).toHaveText('Oct 2025 not published');
+		const paths = await tile
+			.locator('[data-inflation-line]')
+			.evaluate((p) => (p.getAttribute('d')!.match(/M/g) ?? []).length);
+		expect(paths).toBe(2);
+		// Drawn at its own width: the axis text is 12 CSS px, never scaled down (Codex).
+		const scale = await tile
+			.locator('[data-inflation-chart]')
+			.evaluate(
+				(svg) => svg.getBoundingClientRect().width / (svg as SVGSVGElement).viewBox.baseVal.width
+			);
+		expect(scale).toBeCloseTo(1, 1);
+		// The basket is a footnote under the source, worded as it was.
+		const foot = tile.locator('[data-tile-reference]');
+		await expect(foot).toHaveText(
 			'Marin basket $174.93, prices as of Nov 1, 2026, no longer updated'
 		);
+		const src = (await tile.locator('[data-card-source]').boundingBox())!;
+		expect((await foot.boundingBox())!.y).toBeGreaterThanOrEqual(src.y + src.height - 1);
+		// Wider than a spark tile: two of the row's columns.
+		const coffee = (await page.locator('#cost [data-tile="coffee"]').boundingBox())!;
+		expect((await tile.boundingBox())!.width).toBeGreaterThan(coffee.width * 1.8);
 		await expect(tile).not.toContainText(/Instacart|time not reported|last week/);
 		expect(await noSideScroll(page)).toBe(true);
-		const dir = process.env.SHOTS_DIR;
-		if (dir) await tile.screenshot({ path: `${dir}/grocery-tile-1440.png` });
+	});
+
+	test('the keyboard reads each month, the missing one as missing with its reason (R10)', async ({
+		page
+	}) => {
+		await stubRest(page);
+		await stubCost(page);
+		await stubCams(page);
+		await stub(page, OK);
+		await page.goto('/');
+		const slider = page.locator('#cost [data-tile="grocery"] [role="slider"]');
+		await slider.focus();
+		await page.keyboard.press('End');
+		const readout = page.locator('#cost [data-tile="grocery"] [data-readout]');
+		await expect(readout).toHaveText('363.6 · Oct 2026 · index');
+		for (let i = 0; i < 12; i++) await page.keyboard.press('ArrowLeft');
+		await expect(readout).toHaveText(
+			'Missing · Oct 2025 · Data unavailable due to the 2025 lapse in appropriations'
+		);
+		await page.keyboard.press('ArrowLeft');
+		await expect(readout).toContainText('Sep 2025 · index');
 	});
 
 	test('says unavailable, with no figure, when BLS cannot be read', async ({ page }) => {
