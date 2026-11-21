@@ -21,7 +21,7 @@ const count = (seen: string[], path: string) =>
 	seen.filter((u) => new URL(u).pathname === path).length;
 
 async function openV2(page: Page) {
-	await page.goto('/?layout=v2');
+	await page.goto('/');
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 }
 

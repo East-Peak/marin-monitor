@@ -13,7 +13,7 @@ test.skip(({ baseURL }) => baseURL?.startsWith('https://') ?? false, 'stubbed');
 async function open(page: Page) {
 	await stubRest(page);
 	await stubCams(page);
-	await page.goto('/?layout=v2');
+	await page.goto('/');
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 }
 const box = async (page: Page, sel: string) => (await page.locator(sel).first().boundingBox())!;
@@ -104,7 +104,7 @@ test.describe('desktop 1440: Outdoors beside Getting Around (Goal 2)', () => {
 		await stubRest(page);
 		await stubBrief(page);
 		await stubCams(page);
-		await page.goto('/?layout=v2');
+		await page.goto('/');
 		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 		const out = await box(page, '#outdoors');
 		const ga = await box(page, '#getting-around');
@@ -138,7 +138,7 @@ test.describe('desktop 1440: Cost & Character (Goal 3)', () => {
 		await stubRest(page);
 		await stubCost(page);
 		await stubCams(page);
-		await page.goto('/?layout=v2');
+		await page.goto('/');
 		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 		const cost = page.locator('#cost');
 		const change = cost.locator('[data-card="gas"] [data-stat="change7"] [data-text-role="value"]');
@@ -165,7 +165,7 @@ for (const width of [1440, 2000]) {
 			await stubRest(page);
 			await stubCivic(page);
 			await stubCams(page);
-			await page.goto('/?layout=v2');
+			await page.goto('/');
 			await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 			await expect(page.getByText(/later release/)).toHaveCount(0);
 
@@ -294,7 +294,7 @@ for (const width of [1440, 2000]) {
 			await stubRest(page);
 			await stubBrief(page);
 			await stubCams(page);
-			await page.goto('/?layout=v2');
+			await page.goto('/');
 			await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 			const brief = page.locator('[data-slot="brief"]');
 			await expect(brief.locator('[data-chart="hours"] [data-col-time]')).toHaveCount(13);
@@ -338,7 +338,7 @@ test.describe('desktop 1440: the advisory reader (MAPX1)', () => {
 		await stubRest(page);
 		await stubBrief(page);
 		await stubCams(page);
-		await page.goto('/?layout=v2');
+		await page.goto('/');
 		const chip = page.locator('[data-slot="advisories"] button[data-advisory]');
 		await chip.click();
 		const dialog = page.getByRole('dialog', { name: 'Beach Hazards Statement' });
@@ -398,7 +398,7 @@ for (const [name, viewport] of [
 					})
 				)
 			);
-			await page.goto('/?layout=v2');
+			await page.goto('/');
 			await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 			if (viewport.width < 500) await page.locator('[data-section-toggle="news"]').click();
 
@@ -473,7 +473,7 @@ for (const [name, viewport] of [
 					})
 				)
 			);
-			await page.goto('/?layout=v2');
+			await page.goto('/');
 			await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 			if (viewport.width < 500) await page.locator('[data-section-toggle="news"]').click();
 

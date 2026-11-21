@@ -28,7 +28,7 @@ async function openDashboard(page: Page) {
 		r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(HEADINGS) })
 	);
 	await stubCams(page, { png: FRAME_16_9 });
-	await page.goto('/?layout=v2');
+	await page.goto('/');
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 }
 

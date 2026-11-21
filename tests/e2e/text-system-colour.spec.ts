@@ -22,7 +22,7 @@ async function open(page: Page, width: number) {
 	await stubCost(page);
 	await stubCivic(page);
 	await stubCams(page);
-	await page.goto('/?layout=v2&probe');
+	await page.goto('/?probe');
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 	const closed = page.locator('[data-section-toggle][aria-expanded="false"]');
 	while ((await closed.count()) > 0) await closed.first().click();

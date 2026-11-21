@@ -106,7 +106,7 @@ test.describe('1440', () => {
 
 	test.beforeEach(async ({ page }) => {
 		await stubSeries(page);
-		await page.goto('/?layout=v2');
+		await page.goto('/');
 		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 	});
 

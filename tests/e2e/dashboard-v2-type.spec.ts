@@ -71,7 +71,7 @@ async function audit(page: Page): Promise<TextNode[]> {
 }
 
 async function openAll(page: Page) {
-	await page.goto('/?layout=v2&probe');
+	await page.goto('/?probe');
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 	await page.evaluate(() => document.fonts.ready);
 	// The map's own DOM text (layer controls, attribution) is part of the page (PR 9).

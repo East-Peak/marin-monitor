@@ -11,7 +11,7 @@ const stubRest = (page: Page) =>
 		(r) => r.fulfill({ status: 503, body: 'stubbed' })
 	);
 async function open(page: Page, waitUntil: 'load' | 'domcontentloaded' = 'load') {
-	await page.goto('/?layout=v2', { waitUntil });
+	await page.goto('/', { waitUntil });
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 }
 const tiles = (page: Page) => page.locator('section#cams [data-camera-id]');
@@ -354,7 +354,7 @@ test.describe("phone 390×844: the server's first frame (LCP1)", () => {
 		await stubRest(page);
 		const seen = await stubCams(page);
 		const release = await holdScripts(page);
-		await page.goto('/?layout=v2', { waitUntil: 'domcontentloaded' });
+		await page.goto('/', { waitUntil: 'domcontentloaded' });
 		await expect(page.locator('[data-layout="v2"][data-hydrated="false"]')).toBeVisible();
 		await expect
 			.poll(() => served(page).evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0))
@@ -414,7 +414,7 @@ test.describe("phone 390×844: the server's first frame (LCP1)", () => {
 		const failed = new Set<Request>();
 		page.on('requestfailed', (r) => failed.add(r));
 		const release = await holdScripts(page);
-		await page.goto('/?layout=v2', { waitUntil: 'domcontentloaded' });
+		await page.goto('/', { waitUntil: 'domcontentloaded' });
 		await entered;
 		await page.locator('.cams-row').evaluate((el) => (el.scrollLeft = el.scrollWidth));
 		release();
@@ -429,7 +429,7 @@ test.describe("phone 390×844: the server's first frame (LCP1)", () => {
 		await stubRest(page);
 		const seen = await stubCams(page);
 		const release = await holdScripts(page);
-		await page.goto('/?layout=v2&cam=alert-tam-west', { waitUntil: 'domcontentloaded' });
+		await page.goto('/?cam=alert-tam-west', { waitUntil: 'domcontentloaded' });
 		await page.waitForTimeout(1000);
 		expect(seen.filter((u) => SERVED_FRAME.test(u))).toEqual([]);
 		release();
@@ -445,7 +445,7 @@ test.describe("phone 390×844: the server's first frame (LCP1)", () => {
 		await stubRest(page);
 		const seen = await stubCams(page);
 		const release = await holdScripts(page);
-		await page.goto('/?layout=v2', { waitUntil: 'domcontentloaded' });
+		await page.goto('/', { waitUntil: 'domcontentloaded' });
 		await expect(page.getByText('Cameras are hidden.')).toBeVisible();
 		await page.waitForTimeout(1000);
 		expect(seen).toEqual([]);
@@ -468,7 +468,7 @@ test.describe("desktop 1440: the server's first frame (LCP1)", () => {
 			await held;
 			await r.fallback();
 		});
-		await page.goto('/?layout=v2', { waitUntil: 'domcontentloaded' });
+		await page.goto('/', { waitUntil: 'domcontentloaded' });
 		await page.waitForTimeout(1000);
 		expect(seen).toEqual([]);
 		release();

@@ -11,7 +11,7 @@ for (const [w, h] of [
 	}) => {
 		test.setTimeout(90_000); // two bounded 30 s waits plus navigation (Codex r7 #1)
 		await page.setViewportSize({ width: w, height: h });
-		await page.goto('/?layout=v2');
+		await page.goto('/');
 		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 		const strip = page.locator('section#cams');
 		await expect(strip.locator('[data-camera-id]').first()).toHaveAttribute(

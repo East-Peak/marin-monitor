@@ -60,7 +60,7 @@ test.use({ viewport: { width: 1440, height: 1000 } });
 test('a town click flies in; "All of Marin" brings back the county view and clears the town', async ({
 	page
 }) => {
-	await page.goto('/?layout=v2&probe');
+	await page.goto('/?probe');
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 	await settled(page, 45_000);
 	await expect.poll(() => clickableTown(page), { timeout: 30_000 }).not.toBeNull();
@@ -90,7 +90,7 @@ test('a town click flies in; "All of Marin" brings back the county view and clea
 });
 
 test('the key names how each layer is placed, inside the map', async ({ page }) => {
-	await page.goto('/?layout=v2&probe');
+	await page.goto('/?probe');
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 	const key = page.locator('#v2-map-canvas [data-slot="map-key"]');
 	await expect(key).toBeVisible({ timeout: 30_000 });

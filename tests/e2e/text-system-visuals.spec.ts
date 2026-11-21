@@ -133,7 +133,7 @@ for (const [name, viewport] of [
 		await stubCost(page);
 		await stubCivic(page);
 		await stubCams(page);
-		await page.goto('/?layout=v2&probe');
+		await page.goto('/?probe');
 		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 		await expect(page.locator('.v2-map .maplibregl-canvas')).toBeVisible({ timeout: 20_000 });
 		// On the phone every section opens (desktop's are always open).

@@ -14,7 +14,7 @@ test('Latest reporting is bounded and labelled; the map draws owned features or 
 		// airport-status is owned by Getting Around (its spec pins one request open, none closed).
 		if (/^\/api\/(calfire|traffic\/events)$/.test(new URL(r.url()).pathname)) unowned.push(r.url());
 	});
-	await page.goto('/?layout=v2&probe');
+	await page.goto('/?probe');
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 	await expect
 		.poll(
@@ -106,7 +106,7 @@ test('311 and quakes: the map judged the browser’s own payload times, and name
 			}))
 			.catch(() => ({ url, time: null }));
 	});
-	await page.goto('/?layout=v2&probe');
+	await page.goto('/?probe');
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 	const p = await settled(page, 45_000);
 	const at = Date.now();

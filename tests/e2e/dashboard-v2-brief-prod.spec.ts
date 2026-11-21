@@ -8,7 +8,7 @@ test.skip(({ baseURL }) => !baseURL?.startsWith('https://'), 'production readbac
 test('production brief: every card answers or says why not; nothing says LIVE or just now', async ({
 	page
 }) => {
-	await page.goto(`/?layout=v2&cb=${Date.now()}`);
+	await page.goto(`/?cb=${Date.now()}`);
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 	await expect(page.locator('[data-card="weather"]')).toContainText(
 		/Observed \d|Observation unavailable/,
@@ -72,7 +72,7 @@ test('production weather card agrees with the browser’s own KDVO observation l
 			}
 		});
 	});
-	await page.goto(`/?layout=v2&cb=${Date.now()}`);
+	await page.goto(`/?cb=${Date.now()}`);
 	const card = page.locator('[data-card="weather"]');
 	await expect(card).toContainText(/Observed \d|Observation unavailable/, {
 		timeout: 30_000

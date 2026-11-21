@@ -5,7 +5,7 @@ const ALL = ['getting-around', 'outdoors', 'news', 'cost', 'events'] as const;
 const toggle = (page: Page, id: string) => page.locator(`[data-section-toggle="${id}"]`);
 
 async function openV2(page: Page, suffix = '') {
-	await page.goto(`/?layout=v2${suffix}`);
+	await page.goto(`/${suffix}`);
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 }
 async function expanded(page: Page) {

@@ -11,7 +11,7 @@ test.describe('phone 390×844', () => {
 	test('the v2 picker names the selected town, visibly and in its accessible name', async ({
 		page
 	}) => {
-		await page.goto('/?layout=v2');
+		await page.goto('/');
 		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 		const trigger = page.locator('[data-layout="v2"] .picker-trigger');
 		await expect(trigger.locator('.picker-label')).toBeVisible();
@@ -33,7 +33,7 @@ test.describe('phone 390×844', () => {
 		// The label widens the picker, so the gear can wrap to the start of a header line
 		// (it does with the default "All of Marin" at 390 px); a panel anchored to the gear's
 		// right edge would then open off-screen.
-		await page.goto('/?layout=v2');
+		await page.goto('/');
 		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 		await expect(page.locator('[data-layout="v2"] .picker-label')).toHaveText('All of Marin');
 		await page.getByRole('button', { name: 'Dashboard settings' }).click();

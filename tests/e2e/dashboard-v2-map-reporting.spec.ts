@@ -94,7 +94,7 @@ async function stub(
 }
 async function openV2(page: Page) {
 	await camsOff(page);
-	await page.goto('/?layout=v2&probe');
+	await page.goto('/?probe');
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 }
 const rows = (page: Page) => page.locator('[data-slot="latest-reporting"] [data-reporting-row]');

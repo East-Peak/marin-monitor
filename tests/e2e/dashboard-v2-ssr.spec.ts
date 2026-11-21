@@ -19,12 +19,12 @@ for (const [name, viewport] of [
 	['desktop', { width: 1440, height: 900 }],
 	['phone', { width: 390, height: 844 }]
 ] as const) {
-	test(`${name}: with JS disabled, /?layout=v2 HTML has five Latest-reporting items with their times`, async ({
+	test(`${name}: with JS disabled, / HTML has five Latest-reporting items with their times`, async ({
 		browser
 	}) => {
 		const context = await browser.newContext({ javaScriptEnabled: false, viewport });
 		const page = await context.newPage();
-		await page.goto('/?layout=v2');
+		await page.goto('/');
 		await expect(page.locator(ROWS)).toHaveCount(5);
 		// "source · age · scope": the fixture's stories are dated, so each age is a time or a date.
 		for (const row of await page.locator(ROWS).all())
@@ -72,7 +72,7 @@ test('a saved town: hydration adopts the county-wide server rows, then the list 
 			});
 		});
 	});
-	await page.goto('/?layout=v2');
+	await page.goto('/');
 	await expect(page.locator('[data-layout="v2"]')).toHaveAttribute('data-hydrated', 'true');
 	await expect(page.locator(ROWS)).toHaveCount(1);
 	await expect(page.locator(ROWS)).toContainText('Novato');

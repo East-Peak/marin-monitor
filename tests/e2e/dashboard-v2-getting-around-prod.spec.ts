@@ -27,7 +27,7 @@ for (const [w, h] of [
 	test(`live Getting Around at ${w}: every part settles to its own words`, async ({ page }) => {
 		test.setTimeout(90_000);
 		await page.setViewportSize({ width: w, height: h });
-		await page.goto('/?layout=v2#getting-around'); // the hash opens it on a phone too
+		await page.goto('/#getting-around'); // the hash opens it on a phone too
 		await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 		const s = page.locator('section#getting-around');
 		await expect(s).toHaveAttribute('data-open', 'true');

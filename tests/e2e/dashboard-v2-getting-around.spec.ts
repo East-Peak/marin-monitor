@@ -281,7 +281,7 @@ async function heavyCheck(page: Page) {
 }
 async function openV2(page: Page, hash = '') {
 	await page.clock.install({ time: T0 });
-	await page.goto(`/?layout=v2${hash}`);
+	await page.goto(`/${hash}`);
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 }
 const section = (page: Page) => page.locator('section#getting-around');

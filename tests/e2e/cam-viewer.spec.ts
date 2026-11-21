@@ -59,7 +59,7 @@ async function stub(
 	};
 }
 
-async function open(page: Page, path = '/?layout=v2') {
+async function open(page: Page, path = '/') {
 	await page.goto(path);
 	await expect(page.locator('[data-layout="v2"][data-hydrated="true"]')).toBeVisible();
 }
@@ -238,7 +238,7 @@ test('a loaded link opens there and closes without leaving the site; an unknown 
 	page
 }) => {
 	await stub(page);
-	await open(page, '/?layout=v2&cam=caltrans-580#outdoors');
+	await open(page, '/?cam=caltrans-580#outdoors');
 	await expect(viewer(page)).toHaveAttribute('data-camera-id', 'caltrans-580');
 	await page.keyboard.press('ArrowRight');
 	await expect(viewer(page)).toHaveAttribute('data-camera-id', 'caltrans-ignacio');
@@ -247,13 +247,13 @@ test('a loaded link opens there and closes without leaving the site; an unknown 
 	const url = new URL(page.url());
 	expect(url.pathname).toBe('/');
 	expect(url.searchParams.get('cam')).toBeNull();
-	expect(url.searchParams.get('layout')).toBe('v2');
+	expect(url.searchParams.get('layout')).toBeNull();
 	expect(url.hash).toBe('#outdoors');
 	// Reload reopens at the camera in the URL.
-	await open(page, '/?layout=v2&cam=alert-bolinas');
+	await open(page, '/?cam=alert-bolinas');
 	await page.reload();
 	await expect(viewer(page)).toHaveAttribute('data-camera-id', 'alert-bolinas');
-	await open(page, '/?layout=v2&cam=abc7-tam');
+	await open(page, '/?cam=abc7-tam');
 	await expect.poll(() => camOf(page)).toBeNull();
 	await expect(viewer(page)).toBeHidden();
 });
