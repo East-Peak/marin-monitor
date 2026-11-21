@@ -12,7 +12,8 @@ import {
 	lifestyleBlobApi,
 	lifestyleHighlights,
 	lifestyleOn,
-	readLifestyleDoc
+	readLifestyleDoc,
+	snapshotStale
 } from '$lib/server/lifestyle/read';
 import { offerCacheControl } from '$lib/lifestyle/offers';
 import type { PageServerLoad } from './$types';
@@ -45,9 +46,7 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
 				? (lifestyleHighlights(read, SHEETS)[sheet.id] ?? [])
 				: null,
 		computedAt: snapshot?.computedAt ?? null,
-		// A stopped run leaves each line's availability as it was: say so for the whole budget.
-		stale:
-			!!snapshot && !(Date.now() - Date.parse(snapshot.lastSuccessfulScrapeAt ?? '') <= MAX_AGE_MS),
+		stale: snapshotStale(snapshot, MAX_AGE_MS),
 		towns: SHEETS.map((s) => ({ slug: townSlug(s.town), town: s.town }))
 	};
 };

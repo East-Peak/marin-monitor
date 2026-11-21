@@ -53,6 +53,13 @@ describe('the Lifestyle card', () => {
 		expect(c.querySelector('[data-card="lifestyle"]')?.lastElementChild?.contains(all)).toBe(true);
 	});
 
+	it('links to the households side by side (COSTX1)', () => {
+		card(summary(budget('larkspur')));
+		const compare = screen.getByRole('link', { name: 'Compare the households →' });
+		expect(compare.getAttribute('href')).toBe('/cost');
+		expect(compare.hasAttribute('data-compare-link')).toBe(true);
+	});
+
 	it('is a receipt of signature lines: same-tab links to each line, no chips, sorted by amount', () => {
 		const c = card(summary(budget('larkspur')));
 		const rows = [...c.querySelectorAll<HTMLAnchorElement>('a[data-line]')];

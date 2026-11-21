@@ -14,7 +14,7 @@ const { default: ErrorPage } = await import('./+error.svelte');
 const LINKS = [
 	['Dashboard', '/'],
 	['Map', '/map'],
-	['Cost of living', '/#cost']
+	['Cost of living', '/cost']
 ];
 
 beforeEach(() => {

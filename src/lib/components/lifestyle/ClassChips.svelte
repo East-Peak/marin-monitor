@@ -2,16 +2,33 @@
 <script lang="ts">
 	import type { InputClass } from '$lib/lifestyle/model';
 
-	let { classes }: { classes: readonly InputClass[] } = $props();
+	let {
+		classes,
+		quiet = false
+	}: {
+		classes: readonly InputClass[];
+		/** A budget line's column: smaller and dimmer, the same classes (COSTX1 R3). */
+		quiet?: boolean;
+	} = $props();
 
-	const CHIP: Record<InputClass, { letter: string; title: string }> = {
-		live: { letter: 'L', title: 'Live: our own read' },
-		cited: { letter: 'C', title: 'Cited: a published figure' },
-		persona: { letter: 'P', title: 'Persona: an assumption about this household' }
+	const CHIP: Record<InputClass, { letter: string; title: string; word: string }> = {
+		live: { letter: 'L', title: 'Live: our own read', word: 'live' },
+		cited: { letter: 'C', title: 'Cited: a published figure', word: 'cited' },
+		persona: { letter: 'P', title: 'Persona: an assumption about this household', word: 'persona' }
 	};
+	/** Said in words to a screen reader: a letter's title is a tooltip, which touch never shows. */
+	const spoken = $derived(
+		classes.length ? `Inputs: ${classes.map((c) => CHIP[c].word).join(', ')}` : undefined
+	);
 </script>
 
-<span class="chips" data-classes={classes.join(' ')}>
+<span
+	class="chips"
+	class:quiet
+	data-classes={classes.join(' ')}
+	role={classes.length ? 'img' : undefined}
+	aria-label={spoken}
+>
 	{#each classes as c (c)}
 		<abbr class="chip {c}" title={CHIP[c].title}>{CHIP[c].letter}</abbr>
 	{/each}
@@ -32,6 +49,16 @@
 		border-radius: 3px;
 		background: rgba(148, 163, 184, 0.12);
 		text-decoration: none;
+	}
+	.quiet {
+		gap: 1px;
+		margin-left: 0;
+		opacity: 0.72;
+	}
+	.quiet .chip {
+		padding: 0 3px;
+		font-weight: 500;
+		background: none;
 	}
 	.live {
 		color: #10b981;

@@ -33,30 +33,14 @@ test('three full-width links, each at least 52 px tall, that go somewhere', asyn
 	expect(await links.evaluateAll((as) => as.map((a) => a.getAttribute('href')))).toEqual([
 		'/',
 		'/map',
-		'/#cost'
+		'/cost'
 	]);
 	await links.nth(1).click();
 	await expect(page).toHaveURL(/\/map$/);
 });
 
-test('every link on the error page is followed and answers 200', async ({ page }) => {
-	await page.goto('/cost/stinson');
-	const hrefs = await page
-		.locator('nav a')
-		.evaluateAll((as) => as.map((a) => a.getAttribute('href')!));
-	expect(hrefs.length).toBeGreaterThan(0);
-	for (const href of hrefs) {
-		const response = await page.goto(href);
-		expect(response?.status(), `${href} should answer 200`).toBe(200);
-	}
-});
-
-test('the cost link lands on the dashboard’s cost section', async ({ page }) => {
-	await page.goto('/cost/stinson');
-	await page.locator('nav a', { hasText: 'Cost of living' }).click();
-	await expect(page).toHaveURL(/\/#cost$/);
-	await expect(page.locator('#cost')).toBeAttached();
-});
+// Following the links, /cost included, is cost-lifestyle-404.spec.ts: /cost exists only under the
+// Lifestyle Index's flag, which is on in production and off on this preview.
 
 test('the path is shown as text, never as markup', async ({ page }) => {
 	const response = await page.goto('/%3Cimg%20src=x%3E');

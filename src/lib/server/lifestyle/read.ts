@@ -200,6 +200,16 @@ export async function readLifestyleDoc(
 	}
 }
 
+/**
+ * No run has priced every household on in-date reads within `maxAgeMs`: a stopped run leaves each
+ * line's availability as it was, so the whole budget may be out of date.
+ */
+export const snapshotStale = (
+	snapshot: LifestyleSnapshot | null,
+	maxAgeMs: number,
+	now = Date.now()
+) => !!snapshot && !(now - Date.parse(snapshot.lastSuccessfulScrapeAt ?? '') <= maxAgeMs);
+
 /** The current snapshot, or null: a missing, failed or malformed read is never an empty index. */
 export async function readLifestyle(
 	api: BlobApi,

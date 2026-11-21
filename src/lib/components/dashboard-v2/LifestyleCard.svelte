@@ -136,9 +136,14 @@
 			{notes}
 		/>
 		{#if h}
-			<a class="see-all" href="/cost/{h.slug}" data-see-all data-text-role="label"
-				>See all {h.lineCount} lines →</a
-			>
+			<div class="ways">
+				<a class="compare hit-44" href="/cost" data-compare-link data-text-role="label"
+					>Compare the households →</a
+				>
+				<a class="see-all" href="/cost/{h.slug}" data-see-all data-text-role="label"
+					>See all {h.lineCount} lines →</a
+				>
+			</div>
 		{/if}
 	</div>
 </article>
@@ -188,6 +193,7 @@
 	}
 	.picker button:focus-visible,
 	.hero:focus-visible,
+	.compare:focus-visible,
 	.see-all:focus-visible {
 		outline: 2px solid var(--accent);
 		outline-offset: 2px;
@@ -327,6 +333,20 @@
 		gap: var(--v2-s4);
 		min-width: 0;
 	}
+	.ways {
+		flex: none;
+		display: flex;
+		align-items: center;
+		gap: var(--v2-s4);
+	}
+	.compare {
+		color: var(--accent);
+		text-decoration: none;
+	}
+	.compare:hover {
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
 	.see-all {
 		flex: none;
 		display: inline-flex;
@@ -354,10 +374,14 @@
 		.bar {
 			display: none;
 		}
-		.foot {
+		.foot,
+		.ways {
 			flex-direction: column;
 			align-items: stretch;
 			gap: var(--v2-s2);
+		}
+		.compare {
+			text-align: center;
 		}
 	}
 </style>

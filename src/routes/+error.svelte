@@ -4,7 +4,7 @@
 	const LINKS = [
 		{ href: '/', label: 'Dashboard' },
 		{ href: '/map', label: 'Map' },
-		{ href: '/#cost', label: 'Cost of living' }
+		{ href: '/cost', label: 'Cost of living' }
 	];
 
 	/** The path as typed, for reading; a malformed escape shows as it came. */

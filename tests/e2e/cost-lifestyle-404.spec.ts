@@ -9,3 +9,22 @@ test('/cost/<unknown town> is a 404 with the branded page', async ({ page }) => 
 	);
 	await expect(page.locator('nav a')).toHaveText(['Dashboard', 'Map', 'Cost of living']);
 });
+
+test('every link on the error page is followed and answers 200', async ({ page }) => {
+	await page.goto('/cost/stinson');
+	const hrefs = await page
+		.locator('nav a')
+		.evaluateAll((as) => as.map((a) => a.getAttribute('href')!));
+	expect(hrefs).toEqual(['/', '/map', '/cost']);
+	for (const href of hrefs) {
+		const response = await page.goto(href);
+		expect(response?.status(), `${href} should answer 200`).toBe(200);
+	}
+});
+
+test('the cost link lands on the households side by side', async ({ page }) => {
+	await page.goto('/cost/stinson');
+	await page.locator('nav a', { hasText: 'Cost of living' }).click();
+	await expect(page).toHaveURL(/\/cost$/);
+	await expect(page.locator('[data-household]')).toHaveCount(3);
+});
