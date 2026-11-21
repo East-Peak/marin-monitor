@@ -110,6 +110,12 @@ describe('map layer choices (MAPX2b, version 3)', () => {
 			layers: {}
 		});
 	});
+	it('an earthquakes choice is stored and read back, on or off', () => {
+		for (const on of [true, false]) {
+			const stored = serializeSectionPrefs(withLayerOn(emptySectionPrefs(), 'earthquakes', on));
+			expect(parseSectionPrefs(stored).layers).toEqual({ earthquakes: on });
+		}
+	});
 	it('withLayerOn records one explicit choice', () => {
 		expect(withLayerOn(emptySectionPrefs(), 'ev', true).layers).toEqual({ ev: true });
 	});

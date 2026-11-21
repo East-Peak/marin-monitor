@@ -88,9 +88,10 @@ export function exploreHref(state: ExploreState, keep?: URLSearchParams): string
 	return `/map${query ? `?${query}` : ''}${state.view ? exploreHash(state.view) : ''}`;
 }
 
-/** The switch that draws a selection; null for earthquakes (no switch) and stories (by category). */
+/** The switch that draws a selection; null for stories (by category). */
 export function selLayer(sel: string): LayerPrefId | null {
 	const layer = layerOf(sel);
+	if (layer === 'quake') return 'earthquakes';
 	return layer !== 'news' && isPrefId(layer) ? layer : null;
 }
 

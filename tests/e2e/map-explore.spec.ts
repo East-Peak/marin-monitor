@@ -193,6 +193,32 @@ test.describe('desktop 1440×900', () => {
 		});
 	});
 
+	test('earthquakes have the same on/off checkbox as every layer: on by default, saved, restored', async ({
+		page
+	}) => {
+		await stub(page);
+		await explore(page, '/map');
+		const key = page.locator('[data-slot="map-key"] [data-key="earthquakes"]');
+		await expect(layer(page, 'earthquakes')).toBeChecked();
+		await expect(key).toHaveCount(1);
+		expect(search(page).get('layers')?.split(',')).toContain('earthquakes');
+		await layer(page, 'earthquakes').uncheck();
+		await expect(key).toHaveCount(0);
+		expect(search(page).get('layers')?.split(',')).not.toContain('earthquakes');
+		expect(
+			JSON.parse((await page.evaluate(() => localStorage.getItem('mm_sections_v2')))!)
+		).toMatchObject({ layers: { earthquakes: false } });
+		// A later visit keeps it off; switching it back on is saved too.
+		await explore(page, '/map');
+		await expect(layer(page, 'earthquakes')).not.toBeChecked();
+		await expect(key).toHaveCount(0);
+		await layer(page, 'earthquakes').check();
+		await expect(key).toHaveCount(1);
+		expect(
+			JSON.parse((await page.evaluate(() => localStorage.getItem('mm_sections_v2')))!)
+		).toMatchObject({ layers: { earthquakes: true } });
+	});
+
 	test('a selection whose layer is off turns that layer on for the visit', async ({ page }) => {
 		await stub(page);
 		await explore(page, `/map?layers=&sel=${SEL}`);

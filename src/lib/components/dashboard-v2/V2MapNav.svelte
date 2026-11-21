@@ -19,12 +19,15 @@
 	let {
 		town,
 		activeLayers,
+		quakesOn = true,
 		layers,
 		counts,
 		onReset
 	}: {
 		town: string | null;
 		activeLayers: Readonly<Partial<Record<MapLayer, boolean>>>;
+		/** The earthquakes switch; off, the key drops the line. */
+		quakesOn?: boolean;
 		layers: V2MapData['layers'];
 		/** Points in view, from the in-view list the layer rail counts: one source for both. */
 		counts: { fixIt: number; quakes: number };
@@ -91,7 +94,7 @@
 	const key = $derived(
 		mapLegend({
 			activeLayers,
-			earthquakesShown: quakesShown,
+			earthquakesShown: quakesOn && quakesShown,
 			layers,
 			town,
 			townName: (slug) => TOWN_BY_SLUG[slug]?.name ?? slug,

@@ -36,7 +36,8 @@ export const LAYER_PREF_IDS = [
 	'activity',
 	'housing',
 	'311',
-	'satire'
+	'satire',
+	'earthquakes'
 ] as const;
 export type LayerPrefId = (typeof LAYER_PREF_IDS)[number];
 

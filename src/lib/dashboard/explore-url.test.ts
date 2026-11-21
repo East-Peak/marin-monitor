@@ -91,8 +91,8 @@ describe('selLayer', () => {
 		expect(selLayer('311:seeclickfix-901')).toBe('311');
 		expect(selLayer('traffic:t1')).toBe('traffic');
 		expect(selLayer('gas:place-9')).toBe('gas');
-		// Earthquakes have no switch; a story's switch is its category, unknown from the id.
-		expect(selLayer('quake:usgs-nc1')).toBeNull();
+		expect(selLayer('quake:usgs-nc1')).toBe('earthquakes');
+		// A story's switch is its category, unknown from the id.
 		expect(selLayer('news:point-reyes-light:a')).toBeNull();
 	});
 });
@@ -179,7 +179,22 @@ describe('layersOn', () => {
 			'civic',
 			'activity',
 			'housing',
-			'311'
+			'311',
+			'earthquakes'
 		]);
+	});
+
+	it('earthquakes are on unless switched off (the default is today’s: always drawn)', () => {
+		expect(layersOn({}, {})).toContain('earthquakes');
+		expect(layersOn({ earthquakes: true }, {})).toContain('earthquakes');
+		expect(layersOn({ earthquakes: false }, {})).not.toContain('earthquakes');
+	});
+
+	it('a quake selection’s own switch is earthquakes', () => {
+		expect(selLayer('quake:us7000abcd')).toBe('earthquakes');
+	});
+
+	it('a link’s earthquakes switch round-trips', () => {
+		expect(parseExplore(at('/map?layers=311,earthquakes')).layers).toEqual(['311', 'earthquakes']);
 	});
 });

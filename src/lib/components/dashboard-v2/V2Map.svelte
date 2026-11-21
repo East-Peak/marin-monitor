@@ -123,6 +123,9 @@
 	} = $props();
 	const explore = untrack(() => mode === 'explore');
 	const layerPrefs = $derived(prefs ?? $sectionPrefs.layers);
+	/** The earthquakes switch: on unless switched off (they were always drawn before it existed). */
+	const quakesOn = $derived(layerPrefs.earthquakes ?? true);
+	const quakes = $derived(quakesOn ? data.earthquakes : []);
 
 	let phone = $state(false);
 	let desktop = $state(false);
@@ -197,7 +200,7 @@
 		inViewItems({
 			news: data.inspectable.filter((i) => !fixIds.has(i.id)),
 			threeOneOne: data.inspectable.filter((i) => fixIds.has(i.id)),
-			earthquakes: data.earthquakes,
+			earthquakes: quakes,
 			town: $townFilter,
 			towns: TOWN_BY_SLUG,
 			notes: data.notes,
@@ -461,8 +464,8 @@
 			id: 'earthquakes',
 			name: 'Earthquakes',
 			swatch: '#facc15',
-			on: null,
-			count: data.layers.earthquakes === 'value' ? inViewCount('quake') : null,
+			on: quakesOn,
+			count: quakesOn && data.layers.earthquakes === 'value' ? inViewCount('quake') : null,
 			status: statusOf('USGS', data.layers.earthquakes, data.asOf.earthquakes)
 		},
 		...(dataLayers
@@ -567,7 +570,7 @@
 	<div class="v2-map-canvas" id="v2-map-canvas" data-text-role="control" bind:this={canvasEl}>
 		<MapContainer {initialView}>
 			<MapDataLayer
-				earthquakes={data.earthquakes}
+				earthquakes={quakes}
 				alertPulses={false}
 				airports={false}
 				trafficEvents={false}
@@ -643,6 +646,7 @@
 			<V2MapNav
 				town={$townFilter}
 				activeLayers={$mapStore.activeLayers}
+				{quakesOn}
 				layers={data.layers}
 				counts={{ fixIt: inViewCount('311'), quakes: inViewCount('quake') }}
 				onReset={resetToMarin}
