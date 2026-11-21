@@ -4,6 +4,14 @@ All notable changes to Marin Monitor are documented here.
 
 ---
 
+## 2026-11-21
+
+### Fixed — Final audit polish
+
+- **Getting Around sentence-cases GGTransit and Richmond-San Rafael headlines; a failed Surf read says "Surf forecast unavailable"** (never "No wave height this hour"); **phone jump-nav targets land clear of the top edge; `/map` earthquakes have an on/off checkbox** (on by default, saved like the other layers); **the error page's cost link goes to `/#cost`** (it pointed at a route that 404s).
+
+---
+
 ## 2026-11-18
 
 ### Changed — The phone trims News & Civic
