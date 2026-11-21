@@ -41,7 +41,6 @@ const config = {
 					'self',
 					'https://api.weather.gov',
 					'https://*.mapbox.com',
-					'https://*.maptiler.com',
 					'https://*.cartocdn.com',
 					'https://earthquake.usgs.gov',
 					'https://api.tidesandcurrents.noaa.gov',
@@ -50,13 +49,11 @@ const config = {
 					'https://api.511.org',
 					'https://developer.nps.gov',
 					'https://waterservices.usgs.gov',
-					'https://marine.weather.gov',
 					'https://incidents.fire.ca.gov',
 					'https://marine-api.open-meteo.com',
 					'https://api.open-meteo.com',
 					'https://data.marincounty.gov',
 					'https://seeclickfix.com',
-					'https://citizen.com',
 					// Caltrans cam frames: Last-Modified for the v2 Cams strip's age (img-src already allows it)
 					'https://cwwp2.dot.ca.gov'
 				],
