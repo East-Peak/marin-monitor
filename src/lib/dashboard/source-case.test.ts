@@ -59,6 +59,33 @@ describe('sourceSentenceCase (rule 4: a named source’s ALL CAPS, read as a sen
 	});
 });
 
+describe('sourceSentenceCase on the audited Golden Gate headlines (final smoke R45)', () => {
+	it.each([
+		[
+			'11/13 GGTRANSIT KING TIDES AND ONGOING FLOODING',
+			'11/13 GGTransit king tides and ongoing flooding'
+		],
+		['11/15 WB RICHMOND-SAN RAFAEL BRIDGE CLOSURE', '11/15 WB Richmond-San Rafael bridge closure'],
+		['US 101 SB LANES CLOSED NEAR NOVATO', 'US 101 SB lanes closed near Novato'],
+		['GGT ROUTE 101X DETOUR', 'GGT Route 101X detour']
+	])('%s → %s', (raw, shown) => {
+		expect(sourceSentenceCase(raw, GG)).toBe(shown);
+	});
+
+	it.each([
+		'11/13 GGTransit King Tides and ongoing flooding',
+		'11/15 WB Richmond-San Rafael Bridge Closure',
+		'Rider Alert GGTransit King Tides',
+		'US 101 closed in Novato'
+	])('already-correct %s stays as written', (text) => {
+		expect(sourceSentenceCase(text, GG)).toBe(text);
+	});
+
+	it('a name fused to an unplaced word keeps the original, whole', () => {
+		expect(sourceSentenceCase('LARKSPUR-ZZ BRIDGE CLOSURE', GG)).toBe('LARKSPUR-ZZ BRIDGE CLOSURE');
+	});
+});
+
 describe('dropAlertPrefix (Stuart 2026-10-28: rows drop goldengate.org’s leading "ALERT")', () => {
 	it('drops a leading ALERT word, with or without a colon', () => {
 		expect(dropAlertPrefix('ALERT MANZANITA PARK & RIDE MAY FLOOD')).toBe(

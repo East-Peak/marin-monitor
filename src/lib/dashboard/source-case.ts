@@ -22,9 +22,9 @@ const NOTICE_WORDS = new Set(
 		'cancel cancellation change close closure community connection construction continue customer ' +
 		'daily day delay depart departure detour disruption do due during each early effective end ' +
 		'entrance evening event expansion expect extra fare ferry few flood following for from game gate ' +
-		'go high holiday hour if in information into is it its lane last late leave limited line lot ' +
-		'maintenance make may meeting modified morning move new next night nighttime no normal not notice ' +
-		'now of off on only open or other our out over overnight park parking passenger plan platform please ' +
+		'go high holiday hour if in information into is it its lane last late leave king limited line lot ' +
+		'maintenance make may meeting modified morning move near new next night nighttime no normal not notice ' +
+		'now of off on ongoing only open or other our out over overnight park parking passenger plan platform please ' +
 		'reduce regular relocate remain reopen repair reroute resume ride rider road run sail sailing ' +
 		'schedule service shuttle some special start station stop storm study suspend suspension take ' +
 		'temporary temporarily terminal than that the their this through ticket tide to today tomorrow ' +
@@ -36,6 +36,8 @@ const NOTICE_WORDS = new Set(
 
 const GOLDEN_GATE: SourceCase = {
 	phrases: [
+		'Richmond-San Rafael',
+		'GGTransit',
 		'Manzanita Park & Ride',
 		'San Rafael Transit Center',
 		'Larkspur Ferry Terminal',
@@ -78,7 +80,8 @@ const GOLDEN_GATE: SourceCase = {
 		'WB',
 		'AM',
 		'PM',
-		'GGFERRY'
+		'GGFERRY',
+		'GGT'
 	]),
 	words: NOTICE_WORDS
 };
@@ -143,6 +146,8 @@ export function sourceSentenceCase(text: string, source: string): string {
 		const w = words[i];
 		const c = core(w);
 		if (!c || w.includes('\uE000')) {
+			// A name fused to letters it didn't place ("LARKSPUR-ZZ"): keep the original, whole.
+			if (w.replace(HELD, '').match(/[A-Z]{2,}/)) return text;
 			if (first < 0 && w.includes('\uE000')) first = -2; // a name leads: already capitalised
 			continue;
 		}
