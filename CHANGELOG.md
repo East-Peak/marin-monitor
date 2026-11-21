@@ -6,6 +6,13 @@ All notable changes to Marin Monitor are documented here.
 
 ## 2026-11-21
 
+### Added — Cost exploration: `/cost`, a readable CPI chart, a lighter household page (COSTX1)
+
+- **`/cost` sets the three fictional households side by side.** Each household's name, persona line, monthly spending and pre-tax break-even (hidden while its budget is incomplete), then every budget section as one bar per household on a single shared dollar scale from $0, so the bars compare honestly. A section with a line that can't be read says "so far" and is drawn hatched; an unread section says "can't be read", never $0. Opening a section lists each household's own lines, in its own words, under its own name: lines are never paired across households. An existing "rank" highlight shows as a comparison highlight only where every household is priced in full on in-date reads. Same snapshot, flag and caching as `/cost/<town>`; works at 390 px. The dashboard's Cost card and the 404 page link to it.
+- **The SF-area grocery inflation tile is a chart.** It heads with the newest published 12-month change and its two months, keeps BLS's reason when the newest month has none, and labels the month-over-month change with its months, not seasonally adjusted. The index is drawn from Jan 2023 with the unpublished month as a labelled gap; the keyboard readout stops on it as "Missing", with its reason. The retired Marin basket is a footnote.
+- **`/cost/<town>` reads lighter, with the same facts.** Provenance chips sit in one quiet column (same classes, same legend, named in words for a screen reader); "For scale" is a list of a figure and its sentence; the movers sit under the month as "Since the previous comparable run"; the town median is a number with a short qualifier.
+- **The dashboard's Cost card states the month once**, in its headline; the receipt's foot counts its lines.
+
 ### Fixed — Final audit polish
 
 - **Getting Around sentence-cases GGTransit and Richmond-San Rafael headlines; a failed Surf read says "Surf forecast unavailable"** (never "No wave height this hour"); **phone jump-nav targets land clear of the top edge; `/map` earthquakes have an on/off checkbox** (on by default, saved like the other layers); **the error page's cost link goes to `/#cost`** (it pointed at a route that 404s).

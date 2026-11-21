@@ -103,10 +103,10 @@
 						<li><ReceiptRow line={l} slug={h.slug} /></li>
 					{/each}
 				</ul>
+				<!-- The month is the hero's alone: the receipt's foot counts its lines (COSTX1). -->
 				<div class="total" data-receipt-total data-text-role="label">
-					<span>{lineTally(h)}</span><span class="num"
-						>{usd(h.burnMonthly)} a month{soFar ? ' so far' : ''}</span
-					>
+					<span data-tally>{lineTally(h)}</span>
+					<a class="compare" href="/cost" data-compare-link>Compare the households →</a>
 				</div>
 			</div>
 			{#if highlight}
@@ -136,14 +136,9 @@
 			{notes}
 		/>
 		{#if h}
-			<div class="ways">
-				<a class="compare hit-44" href="/cost" data-compare-link data-text-role="label"
-					>Compare the households →</a
-				>
-				<a class="see-all" href="/cost/{h.slug}" data-see-all data-text-role="label"
-					>See all {h.lineCount} lines →</a
-				>
-			</div>
+			<a class="see-all" href="/cost/{h.slug}" data-see-all data-text-role="label"
+				>See all {h.lineCount} lines →</a
+			>
 		{/if}
 	</div>
 </article>
@@ -311,9 +306,10 @@
 	.total {
 		display: flex;
 		flex-wrap: wrap;
+		align-items: center;
 		justify-content: space-between;
 		gap: 0 var(--v2-s3);
-		padding-top: var(--v2-s2);
+		padding-top: var(--v2-s1);
 		border-top: 2px solid var(--border-light);
 		color: var(--text-secondary);
 	}
@@ -333,13 +329,12 @@
 		gap: var(--v2-s4);
 		min-width: 0;
 	}
-	.ways {
-		flex: none;
-		display: flex;
-		align-items: center;
-		gap: var(--v2-s4);
-	}
+	/* On the receipt's foot, beside the count: a 44 px target of its own. */
 	.compare {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 2.75rem;
 		color: var(--accent);
 		text-decoration: none;
 	}
@@ -374,14 +369,10 @@
 		.bar {
 			display: none;
 		}
-		.foot,
-		.ways {
+		.foot {
 			flex-direction: column;
 			align-items: stretch;
 			gap: var(--v2-s2);
-		}
-		.compare {
-			text-align: center;
 		}
 	}
 </style>

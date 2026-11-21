@@ -68,7 +68,9 @@ describe('the Lifestyle card', () => {
 		expect(rows[0].hasAttribute('target')).toBe(false);
 		expect(rows.at(-1)?.textContent).toContain('Bikes (woom, amortised 3 yr)');
 		expect(c.querySelector('[data-classes]')).toBeNull();
-		expect(text(c, '[data-receipt-total]')).toBe('40 lines$42,581 a month');
+		// The month is stated once, in the hero: the receipt's foot counts its lines (COSTX1).
+		expect(text(c, '[data-receipt-total] [data-tally]')).toBe('40 lines');
+		expect(c.textContent!.split('$42,581').length - 1).toBe(1);
 	});
 
 	it('shows Ross’s mortgage at $0 with its note, and no other note', async () => {
@@ -101,9 +103,7 @@ describe('the Lifestyle card', () => {
 		expect(text(c, '[data-burn]')).toMatch(/a month so far$/);
 		expect(text(c, '[data-incomplete]')).toBe('incomplete');
 		expect(c.querySelector('[data-break-even]')).toBeNull();
-		expect(text(c, '[data-receipt-total]')).toMatch(
-			/^39 of 40 lines priced\$[\d,]+ a month so far$/
-		);
+		expect(text(c, '[data-receipt-total] [data-tally]')).toBe('39 of 40 lines priced');
 	});
 
 	it('a non-signature line unread: every row priced, and the total still says so far', () => {
