@@ -487,6 +487,47 @@ test.describe('@phone dashboard controls', () => {
 		expect(failures).toEqual([]);
 	});
 
+	test('jump bar: every target lands with breathing room above it, not flush to the edge', async ({
+		page
+	}) => {
+		const nav = page.getByRole('navigation', { name: 'Jump to' });
+		const landed: string[] = [];
+		for (const link of await nav.getByRole('link').all()) {
+			const hash = (await link.getAttribute('href'))!;
+			await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight / 2));
+			await link.tap();
+			await expect(page).toHaveURL(new RegExp(`${hash}$`), { timeout: 2_000 });
+			if (hash === '#top') {
+				await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 3_000 }).toBe(0);
+				continue;
+			}
+			// Settled: the landed element's top stops moving.
+			const top = () =>
+				page.evaluate(
+					(h) => Math.round(document.querySelector(h)!.getBoundingClientRect().top),
+					hash
+				);
+			let last = Number.NaN;
+			await expect
+				.poll(
+					async () => {
+						const now = await top();
+						const still = now === last;
+						last = now;
+						return still;
+					},
+					{ timeout: 5_000, intervals: [150] }
+				)
+				.toBe(true);
+			// The focused element (a section's toggle, or the region) is what the reader sees first.
+			const seen = await page.evaluate(() =>
+				Math.round(document.activeElement!.getBoundingClientRect().top)
+			);
+			if (seen < 12 || seen > 48) landed.push(`${hash}: focused element top ${seen}px`);
+		}
+		expect(landed).toEqual([]);
+	});
+
 	test('bottom of the page: nothing tappable sits under the jump bar', async ({ page }, info) => {
 		test.slow(); // many controls, each tapped, checked and undone
 		for (const id of SECTIONS) {

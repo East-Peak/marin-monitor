@@ -733,6 +733,9 @@
 		/* Keyboard focus and fragment jumps scroll targets clear of the fixed jump-nav (§8). */
 		:global(html:has(.dash-v2)) {
 			scroll-padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+			/* The jump bar is at the foot and nothing is sticky at the top, so a target needs only
+			   breathing room: it lands a little down from the edge, not flush against it. */
+			scroll-padding-top: 1rem;
 		}
 	}
 </style>
