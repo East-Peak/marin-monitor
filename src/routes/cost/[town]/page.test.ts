@@ -1,6 +1,7 @@
 import { render } from '@testing-library/svelte';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
+import type { Highlight } from '$lib/lifestyle/highlight-copy';
 import type { PricedBudget } from '$lib/lifestyle/model';
 import { SHEETS } from '$lib/lifestyle/sheets';
 import { householdPage, lineAnchor } from '$lib/lifestyle/view';
@@ -12,13 +13,13 @@ const seed = JSON.parse(readFileSync('tests/e2e/fixtures/lifestyle-index.json', 
 	current: { budgets: PricedBudget[] };
 };
 const budget = (id: string) => seed.current.budgets.find((b) => b.town === id)!;
-function page(b: PricedBudget) {
+function page(b: PricedBudget, highlights: Highlight[] | null = null) {
 	const sheet = SHEETS.find((s) => s.id === b.town)!;
 	return render(Page, {
 		data: {
 			town: sheet.town,
 			page: householdPage(b, sheet),
-			highlights: null,
+			highlights,
 			computedAt: null,
 			stale: false,
 			towns: []
@@ -109,5 +110,73 @@ describe('/cost/<town>', () => {
 		});
 		expect(c.textContent).toContain('Part-time.');
 		expect(c.textContent).not.toContain('ruling');
+	});
+
+	it('sets each line’s provenance in one quiet column of its own, the classes unchanged (R3)', () => {
+		const c = page(budget('larkspur'));
+		const pi = c.querySelector('[data-line="larkspur.home.pi"] summary')!;
+		const prov = pi.querySelector(':scope > [data-provenance] [data-classes]');
+		expect(prov?.getAttribute('data-classes')).toBe('cited persona');
+		expect(prov?.classList).toContain('quiet');
+		expect(prov?.getAttribute('aria-label')).toBe('Inputs: cited, persona');
+		// Not inside the label any more.
+		expect(pi.querySelector('.lab [data-classes]')).toBeNull();
+		// The legend stays.
+		expect(c.textContent).toContain('Persona: an assumption about this family');
+	});
+
+	it('splits the town median into a number and a short qualifier, its facts kept', () => {
+		const c = page(budget('larkspur'));
+		const t = c.querySelector('[data-market-tracker]')!;
+		expect(t.querySelector('[data-tracker-value]')?.textContent?.trim()).toMatch(/^\$[\d,]+$/);
+		expect(t.querySelector('[data-tracker-qualifier]')?.textContent?.trim()).toBe(
+			'Context only: it never reprices this household’s home.'
+		);
+		expect(t.querySelector('[data-tracker-source]')?.textContent).toMatch(
+			/^all residential, Redfin · read /
+		);
+	});
+
+	it('lists the comparisons as a number and a sentence; the movers sit under the month (R9)', () => {
+		const h = (key: string, rule: Highlight['rule'], figure: string | null, text: string) =>
+			({
+				key,
+				rule,
+				template: key.split(':')[0],
+				figure,
+				text,
+				modelled: rule === 'comparison',
+				sources: ['dir.ca.gov']
+			}) as Highlight;
+		const c = page(budget('larkspur'), [
+			h('lineVsMinimumWage:larkspur.biz', 'comparison', '3.2×', 'The Business, alone: …'),
+			h('rank:business', 'rank', '26.4×', 'Of the two households …'),
+			h(
+				'mover:larkspur.car.suv.fuel',
+				'mover',
+				'+$10/mo',
+				'Gas SUV gas: up $10 a month since Oct 13.'
+			),
+			h('moversNotComparable', 'mover', null, 'Movers: not enough comparable history yet.')
+		]);
+		const scale = c.querySelector('[data-highlights]')!;
+		expect(
+			[...scale.querySelectorAll('[data-highlight]')].map((x) => x.getAttribute('data-highlight'))
+		).toEqual(['lineVsMinimumWage:larkspur.biz', 'rank:business']);
+		const line = scale.querySelector('[data-highlight="lineVsMinimumWage:larkspur.biz"]')!;
+		expect(line.querySelector('[data-figure]')?.textContent).toBe('3.2×');
+		expect(line.querySelector('[data-sources]')?.textContent).toContain('dir.ca.gov');
+		const movers = c.querySelector('[data-movers]')!;
+		expect(movers.querySelector('h2')?.textContent).toBe('Since the previous comparable run');
+		expect(
+			movers.querySelector('[data-highlight="mover:larkspur.car.suv.fuel"]')?.textContent
+		).toContain('up $10 a month since Oct 13');
+		expect(movers.querySelector('[data-highlight="moversNotComparable"]')?.textContent).toContain(
+			'not enough comparable history yet'
+		);
+		// Under the month: after the burn in the document.
+		const burn = c.querySelector('[data-burn]')!;
+		expect(burn.compareDocumentPosition(movers) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+		expect(movers.compareDocumentPosition(scale) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 	});
 });

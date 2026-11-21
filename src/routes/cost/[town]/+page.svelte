@@ -37,6 +37,9 @@
 	/** Live: when the source saw it. Cited: when we checked the publication. */
 
 	const soFar = $derived(!!h && pricedSoFar(h));
+	/** "For scale" is the comparisons; the movers say what changed, under the month (R9). */
+	const scale = $derived(data.highlights?.filter((x) => x.rule !== 'mover') ?? []);
+	const movers = $derived(data.highlights?.filter((x) => x.rule === 'mover') ?? []);
 
 	/** The line or section just landed on: outlined while it holds focus. */
 	let arrived = $state<string | null>(null);
@@ -113,20 +116,40 @@
 							<span class="incomplete" data-incomplete data-text-role="meta">incomplete</span>
 						{/if}
 					</div>
+					{#if movers.length}
+						<section class="movers" data-movers aria-labelledby="movers-title">
+							<h2 id="movers-title" data-text-role="meta">Since the previous comparable run</h2>
+							<ul>
+								{#each movers as x (x.key)}
+									<li data-highlight={x.key} data-text-role="label">
+										{#if x.figure !== null}<span class="num mover-x" data-figure>{x.figure}</span
+											>{/if}<span>{x.text}</span>
+									</li>
+								{/each}
+							</ul>
+						</section>
+					{/if}
 					{#if t}
-						<p class="meta tracker" data-market-tracker data-text-role="meta">
-							<ClassChips classes={[t.class]} />
-							<span>
-								The {h.town} median, {money(t.value)} ({t.label}){#if trackerLink}, <a
+						<div class="tracker" data-market-tracker>
+							<p class="tracker-head" data-text-role="label">
+								<ClassChips classes={[t.class]} quiet />
+								<span>The {h.town} median</span>
+								<span class="num tracker-v" data-tracker-value>{money(t.value)}</span>
+							</p>
+							<p class="meta" data-tracker-qualifier data-text-role="meta">
+								Context only: it never reprices this household’s home.
+							</p>
+							<p class="meta dim" data-tracker-source data-text-role="meta">
+								{t.label}{#if trackerLink}{' · '}<a
 										class="hit-44"
 										href={trackerLink.href}
 										rel="noopener noreferrer"
 										target="_blank">{trackerLink.host}</a
-									>{/if}{#if inputWhen(t)}, {inputWhen(t)}{/if}{#if t.availability !== 'ok'}<span
-										class="flag">, {t.availability}{t.reason ? `: ${t.reason}` : ''}</span
-									>{/if}, is context only: it never reprices this household’s home.
-							</span>
-						</p>
+									>{/if}{#if inputWhen(t)}{` · ${inputWhen(t)}`}{/if}{#if t.availability !== 'ok'}<span
+										class="flag">{` · ${t.availability}${t.reason ? `: ${t.reason}` : ''}`}</span
+									>{/if}
+							</p>
+						</div>
 					{/if}
 				</div>
 				<section class="equation" aria-label="Break-even income">
@@ -166,24 +189,24 @@
 				</section>
 			</div>
 
-			{#if data.highlights?.length}
+			{#if scale.length}
 				<section class="scale" aria-label="For scale" data-highlights>
 					<h2 data-text-role="label">For scale</h2>
 					<ul>
-						{#each data.highlights as x (x.key)}
-							<li data-highlight={x.key} class:plain={x.figure === null}>
-								{#if x.figure !== null}
-									<span class="x num" data-figure data-text-role="value">{x.figure}</span>
-								{/if}
-								<span class="y" data-text-role="label">{x.text}</span>
-								{#if x.modelled || x.sources.length}
-									<span class="meta" data-text-role="meta"
-										>{#if x.modelled}<span class="modelled" data-modelled>modelled</span
-											>{/if}{#if x.sources.length}<span data-sources
-												>{x.modelled ? ' · ' : ''}{x.sources.join(', ')}</span
-											>{/if}</span
-									>
-								{/if}
+						{#each scale as x (x.key)}
+							<li data-highlight={x.key}>
+								<span class="x num" data-figure data-text-role="value">{x.figure ?? ''}</span>
+								<span class="y">
+									<span data-text-role="label">{x.text}</span>
+									{#if x.modelled || x.sources.length}
+										<span class="meta dim" data-text-role="meta"
+											>{#if x.modelled}<span class="modelled" data-modelled>modelled</span
+												>{/if}{#if x.sources.length}<span data-sources
+													>{x.modelled ? ' · ' : ''}{x.sources.join(', ')}</span
+												>{/if}</span
+										>
+									{/if}
+								</span>
 							</li>
 						{/each}
 					</ul>
@@ -234,9 +257,7 @@
 							>
 								<summary data-text-role="label" onblur={() => (arrived = null)}>
 									<span class="lab"
-										>{l.label}<ClassChips
-											classes={l.classes}
-										/>{#if p.signatures.includes(l.id)}<span
+										>{l.label}{#if p.signatures.includes(l.id)}<span
 												class="on-card"
 												data-on-card
 												data-text-role="meta">on the card</span
@@ -244,6 +265,7 @@
 												>{l.availability === 'stale' ? 'stale' : 'can’t be read'}</span
 											>{/if}</span
 									>
+									<span class="prov" data-provenance><ClassChips classes={l.classes} quiet /></span>
 									<span class="num">{money(l.monthly)}</span>
 								</summary>
 								<ul class="inputs">
@@ -370,13 +392,54 @@
 		outline: 2px solid var(--accent);
 		outline-offset: 2px;
 	}
+	/* Today's town median: a number and its qualifier, the source dimmed under them. */
 	.tracker {
 		display: flex;
-		gap: 6px;
-		align-items: baseline;
+		flex-direction: column;
+		gap: 2px;
+		margin-top: var(--v2-s2);
 	}
-	.tracker > :global(.chips) {
-		margin-left: 0;
+	.tracker p {
+		margin: 0;
+	}
+	.tracker-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0 6px;
+		color: var(--text-secondary);
+	}
+	.tracker-v {
+		color: var(--text-primary);
+		font-weight: 600;
+	}
+	.tracker .meta {
+		color: var(--text-muted);
+	}
+	.dim {
+		opacity: 0.8;
+	}
+	/* What moved since the last comparable run: small, under the month. */
+	.movers {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		margin-top: var(--v2-s2);
+	}
+	.movers h2 {
+		color: var(--text-muted);
+		font-weight: 400;
+	}
+	.movers ul {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		color: var(--text-secondary);
+	}
+	.mover-x {
+		margin-right: 6px;
+		color: var(--text-primary);
+		font-weight: 600;
 	}
 	.towns {
 		display: inline-flex;
@@ -466,7 +529,7 @@
 		color: var(--text-primary);
 		font-weight: 500;
 	}
-	/* The approved mockup's "For scale" boxes: the figure big, the sentence under it. */
+	/* "For scale": a tidy list, the figure in its own column and the sentence beside it. */
 	.scale {
 		display: flex;
 		flex-direction: column;
@@ -480,27 +543,30 @@
 		list-style: none;
 		margin: 0;
 		padding: 0;
-		display: grid;
-		gap: var(--v2-s3);
-		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+		border-top: 1px solid var(--border-light);
 	}
 	.scale li {
-		display: flex;
-		flex-direction: column;
-		gap: var(--v2-s1);
-		min-width: 0;
-		padding: var(--v2-s3);
-		border: 1px solid var(--border-light);
-		border-radius: 8px;
-	}
-	.scale li.plain {
-		justify-content: center;
+		display: grid;
+		grid-template-columns: 6.5rem minmax(0, 1fr);
+		gap: var(--v2-s3);
+		align-items: baseline;
+		padding: var(--v2-s2) 0;
+		border-bottom: 1px solid var(--border);
 	}
 	.scale .x {
 		font-weight: 600;
+		white-space: nowrap;
 	}
 	.scale .y {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+		max-width: 76ch;
 		color: var(--text-secondary);
+	}
+	.scale .y .meta {
+		color: var(--text-muted);
 	}
 	.modelled {
 		color: var(--amber, #f59e0b);
@@ -582,9 +648,10 @@
 	details:last-child {
 		border-bottom: 0;
 	}
+	/* Label, provenance in one aligned column, amount. */
 	summary {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto;
+		grid-template-columns: minmax(0, 1fr) 2.75rem 5.5rem;
 		gap: var(--v2-s2);
 		padding: var(--v2-s1) 0;
 		list-style: none;
@@ -610,6 +677,13 @@
 	.lab .flag,
 	.on-card {
 		margin-left: 6px;
+	}
+	.prov {
+		display: flex;
+		justify-content: flex-start;
+	}
+	summary .num {
+		text-align: right;
 	}
 	.on-card {
 		padding: 0 5px;

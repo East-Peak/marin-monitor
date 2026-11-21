@@ -125,6 +125,9 @@ for (const [label, viewport] of [
 			// Redfin's 3-month city median, read live (COSTDATA Q3): it says when we read it.
 			await expect(tracker.locator('[data-classes]')).toHaveAttribute('data-classes', 'live');
 			await expect(tracker).toContainText('all residential, Redfin');
+			await expect(tracker.locator('[data-tracker-qualifier]')).toHaveText(
+				'Context only: it never reprices this household’s home.'
+			);
 			await expect(tracker).toContainText('read');
 			await expect(tracker).not.toContainText('Today');
 			const rate = pi.locator('[data-input="ratePct"]');
@@ -151,8 +154,11 @@ for (const [label, viewport] of [
 			await expect(line.locator('[data-figure]')).toHaveText('3.2×');
 			await expect(line.locator('[data-modelled]')).toHaveText('modelled');
 			await expect(line.locator('[data-sources]')).toContainText('dir.ca.gov');
-			// The seed's week before had gas at $5.90: a like-for-like mover.
-			const gas = hl.locator('[data-highlight="mover:larkspur.car.suv.fuel"]');
+			// The seed's week before had gas at $5.90: a like-for-like mover, under the month (COSTX1).
+			const movers = page.locator('[data-movers]');
+			await expect(movers.locator('h2')).toHaveText('Since the previous comparable run');
+			await expect(hl.locator('[data-highlight^="mover"]')).toHaveCount(0);
+			const gas = movers.locator('[data-highlight="mover:larkspur.car.suv.fuel"]');
 			await expect(gas).toContainText('since Oct 13');
 			await expect(gas.locator('[data-figure]')).toHaveText('+$10/mo');
 			await expect(hl.locator('[data-highlight="breakEvenVsMedian"]')).toContainText(
