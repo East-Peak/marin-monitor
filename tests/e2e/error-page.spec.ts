@@ -22,7 +22,7 @@ test('three full-width links, each at least 52 px tall, that go somewhere', asyn
 	await page.setViewportSize({ width: 390, height: 844 });
 	await page.goto('/cost/stinson');
 	const links = page.locator('nav a');
-	await expect(links).toHaveText(['Dashboard', 'Map', 'Cost of living by town']);
+	await expect(links).toHaveText(['Dashboard', 'Map', 'Cost of living']);
 	await expect(links).toHaveCount(3);
 	const nav = (await page.locator('nav').boundingBox())!;
 	for (const a of await links.all()) {
@@ -33,10 +33,29 @@ test('three full-width links, each at least 52 px tall, that go somewhere', asyn
 	expect(await links.evaluateAll((as) => as.map((a) => a.getAttribute('href')))).toEqual([
 		'/',
 		'/map',
-		'/cost'
+		'/#cost'
 	]);
 	await links.nth(1).click();
 	await expect(page).toHaveURL(/\/map$/);
+});
+
+test('every link on the error page is followed and answers 200', async ({ page }) => {
+	await page.goto('/cost/stinson');
+	const hrefs = await page
+		.locator('nav a')
+		.evaluateAll((as) => as.map((a) => a.getAttribute('href')!));
+	expect(hrefs.length).toBeGreaterThan(0);
+	for (const href of hrefs) {
+		const response = await page.goto(href);
+		expect(response?.status(), `${href} should answer 200`).toBe(200);
+	}
+});
+
+test('the cost link lands on the dashboard’s cost section', async ({ page }) => {
+	await page.goto('/cost/stinson');
+	await page.locator('nav a', { hasText: 'Cost of living' }).click();
+	await expect(page).toHaveURL(/\/#cost$/);
+	await expect(page.locator('#cost')).toBeAttached();
 });
 
 test('the path is shown as text, never as markup', async ({ page }) => {
