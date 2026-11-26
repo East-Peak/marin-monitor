@@ -1,0 +1,13 @@
+# Monthly, grouped updates for GitHub Actions only.
+# The workflows pin actions to exact commits, and Dependabot raises no security
+# alert for commit-pinned actions, so this is how they stay current.
+# App dependencies get security updates only (repo setting); no version bumps.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
