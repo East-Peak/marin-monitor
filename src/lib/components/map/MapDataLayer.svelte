@@ -41,6 +41,7 @@
 	import { setupSources } from './map-layers';
 	import {
 		applyRoadSpeeds,
+		congestionTileIds,
 		watchRoadSpeeds,
 		type RoadSpeeds,
 		type RoadSpeedsTarget
@@ -221,11 +222,11 @@
 
 	/** The map, plus the congestion tiles in view (MapLibre's SourceCache ids). */
 	const roadSpeedsTarget = (map: MapLibreMap): RoadSpeedsTarget => ({
-		on: (type, fn) => map.on(type as 'idle', fn),
-		off: (type, fn) => map.off(type as 'idle', fn),
+		on: (type, fn) => map.on(type as 'idle', fn as never),
+		off: (type, fn) => map.off(type as 'idle', fn as never),
 		getSource: (id) => map.getSource(id),
 		isSourceLoaded: (id) => map.isSourceLoaded(id),
-		tileIds: () => map.style?.sourceCaches?.['traffic-congestion']?.getIds() ?? [],
+		tileIds: () => congestionTileIds(map as unknown as Parameters<typeof congestionTileIds>[0]),
 		renderedRoads: () =>
 			map.getLayer('traffic-congestion-layer')
 				? map.queryRenderedFeatures({ layers: ['traffic-congestion-layer'] })

@@ -39,6 +39,16 @@ export interface RoadSpeedsTarget {
 	renderedRoads(): readonly { properties?: Record<string, unknown> | null }[];
 }
 
+/**
+ * The keys of the congestion tiles in view. MapLibre keeps them on the style's tile manager for
+ * the source (an internal: `sourceCaches` before v6, `tileManagers` since), so read it defensively.
+ */
+export function congestionTileIds(map: {
+	style?: { tileManagers?: Record<string, { getIds(): string[] } | undefined> };
+}): readonly string[] {
+	return map.style?.tileManagers?.[SOURCE]?.getIds() ?? [];
+}
+
 const isSlow = (p: Record<string, unknown> | null | undefined) =>
 	p?.closed === true ||
 	p?.closed === 'yes' ||

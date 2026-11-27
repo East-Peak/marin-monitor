@@ -37,6 +37,11 @@
 	onMount(async () => {
 		// Dynamic import to avoid SSR issues with WebGL
 		const maplibregl = await import('maplibre-gl');
+		// MapLibre 6 cannot find its worker under a bundler on its own (v5-to-v6 guide, "setWorkerUrl()
+		// is bundler-only"); Vite's ?worker&url gives the worker as a same-origin asset URL.
+		const { default: workerUrl } =
+			await import('maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url');
+		maplibregl.setWorkerUrl(workerUrl);
 		const initialTheme = get(settings).theme;
 		currentMapStyle = getMapStyleUrl(initialTheme);
 
