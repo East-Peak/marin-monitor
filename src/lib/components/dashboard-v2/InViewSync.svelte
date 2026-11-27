@@ -155,7 +155,7 @@
 	$effect(() => {
 		if (!map) return;
 		const padding = { top: 0, bottom: 0, left: 0, right: panelPx };
-		const from = map.getPadding().right;
+		const from = map.getPadding().right ?? 0;
 		// Any padding change stops a flight (setPadding is a jumpTo). Ours lands under the new
 		// padding instead; after the first dock, Hide and Show otherwise change only the padding,
 		// the geography staying on its pixels (PANELSTEADY1). The first dock keeps the bare

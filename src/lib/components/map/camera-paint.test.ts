@@ -24,7 +24,7 @@ function registered() {
 /** A paint value for a wedge of `style`, with or without its camera emphasised. */
 function paint(layer: Layer, prop: string, style: string, emphasis: boolean) {
 	const value = layer.paint?.[prop];
-	const parsed = expression.createExpression(value);
+	const parsed = expression.createExpression(value, `${layer.id}.${prop}`);
 	if (parsed.result !== 'success') throw new Error(`${layer.id} ${prop}: does not parse`);
 	return parsed.value.evaluate(
 		{ zoom: 11 },

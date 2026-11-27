@@ -35,11 +35,12 @@ const segment = (congestion: string, closed?: unknown) =>
 	({ type: 'LineString', properties: { congestion, ...(closed ? { closed } : {}) } }) as never;
 
 function value(layer: Layer, group: 'paint' | 'layout', prop: string, f: never, zoom = 11) {
-	const parsed = expression.createExpression(layer[group]?.[prop]);
+	const parsed = expression.createExpression(layer[group]?.[prop], `${layer.id}.${prop}`);
 	if (parsed.result !== 'success') throw new Error(`${layer.id} ${prop}: does not parse`);
 	return parsed.value.evaluate({ zoom }, f, {}) as number | string;
 }
-const drawn = (f: never) => featureFilter(roads.filter as never).filter({ zoom: 11 }, f);
+const drawn = (f: never) =>
+	featureFilter(roads.filter as never, `${roads.id}.filter`).filter({ zoom: 11 }, f);
 
 describe('road speeds paint (TRAFFIC1)', () => {
 	it('free-flowing (low) segments are drawn, as are the slowdowns and closures', () => {

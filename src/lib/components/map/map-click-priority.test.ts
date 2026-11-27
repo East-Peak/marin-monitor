@@ -11,7 +11,7 @@ type Hits = Record<string, { properties: Record<string, unknown> }[]>;
 
 /** A map whose click dispatch is MapLibre's own; only rendering is scripted. */
 async function delegatingMap(hits: Hits): Promise<MapLibreMap & { click(): void }> {
-	const maplibregl = (await import('maplibre-gl')).default;
+	const maplibregl = await import('maplibre-gl');
 	const map = Object.create(maplibregl.Map.prototype);
 	map.getLayer = (id: string) => (id in hits ? { id } : undefined);
 	map.getLayoutProperty = () => 'visible';

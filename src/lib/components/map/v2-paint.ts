@@ -5,7 +5,7 @@
  * gives towns a brighter fill, a light stroke and a count, and makes 311 dots small and lighter.
  * Dimmed (other-town) and kept (retained) semantics are unchanged.
  */
-import type { Map as MapLibreMap } from 'maplibre-gl';
+import type { ExpressionSpecification, Map as MapLibreMap } from 'maplibre-gl';
 import { LAYER_COLORS } from '$lib/config/map';
 
 /** Each story colour's brighter fill (the Tailwind 300 of the same hue). */
@@ -18,7 +18,7 @@ export const V2_TOWN_FILL: Readonly<Record<string, string>> = {
 	[LAYER_COLORS.satire]: '#f9a8d4'
 };
 
-const hasStories = ['>', ['coalesce', ['get', 'total'], 0], 0];
+const hasStories: ExpressionSpecification = ['>', ['coalesce', ['get', 'total'], 0], 0];
 
 type PaintTarget = Pick<
 	MapLibreMap,
@@ -45,7 +45,7 @@ export function applyV2Paint(map: PaintTarget): () => void {
 		['get', 'color'],
 		...Object.entries(V2_TOWN_FILL).flat(),
 		['coalesce', ['get', 'color'], '#8b5cf6']
-	]);
+	] as unknown as ExpressionSpecification);
 	map.setPaintProperty('towns-layer', 'circle-stroke-width', ['case', hasStories, 1.5, 1]);
 	map.setPaintProperty('towns-layer', 'circle-stroke-color', [
 		'case',

@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { CONGESTION_LINE_OPACITY } from './map-layers';
-import { applyRoadSpeeds, roadSpeedsNote, watchRoadSpeeds, type RoadSpeeds } from './road-speeds';
+import {
+	applyRoadSpeeds,
+	congestionTileIds,
+	roadSpeedsNote,
+	watchRoadSpeeds,
+	type RoadSpeeds
+} from './road-speeds';
 
 /** A MapLibre-shaped event source: just the events, the source check and the paint calls. */
 function fakeMap() {
@@ -238,5 +244,18 @@ describe('applyRoadSpeeds', () => {
 		const map = fakeMap();
 		applyRoadSpeeds(map, false, true);
 		expect(map.layout['traffic-congestion-layer.visibility']).toBe('none');
+	});
+});
+
+describe('congestionTileIds', () => {
+	// MapLibre 6 renamed the style's `sourceCaches` to `tileManagers`; the ids still come from getIds().
+	it('reads the tile keys in view from the congestion source tile manager', () => {
+		const map = { style: { tileManagers: { 'traffic-congestion': { getIds: () => ['a', 'b'] } } } };
+		expect(congestionTileIds(map)).toEqual(['a', 'b']);
+	});
+
+	it('is empty while the style, or the congestion source, is not there', () => {
+		expect(congestionTileIds({})).toEqual([]);
+		expect(congestionTileIds({ style: { tileManagers: {} } })).toEqual([]);
 	});
 });

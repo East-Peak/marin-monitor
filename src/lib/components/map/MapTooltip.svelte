@@ -167,10 +167,10 @@
 			}
 
 			mapInstance.on('mousemove', handleMouseMove);
-			mapInstance.on('mouseleave', handleMapLeave);
+			mapInstance.on('mouseout', handleMapLeave);
 			removeMapListeners = () => {
 				mapInstance.off('mousemove', handleMouseMove);
-				mapInstance.off('mouseleave', handleMapLeave);
+				mapInstance.off('mouseout', handleMapLeave);
 			};
 		});
 
